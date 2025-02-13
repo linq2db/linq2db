@@ -11,6 +11,7 @@ using Microsoft.SqlServer.Server;
 namespace LinqToDB.Metadata
 {
 	using Common;
+	using Common.Internal;
 	using Extensions;
 	using Mapping;
 
@@ -26,11 +27,13 @@ namespace LinqToDB.Metadata
 		/// Provider instance, which use mapping attributes from System.Data.SqlClient assembly.
 		/// Could be null of assembly not found.
 		/// </summary>
-		public static IMetadataReader? SystemDataSqlClientProvider = TryCreate(
-			"Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient",
-			"Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient")
+		public static IMetadataReader? SystemDataSqlClientProvider =
 #if NETFRAMEWORK
-			?? new SystemDataSqlServerAttributeReader(typeof(SqlMethodAttribute), typeof(SqlUserDefinedTypeAttribute))
+			new SystemDataSqlServerAttributeReader(typeof(SqlMethodAttribute), typeof(SqlUserDefinedTypeAttribute))
+#else
+			TryCreate(
+				"Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient",
+				"Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient")
 #endif
 			;
 
@@ -71,10 +74,10 @@ namespace LinqToDB.Metadata
 			_objectId                    = $".{_sqlMethodAttribute.AssemblyQualifiedName}.{_sqlUserDefinedTypeAttribute.AssemblyQualifiedName}.";
 
 			var methodNameGetter = _sqlMethodAttribute.GetProperty("Name")!.GetMethod!;
-			_methodNameGetter    = attr => (string?)methodNameGetter.Invoke(attr, null);
+			_methodNameGetter    = attr => methodNameGetter.InvokeExt<string?>(attr, null);
 
 			var udtNameGetter = _sqlUserDefinedTypeAttribute.GetProperty("Name")!.GetMethod!;
-			_typeNameGetter   = attr => (string?)udtNameGetter.Invoke(attr, null);
+			_typeNameGetter   = attr => udtNameGetter.InvokeExt<string?>(attr, null);
 		}
 
 		static SystemDataSqlServerAttributeReader? TryCreate(string sqlMethodAttributeType, string sqlUserDefinedTypeAttributeType)

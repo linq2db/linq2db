@@ -142,6 +142,11 @@ namespace LinqToDB.Linq.Builder
 
 		#region SubQueryToSql
 
+		public static bool NeedsSubqueryValidation(IDataContext dataContext)
+		{
+			return !dataContext.SqlProviderFlags.IsApplyJoinSupported;
+		}
+
 		/// <summary>
 		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/>
 		/// </summary>
@@ -158,11 +163,12 @@ namespace LinqToDB.Linq.Builder
 			if (parent.Builder.IsRecursiveBuild)
 				return true;
 
-			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
+			if (NeedsSubqueryValidation(context.Builder.DataContext))
 			{
 				// We are trying to simulate what will be with query after optimizer's work
 				//
 				var cloningContext = new CloningContext();
+				cloningContext.CloneElements(context.Builder.GetCteClauses());
 
 				var clonedParentContext = cloningContext.CloneContext(parent);
 				var clonedContext       = cloningContext.CloneContext(context);
@@ -449,35 +455,59 @@ namespace LinqToDB.Linq.Builder
 			return _buildVisitor.GenerateComparison(context, left, right, buildPurpose);
 		}
 
-		public static List<SqlPlaceholderExpression> CollectPlaceholders(Expression expression)
+		class PlaceholderCollectVisitor : ExpressionVisitorBase
 		{
-			var result = new List<SqlPlaceholderExpression>();
+			readonly List<SqlPlaceholderExpression> _collected = new();
+			bool                                    _includeDefaultIfEmpty;
 
-			expression.Visit(result, static (list, e) =>
+			public IReadOnlyList<SqlPlaceholderExpression> Collected => _collected;
+
+			public override void Cleanup()
 			{
-				if (e is SqlPlaceholderExpression placeholder)
-				{
-					list.Add(placeholder);
-				}
-			});
+				_includeDefaultIfEmpty = false;
+				_collected.Clear();
+				base.Cleanup();
+			}
 
-			return result;
+			public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
+			{
+				_collected.Add(node);
+				return base.VisitSqlPlaceholderExpression(node);
+			}
+
+			public override Expression VisitSqlDefaultIfEmptyExpression(SqlDefaultIfEmptyExpression node)
+			{
+				if (!_includeDefaultIfEmpty)
+				{
+					// Do not collect placeholders from NotNullExpressions
+					Visit(node.InnerExpression);
+					return node;
+				}
+
+				return base.VisitSqlDefaultIfEmptyExpression(node);
+			}
+
+			public IReadOnlyList<SqlPlaceholderExpression> CollectPlaceholders(Expression expression, bool includeDefaultIfEmpty)
+			{
+				Cleanup();
+				_includeDefaultIfEmpty = includeDefaultIfEmpty;
+				Visit(expression);
+				return Collected;
+			}
 		}
 
-		public static List<SqlPlaceholderExpression> CollectDistinctPlaceholders(Expression expression)
+		public static List<SqlPlaceholderExpression> CollectPlaceholders(Expression expression, bool includeDefaultIfEmpty)
 		{
-			var result = new List<SqlPlaceholderExpression>();
+			using var visitor = _placeholderCollectorPool.Allocate();
 
-			expression.Visit(result, static (list, e) =>
-			{
-				if (e is SqlPlaceholderExpression placeholder)
-				{
-					if (!list.Contains(placeholder))
-						list.Add(placeholder);
-				}
-			});
+			return visitor.Value.CollectPlaceholders(expression, includeDefaultIfEmpty).ToList();
+		}
 
-			return result;
+		public static List<SqlPlaceholderExpression> CollectDistinctPlaceholders(Expression expression, bool includeDefaultIfEmpty)
+		{
+			using var visitor = _placeholderCollectorPool.Allocate();
+
+			return visitor.Value.CollectPlaceholders(expression, includeDefaultIfEmpty).Distinct().ToList();
 		}
 
 		public bool CollectNullCompareExpressions(IBuildContext context, Expression expression, List<Expression> result)
@@ -669,7 +699,7 @@ namespace LinqToDB.Linq.Builder
 		Expression MakeIsPredicateExpression(IBuildContext context, TypeBinaryExpression expression)
 		{
 			var typeOperand = expression.TypeOperand;
-			var table       = new TableBuilder.TableContext(this, context.MappingSchema, new BuildInfo((IBuildContext?)null, ExpressionInstances.UntypedNull, new SelectQuery()), typeOperand);
+			var table       = new TableBuilder.TableContext(context.TranslationModifier, this, context.MappingSchema, new BuildInfo((IBuildContext?)null, ExpressionInstances.UntypedNull, new SelectQuery()), typeOperand);
 
 			if (typeOperand == table.ObjectType)
 			{
@@ -1049,34 +1079,82 @@ namespace LinqToDB.Linq.Builder
 			return cteContext;
 		}
 
+		public IEnumerable<CteClause>? GetCteClauses()
+		{
+			if (_cteContexts == null)
+				return null;
+
+			return _cteContexts.Values.Select(ctx => ctx.CteClause);
+		}
+
 		#endregion
 
 		#region Query Filter
 
-		Stack<Type[]>? _disabledFilters;
+		TranslationModifier?        _globalModifier;
+		Stack<TranslationModifier>? _translationModifiers;
+		Stack<Expression>?          _disableFiltersForExpression;
+
+		public void PushTranslationModifier(TranslationModifier modifier, bool isTemporary)
+		{
+			_translationModifiers ??= new Stack<TranslationModifier>();
+
+			if (!isTemporary && _translationModifiers.Count == 0)
+				_globalModifier = modifier;
+
+			_translationModifiers.Push(modifier);
+		}
+
+		public void PopTranslationModifier()
+		{
+			if (_translationModifiers == null)
+				throw new InvalidOperationException();
+			_ = _translationModifiers.Pop();
+		}
+
+		public TranslationModifier GetTranslationModifier()
+		{
+			if (_translationModifiers is { Count: > 0 })
+				return _translationModifiers.Peek();
+			return _globalModifier ?? TranslationModifier.Default;
+		}
 
 		public void PushDisabledQueryFilters(Type[] disabledFilters)
 		{
-			_disabledFilters ??= new Stack<Type[]>();
-			_disabledFilters.Push(disabledFilters);
+			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilters(disabledFilters), true);
 		}
 
 		public bool IsFilterDisabled(Type entityType)
 		{
-			if (_disabledFilters == null || _disabledFilters.Count == 0)
-				return false;
-			var filter = _disabledFilters.Peek();
-			if (filter.Length == 0)
-				return true;
-			return Array.IndexOf(filter, entityType) >= 0;
+			return GetTranslationModifier().IsFilterDisabled(entityType);
 		}
 
 		public void PopDisabledFilter()
 		{
-			if (_disabledFilters == null)
+			if (_translationModifiers == null)
 				throw new InvalidOperationException();
 
-			_ = _disabledFilters.Pop();
+			_ = _translationModifiers.Pop();
+		}
+
+		public void PushDisableFiltersForExpression(Expression expression)
+		{
+			_disableFiltersForExpression ??= new Stack<Expression>();
+			_disableFiltersForExpression.Push(expression);
+		}
+
+		public void PopDisableFiltersForExpression()
+		{
+			if (_disableFiltersForExpression == null)
+				throw new InvalidOperationException();
+			_ = _disableFiltersForExpression.Pop();
+		}
+
+		public bool IsFilterDisabledForExpression(Expression expression)
+		{
+			if (_disableFiltersForExpression == null)
+				return false;
+			return _disableFiltersForExpression.Contains(expression);
 		}
 
 		#endregion
@@ -1180,9 +1258,16 @@ namespace LinqToDB.Linq.Builder
 				body = RemoveNullPropagation(body, flags.HasFlag(ProjectFlags.Keys));
 			}
 
-			if (body is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
+			if (body is SqlDefaultIfEmptyExpression defaultIfEmpty && next != null)
 			{
-				body = defaultIfEmptyExpression.InnerExpression;
+				var inner = Project(context, path, nextPath, nextIndex, flags, defaultIfEmpty.InnerExpression, strict);
+				if (inner is SqlErrorExpression)
+					return inner;
+
+				var testCondition = defaultIfEmpty.NotNullExpressions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
+
+				var result = Expression.Condition(testCondition, inner, new DefaultValueExpression(MappingSchema, next.Type));
+				return result;
 			}
 
 			switch (body.NodeType)
@@ -1336,7 +1421,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (member != null && nextPath != null)
 					{
-						if (nextPath[nextIndex] is MemberExpression nextMember && body.Type.IsSameOrParentOf(nextMember.Expression!.Type))
+						if (nextPath[nextIndex] is MemberExpression nextMember
+							&& (body.Type.IsSameOrParentOf(nextMember.Expression!.Type) || nextMember.Expression!.Type.IsSameOrParentOf(body.Type)))
 						{
 							var newMember = body.Type.GetMemberEx(nextMember.Member);
 							if (newMember != null)
@@ -1668,7 +1754,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return CreateSqlError(next!);
+			return CreateSqlError(next ?? path!);
 		}
 
 		public Expression ParseGenericConstructor(Expression createExpression, ProjectFlags flags, ColumnDescriptor? columnDescriptor, bool force = false)

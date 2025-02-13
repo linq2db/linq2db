@@ -60,7 +60,7 @@ namespace LinqToDB.Linq.Builder
 
 			SqlPlaceholderExpression? _rowNumberPlaceholder;
 
-			public CounterContext(IBuildContext sequence) : base(sequence.Builder, typeof(int), sequence.SelectQuery)
+			public CounterContext(IBuildContext sequence) : base(sequence.TranslationModifier, sequence.Builder, typeof(int), sequence.SelectQuery)
 			{
 				_sequence = sequence;
 			}

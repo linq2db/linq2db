@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
@@ -39,13 +38,22 @@ public class a_CreateData : TestBase
 
 		while (true)
 		{
-			var idx = text.IndexOf("SKIP " + configString + " BEGIN");
+			var idx = text.IndexOf($"SKIP {configString} BEGIN", StringComparison.Ordinal);
 
 			if (idx >= 0)
-				text = text.Substring(0, idx) + text.Substring(text.IndexOf("SKIP " + configString + " END", idx));
+				text = text[..idx] + text[text.IndexOf($"SKIP {configString} END", idx, StringComparison.Ordinal)..];
 			else
 				break;
 		}
+
+		text = string.Join(Environment.NewLine,
+			text.Split('\n')
+			.Select(l => l.Trim('\r', '\n'))
+			.Select(l =>
+			{
+				var idx = l.IndexOf("-- SKIP ", StringComparison.Ordinal);
+				return idx >= 0 ? l[..idx] : l;
+			}));
 
 		Exception? exception = null;
 

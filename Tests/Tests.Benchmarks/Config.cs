@@ -29,7 +29,7 @@ namespace LinqToDB.Benchmarks
 				.WithOptions       (ConfigOptions.DisableLogFile)
 				.AddExporter       (MarkdownExporter.GitHub)
 				.AddDiagnoser      (MemoryDiagnoser.Default)
-				.WithArtifactsPath (@"..\..\..")
+				.WithArtifactsPath (@"..\..\..\..\..\Tests\Tests.Benchmarks")
 				.AddJob            (netfx, net60, net80, net90);
 		}
 

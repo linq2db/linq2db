@@ -1370,6 +1370,7 @@ namespace LinqToDB.SqlQuery
 			{
 				if (!subQuery.GroupBy.IsEmpty)
 					return false;
+
 				if (parentQuery.Select.Columns.Count == 0)
 					return false;
 
@@ -1448,7 +1449,7 @@ namespace LinqToDB.SqlQuery
 
 				if (containsWindowFunction)
 				{
-					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || !subQuery.Where.IsEmpty || !subQuery.GroupBy.IsEmpty)
+					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || (!parentQuery.Where.IsEmpty && !subQuery.Where.IsEmpty) || !subQuery.GroupBy.IsEmpty)
 					{
 						// not allowed to break window
 						return false;
@@ -1858,7 +1859,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			if (subQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
 				return false;
 
 			// Actual modification starts from this point
@@ -1889,7 +1890,7 @@ namespace LinqToDB.SqlQuery
 				NotifyReplaced(column.Expression, column);
 			}
 
-			if (subQuery.OrderBy.Items.Count > 0 && !selectQuery.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			if (subQuery.OrderBy.Items.Count > 0 && !QueryHelper.IsAggregationQuery(selectQuery))
 			{
 				ApplySubsequentOrder(selectQuery, subQuery);
 			}
@@ -2920,6 +2921,12 @@ namespace LinqToDB.SqlQuery
 						// in theory it could be lifted for providers with Fake column, but we don't have this
 						// information here currently (it's in SqlBuilder)
 						|| element.From.Tables.Count == 0
+						// we can replace
+						// SELECT xxx GROUP BY ...
+						// with
+						// SELECT * GROUP BY ...
+						// only if we know that all columns in source are in group-by, which is not worth of extra logic
+						|| !element.GroupBy.IsEmpty
 					))
 				{
 					element.AddNew(new SqlValue(1), alias: cte != null ? "c1" : null);

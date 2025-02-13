@@ -606,11 +606,15 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				query = new ExpressionBuilder(query, false, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null).Build<T>(ref expressions);
+				var validateSubqueries = !ExpressionBuilder.NeedsSubqueryValidation(dataContext);
+				query = new ExpressionBuilder(query, validateSubqueries, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null).Build<T>(ref expressions);
 				if (query.ErrorExpression != null)
 				{
-					query = new Query<T>(dataContext);
-					query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null).Build<T>(ref expressions);
+					if (!validateSubqueries)
+					{
+						query = new Query<T>(dataContext);
+						query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null).Build<T>(ref expressions);
+					}
 					if (query.ErrorExpression != null)
 						throw query.ErrorExpression.CreateException();
 				}

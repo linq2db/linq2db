@@ -93,7 +93,7 @@ namespace LinqToDB.Linq.Builder
 
 			var body = SequenceHelper.PrepareBody(selector, outerContext, new ScopeContext(innerContext, outerContext));
 
-			return BuildSequenceResult.FromContext(new SelectContext(buildInfo.Parent, builder, null, body, outerContext.SelectQuery, buildInfo.IsSubQuery)
+			return BuildSequenceResult.FromContext(new SelectContext(outerContext.TranslationModifier, buildInfo.Parent, builder, null, body, outerContext.SelectQuery, buildInfo.IsSubQuery)
 #if DEBUG
 				{
 					Debug_MethodCall = methodCall

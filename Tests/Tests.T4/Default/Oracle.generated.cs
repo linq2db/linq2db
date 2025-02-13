@@ -24,6 +24,8 @@ namespace Default.Oracle
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AllType>             AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<BINARYDATA>          Binarydatas         { get { return this.GetTable<BINARYDATA>(); } }
 		public ITable<Child>               Children            { get { return this.GetTable<Child>(); } }
@@ -59,6 +61,10 @@ namespace Default.Oracle
 		public ITable<TTestUser>           TTestUsers          { get { return this.GetTable<TTestUser>(); } }
 		public ITable<TTestUserContract>   TTestUserContracts  { get { return this.GetTable<TTestUserContract>(); } }
 
+		#endregion
+
+		#region .ctor
+
 		public TestDataDB()
 		{
 			InitDataContext();
@@ -88,6 +94,8 @@ namespace Default.Oracle
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 
 		#region Table Functions
 
@@ -241,9 +249,9 @@ namespace Default.Oracle
 		#region Associations
 
 		/// <summary>
-		/// Fk_Doctor_Person (MANAGED.Person)
+		/// FK_Doctor_Person (MANAGED.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Oracle.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -328,9 +336,9 @@ namespace Default.Oracle
 		#region Associations
 
 		/// <summary>
-		/// Fk_Patient_Person (MANAGED.Person)
+		/// FK_Patient_Person (MANAGED.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Oracle.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -348,16 +356,16 @@ namespace Default.Oracle
 		#region Associations
 
 		/// <summary>
-		/// Fk_Doctor_Person_BackReference (MANAGED.Doctor)
+		/// FK_Doctor_Person_BackReference (MANAGED.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
-		public Doctor? FkDoctor { get; set; }
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Oracle.Doctor.PersonID), CanBeNull=true)]
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// Fk_Patient_Person_BackReference (MANAGED.Patient)
+		/// FK_Patient_Person_BackReference (MANAGED.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
-		public Patient? FkPatient { get; set; }
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Oracle.Patient.PersonID), CanBeNull=true)]
+		public Patient? Patient { get; set; }
 
 		#endregion
 	}
@@ -499,7 +507,7 @@ namespace Default.Oracle
 		/// <summary>
 		/// SYS_C007123_BackReference (MANAGED.t_test_user_contract)
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true)]
+		[Association(ThisKey=nameof(UserId), OtherKey=nameof(Default.Oracle.TTestUserContract.UserId), CanBeNull=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
 
 		#endregion
@@ -518,7 +526,7 @@ namespace Default.Oracle
 		/// <summary>
 		/// SYS_C007123 (MANAGED.t_test_user)
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false)]
+		[Association(ThisKey=nameof(UserId), OtherKey=nameof(Default.Oracle.TTestUser.UserId), CanBeNull=false)]
 		public TTestUser User { get; set; } = null!;
 
 		#endregion
@@ -537,16 +545,16 @@ namespace Default.Oracle
 
 		#region OUTREFENUMTEST
 
-		public static int OUTREFENUMTEST(this TestDataDB dataConnection, string? pSTR, out string? pOUTPUTSTR, ref string? pINPUTOUTPUTSTR)
+		public static int OUTREFENUMTEST(this TestDataDB dataConnection, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PSTR",            pSTR,            LinqToDB.DataType.NVarChar),
+				new DataParameter("PSTR",            pstr,            LinqToDB.DataType.NVarChar),
 				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar)
 				{
 					Direction = ParameterDirection.Output
 				},
-				new DataParameter("PINPUTOUTPUTSTR", pINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
+				new DataParameter("PINPUTOUTPUTSTR", pinputoutputstr, LinqToDB.DataType.NVarChar)
 				{
 					Direction = ParameterDirection.InputOutput
 				}
@@ -554,8 +562,8 @@ namespace Default.Oracle
 
 			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST", parameters);
 
-			pOUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
-			pINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[2].Value);
+			poutputstr      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			pinputoutputstr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
 
 			return ret;
 		}
@@ -564,30 +572,25 @@ namespace Default.Oracle
 
 		#region OUTREFTEST
 
-		public static int OUTREFTEST(this TestDataDB dataConnection, decimal? pID, out decimal? pOUTPUTID, ref decimal? pINPUTOUTPUTID, string? pSTR, out string? pOUTPUTSTR, ref string? pINPUTOUTPUTSTR)
+		public static int OUTREFTEST(this TestDataDB dataConnection, decimal? pid, out decimal? poutputid, ref decimal? pinputoutputid, string? pstr, out string? poutputstr, ref string? pinputoutputstr)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PID",             pID,             LinqToDB.DataType.Decimal)
+				new DataParameter("PID",             pid,             LinqToDB.DataType.Decimal, 22),
+				new DataParameter("POUTPUTID", null,       LinqToDB.DataType.Decimal, 22)
 				{
-					Size = 22
+					Direction = ParameterDirection.Output
 				},
-				new DataParameter("POUTPUTID", null,       LinqToDB.DataType.Decimal)
+				new DataParameter("PINPUTOUTPUTID",  pinputoutputid,  LinqToDB.DataType.Decimal, 22)
 				{
-					Direction = ParameterDirection.Output,
-					Size      = 22
+					Direction = ParameterDirection.InputOutput
 				},
-				new DataParameter("PINPUTOUTPUTID",  pINPUTOUTPUTID,  LinqToDB.DataType.Decimal)
-				{
-					Direction = ParameterDirection.InputOutput,
-					Size      = 22
-				},
-				new DataParameter("PSTR",            pSTR,            LinqToDB.DataType.NVarChar),
+				new DataParameter("PSTR",            pstr,            LinqToDB.DataType.NVarChar),
 				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar)
 				{
 					Direction = ParameterDirection.Output
 				},
-				new DataParameter("PINPUTOUTPUTSTR", pINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
+				new DataParameter("PINPUTOUTPUTSTR", pinputoutputstr, LinqToDB.DataType.NVarChar)
 				{
 					Direction = ParameterDirection.InputOutput
 				}
@@ -595,10 +598,10 @@ namespace Default.Oracle
 
 			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFTEST", parameters);
 
-			pOUTPUTID       = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
-			pINPUTOUTPUTID  = Converter.ChangeTypeTo<decimal?>(parameters[2].Value);
-			pOUTPUTSTR      = Converter.ChangeTypeTo<string?> (parameters[4].Value);
-			pINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?> (parameters[5].Value);
+			poutputid       = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+			pinputoutputid  = Converter.ChangeTypeTo<decimal?>(parameters[2].Value);
+			poutputstr      = Converter.ChangeTypeTo<string?> (parameters[4].Value);
+			pinputoutputstr = Converter.ChangeTypeTo<string?> (parameters[5].Value);
 
 			return ret;
 		}
@@ -607,14 +610,11 @@ namespace Default.Oracle
 
 		#region PersonDelete
 
-		public static int PersonDelete(this TestDataDB dataConnection, decimal? pPERSONID)
+		public static int PersonDelete(this TestDataDB dataConnection, decimal? ppersonid)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PPERSONID", pPERSONID, LinqToDB.DataType.Decimal)
-				{
-					Size = 22
-				}
+				new DataParameter("PPERSONID", ppersonid, LinqToDB.DataType.Decimal, 22)
 			};
 
 			return dataConnection.ExecuteProc("MANAGED.PERSON_DELETE", parameters);
@@ -624,18 +624,15 @@ namespace Default.Oracle
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TestDataDB dataConnection, decimal? pPERSONID, string? pFIRSTNAME, string? pLASTNAME, string? pMIDDLENAME, string? pGENDER)
+		public static int PersonUpdate(this TestDataDB dataConnection, decimal? ppersonid, string? pfirstname, string? plastname, string? pmiddlename, string? pgender)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PPERSONID",   pPERSONID,   LinqToDB.DataType.Decimal)
-				{
-					Size = 22
-				},
-				new DataParameter("PFIRSTNAME",  pFIRSTNAME,  LinqToDB.DataType.NVarChar),
-				new DataParameter("PLASTNAME",   pLASTNAME,   LinqToDB.DataType.NVarChar),
-				new DataParameter("PMIDDLENAME", pMIDDLENAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("PGENDER",     pGENDER,     LinqToDB.DataType.Char)
+				new DataParameter("PPERSONID",   ppersonid,   LinqToDB.DataType.Decimal, 22),
+				new DataParameter("PFIRSTNAME",  pfirstname,  LinqToDB.DataType.NVarChar),
+				new DataParameter("PLASTNAME",   plastname,   LinqToDB.DataType.NVarChar),
+				new DataParameter("PMIDDLENAME", pmiddlename, LinqToDB.DataType.NVarChar),
+				new DataParameter("PGENDER",     pgender,     LinqToDB.DataType.Char)
 			};
 
 			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE", parameters);
@@ -645,7 +642,7 @@ namespace Default.Oracle
 
 		#region RESULTSETTEST
 
-		public static IEnumerable<RESULTSETTESTResult> RESULTSETTEST(this TestDataDB dataConnection, out object? mR, out object? sR)
+		public static IEnumerable<RESULTSETTESTResult> RESULTSETTEST(this TestDataDB dataConnection, out object? mr, out object? sr)
 		{
 			var parameters = new []
 			{
@@ -661,8 +658,8 @@ namespace Default.Oracle
 
 			var ret = dataConnection.QueryProc<RESULTSETTESTResult>("MANAGED.RESULTSETTEST", parameters).ToList();
 
-			mR = Converter.ChangeTypeTo<object?>(parameters[0].Value);
-			sR = Converter.ChangeTypeTo<object?>(parameters[1].Value);
+			mr = Converter.ChangeTypeTo<object?>(parameters[0].Value);
+			sr = Converter.ChangeTypeTo<object?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -680,14 +677,10 @@ namespace Default.Oracle
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", i, LinqToDB.DataType.Decimal)
+				new DataParameter("I", i, LinqToDB.DataType.Decimal, 22),
+				new DataParameter("O", null, LinqToDB.DataType.Decimal, 22)
 				{
-					Size = 22
-				},
-				new DataParameter("O", null, LinqToDB.DataType.Decimal)
-				{
-					Direction = ParameterDirection.Output,
-					Size      = 22
+					Direction = ParameterDirection.Output
 				}
 			};
 
@@ -706,14 +699,10 @@ namespace Default.Oracle
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", i, LinqToDB.DataType.Decimal)
+				new DataParameter("I", i, LinqToDB.DataType.Decimal, 22),
+				new DataParameter("O", null, LinqToDB.DataType.Decimal, 22)
 				{
-					Size = 22
-				},
-				new DataParameter("O", null, LinqToDB.DataType.Decimal)
-				{
-					Direction = ParameterDirection.Output,
-					Size      = 22
+					Direction = ParameterDirection.Output
 				}
 			};
 
@@ -732,14 +721,10 @@ namespace Default.Oracle
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", i, LinqToDB.DataType.Decimal)
+				new DataParameter("I", i, LinqToDB.DataType.Decimal, 22),
+				new DataParameter("O", null, LinqToDB.DataType.Decimal, 22)
 				{
-					Size = 22
-				},
-				new DataParameter("O", null, LinqToDB.DataType.Decimal)
-				{
-					Direction = ParameterDirection.Output,
-					Size      = 22
+					Direction = ParameterDirection.Output
 				}
 			};
 
@@ -768,7 +753,7 @@ namespace Default.Oracle
 		#region PatientSelectbyname
 
 		[Sql.Function(Name="MANAGED.PATIENT_SELECTBYNAME", ServerSideOnly=true)]
-		public static object? PatientSelectbyname(string? pFIRSTNAME, string? pLASTNAME)
+		public static object? PatientSelectbyname(string? pfirstname, string? plastname)
 		{
 			throw new InvalidOperationException();
 		}
@@ -778,7 +763,7 @@ namespace Default.Oracle
 		#region PersonInsert
 
 		[Sql.Function(Name="MANAGED.PERSON_INSERT", ServerSideOnly=true)]
-		public static object? PersonInsert(string? pFIRSTNAME, string? pLASTNAME, string? pMIDDLENAME, string? pGENDER)
+		public static object? PersonInsert(string? pfirstname, string? plastname, string? pmiddlename, string? pgender)
 		{
 			throw new InvalidOperationException();
 		}
@@ -798,7 +783,7 @@ namespace Default.Oracle
 		#region PersonSelectallbygender
 
 		[Sql.Function(Name="MANAGED.PERSON_SELECTALLBYGENDER", ServerSideOnly=true)]
-		public static object? PersonSelectallbygender(string? pGENDER)
+		public static object? PersonSelectallbygender(string? pgender)
 		{
 			throw new InvalidOperationException();
 		}
@@ -808,7 +793,7 @@ namespace Default.Oracle
 		#region PersonSelectbykey
 
 		[Sql.Function(Name="MANAGED.PERSON_SELECTBYKEY", ServerSideOnly=true)]
-		public static object? PersonSelectbykey(decimal? pID)
+		public static object? PersonSelectbykey(decimal? pid)
 		{
 			throw new InvalidOperationException();
 		}
@@ -818,7 +803,7 @@ namespace Default.Oracle
 		#region PersonSelectbyname
 
 		[Sql.Function(Name="MANAGED.PERSON_SELECTBYNAME", ServerSideOnly=true)]
-		public static object? PersonSelectbyname(string? pFIRSTNAME, string? pLASTNAME)
+		public static object? PersonSelectbyname(string? pfirstname, string? plastname)
 		{
 			throw new InvalidOperationException();
 		}
@@ -828,7 +813,7 @@ namespace Default.Oracle
 		#region PersonSelectlistbyname
 
 		[Sql.Function(Name="MANAGED.PERSON_SELECTLISTBYNAME", ServerSideOnly=true)]
-		public static object? PersonSelectlistbyname(string? pFIRSTNAME, string? pLASTNAME)
+		public static object? PersonSelectlistbyname(string? pfirstname, string? plastname)
 		{
 			throw new InvalidOperationException();
 		}

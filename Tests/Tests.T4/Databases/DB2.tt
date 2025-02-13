@@ -1,22 +1,19 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
-<#@ output extension=".generated.cs"                                                         #>
-<#@ include file="..\Shared.ttinclude"                                       once="true"     #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.DB2.ttinclude" once="true"     #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                        #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"     #>
+<#@ output extension=".generated.cs"                                               #>
+<#@ include file="$(LinqToDBT4DB2TemplatesPath)LinqToDB.DB2.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                 once="true" #>
 <#
-	NamespaceName = "DB2DataContext";
-	DataContextName = "TESTDATADB";
+	NamespaceName        = "DB2DataContext";
+	DataContextName      = "TESTDATADB";
+	GenerateDataTypes    = true;
+	GenerateDbTypes      = true;
+//	GenerateNameOf       = false;
+	GenerateSchemaAsType = true;
 
-	GenerateDataTypes = true;
-	GenerateDbTypes   = true;
-
-	//GetSchemaOptions.ExcludedSchemas = new[] { "TestUser", "SYSSTAT" };
+	GetSchemaOptions.DefaultSchema = "DB2INST2";
+	GetSchemaOptions.IncludedSchemas = ["DB2INST1"];
 
 	LoadDB2Metadata(GetConnectionString("DB2"));
-
-	//GetProcedure("ADMINISTRATOR.PERSON_SELECTBYKEY").ResultTable = GetTable("ADMINISTRATOR.Person");
-
-	//GetColumn("ADMINISTRATOR.Person", "PersonID").MemberName = "122";
-	//GetFK    ("ADMINISTRATOR.Person", "ID1").MemberName = "122";
-
 	GenerateModel();
 #>

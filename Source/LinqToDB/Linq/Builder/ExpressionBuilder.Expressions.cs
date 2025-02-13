@@ -107,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSqlExpression(IBuildContext? context, Expression expression, BuildFlags buildFlags, string? alias = null)
 		{
-			var result = _buildVisitor.BuildExpression(context, expression, buildFlags, alias);
+			var result = _buildVisitor.BuildExpression(context, expression, BuildPurpose.Sql, buildFlags, alias);
 			return context != null ? UpdateNesting(context, result) : result;
 		}
 
@@ -115,6 +115,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			var result = _buildVisitor.BuildExpression(context, expression, BuildPurpose.Sql);
 			return context != null ? UpdateNesting(context, result) : result;
+		}
+
+		public Expression BuildExpression(IBuildContext? context, Expression expression, BuildFlags buildFlags, string? alias = null)
+		{
+			return _buildVisitor.BuildExpression(context, expression, buildFlags, alias);
 		}
 
 		public Expression BuildExpression(IBuildContext context, Expression expression)

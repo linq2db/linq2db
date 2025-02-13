@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "LinqToDB-SGen": {
-      "commandName": "DebugRoslynComponent",
-      "targetProject": "..\\LinqToDB\\LinqToDB.csproj"
-    }
-  }
-}

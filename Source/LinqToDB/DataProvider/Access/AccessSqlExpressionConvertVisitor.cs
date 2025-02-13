@@ -120,7 +120,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			if (SqlProviderFlags == null || element.SystemType == null)
+			if (element.SystemType == null)
 				return element;
 
 			if (element.Expressions.Length == 2)
@@ -200,7 +200,9 @@ namespace LinqToDB.DataProvider.Access
 
 			if (!string.IsNullOrEmpty(funcName))
 			{
-				return new SqlFunction(cast.SystemType, funcName, expression); 
+				var isNotNull = new SqlPredicate.IsNull(expression, true);
+				var funcCall = new SqlFunction(cast.Type, funcName, false, true, Precedence.Primary, nullabilityType : ParametersNullabilityType.NotNullable, canBeNull : false, expression);
+				return new SqlConditionExpression(isNotNull, funcCall, new SqlValue(cast.Type, null));
 			}
 
 			return expression;

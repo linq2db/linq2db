@@ -56,6 +56,11 @@ namespace LinqToDB.Linq.Builder
 				|| (expression is ContextRefExpression contextRef && contextRef.BuildContext == context);
 		}
 
+		public static ContextRefExpression CreateRef(IBuildContext buildContext)
+		{
+			return new ContextRefExpression(buildContext.ElementType, buildContext);
+		}
+
 		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? CorrectExpression(Expression? expression, IBuildContext current,
 			IBuildContext                                       underlying)
@@ -66,6 +71,11 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return expression;
+		}
+
+		public static bool HasContextRef(Expression expression)
+		{
+			return null != expression.Find(1, static (_, e) => e is ContextRefExpression);
 		}
 
 		public static Expression CorrectTrackingPath(ExpressionBuilder builder, Expression expression, Expression toPath)

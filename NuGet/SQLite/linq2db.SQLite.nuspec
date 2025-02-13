@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!-- %T4% -->
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata minClientVersion="3.3.0">
+		<id>linq2db.SQLite</id>
+		<title>LINQ to DB T4 Scaffold Templates for SQLite</title>
+		<tags>Sqlite</tags>
+	</metadata>
+	<files>
+		<file src="t4bin\System.Data.SQLite.dll" target="tools"     />
+		<file src="t4bin\x86\SQLite.Interop.dll" target="tools\x86" />
+		<file src="t4bin\x64\SQLite.Interop.dll" target="tools\x64" />
+	</files>
+</package>

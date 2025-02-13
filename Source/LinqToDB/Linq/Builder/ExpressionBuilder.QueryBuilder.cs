@@ -11,6 +11,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using LinqToDB.Expressions;
 	using SqlQuery;
+	using Reflection;
 
 	internal partial class ExpressionBuilder
 	{
@@ -84,6 +85,25 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return constructed;
+			}
+
+			protected override Expression VisitMethodCall(MethodCallExpression node)
+			{
+				var newNode = base.VisitMethodCall(node);
+				if (!ReferenceEquals(newNode, node))
+					return Visit(newNode);
+
+				if (_constructRun)
+				{
+					// remove translation helpers
+					if (node.IsSameGenericMethod(Methods.LinqToDB.ApplyModifierInternal) || node.IsSameGenericMethod(Methods.LinqToDB.DisableFilterInternal) ||
+					    node.IsSameGenericMethod(Methods.LinqToDB.LoadWithInternal))
+					{
+						return node.Arguments[0];
+					}
+				}
+
+				return node;
 			}
 
 			Expression TranslateExpression(Expression local)

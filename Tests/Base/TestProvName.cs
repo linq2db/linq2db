@@ -120,9 +120,14 @@ namespace Tests
 		public const string NorthwindMS                  = "SqlServer.Northwind.MS";
 		public const string AllNorthwind                 = $"{Northwind},{NorthwindMS}";
 
+		// Azure SQL database
 		public const string SqlAzure                     = "SqlServer.Azure";
 		public const string SqlAzureMS                   = "SqlServer.Azure.MS";
 		public const string AllSqlAzure                  = $"{SqlAzure},{SqlAzureMS}";
+		// Azure SQL managed instance
+		public const string SqlAzureMi                   = "SqlServer.Azure.MI";
+		public const string SqlAzureMiMS                 = "SqlServer.Azure.MI.MS";
+		public const string AllSqlAzureMi                = $"{SqlAzureMi},{SqlAzureMiMS}";
 
 		public const string SqlServer2005MS              = "SqlServer.2005.MS";
 		public const string SqlServer2008MS              = "SqlServer.2008.MS";
@@ -158,7 +163,7 @@ namespace Tests
 		public const string AllSqlServer2016Minus        = $"{AllSqlServer2014Minus},{AllSqlServer2016}";
 		public const string AllSqlServer2019Minus        = $"{AllSqlServer2016Minus},{AllSqlServer2017},{AllSqlServer2019}";
 		public const string AllSqlServer2022Minus        = $"{AllSqlServer2019Minus},{AllSqlServer2022}";
-		public const string AllSqlServer2022Plus         = $"{AllSqlServer2022},{AllSqlAzure}";
+		public const string AllSqlServer2022Plus         = $"{AllSqlServer2022},{AllSqlAzure},{AllSqlAzureMi}";
 		public const string AllSqlServer2019Plus         = $"{AllSqlServer2019},{AllSqlServer2022Plus}";
 		public const string AllSqlServer2017Plus         = $"{AllSqlServer2017},{AllSqlServer2019Plus}";
 		public const string AllSqlServer2016Plus         = $"{AllSqlServer2016},{AllSqlServer2017Plus}";
@@ -166,7 +171,7 @@ namespace Tests
 		public const string AllSqlServer2008Plus         = $"{AllSqlServer2008},{AllSqlServer2012Plus}";
 		public const string AllSqlServer2012PlusNoAzure  = $"{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019},{AllSqlServer2022}";
 		public const string AllSqlServerNoAzure          = $"{AllSqlServer2005},{AllSqlServer2008},{AllSqlServer2012PlusNoAzure}";
-		public const string AllSqlServer                 = $"{AllSqlServerNoAzure},{AllSqlAzure}";
+		public const string AllSqlServer                 = $"{AllSqlServerNoAzure},{AllSqlAzure},{AllSqlAzureMi}";
 		public const string AllSqlServerMS               = $"{SqlServer2005MS},{SqlServer2008MS},{SqlServer2012MS},{SqlServer2014MS},{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlServer2022MS},{SqlServerSequentialAccessMS},{SqlServerContainedMS},{SqlAzureMS}";
 		public const string AllSqlServer2016PlusMS       = $"{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlServer2022MS},{SqlServerSequentialAccessMS},{SqlServerContainedMS},{SqlAzureMS}";
 		#endregion
@@ -238,5 +243,11 @@ namespace Tests
 		public const string AllSapHana    = $"{ProviderName.SapHanaNative},{ProviderName.SapHanaOdbc}";
 		public const string AllInformix   = $"{ProviderName.Informix},{ProviderName.InformixDB2}";
 		public const string AllClickHouse = $"{ProviderName.ClickHouseClient},{ProviderName.ClickHouseOctonica},{ProviderName.ClickHouseMySql}";
+
+		#region By Feature
+
+		public const string WithApplyJoin = $"{AllFirebird4Plus},{AllMySql80},{AllOracle12Plus},{AllPostgreSQL93Plus},{AllSapHana},{ProviderName.SqlCe},{AllSqlServer}";
+
+		#endregion By Feature
 	}
 }

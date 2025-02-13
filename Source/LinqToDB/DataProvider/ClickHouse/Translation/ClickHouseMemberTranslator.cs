@@ -39,11 +39,11 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 					case Sql.DateParts.Month:       return factory.Function(intDataType, "toMonth", dateTimeExpression);
 					case Sql.DateParts.DayOfYear:   return factory.Function(intDataType, "toDayOfYear", dateTimeExpression);
 					case Sql.DateParts.Day:         return factory.Function(intDataType, "toDayOfMonth", dateTimeExpression);
-					case Sql.DateParts.Week:        return factory.Function(intDataType, "toISOWeek", factory.Function(longDataType, "toDateTime64", dateTimeExpression, factory.Value(intDataType, 1)));
+					case Sql.DateParts.Week:        return factory.Function(intDataType, "toISOWeek", factory.Function(longDataType, "toDateTime64", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(intDataType, 1)));
 					case Sql.DateParts.Hour:        return factory.Function(intDataType, "toHour", dateTimeExpression);
 					case Sql.DateParts.Minute:      return factory.Function(intDataType, "toMinute", dateTimeExpression);
 					case Sql.DateParts.Second:      return factory.Function(intDataType, "toSecond", dateTimeExpression);
-					case Sql.DateParts.WeekDay:     return factory.Function(intDataType, "toDayOfWeek", factory.Function(intDataType, "addDays", dateTimeExpression, factory.Value(intDataType, 1)));
+					case Sql.DateParts.WeekDay:     return factory.Function(intDataType, "toDayOfWeek", factory.Function(intDataType, "addDays", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(intDataType, 1)));
 					case Sql.DateParts.Millisecond: return factory.Mod(factory.Function(intDataType, "toUnixTimestamp64Milli", dateTimeExpression), 1000);
 					default:                        return null;
 				}
@@ -188,7 +188,7 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory     = translationContext.ExpressionFactory;
-				var nowFunction = factory.Function(factory.GetDbDataType(typeof(DateTime)), "now");
+				var nowFunction = factory.Function(factory.GetDbDataType(typeof(DateTime)), "now", ParametersNullabilityType.NotNullable);
 				return nowFunction;
 			}
 		}

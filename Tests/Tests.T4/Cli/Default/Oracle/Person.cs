@@ -23,13 +23,13 @@ namespace Cli.Default.Oracle
 
 		#region Associations
 		/// <summary>
-		/// Fk_Doctor_Person backreference
+		/// FK_Doctor_Person backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Oracle.Doctor.PersonId))]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// Fk_Patient_Person backreference
+		/// FK_Patient_Person backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Oracle.Patient.PersonId))]
 		public Patient? Patient { get; set; }

@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.Scaffold</AssemblyName>
+		<RootNamespace>LinqToDB</RootNamespace>
+
+		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+
+		<!--published targets-->
+		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0;net9.0</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+
+		<PackageReference Include="Humanizer.Core" />
+
+		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
+		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
+	</ItemGroup>
+
+</Project>

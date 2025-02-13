@@ -93,7 +93,12 @@ namespace LinqToDB.DataProvider.Access
 				// ODBC provider cannot handle this literal as:
 				// https://ftp.zx.net.nz/pub/archive/ftp.microsoft.com/MISC/KB/en-us/170/117.HTM
 				// Because ODBC defines the curly brace as an escape code for vendor specific escape clauses, you must turn off escape clause scanning when you use literal GUIDs in SQL statements with the Microsoft Access ODBC driver. Note that this functionality is not supported in the Microsoft Access ODBC driver that ships with MDAC 2.1 or later.
+#if NETFRAMEWORK
+				// NETFX format parser fails to digest format string (even v4.8)
+				SetValueToSqlConverter(typeof(Guid), (sb, _, _, v) => sb.Append('{').Append(CultureInfo.InvariantCulture, $"guid {(Guid)v:B}").Append('}'));
+#else
 				SetValueToSqlConverter(typeof(Guid), (sb, _, _, v) => sb.Append(CultureInfo.InvariantCulture, $"{{guid {(Guid)v:B}}}"));
+#endif
 			}
 		}
 

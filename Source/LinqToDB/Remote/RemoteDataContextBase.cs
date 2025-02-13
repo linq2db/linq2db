@@ -27,7 +27,7 @@ namespace LinqToDB.Remote
 	using SqlProvider;
 
 	[PublicAPI]
-	public abstract partial class RemoteDataContextBase : IDataContext, 
+	public abstract partial class RemoteDataContextBase : IDataContext,
 		IInfrastructure<IServiceProvider>
 	{
 		protected RemoteDataContextBase(DataOptions options)
@@ -35,13 +35,6 @@ namespace LinqToDB.Remote
 			Options = options;
 
 			options.Apply(this);
-		}
-
-		[Obsolete("Use ConfigurationString instead.")]
-		public string? Configuration
-		{
-			get => ConfigurationString;
-			set => ConfigurationString = value;
 		}
 
 		public string?          ConfigurationString { get; set; }
@@ -95,7 +88,7 @@ namespace LinqToDB.Remote
 					static entry =>
 					{
 						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return new RemoteMappingSchema(entry.Key.contextIDPrefix, (MappingSchema)Activator.CreateInstance(entry.Key.mappingSchemaType)!);
+						return new RemoteMappingSchema(entry.Key.contextIDPrefix, ActivatorExt.CreateInstance<MappingSchema>(entry.Key.mappingSchemaType));
 					});
 			}
 
@@ -118,7 +111,7 @@ namespace LinqToDB.Remote
 					static entry =>
 					{
 						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return new RemoteMemberTranslator((IMemberTranslator)Activator.CreateInstance(entry.Key)!);
+						return new RemoteMemberTranslator(ActivatorExt.CreateInstance<IMemberTranslator>(entry.Key));
 					});
 			}
 
@@ -149,10 +142,10 @@ namespace LinqToDB.Remote
 					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
 					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
-					_configurationInfo = new ConfigurationInfo
+					_configurationInfo = new ConfigurationInfo()
 					{
-						LinqServiceInfo = info,
-						MappingSchema   = ms,
+						LinqServiceInfo  = info,
+						MappingSchema    = ms,
 						MemberTranslator = translator,
 					};
 				}

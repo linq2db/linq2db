@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
@@ -9,10 +10,10 @@ namespace LinqToDB.Reflection
 {
 	using Common;
 	using Expressions;
+	using Expressions.Internal;
 	using Extensions;
 	using Linq;
-	using Expressions.Internal;
-
+	using LinqToDB.DataProvider.SqlServer;
 	using SqlQuery;
 
 	/// <summary>
@@ -133,7 +134,9 @@ namespace LinqToDB.Reflection
 
 			public static readonly MethodInfo LoadWithAsTable       = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.LoadWithAsTable(e => e.Single2));
 
-			internal static readonly MethodInfo LoadWithInternal    = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWithInternal(null!, null));
+			internal static readonly MethodInfo LoadWithInternal      = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWithInternal(null!, null));
+			internal static readonly MethodInfo DisableFilterInternal = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.DisableFilterInternal());
+			internal static readonly MethodInfo ApplyModifierInternal = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.ApplyModifierInternal(null!));
 
 			public static readonly MethodInfo LoadWith              = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Single2));
 			public static readonly MethodInfo LoadWithSingleFilter  = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Single2, eq => eq.Where(e => e.Value2 == 1)));
@@ -150,10 +153,10 @@ namespace LinqToDB.Reflection
 			public static readonly MethodInfo ElementAtLambda = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.ElementAt(() => 1));
 			public static readonly MethodInfo SkipLambda      = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.Skip(() => 1));
 
-			public static readonly MethodInfo RemoveOrderBy       = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.RemoveOrderBy());
-			public static readonly MethodInfo IgnoreFilters       = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreFilters());
-			public static readonly MethodInfo DisableGuard        = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.DisableGuard());
-			public static readonly MethodInfo InlineParameters    = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.InlineParameters());
+			public static readonly MethodInfo RemoveOrderBy         = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.RemoveOrderBy());
+			public static readonly MethodInfo IgnoreFilters         = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreFilters());
+			public static readonly MethodInfo DisableGuard          = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.DisableGuard());
+			public static readonly MethodInfo InlineParameters      = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.InlineParameters());
 
 			public static readonly MethodInfo Select              = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.Select(() => 1));
 
@@ -206,9 +209,11 @@ namespace LinqToDB.Reflection
 				public static readonly MethodInfo UpdateSetterAsync           = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, Expression<Func<LW1, LW1>> s) => q.UpdateAsync(s, default));
 				public static readonly MethodInfo UpdatePredicateSetter       = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, Expression<Func<LW1, bool>> p, Expression<Func<LW1, LW1>> s) => q.Update(p, s));
 				public static readonly MethodInfo UpdatePredicateSetterAsync  = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, Expression<Func<LW1, bool>> p, Expression<Func<LW1, LW1>> s) => q.UpdateAsync(p, s, default));
-				[Obsolete("Remove in V7")]
+				// TODO: Remove in v7
+				[Obsolete("Use overload with lambda argument for target parameter. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 				public static readonly MethodInfo UpdateTarget                = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, ITable<LW2> t, Expression<Func<LW1, LW2>> s) => q.Update(t, s));
-				[Obsolete("Remove in V7")]
+				// TODO: Remove in v7
+				[Obsolete("Use overload with lambda argument for target parameter. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 				public static readonly MethodInfo UpdateTargetAsync           = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, ITable<LW2> t, Expression<Func<LW1, LW2>> s) => q.UpdateAsync(t, s, default));
 				public static readonly MethodInfo UpdateTargetFuncSetter      = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, Expression<Func<LW1, LW2>> t, Expression<Func<LW1, LW2>> s) => q.Update(t, s));
 				public static readonly MethodInfo UpdateTargetFuncSetterAsync = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, Expression<Func<LW1, LW2>> t, Expression<Func<LW1, LW2>> s) => q.UpdateAsync(t, s, default));
@@ -226,7 +231,7 @@ namespace LinqToDB.Reflection
 
 			public static class Insert
 			{
-				public static class Q
+				public static class FromQuery
 				{
 					public static readonly MethodInfo Into        = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, ITable<LW2> t) => q.Into(t));
 
@@ -243,7 +248,7 @@ namespace LinqToDB.Reflection
 					public static readonly MethodInfo InsertWithDecimalIdentityAsync = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, ITable<LW2> t, Expression<Func<LW1, LW2>> s) => q.InsertWithDecimalIdentityAsync(t, s, default));
 				}
 
-				public static class DC
+				public static class FromDataContext
 				{
 					public static readonly MethodInfo Into        = MemberHelper.MethodOfGeneric((IDataContext dc, ITable<LW1> t) => dc.Into(t));
 
@@ -251,7 +256,7 @@ namespace LinqToDB.Reflection
 					public static readonly MethodInfo InsertAsync = MemberHelper.MethodOfGeneric((IDataContext dc, LW1 o) => dc.InsertAsync(o, "tn", "db", "sch", "srv", TableOptions.NotSet, default));
 				}
 
-				public static class T
+				public static class FromTable
 				{
 					public static readonly MethodInfo AsValueInsertable = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.AsValueInsertable());
 
@@ -271,7 +276,7 @@ namespace LinqToDB.Reflection
 					public static readonly MethodInfo InsertWithDecimalIdentityAsync = MemberHelper.MethodOfGeneric((ITable<LW1> t, Expression<Func<LW1>> s) => t.InsertWithDecimalIdentityAsync(s, default));
 				}
 
-				public static class VI
+				public static class FromValueInsertable
 				{
 					public static readonly MethodInfo Value           = MemberHelper.MethodOfGeneric<IValueInsertable<LW1>>(q => q.Value(e => e.Value1, 1));
 					public static readonly MethodInfo ValueExpression = MemberHelper.MethodOfGeneric<IValueInsertable<LW1>>(q => q.Value(e => e.Value1, () => 1));
@@ -289,7 +294,7 @@ namespace LinqToDB.Reflection
 					public static readonly MethodInfo InsertWithDecimalIdentityAsync = MemberHelper.MethodOfGeneric<IValueInsertable<LW1>>(i => i.InsertWithDecimalIdentityAsync(default));
 				}
 
-				public static class SI
+				public static class FromSelectInsertable
 				{
 					public static readonly MethodInfo Value                 = MemberHelper.MethodOfGeneric<ISelectInsertable<LW1, LW2>>(q => q.Value(e => e.Value2, 1));
 					public static readonly MethodInfo ValueExpression       = MemberHelper.MethodOfGeneric<ISelectInsertable<LW1, LW2>>(q => q.Value(e => e.Value2, () => 1));
@@ -384,6 +389,11 @@ namespace LinqToDB.Reflection
 				public static readonly ConstructorInfo SqlParameterConstructor = MemberHelper.ConstructorOf(() => new SqlParameter(default(DbDataType), default(string), null));
 				public static readonly ConstructorInfo SqlValueConstructor     = MemberHelper.ConstructorOf(() => new SqlValue    (default(DbDataType), null));
 			}
+		}
+
+		internal class SqlServer
+		{
+			public static readonly MethodInfo ConvertStringToSql = typeof(SqlServerMappingSchema).GetMethod(nameof(SqlServerMappingSchema.ConvertStringToSql), BindingFlags.Static | BindingFlags.NonPublic)!;
 		}
 
 		#region Method definition helper classes

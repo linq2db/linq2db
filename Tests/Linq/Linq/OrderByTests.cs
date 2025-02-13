@@ -461,6 +461,33 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void OrderByAndGroupByConstant([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+
+				var qry =
+					from ch in db.Child
+					orderby ch.ChildID
+					select ch;
+
+				var query =
+					from ch in qry
+					group ch by 1 into g
+					select new
+					{
+						Count = g.Count(),
+						Expr  = 1 + g.Min(c => c.ChildID),
+						Max   = g.Max(c => c.ChildID),
+					};
+
+				query = query.Take(1);
+
+				AssertQuery(query);
+			}
+		}
+
+		[Test]
 		public void Min1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

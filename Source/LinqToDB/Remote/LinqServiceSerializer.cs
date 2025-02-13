@@ -11,6 +11,7 @@ using System.Text;
 namespace LinqToDB.Remote
 {
 	using Common;
+	using Common.Internal;
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
@@ -584,7 +585,7 @@ namespace LinqToDB.Remote
 					{
 						if (!_arrayDeserializers.TryGetValue(elem, out deserializer))
 						{
-							var helper = (IDeserializerHelper)Activator.CreateInstance(typeof(DeserializerHelper<>).MakeGenericType(elem))!;
+							var helper = ActivatorExt.CreateInstance<IDeserializerHelper>(typeof(DeserializerHelper<>).MakeGenericType(elem));
 							_arrayDeserializers.Add(elem, deserializer = helper.GetArray);
 						}
 					}
@@ -3092,7 +3093,7 @@ namespace LinqToDB.Remote
 			{
 				if (!_arrayTypes.TryGetValue(elementType, out arrayType))
 				{
-					var helper = (IArrayHelper)Activator.CreateInstance(typeof(ArrayHelper<>).MakeGenericType(elementType))!;
+					var helper = ActivatorExt.CreateInstance<IArrayHelper>(typeof(ArrayHelper<>).MakeGenericType(elementType));
 					_arrayTypes.Add(elementType, arrayType = helper.GetArrayType());
 				}
 			}
@@ -3108,7 +3109,7 @@ namespace LinqToDB.Remote
 			{
 				if (!_arrayConverters.TryGetValue(elementType, out converter))
 				{
-					var helper = (IArrayHelper)Activator.CreateInstance(typeof(ArrayHelper<>).MakeGenericType(elementType))!;
+					var helper = ActivatorExt.CreateInstance<IArrayHelper>(typeof(ArrayHelper<>).MakeGenericType(elementType));
 					_arrayConverters.Add(elementType, converter = helper.ConvertToArray);
 				}
 			}

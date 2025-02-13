@@ -228,10 +228,18 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.NotPredicate:
 				{
 					var notPredicate = (SqlPredicate.Not)expr;
-					if (notPredicate.Predicate.TryEvaluateExpression(forServer, context, out var value) && value is bool boolValue)
+					if (notPredicate.Predicate.TryEvaluateExpression(forServer, context, out var value))
 					{
-						result = !boolValue;
-						return true;
+						if (value is bool boolValue)
+						{
+							result = !boolValue;
+							return true;
+						}
+						if (value is null)
+						{
+							result = null;
+							return true;
+						}
 					}
 
 					return false;
@@ -257,10 +265,7 @@ namespace LinqToDB.SqlQuery
 
 					if (value == null)
 					{
-						if (isTruePredicate.WithNull != null)
-							result = isTruePredicate.WithNull;
-						else
-							result = false;
+						result = null;
 						return true;
 					}
 
@@ -433,8 +438,10 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
-				case QueryElementType.SearchCondition    :
+				case QueryElementType.SearchCondition:
 				{
+					// SQL condition evaluation logic notes:
+					// - if any predicate evaluated to UNKNOWN - condition is UNKNOWN
 					var cond = (SqlSearchCondition)expr;
 
 					if (cond.Predicates.Count == 0)
@@ -443,34 +450,70 @@ namespace LinqToDB.SqlQuery
 						return true;
 					}
 
+					bool? evaluatedValue = cond.IsAnd; // evaluated condition value without non-evaluated predicates
+					var evaluatedCount   = 0; // to track if we have non-evaluated predicates
+					var canBeUnknown     = false; // at least one non-evaluated predicate could be UNKNOWN
+
 					for (var i = 0; i < cond.Predicates.Count; i++)
 					{
 						var predicate = cond.Predicates[i];
 						if (predicate.TryEvaluateExpression(forServer, context, out var evaluated))
 						{
+							evaluatedCount++;
+
 							if (evaluated is bool boolValue)
 							{
-								if (boolValue)
+								// don't change evaluatedValue if it is null - UNKNOWN cannot be changed
+								if (cond.IsOr && boolValue && evaluatedValue == false)
 								{
-									if (cond.IsOr)
-									{
-										result = true;
-										return true;
-									}
+									evaluatedValue = true;
 								}
-								else
+
+								if (cond.IsAnd && !boolValue && evaluatedValue == true)
 								{
-									if (!cond.IsOr)
-									{
-										result = false;
-										return true;
-									}
+									evaluatedValue = false;
 								}
+							}
+							else if (evaluated is null)
+							{
+								evaluatedValue = null;
+								break;
+							}
+							else
+							{
+								// shouldn't be reachable?
+								return false;
+							}
+						}
+						else
+						{
+
+							if (predicate.CanBeUnknown(NullabilityContext.NonQuery))
+							{
+								canBeUnknown = true;
 							}
 						}
 					}
 
-					return false;
+					if (evaluatedCount == 0)
+						return false;
+
+					// condition evaluated partially to non-UNKNOWN value
+					if (evaluatedCount < cond.Predicates.Count && evaluatedValue != null)
+					{
+						// remaining predicates could return UNKNOWN
+						if (canBeUnknown)
+							return false;
+
+						// condition result depends on remaining predicates evaluation
+						if (cond.IsOr && evaluatedValue == false)
+							return false;
+						if (cond.IsAnd && evaluatedValue == true)
+							return false;
+					}
+
+					result = evaluatedValue;
+					return true;
 				}
 
 				case QueryElementType.SqlCase:

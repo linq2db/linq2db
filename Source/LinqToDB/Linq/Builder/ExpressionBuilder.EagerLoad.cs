@@ -232,7 +232,8 @@ namespace LinqToDB.Linq.Builder
 			List<Preamble>         preambles,
 			Expression[]           previousKeys)
 		{
-			var cloningContext       = new CloningContext();
+			var cloningContext = new CloningContext();
+			cloningContext.CloneElements(buildContext.Builder.GetCteClauses());
 
 			var itemType = eagerLoad.Type.GetItemType();
 
@@ -279,9 +280,9 @@ namespace LinqToDB.Linq.Builder
 
 				var parameters = new object[] { detailSequence, queryParameter, preambles };
 
-				resultExpression = (Expression)_buildPreambleQueryDetachedMethodInfo
+				resultExpression = _buildPreambleQueryDetachedMethodInfo
 					.MakeGenericMethod(detailType)
-					.Invoke(this, parameters)!;
+					.InvokeExt<Expression>(this, parameters);
 			}
 			else
 			{
@@ -325,8 +326,9 @@ namespace LinqToDB.Linq.Builder
 
 				var detailSelectorBody = correctedSequence;
 
-				var detailSelector = (LambdaExpression)_buildSelectManyDetailSelectorInfo
-					.MakeGenericMethod(mainType, detailType).Invoke(null, new object[] { detailSelectorBody, mainParameter })!;
+				var detailSelector = _buildSelectManyDetailSelectorInfo
+					.MakeGenericMethod(mainType, detailType)
+					.InvokeExt<LambdaExpression>(null, new object[] { detailSelectorBody, mainParameter });
 
 				var selectManyCall =
 					Expression.Call(
@@ -343,9 +345,9 @@ namespace LinqToDB.Linq.Builder
 
 				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, preambles, orderByToApply, detailKeys };
 
-				resultExpression = (Expression)_buildPreambleQueryAttachedMethodInfo
+				resultExpression = _buildPreambleQueryAttachedMethodInfo
 					.MakeGenericMethod(mainKeyExpression.Type, detailType)
-					.Invoke(this, parameters)!;
+					.InvokeExt<Expression>(this, parameters);
 
 				_buildVisitor = saveVisitor;
 			}
@@ -470,7 +472,7 @@ namespace LinqToDB.Linq.Builder
 					eagerLoadingCache ??= new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 					if (!eagerLoadingCache.TryGetValue(eagerLoad.SequenceExpression, out var preambleExpression))
 					{
-						preamblesLocal     ??= new List<Preamble>();
+						preamblesLocal ??= [];
 
 						preambleExpression = ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
 						eagerLoadingCache.Add(eagerLoad.SequenceExpression, preambleExpression);

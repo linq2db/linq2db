@@ -21,13 +21,14 @@ namespace LinqToDB.Linq.Builder
 				var genericArguments = methodCall.Method.GetGenericArguments();
 
 				var cloningContext      = new CloningContext();
+				cloningContext.CloneElements(builder.GetCteClauses());
 				var clonedTargetContext = cloningContext.CloneContext(mergeContext.TargetContext);
 
 				var targetContextRef = new ContextRefExpression(genericArguments[0], mergeContext.TargetContext, "target");
 				var sourceContextRef = new ContextRefExpression(genericArguments[0], clonedTargetContext, "source");
 
-				var source                = new TableLikeQueryContext(targetContextRef, sourceContextRef);
-				mergeContext.Sequences    = new IBuildContext[] { mergeContext.Sequence, source };
+				var source                = new TableLikeQueryContext(builder.GetTranslationModifier(), targetContextRef, sourceContextRef);
+				mergeContext.Sequences    = [mergeContext.Sequence, source];
 				mergeContext.Merge.Source = source.Source;
 
 				return BuildSequenceResult.FromContext(mergeContext);

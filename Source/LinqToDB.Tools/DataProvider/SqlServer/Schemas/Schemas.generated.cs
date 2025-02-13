@@ -20,7 +20,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 	/// <summary>
 	/// Database       : master
 	/// Data Source    : .
-	/// Server Version : 15.00.2101
+	/// Server Version : 16.00.1115
 	/// </summary>
 	public partial class SystemDB : LinqToDB.Data.DataConnection
 	{
@@ -976,7 +976,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("description"),        NotNull] public string   Description      { get; set; } = null!; // nvarchar(max)
 			/// <summary>
-			/// *Note: This value is always NULL for Azure SQL Database V12. <br/><br/> For <strong>Deadlock</strong> events, this column contains the deadlock graph. This column is NULL for other event types.
+			/// *Note: This value is always NULL for Azure SQL Database V12. See [examples](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-event-log-azure-sql-database?view=azuresqldb-current#examples) section for how to retrieve deadlock events for V12.*<br/><br/> For <strong>Deadlock</strong> events, this column contains the deadlock graph. This column is NULL for other event types.
 			/// </summary>
 			[Column("additional_data"),    NotNull] public object   AdditionalData   { get; set; } = null!; // XML
 		}
@@ -1478,7 +1478,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -1596,7 +1596,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("distribution_id"), NotNull] public int    DistributionID { get; set; } // int
 			/// <summary>
 			/// ID of the node this distribution is on.<br/>
-			/// Range: See pdw_node_id in [sys.dm_pdw_nodes (Transact-SQL)](https://docs.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql).
+			/// Range: See pdw_node_id in [sys.dm_pdw_nodes (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql?view=aps-pdw-2016-au7).
 			/// </summary>
 			[Column("pdw_node_id"),     NotNull] public int    PdwNodeID      { get; set; } // int
 			/// <summary>
@@ -1813,7 +1813,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -1877,12 +1877,12 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("Principal_id"),       NotNull] public int      PrincipalID      { get; set; } // int
 			/// <summary>
 			/// ID of the session performing the operation.<br/>
-			/// Range: See session_id in [sys.dm_pdw_exec_sessions (Transact-SQL)](https://docs.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-sessions-transact-sql).
+			/// Range: See session_id in [sys.dm_pdw_exec_sessions (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-sessions-transact-sql?view=aps-pdw-2016-au7).
 			/// </summary>
 			[Column("session_id"),         NotNull] public string   SessionID        { get; set; } = null!; // nvarchar(32)
 			/// <summary>
 			/// ID of the request performing the operation. For loads, this is the current or last request associated with this load..<br/>
-			/// Range: See request_id in [sys.dm_pdw_exec_requests (Transact-SQL)](https://docs.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-requests-transact-sql).
+			/// Range: See request_id in [sys.dm_pdw_exec_requests (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-requests-transact-sql?view=aps-pdw-2016-au7).
 			/// </summary>
 			[Column("request_id"),         NotNull] public string   RequestID        { get; set; } = null!; // nvarchar(32)
 			/// <summary>
@@ -1929,7 +1929,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("run_id"),             NotNull] public int      RunID            { get; set; } // int
 			/// <summary>
 			/// Unique identifier of an appliance node for which this record holds details.<br/><br/> run_id and pdw_node_id form the key for this view.<br/>
-			/// Range: See node_id in [sys.dm_pdw_nodes (Transact-SQL)](https://docs.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql).
+			/// Range: See node_id in [sys.dm_pdw_nodes (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql?view=aps-pdw-2016-au7).
 			/// </summary>
 			[Column("pdw_node_id"),        NotNull] public int      PdwNodeID        { get; set; } // int
 			/// <summary>
@@ -2026,7 +2026,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2059,7 +2059,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2080,7 +2080,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("physical_name"), NotNull] public string PhysicalName { get; set; } = null!; // nvarchar(36)
 			/// <summary>
-			/// The object ID for the materialized view. See [sys.objects (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql?view=sql-server-ver16?view=azure-sqldw-latest&amp;preserve-view=true).
+			/// The object ID for the materialized view. See [sys.objects (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql?view=sql-server-ver16).
 			/// </summary>
 			[Column("object_id"),     NotNull] public int    ObjectID     { get; set; } // int
 
@@ -2089,7 +2089,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2231,7 +2231,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2351,7 +2351,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2539,7 +2539,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2596,7 +2596,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2766,7 +2766,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2798,7 +2798,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2828,7 +2828,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2862,7 +2862,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -2891,7 +2891,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -3055,7 +3055,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -3619,7 +3619,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Logical name of the file.
 			/// </summary>
-			[Column("name"),     NotNull    ] public string  Name     { get; set; } = null!; // sysname
+			[Column("name"),        Nullable] public string? Name     { get; set; } // sysname
 			/// <summary>
 			/// Name of the physical device. This includes the full path of the file.
 			/// </summary>
@@ -4072,7 +4072,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Database name
 			/// </summary>
-			[Column("name"),         Nullable] public string?   Name               { get; set; } // sysname
+			[Column("name"),      NotNull    ] public string    Name               { get; set; } = null!; // sysname
 			/// <summary>
 			/// Database ID
 			/// </summary>
@@ -6665,7 +6665,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Name of database, unique within an instance of SQL Server or within a Azure SQL Database server.
 			/// </summary>
-			[Column("name"),                                          Nullable] public string?  Name                                 { get; set; } // sysname
+			[Column("name"),                                       NotNull    ] public string   Name                                 { get; set; } = null!; // sysname
 			/// <summary>
 			/// ID of the database, unique within an instance of SQL Server or within a Azure SQL Database server.
 			/// </summary>
@@ -7009,7 +7009,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Indicates a <a href='https://docs.microsoft.com/en-us/azure/azure-sql/database/ledger-overview#ledger-database'>ledger database</a>, which is a database in which all user tables are ledger tables (all customer database is tamper-evident).<br/><br/><strong>Applies to</strong>: Azure SQL Database
 			/// </summary>
-			[Column("is_ledger_on"),                               NotNull    ] public bool     IsLedgerOn                           { get; set; } // bit
+			[Column("is_ledger_on"),                                  Nullable] public bool?    IsLedgerOn                           { get; set; } // bit
 		}
 
 		/// <summary>
@@ -7110,7 +7110,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Logical name of the file in the database.
 			/// </summary>
-			[Column("name"),                   NotNull    ] public string    Name                 { get; set; } = null!; // sysname
+			[Column("name"),                      Nullable] public string?   Name                 { get; set; } // sysname
 			/// <summary>
 			/// Operating-system file name. If the database is hosted by an AlwaysOn <a href='https://docs.microsoft.com/en-us/sql/database-engine/availability-groups/windows/active-secondaries-readable-secondary-replicas-always-on-availability-groups'>readable secondary replica</a>, <strong>physical_name</strong> indicates the file location of the primary replica database. For the correct file location of a readable secondary database, query <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-sysaltfiles-transact-sql'>sys.sysaltfiles</a>.
 			/// </summary>
@@ -7414,7 +7414,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Logical name of the file in the database.
 			/// </summary>
-			[Column("name"),                   NotNull    ] public string    Name                 { get; set; } = null!; // sysname
+			[Column("name"),                      Nullable] public string?   Name                 { get; set; } // sysname
 			/// <summary>
 			/// Operating-system file name.
 			/// </summary>
@@ -8952,7 +8952,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -9148,7 +9148,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -9451,7 +9451,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -9558,7 +9558,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -9589,7 +9589,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -9868,7 +9868,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -9901,7 +9901,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -9942,7 +9942,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -12408,7 +12408,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// 1 = Column is a computed column.
 			/// </summary>
-			[Column("is_computed"),                  NotNull    ] public bool    IsComputed               { get; set; } // bit
+			[Column("is_computed"),                     Nullable] public bool?   IsComputed               { get; set; } // bit
 			/// <summary>
 			/// 1 = Column is declared to use filestream storage.
 			/// </summary>
@@ -12464,18 +12464,18 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// <strong>Applies to</strong>: SQL Database.<br/><br/> If not NULL, indicates the type of a column in a ledger view:<br/><br/> 1 = TRANSACTION_ID<br/> 2 = SEQUENCE_NUMBER<br/> 3 = OPERATION_TYPE<br/> 4 = OPERATION_TYPE_DESC<br/><br/>For more information on database ledger, see <a href='https://docs.microsoft.com/en-us/azure/azure-sql/database/ledger-overview'>Azure SQL Database ledger</a>.
 			/// </summary>
-			[Column("ledger_view_column_type"),      NotNull    ] public byte    LedgerViewColumnType     { get; set; } // tinyint
+			[Column("ledger_view_column_type"),         Nullable] public byte?   LedgerViewColumnType     { get; set; } // tinyint
 			/// <summary>
 			/// <strong>Applies to</strong>: SQL Database.<br/><br/> If not NULL, contains a textual description of the the type of a column in a ledger view:<br/><br/> TRANSACTION_ID<br/> SEQUENCE_NUMBER<br/> OPERATION_TYPE<br/> OPERATION_TYPE_DESC
 			/// </summary>
-			[Column("ledger_view_column_type_desc"), NotNull    ] public string  LedgerViewColumnTypeDesc { get; set; } = null!; // nvarchar(60)
+			[Column("ledger_view_column_type_desc"),    Nullable] public string? LedgerViewColumnTypeDesc { get; set; } // nvarchar(60)
 
 			#region Associations
 
 			/// <summary>
 			/// all_objects (sys.all_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.AllObject AllObject { get; set; } = null!;
 
 			#endregion
@@ -12544,25 +12544,25 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// all_columns (sys.all_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.AllColumn> AllColumns { get; set; } = null!;
 
 			/// <summary>
 			/// all_parameters (sys.all_parameters)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.AllParameter> AllParameters { get; set; } = null!;
 
 			/// <summary>
 			/// all_sql_modules (sys.all_sql_modules)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.AllSqlModule> AllSqlModules { get; set; } = null!;
 
 			/// <summary>
 			/// all_views (sys.all_views)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.AllView? AllView { get; set; }
 
 			#endregion
@@ -12710,7 +12710,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// all_objects (sys.all_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.AllObject AllObject { get; set; } = null!;
 
 			#endregion
@@ -12772,7 +12772,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// all_objects (sys.all_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.AllObject AllObject { get; set; } = null!;
 
 			#endregion
@@ -12865,7 +12865,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// all_objects (sys.all_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.AllObject AllObject { get; set; } = null!;
 
 			#endregion
@@ -12910,7 +12910,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13007,7 +13007,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13084,7 +13084,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// 1 = Column is a computed column.
 			/// </summary>
-			[Column("is_computed"),                         NotNull    ] public bool    IsComputed                      { get; set; } // bit
+			[Column("is_computed"),                            Nullable] public bool?   IsComputed                      { get; set; } // bit
 			/// <summary>
 			/// 1 = Column is a FILESTREAM column.
 			/// </summary>
@@ -13176,22 +13176,22 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// <strong>Applies to</strong>: Azure SQL Database Edge. Indicates if the column is the data retention filter column for the table.
 			/// </summary>
-			[Column("is_data_deletion_filter_column"),      NotNull    ] public bool    IsDataDeletionFilterColumn      { get; set; } // bit
+			[Column("is_data_deletion_filter_column"),         Nullable] public bool?   IsDataDeletionFilterColumn      { get; set; } // bit
 			/// <summary>
 			/// <strong>Applies to</strong>: SQL Database.<br/><br/> If not NULL, indicates the type of a column in a ledger view:<br/><br/> 1 = TRANSACTION_ID<br/> 2 = SEQUENCE_NUMBER<br/> 3 = OPERATION_TYPE<br/> 4 = OPERATION_TYPE_DESC<br/><br/>For more information on database ledger, see <a href='https://docs.microsoft.com/en-us/azure/azure-sql/database/ledger-overview'>Azure SQL Database ledger</a>.
 			/// </summary>
-			[Column("ledger_view_column_type"),             NotNull    ] public byte    LedgerViewColumnType            { get; set; } // tinyint
+			[Column("ledger_view_column_type"),                Nullable] public byte?   LedgerViewColumnType            { get; set; } // tinyint
 			/// <summary>
 			/// <strong>Applies to</strong>: SQL Database.<br/><br/> If not NULL, contains a textual description of the the type of a column in a ledger view:<br/><br/> TRANSACTION_ID<br/> SEQUENCE_NUMBER<br/> OPERATION_TYPE<br/> OPERATION_TYPE_DESC
 			/// </summary>
-			[Column("ledger_view_column_type_desc"),        NotNull    ] public string  LedgerViewColumnTypeDesc        { get; set; } = null!; // nvarchar(60)
+			[Column("ledger_view_column_type_desc"),           Nullable] public string? LedgerViewColumnTypeDesc        { get; set; } // nvarchar(60)
 
 			#region Associations
 
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13223,7 +13223,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("version"),       Nullable] public int?  Version      { get; set; } // int
 			/// <summary>
-			/// Dictionary type:<br/><br/> 1 - Hash dictionary containing <strong>int</strong> values<br/><br/> 2 - Not used<br/><br/> 3 - Hash dictionary containing string values<br/><br/> 4 - Hash dictionary containing <strong>float</strong> values<br/><br/> For more information about dictionaries, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/~/relational-databases/indexes/columnstore-indexes-overview'>Columnstore Indexes Guide</a>.
+			/// Dictionary type:<br/><br/> 1 - Hash dictionary containing <strong>int</strong> values<br/><br/> 2 - Not used<br/><br/> 3 - Hash dictionary containing string values<br/><br/> 4 - Hash dictionary containing <strong>float</strong> values<br/><br/> For more information about dictionaries, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/indexes/columnstore-indexes-overview'>Columnstore Indexes Guide</a>.
 			/// </summary>
 			[Column("type"),          Nullable] public int?  TypeColumn   { get; set; } // int
 			/// <summary>
@@ -13299,7 +13299,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13335,7 +13335,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("version"),                 Nullable] public int?    Version               { get; set; } // int
 			/// <summary>
-			/// Type of encoding used for that segment:<br/><br/> 1 = VALUE_BASED - non-string/binary with no dictionary (similar to 4 with some internal variations)<br/><br/> 2 = VALUE_HASH_BASED - non-string/binary column with common values in dictionary<br/><br/> 3 = STRING_HASH_BASED - string/binary column with common values in dictionary<br/><br/> 4 = STORE_BY_VALUE_BASED - non-string/binary with no dictionary<br/><br/> 5 = STRING_STORE_BY_VALUE_BASED - string/binary with no dictionary<br/><br/> For more information, see the [Remarks](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-store-segments-transact-sql#remarks) section.
+			/// Type of encoding used for that segment:<br/><br/> 1 = VALUE_BASED - non-string/binary with no dictionary (similar to 4 with some internal variations)<br/><br/> 2 = VALUE_HASH_BASED - non-string/binary column with common values in dictionary<br/><br/> 3 = STRING_HASH_BASED - string/binary column with common values in dictionary<br/><br/> 4 = STORE_BY_VALUE_BASED - non-string/binary with no dictionary<br/><br/> 5 = STRING_STORE_BY_VALUE_BASED - string/binary with no dictionary<br/><br/> For more information, see the [Remarks](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-store-segments-transact-sql?view=sql-server-ver16#remarks) section.
 			/// </summary>
 			[Column("encoding_type"),           Nullable] public int?    EncodingType          { get; set; } // int
 			/// <summary>
@@ -13444,7 +13444,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// 1 = Column is a computed column.
 			/// </summary>
-			[Column("is_computed"),                         NotNull    ] public bool    IsComputed                      { get; set; } // bit
+			[Column("is_computed"),                            Nullable] public bool?   IsComputed                      { get; set; } // bit
 			/// <summary>
 			/// 1 = Column is a FILESTREAM column.
 			/// </summary>
@@ -13536,15 +13536,15 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// <strong>Applies to</strong>: Azure SQL Database Edge. Indicates if the column is the data retention filter column for the table.
 			/// </summary>
-			[Column("is_data_deletion_filter_column"),      NotNull    ] public bool    IsDataDeletionFilterColumn      { get; set; } // bit
+			[Column("is_data_deletion_filter_column"),         Nullable] public bool?   IsDataDeletionFilterColumn      { get; set; } // bit
 			/// <summary>
 			/// <strong>Applies to</strong>: SQL Database.<br/><br/> If not NULL, indicates the type of a column in a ledger view:<br/><br/> 1 = TRANSACTION_ID<br/> 2 = SEQUENCE_NUMBER<br/> 3 = OPERATION_TYPE<br/> 4 = OPERATION_TYPE_DESC<br/><br/>For more information on database ledger, see <a href='https://docs.microsoft.com/en-us/azure/azure-sql/database/ledger-overview'>Azure SQL Database ledger</a>.
 			/// </summary>
-			[Column("ledger_view_column_type"),             NotNull    ] public byte    LedgerViewColumnType            { get; set; } // tinyint
+			[Column("ledger_view_column_type"),                Nullable] public byte?   LedgerViewColumnType            { get; set; } // tinyint
 			/// <summary>
 			/// <strong>Applies to</strong>: SQL Database.<br/><br/> If not NULL, contains a textual description of the the type of a column in a ledger view:<br/><br/> TRANSACTION_ID<br/> SEQUENCE_NUMBER<br/> OPERATION_TYPE<br/> OPERATION_TYPE_DESC
 			/// </summary>
-			[Column("ledger_view_column_type_desc"),        NotNull    ] public string  LedgerViewColumnTypeDesc        { get; set; } = null!; // nvarchar(60)
+			[Column("ledger_view_column_type_desc"),           Nullable] public string? LedgerViewColumnTypeDesc        { get; set; } // nvarchar(60)
 			/// <summary>
 			/// SQL text that defines this computed-column.
 			/// </summary>
@@ -13563,7 +13563,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13644,7 +13644,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13689,7 +13689,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13754,7 +13754,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -13850,7 +13850,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14097,7 +14097,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14169,7 +14169,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14283,7 +14283,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14446,15 +14446,15 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// <strong>Applies to</strong>: Azure SQL Database Edge. Indicates if the column is the data retention filter column for the table.
 			/// </summary>
-			[Column("is_data_deletion_filter_column"),      NotNull    ] public bool    IsDataDeletionFilterColumn      { get; set; } // bit
+			[Column("is_data_deletion_filter_column"),         Nullable] public bool?   IsDataDeletionFilterColumn      { get; set; } // bit
 			/// <summary>
 			/// <strong>Applies to</strong>: SQL Database.<br/><br/> If not NULL, indicates the type of a column in a ledger view:<br/><br/> 1 = TRANSACTION_ID<br/> 2 = SEQUENCE_NUMBER<br/> 3 = OPERATION_TYPE<br/> 4 = OPERATION_TYPE_DESC<br/><br/>For more information on database ledger, see <a href='https://docs.microsoft.com/en-us/azure/azure-sql/database/ledger-overview'>Azure SQL Database ledger</a>.
 			/// </summary>
-			[Column("ledger_view_column_type"),             NotNull    ] public byte    LedgerViewColumnType            { get; set; } // tinyint
+			[Column("ledger_view_column_type"),                Nullable] public byte?   LedgerViewColumnType            { get; set; } // tinyint
 			/// <summary>
 			/// <strong>Applies to</strong>: SQL Database.<br/><br/> If not NULL, contains a textual description of the the type of a column in a ledger view:<br/><br/> TRANSACTION_ID<br/> SEQUENCE_NUMBER<br/> OPERATION_TYPE<br/> OPERATION_TYPE_DESC
 			/// </summary>
-			[Column("ledger_view_column_type_desc"),        NotNull    ] public string  LedgerViewColumnTypeDesc        { get; set; } = null!; // nvarchar(60)
+			[Column("ledger_view_column_type_desc"),           Nullable] public string? LedgerViewColumnTypeDesc        { get; set; } // nvarchar(60)
 			/// <summary>
 			/// Seed value for this identity column. The data type of the seed value is the same as the data type of the column itself.
 			/// </summary>
@@ -14477,7 +14477,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14586,7 +14586,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14643,7 +14643,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14717,7 +14717,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14786,7 +14786,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14880,7 +14880,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -14957,7 +14957,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15006,7 +15006,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15047,7 +15047,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15076,7 +15076,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15112,7 +15112,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15183,7 +15183,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15256,487 +15256,487 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// assembly_modules (sys.assembly_modules)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.AssemblyModule? AssemblyModule { get; set; }
 
 			/// <summary>
 			/// change_tracking_tables (sys.change_tracking_tables)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ChangeTrackingSchema.ChangeTrackingTable> ChangeTrackingTables { get; set; } = null!;
 
 			/// <summary>
 			/// check_constraints (sys.check_constraints)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.CheckConstraint? CheckConstraint { get; set; }
 
 			/// <summary>
 			/// columns (sys.columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Column> Columns { get; set; } = null!;
 
 			/// <summary>
 			/// column_store_row_groups (sys.column_store_row_groups)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ColumnStoreRowGroup> ColumnStoreRowGroups { get; set; } = null!;
 
 			/// <summary>
 			/// column_type_usages (sys.column_type_usages)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ScalarTypesSchema.ColumnTypeUsage> ColumnTypeUsages { get; set; } = null!;
 
 			/// <summary>
 			/// column_xml_schema_collection_usages (sys.column_xml_schema_collection_usages)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<XmlSchema.ColumnXmlSchemaCollectionUsage> ColumnXmlSchemaCollectionUsages { get; set; } = null!;
 
 			/// <summary>
 			/// computed_columns (sys.computed_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ComputedColumn> ComputedColumns { get; set; } = null!;
 
 			/// <summary>
 			/// database_event_session_fields (sys.database_event_session_fields)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ExtendedEventsSchema.DatabaseEventSessionField> DatabaseEventSessionFields { get; set; } = null!;
 
 			/// <summary>
 			/// default_constraints (sys.default_constraints)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.DefaultConstraint? DefaultConstraint { get; set; }
 
 			/// <summary>
 			/// event_notifications (sys.event_notifications)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.EventNotification> EventNotifications { get; set; } = null!;
 
 			/// <summary>
 			/// events (sys.events)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Event> Events { get; set; } = null!;
 
 			/// <summary>
 			/// extended_procedures (sys.extended_procedures)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ExtendedProcedure> ExtendedProcedures { get; set; } = null!;
 
 			/// <summary>
 			/// external_tables (sys.external_tables)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ExternalOperationsSchema.ExternalTable> ExternalTables { get; set; } = null!;
 
 			/// <summary>
 			/// filetables (sys.filetables)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<FilestreamAndFileTableSchema.FileTable> Filetables { get; set; } = null!;
 
 			/// <summary>
 			/// filetable_system_defined_objects (sys.filetable_system_defined_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<FilestreamAndFileTableSchema.FileTableSystemDefinedObject> FiletableSystemDefinedObjects { get; set; } = null!;
 
 			/// <summary>
 			/// foreign_keys (sys.foreign_keys)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.ForeignKey? ForeignKey { get; set; }
 
 			/// <summary>
 			/// fulltext_index_catalog_usages (sys.fulltext_index_catalog_usages)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<FullTextSearchSchema.IndexCatalogUsage> FulltextIndexCatalogUsages { get; set; } = null!;
 
 			/// <summary>
 			/// fulltext_index_columns (sys.fulltext_index_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<FullTextSearchSchema.IndexColumn> FulltextIndexColumns { get; set; } = null!;
 
 			/// <summary>
 			/// fulltext_indexes (sys.fulltext_indexes)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<FullTextSearchSchema.Index> FulltextIndexes { get; set; } = null!;
 
 			/// <summary>
 			/// function_order_columns (sys.function_order_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.FunctionOrderColumn> FunctionOrderColumns { get; set; } = null!;
 
 			/// <summary>
 			/// hash_indexes (sys.hash_indexes)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.HashIndex> HashIndexes { get; set; } = null!;
 
 			/// <summary>
 			/// identity_columns (sys.identity_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.IdentityColumn> IdentityColumns { get; set; } = null!;
 
 			/// <summary>
 			/// index_columns (sys.index_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.IndexColumn> IndexColumns { get; set; } = null!;
 
 			/// <summary>
 			/// indexes (sys.indexes)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Index> Indexes { get; set; } = null!;
 
 			/// <summary>
 			/// index_resumable_operations (sys.index_resumable_operations)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.IndexResumableOperation> IndexResumableOperations { get; set; } = null!;
 
 			/// <summary>
 			/// internal_partitions (sys.internal_partitions)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.InternalPartition> InternalPartitions { get; set; } = null!;
 
 			/// <summary>
 			/// internal_tables (sys.internal_tables)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.InternalTable> InternalTables { get; set; } = null!;
 
 			/// <summary>
 			/// key_constraints (sys.key_constraints)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.KeyConstraint? KeyConstraint { get; set; }
 
 			/// <summary>
 			/// ledger_column_history (sys.ledger_column_history)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<SecuritySchema.LedgerColumnHistory> LedgerColumnHistory { get; set; } = null!;
 
 			/// <summary>
 			/// ledger_table_history (sys.ledger_table_history)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<SecuritySchema.LedgerTableHistory> LedgerTableHistory { get; set; } = null!;
 
 			/// <summary>
 			/// masked_columns (sys.masked_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.MaskedColumn> MaskedColumns { get; set; } = null!;
 
 			/// <summary>
 			/// memory_optimized_tables_internal_attributes (sys.memory_optimized_tables_internal_attributes)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.MemoryOptimizedTablesInternalAttribute> MemoryOptimizedTablesInternalAttributes { get; set; } = null!;
 
 			/// <summary>
 			/// module_assembly_usages (sys.module_assembly_usages)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ModuleAssemblyUsage> ModuleAssemblyUsages { get; set; } = null!;
 
 			/// <summary>
 			/// numbered_procedure_parameters (sys.numbered_procedure_parameters)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.NumberedProcedureParameter> NumberedProcedureParameters { get; set; } = null!;
 
 			/// <summary>
 			/// numbered_procedures (sys.numbered_procedures)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.NumberedProcedure> NumberedProcedures { get; set; } = null!;
 
 			/// <summary>
 			/// parameters (sys.parameters)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Parameter> Parameters { get; set; } = null!;
 
 			/// <summary>
 			/// parameter_type_usages (sys.parameter_type_usages)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ScalarTypesSchema.ParameterTypeUsage> ParameterTypeUsages { get; set; } = null!;
 
 			/// <summary>
 			/// parameter_xml_schema_collection_usages (sys.parameter_xml_schema_collection_usages)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<XmlSchema.ParameterXmlSchemaCollectionUsage> ParameterXmlSchemaCollectionUsages { get; set; } = null!;
 
 			/// <summary>
 			/// partitions (sys.partitions)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Partition> Partitions { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_column_distribution_properties (sys.pdw_column_distribution_properties)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.ColumnDistributionProperty> PdwColumnDistributionProperties { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_index_mappings (sys.pdw_index_mappings)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.IndexMapping> PdwIndexMappings { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_materialized_view_column_distribution_properties (sys.pdw_materialized_view_column_distribution_properties)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.MaterializedViewColumnDistributionProperty> PdwMaterializedViewColumnDistributionProperties { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_materialized_view_distribution_properties (sys.pdw_materialized_view_distribution_properties)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.MaterializedViewDistributionProperty> PdwMaterializedViewDistributionProperties { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_materialized_view_mappings (sys.pdw_materialized_view_mappings)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.MaterializedViewMapping> PdwMaterializedViewMappings { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_nodes_columns (sys.pdw_nodes_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesColumn> PdwNodesColumns { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_nodes_column_store_row_groups (sys.pdw_nodes_column_store_row_groups)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesColumnStoreRowGroup> PdwNodesColumnStoreRowGroups { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_nodes_indexes (sys.pdw_nodes_indexes)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesIndex> PdwNodesIndexes { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_nodes_partitions (sys.pdw_nodes_partitions)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesPartition> PdwNodesPartitions { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_nodes_tables (sys.pdw_nodes_tables)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesTable> PdwNodesTables { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_permanent_table_mappings (sys.pdw_permanent_table_mappings)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.PermanentTableMapping> PdwPermanentTableMappings { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_replicated_table_cache_state (sys.pdw_replicated_table_cache_state)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.ReplicatedTableCacheState> PdwReplicatedTableCacheState { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_table_distribution_properties (sys.pdw_table_distribution_properties)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.TableDistributionProperty> PdwTableDistributionProperties { get; set; } = null!;
 
 			/// <summary>
 			/// pdw_table_mappings (sys.pdw_table_mappings)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<AzureSynapseAnalyticsSchema.TableMapping> PdwTableMappings { get; set; } = null!;
 
 			/// <summary>
 			/// periods (sys.periods)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Period> Periods { get; set; } = null!;
 
 			/// <summary>
 			/// procedures (sys.procedures)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Procedure> Procedures { get; set; } = null!;
 
 			/// <summary>
 			/// query_store_query (sys.query_store_query)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<QueryStoreSchema.QueryStoreQuery> QueryStoreQuery { get; set; } = null!;
 
 			/// <summary>
 			/// remote_data_archive_tables (sys.remote_data_archive_tables)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<StretchDatabaseSchema.RemoteDataArchiveTable> RemoteDataArchiveTables { get; set; } = null!;
 
 			/// <summary>
 			/// security_policies (sys.security_policies)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<SecuritySchema.SecurityPolicy> SecurityPolicies { get; set; } = null!;
 
 			/// <summary>
 			/// security_predicates (sys.security_predicates)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<SecuritySchema.SecurityPredicate> SecurityPredicates { get; set; } = null!;
 
 			/// <summary>
 			/// selective_xml_index_paths (sys.selective_xml_index_paths)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<XmlSchema.SelectiveXmlIndexPath> SelectiveXmlIndexPaths { get; set; } = null!;
 
 			/// <summary>
 			/// sequences (sys.sequences)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Sequence> Sequences { get; set; } = null!;
 
 			/// <summary>
 			/// server_assembly_modules (sys.server_assembly_modules)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ServerAssemblyModule> ServerAssemblyModules { get; set; } = null!;
 
 			/// <summary>
 			/// server_event_notifications (sys.server_event_notifications)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ServerEventNotification> ServerEventNotifications { get; set; } = null!;
 
 			/// <summary>
 			/// server_events (sys.server_events)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ServerEvent> ServerEvents { get; set; } = null!;
 
 			/// <summary>
 			/// server_event_session_fields (sys.server_event_session_fields)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ExtendedEventsSchema.ServerEventSessionField> ServerEventSessionFields { get; set; } = null!;
 
 			/// <summary>
 			/// server_sql_modules (sys.server_sql_modules)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ServerSqlModule> ServerSqlModules { get; set; } = null!;
 
 			/// <summary>
 			/// server_triggers (sys.server_triggers)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.ServerTrigger> ServerTriggers { get; set; } = null!;
 
 			/// <summary>
 			/// service_queues (sys.service_queues)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public ServiceBrokerSchema.ServiceQueue? ServiceQueue { get; set; }
 
 			/// <summary>
 			/// spatial_indexes (sys.spatial_indexes)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<SpatialDataSchema.SpatialIndex> SpatialIndexes { get; set; } = null!;
 
 			/// <summary>
 			/// spatial_index_tessellations (sys.spatial_index_tessellations)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<SpatialDataSchema.SpatialIndexTessellation> SpatialIndexTessellations { get; set; } = null!;
 
 			/// <summary>
 			/// sql_dependencies (sys.sql_dependencies)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.SqlDependency> SqlDependencies { get; set; } = null!;
 
 			/// <summary>
 			/// sql_modules (sys.sql_modules)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.SqlModule> SqlModules { get; set; } = null!;
 
 			/// <summary>
 			/// stats (sys.stats)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Stat> Stats { get; set; } = null!;
 
 			/// <summary>
 			/// stats_columns (sys.stats_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.StatsColumn> StatsColumns { get; set; } = null!;
 
 			/// <summary>
 			/// synonyms (sys.synonyms)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.Synonym? Synonym { get; set; }
 
 			/// <summary>
 			/// tables (sys.tables)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.Table? Table { get; set; }
 
 			/// <summary>
 			/// trigger_events (sys.trigger_events)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.TriggerEvent> TriggerEvents { get; set; } = null!;
 
 			/// <summary>
 			/// triggers (sys.triggers)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.Trigger> Triggers { get; set; } = null!;
 
 			/// <summary>
 			/// views (sys.views)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.View? View { get; set; }
 
 			/// <summary>
 			/// xml_indexes (sys.xml_indexes)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<XmlSchema.XmlIndex> XmlIndexes { get; set; } = null!;
 
 			#endregion
@@ -15841,7 +15841,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15898,7 +15898,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -15943,7 +15943,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16087,7 +16087,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16212,7 +16212,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16253,7 +16253,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16294,7 +16294,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16359,7 +16359,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16400,7 +16400,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16465,7 +16465,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16548,7 +16548,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16696,7 +16696,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16770,7 +16770,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16807,7 +16807,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -16880,7 +16880,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -17006,18 +17006,18 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// <strong>Applies to</strong>: SQL Database.<br/><br/> If not NULL, indicates the type of a column in a ledger view:<br/><br/> 1 = TRANSACTION_ID<br/> 2 = SEQUENCE_NUMBER<br/> 3 = OPERATION_TYPE<br/> 4 = OPERATION_TYPE_DESC<br/><br/>For more information on database ledger, see <a href='https://docs.microsoft.com/en-us/azure/azure-sql/database/ledger-overview'>Azure SQL Database ledger</a>.
 			/// </summary>
-			[Column("ledger_view_column_type"),      NotNull    ] public byte    LedgerViewColumnType     { get; set; } // tinyint
+			[Column("ledger_view_column_type"),         Nullable] public byte?   LedgerViewColumnType     { get; set; } // tinyint
 			/// <summary>
 			/// <strong>Applies to</strong>: SQL Database.<br/><br/> If not NULL, contains a textual description of the the type of a column in a ledger view:<br/><br/> TRANSACTION_ID<br/> SEQUENCE_NUMBER<br/> OPERATION_TYPE<br/> OPERATION_TYPE_DESC
 			/// </summary>
-			[Column("ledger_view_column_type_desc"), NotNull    ] public string  LedgerViewColumnTypeDesc { get; set; } = null!; // nvarchar(60)
+			[Column("ledger_view_column_type_desc"),    Nullable] public string? LedgerViewColumnTypeDesc { get; set; } // nvarchar(60)
 
 			#region Associations
 
 			/// <summary>
 			/// system_objects (sys.system_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.SystemObject SystemObject { get; set; } = null!;
 
 			#endregion
@@ -17086,25 +17086,25 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// system_columns (sys.system_columns)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.SystemColumn> SystemColumns { get; set; } = null!;
 
 			/// <summary>
 			/// system_parameters (sys.system_parameters)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.SystemParameter> SystemParameters { get; set; } = null!;
 
 			/// <summary>
 			/// system_sql_modules (sys.system_sql_modules)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public IList<ObjectSchema.SystemSqlModule> SystemSqlModules { get; set; } = null!;
 
 			/// <summary>
 			/// system_views (sys.system_views)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=true)]
 			public ObjectSchema.SystemView? SystemView { get; set; }
 
 			#endregion
@@ -17209,7 +17209,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// system_objects (sys.system_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.SystemObject SystemObject { get; set; } = null!;
 
 			#endregion
@@ -17266,7 +17266,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// system_objects (sys.system_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.SystemObject SystemObject { get; set; } = null!;
 
 			#endregion
@@ -17359,7 +17359,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// system_objects (sys.system_objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.SystemObject SystemObject { get; set; } = null!;
 
 			#endregion
@@ -17541,26 +17541,26 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// <strong>Applies to</strong>: Azure SQL Database. <br/><br/>The numeric value indicates if the table is a ledger table.<br/><br/>0 = NON_LEDGER_TABLE<br/>1 = HISTORY_TABLE (associated with an updatable ledger table)<br/>2 = UPDATABLE_LEDGER_TABLE<br/>3 = APPEND_ONLY_LEDGER_TABLE<br/><br/>For more information on database ledger, see <a href='https://docs.microsoft.com/en-us/azure/azure-sql/database/ledger-overview'>Azure SQL Database ledger</a>.
 			/// </summary>
-			[Column("ledger_type"),                        NotNull    ] public byte     LedgerType                     { get; set; } // tinyint
+			[Column("ledger_type"),                           Nullable] public byte?    LedgerType                     { get; set; } // tinyint
 			/// <summary>
 			/// <strong>Applies to</strong>: Azure SQL Database. <br/><br/>The text description of a value in the ledger_type column:<br/><br/>NON_LEDGER_TABLE<br/>HISTORY_TABLE<br/>UPDATABLE_LEDGER_TABLE<br/>APPEND_ONLY_LEDGER_TABLE
 			/// </summary>
-			[Column("ledger_type_desc"),                   NotNull    ] public string   LedgerTypeDesc                 { get; set; } = null!; // nvarchar(60)
+			[Column("ledger_type_desc"),                      Nullable] public string?  LedgerTypeDesc                 { get; set; } // nvarchar(60)
 			/// <summary>
 			/// <strong>Applies to</strong>: Azure SQL Database. <br/><br/>When ledger_type IN (2,3) returns object_id of the ledger view, otherwise returns NULL.
 			/// </summary>
-			[Column("ledger_view_id"),                     NotNull    ] public int      LedgerViewID                   { get; set; } // int
+			[Column("ledger_view_id"),                        Nullable] public int?     LedgerViewID                   { get; set; } // int
 			/// <summary>
 			/// <strong>Applies to</strong>: Azure SQL Database. <br/><br/>Indicates a ledger table that has been dropped.
 			/// </summary>
-			[Column("is_dropped_ledger_table"),            NotNull    ] public bool     IsDroppedLedgerTable           { get; set; } // bit
+			[Column("is_dropped_ledger_table"),               Nullable] public bool?    IsDroppedLedgerTable           { get; set; } // bit
 
 			#region Associations
 
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -17657,7 +17657,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -17713,7 +17713,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -17826,22 +17826,22 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// <strong>Applies to</strong>: Azure SQL Database. <br/><br/>The numeric value indicating if a view is a ledger view for an updatable ledger table.<br/><br/>0 = NON_LEDGER_VIEW<br/>1 = LEDGER_VIEW<br/><br/>For more information on database ledger, see <a href='https://docs.microsoft.com/en-us/azure/azure-sql/database/ledger-overview'>Azure SQL Database ledger</a>.
 			/// </summary>
-			[Column("ledger_view_type"),            NotNull    ] public byte     LedgerViewType           { get; set; } // tinyint
+			[Column("ledger_view_type"),               Nullable] public byte?    LedgerViewType           { get; set; } // tinyint
 			/// <summary>
 			/// <strong>Applies to</strong>: Azure SQL Database. <br/><br/>The text description of a value in the ledger_view_type column:<br/><br/>NON_LEDGER_VIEW<br/>LEDGER_VIEW
 			/// </summary>
-			[Column("ledger_view_type_desc"),       NotNull    ] public string   LedgerViewTypeDesc       { get; set; } = null!; // nvarchar(60)
+			[Column("ledger_view_type_desc"),          Nullable] public string?  LedgerViewTypeDesc       { get; set; } // nvarchar(60)
 			/// <summary>
 			/// <strong>Applies to</strong>: Azure SQL Database. <br/><br/>Indicates a ledger view that has been dropped.
 			/// </summary>
-			[Column("is_dropped_ledger_view"),      NotNull    ] public bool     IsDroppedLedgerView      { get; set; } // bit
+			[Column("is_dropped_ledger_view"),         Nullable] public bool?    IsDroppedLedgerView      { get; set; } // bit
 
 			#region Associations
 
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -18838,7 +18838,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -18856,39 +18856,39 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Unique identifier of a query hint.
 			/// </summary>
-			[Column("query_hint_id"),                       NotNull] public long   QueryHintID                    { get; set; } // bigint
+			[Column("query_hint_id"),                       NotNull    ] public long    QueryHintID                    { get; set; } // bigint
 			/// <summary>
 			/// Unique identifier of a query in the Query Store. Foreign key to <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-query-store-query-transact-sql'>sys.query_store_query</a>.query_id.)
 			/// </summary>
-			[Column("query_id"),                            NotNull] public long   QueryID                        { get; set; } // bigint
+			[Column("query_id"),                            NotNull    ] public long    QueryID                        { get; set; } // bigint
 			/// <summary>
 			/// Hint definition in form of  N'OPTION (…)
 			/// </summary>
-			[Column("query_hint_text"),                     NotNull] public string QueryHintText                  { get; set; } = null!; // nvarchar(MAX)
+			[Column("query_hint_text"),                        Nullable] public string? QueryHintText                  { get; set; } // nvarchar(MAX)
 			/// <summary>
 			/// Error code returned when if applying hints failed. Will include the message_id of the error message.
 			/// </summary>
-			[Column("last_query_hint_failure_reason"),      NotNull] public int    LastQueryHintFailureReason     { get; set; } // int
+			[Column("last_query_hint_failure_reason"),      NotNull    ] public int     LastQueryHintFailureReason     { get; set; } // int
 			/// <summary>
 			/// Will include the error description of the error message.
 			/// </summary>
-			[Column("last_query_hint_failure_reason_desc"), NotNull] public string LastQueryHintFailureReasonDesc { get; set; } = null!; // nvarchar(128)
+			[Column("last_query_hint_failure_reason_desc"),    Nullable] public string? LastQueryHintFailureReasonDesc { get; set; } // nvarchar(128)
 			/// <summary>
 			/// Number of times that the query hint application has failed since the query hint was created or last modified.
 			/// </summary>
-			[Column("query_hint_failure_count"),            NotNull] public long   QueryHintFailureCount          { get; set; } // bigint
+			[Column("query_hint_failure_count"),            NotNull    ] public long    QueryHintFailureCount          { get; set; } // bigint
 			/// <summary>
 			/// Source of Query Store hint: user source is zero and system-generated is non-zero.
 			/// </summary>
-			[Column("source"),                              NotNull] public int    Source                         { get; set; } // int
+			[Column("source"),                                 Nullable] public int?    Source                         { get; set; } // int
 			/// <summary>
 			/// Description of source of Query Store hint.
 			/// </summary>
-			[Column("source_desc"),                         NotNull] public string SourceDesc                     { get; set; } = null!; // nvarchar(128)
+			[Column("source_desc"),                            Nullable] public string? SourceDesc                     { get; set; } // nvarchar(128)
 			/// <summary>
 			/// Internal use only.
 			/// </summary>
-			[Column("comment"),                             NotNull] public string Comment                        { get; set; } = null!; // nvarchar(max)
+			[Column("comment"),                                Nullable] public string? Comment                        { get; set; } // nvarchar(max)
 		}
 
 		/// <summary>
@@ -19202,23 +19202,23 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Average number of page server I/O reads for the query plan within the aggregation interval (expressed as a number of 8 KB pages read).<br/><br/><strong>Applies to:</strong> Azure SQL Database Hyperscale<br/><strong>Note:</strong> Azure Synapse Analytics, Azure SQL Database, Azure SQL Managed Instance (non-hyperscale) will always return zero (0).
 			/// </summary>
-			[Column("avg_page_server_io_reads"),    NotNull    ] public double         AvgPageServerIoReads    { get; set; } // float
+			[Column("avg_page_server_io_reads"),       Nullable] public double?        AvgPageServerIoReads    { get; set; } // float
 			/// <summary>
 			/// Last number of page server I/O reads for the query plan within the aggregation interval (expressed as a number of 8 KB pages read).<br/><br/><strong>Applies to:</strong> Azure SQL Database Hyperscale<br/><strong>Note:</strong> Azure Synapse Analytics, Azure SQL Database, Azure SQL Managed Instance (non-hyperscale) will always return zero (0).
 			/// </summary>
-			[Column("last_page_server_io_reads"),   NotNull    ] public long           LastPageServerIoReads   { get; set; } // bigint
+			[Column("last_page_server_io_reads"),      Nullable] public long?          LastPageServerIoReads   { get; set; } // bigint
 			/// <summary>
 			/// Minimum number of page server I/O reads for the query plan within the aggregation interval (expressed as a number of 8 KB pages read).<br/><br/><strong>Applies to:</strong> Azure SQL Database Hyperscale<br/><strong>Note:</strong> Azure Synapse Analytics, Azure SQL Database, Azure SQL Managed Instance (non-hyperscale) will always return zero (0).
 			/// </summary>
-			[Column("min_page_server_io_reads"),    NotNull    ] public long           MinPageServerIoReads    { get; set; } // bigint
+			[Column("min_page_server_io_reads"),       Nullable] public long?          MinPageServerIoReads    { get; set; } // bigint
 			/// <summary>
 			/// Maximum number of page server I/O reads for the query plan within the aggregation interval (expressed as a number of 8 KB pages read).<br/><br/><strong>Applies to:</strong> Azure SQL Database Hyperscale<br/><strong>Note:</strong> Azure Synapse Analytics, Azure SQL Database, Azure SQL Managed Instance (non-hyperscale) will always return zero (0).
 			/// </summary>
-			[Column("max_page_server_io_reads"),    NotNull    ] public long           MaxPageServerIoReads    { get; set; } // bigint
+			[Column("max_page_server_io_reads"),       Nullable] public long?          MaxPageServerIoReads    { get; set; } // bigint
 			/// <summary>
 			/// Standard deviation of the number of page server I/O reads for the query plan within the aggregation interval (expressed as a number of 8 KB pages read).<br/><br/><strong>Applies to:</strong> Azure SQL Database Hyperscale<br/><strong>Note:</strong> Azure Synapse Analytics, Azure SQL Database, Azure SQL Managed Instance (non-hyperscale) will always return zero (0).
 			/// </summary>
-			[Column("stdev_page_server_io_reads"),  NotNull    ] public double         StdevPageServerIoReads  { get; set; } // float
+			[Column("stdev_page_server_io_reads"),     Nullable] public double?        StdevPageServerIoReads  { get; set; } // float
 		}
 
 		/// <summary>
@@ -19625,7 +19625,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -19661,7 +19661,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -20558,19 +20558,19 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// A sequence number identifying the row in this view.
 			/// </summary>
-			[Column("block_id"),              NotNull] public long   BlockID             { get; set; } // bigint
+			[Column("block_id"),              NotNull    ] public long    BlockID             { get; set; } // bigint
 			/// <summary>
 			/// The hash of the root of the Merkle tree, formed by transactions stored in the block.
 			/// </summary>
-			[Column("transaction_root_hash"), NotNull] public byte[] TransactionRootHash { get; set; } = null!; // binary(32)
+			[Column("transaction_root_hash"), NotNull    ] public byte[]  TransactionRootHash { get; set; } = null!; // binary(32)
 			/// <summary>
 			/// The number of transactions in the block.
 			/// </summary>
-			[Column("block_size"),            NotNull] public long   BlockSize           { get; set; } // bigint
+			[Column("block_size"),            NotNull    ] public long    BlockSize           { get; set; } // bigint
 			/// <summary>
 			/// A SHA-256 hash of the previous row in the view.
 			/// </summary>
-			[Column("previous_block_hash"),   NotNull] public byte[] PreviousBlockHash   { get; set; } = null!; // binary(32)
+			[Column("previous_block_hash"),      Nullable] public byte[]? PreviousBlockHash   { get; set; } // binary(32)
 		}
 
 		/// <summary>
@@ -20586,15 +20586,15 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// The location of storage digests. For example, a path for a container in <a href='https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction'>Azure Blob storage</a>.
 			/// </summary>
-			[Column("path"),                 NotNull] public string Path              { get; set; } = null!; // nvarchar(4000)
+			[Column("path"),                    Nullable] public string? Path              { get; set; } // nvarchar(4000)
 			/// <summary>
 			/// The block ID for the last digest uploaded.
 			/// </summary>
-			[Column("last_digest_block_id"), NotNull] public long   LastDigestBlockID { get; set; } // bigint
+			[Column("last_digest_block_id"),    Nullable] public long?   LastDigestBlockID { get; set; } // bigint
 			/// <summary>
 			/// Indicates whether this is the current path or a path used in the past.
 			/// </summary>
-			[Column("is_current"),           NotNull] public bool   IsCurrent         { get; set; } // bit
+			[Column("is_current"),           NotNull    ] public bool    IsCurrent         { get; set; } // bit
 		}
 
 		/// <summary>
@@ -20610,27 +20610,27 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// A transaction ID that is unique for the database (it corresponds to a transaction ID in the database transaction log).
 			/// </summary>
-			[Column("transaction_id"),        NotNull] public long     TransactionID        { get; set; } // bigint
+			[Column("transaction_id"),        NotNull    ] public long     TransactionID        { get; set; } // bigint
 			/// <summary>
 			/// A sequence number identifying a row.
 			/// </summary>
-			[Column("block_id"),              NotNull] public long     BlockID              { get; set; } // bigint
+			[Column("block_id"),              NotNull    ] public long     BlockID              { get; set; } // bigint
 			/// <summary>
 			/// Offset of the transaction in the block.
 			/// </summary>
-			[Column("transactional_ordinal"), NotNull] public int      TransactionalOrdinal { get; set; } // int
+			[Column("transactional_ordinal"), NotNull    ] public int      TransactionalOrdinal { get; set; } // int
 			/// <summary>
 			/// The name of the user who started the transaction. Captured by calling <c>ORIGINAL_LOGIN()</c>.
 			/// </summary>
-			[Column("user_name()"),           NotNull] public string   UserName             { get; set; } = null!; // sysname
+			[Column("user_name()"),           NotNull    ] public string   UserName             { get; set; } = null!; // sysname
 			/// <summary>
 			/// The time of the committing transaction.
 			/// </summary>
-			[Column("commit_time"),           NotNull] public DateTime CommitTime           { get; set; } // datetime2(7)
+			[Column("commit_time"),           NotNull    ] public DateTime CommitTime           { get; set; } // datetime2(7)
 			/// <summary>
 			/// This is a set of key-values pairs, stored in a binary format. The keys are object IDs (from <strong>sys.objects</strong>) of ledger database tables, modified by the transaction. Each value is a SHA-256 hash of all row versions a transaction created or invalidated.<br/><br/> The binary format of data stored in this row is: <c>&lt;version&gt;&lt;length&gt;[&lt;key&gt;&lt;value&gt;]</c>, where<br/><br/> - <c>version</c> - indicates the encoding version. Length: 1 byte.<br/> - <c>length</c> - the number of entries in the key-value pair list. Length: 1 byte.<br/> - <c>key</c> - an object ID. Length: 4 bytes.<br/> - <c>value</c> - the hash of rows the transaction cached in the table with the object ID stored as the key. Length: 32 bytes.
 			/// </summary>
-			[Column("table_hashes"),          NotNull] public byte[]   TableHashes          { get; set; } = null!; // varbinary(max)
+			[Column("table_hashes"),             Nullable] public byte[]?  TableHashes          { get; set; } // varbinary(max)
 		}
 
 		/// <summary>
@@ -20861,30 +20861,30 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// The object ID of the ledger table.
 			/// </summary>
-			[Column("object_id"),           NotNull] public int    ObjectID          { get; set; } // int
+			[Column("object_id"),           NotNull    ] public int     ObjectID          { get; set; } // int
 			/// <summary>
 			/// The column ID of the column in a ledger table.
 			/// </summary>
-			[Column("column_id"),           NotNull] public int    ColumnID          { get; set; } // int
+			[Column("column_id"),           NotNull    ] public int     ColumnID          { get; set; } // int
 			/// <summary>
 			/// The name of the column in ledger table. If the operation has changed the column name, this column captures the new column name.
 			/// </summary>
-			[Column("column_name"),         NotNull] public string ColumnName        { get; set; } = null!; // sysname
+			[Column("column_name"),         NotNull    ] public string  ColumnName        { get; set; } = null!; // sysname
 			/// <summary>
 			/// The numeric value indicating the type of the operation<br/><br/>0 = CREATE – creating a column as part of creating the table containing the column using CREATE TABLE.<br/>1 = ADD – adding a column in a ledger table, using ALTER TABLE/ADD COLUMN..
 			/// </summary>
-			[Column("operation_type"),      NotNull] public byte   OperationType     { get; set; } // tinyint
+			[Column("operation_type"),      NotNull    ] public byte    OperationType     { get; set; } // tinyint
 			/// <summary>
 			/// Textual description of the value of operation_type.
 			/// </summary>
-			[Column("operation_type_desc"), NotNull] public string OperationTypeDesc { get; set; } = null!; // nvarchar(60)
+			[Column("operation_type_desc"),    Nullable] public string? OperationTypeDesc { get; set; } // nvarchar(60)
 
 			#region Associations
 
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -20903,46 +20903,46 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// The object ID of the ledger table.
 			/// </summary>
-			[Column("object_id"),               NotNull] public int    ObjectID             { get; set; } // int
+			[Column("object_id"),               NotNull    ] public int     ObjectID             { get; set; } // int
 			/// <summary>
 			/// The name of the schema containing the ledger table. If the operation has changed the schema name, this column captures the new schema name.
 			/// </summary>
-			[Column("schema_name"),             NotNull] public string SchemaName           { get; set; } = null!; // sysname
+			[Column("schema_name"),             NotNull    ] public string  SchemaName           { get; set; } = null!; // sysname
 			/// <summary>
 			/// The name of the ledger table. If the operation has changed the table name, this column captures the new table name.
 			/// </summary>
-			[Column("table_name"),              NotNull] public string TableName            { get; set; } = null!; // sysname
+			[Column("table_name"),              NotNull    ] public string  TableName            { get; set; } = null!; // sysname
 			/// <summary>
 			/// The name of the schema containing the ledger view for the ledger table. If the operation has changed the schema name, this column captures the new schema name.
 			/// </summary>
-			[Column("ledger_view_schema_name"), NotNull] public string LedgerViewSchemaName { get; set; } = null!; // sysname
+			[Column("ledger_view_schema_name"), NotNull    ] public string  LedgerViewSchemaName { get; set; } = null!; // sysname
 			/// <summary>
 			/// The name of the ledger view for the ledger table. If the operation has changed the view name, this column captures the new view name.
 			/// </summary>
-			[Column("ledger_view_name"),        NotNull] public string LedgerViewName       { get; set; } = null!; // sysname
+			[Column("ledger_view_name"),        NotNull    ] public string  LedgerViewName       { get; set; } = null!; // sysname
 			/// <summary>
 			/// The numeric value indicating the type of the operation<br/><br/>0 = CREATE – creating a ledger table.<br/>1 = DROP – dropping a ledger table.
 			/// </summary>
-			[Column("operation_type"),          NotNull] public byte   OperationType        { get; set; } // tinyint
+			[Column("operation_type"),          NotNull    ] public byte    OperationType        { get; set; } // tinyint
 			/// <summary>
 			/// Textual description of the value of operation_type.
 			/// </summary>
-			[Column("operation_type_desc"),     NotNull] public string OperationTypeDesc    { get; set; } = null!; // nvarchar(60)
+			[Column("operation_type_desc"),        Nullable] public string? OperationTypeDesc    { get; set; } // nvarchar(60)
 			/// <summary>
 			/// The transaction of the ID that included the operation on the ledger table. It identifies a row in <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-database-ledger-transactions-transact-sql'>sys.database_ledger_transactions</a>.
 			/// </summary>
-			[Column("transaction_id"),          NotNull] public long   TransactionID        { get; set; } // bigint
+			[Column("transaction_id"),          NotNull    ] public long    TransactionID        { get; set; } // bigint
 			/// <summary>
 			/// The sequence number of the operation within the transaction.
 			/// </summary>
-			[Column("sequence_number"),         NotNull] public long   SequenceNumber       { get; set; } // bigint
+			[Column("sequence_number"),         NotNull    ] public long    SequenceNumber       { get; set; } // bigint
 
 			#region Associations
 
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -21128,7 +21128,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -21181,7 +21181,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -22831,7 +22831,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -23072,7 +23072,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -23160,7 +23160,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -23274,7 +23274,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("remote_table_name"),           Nullable] public string? RemoteTableName        { get; set; } // sysname
 			/// <summary>
-			/// The filter predicate, if any, that identifies rows in the table to be migrated. If the value is null, the entire table is eligible to be migrated.<br/><br/> For more info, see <a href='https://docs.microsoft.com/en-us/sql/sql-server/stretch-database/enable-stretch-database-for-a-table'>Enable Stretch Database for a table</a> and <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/~/sql-server/stretch-database/select-rows-to-migrate-by-using-a-filter-function-stretch-database'>Select rows to migrate by using a filter predicate</a>.
+			/// The filter predicate, if any, that identifies rows in the table to be migrated. If the value is null, the entire table is eligible to be migrated.<br/><br/> For more info, see <a href='https://docs.microsoft.com/en-us/sql/sql-server/stretch-database/enable-stretch-database-for-a-table'>Enable Stretch Database for a table</a> and <a href='https://docs.microsoft.com/en-us/sql/sql-server/stretch-database/select-rows-to-migrate-by-using-a-filter-function-stretch-database'>Select rows to migrate by using a filter predicate</a>.
 			/// </summary>
 			[Column("filter_predicate"),            Nullable] public string? FilterPredicate        { get; set; } // nvarchar(max)
 			/// <summary>
@@ -23299,7 +23299,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -23459,7 +23459,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -23492,7 +23492,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -23601,7 +23601,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion
@@ -23734,7 +23734,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// objects (sys.objects)
 			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false)]
+			[Association(ThisKey=nameof(ObjectID), OtherKey="ObjectID", CanBeNull=false)]
 			public ObjectSchema.Object Object { get; set; } = null!;
 
 			#endregion

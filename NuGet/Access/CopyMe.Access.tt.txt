@@ -1,132 +1,35 @@
-<#@ template language="C#" debug="True" hostSpecific="True" #>
-<#@ output extension=".generated.cs"                        #>
-
-<#@ include file="$(LinqToDBT4AccessTemplatesPath)LinqToDB.Access.Tools.ttinclude" once="true" #>
-<#@ include file="$(LinqToDBT4AccessTemplatesPath)PluralizationService.ttinclude"  once="true" #>
+<#@ template language="C#" debug="True" hostSpecific="True"                              #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"           #>
+<#@ output extension=".generated.cs"                                                     #>
+<#@ include file="$(LinqToDBT4AccessTemplatesPath)LinqToDB.Access.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"  once="true" #>
 <#
-/*
-	1. Create new *.tt file (e.g. MyDatabase.tt) in a folder where you would like to generate your data model
-		and copy content from this file to it. For example:
+	// Install linq2db nuget package.
+	// Install one of the following packages:
+	// - https://www.nuget.org/packages/System.Data.OleDb for OLE DB Access provider
+	// - https://www.nuget.org/packages/System.Data.Odbc  for ODBC Access provider
+	// See LinqToDB.Templates/README.md for more details.
 
-		MyProject
-			DataModels
-				MyDatabase.tt
+	// Configuring schema load process
+	//
+//	GetSchemaOptions.GetProcedures = true;
 
-	2. Modify the connection settings below to connect to your database.
+	// Configuring generation process
+	//
+	NamespaceName        = "DataModels";
+//	DataContextName      = "MyDB";
+	GenerateSchemaAsType = true;
+//	GetDataOptionsMethod = "GetDataOptions({0})";
 
-	3. Add connection string to the web/app.config file:
-
-		<connectionStrings>
-			<add name="MyDatabase" providerName="Access"
-				connectionString="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=MyDatabase.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" />
-		</connectionStrings>
-
-	4. To access your database use the following code:
-
-		using (var db = new MyDatabaseDB())
-		{
-			var q =
-				from c in db.Customers
-				select c;
-
-			foreach (var c in q)
-				Console.WriteLine(c.ContactName);
-		}
-
-	5. See more at https://linq2db.github.io/articles/T4.html
-
-	IMPORTANT: if running .tt file gives you error like this:
-	"error : Failed to resolve include text for file: C:\...\$(LinqToDBT4<DB>TemplatesPath)LinqToDB.<DB>.Tools.ttinclude"
-	check tt file properties.
-	Custom tool must be set to TextTemplatingFileGenerator, not TextTemplatingFilePreprocessor or any other value.
-*/
-
-	// File settings
-//	EnforceModelNullability             = true;                   // #nullable enable
-//	EnableNullableReferenceTypes        = true;                   // #nullable enable
-
-	// DataContext settings
-	NamespaceName                       = "DataModels";           // DataContext class namespace name
-//	DataContextName                     = "TestDataDB";           // DataContext class name
-//	BaseDataContextClass                = "MyDataContext";        // name of the base DataContext class
-//	GenerateDatabaseInfo                = true;                   // adds comment contained database info
-//	GenerateFindExtensions              = true;                   // generate Find(...) extension methods
-//	GenerateViews                       = true;                   // generate views
-
-	// Schema settings
-//	GenerateSchemaAsType                = false;                  // generate database schema as type (db.MySchema.MyTable)
-//	SchemaNameSuffix                    = "Schema";               // schema type name suffix
-//	SchemaDataContextTypeName           = "DataContext";          // schema DataContext type name
-//	PrefixTableMappingWithSchema        = true;                   // add schema name as prefix to table type name
-//	PrefixTableMappingForDefaultSchema  = false;                  // add default schema name as prefix to table type name
-
-	// Constructors
-//	GenerateConstructors                = true;                   // generate constructors
-//	DefaultConfiguration                = "SqlServer";            // use default configuration
-//	GetDataOptionsMethod                = "GetDataOptions({0})";  // constructors call user defined methods that returns DataOptions
-//	GenerateDataOptionsConstructors     = true;                   // generate data options constructors
-
-	// Entity class settings
-//	BaseEntityClass                     = "MyEntity";             // entity base class
-//	ServerName                          = "ServerName";           // specified server name
-//	DatabaseName                        = "DatabaseName";         // specified database name
-//	OneToManyAssociationType            = "IEnumerable<{0}>";     // association base type
-//	GenerateDatabaseName                = ;                       // generate database name
-//	GenerateDatabaseNameFromTable       = ;                       // generate database name from TableSchema.CatalogName
-//	GenerateAssociations                = true;                   // generate associations
-//	GenerateBackReferences              = true;                   // generate back references
-//	GenerateAssociationExtensions       = false;                  // generate associations as extension methods
-//	IncludeDefaultSchema                = true;                   // generated default schema name, such as 'dbo'
-
-	// Column settings
-//	GenerateObsoleteAttributeForAliases = false;                  // add ObsoleteAttribute to alias members
-//	GenerateDataTypes                   = false;                  // generate column DataType
-//	GenerateLengthProperty              = null;                   // generate column length
-//	GeneratePrecisionProperty           = null;                   // generate column precision
-//	GenerateScaleProperty               = null;                   // generate column scale
-//	GenerateDbTypes                     = false;                  // generate column DbType
-//	IsCompactColumns                    = true;                   // compact mode of column generation
-//	IsCompactColumnAliases              = true;                   // compact mode of alias column generation
-
-	// Identifier normalization
-//	PluralizeClassNames                 = ;                       // pluralize class names
-//	SingularizeClassNames               = true;                   // singularize class names
-//	PluralizeDataContextPropertyNames   = true;                   // pluralize DataContext property names
-//	SingularizeDataContextPropertyNames = ;                       // singularize DataContext property names
-//	PluralizeForeignKeyNames            = true;                   // pluralize foreign key names
-//	SingularizeForeignKeyNames          = true;                   // singularize foreign key names
-//	NormalizeNames                      = true;                   // normalize names containing '_', lower case first letters, etc
-//	NormalizeNamesWithoutUnderscores    = ;                       // normalize names without underscores
-
-	// Stored procedures
-//	ReplaceSimilarTables                = true;                   // when generate stored procedure results, use the same type if types are similar
-//	GenerateProcedureErrors             = true;                   // generate stored procedure metadata errors
-//	GenerateProcedureResultAsList       = false;                  // generate stored procedure result as List<T>
-//	GenerateProceduresOnTypedContext    = true;                   // generate stored procedures on typed context
-
-	// to configure GetSchemaOptions properties, add them here, before load metadata call
-
+	// Loading metadata
+	//
 	LoadAccessMetadata(@"C:\Data", "MyDatabase.mdb");
 //	LoadAccessMetadata(string connectionString);
 
-	// to adjust loaded database model before generation, add your code here, after load metadata, but before GenerateModel() call
-
-//	GetTable("Order").TypeName                = "TheOrder";
-//	GetTable("Order").DataContextPropertyName = "TheOrders";
-//
-//	GetColumn("Order", "OrderID").MemberName  = "ID";
-//	GetColumn("Order", "Day").    Type        = "DayOfWeek";
-//
-//	foreach (var t in Tables.Values)
-//	{
-//		var pk = t.Columns.Values.FirstOrDefault(c => c.ColumnName == t.TableName + "ID" && c.Type == "int");
-//
-//		if (pk != null)
-//		{
-//			pk.MemberName = "ID";
-//			t.Interfaces.Add("IIdentifiable");
-//		}
-//	}
+	// Customizing generation process
+	//
+//	GetColumn("Order", "OrderID").MemberName = "ID";
+//	GetColumn("Order", "Day").    Type       = "DayOfWeek";
 
 	GenerateModel();
 #>

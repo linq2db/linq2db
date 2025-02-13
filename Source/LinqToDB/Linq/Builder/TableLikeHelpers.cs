@@ -158,7 +158,7 @@ namespace LinqToDB.Linq.Builder
 					var index = ctx.placeholders.IndexOf(placeholder);
 					if (index >= 0)
 					{
-						return ctx.newPlaceholders[index];
+						return ctx.newPlaceholders[index].WithType(e.Type);
 					}
 				}
 

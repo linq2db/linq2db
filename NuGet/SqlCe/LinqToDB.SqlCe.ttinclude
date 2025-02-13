@@ -1,0 +1,26 @@
+<#@ assembly name="$(LinqToDBT4SqlCeClientPath)System.Data.SqlServerCe.dll"       #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"       once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
+<#+
+LinqToDB.Data.DataConnection GetSqlCeConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.SqlCe.SqlCeTools.CreateDataConnection(connectionString);
+}
+
+LinqToDB.Data.DataConnection GetSqlCeConnection(string path, string database)
+{
+	return GetSqlCeConnection(string.Format("Data Source={0}", Path.Combine(path, database)));
+}
+
+public void LoadSqlCeMetadata(string connectionString)
+{
+	using (var dataConnection = GetSqlCeConnection(connectionString))
+		LoadMetadata(dataConnection);
+}
+
+public void LoadSqlCeMetadata(string path, string database)
+{
+	using (var dataConnection = GetSqlCeConnection(path, database))
+		LoadMetadata(dataConnection);
+}
+#>

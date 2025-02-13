@@ -352,15 +352,15 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext insertedContext;
 			if (targetTableContext is CteTableContext cteTable)
 			{
-				insertedContext = new CteTableContext(builder, null,
+				insertedContext = new CteTableContext(builder.GetTranslationModifier(), builder, null,
 					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext);
-				deletedContext = new CteTableContext(builder, null,
+				deletedContext = new CteTableContext(builder.GetTranslationModifier(), builder, null,
 					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext);
 			}
 			else
 			{
-				insertedContext = new TableBuilder.TableContext(builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
-				deletedContext  = new TableBuilder.TableContext(builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
+				insertedContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
+				deletedContext  = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
 			}
 
 			outputContext = deletedContext;

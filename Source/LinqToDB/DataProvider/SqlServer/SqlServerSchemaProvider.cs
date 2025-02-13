@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			Provider = provider;
 		}
 
-		protected override void InitProvider(DataConnection dataConnection)
+		protected override void InitProvider(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var version = dataConnection.Execute<string>("select @@version");
 
@@ -319,6 +319,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (dataType)
 			{
+				case "json"             : return DataType.Json;
 				case "image"            : return DataType.Image;
 				case "text"             : return DataType.Text;
 				case "binary"           : return DataType.Binary;
@@ -407,6 +408,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (dataType)
 			{
+				case "json"        : return typeof(string);
 				case "tinyint"     : return typeof(byte);
 				case "hierarchyid" :
 				case "geography"   :

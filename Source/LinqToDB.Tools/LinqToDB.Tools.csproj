@@ -11,15 +11,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Humanizer.Core" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
-		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
@@ -33,6 +24,10 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Schemas.tt</DependentUpon>
 		</Compile>
-
 	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+	</ItemGroup>
+
 </Project>
