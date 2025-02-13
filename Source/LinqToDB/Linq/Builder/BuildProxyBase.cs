@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 				if (ExpressionEqualityComparer.Instance.Equals(translated, currentExpression))
 					return path;
 
-				if (translated is ContextRefExpression contextRef && contextRef.BuildContext.Equals(OwnerContext))
+				if (translated is ContextRefExpression { BuildContext: var buildContext } && buildContext.Equals(OwnerContext))
 					return path;
 			}
 
