@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.DependencyInjection;
 
+#pragma warning disable IL2026
+
 namespace LinqToDB.Remote.Http.Server
 {
 	[PublicAPI]
@@ -28,7 +30,24 @@ namespace LinqToDB.Remote.Http.Server
 				.ConfigureApplicationPartManager(apm => apm.FeatureProviders.Add(new SpecificControllerFeatureProvider<LinqToDBController>()));
 		}
 
-		public class SpecificControllerFeatureProvider<T> : IApplicationFeatureProvider<ControllerFeature>
+		/// <summary>
+		/// Adds an <see cref="LinqToDBController"/> to the list of <see cref="ApplicationPartManager.ApplicationParts"/> on the
+		/// <see cref="IMvcBuilder.PartManager"/>.
+		/// </summary>
+		/// <param name="builder">The <see cref="IMvcBuilder"/>.</param>
+		/// <returns>The <see cref="IMvcBuilder"/>.</returns>
+		public static IMvcBuilder AddLinqToDBController<TContext>(this IMvcBuilder builder, string route = "api/linq2db")
+			where TContext : IDataContext
+		{
+			if (builder.Services.All(s => s.ServiceType != typeof(LinqService<TContext>)))
+				builder.Services.AddScoped<LinqService<TContext>>();
+
+			return builder.Services
+				.AddControllers(options => options.Conventions.Add(new ControllerRouteConvention<LinqToDBController<TContext>>(route)))
+				.ConfigureApplicationPartManager(apm => apm.FeatureProviders.Add(new SpecificControllerFeatureProvider<LinqToDBController<TContext>>()));
+		}
+
+		class SpecificControllerFeatureProvider<T> : IApplicationFeatureProvider<ControllerFeature>
 		{
 			public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
 			{
@@ -47,20 +66,6 @@ namespace LinqToDB.Remote.Http.Server
 					controller.Selectors.Add(new SelectorModel { AttributeRouteModel = new AttributeRouteModel { Template = route } });
 				}
 			}
-		}
-
-		/// <summary>
-		/// Adds an <see cref="LinqToDBController"/> to the list of <see cref="ApplicationPartManager.ApplicationParts"/> on the
-		/// <see cref="IMvcBuilder.PartManager"/>.
-		/// </summary>
-		/// <param name="builder">The <see cref="IMvcBuilder"/>.</param>
-		/// <returns>The <see cref="IMvcBuilder"/>.</returns>
-		public static IMvcBuilder AddLinqToDBController<TContext>(this IMvcBuilder builder, string route = "api/linq2db")
-		where TContext : IDataContext
-		{
-			return builder.Services
-				.AddControllers(options => options.Conventions.Add(new ControllerRouteConvention<LinqToDBController<TContext>>(route)))
-				.ConfigureApplicationPartManager(apm => apm.FeatureProviders.Add(new SpecificControllerFeatureProvider<LinqToDBController>()));
 		}
 	}
 }

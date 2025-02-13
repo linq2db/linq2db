@@ -7,6 +7,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Extensions.Logging;
+using LinqToDB.Remote;
 using LinqToDB.Remote.Http.Server;
 
 namespace HttpDemo.Server
@@ -33,11 +34,13 @@ namespace HttpDemo.Server
 			// Add linq2db HttpClient controller.
 			//
 			builder.Services
+//				.AddScoped<LinqService<IDemoDataModel>>(provider =>
+//					new LinqService<IDemoDataModel>(provider.GetRequiredService<IDataContextFactory<IDemoDataModel>>()) { AllowUpdates = true })
 				.AddControllers()
 				// By default, linq2db controller endpoints are mapped to 'api/linq2db'.
 				// If you need to change it, you have to override LinqToDBController class and set it using RouteAttribute on the class.
 				//.AddApplicationPart(typeof(LinqToDB.Remote.Http.Server.LinqToDBController).Assembly)
-				.AddLinqToDBController()
+				.AddLinqToDBController<IDemoDataModel>()
 				;
 
 

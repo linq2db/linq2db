@@ -3,21 +3,20 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
-using LinqToDB.Remote;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace LinqToDB.Extensions.DependencyInjection
 {
 	using Data;
+	using Remote;
 
 	public static class ServiceConfigurationExtensions
 	{
 		const ServiceLifetime DefaultLifetime = ServiceLifetime.Scoped;
 
 		/// <summary>
-		///     Registers <see cref="DataConnection"/> as the service <see cref="IDataContext"/> in the <see cref="IServiceCollection" />.
+		///     Registers <see cref="IDataContext"/> and <see cref="IDataContextFactory{TContext}"/> as services in the <see cref="IServiceCollection"/>.
 		///     You use this method when using dependency injection in your application.
 		///     For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
 		/// </summary>
@@ -63,7 +62,7 @@ namespace LinqToDB.Extensions.DependencyInjection
 		}
 
 		/// <summary>
-		///     Registers <see cref="DataConnection"/> as the service <see cref="IDataContext"/> in the <see cref="IServiceCollection" />.
+		///     Registers <see cref="IDataContext"/> and <see cref="IDataContextFactory{TContext}"/> as services in the <see cref="IServiceCollection" />.
 		///     You use this method when using dependency injection in your application.
 		///     For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
 		/// </summary>
@@ -109,7 +108,7 @@ namespace LinqToDB.Extensions.DependencyInjection
 		}
 
 		/// <summary>
-		///     Registers <see cref="DataConnection"/> as the service <see cref="IDataContext"/> in the <see cref="IServiceCollection" />.
+		///     Registers <see cref="IDataContext"/> and <see cref="IDataContextFactory{TContext}"/> as services in the <see cref="IServiceCollection" />.
 		///     You use this method when using dependency injection in your application.
 		///     For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
 		/// </summary>
@@ -156,7 +155,7 @@ namespace LinqToDB.Extensions.DependencyInjection
 		}
 
 		/// <summary>
-		///     Registers <typeparamref name="TContext"/> as a service in the <see cref="IServiceCollection" />.
+		///     Registers <typeparamref name="TContext"/> and <see cref="IDataContextFactory{TContext}"/> as services in the <see cref="IServiceCollection" />.
 		///     You use this method when using dependency injection in your application, such as with ASP.NET.
 		///     For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
 		/// </summary>
@@ -209,7 +208,7 @@ namespace LinqToDB.Extensions.DependencyInjection
 		}
 
 		/// <summary>
-		///     Registers <typeparamref name="TContext"/> as a service in the <see cref="IServiceCollection" />.
+		///     Registers <typeparamref name="TContext"/> and <see cref="IDataContextFactory{TContext}"/> as services in the <see cref="IServiceCollection" />.
 		///     You use this method when using dependency injection in your application, such as with ASP.NET.
 		///     For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
 		/// </summary>
@@ -262,7 +261,7 @@ namespace LinqToDB.Extensions.DependencyInjection
 		}
 
 		/// <summary>
-		///     Registers <typeparamref name="TContext"/> as a service in the <see cref="IServiceCollection" />.
+		///     Registers <typeparamref name="TContext"/> and <see cref="IDataContextFactory{TContext}"/> as services in the <see cref="IServiceCollection" />.
 		///     You use this method when using dependency injection in your application, such as with ASP.NET.
 		///     For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
 		/// </summary>
@@ -316,7 +315,7 @@ namespace LinqToDB.Extensions.DependencyInjection
 		}
 
 		/// <summary>
-		///     Registers <typeparamref name="TContext"/> as a service in the <see cref="IServiceCollection" />.
+		///     Registers <typeparamref name="TContext"/> and <see cref="IDataContextFactory{TContext}"/> as services in the <see cref="IServiceCollection" />.
 		///     You use this method when using dependency injection in your application, such as with ASP.NET.
 		///     For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
 		/// </summary>
@@ -376,7 +375,7 @@ namespace LinqToDB.Extensions.DependencyInjection
 		}
 
 		/// <summary>
-		///     Registers <typeparamref name="TContext"/> as a service in the <see cref="IServiceCollection" />.
+		///     Registers <typeparamref name="TContext"/> and <see cref="IDataContextFactory{TContext}"/> as services in the <see cref="IServiceCollection" />.
 		///     You use this method when using dependency injection in your application, such as with ASP.NET.
 		///     For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
 		/// </summary>
@@ -435,7 +434,7 @@ namespace LinqToDB.Extensions.DependencyInjection
 		}
 
 		/// <summary>
-		///     Registers <typeparamref name="TContext"/> as a service in the <see cref="IServiceCollection" />.
+		///     Registers <typeparamref name="TContext"/> and <see cref="IDataContextFactory{TContext}"/> as services in the <see cref="IServiceCollection" />.
 		///     You use this method when using dependency injection in your application, such as with ASP.NET.
 		///     For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
 		/// </summary>
@@ -556,7 +555,7 @@ namespace LinqToDB.Extensions.DependencyInjection
 		}
 
 		/// <summary>
-		///     Registers <typeparamref name="TContext"/> as a service in the <see cref="IServiceCollection" />.
+		///     Registers <typeparamref name="TContext"/> and <see cref="IDataContextFactory{TContext}"/> as services in the <see cref="IServiceCollection" />.
 		///     You use this method when using dependency injection in your application, such as with ASP.NET.
 		///     For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
 		/// </summary>
@@ -614,7 +613,7 @@ namespace LinqToDB.Extensions.DependencyInjection
 		}
 
 		/// <summary>
-		///     Registers <typeparamref name="TContext"/> as a service in the <see cref="IServiceCollection" />.
+		///     Registers <typeparamref name="TContext"/> and <see cref="IDataContextFactory{TContext}"/> as services in the <see cref="IServiceCollection" />.
 		///     You use this method when using dependency injection in your application, such as with ASP.NET.
 		///     For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
 		/// </summary>
@@ -660,16 +659,21 @@ namespace LinqToDB.Extensions.DependencyInjection
 			{
 				case ServiceLifetime.Scoped    :
 					serviceCollection.AddScoped   (provider => create(provider, DataConnection.DefaultConfiguration));
-					serviceCollection.AddScoped   (provider => new DataContextFactory<TContext>(context => create(provider, context)));
+					serviceCollection.AddScoped   (GetFactory);
 					break;
 				case ServiceLifetime.Singleton :
 					serviceCollection.AddSingleton(provider => create(provider, DataConnection.DefaultConfiguration));
-					serviceCollection.AddSingleton(provider => new DataContextFactory<TContext>(context => create(provider, context)));
+					serviceCollection.AddSingleton(GetFactory);
 					break;
 				case ServiceLifetime.Transient :
 					serviceCollection.AddTransient(provider => create(provider, DataConnection.DefaultConfiguration));
-					serviceCollection.AddTransient(provider => new DataContextFactory<TContext>(context => create(provider, context)));
+					serviceCollection.AddTransient(GetFactory);
 					break;
+			}
+
+			IDataContextFactory<TContext> GetFactory(IServiceProvider provider)
+			{
+				return new DataContextFactory<TContext>(context => create(provider, context));
 			}
 
 			return serviceCollection;

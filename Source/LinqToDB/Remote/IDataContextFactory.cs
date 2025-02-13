@@ -6,9 +6,9 @@ namespace LinqToDB.Remote
 	/// A factory for creating <see cref="IDataContext"/> instances.
 	/// </summary>
 	/// <typeparam name="TContext"></typeparam>
-	public interface IDataContextFactory<TContext>
+	public interface IDataContextFactory<out TContext>
 	where TContext : IDataContext
 	{
-		TContext GetDataContext(string? configuration = null);
+		TContext CreateDataContext(string? configuration = null);
 	}
 }
