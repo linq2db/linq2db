@@ -84,6 +84,8 @@ namespace LinqToDB.Remote.Http.Client
 			return _hubConnection.InvokeAsync<int>(nameof(ILinqService.ExecuteBatchAsync), configuration, queryData, cancellationToken: cancellationToken);
 		}
 
+		string? ILinqService.RemoteClientTag { get; set; } = "Signal/R";
+
 		public async ValueTask DisposeAsync()
 		{
 			await Task.CompletedTask;

@@ -77,7 +77,7 @@ namespace LinqToDB.Remote.Http.Server
 
 		protected virtual ILinqService CreateLinqService()
 		{
-			return new LinqService { AllowUpdates = false, RemoteClientTag = "Http" };
+			return new LinqService { AllowUpdates = false, RemoteClientTag = "HttpClient" };
 		}
 	}
 }

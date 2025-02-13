@@ -39,8 +39,8 @@ namespace LinqToDB.Remote.Http.Server
 		public static IMvcBuilder AddLinqToDBController<TContext>(this IMvcBuilder builder, string route = "api/linq2db")
 			where TContext : IDataContext
 		{
-			if (builder.Services.All(s => s.ServiceType != typeof(LinqService<TContext>)))
-				builder.Services.AddScoped<LinqService<TContext>>();
+			if (builder.Services.All(s => s.ServiceType != typeof(ILinqService<TContext>)))
+				builder.Services.AddScoped<ILinqService<TContext>>(provider => new LinqService<TContext>(provider.GetRequiredService<IDataContextFactory<TContext>>()));
 
 			return builder.Services
 				.AddControllers(options => options.Conventions.Add(new ControllerRouteConvention<LinqToDBController<TContext>>(route)))

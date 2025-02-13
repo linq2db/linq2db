@@ -119,5 +119,7 @@ namespace LinqToDB.Remote.Http.Client
 
 			return int.Parse(await response.Content.ReadAsStringAsync(cancellationToken), CultureInfo.InvariantCulture);
 		}
+
+		string? ILinqService.RemoteClientTag { get; set; } = "HttpClient";
 	}
 }

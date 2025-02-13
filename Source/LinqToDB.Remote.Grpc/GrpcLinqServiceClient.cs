@@ -127,6 +127,8 @@ namespace LinqToDB.Remote.Grpc
 				.ConfigureAwait(false);
 		}
 
+		string? ILinqService.RemoteClientTag { get; set; } = "Grpc";
+
 		void IDisposable.Dispose()
 		{
 			_channel.Dispose();

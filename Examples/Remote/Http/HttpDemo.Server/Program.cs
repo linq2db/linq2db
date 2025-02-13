@@ -26,7 +26,9 @@ namespace HttpDemo.Server
 
 			// Add linq2db data context.
 			//
-			builder.Services.AddLinqToDBContext<IDemoDataModel>(provider => new DemoDB(new DataOptions()
+			DataOptions? options = null;
+
+			builder.Services.AddLinqToDBContext<IDemoDataModel>(provider => new DemoDB(options ??= new DataOptions()
 				.UseSQLite("Data Source=:memory:;Mode=Memory;Cache=Shared")
 				.UseDefaultLogging(provider)),
 				ServiceLifetime.Transient);
