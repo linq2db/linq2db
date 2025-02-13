@@ -6,9 +6,9 @@ namespace LinqToDB.Remote.Http.Client
 	/// <summary>
 	/// Remote data context implementation over HttpClient.
 	/// </summary>
-	public class HttpDataContext : RemoteDataContextBase
+	public class HttpClientDataContext : RemoteDataContextBase
 	{
-		protected HttpLinqServiceClient Client;
+		protected HttpClientLinqServiceClient Client;
 
 		#region Init
 
@@ -19,7 +19,7 @@ namespace LinqToDB.Remote.Http.Client
 		/// </summary>
 		/// <param name="client"></param>
 		/// <param name="optionBuilder"></param>
-		public HttpDataContext(HttpLinqServiceClient client, Func<DataOptions,DataOptions>? optionBuilder = null)
+		public HttpClientDataContext(HttpClientLinqServiceClient client, Func<DataOptions,DataOptions>? optionBuilder = null)
 			: base(optionBuilder == null ? _defaultDataOptions : optionBuilder(_defaultDataOptions))
 		{
 			Client = client;
@@ -31,8 +31,8 @@ namespace LinqToDB.Remote.Http.Client
 		/// <param name="httpClient">HttpClient</param>
 		/// <param name="requestUri"></param>
 		/// <param name="optionBuilder"></param>
-		public HttpDataContext(HttpClient httpClient, string requestUri, Func<DataOptions,DataOptions>? optionBuilder = null)
-			: this(new HttpLinqServiceClient(httpClient, requestUri), optionBuilder)
+		public HttpClientDataContext(HttpClient httpClient, string requestUri, Func<DataOptions,DataOptions>? optionBuilder = null)
+			: this(new HttpClientLinqServiceClient(httpClient, requestUri), optionBuilder)
 		{
 		}
 
@@ -42,7 +42,7 @@ namespace LinqToDB.Remote.Http.Client
 		/// <param name="baseAddress">Server baseAddress.</param>
 		/// <param name="requestUri"></param>
 		/// <param name="optionBuilder"></param>
-		public HttpDataContext(Uri baseAddress, string requestUri, Func<DataOptions,DataOptions>? optionBuilder = null)
+		public HttpClientDataContext(Uri baseAddress, string requestUri, Func<DataOptions,DataOptions>? optionBuilder = null)
 			: this(new HttpClient { BaseAddress = baseAddress}, requestUri, optionBuilder)
 		{
 		}

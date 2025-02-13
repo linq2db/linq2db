@@ -5,9 +5,9 @@ using LinqToDB.Remote.Http.Client;
 
 namespace HttpDemo.Client.DataModel
 {
-	public class DemoData : HttpDataContext, IDemoDataModel
+	public class DemoClientData : HttpClientDataContext, IDemoDataModel
 	{
-		public DemoData(HttpLinqServiceClient client, Func<DataOptions,DataOptions>? optionBuilder = null)
+		public DemoClientData(HttpClientLinqServiceClient client, Func<DataOptions,DataOptions>? optionBuilder = null)
 			: base(client, optionBuilder)
 		{
 			Model = new DemoDataModel(this);

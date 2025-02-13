@@ -14,7 +14,7 @@ namespace LinqToDB.Remote.Http.Client
 	/// <summary>
 	/// Http-base remote data context client.
 	/// </summary>
-	public class HttpLinqServiceClient(HttpClient httpClient, string requestUri) : ILinqService
+	public class HttpClientLinqServiceClient(HttpClient httpClient, string requestUri) : ILinqService
 	{
 		public HttpClient HttpClient { get; } = httpClient;
 

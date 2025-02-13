@@ -22,7 +22,7 @@ namespace LinqToDB.Remote.Http.Client
 		///           {
 		///               var connectionString = "connection string to database";
 		///
-		///               services.AddLinqToDBHttpDataContext&lt;IMyContext, MyContext&gt;(
+		///               services.AddLinqToDBHttpClientDataContext&lt;IMyContext, MyContext&gt;(
 		///                   builder.HostEnvironment.BaseAddress,
 		///                   "api/linq2db",
 		///                   (service,options) => options.UseSqlServer(connectionString));
@@ -43,11 +43,11 @@ namespace LinqToDB.Remote.Http.Client
 		/// <returns>
 		///     The same service collection so that multiple calls can be chained.
 		/// </returns>
-		public static IServiceCollection AddLinqToDBHttpDataContext<TContext>(
-			this IServiceCollection              services,
-			string                               baseAddress,
-			string                               serviceName,
-			Func<HttpLinqServiceClient,TContext> getContext)
+		public static IServiceCollection AddLinqToDBHttpClientDataContext<TContext>(
+			this IServiceCollection                    services,
+			string                                     baseAddress,
+			string                                     serviceName,
+			Func<HttpClientLinqServiceClient,TContext> getContext)
 			where TContext: class, IDataContext
 		{
 			services.AddHttpClient(serviceName, client => client.BaseAddress = new Uri(baseAddress));
@@ -55,18 +55,18 @@ namespace LinqToDB.Remote.Http.Client
 			services.AddKeyedScoped(serviceName, (provider, _) =>
 			{
 				var http = provider.GetRequiredService<IHttpClientFactory>().CreateClient(serviceName);
-				return new HttpLinqServiceClient(http, serviceName);
+				return new HttpClientLinqServiceClient(http, serviceName);
 			});
 
 			services.AddTransient(provider =>
 			{
-				var client = provider.GetRequiredKeyedService<HttpLinqServiceClient>(serviceName);
+				var client = provider.GetRequiredKeyedService<HttpClientLinqServiceClient>(serviceName);
 				return getContext(client);
 			});
 
 			services.AddTransient<IDataContextFactory<TContext>>(provider =>
 			{
-				var client = provider.GetRequiredKeyedService<HttpLinqServiceClient>(serviceName);
+				var client = provider.GetRequiredKeyedService<HttpClientLinqServiceClient>(serviceName);
 				return new DataContextFactory<TContext>(_ => getContext(client));
 			});
 
@@ -84,7 +84,7 @@ namespace LinqToDB.Remote.Http.Client
 		///           {
 		///               var connectionString = "connection string to database";
 		///
-		///               services.AddLinqToDBHttpDataContext&lt;IMyContext, MyContext&gt;(
+		///               services.AddLinqToDBHttpClientDataContext&lt;IMyContext, MyContext&gt;(
 		///                   builder.HostEnvironment.BaseAddress,
 		///                   (service,options) => options.UseSqlServer(connectionString));
 		///           }
@@ -103,18 +103,18 @@ namespace LinqToDB.Remote.Http.Client
 		/// <returns>
 		///     The same service collection so that multiple calls can be chained.
 		/// </returns>
-		public static IServiceCollection AddLinqToDBHttpDataContext<TContext>(
-			this IServiceCollection              serviceCollection,
-			string                               baseAddress,
-			Func<HttpLinqServiceClient,TContext> getContext)
+		public static IServiceCollection AddLinqToDBHttpClientDataContext<TContext>(
+			this IServiceCollection                    serviceCollection,
+			string                                     baseAddress,
+			Func<HttpClientLinqServiceClient,TContext> getContext)
 			where TContext: class, IDataContext
 		{
-			return serviceCollection.AddLinqToDBHttpDataContext(baseAddress, "api/linq2db", getContext);
+			return serviceCollection.AddLinqToDBHttpClientDataContext(baseAddress, "api/linq2db", getContext);
 		}
 
 		public static async Task InitAsync(this IDataContext dataContext)
 		{
-			if (dataContext is HttpDataContext httpDataContext)
+			if (dataContext is HttpClientDataContext httpDataContext)
 			{
 				await httpDataContext.ConfigureAsync(default).ConfigureAwait(false);
 			}

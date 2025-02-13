@@ -18,9 +18,9 @@ namespace HttpDemo.Client
 
 			// Add linq2db HttpClient service.
 			//
-			builder.Services.AddLinqToDBHttpDataContext<IDemoDataModel>(
+			builder.Services.AddLinqToDBHttpClientDataContext<IDemoDataModel>(
 				builder.HostEnvironment.BaseAddress,
-				client => new DemoData(client));
+				client => new DemoClientData(client));
 
 
 
@@ -29,6 +29,8 @@ namespace HttpDemo.Client
 
 
 			// Initialize linq2db HttpClient.
+			// This is required to be able to use linq2db HttpClient service.
+			//
 			await app.Services.GetRequiredService<IDemoDataModel>().InitAsync();
 
 
