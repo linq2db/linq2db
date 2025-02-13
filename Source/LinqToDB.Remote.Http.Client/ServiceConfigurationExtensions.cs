@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -68,7 +67,7 @@ namespace LinqToDB.Remote.Http.Client
 			services.AddTransient<IDataContextFactory<TContext>>(provider =>
 			{
 				var client = provider.GetRequiredKeyedService<HttpLinqServiceClient>(serviceName);
-				return new DataContextFactory<TContext>(() => getContext(client));
+				return new DataContextFactory<TContext>(_ => getContext(client));
 			});
 
 			return services;

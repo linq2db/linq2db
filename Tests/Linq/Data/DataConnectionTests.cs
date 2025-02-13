@@ -369,6 +369,17 @@ namespace Tests.Data
 		}
 
 		[Test]
+		public void TestServiceCollection4([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var collection = new ServiceCollection();
+			collection.AddTransient<DummyService>();
+			collection.AddLinqToDBContext<DbConnection4>(serviceProvider => new DbConnection4(new DataOptions<IDataContext>(new DataOptions().UseConfigurationString(context))));
+			var provider = collection.BuildServiceProvider();
+			var con = provider.GetService<DbConnection3>()!;
+			Assert.That(con.ConfigurationString, Is.EqualTo(context));
+		}
+
+		[Test]
 		public void TestServiceCollection_Issue4326_Positive([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var collection = new ServiceCollection();

@@ -3,6 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
+using LinqToDB.Remote;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -486,7 +488,7 @@ namespace LinqToDB.Extensions.DependencyInjection
 			ServiceLifetime                                lifetime = DefaultLifetime
 		)
 			where TContextImplementation : TContext, IDataContext
-			where TContext: IDataContext
+			where TContext : IDataContext
 		{
 			var constructorType = HasTypedContextConstructor<TContextImplementation, TContext>();
 
@@ -509,6 +511,18 @@ namespace LinqToDB.Extensions.DependencyInjection
 						provider => configure(provider, new DataOptions()), lifetime));
 					break;
 
+			}
+
+			switch (lifetime)
+			{
+				case ServiceLifetime.Scoped    : serviceCollection.AddScoped   (GetFactory); break;
+				case ServiceLifetime.Singleton : serviceCollection.AddSingleton(GetFactory); break;
+				case ServiceLifetime.Transient : serviceCollection.AddTransient(GetFactory); break;
+			}
+
+			IDataContextFactory<TContext> GetFactory(IServiceProvider provider)
+			{
+				return new DataContextFactory<TContext>(_ => provider.GetRequiredService<TContext>());
 			}
 
 			return serviceCollection;
@@ -539,6 +553,126 @@ namespace LinqToDB.Extensions.DependencyInjection
 				return OptionsParameterType.DataOptions;
 
 			throw new ArgumentException($"Missing constructor accepting '{nameof(DataOptions)}' on type {typeof(TContextImplementation).Name}.");
+		}
+
+		/// <summary>
+		///     Registers <typeparamref name="TContext"/> as a service in the <see cref="IServiceCollection" />.
+		///     You use this method when using dependency injection in your application, such as with ASP.NET.
+		///     For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
+		/// </summary>
+		/// <example>
+		///     <code>
+		///           public void ConfigureServices(IServiceCollection services)
+		///           {
+		///               var connectionString = "connection string to database";
+		///
+		///               services.AddLinqToDBContext&lt;IMyContext, MyContext&gt;((service,options) => options.UseSqlServer(connectionString));
+		///           }
+		///       </code>
+		/// </example>
+		/// <typeparam name="TContext">
+		/// 	The class or interface that will be used to resolve the context from the container.
+		/// </typeparam>
+		/// <param name="serviceCollection"> The <see cref="IServiceCollection" /> to add services to. </param>
+		/// <param name="create">
+		///     <para>
+		///         An action to create the <see cref="IDataContext" />.
+		///     </para>
+		/// </param>
+		/// <param name="lifetime">
+		/// 	The lifetime with which to register the Context service in the container.
+		/// 	For one connection per request use <see cref="ServiceLifetime.Scoped"/> (the default).
+		/// </param>
+		/// <remarks>
+		/// 	This method should be used when a custom context is required or
+		/// 	when multiple contexts with different configurations are required.
+		/// </remarks>
+		/// <returns>
+		///     The same service collection so that multiple calls can be chained.
+		/// </returns>
+		public static IServiceCollection AddLinqToDBContext<TContext>
+		(
+			this IServiceCollection         serviceCollection,
+			Func<IServiceProvider,TContext> create,
+			ServiceLifetime                 lifetime = DefaultLifetime
+		)
+			where TContext : class, IDataContext
+		{
+			switch (lifetime)
+			{
+				case ServiceLifetime.Scoped    : serviceCollection.AddScoped   (create); serviceCollection.AddScoped   (GetFactory); break;
+				case ServiceLifetime.Singleton : serviceCollection.AddSingleton(create); serviceCollection.AddSingleton(GetFactory); break;
+				case ServiceLifetime.Transient : serviceCollection.AddTransient(create); serviceCollection.AddTransient(GetFactory); break;
+			}
+
+			IDataContextFactory<TContext> GetFactory(IServiceProvider provider)
+			{
+				return new DataContextFactory<TContext>(_ => create(provider));
+			}
+
+			return serviceCollection;
+		}
+
+		/// <summary>
+		///     Registers <typeparamref name="TContext"/> as a service in the <see cref="IServiceCollection" />.
+		///     You use this method when using dependency injection in your application, such as with ASP.NET.
+		///     For more information on setting up dependency injection, see http://go.microsoft.com/fwlink/?LinkId=526890.
+		/// </summary>
+		/// <example>
+		///     <code>
+		///           public void ConfigureServices(IServiceCollection services)
+		///           {
+		///               var connectionString = "connection string to database";
+		///
+		///               services.AddLinqToDBContext&lt;IMyContext, MyContext&gt;((service,options) => options.UseSqlServer(connectionString));
+		///           }
+		///       </code>
+		/// </example>
+		/// <typeparam name="TContext">
+		/// 	The class or interface that will be used to resolve the context from the container.
+		/// </typeparam>
+		/// <param name="serviceCollection"> The <see cref="IServiceCollection" /> to add services to. </param>
+		/// <param name="create">
+		///     <para>
+		///         An action to create the <see cref="IDataContext" />.
+		///     </para>
+		/// </param>
+		/// <param name="lifetime">
+		/// 	The lifetime with which to register the Context service in the container.
+		/// 	For one connection per request use <see cref="ServiceLifetime.Scoped"/> (the default).
+		/// </param>
+		/// <remarks>
+		/// 	This method should be used when a custom context is required or
+		/// 	when multiple contexts with different configurations are required.
+		/// </remarks>
+		/// <returns>
+		///     The same service collection so that multiple calls can be chained.
+		/// </returns>
+		public static IServiceCollection AddLinqToDBContext<TContext>
+		(
+			this IServiceCollection                 serviceCollection,
+			Func<IServiceProvider,string?,TContext> create,
+			ServiceLifetime                         lifetime = DefaultLifetime
+		)
+			where TContext : class, IDataContext
+		{
+			switch (lifetime)
+			{
+				case ServiceLifetime.Scoped    :
+					serviceCollection.AddScoped   (provider => create(provider, DataConnection.DefaultConfiguration));
+					serviceCollection.AddScoped   (provider => new DataContextFactory<TContext>(context => create(provider, context)));
+					break;
+				case ServiceLifetime.Singleton :
+					serviceCollection.AddSingleton(provider => create(provider, DataConnection.DefaultConfiguration));
+					serviceCollection.AddSingleton(provider => new DataContextFactory<TContext>(context => create(provider, context)));
+					break;
+				case ServiceLifetime.Transient :
+					serviceCollection.AddTransient(provider => create(provider, DataConnection.DefaultConfiguration));
+					serviceCollection.AddTransient(provider => new DataContextFactory<TContext>(context => create(provider, context)));
+					break;
+			}
+
+			return serviceCollection;
 		}
 	}
 }

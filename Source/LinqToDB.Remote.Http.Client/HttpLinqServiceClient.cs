@@ -4,8 +4,8 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
-#pragma warning disable CA2007
 
+#pragma warning disable CA2007
 #pragma warning disable IL2026
 #pragma warning disable IL3050
 

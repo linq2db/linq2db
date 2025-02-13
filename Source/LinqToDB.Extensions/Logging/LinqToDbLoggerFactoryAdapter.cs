@@ -1,20 +1,15 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+
 using Microsoft.Extensions.Logging;
 
 namespace LinqToDB.Extensions.Logging
 {
 	using Data;
 
-	public class LinqToDBLoggerFactoryAdapter
+	public class LinqToDBLoggerFactoryAdapter(ILoggerFactory loggerFactory)
 	{
-		private readonly ILoggerFactory          _loggerFactory;
-		private readonly ILogger<DataConnection> _logger;
-
-		public LinqToDBLoggerFactoryAdapter(ILoggerFactory loggerFactory)
-		{
-			_loggerFactory = loggerFactory;
-			_logger        = _loggerFactory.CreateLogger<DataConnection>();
-		}
+		private readonly ILogger<DataConnection> _logger = loggerFactory.CreateLogger<DataConnection>();
 
 		public void OnTrace(string? message, string? category, TraceLevel level)
 		{

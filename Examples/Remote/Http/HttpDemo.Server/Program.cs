@@ -5,6 +5,9 @@ using HttpDemo.Server.Components;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Extensions.DependencyInjection;
+using LinqToDB.Extensions.Logging;
+using LinqToDB.Remote.Http.Server;
 
 namespace HttpDemo.Server
 {
@@ -14,33 +17,33 @@ namespace HttpDemo.Server
 		{
 			var builder = WebApplication.CreateBuilder(args);
 
-			// Add services to the container.
 			builder.Services.AddRazorComponents()
 				.AddInteractiveServerComponents()
 				.AddInteractiveWebAssemblyComponents();
 
 
 
-			// Initialize linq2db options.
+			// Add linq2db data context.
 			//
-			var linq2dbOptions = new DataOptions().UseSQLite("Data Source=:memory:;Mode=Memory;Cache=Shared");
+			builder.Services.AddLinqToDBContext<IDemoDataModel>(provider => new DemoDB(new DataOptions()
+				.UseSQLite("Data Source=:memory:;Mode=Memory;Cache=Shared")
+				.UseDefaultLogging(provider)),
+				ServiceLifetime.Transient);
 
-			// Add linq2db service.
-			//
-			builder.Services.AddTransient<IDemoDataModel>(_ => new DemoDB(linq2dbOptions));
-
-			// Add linq2db controller.
+			// Add linq2db HttpClient controller.
 			//
 			builder.Services
 				.AddControllers()
-				.AddApplicationPart(typeof(LinqToDB.Remote.Http.Server.LinqToDBController).Assembly)
+				// By default, linq2db controller endpoints are mapped to 'api/linq2db'.
+				// If you need to change it, you have to override LinqToDBController class and set it using RouteAttribute on the class.
+				//.AddApplicationPart(typeof(LinqToDB.Remote.Http.Server.LinqToDBController).Assembly)
+				.AddLinqToDBController()
 				;
 
 
 
 			var app = builder.Build();
 
-			// Configure the HTTP request pipeline.
 			if (app.Environment.IsDevelopment())
 			{
 				app.UseWebAssemblyDebugging();
@@ -56,11 +59,12 @@ namespace HttpDemo.Server
 			app.MapRazorComponents<App>()
 				.AddInteractiveServerRenderMode()
 				.AddInteractiveWebAssemblyRenderMode()
-				.AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
+				.AddAdditionalAssemblies(typeof(Client._Imports).Assembly)
+				;
 
 
 
-			// Map controllers including linq2db controller.
+			// Map controllers including linq2db HttpClient controller.
 			//
 			app.MapControllers();
 
