@@ -18,7 +18,6 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using LinqToDB.Common;
 	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Types;
 	using LinqToDB.Mapping;
 	using LinqToDB.Reflection;
 	using LinqToDB.SqlQuery;
@@ -56,73 +55,73 @@ namespace LinqToDB.DataProvider.SqlServer
 			Type sqlExceptionType,
 
 			Action<DbParameter, SqlDbType> dbTypeSetter,
-			Func  <DbParameter, SqlDbType> dbTypeGetter,
+			Func<DbParameter, SqlDbType> dbTypeGetter,
 			Action<DbParameter, string> udtTypeNameSetter,
-			Func  <DbParameter, string> udtTypeNameGetter,
+			Func<DbParameter, string> udtTypeNameGetter,
 			Action<DbParameter, string> typeNameSetter,
-			Func  <DbParameter, string> typeNameGetter,
+			Func<DbParameter, string> typeNameGetter,
 
 			Func<string, SqlConnectionStringBuilder> createConnectionStringBuilder,
 
 			Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> createBulkCopy,
-			Func<int, string, SqlBulkCopyColumnMapping>                         createBulkCopyColumnMapping,
-			
+			Func<int, string, SqlBulkCopyColumnMapping> createBulkCopyColumnMapping,
+
 			MappingSchema? mappingSchema,
 			Type? sqlJsonType)
 		{
 			Provider = provider;
 
 			ConnectionType = connectionType;
-			DataReaderType     = dataReaderType;
-			ParameterType      = parameterType;
-			CommandType        = commandType;
-			TransactionType    = transactionType;
+			DataReaderType = dataReaderType;
+			ParameterType = parameterType;
+			CommandType = commandType;
+			TransactionType = transactionType;
 			_connectionFactory = connectionFactory;
 
 			SqlDataRecordType = sqlDataRecordType;
-			SqlExceptionType  = sqlExceptionType;
+			SqlExceptionType = sqlExceptionType;
 
-			SetDbType      = dbTypeSetter;
-			GetDbType      = dbTypeGetter;
+			SetDbType = dbTypeSetter;
+			GetDbType = dbTypeGetter;
 			SetUdtTypeName = udtTypeNameSetter;
 			GetUdtTypeName = udtTypeNameGetter;
-			SetTypeName    = typeNameSetter;
-			GetTypeName    = typeNameGetter;
+			SetTypeName = typeNameSetter;
+			GetTypeName = typeNameGetter;
 
 			_createConnectionStringBuilder = createConnectionStringBuilder;
 
-			_createBulkCopy              = createBulkCopy;
+			_createBulkCopy = createBulkCopy;
 			_createBulkCopyColumnMapping = createBulkCopyColumnMapping;
 
 			MappingSchema = mappingSchema;
-			SqlJsonType   = sqlJsonType;
+			SqlJsonType = sqlJsonType;
 		}
 
 		public SqlServerProvider Provider { get; }
 
 		#region IDynamicProviderAdapter
 
-		public Type ConnectionType  { get; }
-		public Type DataReaderType  { get; }
-		public Type ParameterType   { get; }
-		public Type CommandType     { get; }
+		public Type ConnectionType { get; }
+		public Type DataReaderType { get; }
+		public Type ParameterType { get; }
+		public Type CommandType { get; }
 		public Type TransactionType { get; }
 
 		readonly Func<string, DbConnection> _connectionFactory;
 		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
 
-#endregion
+		#endregion
 
 		public Type SqlDataRecordType { get; }
-		public Type SqlExceptionType  { get; }
+		public Type SqlExceptionType { get; }
 
-		public string GetSqlXmlReaderMethod         => "GetSqlXml";
+		public string GetSqlXmlReaderMethod => "GetSqlXml";
 		public string GetDateTimeOffsetReaderMethod => "GetDateTimeOffset";
-		public string GetTimeSpanReaderMethod       => "GetTimeSpan";
+		public string GetTimeSpanReaderMethod => "GetTimeSpan";
 
 		public MappingSchema? MappingSchema { get; }
 
-		public Type?   SqlJsonType { get; }
+		public Type? SqlJsonType { get; }
 		public string? GetSqlJsonReaderMethod => SqlJsonType == null ? null : "GetSqlJson";
 		public SqlDbType JsonDbType => SqlJsonType == null ? SqlDbType.NVarChar : (SqlDbType)35;
 
@@ -138,13 +137,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			=> _createBulkCopyColumnMapping(source, destination);
 
 		public Action<DbParameter, SqlDbType> SetDbType { get; }
-		public Func  <DbParameter, SqlDbType> GetDbType { get; }
+		public Func<DbParameter, SqlDbType> GetDbType { get; }
 
 		public Action<DbParameter, string> SetUdtTypeName { get; }
-		public Func  <DbParameter, string> GetUdtTypeName { get; }
+		public Func<DbParameter, string> GetUdtTypeName { get; }
 
 		public Action<DbParameter, string> SetTypeName { get; }
-		public Func  <DbParameter, string> GetTypeName { get; }
+		public Func<DbParameter, string> GetTypeName { get; }
 
 		public static SqlServerProviderAdapter GetInstance(SqlServerProvider provider)
 		{
@@ -429,9 +428,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		private sealed class SqlParameter
 		{
 			// string return type is correct, TypeName and UdtTypeName return empty string instead of null
-			public string    UdtTypeName { get; set; } = null!;
-			public string    TypeName    { get; set; } = null!;
-			public SqlDbType SqlDbType   { get; set; }
+			public string UdtTypeName { get; set; } = null!;
+			public string TypeName { get; set; } = null!;
+			public SqlDbType SqlDbType { get; set; }
 		}
 
 		[Wrapper]
@@ -454,7 +453,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			public bool MultipleActiveResultSets
 			{
-				get => ((Func  <SqlConnectionStringBuilder, bool>)CompiledWrappers[0])(this);
+				get => ((Func<SqlConnectionStringBuilder, bool>)CompiledWrappers[0])(this);
 				set => ((Action<SqlConnectionStringBuilder, bool>)CompiledWrappers[1])(this, value);
 			}
 		}
@@ -516,7 +515,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			public SqlBulkCopy(SqlConnection connection, SqlBulkCopyOptions options, SqlTransaction? transaction) => throw new NotImplementedException();
 
-			void IDisposable.Dispose()                        => ((Action<SqlBulkCopy>)CompiledWrappers[0])(this);
+			void IDisposable.Dispose() => ((Action<SqlBulkCopy>)CompiledWrappers[0])(this);
 #pragma warning disable RS0030 // API mapping must preserve type
 			public void WriteToServer(IDataReader dataReader) => ((Action<SqlBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
 			public Task WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken)
@@ -525,29 +524,29 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			public int NotifyAfter
 			{
-				get => ((Func  <SqlBulkCopy, int>)CompiledWrappers[2])(this);
+				get => ((Func<SqlBulkCopy, int>)CompiledWrappers[2])(this);
 				set => ((Action<SqlBulkCopy, int>)CompiledWrappers[7])(this, value);
 			}
 
 			public int BatchSize
 			{
-				get => ((Func  <SqlBulkCopy, int>)CompiledWrappers[3])(this);
+				get => ((Func<SqlBulkCopy, int>)CompiledWrappers[3])(this);
 				set => ((Action<SqlBulkCopy, int>)CompiledWrappers[8])(this, value);
 			}
 
 			public int BulkCopyTimeout
 			{
-				get => ((Func  <SqlBulkCopy, int>)CompiledWrappers[4])(this);
+				get => ((Func<SqlBulkCopy, int>)CompiledWrappers[4])(this);
 				set => ((Action<SqlBulkCopy, int>)CompiledWrappers[9])(this, value);
 			}
 
 			public string? DestinationTableName
 			{
-				get => ((Func  <SqlBulkCopy, string?>)CompiledWrappers[5] )(this);
+				get => ((Func<SqlBulkCopy, string?>)CompiledWrappers[5])(this);
 				set => ((Action<SqlBulkCopy, string?>)CompiledWrappers[10])(this, value);
 			}
 
-			public SqlBulkCopyColumnMappingCollection ColumnMappings => ((Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>) CompiledWrappers[6])(this);
+			public SqlBulkCopyColumnMappingCollection ColumnMappings => ((Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>)CompiledWrappers[6])(this);
 
 			private      SqlRowsCopiedEventHandler? _SqlRowsCopied;
 			public event SqlRowsCopiedEventHandler?  SqlRowsCopied
@@ -579,7 +578,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			public bool Abort
 			{
-				get => ((Func  <SqlRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
+				get => ((Func<SqlRowsCopiedEventArgs, bool>)CompiledWrappers[1])(this);
 				set => ((Action<SqlRowsCopiedEventArgs, bool>)CompiledWrappers[2])(this, value);
 			}
 		}
