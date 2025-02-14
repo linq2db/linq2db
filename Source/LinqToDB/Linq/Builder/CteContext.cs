@@ -192,7 +192,7 @@ namespace LinqToDB.Linq.Builder
 					field.Type      = dataType;
 				}
 				else
-		{
+				{
 					field = new SqlField(dataType, alias, isNullable);
 				}
 
@@ -203,7 +203,7 @@ namespace LinqToDB.Linq.Builder
 				}, f => (string.IsNullOrEmpty(f.Name) ? "field" : f.Name) + "_1");
 
 				CteClause.Fields.Add(field);
-		}
+			}
 
 			var newPlaceholderPath = path;
 

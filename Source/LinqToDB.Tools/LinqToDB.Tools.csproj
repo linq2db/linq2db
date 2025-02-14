@@ -11,6 +11,7 @@
 
 		<Title>Linq to DB Tools</Title>
 		<Description>Additional tools to support scaffolding a Linq to DB Data Context</Description>
+		<Product>$(Title)</Product>
 	</PropertyGroup>
 
 	<ItemGroup>

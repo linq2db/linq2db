@@ -12,6 +12,7 @@
 
 		<Title>Linq to DB F#</Title>
 		<Description>Linq to DB Bindings to support F#</Description>
+		<Product>$(Title)</Product>
 	</PropertyGroup>
 
 	<ItemGroup>

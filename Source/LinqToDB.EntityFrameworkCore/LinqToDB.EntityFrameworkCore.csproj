@@ -7,7 +7,9 @@
 
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 
+		<Title>Linq to DB EntityFrameworkCore</Title>
 		<Description>Linq to DB Extensions for Entity Framework Core</Description>
+		<Product>$(Title)</Product>
 
 		<!--EF1001: use of internal EF API-->
 		<NoWarn>EF1001</NoWarn>

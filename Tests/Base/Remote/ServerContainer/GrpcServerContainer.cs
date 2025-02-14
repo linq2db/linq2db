@@ -20,19 +20,8 @@ using NUnit.Framework;
 
 using ProtoBuf.Grpc.Server;
 
-#if NET9_0_OR_GREATER
-using System.Threading;
-
 using Tests.Model;
 using Tests.Model.Remote.Grpc;
-
-#else
-using Lock = System.Object;
-
-using Tests.Model;
-using Tests.Model.Remote.Grpc;
-
-#endif
 
 namespace Tests.Remote.ServerContainer
 {
@@ -40,7 +29,7 @@ namespace Tests.Remote.ServerContainer
 	{
 		private const int Port = 22654;
 
-		private readonly Lock _syncRoot = new ();
+		private readonly object _syncRoot = new ();
 
 		//useful for async tests
 		public bool KeepSamePortBetweenThreads { get; set; } = true;

@@ -13,6 +13,7 @@
 
 		<Title>Linq to DB Extensions</Title>
 		<Description>Linq to DB Extensions to integrate with Microsoft.Extensions.DependencyInjection</Description>
+		<Product>$(Title)</Product>
 	</PropertyGroup>
 
 	<ItemGroup>

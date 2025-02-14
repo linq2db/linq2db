@@ -2628,6 +2628,6 @@ namespace Tests.Linq
 				};
 
 			var result = query.ToArray();
-}
+		}
 	}
 }

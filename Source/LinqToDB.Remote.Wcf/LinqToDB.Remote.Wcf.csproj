@@ -9,6 +9,7 @@
 
 		<Title>Linq to DB WCF Remote</Title>
 		<Description>Linq to DB support for querying remote data contexts over WCF</Description>
+		<Product>$(Title)</Product>
 	</PropertyGroup>
 
 	<ItemGroup>

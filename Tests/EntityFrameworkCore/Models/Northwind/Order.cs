@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.EntityFrameworkCore.Tests.Models.Northwind
 {
-	public class Order : BaseEntity
+    public class Order : BaseEntity
     {
         public Order()
         {
