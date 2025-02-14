@@ -48,7 +48,7 @@
 		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
 
 		<!--feature flags-->
-		<DefineConstants Condition=" $(TargetFramework) == 'net8.0' ">SUPPORTS_COMPOSITE_FORMAT;$(DefineConstants)</DefineConstants>
+		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_COMPOSITE_FORMAT;$(DefineConstants)</DefineConstants>
 
 		<ArtifactsPath>$(MSBuildThisFileDirectory).build</ArtifactsPath>
 		<ArtifactsPivots>$(Configuration)\$(TargetFramework)</ArtifactsPivots>
