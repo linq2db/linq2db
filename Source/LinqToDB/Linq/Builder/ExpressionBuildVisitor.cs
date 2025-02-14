@@ -2367,7 +2367,8 @@ namespace LinqToDB.Linq.Builder
 
 					if (sql != null)
 					{
-						translated = CreatePlaceholder(sql, node).WithAlias(_alias);
+						var path = new SqlPathExpression([SequenceHelper.CreateRef(BuildContext), node], node.Type);
+						translated = CreatePlaceholder(sql, path).WithAlias(_alias);
 						return true;
 					}
 				}
