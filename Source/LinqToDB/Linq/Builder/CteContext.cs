@@ -230,8 +230,8 @@ namespace LinqToDB.Linq.Builder
 					throw new InvalidOperationException();
 			}
 
-		public override IBuildContext Clone(CloningContext context)
-		{
+			public override IBuildContext Clone(CloningContext context)
+			{
 				return new CteProxy(context.CloneContext(OwnerContext), context.CloneExpression(CurrentPath), context.CloneExpression(InnerExpression));
 			}
 
