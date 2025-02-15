@@ -108,7 +108,6 @@ namespace Tests.UserTests
 			new Executant { Id = 2, TestId = 2 }
 		};
 
-
 		[Test]
 		public void JoinUsingAggregateResult([DataSources] string context)
 		{
@@ -169,7 +168,6 @@ namespace Tests.UserTests
 				join t in testeeTable on q.TesteeId equals t.Id into gj
 				from t in gj.DefaultIfEmpty()
 				select new { q.TesteeId };
-
 
 			var result = query2.ToList();
 
