@@ -554,13 +554,15 @@ namespace LinqToDB.Metadata
 			// partial static init method, called by static constructor, which could be used by user to add
 			// additional initialization logic
 
-			if ( context.Options.GenerateStaticInitDataContextMethod )
+			if (context.Options.GenerateStaticInitDataContextMethod)
 			{
 				var staticInitDataContext = context.MainDataContextPartialMethods
 					.New(context.AST.Name(DataModelConstants.CONTEXT_STATIC_INIT_METHOD))
-						.SetModifiers(Modifiers.Static | Modifiers.Partial);
+					.SetModifiers(Modifiers.Static | Modifiers.Partial);
 
-				context.StaticInitializer.Append( context.AST.Call( context.ContextReference, staticInitDataContext.Method.Name ) );
+				context.StaticInitializer.Append(
+					context.AST.Call(context.ContextReference, staticInitDataContext.Method.Name)
+				);
 			}
 		}
 	}
