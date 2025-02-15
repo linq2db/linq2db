@@ -964,7 +964,6 @@ namespace LinqToDB.SqlProvider
 		{
 			source = null;
 
-
 			if (query.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported) ||
 				!query.GroupBy.IsEmpty)
 				return false;
