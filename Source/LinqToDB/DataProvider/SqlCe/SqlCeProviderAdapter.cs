@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
 
 using LinqToDB.Expressions.Types;
 
@@ -9,7 +10,7 @@ namespace LinqToDB.DataProvider.SqlCe
 {
 	public class SqlCeProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new object();
+		private static readonly Lock _syncRoot = new();
 		private static SqlCeProviderAdapter? _instance;
 
 		public const string AssemblyName        = "System.Data.SqlServerCe";

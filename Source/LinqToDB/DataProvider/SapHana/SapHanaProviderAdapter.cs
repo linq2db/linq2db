@@ -11,8 +11,8 @@ namespace LinqToDB.DataProvider.SapHana
 {
 	public class SapHanaProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _unmanagedSyncRoot = new ();
-		private static readonly object _odbcSyncRoot      = new ();
+		private static readonly Lock _unmanagedSyncRoot = new ();
+		private static readonly Lock _odbcSyncRoot      = new ();
 
 		private static SapHanaProviderAdapter? _unmanagedProvider;
 		private static SapHanaProviderAdapter? _odbcProvider;

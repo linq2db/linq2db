@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 using JetBrains.Annotations;
 
@@ -96,7 +97,7 @@ namespace LinqToDB.Common
 			return Find<TSet>() ?? defaultOptions;
 		}
 
-		readonly object _sync = new ();
+		readonly Lock _sync = new ();
 
 		/// <summary>
 		/// Returns options set by set type <typeparamref name="TSet"/>. If options doesn't contain specific options set, it is created and added to options.
