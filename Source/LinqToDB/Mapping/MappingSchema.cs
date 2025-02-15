@@ -26,10 +26,6 @@ using LinqToDB.Metadata;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
-#if !NET9_0_OR_GREATER
-using Lock = System.Object;
-#endif
-
 namespace LinqToDB.Mapping
 {
 	/// <summary>

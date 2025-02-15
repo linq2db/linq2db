@@ -11,10 +11,6 @@ using LinqToDB.Expressions.Types;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
-#if !NET9_0_OR_GREATER
-using Lock = System.Object;
-#endif
-
 namespace LinqToDB.DataProvider.MySql
 {
 	public abstract class MySqlProviderAdapter : IDynamicProviderAdapter

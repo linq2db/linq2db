@@ -529,10 +529,11 @@ namespace Tests
 		static class DataCache<T>
 			where T : class
 		{
-			static readonly Dictionary<string,List<T>> _dic = new ();
+			static readonly Lock                       _lock = new();
+			static readonly Dictionary<string,List<T>> _dic  = new();
 			public static List<T> Get(string context)
 			{
-				lock (_dic)
+				lock (_lock)
 				{
 					context = context.StripRemote();
 

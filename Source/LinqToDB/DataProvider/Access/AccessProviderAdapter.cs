@@ -6,10 +6,6 @@ using System.Threading;
 using OdbcType = LinqToDB.DataProvider.OdbcProviderAdapter.OdbcType;
 using OleDbType = LinqToDB.DataProvider.OleDbProviderAdapter.OleDbType;
 
-#if !NET9_0_OR_GREATER
-using Lock = System.Object;
-#endif
-
 namespace LinqToDB.DataProvider.Access
 {
 	public class AccessProviderAdapter : IDynamicProviderAdapter

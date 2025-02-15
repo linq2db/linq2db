@@ -5,10 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 
-#if !NET9_0_OR_GREATER
-using Lock = System.Object;
-#endif
-
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 

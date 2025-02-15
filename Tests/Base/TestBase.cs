@@ -51,8 +51,7 @@ namespace Tests
 							ctx.Set(CustomTestContext.TRACE, trace);
 						}
 
-						lock (trace)
-							trace.AppendLine($"{name}: {message}");
+						trace.AppendLine($"{name}: {message}");
 
 						if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
 						{
@@ -69,19 +68,19 @@ namespace Tests
 				// Configuration.Linq.GenerateExpressionTest  = true;
 
 #if NETFRAMEWORK
-			var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.CodeBase.Replace("file:///", ""))!;
+				var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.CodeBase.Replace("file:///", ""))!;
 
-			// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
-			try
-			{
-				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
-			}
-			catch // this can fail during tests discovering with NUnitTestAdapter
-			{
-				// ignore
-			}
+				// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
+				try
+				{
+					SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
+				}
+				catch // this can fail during tests discovering with NUnitTestAdapter
+				{
+					// ignore
+				}
 #else
-			var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
+				var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
 #endif
 
 				Environment.CurrentDirectory = assemblyPath;
@@ -91,15 +90,15 @@ namespace Tests
 				DatabaseUtils.CopyDatabases();
 
 #if NETFRAMEWORK
-			LinqToDB.Remote.LinqService.TypeResolver = str =>
-			{
-				return str switch
+				LinqToDB.Remote.LinqService.TypeResolver = str =>
 				{
-					"Tests.Model.Gender" => typeof(Gender),
-					"Tests.Model.Person" => typeof(Person),
-					_ => null,
+					return str switch
+					{
+						"Tests.Model.Gender" => typeof(Gender),
+						"Tests.Model.Person" => typeof(Person),
+						_ => null,
+					};
 				};
-			};
 #endif
 			}
 			catch (Exception ex)

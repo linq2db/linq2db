@@ -14,10 +14,6 @@ using LinqToDB.Expressions;
 using LinqToDB.Expressions.Types;
 using LinqToDB.Mapping;
 
-#if !NET9_0_OR_GREATER
-using Lock = System.Object;
-#endif
-
 namespace LinqToDB.DataProvider.Oracle
 {
 	public class OracleProviderAdapter : IDynamicProviderAdapter

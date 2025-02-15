@@ -19,10 +19,6 @@ using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 
-#if !NET9_0_OR_GREATER
-using Lock = System.Object;
-#endif
-
 // ReSharper disable StaticMemberInGenericType
 
 namespace LinqToDB.Linq

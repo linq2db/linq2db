@@ -4,10 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 
-#if !NET9_0_OR_GREATER
-using Lock = System.Object;
-#endif
-
 using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.Mapping;

@@ -7,10 +7,6 @@ using System.Threading.Tasks;
 
 using LinqToDB.Expressions.Types;
 
-#if !NET9_0_OR_GREATER
-using Lock = System.Object;
-#endif
-
 namespace LinqToDB.DataProvider.SapHana
 {
 	public class SapHanaProviderAdapter : IDynamicProviderAdapter

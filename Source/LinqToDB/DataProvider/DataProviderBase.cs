@@ -22,10 +22,6 @@ using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.SqlProvider;
 
-#if !NET9_0_OR_GREATER
-using Lock = System.Object;
-#endif
-
 namespace LinqToDB.DataProvider
 {
 	public abstract class DataProviderBase : IDataProvider, IInfrastructure<IServiceProvider>

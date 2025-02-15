@@ -13,10 +13,6 @@ using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
 
-#if !NET9_0_OR_GREATER
-using Lock = System.Object;
-#endif
-
 namespace LinqToDB
 {
 	/// <summary>

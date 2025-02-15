@@ -4,10 +4,6 @@ using System.Threading;
 
 using JetBrains.Annotations;
 
-#if !NET9_0_OR_GREATER
-using Lock = System.Object;
-#endif
-
 namespace LinqToDB.Common
 {
 	/// <summary>

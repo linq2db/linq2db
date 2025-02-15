@@ -23,10 +23,6 @@ using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.Tools;
 
-#if !NET9_0_OR_GREATER
-using Lock = System.Object;
-#endif
-
 namespace LinqToDB.Remote
 {
 	[PublicAPI]

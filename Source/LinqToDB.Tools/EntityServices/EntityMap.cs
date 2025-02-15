@@ -23,7 +23,7 @@ namespace LinqToDB.Tools.EntityServices
 	public class EntityMap<T> : IEntityMap
 		where T : class
 	{
-		readonly object _syncRoot = new ();
+		readonly Lock _syncRoot = new ();
 
 		public EntityMap(IDataContext dataContext)
 		{

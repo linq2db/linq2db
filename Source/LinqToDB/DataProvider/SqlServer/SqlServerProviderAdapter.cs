@@ -17,10 +17,6 @@ using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
-#if !NET9_0_OR_GREATER
-using Lock = System.Object;
-#endif
-
 namespace LinqToDB.DataProvider.SqlServer
 {
 	// old System.Data.SqlClient versions for .net core (< 4.5.0)
