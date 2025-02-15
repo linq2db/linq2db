@@ -47,7 +47,6 @@ namespace Tests.UserTests
 				var lB = qryB.ToList();
 				Assert.That(lB, Has.Count.EqualTo(1));
 
-
 				var qryC = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
 						   where infeed.Id.ToString().Contains("8f4-53")
 						   select infeed;
