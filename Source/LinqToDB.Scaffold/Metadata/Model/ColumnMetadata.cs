@@ -1,5 +1,5 @@
-﻿using LinqToDB.Schema;
-using LinqToDB.Mapping;
+﻿using LinqToDB.Mapping;
+using LinqToDB.Schema;
 
 namespace LinqToDB.Metadata
 {

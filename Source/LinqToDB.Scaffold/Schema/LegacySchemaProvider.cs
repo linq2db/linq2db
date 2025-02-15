@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.CodeModel;
+using LinqToDB.Data;
+using LinqToDB.Scaffold;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Schema
 {
-	using CodeModel;
-	using Data;
-	using Scaffold;
-	using SchemaProvider;
-	using SqlQuery;
-
 	// Because linq2db schema API is quite an abomination, created to leverage T4 functionality and includes not
 	// only schema but also names generation for generated code and type mapping of database types to .net types.
 	// To not work with this API directly, we introduced schema provider interface and perform conversion of data

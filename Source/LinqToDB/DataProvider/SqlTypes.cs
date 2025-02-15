@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider
+﻿namespace LinqToDB.DataProvider
 {
 	internal static class SqlTypes
 	{

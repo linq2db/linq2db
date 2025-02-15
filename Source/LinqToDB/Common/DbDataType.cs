@@ -3,11 +3,11 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Common
 {
-	using Mapping;
-	using Expressions;
-
 	/// <summary>
 	/// Stores database type attributes.
 	/// </summary>

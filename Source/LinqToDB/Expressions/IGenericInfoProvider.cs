@@ -1,9 +1,9 @@
 ﻿using System;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Expressions
 {
-	using Mapping;
-
 	/// <summary>
 	/// Generic conversions provider.
 	/// Implementation class must be generic, as type parameters will be used for conversion initialization in

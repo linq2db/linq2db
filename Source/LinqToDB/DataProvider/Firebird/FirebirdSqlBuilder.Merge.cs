@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Firebird
 {
-	using SqlQuery;
-
 	public partial class FirebirdSqlBuilder
 	{
 		// source subquery select list shouldn't contain parameters otherwise following error will be

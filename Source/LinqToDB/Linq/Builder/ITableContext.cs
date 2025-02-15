@@ -1,9 +1,9 @@
 ﻿using System;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.SqlQuery;
-
 	interface ITableContext : ILoadWithContext
 	{
 		public Type     ObjectType { get; }

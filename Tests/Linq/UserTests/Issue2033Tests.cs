@@ -784,7 +784,6 @@ namespace Tests.UserTests
 			public ITable<ItemGroup> ItemGroup => this.GetTable<ItemGroup>();
 		}
 
-
 		[Test]
 		public void Issue2033([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{

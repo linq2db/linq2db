@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Remote
 {
-	using SqlQuery;
-
 	public class LinqServiceQuery
 	{
 		public SqlStatement                 Statement   { get; set; } = null!;

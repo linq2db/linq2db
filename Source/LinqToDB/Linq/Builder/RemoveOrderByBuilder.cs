@@ -1,10 +1,10 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Reflection;
-
 	[BuildsMethodCall(nameof(LinqExtensions.RemoveOrderBy))]
 	sealed class RemoveOrderByBuilder : MethodCallBuilder
 	{

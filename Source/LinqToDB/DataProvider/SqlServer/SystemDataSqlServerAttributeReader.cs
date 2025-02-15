@@ -8,13 +8,13 @@ using System.Reflection;
 using Microsoft.SqlServer.Server;
 #endif
 
-namespace LinqToDB.Metadata
-{
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Mapping;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Metadata;
+using LinqToDB.Common.Internal;
 
+namespace LinqToDB.DataProvider.SqlServer
+{
 	/// <summary>
 	/// Adds support for types and functions, defined in Microsoft.SqlServer.Types spatial types
 	/// (or any other types and methods, that use SqlMethodAttribute or SqlUserDefinedTypeAttribute mapping attributes).
@@ -32,8 +32,8 @@ namespace LinqToDB.Metadata
 			new SystemDataSqlServerAttributeReader(typeof(SqlMethodAttribute), typeof(SqlUserDefinedTypeAttribute))
 #else
 			TryCreate(
-				"Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient",
-				"Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient")
+			"Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient",
+			"Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient")
 #endif
 			;
 

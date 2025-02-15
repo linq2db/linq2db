@@ -1,12 +1,12 @@
 ﻿using System;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
-	using Extensions;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class InformixSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public InformixSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)

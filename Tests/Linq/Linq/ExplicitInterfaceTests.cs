@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB;
-	using LinqToDB.Data;
-
 	[TestFixture]
 	public class ExplicitInterfaceTests : TestBase
 	{

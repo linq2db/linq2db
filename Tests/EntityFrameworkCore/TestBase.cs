@@ -168,7 +168,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 #error Unknown framework
 #endif
 
-
 		protected virtual string GetConnectionString(string provider)
 		{
 			var efProvider = provider + ".EF";
