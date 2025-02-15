@@ -3,8 +3,8 @@ SET TreatWarningsAsErrors=true
 SET NUSPECS=../.build/nuspecs
 SET NUGETS=../.build/nugets
 
-IF EXIST %NUGETS%/ RMDIR %NUGETS% /S /Q
-MD %NUGETS%
+IF EXIST "%NUGETS%/" RMDIR "%NUGETS%" /S /Q
+MD "%NUGETS%"
 
 DIR "%NUSPECS%"
 
