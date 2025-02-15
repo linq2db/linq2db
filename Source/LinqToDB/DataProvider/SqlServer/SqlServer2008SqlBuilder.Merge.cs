@@ -1,7 +1,7 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
-{
-	using SqlQuery;
+﻿using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataProvider.SqlServer
+{
 	partial class SqlServer2008SqlBuilder
 	{
 		protected override void BuildMergeInto(NullabilityContext nullability, SqlMergeStatement merge)

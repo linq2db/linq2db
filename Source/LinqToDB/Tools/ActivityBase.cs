@@ -1,13 +1,12 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.Tools
 {
-	using Data;
-
 	/// <summary>
 	/// Provides a basic implementation of the <see cref="IActivity"/> interface.
 	/// You do not have to use this class.

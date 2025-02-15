@@ -14,12 +14,10 @@ using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using System.Security.Cryptography.Xml;
-
-	using Model;
-
 	[TestFixture]
 	public class WhereTests : TestBase
 	{
@@ -2209,7 +2207,6 @@ namespace Tests.Linq
 
 			Assert.That(result1 && result2, Is.False);
 		}
-
 
 		#region Issue 2667
 		[Table("LinkedContracts", IsColumnAttributeRequired = false)]

@@ -1,5 +1,4 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
+﻿using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
 
 using NUnit.Framework;

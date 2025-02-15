@@ -5,13 +5,12 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Metadata
 {
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Mapping;
-
 	public class FluentMetadataReader : IMetadataReader
 	{
 		private readonly string _objectId;

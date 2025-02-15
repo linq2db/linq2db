@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Data.Common;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.DataProvider;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
+using LinqToDB.Remote;
+
 namespace LinqToDB.Data
 {
-	using Common.Internal;
-	using Common;
-	using DataProvider;
-	using Interceptors;
-	using Mapping;
-	using Remote;
-
 	/// <param name="ConfigurationString">
 	/// Gets configuration string name to use with <see cref="DataConnection"/> instance.
 	/// </param>

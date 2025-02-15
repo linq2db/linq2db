@@ -1,17 +1,17 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	abstract class SequenceContextBase : BuildContextBase
 	{
-		protected SequenceContextBase(IBuildContext? parent, IBuildContext[] sequences, LambdaExpression? lambda)
-			: base(sequences[0].Builder, sequences[0].ElementType, sequences[0].SelectQuery)
+		protected SequenceContextBase(TranslationModifier translationModifier, IBuildContext? parent, IBuildContext[] sequences, LambdaExpression? lambda)
+			: base(translationModifier, sequences[0].Builder, sequences[0].ElementType, sequences[0].SelectQuery)
 		{
 			Parent          = parent;
 			Sequences       = sequences;
@@ -20,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		protected SequenceContextBase(IBuildContext? parent, IBuildContext sequence, LambdaExpression? lambda)
-			: this(parent, new[] { sequence }, lambda)
+			: this(sequence.TranslationModifier, parent, [sequence], lambda)
 		{
 		}
 

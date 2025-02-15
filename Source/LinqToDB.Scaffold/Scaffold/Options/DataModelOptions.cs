@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
+using LinqToDB.CodeModel;
 using LinqToDB.Data;
 using LinqToDB.DataModel;
 using LinqToDB.Metadata;
@@ -215,6 +217,15 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public string? ContextClassName { get; set; }
+
+		/// <summary>
+		/// Gets or sets the modifier of data context class. When not set, public will be used. Context class is always partial.
+		/// <list type="bullet">
+		/// <item>Default: not set</item>
+		/// <item>In T4 compability mode: not set</item>
+		/// </list>
+		/// </summary>
+		public Modifiers? ContextClassModifier { get; set; }
 
 		/// <summary>
 		/// Gets or sets type name (full name with namespace) of base class for generated data context. When not specified, <see cref="DataConnection"/> type used.

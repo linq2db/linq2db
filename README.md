@@ -1,6 +1,6 @@
 # LINQ to DB
 
-[![Discord](https://img.shields.io/discord/1089930409577545948?label=discord)](https://discord.gg/PcV6pTXt4s) [![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db?includePreReleases=true)](https://www.nuget.org/profiles/LinqToDB) [![License](https://img.shields.io/github/license/linq2db/linq2db)](https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt)
+[![Discord](https://img.shields.io/discord/1089930409577545948?label=discord)](https://discord.gg/PcV6pTXt4s) [![NuGet Version](https://img.shields.io/nuget/vpre/linq2db)](https://www.nuget.org/profiles/LinqToDB) [![License](https://img.shields.io/github/license/linq2db/linq2db)](https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt)
  [!["good first issue" tasks](https://img.shields.io/github/issues/linq2db/linq2db/good%20first%20issue.svg)](https://github.com/linq2db/linq2db/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 
 [![Master branch build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5/master?label=build%20(master))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary) [![Latest build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5?label=build%20(latest))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary)
@@ -13,9 +13,9 @@ However, it's not as heavy as LINQ to SQL or Entity Framework. There is no chang
 
 In other words **LINQ to DB is type-safe SQL**.
 
-Development version nuget [feed](https://pkgs.dev.azure.com/linq2db/linq2db/_packaging/linq2db/nuget/v3/index.json) ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
+**LINQ to DB** also very nice for F# developers (see Tests/FSharp and Source/LinqToDB.FSharp project for details).
 
-You can follow our [twitter bot](https://twitter.com/linq2db) to receive notifications about new releases. Note that currently it is only release notification bot and we don't monitor questions there.
+Development version nuget [feed](https://pkgs.dev.azure.com/linq2db/linq2db/_packaging/linq2db/nuget/v3/index.json) ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
 
 ## Standout Features
 
@@ -740,6 +740,24 @@ public class DbDataContext : DataConnection
   }
 #endif
 }
+```
+
+## F#
+
+### Sample query with load child relations 
+
+```fsharp
+let getPerson (db: IDataContext) (id: int) =
+    let persons = db.GetTable<Person>().LoadWith(fun x -> x.Patient)
+
+    let person =
+        query {
+            for p in persons do
+                where (p.ID = id)
+                exactlyOne
+        }
+
+    person
 ```
 
 ## More

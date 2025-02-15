@@ -10,6 +10,7 @@
 
 	var options = new string[]
 	{
+		"--context-modifier internal",
 		$"--customize {interceptorsPath}"
 	};
 

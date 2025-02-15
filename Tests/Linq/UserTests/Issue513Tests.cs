@@ -2,13 +2,14 @@
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.UserTests
 {
-	using LinqToDB;
-	using Model;
-
 	[TestFixture]
 	public class Issue513Tests : TestBase
 	{

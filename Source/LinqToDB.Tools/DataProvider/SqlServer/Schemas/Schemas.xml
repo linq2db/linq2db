@@ -1681,7 +1681,7 @@ The following columns will be removed in a future release of SQL Server: &lt;str
     <column name="column_id" type="int">ID of the columnstore column starting with 1. The first column has ID = 1, the second column has ID = 2, etc.</column>
     <column name="dictionary_id" type="int">There can be two kinds of dictionaries, global and local, associated with a column segment. A dictionary_id of 0 represents the global dictionary that is shared across all column segments (one for each row group) for that column.</column>
     <column name="version" type="int">Version of the dictionary format.</column>
-    <column name="type" type="int">Dictionary type:&lt;br /&gt;&lt;br /&gt; 1 - Hash dictionary containing &lt;strong&gt;int&lt;/strong&gt; values&lt;br /&gt;&lt;br /&gt; 2 - Not used&lt;br /&gt;&lt;br /&gt; 3 - Hash dictionary containing string values&lt;br /&gt;&lt;br /&gt; 4 - Hash dictionary containing &lt;strong&gt;float&lt;/strong&gt; values&lt;br /&gt;&lt;br /&gt; For more information about dictionaries, see &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/~/relational-databases/indexes/columnstore-indexes-overview'&gt;Columnstore Indexes Guide&lt;/a&gt;.</column>
+    <column name="type" type="int">Dictionary type:&lt;br /&gt;&lt;br /&gt; 1 - Hash dictionary containing &lt;strong&gt;int&lt;/strong&gt; values&lt;br /&gt;&lt;br /&gt; 2 - Not used&lt;br /&gt;&lt;br /&gt; 3 - Hash dictionary containing string values&lt;br /&gt;&lt;br /&gt; 4 - Hash dictionary containing &lt;strong&gt;float&lt;/strong&gt; values&lt;br /&gt;&lt;br /&gt; For more information about dictionaries, see &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/indexes/columnstore-indexes-overview'&gt;Columnstore Indexes Guide&lt;/a&gt;.</column>
     <column name="last_id" type="int">The last data ID in the dictionary.</column>
     <column name="entry_count" type="bigint">Number of entries in the dictionary.</column>
     <column name="on_disk_size" type="bigint">Size of dictionary in bytes.</column>
@@ -4234,7 +4234,7 @@ Range: 0 = Not a distribution column. 1 = Azure Synapse Analytics is using this 
     <column name="distribution_id" type="int">Unique numeric id associated with the distribution.&lt;br /&gt;&lt;br /&gt; Key for this view.&lt;br/&gt;
 Range: 1 to the number of Compute nodes in appliance multiplied by the number of distributions per Compute node.</column>
     <column name="pdw_node_id" type="int">ID of the node this distribution is on.&lt;br/&gt;
-Range: See pdw_node_id in [sys.dm_pdw_nodes (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql.md).</column>
+		Range: See pdw_node_id in [sys.dm_pdw_nodes (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql?view=aps-pdw-2016-au7).</column>
     <column name="name" type="nvarchar(32)">String identifier associated with the distribution, used as a suffix on distributed tables.&lt;br/&gt;
 Range: String composed of 'A-Z','a-z','0-9','_','-'.</column>
     <column name="position" type="int">Position of the distribution within a node respective to other distributions on that node.&lt;br/&gt;
@@ -4327,7 +4327,7 @@ Range: NOT NULL</column>
 &lt;para&gt;Contains further detailed information, beyond the information in &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-pdw-loader-backup-runs-transact-sql'&gt;sys.pdw_loader_backup_runs (Transact-SQL)&lt;/a&gt;, about ongoing and completed backup and restore operations in Azure Synapse Analytics and about ongoing and completed backup, restore, and load operations in Analytics Platform System (PDW). The information persists across system restarts.&lt;/para&gt;</description>
     <column name="run_id" type="int">Unique identifier for a specific backup or restore run.&lt;br /&gt;&lt;br /&gt; run_id and pdw_node_id form the key for this view.</column>
     <column name="pdw_node_id" type="int">Unique identifier of an appliance node for which this record holds details.&lt;br /&gt;&lt;br /&gt; run_id and pdw_node_id form the key for this view.&lt;br/&gt;
-Range: See node_id in [sys.dm_pdw_nodes (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql.md).</column>
+		Range: See node_id in [sys.dm_pdw_nodes (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql?view=aps-pdw-2016-au7).</column>
     <column name="status" type="nvarchar(16)">The current status of the run.&lt;br/&gt;
 Range: 'CANCELLED', 'COMPLETED', 'FAILED', 'QUEUED', 'RUNNING'</column>
     <column name="start_time" type="datetime">Time at which the operation started on this particular node.</column>
@@ -4356,9 +4356,9 @@ Range: For operation_type = **BACKUP**&lt;br /&gt;**DIFFERENTIAL**&lt;br /&gt;**
     <column name="table_name" type="nvarchar(255)">Information not available.</column>
     <column name="Principal_id" type="int">ID of the user requesting the operation.</column>
     <column name="session_id" type="nvarchar(32)">ID of the session performing the operation.&lt;br/&gt;
-Range: See session_id in [sys.dm_pdw_exec_sessions (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-sessions-transact-sql.md).</column>
+		Range: See session_id in [sys.dm_pdw_exec_sessions (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-sessions-transact-sql?view=aps-pdw-2016-au7).</column>
     <column name="request_id" type="nvarchar(32)">ID of the request performing the operation. For loads, this is the current or last request associated with this load..&lt;br/&gt;
-Range: See request_id in [sys.dm_pdw_exec_requests (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-requests-transact-sql.md).</column>
+		Range: See request_id in [sys.dm_pdw_exec_requests (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-requests-transact-sql?view=aps-pdw-2016-au7).</column>
     <column name="status" type="nvarchar(16)">Status of the run.&lt;br/&gt;
 Range: 'CANCELLED','COMPLETED','FAILED','QUEUED','RUNNING'</column>
     <column name="progress" type="int">Percentage completed.&lt;br/&gt;
@@ -4406,7 +4406,7 @@ Range: If total_elapsed_time exceeds the maximum value for an integer (24.8 days
 &lt;para&gt;Ties the materialized view to internal object names by object_id.&lt;br/&gt;
 The columns physical_name and object_id form the key for this catalog view.&lt;/para&gt;</description>
     <column name="physical_name" type="nvarchar(36)">The physical name for the materialized view.</column>
-    <column name="object_id" type="int">The object ID for the materialized view. See [sys.objects (Transact-SQL)](./sys-objects-transact-sql.md?view=azure-sqldw-latest&amp;preserve-view=true).</column>
+    <column name="object_id" type="int">The object ID for the materialized view. See [sys.objects (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql?view=sql-server-ver16).</column>
   </table>
   <table name="sys.pdw_nodes_column_store_dictionaries" category="AzureSynapseAnalytics" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-pdw-nodes-column-store-dictionaries-transact-sql">
     <description>&lt;para&gt;&lt;strong&gt;sys.pdw_nodes_column_store_dictionaries (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
@@ -4686,7 +4686,7 @@ Range: low, below_normal, normal (default), above_normal, high</column>
     <column name="object_id" type="int">The object ID of the Stretch-enabled local table.</column>
     <column name="remote_database_id" type="int">The auto-generated local identifier of the remote database.</column>
     <column name="remote_table_name" type="sysname">The name of the table in the remote database that corresponds to the Stretch-enabled local table.</column>
-    <column name="filter_predicate" type="nvarchar(max)">The filter predicate, if any, that identifies rows in the table to be migrated. If the value is null, the entire table is eligible to be migrated.&lt;br /&gt;&lt;br /&gt; For more info, see &lt;a href='https://docs.microsoft.com/en-us/sql/sql-server/stretch-database/enable-stretch-database-for-a-table'&gt;Enable Stretch Database for a table&lt;/a&gt; and &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/~/sql-server/stretch-database/select-rows-to-migrate-by-using-a-filter-function-stretch-database'&gt;Select rows to migrate by using a filter predicate&lt;/a&gt;.</column>
+    <column name="filter_predicate" type="nvarchar(max)">The filter predicate, if any, that identifies rows in the table to be migrated. If the value is null, the entire table is eligible to be migrated.&lt;br /&gt;&lt;br /&gt; For more info, see &lt;a href='https://docs.microsoft.com/en-us/sql/sql-server/stretch-database/enable-stretch-database-for-a-table'&gt;Enable Stretch Database for a table&lt;/a&gt; and &lt;a href='https://docs.microsoft.com/en-us/sql/sql-server/stretch-database/select-rows-to-migrate-by-using-a-filter-function-stretch-database'&gt;Select rows to migrate by using a filter predicate&lt;/a&gt;.</column>
     <column name="migration_direction" type="tinyint">The direction in which data is currently being migrated. The available values are the following.&lt;br/&gt;1 (outbound)&lt;br/&gt;2 (inbound)</column>
     <column name="migration_direction_desc" type="nvarchar(60)">The description of the direction in which data is currently being migrated. The available values are the following.&lt;br/&gt;outbound (1)&lt;br/&gt;inbound (2)</column>
     <column name="is_migration_paused" type="bit">Indicates whether migration is currently paused.</column>

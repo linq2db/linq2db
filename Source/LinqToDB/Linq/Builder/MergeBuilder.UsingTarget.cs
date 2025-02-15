@@ -1,11 +1,11 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+
+using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-
-	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
-
 	internal partial class MergeBuilder
 	{
 		[BuildsMethodCall(nameof(LinqExtensions.UsingTarget))]
@@ -27,8 +27,8 @@ namespace LinqToDB.Linq.Builder
 				var targetContextRef = new ContextRefExpression(genericArguments[0], mergeContext.TargetContext, "target");
 				var sourceContextRef = new ContextRefExpression(genericArguments[0], clonedTargetContext, "source");
 
-				var source                = new TableLikeQueryContext(targetContextRef, sourceContextRef);
-				mergeContext.Sequences    = new IBuildContext[] { mergeContext.Sequence, source };
+				var source                = new TableLikeQueryContext(builder.GetTranslationModifier(), targetContextRef, sourceContextRef);
+				mergeContext.Sequences    = [mergeContext.Sequence, source];
 				mergeContext.Merge.Source = source.Source;
 
 				return BuildSequenceResult.FromContext(mergeContext);

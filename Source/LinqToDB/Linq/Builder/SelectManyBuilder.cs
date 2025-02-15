@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	[BuildsMethodCall("SelectMany")]
 	sealed class SelectManyBuilder : MethodCallBuilder
 	{
@@ -49,7 +49,6 @@ namespace LinqToDB.Linq.Builder
 				CreateSubQuery    = true,
 				SourceCardinality = SourceCardinality.Many
 			};
-
 
 			using var snapshot = builder.CreateSnapshot();
 
@@ -102,7 +101,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (collectionDefaultIfEmptyContext != null)
 			{
-				var collectionSelectContext = new SelectContext(buildInfo.Parent, builder, null, expanded, collection.SelectQuery, buildInfo.IsSubQuery);
+				var collectionSelectContext = new SelectContext(sequence.TranslationModifier, buildInfo.Parent, builder, null, expanded, collection.SelectQuery, buildInfo.IsSubQuery);
 
 				collection = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
 					sequence,
@@ -126,7 +125,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var context = new SelectContext(buildInfo.Parent, builder, resultSelector == null ? collection : null, resultExpression, sequence.SelectQuery, buildInfo.IsSubQuery);
+			var context = new SelectContext(sequence.TranslationModifier, buildInfo.Parent, builder, resultSelector == null ? collection : null, resultExpression, sequence.SelectQuery, buildInfo.IsSubQuery);
 			context.SetAlias(collectionSelector.Parameters[0].Name);
 
 			string? collectionAlias = null;
