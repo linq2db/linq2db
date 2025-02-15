@@ -158,7 +158,7 @@ namespace LinqToDB.Linq
 						return new TransformInfo(expr, true);
 					}
 
-					if (expr.NodeType == ExpressionType.Constant && context.paramContext.GetAccessorExpression(expr, out var accessor))
+					if (expr is ConstantExpression { Value: not null } && context.paramContext.GetAccessorExpression(expr, out var accessor))
 					{
 						 context.modified.Add(expr);
 
