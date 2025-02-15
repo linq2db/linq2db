@@ -1,10 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using LinqToDB.Expressions;
 
 namespace LinqToDB.Interceptors.Internal
 {
-	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
-
 	sealed class AggregatedEntityBindingInterceptor : AggregatedInterceptor<IEntityBindingInterceptor>, IEntityBindingInterceptor
 	{
 		public SqlGenericConstructorExpression ConvertConstructorExpression(SqlGenericConstructorExpression expression)

@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 
 using LinqToDB;
 using LinqToDB.DataProvider.Access;
-using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.MySql;
+using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SQLite;
@@ -13,11 +12,12 @@ using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
 
+using Tests.Linq;
+
+using Tests.Model;
+
 namespace Tests.Extensions
 {
-	using Linq;
-	using Model;
-
 	[TestFixture]
 	public class QueryExtensionTests : TestBase
 	{

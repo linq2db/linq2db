@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Expressions.Types
 {
 	[AttributeUsage(AttributeTargets.ReturnValue)]
 	public class CustomMapperAttribute : Attribute

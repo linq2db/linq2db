@@ -4,15 +4,15 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common.Internal.Cache;
+using LinqToDB.Infrastructure;
+using LinqToDB.Linq.Internal;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 namespace LinqToDB.Linq
 {
-	using Common.Internal.Cache;
-	using Mapping;
-	using SqlQuery;
-	using Tools;
-	using Infrastructure;
-	using Internal;
-
 	static partial class QueryRunner
 	{
 		public static class Insert<T>

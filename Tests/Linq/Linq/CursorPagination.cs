@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -101,6 +103,7 @@ namespace Tests.Linq
 							supported = false;
 							break;
 					}
+
 					if (!supported)
 						break;
 
@@ -118,7 +121,6 @@ namespace Tests.Linq
 			//
 			Expression<Func<T, AnalyticFunctions.IOverMayHavePartitionAndOrder<long>>> overExpression =
 				t => Sql.Ext.RowNumber().Over();
-
 
 			var isFirst = true;
 

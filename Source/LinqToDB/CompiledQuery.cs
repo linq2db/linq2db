@@ -5,15 +5,15 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
+
 namespace LinqToDB
 {
-	using Common;
-	using Common.Internal;
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Linq.Builder;
-
 	/// <summary>
 	/// Provides API for compilation and caching of queries for reuse.
 	/// </summary>

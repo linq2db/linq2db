@@ -1,6 +1,4 @@
-﻿using LinqToDB.Linq;
-
-namespace LinqToDB
+﻿namespace LinqToDB
 {
 	public partial class Sql
 	{

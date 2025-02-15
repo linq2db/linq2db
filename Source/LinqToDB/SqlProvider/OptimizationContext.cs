@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
+using LinqToDB.Common;
+using LinqToDB.DataProvider;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using DataProvider;
-	using Mapping;
-	using SqlQuery;
-
 	public class OptimizationContext
 	{
 		private IQueryParametersNormalizer?                      _parametersNormalizer;

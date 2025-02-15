@@ -8,10 +8,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.xUpdate
 {
-	using Model;
-
 	// Regression tests converted from tests for previous version of Merge API to new API.
 	public partial class MergeTests
 	{
