@@ -4,18 +4,17 @@ using System.Linq;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
 
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class OrderByTests : TestBase
 	{
@@ -542,7 +541,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void OrderByConstant([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -576,7 +574,6 @@ namespace Tests.Linq
 				Assert.That(db.LastQuery, Does.Not.Contain("ORDER BY"));
 			}
 		}
-
 
 		[Test]
 		public void OrderByIndex([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)

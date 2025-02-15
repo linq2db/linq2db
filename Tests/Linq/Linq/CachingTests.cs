@@ -10,11 +10,12 @@ using LinqToDB.Expressions;
 
 using NUnit.Framework;
 
+using Tests.DataProvider;
+
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using DataProvider;
-	using Model;
-
 	public class CachingTests: TestBase
 	{
 		sealed class AggregateFuncBuilder : Sql.IExtensionCallBuilder

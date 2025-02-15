@@ -1,12 +1,14 @@
-﻿using LinqToDB;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
+
 using Tests.Model;
-using System.Linq;
 using Tests.UserTests;
-using System.Collections.Generic;
-using LinqToDB.Tools.Comparers;
 
 namespace Tests.DataProvider
 {

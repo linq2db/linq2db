@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.xUpdate
@@ -41,7 +43,6 @@ namespace Tests.xUpdate
 			[Column] public int Value2 { get; set; }
 			[Column] public int Value3 { get; set; }
 		}
-
 
 		private UpdatedEntities[] GenerateData()
 		{

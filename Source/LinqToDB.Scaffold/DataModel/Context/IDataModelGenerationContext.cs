@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+
 using LinqToDB.CodeModel;
 using LinqToDB.Metadata;
 using LinqToDB.Scaffold;

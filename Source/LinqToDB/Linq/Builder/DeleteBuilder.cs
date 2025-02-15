@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	[BuildsMethodCall(
 		nameof(LinqExtensions.Delete),
 		nameof(LinqExtensions.DeleteWithOutput),
@@ -70,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 				var outputSelectQuery = new SelectQuery();
 
 				deletedContext = new AnchorContext(null,
-					new TableBuilder.TableContext(builder, sequence.MappingSchema, outputSelectQuery, deletedTable, false),
+					new TableBuilder.TableContext(sequence.TranslationModifier, builder, sequence.MappingSchema, outputSelectQuery, deletedTable, false),
 					SqlAnchor.AnchorKindEnum.Deleted);
 
 				if (deleteType == DeleteContext.DeleteTypeEnum.DeleteOutputInto)

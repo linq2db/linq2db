@@ -1,11 +1,11 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlServer.Translation
 {
-	using Common;
-	using Linq.Translation;
-	using SqlQuery;
-
 	public class SqlServer2005MemberTranslator : SqlServerMemberTranslator
 	{
 		class SqlTypes2005Translation : SqlTypesTranslation

@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using SqlQuery;
-	using Common;
-	using LinqToDB.Expressions;
-	using LinqToDB.Data;
-
 	[BuildsMethodCall(
 		nameof(LinqExtensions.Insert), 
 		nameof(LinqExtensions.InsertWithIdentity), 
@@ -162,7 +162,9 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					var sourceSequence = new SelectContext(buildInfo.Parent,
+					var sourceSequence = new SelectContext(
+						builder.GetTranslationModifier(), 
+						buildInfo.Parent,
 						builder,
 						null,
 						setterExpr,
@@ -202,8 +204,8 @@ namespace LinqToDB.Linq.Builder
 					if (insertedTable == null)
 						throw new InvalidOperationException("Cannot find target table for INSERT statement");
 
-					var outputTableContext = new TableBuilder.TableContext(builder, sequence.MappingSchema, new SelectQuery(), insertedTable, false);
-					var outputAnchor = new AnchorContext(buildInfo.Parent, outputTableContext, SqlAnchor.AnchorKindEnum.Inserted);
+					var outputTableContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, sequence.MappingSchema, new SelectQuery(), insertedTable, false);
+					var outputAnchor       = new AnchorContext(buildInfo.Parent, outputTableContext, SqlAnchor.AnchorKindEnum.Inserted);
 					insertContext.OutputContext = outputAnchor;
 
 					if (insertType is InsertContext.InsertTypeEnum.InsertOutputInto)

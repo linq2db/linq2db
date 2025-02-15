@@ -5,14 +5,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	[BuildsMethodCall(
 		nameof(LinqExtensions.Update), 
 		nameof(LinqExtensions.UpdateWithOutput), 
@@ -352,15 +352,15 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext insertedContext;
 			if (targetTableContext is CteTableContext cteTable)
 			{
-				insertedContext = new CteTableContext(builder, null,
+				insertedContext = new CteTableContext(builder.GetTranslationModifier(), builder, null,
 					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext);
-				deletedContext = new CteTableContext(builder, null,
+				deletedContext = new CteTableContext(builder.GetTranslationModifier(), builder, null,
 					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext);
 			}
 			else
 			{
-				insertedContext = new TableBuilder.TableContext(builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
-				deletedContext  = new TableBuilder.TableContext(builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
+				insertedContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
+				deletedContext  = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
 			}
 
 			outputContext = deletedContext;

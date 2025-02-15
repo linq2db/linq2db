@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.DataProvider.SqlServer.Translation
-{
-	using Common;
-	using Linq.Translation;
-	using SqlQuery;
+﻿using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataProvider.SqlServer.Translation
+{
 	public class SqlServer2012MemberTranslator : SqlServerMemberTranslator
 	{
 		public class SqlServer2012DateFunctionsTranslator : SqlServerDateFunctionsTranslator

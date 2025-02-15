@@ -182,6 +182,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.Northwind
 					{
 						expr = ((UnaryExpression) expr).Operand;
 					}
+
 					return expr;
 				}
 

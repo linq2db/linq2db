@@ -1,10 +1,10 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	[BuildsMethodCall("Skip", "Take")]
 	sealed class TakeSkipBuilder : MethodCallBuilder
 	{
@@ -19,9 +19,7 @@ namespace LinqToDB.Linq.Builder
 			if (buildResult.BuildContext == null)
 				return buildResult;
 
-			var saveInline = builder.DataContext.InlineParameters;
-
-			builder.DataContext.InlineParameters = info.InlineParameters ?? saveInline;
+			builder.PushTranslationModifier(buildResult.BuildContext.TranslationModifier, true);
 
 			try
 			{
@@ -81,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			finally
 			{
-				builder.DataContext.InlineParameters = saveInline;
+				builder.PopTranslationModifier();
 			}
 		}
 
@@ -89,11 +87,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			public TakeSkipContext(IBuildContext context) : base(context)
 			{
-			}
-
-			public override Expression MakeExpression(Expression path, ProjectFlags flags)
-			{
-				return base.MakeExpression(path, flags);
 			}
 
 			public override IBuildContext Clone(CloningContext context)

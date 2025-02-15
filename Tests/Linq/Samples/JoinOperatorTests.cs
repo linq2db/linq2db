@@ -2,10 +2,10 @@
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Samples
 {
-	using Model;
-
 	[TestFixture]
 	public class JoinOperatorTests : TestBase
 	{
