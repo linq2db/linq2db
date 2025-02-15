@@ -798,7 +798,6 @@ If you don't specify some property, CLI will use default value for current optio
 					new[] { "System.Collections.Generic.IEnumerable<>" },
 					new[] { "System.Collections.Generic.IEnumerable<>" });
 
-
 			/// <summary>
 			/// Type of association return type for association back reference with many cardinality option.
 			/// </summary>
