@@ -6,7 +6,7 @@ SET NUGETS=../.build/nugets
 IF EXIST %NUGETS%/ RMDIR %NUGETS% /S /Q
 MD %NUGETS%
 
-DIR %NUSPECS%
+DIR "%NUSPECS%"
 
 cmd /c "exit /b 0"
 
@@ -33,4 +33,4 @@ FOR %%n IN (cli Access ClickHouse DB2 Firebird Informix MySql Oracle PostgreSQL 
     IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 )
 
-DIR %NUGETS%
+DIR "%NUGETS%"
