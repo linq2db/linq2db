@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 {
 	public class NpgsqlProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new ();
+		private static readonly Lock _syncRoot = new ();
 		private static NpgsqlProviderAdapter? _instance;
 
 		public const string AssemblyName    = "Npgsql";
