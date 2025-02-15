@@ -621,7 +621,6 @@ Add as many as needed. Both concrete types and marker interfaces work.
 					_defaultOptions.DataModel.FluentEntityTypeDiscriminators?.ToArray(),
 					_t4ModeOptions.DataModel.FluentEntityTypeDiscriminators?.ToArray());
 
-
 			/// <summary>
 			/// Generate database information comment on data context class option.
 			/// </summary>
