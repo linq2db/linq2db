@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -44,14 +45,22 @@ namespace Tests
 					var ctx = CustomTestContext.Get();
 					if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
 					{
-						var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
-						if (trace == null)
+						static StringBuilder GetTraceBuilder(CustomTestContext ctx)
 						{
-							trace = new StringBuilder();
-							ctx.Set(CustomTestContext.TRACE, trace);
+							var builder = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+							if (builder is not null)
+								return builder;
+
+							builder = new();
+							ctx.Set(CustomTestContext.TRACE, builder);
+							return builder;
 						}
 
-						trace.AppendLine($"{name}: {message}");
+						var trace = GetTraceBuilder(ctx);
+
+						// necessary for multi-threaded tests like `Issue1398Tests.cs`
+						lock (trace)
+							trace.AppendLine($"{name}: {message}");
 
 						if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
 						{
@@ -60,7 +69,7 @@ namespace Tests
 							Debug.WriteLine(message, name);
 						}
 
-						traceCount++;
+						Interlocked.Increment(ref traceCount);
 					}
 				};
 
