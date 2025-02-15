@@ -2,10 +2,10 @@
 
 using JetBrains.Annotations;
 
+using LinqToDB.Configuration;
+
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Configuration;
-
 	[UsedImplicitly]
 	sealed class SapHanaFactory : DataProviderFactoryBase
 	{

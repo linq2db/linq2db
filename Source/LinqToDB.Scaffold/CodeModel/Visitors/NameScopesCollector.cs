@@ -1,8 +1,7 @@
-﻿using System.Linq;
+﻿using System;
 using System.Collections.Generic;
-using System;
 using System.Diagnostics.CodeAnalysis;
-using LinqToDB.Common;
+using System.Linq;
 
 namespace LinqToDB.CodeModel
 {
@@ -223,11 +222,13 @@ namespace LinqToDB.CodeModel
 							AddNameToCurrentScope(name, true);
 						}
 					}
+
 					if (type is GenericType generic)
 					{
 						foreach (var typeArg in generic.TypeArguments)
 							RegisterExternalType(typeArg);
 					}
+
 					break;
 				case TypeKind.Dynamic     :
 				case TypeKind.TypeArgument:

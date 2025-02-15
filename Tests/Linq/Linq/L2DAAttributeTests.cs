@@ -1,17 +1,16 @@
 ﻿using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Metadata;
 
 using NUnit.Framework;
+
+using Tests.Model;
 
 using ColumnAttribute = System.ComponentModel.DataAnnotations.Schema.ColumnAttribute;
 using TableAttribute = System.ComponentModel.DataAnnotations.Schema.TableAttribute;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Metadata;
-
-	using Model;
-
 	[Table("Person")]
 	public class L2DAPersons
 	{

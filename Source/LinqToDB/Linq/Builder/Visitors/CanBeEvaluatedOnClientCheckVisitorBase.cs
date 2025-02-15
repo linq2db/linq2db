@@ -2,10 +2,10 @@
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+
 namespace LinqToDB.Linq.Builder.Visitors
 {
-	using LinqToDB.Expressions;
-
 	public abstract class CanBeEvaluatedOnClientCheckVisitorBase : ExpressionVisitorBase
 	{
 		protected bool InMethod;

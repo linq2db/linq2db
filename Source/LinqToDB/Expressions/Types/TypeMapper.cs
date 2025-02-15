@@ -9,13 +9,13 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Expressions
-{
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Internal;
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Extensions;
 
+namespace LinqToDB.Expressions.Types
+{
 	/// <summary>
 	/// Implements typed mappings support for dynamically loaded types.
 	/// </summary>
@@ -664,6 +664,7 @@ namespace LinqToDB.Expressions
 									return newExpression;
 								}
 							}
+
 							break;
 						}
 					case ExpressionType.MemberInit:
@@ -698,6 +699,7 @@ namespace LinqToDB.Expressions
 								var newMemberInit = Expression.MemberInit(newExpression, newBindings);
 								return newMemberInit;
 							}
+
 							break;
 						}
 					case ExpressionType.Call:

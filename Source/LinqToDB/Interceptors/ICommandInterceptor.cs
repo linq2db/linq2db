@@ -4,10 +4,10 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.Interceptors
 {
-	using Common;
-
 	public interface ICommandInterceptor : IInterceptor
 	{
 		/// <summary>

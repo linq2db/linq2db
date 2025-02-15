@@ -370,6 +370,7 @@ namespace LinqToDB.CodeModel
 									throw new InvalidOperationException($"Cannot parse type name \"{typeName}\": generic type argument found for open generic type");
 								typeArgs.Add(typeArg);
 							}
+
 							continue;
 						case ParserState.SearchForIdentifierStart              : // unexpected comma outside of generic type arguments list
 							if (!typeArgument)
@@ -418,6 +419,7 @@ namespace LinqToDB.CodeModel
 								isTypeArgument = true;
 								break;
 							}
+
 							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected > at {position}"));
 						case ParserState.ParseTrailingSpaces                   : // only spaces expected after type
 							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected > at {position}"));

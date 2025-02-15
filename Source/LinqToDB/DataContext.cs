@@ -8,17 +8,17 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.Infrastructure;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.Tools;
+
 namespace LinqToDB
 {
-	using Common.Internal;
-	using Data;
-	using DataProvider;
-	using Infrastructure;
-	using Linq;
-	using Mapping;
-	using SqlProvider;
-	using Tools;
-
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>

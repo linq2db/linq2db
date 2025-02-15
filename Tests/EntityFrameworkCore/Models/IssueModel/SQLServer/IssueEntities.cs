@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-
-using NpgsqlTypes;
-
-namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel
+﻿namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel
 {
 	public class Issue129Table
 	{

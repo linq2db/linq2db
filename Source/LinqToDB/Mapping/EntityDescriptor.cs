@@ -5,15 +5,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using LinqToDB.SqlQuery;
-	using Reflection;
-
 	/// <summary>
 	/// Stores mapping entity descriptor.
 	/// </summary>
@@ -90,7 +88,7 @@ namespace LinqToDB.Mapping
 		/// Otherwise all supported members of scalar type will be used:
 		/// - public instance fields and properties;
 		/// - explicit interface implementation properties.
-		/// Also see <seealso cref="Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.
+		/// Also see <seealso cref="Common.Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.
 		/// </summary>
 		public bool IsColumnAttributeRequired { get; private set; }
 

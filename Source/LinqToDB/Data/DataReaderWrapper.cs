@@ -2,12 +2,11 @@
 using System.Data.Common;
 using System.Threading.Tasks;
 
+using LinqToDB.Interceptors;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Data
 {
-	using Interceptors;
-
 	/// <summary>
 	/// Disposable wrapper over <see cref="DbDataReader"/> instance, which properly disposes associated objects.
 	/// </summary>

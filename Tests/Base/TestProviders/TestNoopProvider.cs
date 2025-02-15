@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SQLite.Translation;
@@ -249,7 +249,6 @@ namespace Tests
 			return _parameters.Count - 1;
 		}
 
-
 		public override void Clear()
 		{
 			_parameters.Clear();
@@ -285,7 +284,6 @@ namespace Tests
 
 	public class TestNoopProvider : DynamicDataProviderBase<TestNoopProviderAdapter>
 	{
-
 
 		public TestNoopProvider()
 			: base(TestProvName.NoopProvider, new MappingSchema(), new TestNoopProviderAdapter())

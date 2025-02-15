@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Expressions
 {
-	using Linq.Builder;
-	using Mapping;
-
 	class SqlAdjustTypeExpression: Expression, IEquatable<SqlAdjustTypeExpression>
 	{
 		readonly Type          _type;

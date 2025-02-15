@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using SqlQuery;
-
 	public partial class PostgreSQLSqlBuilder
 	{
 		// we enable MERGE in base pgsql builder class intentionally

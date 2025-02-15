@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Data;
+using LinqToDB.Tools;
+
 using AsyncDisposableWrapper = LinqToDB.Tools.ActivityService.AsyncDisposableWrapper;
 
 namespace LinqToDB.Async
 {
-	using Data;
-	using Tools;
-
 	/// <summary>
 	/// Implements <see cref="IAsyncDbConnection"/> wrapper over <see cref="DbConnection"/> instance with
 	/// synchronous implementation of asynchronous methods.

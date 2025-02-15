@@ -1,9 +1,9 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-
 	[BuildsMethodCall(nameof(DataExtensions.SelectQuery))]
 	sealed class SelectQueryBuilder : MethodCallBuilder
 	{
