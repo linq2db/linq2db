@@ -73,32 +73,32 @@ namespace LinqToDB.CommandLine
 			object? value;
 
 			// simple flags
-			if (options.Remove(DataModel.GenerateDbName                , out value)) settings.IncludeDatabaseName                = (bool)value!;
-			if (options.Remove(DataModel.GenerateDefaultSchemaName     , out value)) settings.GenerateDefaultSchema              = (bool)value!;
-			if (options.Remove(DataModel.DataTypeOnTables              , out value)) settings.GenerateDataType                   = (bool)value!;
-			if (options.Remove(DataModel.DbTypeOnTables                , out value)) settings.GenerateDbType                     = (bool)value!;
-			if (options.Remove(DataModel.LengthOnTables                , out value)) settings.GenerateLength                     = (bool)value!;
-			if (options.Remove(DataModel.PrecisionOnTables             , out value)) settings.GeneratePrecision                  = (bool)value!;
-			if (options.Remove(DataModel.ScaleOnTables                 , out value)) settings.GenerateScale                      = (bool)value!;
-			if (options.Remove(DataModel.EmitDbInfo                    , out value)) settings.IncludeDatabaseInfo                = (bool)value!;
-			if (options.Remove(DataModel.EmitInitDataContextMethod     , out value)) settings.GenerateInitDataContextMethod      = (bool)value!;
+			if (options.Remove(DataModel.GenerateDbName                 , out value)) settings.IncludeDatabaseName                 = (bool)value!;
+			if (options.Remove(DataModel.GenerateDefaultSchemaName      , out value)) settings.GenerateDefaultSchema               = (bool)value!;
+			if (options.Remove(DataModel.DataTypeOnTables               , out value)) settings.GenerateDataType                    = (bool)value!;
+			if (options.Remove(DataModel.DbTypeOnTables                 , out value)) settings.GenerateDbType                      = (bool)value!;
+			if (options.Remove(DataModel.LengthOnTables                 , out value)) settings.GenerateLength                      = (bool)value!;
+			if (options.Remove(DataModel.PrecisionOnTables              , out value)) settings.GeneratePrecision                   = (bool)value!;
+			if (options.Remove(DataModel.ScaleOnTables                  , out value)) settings.GenerateScale                       = (bool)value!;
+			if (options.Remove(DataModel.EmitDbInfo                     , out value)) settings.IncludeDatabaseInfo                 = (bool)value!;
+			if (options.Remove(DataModel.EmitInitDataContextMethod      , out value)) settings.GenerateInitDataContextMethod       = (bool)value!;
 			if (options.Remove(DataModel.EmitStaticInitDataContextMethod, out value)) settings.GenerateStaticInitDataContextMethod = (bool)value!;
-			if (options.Remove(DataModel.EmitDefaultConstructor        , out value)) settings.HasDefaultConstructor              = (bool)value!;
-			if (options.Remove(DataModel.EmitConfigurationConstructor  , out value)) settings.HasConfigurationConstructor        = (bool)value!;
-			if (options.Remove(DataModel.EmitOptionsConstructor        , out value)) settings.HasUntypedOptionsConstructor       = (bool)value!;
-			if (options.Remove(DataModel.EmitTypedOptionsConstructor   , out value)) settings.HasTypedOptionsConstructor         = (bool)value!;
-			if (options.Remove(DataModel.EmitAssociations              , out value)) settings.GenerateAssociations               = (bool)value!;
-			if (options.Remove(DataModel.EmitAssociationExtensions     , out value)) settings.GenerateAssociationExtensions      = (bool)value!;
-			if (options.Remove(DataModel.ReuseEntitiesInFunctions      , out value)) settings.MapProcedureResultToEntity         = (bool)value!;
-			if (options.Remove(DataModel.TableFunctionReturnsITable    , out value)) settings.TableFunctionReturnsTable          = (bool)value!;
-			if (options.Remove(DataModel.EmitSchemaErrors              , out value)) settings.GenerateProceduresSchemaError      = (bool)value!;
-			if (options.Remove(DataModel.SkipProceduresWithSchemaErrors, out value)) settings.SkipProceduresWithSchemaErrors     = (bool)value!;
-			if (options.Remove(DataModel.ReturnListFromProcedures      , out value)) settings.GenerateProcedureResultAsList      = (bool)value!;
-			if (options.Remove(DataModel.DbTypeInProcedures            , out value)) settings.GenerateProcedureParameterDbType   = (bool)value!;
-			if (options.Remove(DataModel.SchemasAsTypes                , out value)) settings.GenerateSchemaAsType               = (bool)value!;
-			if (options.Remove(DataModel.GenerateIEquatable            , out value)) settings.GenerateIEquatable                 = (bool)value!;
-			if (options.Remove(DataModel.FindParametersInOrdinalOrder  , out value)) settings.OrderFindParametersByColumnOrdinal = (bool)value!;
-			if (options.Remove(DataModel.EntityClassIsPartial          , out value)) settings.EntityClassIsPartial               = (bool)value!;
+			if (options.Remove(DataModel.EmitDefaultConstructor         , out value)) settings.HasDefaultConstructor               = (bool)value!;
+			if (options.Remove(DataModel.EmitConfigurationConstructor   , out value)) settings.HasConfigurationConstructor         = (bool)value!;
+			if (options.Remove(DataModel.EmitOptionsConstructor         , out value)) settings.HasUntypedOptionsConstructor        = (bool)value!;
+			if (options.Remove(DataModel.EmitTypedOptionsConstructor    , out value)) settings.HasTypedOptionsConstructor          = (bool)value!;
+			if (options.Remove(DataModel.EmitAssociations               , out value)) settings.GenerateAssociations                = (bool)value!;
+			if (options.Remove(DataModel.EmitAssociationExtensions      , out value)) settings.GenerateAssociationExtensions       = (bool)value!;
+			if (options.Remove(DataModel.ReuseEntitiesInFunctions       , out value)) settings.MapProcedureResultToEntity          = (bool)value!;
+			if (options.Remove(DataModel.TableFunctionReturnsITable     , out value)) settings.TableFunctionReturnsTable           = (bool)value!;
+			if (options.Remove(DataModel.EmitSchemaErrors               , out value)) settings.GenerateProceduresSchemaError       = (bool)value!;
+			if (options.Remove(DataModel.SkipProceduresWithSchemaErrors , out value)) settings.SkipProceduresWithSchemaErrors      = (bool)value!;
+			if (options.Remove(DataModel.ReturnListFromProcedures       , out value)) settings.GenerateProcedureResultAsList       = (bool)value!;
+			if (options.Remove(DataModel.DbTypeInProcedures             , out value)) settings.GenerateProcedureParameterDbType    = (bool)value!;
+			if (options.Remove(DataModel.SchemasAsTypes                 , out value)) settings.GenerateSchemaAsType                = (bool)value!;
+			if (options.Remove(DataModel.GenerateIEquatable             , out value)) settings.GenerateIEquatable                  = (bool)value!;
+			if (options.Remove(DataModel.FindParametersInOrdinalOrder   , out value)) settings.OrderFindParametersByColumnOrdinal  = (bool)value!;
+			if (options.Remove(DataModel.EntityClassIsPartial           , out value)) settings.EntityClassIsPartial                = (bool)value!;
 
 			// strings
 			if (options.Remove(DataModel.BaseEntity          , out value)) settings.BaseEntityClass  = (string)value!;
