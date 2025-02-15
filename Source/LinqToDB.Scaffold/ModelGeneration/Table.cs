@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.Tools.ModelGeneration
 {
-	using SchemaProvider;
-
 	/// <summary>
 	/// For internal use.
 	/// </summary>

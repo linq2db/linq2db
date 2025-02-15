@@ -2,11 +2,11 @@
 using System.Data.Common;
 using System.IO;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Common;
-	using Data;
-
 	sealed class MySqlProviderDetector : ProviderDetectorBase<MySqlProvider, MySqlVersion>
 	{
 		public MySqlProviderDetector() : base(MySqlVersion.AutoDetect, MySqlVersion.MySql57)

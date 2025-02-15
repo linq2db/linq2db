@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -18,7 +19,6 @@ namespace Tests.UserTests
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(Metric.RequestId))]
 			public virtual ICollection<Metric> Metrics { get; set; } = null!;
 		}
-
 
 		[Table]
 		public class Metric

@@ -1,21 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-
-	using Remote;
-
 	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
 	public abstract class SqlStatement : IQueryElement
 	{
 		public string SqlText => this.ToDebugString(SelectQuery);
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		protected string DebugSqlText => Tools.ToDebugDisplay(SqlText);
+		protected string DebugSqlText => Common.Tools.ToDebugDisplay(SqlText);
 
 		public abstract QueryType QueryType { get; }
 

@@ -1,5 +1,6 @@
-﻿using System.Text;
+﻿using System;
 using System.Globalization;
+using System.Text;
 
 using LinqToDB.CodeModel;
 using LinqToDB.DataModel;
@@ -32,7 +33,7 @@ namespace LinqToDB.Scaffold
 
 			var dataContextClass = new ClassModel(className, className)
 			{
-				Modifiers = Modifiers.Public | Modifiers.Partial,
+				Modifiers = (_options.DataModel.ContextClassModifier ?? Modifiers.Public) | Modifiers.Partial,
 				Namespace = _options.CodeGeneration.Namespace
 			};
 

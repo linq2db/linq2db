@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Data.Common;
 
-namespace LinqToDB
-{
-	using Data;
-	using Interceptors;
-	using Interceptors.Internal;
+using LinqToDB.Data;
+using LinqToDB.Interceptors.Internal;
 
+namespace LinqToDB.Interceptors
+{
 	/// <summary>
 	/// Contains extensions that add one-time interceptors to connection.
 	/// </summary>

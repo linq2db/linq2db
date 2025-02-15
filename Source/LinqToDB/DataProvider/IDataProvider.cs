@@ -6,14 +6,14 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
-
 	public interface IDataProvider
 	{
 		string           Name                  { get; }

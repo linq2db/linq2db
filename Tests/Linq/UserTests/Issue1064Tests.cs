@@ -24,7 +24,6 @@ namespace Tests.UserTests
 			public int Column1064 { get; set; }
 		}
 
-
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSybase)] string configuration)
 		{

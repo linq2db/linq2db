@@ -4,14 +4,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using LinqToDB.Common.Internal;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	internal static class SequenceHelper
 	{
 		public static Expression PrepareBody(LambdaExpression lambda, params IBuildContext[] sequences)
@@ -668,6 +668,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					return expression;
 				}
+
 				if (!expression.Type.IsValueType)
 				{
 					if (expression is DefaultExpression)

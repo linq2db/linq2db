@@ -8,20 +8,20 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.DataProvider;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Linq.Builder.Visitors;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Common.Internal;
-	using DataProvider;
-	using Extensions;
-	using Infrastructure;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-	using Tools;
-	using Translation;
-	using Visitors;
-
 	internal sealed partial class ExpressionBuilder : IExpressionEvaluator
 	{
 		#region Sequence
@@ -86,6 +86,8 @@ namespace LinqToDB.Linq.Builder
 			_memberTranslator = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberTranslator>();
 
 			_buildVisitor = new ExpressionBuildVisitor(this);
+			
+			_globalModifier = TranslationModifier.Default.WithInlineParameters(dataContext.InlineParameters);
 
 			if (DataOptions.DataContextOptions.MemberTranslators != null)
 			{
@@ -378,6 +380,7 @@ namespace LinqToDB.Linq.Builder
 
 				throw SqlErrorExpression.CreateException(errorExpr, buildResult.AdditionalDetails);
 			}
+
 			return buildResult.BuildContext;
 		}
 

@@ -1,0 +1,13 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"            #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                          #>
+<#@ output extension=".generated.cs"                                                                    #>
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.SqlServer.ttinclude"          once="true" #>
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.SqlServer.SqlTypes.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                                      once="true" #>
+<#@ include file="SqlServer.ttinclude"                                                      once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)ObsoleteAttributes.ttinclude"                   once="true" #>
+<#
+	NamespaceName = "TestAzureSQLMi";
+	LoadSqlServerMetadata(GetConnectionString("SqlServer.Azure.MI"));
+	GenerateModel();
+#>

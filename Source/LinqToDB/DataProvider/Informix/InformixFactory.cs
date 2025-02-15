@@ -2,12 +2,12 @@
 
 using JetBrains.Annotations;
 
+using LinqToDB.Configuration;
+
+using LinqToDB.DataProvider.DB2;
+
 namespace LinqToDB.DataProvider.Informix
 {
-	using Configuration;
-
-	using DB2;
-
 	[UsedImplicitly]
 	sealed class InformixFactory : DataProviderFactoryBase
 	{

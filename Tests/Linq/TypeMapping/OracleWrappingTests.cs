@@ -1,10 +1,12 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
+
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Oracle;
-using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
+
 using NUnit.Framework;
+
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
 

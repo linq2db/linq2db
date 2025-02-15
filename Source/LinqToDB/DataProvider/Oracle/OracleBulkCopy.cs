@@ -11,12 +11,12 @@ using System.Threading.Tasks;
 using System.Text;
 #endif
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using Data;
-	using SqlProvider;
-
 	sealed class OracleBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
@@ -104,7 +104,7 @@ namespace LinqToDB.DataProvider.Oracle
 							opts.RowsCopiedCallback,
 							rc,
 							opts.MaxBatchSize,
-							opts.BulkCopyTimeout ?? (Configuration.Data.BulkCopyUseConnectionCommandTimeout ? connection.ConnectionTimeout : null)))
+							opts.BulkCopyTimeout ?? (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout ? connection.ConnectionTimeout : null)))
 						{
 							for (var i = 0; i < columns.Count; i++)
 								bc.AddColumn(i, columns[i]);

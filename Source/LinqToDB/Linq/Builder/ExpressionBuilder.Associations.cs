@@ -5,15 +5,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-
 	partial class ExpressionBuilder
 	{
 		bool IsAssociationInRealization(Expression? expression, MemberInfo member, [NotNullWhen(true)] out MemberInfo? associationMember)

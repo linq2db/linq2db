@@ -254,6 +254,7 @@ Possible reasons:
 						var assembly = Assembly.LoadFrom(assemblyPath);
 						DbProviderFactories.RegisterFactory("Sap.Data.Hana", assembly.GetType("Sap.Data.Hana.HanaFactory")!);
 					}
+
 					break;
 				}
 				case ProviderName.Informix:

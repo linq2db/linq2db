@@ -2,12 +2,12 @@
 using System.Data.Common;
 using System.IO;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.DB2;
+
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
-	using Data;
-	using LinqToDB.DataProvider.DB2;
-
 	sealed class InformixProviderDetector : ProviderDetectorBase<InformixProvider, InformixProviderDetector.Dialect>
 	{
 		internal enum Dialect { }

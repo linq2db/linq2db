@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Interceptors
+﻿namespace LinqToDB.Interceptors
 {
 	public interface IEntityServiceInterceptor : IInterceptor
 	{

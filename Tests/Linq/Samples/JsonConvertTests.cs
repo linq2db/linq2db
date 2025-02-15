@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using Newtonsoft.Json;
+
 using NUnit.Framework;
 
 namespace Tests.Samples
@@ -148,7 +151,6 @@ namespace Tests.Samples
 				builder.AddParameter("propPath", new SqlValue(propPathStr));
 			}
 		}
-
 
 		[Sql.Extension("JSON_VALUE({field}, {propPath})", Precedence = Precedence.Primary, BuilderType = typeof(JsonValueBuilder), ServerSideOnly = true, CanBeNull = false)]
 		public static string Value(object? path)

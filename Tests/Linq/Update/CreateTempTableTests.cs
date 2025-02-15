@@ -180,6 +180,7 @@ namespace Tests.xUpdate
 							select t
 						).ToList();
 					}
+
 					if (!context.IsAnyOf(TestProvName.AllMySqlData))
 					{
 						Assert.Fail("Task should have been canceled but was not");
@@ -202,6 +203,7 @@ namespace Tests.xUpdate
 				{
 					tableExists = false;
 				}
+
 				Assert.That(tableExists, Is.EqualTo(false));
 			}
 		}
@@ -233,6 +235,7 @@ namespace Tests.xUpdate
 							select t
 						).ToList();
 					}
+
 					if (!context.IsAnyOf(TestProvName.AllMySqlData))
 					{
 						Assert.Fail("Task should have been canceled but was not");
@@ -255,6 +258,7 @@ namespace Tests.xUpdate
 				{
 					tableExists = false;
 				}
+
 				Assert.That(tableExists, Is.EqualTo(false));
 			}
 		}

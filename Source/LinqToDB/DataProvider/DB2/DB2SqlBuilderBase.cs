@@ -7,13 +7,13 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
 	{
 		public override bool CteFirst => false;
@@ -451,6 +451,7 @@ END");
 				{
 					base.BuildParameter(parameter);
 				}
+
 				BuildStep = saveStep;
 
 				return;

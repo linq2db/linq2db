@@ -745,8 +745,6 @@ namespace Tests.Linq
 			}
 		}
 
-
-
 		#endregion
 
 		[Test]

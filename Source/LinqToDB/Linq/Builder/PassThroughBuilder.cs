@@ -1,11 +1,11 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Reflection;
-
 	[BuildsMethodCall("AsQueryable", nameof(Sql.Alias))]
 	sealed class PassThroughBuilder : MethodCallBuilder
 	{

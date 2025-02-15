@@ -28,11 +28,11 @@ variables:
   ef8AssemblyVersion: 8.2.0
   ef9AssemblyVersion: 9.1.0
   ${{ if eq(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 6.0.0-preview.2
-    ef3PackageVersion: 3.28.0-preview.2
-    ef6PackageVersion: 6.18.0-preview.2
-    ef8PackageVersion: 8.2.0-preview.2
-    ef9PackageVersion: 9.1.0-preview.2
+    packageVersion: 6.0.0-rc.1
+    ef3PackageVersion: 3.28.0-rc.1
+    ef6PackageVersion: 6.18.0-rc.1
+    ef8PackageVersion: 8.2.0-rc.1
+    ef9PackageVersion: 9.1.0-rc.1
   ${{ if ne(variables['Build.SourceBranchName'], 'release') }}:
     packageVersion: 6.0.0
     ef3PackageVersion: 3.28.0

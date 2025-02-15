@@ -4,15 +4,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using Extensions;
-	using Interceptors;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-
 	static class AssociationHelper
 	{
 		static readonly MethodInfo[] DefaultIfEmptyMethods = new [] { Methods.Queryable.DefaultIfEmpty, Methods.Queryable.DefaultIfEmptyValue };
@@ -31,6 +31,7 @@ namespace LinqToDB.Linq.Builder
 			Expression?           additionalCondition,
 			bool                  inline,
 			bool?                 enforceDefault,
+			TranslationModifier   modifier,
 			LoadWithInfo?         loadWith,
 			MemberInfo[]?         loadWithPath,
 			out bool?             isOptional)
@@ -202,6 +203,7 @@ namespace LinqToDB.Linq.Builder
 							newBody,
 							additionalLambda);
 					}
+
 					definedQueryMethod = Expression.Lambda(newBody, definedQueryMethod.Parameters);
 				}
 
@@ -326,6 +328,10 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			isOptional = shouldAddDefaultIfEmpty;
+
+			var bodyWithModifier = Expression.Call(null, Methods.LinqToDB.ApplyModifierInternal.MakeGenericMethod(objectType), definedQueryMethod.Body, Expression.Constant(modifier));
+			definedQueryMethod = Expression.Lambda(bodyWithModifier, definedQueryMethod.Parameters);
+
 			if (inline)
 			{
 				var body = definedQueryMethod.Body.Unwrap();
@@ -343,7 +349,8 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext,
-			AccessorMember onMember, AssociationDescriptor descriptor, Expression? additionalCondition, bool inline, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath, ref bool? isOptional)
+			AccessorMember onMember, AssociationDescriptor descriptor, Expression? additionalCondition, bool inline, TranslationModifier modifier, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath,
+			ref bool? isOptional)
 		{
 			var elementType     = descriptor.GetElementType();
 			var parentExactType = descriptor.GetParentElementType();
@@ -351,7 +358,7 @@ namespace LinqToDB.Linq.Builder
 			var queryMethod = CreateAssociationQueryLambda(
 				builder, tableContext.BuildContext.MappingSchema, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType, elementType,
 				additionalCondition,
-				inline, isOptional, loadwith, loadWithPath, out isOptional);
+				inline, isOptional, modifier, loadwith, loadWithPath, out isOptional);
 
 			var correctedContext = tableContext.WithType(queryMethod.Parameters[0].Type);
 

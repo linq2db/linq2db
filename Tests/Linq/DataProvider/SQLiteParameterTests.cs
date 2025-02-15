@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.DataProvider
@@ -93,7 +95,6 @@ namespace Tests.DataProvider
 					where t1.DoubleValue == double.MinValue && t1.FloatValue == float.MinValue
 					select t1
 				);
-
 
 				AreEqualWithComparer(expected, actual);
 			}

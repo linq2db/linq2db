@@ -125,6 +125,7 @@ namespace LinqToDB.SqlQuery
 				list = new List<SelectQuery>();
 				_tree.Add(parent, list);
 			}
+
 			list.Add(child);
 		}
 

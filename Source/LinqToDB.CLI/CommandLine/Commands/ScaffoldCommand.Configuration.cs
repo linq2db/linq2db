@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+
+using LinqToDB.CodeModel;
 using LinqToDB.DataModel;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
@@ -102,6 +104,19 @@ namespace LinqToDB.CommandLine
 			if (options.Remove(DataModel.BaseEntity          , out value)) settings.BaseEntityClass  = (string)value!;
 			if (options.Remove(DataModel.DataContextName     , out value)) settings.ContextClassName = (string)value!;
 			if (options.Remove(DataModel.DataContextBaseClass, out value)) settings.BaseContextClass = (string)value!;
+
+			// data context access modifiers
+			if (options.Remove(DataModel.DataContextModifier, out value))
+			{
+				var str = (string)value!;
+				settings.ContextClassModifier = str switch
+				{
+					"public"   => Modifiers.Public,
+					"internal" => Modifiers.Internal,
+					"private"  => Modifiers.Private,
+					_ => throw new InvalidOperationException($"Unsuppored value for option {DataModel.DataContextModifier.Name}: {str}")
+				};
+			}
 
 			// stored procedure signatures
 			if (options.Remove(DataModel.StoredProcedureTypes, out value))
@@ -231,6 +246,7 @@ namespace LinqToDB.CommandLine
 						case "aggregate-function": objects |= SchemaObjects.AggregateFunction; break;
 					}
 				}
+
 				settings.LoadedObjects = objects;
 			}
 
@@ -257,7 +273,6 @@ namespace LinqToDB.CommandLine
 				foreach (var strVal in (string[])value!)
 					settings.DefaultSchemas.Add(strVal);
 			}
-
 
 			// include/exclude catalogs
 			if (options.Remove(SchemaOptions.IncludedCatalogs, out value))
@@ -299,6 +314,7 @@ namespace LinqToDB.CommandLine
 				includeTables = false;
 				tableFilter   = (NameFilter)value!;
 			}
+
 			if (options.Remove(SchemaOptions.IncludedViews, out value))
 			{
 				includeViews = true;
