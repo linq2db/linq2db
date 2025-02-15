@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 
+using LinqToDB.Data;
+
 using Microsoft.Extensions.Logging;
 
 namespace LinqToDB.Extensions.Logging
 {
-	using Data;
-
 	public class LinqToDBLoggerFactoryAdapter(ILoggerFactory loggerFactory)
 	{
 		private readonly ILogger<DataConnection> _logger = loggerFactory.CreateLogger<DataConnection>();

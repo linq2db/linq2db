@@ -12,11 +12,11 @@ using LinqToDB.Mapping;
 using LinqToDB.Remote;
 using LinqToDB.Remote.Wcf;
 
+using Tests.Model;
+using Tests.Model.Remote.Wcf;
+
 namespace Tests.Remote.ServerContainer
 {
-	using Model;
-	using Model.Remote.Wcf;
-
 	public class WcfServerContainer : IServerContainer
 	{
 		private const int Port = 22654;

@@ -6,11 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Data;
-
 	sealed class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion>
 	{
 		public SqlServerProviderDetector() : base(SqlServerVersion.AutoDetect, SqlServerVersion.v2012)

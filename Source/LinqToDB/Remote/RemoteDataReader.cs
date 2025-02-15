@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Remote
 {
-	using Mapping;
-
 	sealed class RemoteDataReader : DbDataReader
 	{
 		public RemoteDataReader(MappingSchema mappingSchema, LinqServiceResult result)

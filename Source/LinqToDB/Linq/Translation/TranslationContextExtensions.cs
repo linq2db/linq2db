@@ -2,12 +2,12 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Translation
 {
-	using Common;
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	public static class TranslationContextExtensions
 	{
 		public static bool TryEvaluate<T>(this ITranslationContext translationContext, Expression expression, out T result)

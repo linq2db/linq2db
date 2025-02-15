@@ -7,13 +7,12 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Common
 {
-	using Expressions;
-	using Extensions;
-	using Internal;
-	using Mapping;
-
 	public static class ConvertBuilder
 	{
 		internal static readonly MethodInfo DefaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));

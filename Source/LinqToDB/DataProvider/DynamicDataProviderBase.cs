@@ -3,14 +3,14 @@ using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Data.RetryPolicy;
+using LinqToDB.Extensions;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
+using LinqToDB.Tools;
+
 namespace LinqToDB.DataProvider
 {
-	using Data.RetryPolicy;
-	using Extensions;
-	using Interceptors;
-	using Mapping;
-	using Tools;
-
 	public abstract class DynamicDataProviderBase<TProviderMappings> : DataProviderBase
 		where TProviderMappings : IDynamicProviderAdapter
 	{

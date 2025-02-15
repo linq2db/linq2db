@@ -2,11 +2,10 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Linq;
-	using Mapping;
-
 	public interface ISqlServerExtensions
 	{
 	}

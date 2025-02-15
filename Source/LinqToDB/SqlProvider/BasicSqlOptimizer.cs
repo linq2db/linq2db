@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
+
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+using LinqToDB.SqlQuery.Visitors;
 
 // ReSharper disable InconsistentNaming
 
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using Expressions;
-	using Linq;
-	using Mapping;
-	using SqlQuery;
-	using SqlQuery.Visitors;
-
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
 		#region Init
@@ -137,6 +136,7 @@ namespace LinqToDB.SqlProvider
 				if (result.tableSource != null)
 					return result;
 			}
+
 			currentPath.Pop();
 
 			return default;
@@ -816,6 +816,7 @@ namespace LinqToDB.SqlProvider
 									context.StaticValue.newExpressions.Add(normalized);
 									return newIndex;
 								}
+
 								return idx;
 							});
 
@@ -827,6 +828,7 @@ namespace LinqToDB.SqlProvider
 						return newExpression;
 					}
 				}
+
 				return e;
 			});
 
@@ -961,7 +963,6 @@ namespace LinqToDB.SqlProvider
 		protected bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, out SqlTableSource? source)
 		{
 			source = null;
-
 
 			if (query.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported) ||
 				!query.GroupBy.IsEmpty)
@@ -1394,6 +1395,7 @@ namespace LinqToDB.SqlProvider
 
 						return column.Expression;
 					}
+
 					return e;
 				});
 
@@ -1746,6 +1748,7 @@ namespace LinqToDB.SqlProvider
 							break;
 						}
 					}
+
 					break;
 				}
 				case QueryElementType.SqlInlinedExpression:

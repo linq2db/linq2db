@@ -1,10 +1,8 @@
-﻿using System;
+﻿using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using SqlProvider;
-	using SqlQuery;
-
 	public class SapHanaSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public SapHanaSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)

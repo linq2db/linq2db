@@ -47,7 +47,7 @@ namespace LinqToDB.Remote.Http.Server
 				.ConfigureApplicationPartManager(apm => apm.FeatureProviders.Add(new SpecificControllerFeatureProvider<LinqToDBController<TContext>>()));
 		}
 
-		class SpecificControllerFeatureProvider<T> : IApplicationFeatureProvider<ControllerFeature>
+		sealed class SpecificControllerFeatureProvider<T> : IApplicationFeatureProvider<ControllerFeature>
 		{
 			public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
 			{
@@ -56,7 +56,7 @@ namespace LinqToDB.Remote.Http.Server
 			}
 		}
 
-		class ControllerRouteConvention<T>(string route) : IControllerModelConvention
+		sealed class ControllerRouteConvention<T>(string route) : IControllerModelConvention
 		{
 			public void Apply(ControllerModel controller)
 			{

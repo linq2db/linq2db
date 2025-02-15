@@ -4,11 +4,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common.Internal;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using LinqToDB.Common.Internal;
-
 	[DebuggerDisplay("{ToDebugString()}")]
 	sealed class LoadWithInfo
 	{

@@ -1,10 +1,8 @@
-﻿using System;
+﻿using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.DataProvider.SqlServer;
 
 namespace LinqToDB.Data.RetryPolicy
 {
-	using DataProvider.SqlServer;
-	using LinqToDB.DataProvider.ClickHouse;
-
 	static class DefaultRetryPolicyFactory
 	{
 		public static IRetryPolicy? GetRetryPolicy(DataConnection dataContext)

@@ -4,13 +4,13 @@ using System.Globalization;
 using System.Numerics;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SqlQuery;
-
 	sealed class FirebirdMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT

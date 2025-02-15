@@ -5,26 +5,17 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Common.Internal;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.MySql;
-using LinqToDB.DataProvider.SQLite;
-using LinqToDB.DataProvider.Access;
-using LinqToDB.DataProvider.ClickHouse;
-using LinqToDB.DataProvider.DB2;
-using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.DataProvider.Informix;
-using LinqToDB.DataProvider.SapHana;
-using LinqToDB.DataProvider.Sybase;
 using LinqToDB.Mapping;
 
 using Microsoft.Data.SqlClient;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Infrastructure
 {
-	using Model;
-
 	[TestFixture]
 	public class DataOptionsTests : TestBase
 	{
@@ -76,7 +67,6 @@ namespace Tests.Infrastructure
 				.UseConnection   (db.DataProvider, db.Connection, false)
 				.UseMappingSchema(db.MappingSchema)
 				.UseTracing(ti => s1 = ti.SqlText));
-
 
 			_child = db1.Child.ToList();
 

@@ -2,10 +2,10 @@
 
 using JetBrains.Annotations;
 
+using LinqToDB.Configuration;
+
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Configuration;
-
 	[UsedImplicitly]
 	sealed class SqlCeFactory : IDataProviderFactory
 	{

@@ -3,15 +3,15 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
-	using Model;
-
 	[TestFixture]
 	public class EnumMappingTests : TestBase
 	{

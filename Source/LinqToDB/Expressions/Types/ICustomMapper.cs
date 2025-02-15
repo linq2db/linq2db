@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Expressions.Types
 {
 	public interface ICustomMapper
 	{

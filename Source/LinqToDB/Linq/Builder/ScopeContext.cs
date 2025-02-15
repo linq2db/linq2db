@@ -1,11 +1,11 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
-	using LinqToDB.SqlQuery;
-
 	class ScopeContext : BuildContextBase
 	{
 		public IBuildContext Context { get; }

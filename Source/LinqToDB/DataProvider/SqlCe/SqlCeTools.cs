@@ -2,11 +2,10 @@
 using System.Data.Common;
 using System.Reflection;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Configuration;
-	using Data;
-
 	public static class SqlCeTools
 	{
 		enum Fake { };

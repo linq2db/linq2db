@@ -175,7 +175,6 @@ namespace LinqToDB.DataModel
 			return group;
 		}
 
-
 		MethodGroup IDataModelGenerationContext.GetEntityAssociationExtensionsGroup(EntityModel entity)
 		{
 			if (_entityAssociationExtensions == null || !_entityAssociationExtensions.TryGetValue(entity, out var group))

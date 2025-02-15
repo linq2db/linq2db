@@ -4,12 +4,12 @@ using System.Linq;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.Tools.Comparers;
+
 namespace LinqToDB.Tools
 {
-	using Comparers;
-	using Mapping;
-	using Reflection;
-
 	[PublicAPI]
 	public static class MappingSchemaExtensions
 	{
