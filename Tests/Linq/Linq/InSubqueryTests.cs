@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -338,7 +337,6 @@ namespace Tests.Linq
 				group t by t.GV
 				into g
 				select g.Min(x => x.ID);
-
 
 			var query = t1.Where(t => t.ID.In(subQuery));
 

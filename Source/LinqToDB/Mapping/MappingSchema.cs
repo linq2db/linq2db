@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -16,22 +15,23 @@ using System.Xml.Linq;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Common.Internal.Cache;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Extensions;
+using LinqToDB.Metadata;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 #if !NET9_0_OR_GREATER
 using Lock = System.Object;
 #endif
 
 namespace LinqToDB.Mapping
 {
-	using Data;
-	using Common;
-	using Common.Internal;
-	using Common.Internal.Cache;
-	using Expressions;
-	using Extensions;
-	using Metadata;
-	using SqlProvider;
-	using SqlQuery;
-
 	/// <summary>
 	/// Mapping schema.
 	/// </summary>
@@ -50,7 +50,7 @@ namespace LinqToDB.Mapping
 				(ms1, ms2),
 				static entry =>
 				{
-					entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 					return new MappingSchema(entry.Key.ms1, entry.Key.ms2);
 				});
 		}
@@ -248,6 +248,7 @@ namespace LinqToDB.Mapping
 						{
 							Schemas[0].SetDefaultValue(type, value, resetId: false);
 						}
+
 						return value;
 					}
 				}
@@ -307,6 +308,7 @@ namespace LinqToDB.Mapping
 						{
 							Schemas[0].SetCanBeNull(type, true, resetId: false);
 						}
+
 						return true;
 					}
 				}
@@ -1473,7 +1475,7 @@ namespace LinqToDB.Mapping
 			{
 				type = type.ToNullableUnderlying();
 
-				if (type.IsEnum || type.IsPrimitive || (Configuration.IsStructIsScalarType && type.IsValueType))
+				if (type.IsEnum || type.IsPrimitive || (Common.Configuration.IsStructIsScalarType && type.IsValueType))
 					ret = true;
 			}
 
@@ -1793,7 +1795,7 @@ namespace LinqToDB.Mapping
 				(mappingSchema: this, callback: onEntityDescriptorCreated ?? EntityDescriptorCreatedCallback),
 				static (o, context) =>
 				{
-					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 					var edNew = new EntityDescriptor(context.mappingSchema, o.Key.entityType, context.callback);
 					context.callback?.Invoke(context.mappingSchema, edNew);
 					return edNew;
@@ -1839,6 +1841,7 @@ namespace LinqToDB.Mapping
 				if (type != null)
 					return type;
 			}
+
 			return null;
 		}
 

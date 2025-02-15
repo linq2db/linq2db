@@ -840,6 +840,7 @@ namespace LinqToDB.CodeModel
 				
 				return new CodeExternalPropertyOrField(new CodeIdentifier(member.Name, true), new(Parser.Parse(pi.PropertyType).WithNullability(isNullable))).Reference;
 			}
+
 			if (member is FieldInfo fi)
 			{
 				var isNullable = !fi.FieldType.IsValueType;

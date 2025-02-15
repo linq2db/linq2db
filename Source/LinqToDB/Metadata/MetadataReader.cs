@@ -9,12 +9,11 @@ using System.Threading;
 using Lock = System.Object;
 #endif
 
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Metadata
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-
 	/// <summary>
 	/// Aggregation metadata reader, that just delegates all calls to nested readers.
 	/// </summary>
@@ -137,6 +136,7 @@ namespace LinqToDB.Metadata
 						.ToArray();
 				}
 			}
+
 			return _registeredTypes;
 		}
 

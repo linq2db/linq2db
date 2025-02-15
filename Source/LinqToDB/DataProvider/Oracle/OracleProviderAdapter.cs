@@ -8,17 +8,18 @@ using System.Reflection;
 using System.Threading;
 using System.Xml;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
+using LinqToDB.Mapping;
+
 #if !NET9_0_OR_GREATER
 using Lock = System.Object;
 #endif
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using Data;
-	using Expressions;
-	using Mapping;
-
 	public class OracleProviderAdapter : IDynamicProviderAdapter
 	{
 		const int NanosecondsPerTick = 100;
@@ -459,7 +460,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var isNative = assemblyName == NativeAssemblyName;
 
-			var assembly = Tools.TryLoadAssembly(assemblyName, factoryName);
+			var assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
@@ -665,7 +666,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static OracleProviderAdapter CreateDevartAdapter()
 		{
-			var assembly = Tools.TryLoadAssembly(DevartAssemblyName, DevartFactoryName);
+			var assembly = Common.Tools.TryLoadAssembly(DevartAssemblyName, DevartFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {DevartAssemblyName}");
 

@@ -1,12 +1,12 @@
 ﻿using System.Linq;
-using LinqToDB.Linq;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB;
-	using LinqToDB.Mapping;
-
 	// tests for target/source/match condition configuration methods, not covered by other tests
 	public partial class MergeTests
 	{

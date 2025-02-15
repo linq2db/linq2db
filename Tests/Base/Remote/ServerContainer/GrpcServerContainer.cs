@@ -20,11 +20,11 @@ using NUnit.Framework;
 
 using ProtoBuf.Grpc.Server;
 
+using Tests.Model;
+using Tests.Model.Remote.Grpc;
+
 namespace Tests.Remote.ServerContainer
 {
-	using Model;
-	using Model.Remote.Grpc;
-
 	public class GrpcServerContainer : IServerContainer
 	{
 		private const int Port = 22654;
@@ -136,7 +136,6 @@ namespace Tests.Remote.ServerContainer
 			return service;
 		}
 
-
 		//Environment.CurrentManagedThreadId need for a parallel test like DataConnectionTests.MultipleConnectionsTest
 		public int GetPort()
 		{
@@ -147,7 +146,6 @@ namespace Tests.Remote.ServerContainer
 
 			return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
 		}
-
 
 		public class Startup
 		{

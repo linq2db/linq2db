@@ -8,10 +8,10 @@ using System.Threading;
 using Lock = System.Object;
 #endif
 
+using LinqToDB.Expressions.Types;
+
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using LinqToDB.Expressions;
-
 	public class SqlCeProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _syncRoot = new();

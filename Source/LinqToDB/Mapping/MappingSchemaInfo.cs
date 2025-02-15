@@ -8,14 +8,14 @@ using System.Threading;
 using Lock = System.Object;
 #endif
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Metadata;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Common.Internal;
-	using Expressions;
-	using Metadata;
-	using SqlQuery;
-
 	class MappingSchemaInfo : IConfigurationID
 	{
 		public MappingSchemaInfo(string configuration)
@@ -117,6 +117,7 @@ namespace LinqToDB.Mapping
 									stop = true;
 									break;
 								}
+
 							if (stop)
 								continue;
 

@@ -3,14 +3,14 @@ using System.Data.Common;
 using System.Linq.Expressions;
 using System.Threading;
 
+using LinqToDB.Expressions.Types;
+
 #if !NET9_0_OR_GREATER
 using Lock = System.Object;
 #endif
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Expressions;
-
 	public class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _systemSyncRoot = new ();
@@ -88,6 +88,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				typeMapper.RegisterTypeWrapper<SQLiteConnection>(connectionType);
 			}
+
 			typeMapper.FinalizeMappings();
 
 			Action? clearAllPools = null;

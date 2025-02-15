@@ -10,17 +10,18 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
+using LinqToDB.Mapping;
+
 #if !NET9_0_OR_GREATER
 using Lock = System.Object;
 #endif
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Common;
-	using Data;
-	using Expressions;
-	using Mapping;
-
 	public class NpgsqlProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _syncRoot = new ();
@@ -208,7 +209,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					if (_instance == null)
 #pragma warning restore CA1508 // Avoid dead conditional code
 					{
-						var assembly = Tools.TryLoadAssembly(AssemblyName, null);
+						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
@@ -285,7 +286,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 							var reader  = Expression.Parameter(typeof(DbDataReader));
 							var ordinal = Expression.Parameter(typeof(int));
-							var body    = Expression.Call(reader, nameof(DbDataReader.GetFieldValue), new[] { npgsqlIntervalType }, ordinal);
+							var body    = Expression.Call(reader, nameof(DbDataReader.GetFieldValue), [npgsqlIntervalType], [ordinal]);
 
 							npgsqlIntervalReader = Expression.Lambda(body, reader, ordinal);
 						}
@@ -335,6 +336,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 									ctor = npgsqlInetType.GetConstructor(new[] { typeof(IPAddress), netmaskType })
 										?? throw new InvalidOperationException("Cannot find NpgsqlInet constructor");
 								}
+
 								var inetTupleType = valueTypeType.MakeGenericType(typeof(IPAddress), typeof(int));
 								var p = Expression.Parameter(inetTupleType, "p");
 

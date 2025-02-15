@@ -2,6 +2,7 @@
 
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -26,7 +27,6 @@ namespace Tests.UserTests
 			public PayRate? PayRate   { get; set; }
 			public int?     PayRateId { get; set; }
 		}
-
 
 		[Test]
 		public void NullReferenceExceptionTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)

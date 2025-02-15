@@ -7,6 +7,18 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Logging;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Interceptors;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Linq.Internal;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 #if !NET9_0_OR_GREATER
 using Lock = System.Object;
 #endif
@@ -15,18 +27,6 @@ using Lock = System.Object;
 
 namespace LinqToDB.Linq
 {
-	using Builder;
-	using Common;
-	using Common.Logging;
-	using Interceptors;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.ExpressionVisitors;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-	using Tools;
-	using Internal;
-
 	public abstract class Query
 	{
 		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,object?>                         GetElement      = null!;
@@ -620,6 +620,7 @@ namespace LinqToDB.Linq
 						query = new Query<T>(dataContext);
 						query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null).Build<T>(ref expressions);
 					}
+
 					if (query.ErrorExpression != null)
 						throw query.ErrorExpression.CreateException();
 				}

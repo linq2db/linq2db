@@ -4,10 +4,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Common
 {
-	using Extensions;
-
 	public static class TypeHelper
 	{
 		/// <summary>

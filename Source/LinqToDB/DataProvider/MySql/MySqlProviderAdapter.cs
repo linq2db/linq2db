@@ -7,16 +7,16 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Expressions.Types;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 #if !NET9_0_OR_GREATER
 using Lock = System.Object;
 #endif
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	public abstract class MySqlProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Type[] _ordinalParameters = [typeof(int)];

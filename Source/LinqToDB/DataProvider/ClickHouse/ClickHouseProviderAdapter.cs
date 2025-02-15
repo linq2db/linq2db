@@ -7,18 +7,18 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.DataProvider.MySql;
+using LinqToDB.Expressions.Types;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 #if !NET9_0_OR_GREATER
 using Lock = System.Object;
 #endif
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Common;
-	using Expressions;
-	using Mapping;
-	using MySql;
-	using SqlQuery;
-
 	public class ClickHouseProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _octonicaSyncRoot = new ();
@@ -199,7 +199,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateClientAdapter()
 		{
-			var assembly = Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
+			var assembly = Common.Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {ClientAssemblyName}");
 
@@ -268,7 +268,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateOctonicaAdapter()
 		{
-			var assembly = Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
+			var assembly = Common.Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {OctonicaAssemblyName}");
 
@@ -522,12 +522,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseException : TypeWrapper
 			{
-				private static LambdaExpression[] Wrappers { get; }
-					= new LambdaExpression[]
-				{
+				private static LambdaExpression[] Wrappers { get; } =
+				[
 						// [0]: get ErrorCode
 						(Expression<Func<ClickHouseException, int>>)((ClickHouseException this_) => this_.ErrorCode),
-				};
+				];
 
 				public ClickHouseException(object instance, Delegate[] wrappers) : base(instance, wrappers)
 				{

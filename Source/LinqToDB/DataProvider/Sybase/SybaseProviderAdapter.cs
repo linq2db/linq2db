@@ -8,10 +8,10 @@ using System.Threading;
 using Lock = System.Object;
 #endif
 
+using LinqToDB.Expressions.Types;
+
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Expressions;
-
 	public class SybaseProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _nativeSyncRoot = new ();

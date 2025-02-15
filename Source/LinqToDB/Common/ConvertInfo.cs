@@ -8,12 +8,12 @@ using System.Threading;
 using Lock = System.Object;
 #endif
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Common
 {
-	using Data;
-	using Internal;
-	using Mapping;
-
 	sealed class ConvertInfo
 	{
 		public static ConvertInfo Default = new ();

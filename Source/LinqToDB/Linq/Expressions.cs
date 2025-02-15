@@ -10,7 +10,14 @@ using System.Threading;
 
 using JetBrains.Annotations;
 
-#if !NET9_0_OR_GREATER
+using LinqToDB.Common.Internal;
+using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
+if !NET9_0_OR_GREATER
 using Lock = System.Object;
 #endif
 
@@ -25,13 +32,6 @@ using Lock = System.Object;
 
 namespace LinqToDB.Linq
 {
-	using Common.Internal;
-	using DataProvider.Firebird;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	[PublicAPI]
 	public static class Expressions
 	{
@@ -1002,7 +1002,6 @@ namespace LinqToDB.Linq
 			{ M(() => Math.Log10          (0)),  N(() => L<double,double>       ((double p)          => Sql.Log10  (p)!   .Value )) },
 
 			{ M(() => Math.Pow        (0,0) ), N(() => L<double,double,double>    ((double x,double y) => Sql.Power(x, y)!.Value )) },
-
 
 			{ M(() => Math.Sign  ((decimal)0)), N(() => L<decimal,int>(p => Sql.Sign(p)!.Value )) },
 			{ M(() => Math.Sign  ((double) 0)), N(() => L<double, int>(p => Sql.Sign(p)!.Value )) },

@@ -5,14 +5,14 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Expressions.Types;
+
 #if !NET9_0_OR_GREATER
 using Lock = System.Object;
 #endif
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Expressions;
-
 	public class SapHanaProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _unmanagedSyncRoot = new ();

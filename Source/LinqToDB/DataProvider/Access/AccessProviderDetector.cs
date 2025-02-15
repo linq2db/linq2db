@@ -2,11 +2,11 @@
 using System.Data.Common;
 using System.IO;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Common;
-	using Data;
-
 	sealed class AccessProviderDetector : ProviderDetectorBase<AccessProvider, AccessVersion>
 	{
 		public AccessProviderDetector() : base(AccessVersion.AutoDetect, AccessVersion.Jet)

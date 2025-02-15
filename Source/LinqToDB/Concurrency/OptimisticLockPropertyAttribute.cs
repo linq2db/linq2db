@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Concurrency
 {
-	using Expressions;
-	using Mapping;
-	using Reflection;
-
 	/// <summary>
 	/// Implements built-in optimistic lock value generation strategies for updates.
 	/// See <see cref="VersionBehavior"/> for supported strategies.

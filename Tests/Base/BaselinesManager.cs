@@ -1,18 +1,7 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
-
-using LinqToDB.Common;
-using LinqToDB.Data;
-
-using NUnit.Framework;
-using NUnit.Framework.Internal;
+﻿using System.Text;
 
 namespace Tests
 {
-	using Model;
-
 	public static class BaselinesManager
 	{
 		public static void LogQuery(string message)

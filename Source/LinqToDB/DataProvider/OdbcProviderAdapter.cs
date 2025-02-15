@@ -7,10 +7,10 @@ using System.Threading;
 using Lock = System.Object;
 #endif
 
+using LinqToDB.Expressions.Types;
+
 namespace LinqToDB.DataProvider
 {
-	using Expressions;
-
 	public class OdbcProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _syncRoot = new();
