@@ -3,12 +3,12 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
-
 	public static class SQLiteHints
 	{
 		public static class Hint

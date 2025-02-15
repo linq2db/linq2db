@@ -16,10 +16,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class MappingTests : TestBase
 	{
@@ -1135,7 +1135,6 @@ namespace Tests.Linq
 			Assert.That(cnt, Is.EqualTo(mapNull ? 3 : 4));
 		}
 
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
 		public void StructMapping_Enumerable_IntList([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
 		{
@@ -1186,6 +1185,7 @@ namespace Tests.Linq
 			public static bool operator !=(TenderId a, Guid b) => !(a == b);
 
 			public static implicit operator string(TenderId tenderId) => tenderId.Value.ToString();
+			public static implicit operator Guid(TenderId tenderId) => tenderId.Value;
 
 			internal static MappingSchema LinqToDbMapping()
 			{
@@ -1217,7 +1217,6 @@ namespace Tests.Linq
 			public string? Name { get; set; }
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4798")]
 		public void Issue4798Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -1225,11 +1224,12 @@ namespace Tests.Linq
 			using var tb = db.CreateLocalTable<Tender>();
 
 			var tenderIdsGuid = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
-			db.GetTable<Tender>().Where(i => tenderIdsGuid.Contains(i.Id.Value)).Any();
+			db.GetTable<Tender>().Where(i => tenderIdsGuid.Contains(i.Id)).Any();
 
 			TenderId? tenderId = new TenderId { Value = Guid.NewGuid() };
-			db.GetTable<Tender>().Where(i => tenderId != null && i.Id == tenderId.Value.Value).Any();
+			db.GetTable<Tender>().Where(i => tenderId != null && i.Id == tenderId).Any();
 		}
+
 		#endregion
 
 		#region Issue 4437

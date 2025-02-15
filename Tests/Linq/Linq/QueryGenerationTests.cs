@@ -11,15 +11,15 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
+using Tests.xUpdate;
+
+using static Tests.xUpdate.MergeTests;
+using static Tests.xUpdate.MultiInsertTests;
+
 namespace Tests.Linq
 {
-	using Model;
-
-	using xUpdate;
-
-	using static Tests.xUpdate.MergeTests;
-	using static xUpdate.MultiInsertTests;
-
 	[TestFixture]
 	public class QueryGenerationTests : TestBase
 	{

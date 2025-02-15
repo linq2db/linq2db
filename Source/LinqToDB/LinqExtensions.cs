@@ -11,17 +11,18 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Async;
+using LinqToDB.DataProvider;
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Reflection;
+using LinqToDB.SqlProvider;
+
+using static LinqToDB.MultiInsertExtensions;
+
 namespace LinqToDB
 {
-	using Async;
-	using DataProvider;
-	using Expressions;
-	using Linq;
-	using Linq.Builder;
-	using Reflection;
-	using SqlProvider;
-	using static MultiInsertExtensions;
-
 	/// <summary>
 	/// Contains extension methods for LINQ queries.
 	/// </summary>

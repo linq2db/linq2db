@@ -1,11 +1,9 @@
-﻿using System;
+﻿using LinqToDB.Interceptors;
+
+using LinqToDB.Interceptors.Internal;
 
 namespace LinqToDB.Remote
 {
-	using Interceptors;
-
-	using Interceptors.Internal;
-
 	public abstract partial class RemoteDataContextBase :
 		IInterceptable<IDataContextInterceptor>,
 		IInterceptable<IEntityServiceInterceptor>,

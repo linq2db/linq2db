@@ -2,6 +2,7 @@
 
 using LinqToDB;
 using LinqToDB.Interceptors;
+
 using StackExchange.Profiling.Data;
 
 namespace Tests

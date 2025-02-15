@@ -1,5 +1,7 @@
 ﻿#if NETSTANDARD2_0
 
+#pragma warning disable IDE0130
+
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 

@@ -11,16 +11,12 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace LinqToDB
-{
+using LinqToDB.Common.Internal;
 
 #pragma warning disable RS0030
 
-	using Async;
-	using Common;
-
-	using LinqToDB.Common.Internal;
-
+namespace LinqToDB
+{
 	[DebuggerStepThrough]
 	internal static class SharedTypeExtensions
 	{

@@ -10,21 +10,15 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Data
 {
-	using System.Collections;
-
-	using Model;
-
-	using Tests.DataProvider;
-
-
 	[TestFixture]
 	public class TraceTests : TestBase
 	{
 		private TraceLevel                           OriginalTraceLevel { get; set; }
 		private Action<string,string,TraceLevel> OriginalWrite      { get; set; } = null!;
-
 
 		[OneTimeSetUp]
 		public void SetTraceInfoLevel()
@@ -275,7 +269,6 @@ namespace Tests.Data
 				});
 			}
 		}
-
 
 		[Test]
 		public void TraceInfoStepsAreReportedForDataReaderQuery([NorthwindDataContext] string context)

@@ -4,12 +4,12 @@
 using System.Text;
 #endif
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
-
 	sealed class DB2zOSSqlBuilder : DB2SqlBuilderBase
 	{
 		public DB2zOSSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)

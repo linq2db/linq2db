@@ -1,6 +1,6 @@
-﻿using NUnit.Framework;
-using LinqToDB.FSharp;
-using LinqToDB.Data;
+﻿using LinqToDB.Data;
+
+using NUnit.Framework;
 
 namespace Tests.Linq
 {

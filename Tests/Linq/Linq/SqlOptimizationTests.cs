@@ -1,6 +1,8 @@
 ﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -14,7 +16,6 @@ namespace Tests.Linq
 			[Column] public int Id    { get; set; }
 			[Column] public int IntValue { get; set; }
 			[Column] public string StringValue { get; set; } = null!;
-
 
 			public static DataClass[] Seed()
 			{
@@ -126,6 +127,5 @@ namespace Tests.Linq
 		}
 
 	}
-
 
 }

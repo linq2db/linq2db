@@ -12,21 +12,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+
+using LinqToDB;
 
 using NUnit.Framework;
 
-using LinqToDB;
+using Tests.Model;
+using Tests.OrmBattle.Helper;
 
 using static Tests.Model.Northwind;
 
 namespace Tests.OrmBattle
 {
-	using System.Diagnostics.CodeAnalysis;
-
-	using Tests.Model;
-	using Tests.OrmBattle.Helper;
-
 	[TestFixture]
 	public sealed class OrmBattleTests : TestBase
 	{

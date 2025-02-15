@@ -1,10 +1,10 @@
-﻿namespace LinqToDB.DataProvider.MySql
-{
-	using Common;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+﻿using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataProvider.MySql
+{
 	sealed class MySql57SqlBuilder : MySqlSqlBuilder
 	{
 		public MySql57SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)

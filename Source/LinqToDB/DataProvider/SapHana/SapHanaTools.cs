@@ -3,10 +3,10 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Data;
-
 	[PublicAPI]
 	public static class SapHanaTools
 	{

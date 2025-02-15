@@ -3,12 +3,12 @@ using System.Data.Linq;
 using System.Globalization;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
-
 	sealed class AccessMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT

@@ -5,12 +5,12 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	sealed class AccessOleDbSchemaProvider : AccessSchemaProviderBase
 	{
 		private readonly AccessDataProvider _provider;

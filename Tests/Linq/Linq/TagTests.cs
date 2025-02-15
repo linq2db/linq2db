@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
 using Tests.xUpdate;
 
 namespace Tests.Linq
