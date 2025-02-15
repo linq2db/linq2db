@@ -5,14 +5,15 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Common;
+	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Extensions;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using SqlQuery;
-	using Reflection;
-
 	internal partial class ExpressionBuilder
 	{
 		#region BuildExpression
@@ -96,8 +97,9 @@ namespace LinqToDB.Linq.Builder
 				if (_constructRun)
 				{
 					// remove translation helpers
-					if (node.IsSameGenericMethod(Methods.LinqToDB.ApplyModifierInternal) || node.IsSameGenericMethod(Methods.LinqToDB.DisableFilterInternal) ||
-					    node.IsSameGenericMethod(Methods.LinqToDB.LoadWithInternal))
+					if (node.IsSameGenericMethod(Methods.LinqToDB.ApplyModifierInternal)
+						|| node.IsSameGenericMethod(Methods.LinqToDB.DisableFilterInternal)
+						|| node.IsSameGenericMethod(Methods.LinqToDB.LoadWithInternal))
 					{
 						return node.Arguments[0];
 					}
@@ -208,6 +210,7 @@ namespace LinqToDB.Linq.Builder
 					_info = new(Utils.ObjectReferenceEqualityComparer<SelectQuery>.Default);
 					BuildParentsInfo(rootQuery, _info);
 				}
+
 				return _info.TryGetValue(currentQuery, out parentQuery);
 			}
 
@@ -504,6 +507,7 @@ namespace LinqToDB.Linq.Builder
 							return PreferServerSide(newExpr, enforceServerSide);
 						}
 					}
+
 					break;
 				}
 			}
@@ -585,6 +589,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						return new TransformInfo(new SqlReaderIsNullExpression(placeholderRight, e.NodeType == ExpressionType.NotEqual), false, true);
 					}
+
 					if (binary.Right.IsNullValue() && binary.Left is SqlPlaceholderExpression placeholderLeft)
 					{
 						return new TransformInfo(new SqlReaderIsNullExpression(placeholderLeft, e.NodeType == ExpressionType.NotEqual), false, true);

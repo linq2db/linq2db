@@ -3,8 +3,8 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Mapping;
 using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -45,7 +45,6 @@ namespace Tests.Linq
 					CheckPredicate(table, x => (x.StringValueNullable == null ? 1 : x.StringValueNullable != null ? 2 : 3) != 2);
 
 					CheckPredicate(table, x => ((x.StringValueNullable != null) ? (x.StringValueNullable == "2" ? 2 : 10) : (x.StringValueNullable == null) ? 3 : 1) == 2);
-
 
 					CheckPredicate(table, x => (x.IntVlaue < 4 ? 4 : x.IntVlaue) == 0, false, false);
 					CheckPredicate(table, x => (x.IntVlaue < 4 ? 4 : x.IntVlaue) != 0);

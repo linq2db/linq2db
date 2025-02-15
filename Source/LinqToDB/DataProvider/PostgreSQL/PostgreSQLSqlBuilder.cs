@@ -7,15 +7,15 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	public partial class PostgreSQLSqlBuilder : BasicSqlBuilder<PostgreSQLOptions>
 	{
 		public PostgreSQLSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
@@ -75,6 +75,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						StringBuilder
 							.Append(')');
 					}
+
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");       break;

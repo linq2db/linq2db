@@ -1,7 +1,7 @@
-﻿namespace Tests
-{
-	using NUnit.Framework.Interfaces;
+﻿using NUnit.Framework.Interfaces;
 
+namespace Tests
+{
 	internal static class NUnitUtils
 	{
 		public static (string? context, bool isLinqService) GetContext(ITest test)

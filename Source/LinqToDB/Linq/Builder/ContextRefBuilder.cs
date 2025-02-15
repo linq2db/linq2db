@@ -1,10 +1,7 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-
 	[BuildsAny]
 	sealed class ContextRefBuilder : ISequenceBuilder
 	{

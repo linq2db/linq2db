@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
 using System.Reflection;
 using System.Text;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Data;
-	using Common.Internal;
-
 	[PublicAPI]
 	public static partial class SqlServerTools
 	{

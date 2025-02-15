@@ -12,6 +12,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SQLite.Models.ForMapping
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
+			base.OnModelCreating(modelBuilder);
+
 			modelBuilder.Entity<WithIdentity>(b =>
 			{
 				b.HasKey(e => e.Id);

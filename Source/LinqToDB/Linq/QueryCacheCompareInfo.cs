@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq.Expressions;
+
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq
 {
-	using Mapping;
-
 	class QueryCacheCompareInfo
 	{
 		public Expression MainExpression { get; }

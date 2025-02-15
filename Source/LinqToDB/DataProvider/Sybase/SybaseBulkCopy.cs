@@ -4,10 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Data;
-
 	// !table.TableOptions.HasIsTemporary() check:
 	// native bulk copy produce following error for insert into temp table:
 	// AseException : Incorrect syntax near ','.

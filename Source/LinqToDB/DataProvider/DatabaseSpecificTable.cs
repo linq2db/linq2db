@@ -6,11 +6,10 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Linq;
+
 namespace LinqToDB.DataProvider
 {
-	using Async;
-	using Linq;
-
 	abstract class DatabaseSpecificTable<TSource> : ITable<TSource>
 		where TSource : notnull
 	{

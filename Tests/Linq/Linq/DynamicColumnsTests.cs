@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Reflection;
+using System.Text.Json;
 
 using LinqToDB;
 using LinqToDB.DataProvider.Firebird;
@@ -11,12 +11,10 @@ using LinqToDB.Metadata;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.Data;
-
-	using Model;
-
 	[TestFixture]
 	public class DynamicColumnsTests : TestBase
 	{
@@ -666,6 +664,7 @@ namespace Tests.Linq
 					.IsExpression(row => Sql.Expr<float?>(colExpr), isColumn: true)
 					;
 			}
+
 			fm.Build();
 
 			var id = 0;
@@ -716,6 +715,7 @@ namespace Tests.Linq
 					.IsExpression(row => Sql.Expr<string?>(colExpr), isColumn: true)
 					;
 			}
+
 			fm.Build();
 
 			var id = 0;

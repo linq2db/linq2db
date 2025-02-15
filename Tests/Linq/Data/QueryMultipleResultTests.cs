@@ -2,9 +2,12 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.Data
@@ -131,7 +134,6 @@ namespace Tests.Data
 				});
 			}
 		}
-
 
 		[Table]
 		sealed class ProcedureMultipleResultExample
@@ -319,7 +321,6 @@ namespace Tests.Data
 				});
 			}
 		}
-
 
 		[Table]
 		sealed class ProcedureMultipleResultExampleWithoutAttributes

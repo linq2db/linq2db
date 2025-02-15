@@ -19,7 +19,6 @@ namespace Tests.UserTests
 			public DateTime TestDate { get; set; }
 		}
 
-
 		[Test]
 		public void Test([DataSources(false)] string configuration)
 		{

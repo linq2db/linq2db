@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Common.Internal;
+
 namespace LinqToDB.Mapping
 {
-	using Common.Internal;
-
 	/// <summary>
 	/// Configure setter and getter methods for dynamic columns.
 	/// </summary>

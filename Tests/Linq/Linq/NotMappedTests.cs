@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -38,7 +40,6 @@ namespace Tests.Linq
 			[Column] public string? Value       { get; set; }
 			[NotColumn] public Type? NotMapped  { get; set; }
 		}
-
 
 		static Tuple<SuperClass[], Subclass1[], Subclass2[]> GenerateTestData()
 		{

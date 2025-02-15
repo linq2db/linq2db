@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Data;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -64,7 +64,6 @@ namespace Tests.Model
 			get { return Gender; }
 			set { Gender = value; }
 		}
-
 
 		[NotColumn] public string Name { get { return FirstName + " " + LastName; }}
 

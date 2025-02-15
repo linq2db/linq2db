@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Interceptors
+﻿namespace LinqToDB.Interceptors
 {
 	/// <summary>
 	/// Event arguments for <see cref="IDataContextInterceptor"/> events.

@@ -3,10 +3,10 @@ using System.Data.Common;
 using System.IO;
 using System.Reflection;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Data;
-
 	public static partial class SQLiteTools
 	{
 		internal static SQLiteProviderDetector ProviderDetector = new();

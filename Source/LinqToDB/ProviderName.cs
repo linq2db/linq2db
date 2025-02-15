@@ -1,14 +1,11 @@
-﻿using System;
+﻿using JetBrains.Annotations;
 
-using JetBrains.Annotations;
+using LinqToDB.DataProvider.DB2;
+using LinqToDB.DataProvider.MySql;
+using LinqToDB.DataProvider.SqlServer;
 
 namespace LinqToDB
 {
-	using DataProvider.DB2;
-	using DataProvider.SqlServer;
-
-	using LinqToDB.DataProvider.MySql;
-
 	// TODO: v6: obsolete/remove all provider-specific entries as it should be used for dialects only
 	/// <summary>
 	/// Default names for providers.

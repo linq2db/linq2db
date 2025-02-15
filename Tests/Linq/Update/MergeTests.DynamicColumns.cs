@@ -1,12 +1,13 @@
-﻿using LinqToDB;
-using NUnit.Framework;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB.Mapping;
-
 	// dynamic properties for target setters not supported for now, as it will require additional Merge API methods
 	// could be added on request
 	public partial class MergeTests

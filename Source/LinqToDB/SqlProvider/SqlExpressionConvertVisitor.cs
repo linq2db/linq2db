@@ -4,15 +4,14 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+using LinqToDB.SqlQuery.Visitors;
+
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using Extensions;
-	using Linq;
-	using Mapping;
-	using SqlQuery;
-	using SqlQuery.Visitors;
-
 	public class SqlExpressionConvertVisitor : SqlQueryVisitor
 	{
 		protected bool            IsInsideNot;
@@ -783,6 +782,7 @@ namespace LinqToDB.SqlProvider
 			{
 				newElement = Visit(Optimize(newElement));
 			}
+
 			return newElement;
 		}
 
@@ -798,6 +798,7 @@ namespace LinqToDB.SqlProvider
 			{
 				newElement = Visit(Optimize(newElement));
 			}
+
 			return newElement;
 		}
 
@@ -813,6 +814,7 @@ namespace LinqToDB.SqlProvider
 			{
 				newElement = Visit(Optimize(newElement));
 			}
+
 			return newElement;
 		}
 
@@ -828,6 +830,7 @@ namespace LinqToDB.SqlProvider
 			{
 				newElement = Visit(Optimize(newElement));
 			}
+
 			return newElement;
 		}
 
@@ -1675,6 +1678,7 @@ namespace LinqToDB.SqlProvider
 
 				last = new SqlFunction(coalesce.SystemType!, funcName, param, last);
 			}
+
 			return last;
 		}
 

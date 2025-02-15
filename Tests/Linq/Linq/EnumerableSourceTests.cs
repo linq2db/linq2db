@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -263,7 +267,6 @@ namespace Tests.Linq
 				AreEqual(expected, result);
 			}
 		}
-
 
 		[Test]
 		public void ApplyJoinAnonymousClassArray(
@@ -595,7 +598,6 @@ namespace Tests.Linq
 					}.Where(n => p.ID == n.ID)
 					select n;
 
-
 				var result = query.OrderBy(x => x.ID).ToArray();
 
 				result.Should().HaveCount(2);
@@ -808,7 +810,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void SubQuery([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -858,7 +859,6 @@ namespace Tests.Linq
 					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
 			}
 		}
-
 
 		[Test]
 		public void StringSubQuery(

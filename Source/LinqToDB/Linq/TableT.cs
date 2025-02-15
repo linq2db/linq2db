@@ -1,16 +1,15 @@
-﻿using System.Linq.Expressions;
+﻿using System.Diagnostics;
+using System.Linq.Expressions;
 using System.Reflection;
+
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq
 {
-	using System.Diagnostics;
-
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-
 	sealed class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
 		where T : notnull
 	{

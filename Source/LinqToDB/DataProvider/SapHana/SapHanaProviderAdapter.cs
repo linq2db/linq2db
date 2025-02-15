@@ -5,10 +5,10 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Expressions.Types;
+
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Expressions;
-
 	public class SapHanaProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _unmanagedSyncRoot = new ();

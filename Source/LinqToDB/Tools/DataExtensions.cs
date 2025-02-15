@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.Tools
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SqlProvider;
-
 	public static class DataExtensions
 	{
 		/// <summary>

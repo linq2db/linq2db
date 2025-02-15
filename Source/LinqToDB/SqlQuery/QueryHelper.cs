@@ -5,13 +5,13 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.SqlQuery
 {
-	using SqlProvider;
-	using Common;
-	using Mapping;
-	using Common.Internal;
-
 	public static partial class QueryHelper
 	{
 		internal static ObjectPool<SelectQueryOptimizerVisitor> SelectOptimizer =
@@ -136,6 +136,7 @@ namespace LinqToDB.SqlQuery
 			{
 				return true;
 			}
+
 			return false;
 		}
 
@@ -256,6 +257,7 @@ namespace LinqToDB.SqlQuery
 						if (descriptor != null)
 							return descriptor;
 					}
+
 					break;
 				}
 				case QueryElementType.SqlCondition:
@@ -279,6 +281,7 @@ namespace LinqToDB.SqlQuery
 					return GetColumnDescriptor(caseExpression.ElseExpression);
 				}
 			}
+
 			return null;
 		}
 
@@ -448,6 +451,7 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 				}
+
 				return true;
 			});
 		}
@@ -480,6 +484,7 @@ namespace LinqToDB.SqlQuery
 						return false;
 					}
 				}
+
 				return true;
 			});
 		}
@@ -624,6 +629,7 @@ namespace LinqToDB.SqlQuery
 
 				return true;
 			}
+
 			return false;
 		}
 
@@ -667,6 +673,7 @@ namespace LinqToDB.SqlQuery
 				var old = whereClause.SearchCondition;
 				whereClause.SearchCondition = new SqlSearchCondition(false, old);
 			}
+
 			return whereClause.SearchCondition;
 		}
 
@@ -682,6 +689,7 @@ namespace LinqToDB.SqlQuery
 				var old = whereClause.SearchCondition;
 				whereClause.SearchCondition = new SqlSearchCondition(false, old);
 			}
+
 			return whereClause.SearchCondition;
 		}
 
@@ -697,6 +705,7 @@ namespace LinqToDB.SqlQuery
 				var old = joinedTable.Condition;
 				joinedTable.Condition = new SqlSearchCondition(false, old);
 			}
+
 			return joinedTable.Condition;
 		}
 
@@ -935,6 +944,7 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 				}
+
 				break;
 			}
 

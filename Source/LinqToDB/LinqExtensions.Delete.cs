@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Async;
+using LinqToDB.Linq;
+
 namespace LinqToDB
 {
-	using Async;
-	using Linq;
-
 	public static partial class LinqExtensions
 	{
 		/// <summary>

@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
-using System.Linq.Expressions;
+
+using LinqToDB.Expressions.Types;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Common;
-	using Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	public class FirebirdProviderAdapter : IDynamicProviderAdapter
 	{
 		public const string AssemblyName    = "FirebirdSql.Data.FirebirdClient";
@@ -18,7 +16,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		FirebirdProviderAdapter()
 		{
-			var assembly = Tools.TryLoadAssembly(AssemblyName, null);
+			var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
 
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");

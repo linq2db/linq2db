@@ -1,9 +1,9 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
-
 	internal sealed class BuildInfo
 	{
 		public BuildInfo(IBuildContext? parent, Expression expression, SelectQuery selectQuery)

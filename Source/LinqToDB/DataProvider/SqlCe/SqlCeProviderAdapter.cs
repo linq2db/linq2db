@@ -3,10 +3,10 @@ using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions.Types;
+
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using LinqToDB.Expressions;
-
 	public class SqlCeProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _syncRoot = new object();

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-
 	public class AliasesContext
 	{
 		readonly HashSet<IQueryElement> _aliasesSet = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);

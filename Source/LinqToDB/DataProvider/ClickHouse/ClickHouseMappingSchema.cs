@@ -7,12 +7,12 @@ using System.Net.Sockets;
 using System.Numerics;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
-
 	sealed class ClickHouseMappingSchema : LockedMappingSchema
 	{
 		// we need defaults for length/precision/scale for some types if used didn't specified them

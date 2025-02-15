@@ -2,10 +2,10 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common.Internal;
+
 namespace LinqToDB.Linq
 {
-	using Common.Internal;
-
 	sealed class ExpressionQueryImpl<T> : ExpressionQuery<T>
 	{
 		public ExpressionQueryImpl(IDataContext dataContext, Expression? expression)

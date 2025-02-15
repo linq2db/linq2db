@@ -5,7 +5,6 @@ using System.Linq;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -138,7 +137,6 @@ namespace Tests.UserTests
 		   let PeriodOrderLimit = Coalesce(vpcc.PeriodOrderLimit, 0)
 		   let Quantity = vsopc.Quantity
 		   select new ViewCapacityAndOrderedByPeriodAndProductCategoryRow(op.Id, vpcc.Id, vpcc.Name, PeriodOrderLimit, Quantity, PeriodOrderLimit - Quantity);
-
 
 		IQueryable<ViewCapacityAndOrderedByPeriodRow> ViewCapacityAndOrderedByPeriod(IDataContext db) =>
 		   from v1 in ViewCapacityAndOrderedByPeriodAndProduct(db)

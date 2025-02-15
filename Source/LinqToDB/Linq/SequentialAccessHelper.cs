@@ -6,15 +6,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Internal;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Linq
 {
-	using Common;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Internal;
-	using Reflection;
-	using LinqToDB.Common.Internal;
-
 	internal static class SequentialAccessHelper
 	{
 		private static readonly TransformVisitor<object?> _reducer = TransformVisitor<object?>.Create(Reducer);

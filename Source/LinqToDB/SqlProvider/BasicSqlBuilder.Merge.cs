@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using LinqToDB.Common;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using SqlQuery;
-
 	public abstract partial class BasicSqlBuilder
 	{
 		/// <summary>

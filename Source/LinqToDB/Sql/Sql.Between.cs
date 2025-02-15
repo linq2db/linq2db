@@ -1,9 +1,9 @@
 ﻿using System;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB
 {
-	using SqlQuery;
-
 	partial class Sql
 	{
 

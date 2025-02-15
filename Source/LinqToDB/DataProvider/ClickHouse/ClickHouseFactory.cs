@@ -2,12 +2,12 @@
 
 using JetBrains.Annotations;
 
+using LinqToDB.Configuration;
+
+using LinqToDB.DataProvider.MySql;
+
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Configuration;
-
-	using MySql;
-
 	[UsedImplicitly]
 	sealed class ClickHouseFactory : DataProviderFactoryBase
 	{

@@ -1,7 +1,7 @@
-﻿namespace LinqToDB.DataProvider.Oracle
-{
-	using LinqToDB.SqlQuery;
+﻿using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataProvider.Oracle
+{
 	public class Oracle12SqlExpressionConvertVisitor : OracleSqlExpressionConvertVisitor
 	{
 		public Oracle12SqlExpressionConvertVisitor(bool allowModify) : base(allowModify)

@@ -4,6 +4,12 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 #region ReSharper disable
 // ReSharper disable SuggestUseVarKeywordEverywhere
 // ReSharper disable SuggestUseVarKeywordEvident
@@ -11,12 +17,6 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Common;
-	using Common.Internal;
-	using Mapping;
-	using SqlQuery;
-	using SqlProvider;
-
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder<FirebirdOptions>
 	{
 		public override bool CteFirst => false;

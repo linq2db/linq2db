@@ -1,12 +1,11 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
+
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Mapping;
-	using Common;
-	using SqlProvider;
-
 	sealed class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
 	{
 		public SapHanaOdbcSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)

@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Data.Common;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Configuration;
-	using Data;
-
 	sealed class FirebirdProviderDetector : ProviderDetectorBase<FirebirdProviderDetector.Provider, FirebirdVersion>
 	{
 		internal enum Provider {}

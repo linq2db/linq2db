@@ -1,15 +1,14 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+
+using LinqToDB.Expressions;
+using LinqToDB.Linq.Internal;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Linq
 {
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-	using Tools;
-	using Internal;
-
 	static partial class QueryRunner
 	{
 		static IQueryExpressions EmptyQueryExpressions  = new RuntimeExpressionsContainer(ExpressionInstances.UntypedNull);

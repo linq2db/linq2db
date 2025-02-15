@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -446,7 +447,6 @@ AS RETURN
 			}
 		}
 
-
 		public class SomeTableType
 		{
 			public int LargeNumberEntityId { get; set; }
@@ -836,7 +836,6 @@ WHERE
 					)(this, db, parameter1, parameter2, parameter3).FirstOrDefault();
 			}
 
-
 			public static Expression<Func<UserGroup, IDataContext, int, string?, decimal,  IQueryable<User>>> FirstUserWithMultipleParametersExpression()
 			{
 				return (p,db, _, __, ___) => db
@@ -848,7 +847,6 @@ WHERE
 			private static Func<UserGroup, IDataContext, int, string?, decimal, IQueryable<User>>? _firstUserWithMultipleParametersExpression;
 
 			private static Func<UserGroup, IDataContext, int, IQueryable<User>>? _usersWithLanguageExpression;
-
 
 			[Association(QueryExpressionMethod = nameof(FirstUserWithLanguageExpression), CanBeNull = true)]
 			public User? FirstUsersWithLanguage(IDataContext db, int languageId)
@@ -1258,7 +1256,6 @@ WHERE
 			using var t2 = db.CreateLocalTable(Issue4723Table2.TestData);
 
 			var query = t1.Where(x => x.Association != null && x.Association != "unknown").Select(x => new { x.Id, x1 = x.Association, x2 = x.Association });
-
 
 			var select = query.GetSelectQuery();
 			Assert.That(select.Select.From.Tables[0].Joins, Has.Count.EqualTo(1));

@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using SqlQuery;
-
 	abstract partial class DB2SqlBuilderBase
 	{
 		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,

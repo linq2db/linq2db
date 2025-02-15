@@ -4,13 +4,13 @@ using System.Globalization;
 using System.Reflection;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Extensions
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SqlQuery;
-
 	static class MappingExtensions
 	{
 		public static SqlValue GetSqlValueFromObject(this MappingSchema mappingSchema, ColumnDescriptor columnDescriptor, object obj)
@@ -49,11 +49,14 @@ namespace LinqToDB.Extensions
 					{
 						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType)!;
 
-						if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string) &&
-						    mappingSchema.GetMapValues(underlyingType)             == null)
-							return new SqlValue(type, string.Format(CultureInfo.InvariantCulture, "{0}", originalValue));
-
-						return new SqlValue(type, Converter.ChangeType(originalValue, type, mappingSchema));
+						return new SqlValue(
+							type,
+							Common.Configuration.UseEnumValueNameForStringColumns
+								&& type == typeof(string)
+								&& mappingSchema.GetMapValues(underlyingType) == null
+								? string.Format(CultureInfo.InvariantCulture, "{0}", originalValue)
+								: Converter.ChangeType(originalValue, type, mappingSchema)
+						);
 					}
 				}
 			}
@@ -88,11 +91,11 @@ namespace LinqToDB.Extensions
 					{
 						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType)!;
 
-						if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string) &&
-						    mappingSchema.GetMapValues(underlyingType)             == null)
-							value = string.Format(CultureInfo.InvariantCulture, "{0}", value);
-						else
-							value = Converter.ChangeType(value, type, mappingSchema);
+						value = Common.Configuration.UseEnumValueNameForStringColumns
+							&& type                                       == typeof(string)
+							&& mappingSchema.GetMapValues(underlyingType) == null
+							? string.Format(CultureInfo.InvariantCulture, "{0}", value)
+							: Converter.ChangeType(value, type, mappingSchema);
 					}
 				}
 			}

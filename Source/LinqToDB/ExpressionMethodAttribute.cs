@@ -3,11 +3,11 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Mapping;
+
 namespace LinqToDB
 {
-	using Common.Internal;
-	using Mapping;
-
 	/// <summary>
 	/// When applied to method or property, tells linq2db to replace them in queryable LINQ expression with another expression,
 	/// returned by method, specified in this attribute.

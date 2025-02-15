@@ -5,13 +5,13 @@ using System.Text;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
-	using SqlQuery;
-
 	public static partial class ClickHouseHints
 	{
 		public static class Table

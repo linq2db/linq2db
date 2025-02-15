@@ -5,15 +5,15 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.MySql.Translation;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Common;
-	using Data;
-	using Linq.Translation;
-	using Mapping;
-	using SqlProvider;
-	using Translation;
-
 	sealed class MySql57DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql57MySqlData,        MySqlVersion.MySql57,   MySqlProvider.MySqlData     ) { }
 	sealed class MySql57DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql57MySqlConnector,   MySqlVersion.MySql57,   MySqlProvider.MySqlConnector) { }
 	sealed class MySql80DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql80MySqlData,        MySqlVersion.MySql80,   MySqlProvider.MySqlData     ) { }

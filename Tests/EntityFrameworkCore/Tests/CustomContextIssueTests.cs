@@ -66,6 +66,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					ctx.Database.EnsureDeleted();
 					ctx.Database.EnsureCreated();
 				}
+
 				using var db = ctx.CreateLinqToDBConnection();
 				var result = db.GetTable<T>().ToArray();
 			}
@@ -219,7 +220,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 		#endregion
-
 
 	}
 }

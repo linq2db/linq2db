@@ -1,6 +1,4 @@
-﻿using System.Linq.Expressions;
-
-namespace LinqToDB.Linq.Builder
+﻿namespace LinqToDB.Linq.Builder
 {
 	interface ISequenceBuilder
 	{

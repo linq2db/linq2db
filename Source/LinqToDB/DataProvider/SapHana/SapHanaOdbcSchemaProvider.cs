@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	sealed class SapHanaOdbcSchemaProvider : SapHanaSchemaProvider
 	{
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
@@ -41,6 +41,7 @@ namespace LinqToDB.DataProvider.SapHana
 							')');
 					}
 				}
+
 				return x;
 			}).ToList();
 		}

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using Mapping;
-
 	internal sealed class EagerLoading
 	{
 		public static Type GetEnumerableElementType(Type type, MappingSchema mappingSchema)

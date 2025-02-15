@@ -5,15 +5,15 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Data;
+using LinqToDB.EntityFrameworkCore.Internal;
+using LinqToDB.Linq;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Data;
-	using Internal;
-	using Linq;
-
 	public static partial class LinqToDBForEFTools
 	{
 		#region BulkCopy

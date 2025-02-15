@@ -2,11 +2,11 @@
 using System.Globalization;
 using System.Text;
 
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Informix
 {
-	using Mapping;
-	using SqlQuery;
-
 	sealed class InformixMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT

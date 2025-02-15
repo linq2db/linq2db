@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -117,7 +116,6 @@ namespace Tests.Linq
 
 			Assert.That(LastQuery, Is.Not.Contains(" NULL"));
 		}
-
 
 		[Test]
 		public void NullTest([DataSources(ProvidersThatDoNotSupportNullableBool)] string context)

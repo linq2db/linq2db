@@ -1,18 +1,16 @@
 ﻿using System;
-using System.Data.Linq;
-using System.Diagnostics;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Linq;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 
-using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Types;
 
 using FluentAssertions;
@@ -21,17 +19,16 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
-using LinqToDB.Mapping;
 using LinqToDB.Linq;
+using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using LinqToDB.Expressions;
-	using Model;
-
 	[TestFixture]
 	public class FirebirdTests : DataProviderTestBase
 	{
@@ -572,7 +569,6 @@ namespace Tests.DataProvider
 					where folder2.Caption == "dewde"
 					select folder;
 
-
 				Assert.DoesNotThrow(() => folders.ToList());
 			}
 		}
@@ -619,7 +615,6 @@ namespace Tests.DataProvider
 					catch when(throwIfNotExists)
 					{
 					}
-
 
 					db.CreateTable<TTable>();
 					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
@@ -803,6 +798,7 @@ namespace Tests.DataProvider
 					sql.Should().Contain("\"Client\" \"a_Owner\"");
 				}
 			}
+
 			Query.ClearCaches();
 		}
 		#endregion

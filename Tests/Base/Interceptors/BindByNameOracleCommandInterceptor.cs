@@ -1,4 +1,5 @@
 ﻿using System.Data.Common;
+
 using LinqToDB.Interceptors;
 
 namespace Tests

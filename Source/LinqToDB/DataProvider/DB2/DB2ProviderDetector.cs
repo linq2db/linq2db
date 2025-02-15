@@ -1,11 +1,10 @@
 ﻿using System;
+using System.Data.Common;
+
+using LinqToDB.Data;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Data.Common;
-
-	using Data;
-
 	sealed class DB2ProviderDetector : ProviderDetectorBase<DB2ProviderDetector.Provider, DB2Version>
 	{
 		internal enum Provider { }

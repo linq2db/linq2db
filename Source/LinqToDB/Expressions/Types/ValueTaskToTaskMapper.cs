@@ -1,11 +1,8 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Expressions.Types
 {
-	using Common;
-
 	public class ValueTaskToTaskMapper : ICustomMapper
 	{
 		bool ICustomMapper.CanMap(Expression expression)

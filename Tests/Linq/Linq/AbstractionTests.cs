@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -67,7 +69,6 @@ namespace Tests.Linq
 
 			[Column] public int  SubId   { get; set; }
 
-
 			[Association(ThisKey = nameof(SubId), OtherKey = nameof(SubEntitity.Id), CanBeNull = true)]
 			public SubEntitity SubItem { get; set; } = null!;
 
@@ -101,7 +102,6 @@ namespace Tests.Linq
 					.ToArray();
 			}
 		}
-
 
 		static void GenericTest<T>(IDataContext db)
 		where T: class, ISample

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Runtime.Serialization;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -42,13 +40,11 @@ namespace Tests.UserTests
 			public int? LoadCarrierHeightClass { get; set; }
 			public virtual Guid? LoadCarrierTypeId { get; set; }
 
-
 			//material
 			public virtual Guid MaterialId { get; set; }
 			public string? MaterialNumber { get; set; }
 			public string? MaterialDescription_1 { get; set; }
 			public virtual string? MaterialCategoryABC { get; set; }
-
 
 			//storageshelf
 			public virtual Guid StorageShelfId { get; set; }
@@ -58,14 +54,12 @@ namespace Tests.UserTests
 			public string? StorageShelfCategoryABC { get; set; }
 			public int StorageShelfAisleNumber { get; set; }
 
-
 			//inventoryResource
 			public virtual Guid InventoryResourceId { get; set; }
 			public string? InventoryResourceBatchNumber { get; set; }
 			public int InventoryResourceProductStatus { get; set; }
 			public DateTime? InventoryResourceExpiryDate { get; set; }
 			public DateTime? InventoryResourceCustomDate1 { get; set; }
-
 
 			public virtual int InventoryCount { get; set; }
 			public virtual bool ReservedForOutfeed { get; set; }
@@ -168,7 +162,6 @@ namespace Tests.UserTests
 			public virtual int Id { get; set; }
 			public virtual Guid ResourceID { get; set; }
 		}
-
 
 		public class StorageShelfDTO
 		{

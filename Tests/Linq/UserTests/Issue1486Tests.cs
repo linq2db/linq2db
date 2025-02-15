@@ -1,11 +1,13 @@
-﻿using LinqToDB;
+﻿using System.Data.Common;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using System.Data;
-using System.Data.Common;
-using System.Linq;
+
 using Tests.Model;
 
 namespace Tests.UserTests

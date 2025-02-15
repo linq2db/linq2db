@@ -1,12 +1,10 @@
-﻿using System;
+﻿using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class Oracle11SqlOptimizer : BasicSqlOptimizer
 	{
 		public Oracle11SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
@@ -55,6 +53,7 @@ namespace LinqToDB.DataProvider.Oracle
 						if (IsTextType(b, mappingSchema) && b.CanBeEvaluated(true))
 							return true;
 					}
+
 					break;
 				}
 			}

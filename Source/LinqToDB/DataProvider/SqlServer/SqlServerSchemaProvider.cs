@@ -4,11 +4,11 @@ using System.Data;
 using System.Data.SqlTypes;
 using System.Linq;
 
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Data;
-	using SchemaProvider;
-
 	sealed class SqlServerSchemaProvider : SchemaProviderBase
 	{
 		private bool IsAzure;

@@ -8,12 +8,13 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
-
 	sealed class ExpressionTestGenerator
 	{
 		readonly bool          _mangleNames; 
@@ -501,6 +502,7 @@ namespace LinqToDB.Linq.Builder
 							if (i + 1 < e.Arguments.Count)
 								_exprBuilder.Append(", ");
 						}
+
 						_exprBuilder.Append("))");
 
 						return false;
@@ -554,8 +556,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						attr = "[MapValue(\"" + valueAttribute.Value + "\")] ";
 					}
+
 					_typeBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t\t{attr}{nm} = {Convert.ToInt64(Enum.Parse(type, nm), CultureInfo.InvariantCulture)},");
 				}
+
 				_typeBuilder.Remove(_typeBuilder.Length - 1, 1);
 				_typeBuilder.AppendLine("\t}");
 				return;
@@ -597,11 +601,13 @@ namespace LinqToDB.Linq.Builder
 					{
 						attr += "\t\t[NotColumn]" + Environment.NewLine;
 					}
+
 					if (colum != null && colum.IsPrimaryKey)
 					{
 						attr += "\t\t[PrimaryKey]" + Environment.NewLine;
 					}
 				}
+
 				return string.Format(CultureInfo.InvariantCulture, @"
 {0}		public {1} {2};",
 					attr,
@@ -624,11 +630,13 @@ namespace LinqToDB.Linq.Builder
 						{
 							attr += "\t\t[NotColumn]" + Environment.NewLine;
 						}
+
 						if (colum != null && colum.IsPrimaryKey)
 						{
 							attr += "\t\t[PrimaryKey]" + Environment.NewLine;
 						}
 					}
+
 					return string.Format(CultureInfo.InvariantCulture, @"
 {0}		{3}{1} {2} {{ get; set; }}",
 						attr,
@@ -1005,6 +1013,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					BuildType(type, _dataContext.MappingSchema, _dataContext.Options);
 				}
+
 				_typeBuilder.AppendLine("}");
 			}
 

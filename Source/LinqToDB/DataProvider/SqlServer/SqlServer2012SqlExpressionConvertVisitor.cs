@@ -1,9 +1,7 @@
-﻿using System;
+﻿using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using LinqToDB.SqlQuery;
-
 	public class SqlServer2012SqlExpressionConvertVisitor : SqlServer2008SqlExpressionConvertVisitor
 	{
 		public SqlServer2012SqlExpressionConvertVisitor(bool allowModify, SqlServerVersion sqlServerVersion) : base(allowModify, sqlServerVersion)

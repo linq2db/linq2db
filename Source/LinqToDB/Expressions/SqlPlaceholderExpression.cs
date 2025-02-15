@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Expressions
 {
-	using Common.Internal;
-	using Extensions;
-	using SqlQuery;
-
 	public sealed class SqlPlaceholderExpression : Expression
 	{
 #if DEBUG

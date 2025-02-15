@@ -4,19 +4,17 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
-using LinqToDB.Tools.Comparers;
-using LinqToDB.Common;
+using Tests.Model;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB.Async;
-
-	using Model;
-
 	[TestFixture]
 	public class InsertWithOutputTests : TestBase
 	{

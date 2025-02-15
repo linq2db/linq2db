@@ -4,9 +4,10 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 
 using NUnit.Framework;
+
+using Tests.Model;
 
 #region ReSharper disable
 // ReSharper disable ConvertToConstant.Local
@@ -14,8 +15,6 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
-
 	[TestFixture]
 	[Order(10000)]
 	public class DeleteTests : TestBase

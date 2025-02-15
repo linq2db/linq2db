@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 
+using LinqToDB.Common;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Common;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class ClickHouseSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		readonly ClickHouseOptions _providerOptions;

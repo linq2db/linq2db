@@ -1,11 +1,7 @@
-﻿using System;
+﻿using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Extensions;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class Firebird3SqlExpressionConvertVisitor : FirebirdSqlExpressionConvertVisitor
 	{
 		public Firebird3SqlExpressionConvertVisitor(bool allowModify) : base(allowModify)

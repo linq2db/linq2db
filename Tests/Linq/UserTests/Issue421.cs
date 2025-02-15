@@ -51,7 +51,6 @@ namespace Tests.UserTests
 			}
 		}
 
-
 		[Test]
 		public void Test2([DataSources] string context)
 		{
@@ -102,7 +101,6 @@ namespace Tests.UserTests
 				AreEqual(new byte[] { 3, 2, 1 }, v.BlobValue!);
 			}
 		}
-
 
 		[Test]
 		public void Test4([DataSources] string context)

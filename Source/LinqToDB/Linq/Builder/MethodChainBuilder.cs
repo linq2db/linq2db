@@ -3,13 +3,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Internal;
-
 	[BuildsExpression(ExpressionType.Call)]
 	sealed class MethodChainBuilder : MethodCallBuilder
 	{

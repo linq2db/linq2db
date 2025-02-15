@@ -4,11 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Common;
-	using Data;
-
 	sealed class MySqlBulkCopy : BasicBulkCopy
 	{
 		/// <summary>
@@ -100,6 +100,7 @@ namespace LinqToDB.DataProvider.MySql
 					};
 				}
 			}
+
 			return null;
 		}
 
@@ -135,7 +136,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (options.BulkCopyTimeout.HasValue)
 				bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-			else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+			else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
 				bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
 			var tableName = GetTableName(sb, options, table);
@@ -210,7 +211,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (options.BulkCopyTimeout.HasValue)
 				bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-			else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+			else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
 				bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
 			var tableName = GetTableName(sb, options, table);

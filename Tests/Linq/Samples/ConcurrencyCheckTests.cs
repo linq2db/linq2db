@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
-using LinqToDB.Extensions;
 
 using NUnit.Framework;
 
@@ -117,7 +117,6 @@ namespace Tests.Samples
 
 					if (rowVersion == null)
 						return statement;
-
 
 					var newInsertStatement = Clone(statement);
 					var insertClause       = newInsertStatement.RequireInsertClause();

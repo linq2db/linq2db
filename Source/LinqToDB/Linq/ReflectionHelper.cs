@@ -5,10 +5,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+
 namespace LinqToDB.Linq
 {
-	using LinqToDB.Expressions;
-
 	sealed class ReflectionHelper
 	{
 		public abstract class Expressor<T>

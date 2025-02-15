@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -13,10 +12,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class IssueTests : TestBase
 	{
@@ -190,7 +189,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void Issue424Test1([DataSources] string context)
 		{
@@ -247,7 +245,6 @@ namespace Tests.Linq
 				Assert.That(sql, Does.Contain("INNER"));
 			}
 		}
-
 
 		[Test]
 		public void Issue528Test1([DataSources] string context)
@@ -447,7 +444,6 @@ namespace Tests.Linq
 			[NotNull] public string LastName = null!;
 			[Nullable] public string? MiddleName;
 
-
 			[Association(ThisKey = nameof(ID), OtherKey = nameof(Model.Doctor.PersonID), CanBeNull = true)]
 			public Doctor? Doctor { get; set; }
 		}
@@ -517,7 +513,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Table("Person", IsColumnAttributeRequired = false)]
 		public class Person88
 		{
@@ -561,7 +556,6 @@ namespace Tests.Linq
 			}
 
 		}
-
 
 		[Test]
 		public void Issue173([DataSources] string context)

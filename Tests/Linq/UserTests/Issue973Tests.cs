@@ -9,7 +9,9 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.UserTests
@@ -130,7 +132,6 @@ namespace Tests.UserTests
 				var result12 = query12.ToArray();
 
 				query12.GetCacheMissCount().Should().Be(cm1);	
-
 
 				var query21  = GetParents(db, values2);
 				var result21 = query21.ToArray();

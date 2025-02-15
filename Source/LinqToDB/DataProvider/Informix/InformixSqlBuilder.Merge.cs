@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Informix
 {
-	using SqlQuery;
-
 	partial class InformixSqlBuilder
 	{
 		// VALUES(...) syntax not supported

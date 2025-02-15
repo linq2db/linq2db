@@ -1,13 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-	using Reflection;
-
 	[BuildsMethodCall("Select")]
 	sealed class ScalarSelectBuilder : MethodCallBuilder
 	{

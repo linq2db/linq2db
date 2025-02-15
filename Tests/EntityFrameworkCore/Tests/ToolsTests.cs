@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -179,7 +178,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var items = query.ToArray();
 		}
-
 
 		[Test]
 		public void TestTransformation([EFDataSources] string provider, [Values] bool enableFilter)
@@ -586,7 +584,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var id = 1;
 			var query = ctx.Categories.FromSqlRaw("SELECT * FROM [dbo].[Categories] WHERE CategoryId = {0}", id);
-
 
 			var efResult = await query.ToArrayAsyncEF();
 			var linq2dbResult = await query.ToArrayAsyncLinqToDB();

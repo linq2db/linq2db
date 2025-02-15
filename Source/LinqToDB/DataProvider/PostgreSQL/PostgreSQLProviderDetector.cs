@@ -1,12 +1,10 @@
 ﻿using System;
+using System.Data.Common;
+
+using LinqToDB.Data;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using System.Data.Common;
-
-	using Configuration;
-	using Data;
-
 	sealed class PostgreSQLProviderDetector : ProviderDetectorBase<PostgreSQLProviderDetector.Provider,PostgreSQLVersion>
 	{
 		internal enum Provider {}

@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 #nullable disable
@@ -47,7 +49,6 @@ namespace Tests.UserTests
 
 			[Association(ThisKey = "Id", OtherKey = "CustomInvoiceId", CanBeNull = true)]
 			public ICollection<TypeBMeasures> TypeBMeasures { get; set; }
-
 
 			[Column, NotNull] public int PriceListId { get; set; } // integer
 

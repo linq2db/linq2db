@@ -4,10 +4,11 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+
 namespace LinqToDB.Common
 {
-	using Expressions;
-
 	// moved to non-generic class to avoid instance-per-generic
 	internal sealed class ConvertReducer
 	{

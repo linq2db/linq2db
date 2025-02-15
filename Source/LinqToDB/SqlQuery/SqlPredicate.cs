@@ -780,6 +780,7 @@ namespace LinqToDB.SqlQuery
 					{
 						writer.AppendElement(SubQuery);
 					}
+
 					writer.AppendLine();
 					writer.Append(')');
 				}
@@ -925,6 +926,7 @@ namespace LinqToDB.SqlQuery
 					{
 						writer.AppendElement(SubQuery);
 					}
+
 					writer.AppendLine();
 					writer.Append(')');
 				}

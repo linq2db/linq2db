@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -85,7 +87,6 @@ namespace Tests.Linq
 			return result;
 		}
 
-
 		[Test]
 		public void AsSubQueryTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -165,7 +166,6 @@ namespace Tests.Linq
 				var result2 = query2.ToArray();
 			}
 		}
-
 
 		[Test]
 		public void DistinctOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -413,7 +413,6 @@ namespace Tests.Linq
 				});
 			}
 		}
-
 
 		[Test]
 		public void UniqueKeysAndSubqueries([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)

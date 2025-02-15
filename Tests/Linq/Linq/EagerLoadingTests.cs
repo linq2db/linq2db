@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Async;
-using LinqToDB.Interceptors;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -257,7 +259,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void TestLoadWithAndDuplications([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -273,7 +274,6 @@ namespace Tests.Linq
 					select m;
 
 				query = query.LoadWith(d => d.Details);
-
 
 				var expectedQuery = from m in masterRecords
 					join dd in detailRecords on m.Id1 equals dd.MasterId
@@ -316,7 +316,6 @@ namespace Tests.Linq
 					.LoadWith(a => a.One.d.SubDetails)
 					.LoadWith(b => b.Two.SubDetails).ThenLoad(sd => sd.Detail);
 
-
 				var result = query.ToArray();
 
 				foreach (var item in result)
@@ -330,7 +329,6 @@ namespace Tests.Linq
 				}
 			}
 		}
-
 
 		[Test]
 		public void TestLoadWithToString1([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -449,7 +447,6 @@ FROM
 				var result = query.ToList();
 			}
 		}
-
 
 		[Test]
 		public void TestSelectProjectionList([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -911,7 +908,6 @@ FROM
 				result   = result .Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
 				expected = expected.Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
 
-
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
@@ -1056,7 +1052,6 @@ FROM
 				Assert.That(result, Has.Length.EqualTo(result2.Length));
 			}
 		}
-
 
 		[Test]
 		public void ProjectionWithoutClass([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -1367,7 +1362,6 @@ FROM
 			}
 		}
 #endregion
-
 
 #region issue 2196
 		public class EventScheduleItemBase

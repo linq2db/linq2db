@@ -3,12 +3,11 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Data;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Data;
-	using Linq;
-	using SqlProvider;
-
 	public interface ISQLiteExtensions
 	{
 	}

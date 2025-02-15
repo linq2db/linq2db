@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions.Internal;
+
 namespace LinqToDB.Expressions
 {
-	using Internal;
-
 	/// <summary>
 	/// Used for controlling query caching of custom SQL Functions.
 	/// Parameter with this attribute will be evaluated on client side before generating SQL.

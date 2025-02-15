@@ -1,6 +1,4 @@
-﻿using LinqToDB.EntityFrameworkCore.Tests.Models.Shared;
-
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace LinqToDB.EntityFrameworkCore.Tests.Models.Shared
 {
@@ -17,7 +15,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.Shared
 				.UseIdAsKey()
 				.UseOneIdSequence<long>("test", sn => $"nextval('{sn}')");
 		}
-
 
 		public DbSet<Entity> Entities { get; set; } = null!;
 		public DbSet<Detail> Details { get; set; } = null!;

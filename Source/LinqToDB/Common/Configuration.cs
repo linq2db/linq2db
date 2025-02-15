@@ -6,16 +6,16 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Data;
+using LinqToDB.Data.RetryPolicy;
+using LinqToDB.Linq;
+
 #if SUPPORTS_COMPOSITE_FORMAT
 using System.Text;
 #endif
 
 namespace LinqToDB.Common
 {
-	using Data;
-	using Data.RetryPolicy;
-	using Linq;
-
 	/// <summary>
 	/// Contains LINQ expression compilation options.
 	/// </summary>

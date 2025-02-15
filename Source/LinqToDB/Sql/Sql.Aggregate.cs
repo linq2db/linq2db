@@ -2,12 +2,12 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Linq;
+
 using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using Linq;
-
 	public static class StringAggregateExtensions
 	{
 		[Sql.Extension("WITHIN GROUP ({order_by_clause})", TokenName = "aggregation_ordering", ChainPrecedence = 2)]

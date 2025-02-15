@@ -2,10 +2,10 @@
 
 using JetBrains.Annotations;
 
+using LinqToDB.Configuration;
+
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Configuration;
-
 	[UsedImplicitly]
 	sealed class OracleFactory : DataProviderFactoryBase
 	{

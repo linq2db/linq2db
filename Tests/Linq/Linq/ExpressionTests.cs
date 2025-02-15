@@ -8,7 +8,6 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 
@@ -404,7 +403,6 @@ namespace Tests.Linq
 				.With.Message.Contain("The LINQ expression could not be converted to SQL."));
 		}
 		#endregion
-
 
 	}
 }

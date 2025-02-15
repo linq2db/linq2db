@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Mapping;
-	using SqlQuery;
-
 	sealed class SingleExpressionContext : BuildContextBase
 	{
 		public SingleExpressionContext(TranslationModifier translationModifier, ExpressionBuilder builder, ISqlExpression sqlExpression, SelectQuery selectQuery)

@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.Tools
 {
-	using Data;
-
 	/// <summary>
 	/// Provides API to register factory methods that return an Activity object or <c>null</c> for provided <see cref="ActivityID"/> event.
 	/// </summary>

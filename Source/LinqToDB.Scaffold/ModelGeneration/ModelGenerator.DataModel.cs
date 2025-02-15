@@ -362,7 +362,9 @@ namespace LinqToDB.Tools.ModelGeneration
 		protected string CheckColumnName(string memberName)
 		{
 			if (string.IsNullOrEmpty(memberName))
+			{
 				memberName = "Empty";
+			}
 			else
 			{
 				memberName = memberName
@@ -384,6 +386,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				memberName        = NormalizeName(memberName, false);
 				IsProcedureColumn = false;
 			}
+
 			return memberName;
 		}
 
@@ -401,7 +404,6 @@ namespace LinqToDB.Tools.ModelGeneration
 
 			return result;
 		}
-
 
 		protected string SuggestNoDuplicate(IEnumerable<string> currentNames, string newName, string? prefix)
 		{

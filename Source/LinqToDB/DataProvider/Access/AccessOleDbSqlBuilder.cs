@@ -1,11 +1,10 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
+
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Mapping;
-	using SqlProvider;
-
 	sealed class AccessOleDbSqlBuilder : AccessSqlBuilderBase
 	{
 		public AccessOleDbSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)

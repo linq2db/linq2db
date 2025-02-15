@@ -12,7 +12,6 @@ using System.Numerics;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
@@ -1300,6 +1299,7 @@ namespace Tests.Data
 				catch
 				{
 				}
+
 				Assert.That(trace, Does.Contain("DECLARE @p Clob("));
 
 				// provider-specific type classes

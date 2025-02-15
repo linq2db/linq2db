@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	sealed class InformixSchemaProvider : SchemaProviderBase
 	{
 		private readonly InformixDataProvider _provider;

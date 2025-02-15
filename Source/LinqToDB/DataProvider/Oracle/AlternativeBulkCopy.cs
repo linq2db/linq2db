@@ -1,7 +1,7 @@
-﻿namespace LinqToDB.DataProvider.Oracle
-{
-	using Data;
+﻿using LinqToDB.Data;
 
+namespace LinqToDB.DataProvider.Oracle
+{
 	/// <summary>
 	/// Defines type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
 	/// </summary>

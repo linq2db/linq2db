@@ -2,10 +2,10 @@
 
 using JetBrains.Annotations;
 
+using LinqToDB.Configuration;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using Configuration;
-
 	[UsedImplicitly]
 	sealed class DB2Factory : DataProviderFactoryBase
 	{

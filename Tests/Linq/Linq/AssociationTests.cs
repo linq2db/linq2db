@@ -7,18 +7,17 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 
+using JetBrains.Annotations;
+
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using JetBrains.Annotations;
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class AssociationTests : TestBase
 	{
@@ -1031,7 +1030,6 @@ namespace Tests.Linq
 						.Select(c => c!.ChildID));
 		}
 
-
 		[Test]
 		public void AssociationExpressionMethod([DataSources] string context)
 		{
@@ -1457,7 +1455,6 @@ namespace Tests.Linq
 				new Issue2981Entity {OwnerId = 2}
 			});
 			using var t2 = db.CreateLocalTable(new[] {new Issue2981OwnerEntity {Id = 1}});
-
 
 			var res = t1.Select(r => new {r.OwnerId, Id = (int?)r.Owner!.Id})
 				.OrderBy(_ => _.OwnerId)
@@ -1904,7 +1901,6 @@ namespace Tests.Linq
 		}
 
 		#endregion
-
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2022")]
 		public void TestAssociationAliasEscaping([DataSources(false)] string context)

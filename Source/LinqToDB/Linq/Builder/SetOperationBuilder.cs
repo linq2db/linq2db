@@ -5,13 +5,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	[BuildsMethodCall("Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll")]
 	internal sealed class SetOperationBuilder : MethodCallBuilder
 	{
@@ -1202,7 +1201,6 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					projected = Builder.BuildExtractExpression(context, projected);
-
 
 					var lambdaResolver = new LambdaResolveVisitor(context, BuildPurpose.Sql, true);
 					projected = lambdaResolver.Visit(projected);

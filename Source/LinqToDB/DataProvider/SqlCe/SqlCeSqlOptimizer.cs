@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	sealed class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
 		public SqlCeSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)

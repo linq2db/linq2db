@@ -3,10 +3,10 @@ using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions.Types;
+
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Expressions;
-
 	public class SybaseProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _nativeSyncRoot = new ();

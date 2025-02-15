@@ -1,9 +1,12 @@
-﻿using LinqToDB;
-using LinqToDB.DataProvider.SqlServer;
-using NUnit.Framework;
-using System.Linq;
+﻿using System.Linq;
+
 using FluentAssertions;
-using FluentAssertions.Common;
+
+using LinqToDB;
+using LinqToDB.DataProvider.SqlServer;
+
+using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -2102,7 +2105,6 @@ namespace Tests.Linq
 				db.LastQuery!.Should().Contain("*", Exactly.Once());
 			}
 		}
-
 
 		#endregion
 

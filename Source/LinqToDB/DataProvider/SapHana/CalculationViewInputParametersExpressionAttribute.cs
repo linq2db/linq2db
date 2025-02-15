@@ -4,13 +4,13 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Expressions.Internal;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class CalculationViewInputParametersExpressionAttribute : Sql.TableExpressionAttribute
 	{
 		public CalculationViewInputParametersExpressionAttribute() :

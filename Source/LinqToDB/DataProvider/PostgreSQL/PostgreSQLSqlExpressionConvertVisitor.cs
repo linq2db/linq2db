@@ -1,12 +1,12 @@
-﻿namespace LinqToDB.DataProvider.PostgreSQL
+﻿using System;
+
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
+namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using System;
-
-	using Common;
-	using Extensions;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class PostgreSQLSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public PostgreSQLSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
@@ -49,6 +49,7 @@
 						var newExpr =  PseudoFunctions.MakeMandatoryCast(new SqlBinaryExpression(systemType, newExpr1, element.Operation, element.Expr2), toType);
 						return Visit(Optimize(newExpr));
 					}
+
 					break;
 				}
 			}
@@ -140,6 +141,7 @@
 					return ConvertBooleanToCase(cast.Expression, cast.ToType);
 				}
 			}
+
 			cast = FloorBeforeConvert(cast);
 			return base.ConvertConversion(cast);
 		}

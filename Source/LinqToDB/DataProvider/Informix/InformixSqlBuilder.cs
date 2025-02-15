@@ -5,13 +5,13 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	sealed partial class InformixSqlBuilder : BasicSqlBuilder
 	{
 		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
@@ -336,6 +336,7 @@ namespace LinqToDB.DataProvider.Informix
 				BuildExpression(value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
 				StringBuilder.Append(InlineComma);
 			}
+
 			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
 			StringBuilder.Append(')');
 		}

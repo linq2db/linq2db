@@ -4,7 +4,6 @@ using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
 using System.Data.SqlTypes;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -30,10 +29,10 @@ using Microsoft.SqlServer.Types;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class SqlServerTests : DataProviderTestBase
 	{

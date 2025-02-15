@@ -7,14 +7,14 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Tools.Comparers
 {
-	using Common;
-	using Common.Internal;
-	using Expressions;
-	using Extensions;
-	using Reflection;
-
 	/// <summary>
 	/// Builds comparer functions and comparers.
 	/// </summary>
@@ -98,7 +98,6 @@ namespace LinqToDB.Tools.Comparers
 
 			internal static Comparer<T>? DefaultInstance;
 		}
-
 
 		/// <summary>
 		/// Returns implementations of the <see cref="IEqualityComparer{T}" /> generic interface

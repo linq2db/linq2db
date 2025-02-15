@@ -7,16 +7,15 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Async;
+using LinqToDB.Linq;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.xUpdate
 {
-	using LinqToDB.Common;
-	using Model;
-
 	public partial class MergeTests
 	{
 		public static IEnumerable<TestCaseData> _nullParameterCases

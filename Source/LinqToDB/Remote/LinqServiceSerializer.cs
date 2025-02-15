@@ -8,14 +8,14 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Remote
 {
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Mapping;
-	using SqlQuery;
-
 	static class LinqServiceSerializer
 	{
 		#region Public Members
@@ -243,7 +243,7 @@ namespace LinqToDB.Remote
 
 						Builder.Append(CultureInfo.InvariantCulture, $"{idx} {TypeIndex}");
 
-						Append(Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
+						Append(Common.Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
 					}
 
 					Builder.AppendLine();
@@ -615,7 +615,7 @@ namespace LinqToDB.Remote
 						type = LinqService.TypeResolver(str);
 						if (type == null)
 						{
-							if (Configuration.LinqService.ThrowUnresolvedTypeException)
+							if (Common.Configuration.LinqService.ThrowUnresolvedTypeException)
 								throw new LinqToDBException(
 									$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.");
 
@@ -2830,7 +2830,7 @@ namespace LinqToDB.Remote
 
 				foreach (var type in result.FieldTypes)
 				{
-					Append(Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
+					Append(Common.Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
 					Builder.AppendLine();
 				}
 
@@ -2876,6 +2876,7 @@ namespace LinqToDB.Remote
 				NextLine();
 
 				for (var i = 0; i < fieldCount;  i++) { result.FieldNames  [i] = ReadString()!;              NextLine(); }
+
 				for (var i = 0; i < fieldCount;  i++) { result.FieldTypes  [i] = ResolveType(ReadString())!; NextLine(); }
 
 				for (var n = 0; n < result.RowCount; n++)

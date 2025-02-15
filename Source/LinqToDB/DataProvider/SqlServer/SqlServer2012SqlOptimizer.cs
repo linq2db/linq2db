@@ -1,11 +1,9 @@
-﻿using System;
+﻿using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Mapping;
-	using SqlQuery;
-	using SqlProvider;
-
 	class SqlServer2012SqlOptimizer : SqlServerSqlOptimizer
 	{
 		public SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags) : this(sqlProviderFlags, SqlServerVersion.v2012)
@@ -50,6 +48,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						return new SqlOrderByClause(new[] { new SqlOrderByItem(new SqlValue(typeof(int), 1), false, false) });
 					}
 				}
+
 				return element;
 			});
 			return statement;

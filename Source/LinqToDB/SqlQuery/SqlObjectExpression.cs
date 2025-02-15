@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Extensions;
-	using Mapping;
-
 	public class SqlObjectExpression : ISqlExpression
 	{
 		readonly SqlGetValue[] _infoParameters;

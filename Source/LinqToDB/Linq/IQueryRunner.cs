@@ -4,10 +4,10 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.Linq
 {
-	using Data;
-
 	public interface IQueryRunner: IDisposable, IAsyncDisposable
 	{
 		/// <summary>

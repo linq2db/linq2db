@@ -1,12 +1,13 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.Mapping
 {
@@ -366,7 +367,6 @@ namespace Tests.Mapping
 				obj.Values.Add("Name", "test_name");
 				db.Insert(obj);
 
-
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
 				Assert.Multiple(() =>
@@ -400,7 +400,6 @@ namespace Tests.Mapping
 				var obj = new FluentMetadataBasedStore { Id = 5 };
 				obj.Values.Add("Name", "test_name");
 				db.Insert(obj);
-
 
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
@@ -437,7 +436,6 @@ namespace Tests.Mapping
 				var obj = new FluentMetadataBasedStore { Id = 5 };
 				obj.SQLiteValues.Add("Name", "test_name");
 				db.Insert(obj);
-
 
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));

@@ -7,13 +7,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
+using LinqToDB.Data;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Common
 {
-	using Data;
-	using Linq;
-	using Mapping;
-	using Reflection;
-
 	/// <summary>
 	/// Various general-purpose helpers.
 	/// </summary>

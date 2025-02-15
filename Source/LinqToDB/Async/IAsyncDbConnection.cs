@@ -3,12 +3,13 @@ using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Data.RetryPolicy;
 
 namespace LinqToDB.Async
 {
-	using Data.RetryPolicy;
-
 	/// <summary>
 	/// Wrapper over <see cref="DbConnection"/> instance which contains all operations that could have custom implementation like:
 	/// <list type="bullet">

@@ -12,13 +12,13 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Common;
+using LinqToDB.Infrastructure;
+
 #pragma warning disable CA1725
 
 namespace LinqToDB.Expressions
 {
-	using Common;
-	using Infrastructure;
-
 	/// <summary>
 	///     <para>
 	///         A class to create a printable string representation of expression.

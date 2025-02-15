@@ -1,9 +1,5 @@
-﻿using System.Linq.Expressions;
-
-namespace LinqToDB.Linq
+﻿namespace LinqToDB.Linq
 {
-	using Common.Internal;
-
 	sealed class CteTable<T> : ExpressionQuery<T>
 	{
 		public CteTable(IDataContext dataContext)

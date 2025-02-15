@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.SqlProvider
-{
-	using DataProvider;
-	using Mapping;
-	using SqlQuery;
+﻿using LinqToDB.DataProvider;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.SqlProvider
+{
 	internal static class SqlOptimizerExtensions
 	{
 		public static SqlStatement PrepareStatementForRemoting(this ISqlOptimizer optimizer, SqlStatement statement,

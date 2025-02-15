@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -34,12 +33,12 @@ using NUnit.Framework;
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
 
+using Tests.Model;
+
 using DA = Devart.Data.Oracle;
 
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class OracleTests : TestBase
 	{
@@ -640,7 +639,6 @@ namespace Tests.DataProvider
 			{
 				var table    = db.GetTable<OracleSpecific.StringTest>();
 				var expected = table.Where(_ => _.KeyValue == "NullValues").ToList();
-
 
 				AreEqual(expected, table.Where(_ => string.IsNullOrEmpty(_.StringValue1)));
 				AreEqual(expected, table.Where(_ => string.IsNullOrEmpty(_.StringValue2)));
@@ -2568,6 +2566,7 @@ namespace Tests.DataProvider
 						var id = Convert.ToInt32(db.InsertWithIdentity(new Issue723Table() { StringValue = i.ToString() }));
 						Assert.That(id, Is.EqualTo(i));
 					}
+
 					Assert.That(db.LastQuery, Does.Contain($"{schema}.ISSUE723TABLE"));
 				}
 				finally
@@ -3848,6 +3847,7 @@ CREATE TABLE ""TABLE_A""(
 				finally
 				{
 					try { db.Execute("DROP SEQUENCE SEQ_A");    } catch { }
+
 					try { db.Execute("DROP TABLE \"TABLE_A\""); } catch { }
 				}
 			}
@@ -4388,7 +4388,6 @@ END convert_bool;");
 		}
 
 		#endregion
-
 
 		#region Issue 1999
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1999")]

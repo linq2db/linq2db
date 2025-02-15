@@ -3,10 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 
+using LinqToDB.Common.Internal;
+
 namespace LinqToDB.Reflection
 {
-	using Common.Internal;
-
 	[DebuggerDisplay("Type = {" + nameof(Type) + "}")]
 	public abstract class TypeAccessor
 	{

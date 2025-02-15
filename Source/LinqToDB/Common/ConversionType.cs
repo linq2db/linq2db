@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Common
+﻿namespace LinqToDB.Common
 {
 	/// <summary>
 	/// Defines conversion type such as to database / from database conversion direction.

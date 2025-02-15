@@ -7,21 +7,22 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Async;
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data.RetryPolicy;
+using LinqToDB.DataProvider;
+using LinqToDB.Expressions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Data
 {
-	using Async;
-	using Common.Internal;
-	using Common;
-	using DataProvider;
-	using Expressions;
-	using Infrastructure;
-	using Interceptors;
-	using Mapping;
-	using RetryPolicy;
-	using Tools;
-
 	/// <summary>
 	/// Implements persistent database connection abstraction over different database engines.
 	/// Could be initialized using connection string name or connection string,
@@ -1151,7 +1152,6 @@ namespace LinqToDB.Data
 					using (ActivityService.Start(ActivityID.CommandExecuteReader)?.AddQueryInfo(this, _command!.Connection, _command))
 						reader = _command!.ExecuteReader(commandBehavior);
 				}
-
 
 				var wrapper = new DataReaderWrapper(this, reader, _command!);
 				_command = null;

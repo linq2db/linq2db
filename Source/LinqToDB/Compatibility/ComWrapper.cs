@@ -6,11 +6,10 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading;
 
-namespace LinqToDB
-{
-	using Common;
-	using Common.Internal;
+using LinqToDB.Common.Internal;
 
+namespace LinqToDB.Compatibility
+{
 	// implementation based on code from https://github.com/dotnet/runtime/issues/12587
 	/// <summary>
 	/// This class is used as COM object wrapper instead of dynamic keyword, as dynamic for COM is not supported on .net core till v5.

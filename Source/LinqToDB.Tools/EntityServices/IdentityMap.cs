@@ -6,11 +6,11 @@ using System.Linq;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Interceptors;
+
 namespace LinqToDB.Tools.EntityServices
 {
-	using Common.Internal;
-	using Interceptors;
-
 	[PublicAPI]
 	public class IdentityMap : EntityServiceInterceptor, IDisposable
 	{

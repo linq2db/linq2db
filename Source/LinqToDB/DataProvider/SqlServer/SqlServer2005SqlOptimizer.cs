@@ -1,11 +1,9 @@
-﻿using System;
+﻿using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlProvider;
-	using SqlQuery;
-	using Mapping;
-
 	sealed class SqlServer2005SqlOptimizer : SqlServerSqlOptimizer
 	{
 		public SqlServer2005SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags, SqlServerVersion.v2005)

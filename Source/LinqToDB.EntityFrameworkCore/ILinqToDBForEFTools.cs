@@ -2,6 +2,11 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.Mapping;
+using LinqToDB.Metadata;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -10,11 +15,6 @@ using Microsoft.Extensions.Logging;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Data;
-	using DataProvider;
-	using Mapping;
-	using Metadata;
-
 	/// <summary>
 	/// Interface for EF Core - LINQ To DB integration bridge.
 	/// </summary>

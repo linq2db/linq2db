@@ -3,12 +3,13 @@
 #elif NETFRAMEWORK || COMPAT
 using System.Configuration;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
+
+using LinqToDB.DataProvider;
 
 namespace LinqToDB.Configuration
 {
-	using DataProvider;
-
 	/// <summary>
 	/// Data provider configuration element.
 	/// </summary>

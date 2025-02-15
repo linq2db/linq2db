@@ -7,16 +7,16 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.SQLite.Translation;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Common;
-	using Data;
-	using Linq.Translation;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
-	using Translation;
-
 	sealed class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic, SQLiteProvider.System   ) {} }
 	sealed class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS,      SQLiteProvider.Microsoft) {} }
 
@@ -262,6 +262,7 @@ namespace LinqToDB.DataProvider.SQLite
 							// we can allow strings later if there will be request for it
 							value = guid.ToByteArray();
 						}
+
 						break;
 				}
 			}

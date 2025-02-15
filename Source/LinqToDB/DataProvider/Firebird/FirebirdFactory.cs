@@ -2,10 +2,10 @@
 
 using JetBrains.Annotations;
 
+using LinqToDB.Configuration;
+
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Configuration;
-
 	[UsedImplicitly]
 	sealed class FirebirdFactory : DataProviderFactoryBase
 	{

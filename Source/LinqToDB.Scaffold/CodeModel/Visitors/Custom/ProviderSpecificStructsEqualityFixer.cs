@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.Linq;
-using LinqToDB.Common;
 
 namespace LinqToDB.CodeModel
 {

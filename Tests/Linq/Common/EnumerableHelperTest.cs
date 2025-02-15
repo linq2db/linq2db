@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LinqToDB.Async;
+
 using LinqToDB.Common;
+
 using NUnit.Framework;
 
 namespace Tests.Common
@@ -22,6 +23,7 @@ namespace Tests.Common
 			{
 				finalList.Add(enumerable2.ToList());
 			}
+
 			Assert.That(finalList, Is.EqualTo(new int[][] { new[] { 0, 1, 2 }, new[] { 3, 4, 5 }, new[] { 6, 7, 8 }, new[] { 9 } }));
 		}
 
@@ -57,6 +59,7 @@ namespace Tests.Common
 					array1.Add(elem);
 				finalList.Add(array1);
 			}
+
 			Assert.That(finalList, Is.EqualTo(new int[][] { new[] { 0, 1, 2 }, new[] { 3, 4, 5 }, new[] { 6, 7, 8 }, new[] { 9 } }));
 		}
 

@@ -2,11 +2,10 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common.Internal;
+
 namespace LinqToDB.Extensions
 {
-	using Common;
-	using Common.Internal;
-
 	static class MappingExpressionsExtensions
 	{
 		public static TExpression GetExpressionFromExpressionMember<TExpression>(this Type type, string memberName)

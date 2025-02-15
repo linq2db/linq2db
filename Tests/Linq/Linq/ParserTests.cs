@@ -2,14 +2,13 @@
 
 using LinqToDB;
 using LinqToDB.DataProvider.Oracle;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class ParserTests : TestBase
 	{

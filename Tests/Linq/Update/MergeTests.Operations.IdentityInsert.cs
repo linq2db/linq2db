@@ -8,10 +8,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.xUpdate
 {
-	using Model;
-
 	public partial class MergeTests
 	{
 		[Test]

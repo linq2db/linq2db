@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB;
-using LinqToDB.Mapping;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
+using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using Tests.Model;
+
 using Tests.DataProvider;
+using Tests.Model;
 
 namespace Tests.UserTests
 {

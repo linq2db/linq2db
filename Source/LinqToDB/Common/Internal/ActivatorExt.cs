@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace LinqToDB.Common.Internal
@@ -122,7 +121,6 @@ namespace LinqToDB.Common.Internal
 				throw tex.InnerException;
 			}
 		}
-
 
 		#region ConstructorInfo Extensions
 

@@ -1,39 +1,38 @@
-﻿extern alias MySqlData;
-extern alias MySqlConnector;
+﻿extern alias MySqlConnector;
+extern alias MySqlData;
 
 using System;
-using System.Data.Linq;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
-using System.Threading.Tasks;
+using System.Data.Linq;
+using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.MySql;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
-using LinqToDB.DataProvider.MySql;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
-using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
+
+using Tests.Model;
+
 using MySqlConnectorDateTime = MySqlConnector::MySqlConnector.MySqlDateTime;
 using MySqlConnectorDecimal = MySqlConnector::MySqlConnector.MySqlDecimal;
 using MySqlConnectorGuidFormat = MySqlConnector::MySqlConnector.MySqlGuidFormat;
-
+using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
 
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class MySqlTests : DataProviderTestBase
 	{
@@ -1635,6 +1634,7 @@ namespace Tests.DataProvider
 						Assert.That(sql, Does.Contain("\t`TimeStamp`        TIMESTAMP         NOT NULL"));
 						Assert.That(sql, Does.Contain("\t`TimeStamp5`       TIMESTAMP(5)      NOT NULL"));
 					}
+
 					Assert.That(sql, Does.Contain("\t`Time`             TIME              NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`TinyInt`          TINYINT           NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`UnsignedTinyInt`  TINYINT UNSIGNED  NOT NULL"));
@@ -2250,7 +2250,6 @@ namespace Tests.DataProvider
 			});
 		}
 
-
 		#region Issue 4439
 		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4439")]
@@ -2382,7 +2381,6 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable<Issue3726Table>();
-
 
 			db.Insert(new Issue3726Table() { Id = 1, Value = 123 });
 

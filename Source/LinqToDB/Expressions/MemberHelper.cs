@@ -4,13 +4,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Expressions
 {
-	using Extensions;
-	using Internal;
-	using Mapping;
-	using Reflection;
-
 	public static class MemberHelper
 	{
 		[DebuggerDisplay("{Type.Name}.{MemberInfo.Name}")]

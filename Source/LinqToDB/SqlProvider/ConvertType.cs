@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.SqlProvider
+﻿namespace LinqToDB.SqlProvider
 {
 	public enum ConvertType
 	{

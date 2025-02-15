@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-	using Common.Internal;
-
 	public class SqlValue : SqlExpressionBase
 	{
 		public SqlValue(Type systemType, object? value)

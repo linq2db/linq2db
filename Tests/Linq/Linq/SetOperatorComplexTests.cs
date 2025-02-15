@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net;
 
 using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -435,7 +435,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		public void UsingDictionary([DataSources] string context, [Values] SetOperation operation)
 		{
@@ -588,8 +587,6 @@ namespace Tests.Linq
 
 			AssertQuery(query, ByBookTypeResult.BookTypeComparer);
 		}
-
-
 
 		[Test]
 		public void EagerConcatWithSetsDifferentNullability([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)

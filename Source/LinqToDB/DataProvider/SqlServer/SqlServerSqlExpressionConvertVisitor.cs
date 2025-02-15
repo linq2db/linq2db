@@ -1,11 +1,9 @@
-﻿using System;
+﻿using LinqToDB.Extensions;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using LinqToDB.Extensions;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class SqlServerSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		readonly SqlServerVersion _sqlServerVersion;

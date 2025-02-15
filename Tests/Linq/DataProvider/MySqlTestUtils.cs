@@ -1,5 +1,6 @@
-﻿extern alias MySqlData;
-extern alias MySqlConnector;
+﻿extern alias MySqlConnector;
+extern alias MySqlData;
+
 using LinqToDB.Data;
 
 namespace Tests.DataProvider

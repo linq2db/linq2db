@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Expressions.ExpressionVisitors
 {
-	using Extensions;
-	using Internal;
-
 	static class EqualsToVisitor
 	{
 		internal static bool EqualsTo(
-			this Expression                                                                                                                      expr1,
-			Expression                                                                                                                           expr2,
-			IDataContext                                                                                                                         dataContext,
-			bool                                                                                                                                 compareConstantValues = false)
+			this Expression expr1,
+			Expression      expr2,
+			IDataContext    dataContext,
+			bool            compareConstantValues = false)
 		{
 			var equalsInfo = PrepareEqualsInfo(dataContext, compareConstantValues);
 			var result     = EqualsTo(expr1, expr2, equalsInfo);
@@ -24,8 +24,8 @@ namespace LinqToDB.Expressions.ExpressionVisitors
 		/// Creates reusable equality context.
 		/// </summary>
 		internal static EqualsToInfo PrepareEqualsInfo(
-			IDataContext      dataContext,
-			bool              compareConstantValues = false)
+			IDataContext dataContext,
+			bool         compareConstantValues = false)
 		{
 			return new EqualsToInfo(dataContext, compareConstantValues);
 		}
@@ -33,19 +33,15 @@ namespace LinqToDB.Expressions.ExpressionVisitors
 		internal sealed class EqualsToInfo
 		{
 			public EqualsToInfo(
-				IDataContext      dataContext,
-				bool              compareConstantValues)
+				IDataContext dataContext,
+				bool         compareConstantValues)
 			{
 				DataContext                = dataContext;
 				CompareConstantValues      = compareConstantValues;
 			}
 
-			public readonly IDataContext                                              DataContext;
-			public readonly bool                                                      CompareConstantValues;
-
-			public void Reset()
-			{
-			}
+			public IDataContext DataContext { get; }
+			public bool         CompareConstantValues { get; }
 		}
 
 		internal static bool EqualsTo(this Expression? expr1, Expression? expr2, EqualsToInfo info)

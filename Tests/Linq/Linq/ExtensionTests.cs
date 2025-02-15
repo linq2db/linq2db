@@ -4,10 +4,10 @@ using LinqToDB;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class ExtensionTests : TestBase
 	{

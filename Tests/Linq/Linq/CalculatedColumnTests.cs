@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB;
-using LinqToDB.Linq;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -44,7 +45,6 @@ namespace Tests.UserTests
 			public int TypeId { get; set; }
 			public string Id { get; set; } = null!;
 		}
-
 
 		[Test]
 		public void DynamicColumn([IncludeDataSources(TestProvName.AllFirebird)] string context)

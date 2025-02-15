@@ -5,12 +5,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Expressions
 {
-	using Extensions;
-	using Mapping;
-	using Reflection;
-
 	public class SqlGenericConstructorExpression : Expression, IEquatable<SqlGenericConstructorExpression>
 	{
 		public Expression?      NewExpression     { get; private set; }

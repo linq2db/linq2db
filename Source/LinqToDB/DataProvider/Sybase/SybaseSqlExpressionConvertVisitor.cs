@@ -1,11 +1,8 @@
-﻿using System;
+﻿using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using LinqToDB.Extensions;
-	using LinqToDB.SqlProvider;
-	using LinqToDB.SqlQuery;
-
 	public class SybaseSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public SybaseSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)

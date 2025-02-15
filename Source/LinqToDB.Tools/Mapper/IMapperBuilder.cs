@@ -4,11 +4,12 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Mapping;
+
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Tools.Mapper
 {
-	using Mapping;
-	using Reflection;
-
 	/// <summary>
 	/// Builds a mapper that maps an object of <i>TFrom</i> type to an object of <i>TTo</i> type.
 	/// </summary>

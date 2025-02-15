@@ -3,22 +3,20 @@ using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using System.Linq;
-
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Mapping;
-	using Metadata;
-	using SqlQuery;
-
 	sealed class SqlServerMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT

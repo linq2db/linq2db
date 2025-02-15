@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
+using System.Linq.Expressions;
+
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
-using System.Linq.Expressions;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.Linq
 {
@@ -20,7 +21,6 @@ namespace Tests.Linq
 
 			[Column]
 			public string? StringProp { get; set; }
-
 
 			public static ConditionalData[] Seed()
 			{
@@ -54,7 +54,6 @@ namespace Tests.Linq
 				AssertQuery(query);
 			}
 		}
-
 
 		[Test]
 		public void ViaConditionWithNull2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)

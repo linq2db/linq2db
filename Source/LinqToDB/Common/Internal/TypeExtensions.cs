@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Common.Internal
 {
-	using Extensions;
-
 	public static class TypeExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -3,11 +3,11 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq
 {
-	using Data;
-	using SqlQuery;
-
 	abstract class QueryRunnerBase : IQueryRunner
 	{
 		protected QueryRunnerBase(Query query, int queryNumber, IDataContext dataContext, IDataContext parametersContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)

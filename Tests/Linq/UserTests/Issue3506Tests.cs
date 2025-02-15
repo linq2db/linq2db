@@ -1,12 +1,10 @@
-﻿using System.Linq;
-using FluentAssertions;
-using LinqToDB;
-using LinqToDB.Mapping;
-using NUnit.Framework;
+﻿using System;
+using System.Linq;
 using System.Linq.Dynamic.Core;
-using System.Linq.Dynamic.Core.CustomTypeProviders;
-using System.Collections.Generic;
-using System;
+
+using LinqToDB;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {

@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.DataProvider.DB2
-{
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+﻿using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataProvider.DB2
+{
 	sealed class DB2SqlOptimizer : BasicSqlOptimizer
 	{
 		public DB2SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)

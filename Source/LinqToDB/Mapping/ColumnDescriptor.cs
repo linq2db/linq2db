@@ -4,15 +4,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Data;
-	using Expressions;
-	using Extensions;
-	using Reflection;
-	using SqlQuery;
-
 	/// <summary>
 	/// Stores mapping entity column descriptor.
 	/// </summary>
@@ -160,7 +160,7 @@ namespace LinqToDB.Mapping
 			if (na != null)
 				return na.CanBeNull;
 
-			if (Configuration.UseNullableTypesMetadata && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable))
+			if (Common.Configuration.UseNullableTypesMetadata && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable))
 				return isNullable;
 
 			if (IsIdentity)

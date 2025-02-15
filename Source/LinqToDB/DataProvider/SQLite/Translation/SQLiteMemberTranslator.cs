@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Globalization;
 
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SQLite.Translation
 {
-	using Common;
-	using SqlQuery;
-	using Linq.Translation;
-
 	public class SQLiteMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		class SqlTypesTranslation : SqlTypesTranslationDefault

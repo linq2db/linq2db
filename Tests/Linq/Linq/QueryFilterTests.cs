@@ -50,7 +50,6 @@ namespace Tests.Linq
 			[Column] public int? MasterId { get; set; }
 		}
 
-
 		[Table]
 		sealed class DetailClass : ISoftDelete
 		{
@@ -60,7 +59,6 @@ namespace Tests.Linq
 
 			[Column] public int? MasterId { get; set; }
 		}
-
 
 		static MappingSchema _filterMappingSchema;
 
@@ -74,7 +72,6 @@ namespace Tests.Linq
 
 			_filterMappingSchema = builder.MappingSchema;
 		}
-
 
 		static Tuple<MasterClass[], InfoClass[], DetailClass[]> GenerateTestData()
 		{
@@ -268,7 +265,6 @@ namespace Tests.Linq
 				CheckFiltersForQuery(db, query);
 			}
 		}
-
 
 		static IQueryable<T> FilterDeleted<T>(IQueryable<T> query)
 			where T: ISoftDelete

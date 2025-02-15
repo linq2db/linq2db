@@ -7,6 +7,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.DataProvider
@@ -171,7 +172,6 @@ namespace Tests.DataProvider
 					};
 				
 				var selectResult = query.ToArray();
-
 
 				var query2 = from t in table
 					from v in db.Unnest(t.StrArray)
@@ -411,7 +411,6 @@ namespace Tests.DataProvider
 				Assert.That(allResult, Is.EqualTo(separateResult));
 			}
 		}
-
 
 	}
 }

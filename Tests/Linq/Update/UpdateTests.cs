@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Tests.Model;
 
 #region ReSharper disable
 // ReSharper disable ConvertToConstant.Local
@@ -15,9 +19,6 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB.Common;
-	using Model;
-
 	[TestFixture]
 //	[Order(10000)]
 	public class UpdateTests : TestBase

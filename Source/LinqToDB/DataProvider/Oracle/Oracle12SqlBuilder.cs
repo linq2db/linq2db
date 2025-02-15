@@ -1,11 +1,9 @@
-﻿using System;
+﻿using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	sealed class Oracle12SqlBuilder : OracleSqlBuilderBase
 	{
 		public Oracle12SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)

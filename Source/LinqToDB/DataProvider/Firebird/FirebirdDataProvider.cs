@@ -5,15 +5,15 @@ using System.Data.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.Firebird.Translation;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Common;
-	using Data;
-	using Linq.Translation;
-	using Mapping;
-	using SqlProvider;
-	using Translation;
-
 	sealed class FirebirdDataProvider25 : FirebirdDataProvider { public FirebirdDataProvider25() : base(ProviderName.Firebird25, FirebirdVersion.v25) { } }
 	sealed class FirebirdDataProvider3  : FirebirdDataProvider { public FirebirdDataProvider3()  : base(ProviderName.Firebird3,  FirebirdVersion.v3 ) { } }
 	sealed class FirebirdDataProvider4  : FirebirdDataProvider { public FirebirdDataProvider4()  : base(ProviderName.Firebird4,  FirebirdVersion.v4 ) { } }

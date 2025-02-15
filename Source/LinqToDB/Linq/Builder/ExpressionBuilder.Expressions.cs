@@ -1,14 +1,13 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using LinqToDB.Expressions;
-	using Mapping;
-
 	class LambdaResolveVisitor : ExpressionVisitorBase
 	{
 		readonly IBuildContext _context;
@@ -171,7 +170,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			return _buildVisitor.ConvertToExtensionSql(context, expression, columnDescriptor, inlineParameters);
 		}
-
 
 		bool _handlingAlias;
 

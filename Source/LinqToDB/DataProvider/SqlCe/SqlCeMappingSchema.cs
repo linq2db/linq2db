@@ -6,12 +6,12 @@ using System.IO;
 using System.Text;
 using System.Xml;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
-
 	public sealed class SqlCeMappingSchema : LockedMappingSchema
 	{
 		public SqlCeMappingSchema() : base(ProviderName.SqlCe)

@@ -9,17 +9,17 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Data.RetryPolicy;
+using LinqToDB.DataProvider;
+using LinqToDB.Interceptors;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+
 // ReSharper disable once CheckNamespace
 namespace LinqToDB
 {
-	using Common;
-	using Data;
-	using Data.RetryPolicy;
-	using DataProvider;
-	using Interceptors;
-	using Linq.Translation;
-	using Mapping;
-
 	/// <summary>
 	/// Set of extensions for <see cref="DataOptions"/>.
 	/// </summary>

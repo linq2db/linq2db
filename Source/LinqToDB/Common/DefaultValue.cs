@@ -4,12 +4,11 @@ using System.Linq;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Common
 {
-	using Extensions;
-	using Internal;
-	using Mapping;
-
 	/// <summary>
 	/// Default value provider.
 	/// Default value used for mapping from NULL database value to C# value.

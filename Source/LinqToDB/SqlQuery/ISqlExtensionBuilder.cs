@@ -1,10 +1,9 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
+
+using LinqToDB.SqlProvider;
 
 namespace LinqToDB.SqlQuery
 {
-	using SqlProvider;
-
 	/// <summary>
 	/// Base interface for all extension builders.
 	/// </summary>

@@ -3,12 +3,12 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Common
 {
-	using Data;
-	using Internal;
-	using Mapping;
-
 	sealed class ConvertInfo
 	{
 		public static ConvertInfo Default = new ();

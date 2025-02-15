@@ -7,10 +7,10 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Exceptions
 {
-	using Model;
-
 	[TestFixture]
 	public class CommonTests : TestBase
 	{

@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -81,6 +83,7 @@ namespace Tests.Linq
 							supported = false;
 							break;
 					}
+
 					if (!supported)
 						break;
 
@@ -156,7 +159,6 @@ namespace Tests.Linq
 			Expression<Func<T, AnalyticFunctions.IOverMayHavePartitionAndOrder<long>>> overExpression =
 				t => Sql.Ext.Rank().Over();
 
-
 			var entityParam = Expression.Parameter(typeof(T), "e");
 			var windowFunctionBody = overExpression.Body;
 			windowFunctionBody = GeneratePartitionBy(windowFunctionBody,
@@ -164,7 +166,6 @@ namespace Tests.Linq
 
 			windowFunctionBody = GenerateOrderBy(entityParam, windowFunctionBody, orderBy);
 			windowFunctionBody = FinalizeFunction(windowFunctionBody);
-
 
 			// Generating Select
 			//

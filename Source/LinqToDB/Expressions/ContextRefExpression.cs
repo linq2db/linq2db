@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Linq.Builder;
+
 namespace LinqToDB.Expressions
 {
-	using Linq.Builder;
-
 	sealed class ContextRefExpression : Expression, IEquatable<ContextRefExpression>
 	{
 		public ContextRefExpression(Type elementType, IBuildContext buildContext, string? alias = null)

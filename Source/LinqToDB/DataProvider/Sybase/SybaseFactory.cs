@@ -2,10 +2,10 @@
 
 using JetBrains.Annotations;
 
+using LinqToDB.Configuration;
+
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Configuration;
-
 	[UsedImplicitly]
 	sealed class SybaseFactory : DataProviderFactoryBase
 	{
