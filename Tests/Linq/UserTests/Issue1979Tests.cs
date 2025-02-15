@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -18,7 +20,6 @@ namespace Tests.UserTests
 
 			[Association(QueryExpressionMethod = nameof(TaggingImpl))]
 			public List<TaggingIssue> Tagging { get; set; } = null!;
-
 
 			public static Expression<Func<Issue, IDataContext, IQueryable<TaggingIssue>>> TaggingImpl()
 			{

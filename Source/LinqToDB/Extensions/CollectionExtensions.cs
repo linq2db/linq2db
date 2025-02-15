@@ -2,8 +2,6 @@
 
 namespace LinqToDB.Extensions
 {
-	using Common;
-
 	static class CollectionExtensions
 	{
 		public static T[] Flatten<T>(this T[][] items)

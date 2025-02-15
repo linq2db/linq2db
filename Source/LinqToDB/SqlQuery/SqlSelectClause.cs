@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+
+#if BUGCHECK
 using System.Linq;
+#endif
 
 namespace LinqToDB.SqlQuery
 {

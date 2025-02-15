@@ -88,6 +88,7 @@ namespace LinqToDB.Benchmarks.Queries
 			{
 				Thread.Sleep(1);
 			}
+
 			_startJob.Reset();
 			_endJob.Set();
 		}

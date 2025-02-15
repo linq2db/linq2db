@@ -4,13 +4,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Mapping
 {
-	using Expressions;
-	using Extensions;
-	using SqlQuery;
-	using Common;
-
 	/// <summary>
 	/// Column or association fluent mapping builder.
 	/// </summary>

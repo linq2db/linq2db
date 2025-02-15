@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests

@@ -2,24 +2,24 @@
 
 using JetBrains.Annotations;
 
+using LinqToDB.Data;
+using LinqToDB.DataProvider.Access;
+using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.DataProvider.DB2;
+using LinqToDB.DataProvider.Firebird;
+using LinqToDB.DataProvider.Informix;
+using LinqToDB.DataProvider.MySql;
+using LinqToDB.DataProvider.Oracle;
+using LinqToDB.DataProvider.PostgreSQL;
+using LinqToDB.DataProvider.SapHana;
+using LinqToDB.DataProvider.SqlCe;
+using LinqToDB.DataProvider.SQLite;
+using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.DataProvider.Sybase;
+
 // ReSharper disable once CheckNamespace
 namespace LinqToDB
 {
-	using Data;
-	using DataProvider.Access;
-	using DataProvider.ClickHouse;
-	using DataProvider.DB2;
-	using DataProvider.Firebird;
-	using DataProvider.Informix;
-	using DataProvider.MySql;
-	using DataProvider.Oracle;
-	using DataProvider.PostgreSQL;
-	using DataProvider.SapHana;
-	using DataProvider.SqlCe;
-	using DataProvider.SQLite;
-	using DataProvider.SqlServer;
-	using DataProvider.Sybase;
-
 	/*
 	 * To define database configuration overloads stick to those rules:
 	 *

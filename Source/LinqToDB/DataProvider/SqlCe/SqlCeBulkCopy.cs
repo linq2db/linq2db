@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Data;
-
 	sealed class SqlCeBulkCopy : BasicBulkCopy
 	{
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(

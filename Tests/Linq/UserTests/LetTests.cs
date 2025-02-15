@@ -1,15 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using LinqToDB;
-	using LinqToDB.Data;
-
 	[TestFixture]
 	public class LetTests : TestBase
 	{

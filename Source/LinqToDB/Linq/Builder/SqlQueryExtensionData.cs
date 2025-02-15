@@ -1,12 +1,11 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
-
 	[DebuggerDisplay("{ToDebugString()}")]
 	public sealed class SqlQueryExtensionData
 	{

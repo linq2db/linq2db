@@ -1,7 +1,7 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
-{
-	using SqlQuery;
+﻿using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataProvider.SqlServer
+{
 	partial class SqlServer2012SqlBuilder
 	{
 		// TODO: both 2008 and 2012 builders inherit from same base class which leads to duplicate builder logic

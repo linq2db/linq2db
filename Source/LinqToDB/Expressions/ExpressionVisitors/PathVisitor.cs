@@ -5,10 +5,10 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace LinqToDB.Expressions
-{
-	using Linq;
+using LinqToDB.Linq;
 
+namespace LinqToDB.Expressions.ExpressionVisitors
+{
 	// PathVisitor cannot be shared/reused due to _visited state field
 	internal sealed class PathVisitor<TContext>
 	{

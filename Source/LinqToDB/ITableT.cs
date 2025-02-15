@@ -1,9 +1,9 @@
 ﻿using JetBrains.Annotations;
 
+using LinqToDB.Linq;
+
 namespace LinqToDB
 {
-	using Linq;
-
 	/// <summary>
 	/// Table-like queryable source, e.g. table, view or table-valued function.
 	/// </summary>

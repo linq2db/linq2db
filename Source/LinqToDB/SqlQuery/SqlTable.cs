@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-	using Data;
-	using Mapping;
-
 	public class SqlTable : SqlExpressionBase, ISqlTableSource
 	{
 		#region Init

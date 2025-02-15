@@ -6,16 +6,19 @@ using System.Data;
 #endif
 
 using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class StringFunctionTests : TestBase
 	{
@@ -324,7 +327,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void ContainsConstant2([DataSources] string context)
 		{
@@ -392,7 +394,6 @@ namespace Tests.Linq
 			db.Person.Count(p => p.ID == 1 && s.Contains(Sql.ToSql(toTest))).Should().Be(1);
 			db.Person.Count(p => p.ID == 1 && !s.Contains(Sql.ToSql(toTest))).Should().Be(0);
 		}
-
 
 		[Test]
 		public void ContainsParameterAll([DataSources] string context,

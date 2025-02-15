@@ -19,20 +19,21 @@ using System.Text;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Async;
+using LinqToDB.Common.Internal.Cache;
+using LinqToDB.Common.Internal;
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Interceptors;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.Tools;
+using LinqToDB.Compatibility.System;
+
 namespace LinqToDB.Data
 {
-	using Async;
-	using Common.Internal.Cache;
-	using Common.Internal;
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Interceptors;
-	using Linq;
-	using Mapping;
-	using Reflection;
-	using Tools;
-
 	/// <summary>
 	/// Provides database connection command abstraction.
 	/// </summary>
@@ -1883,7 +1884,7 @@ namespace LinqToDB.Data
 				expr = expr.Replace(dataReaderExpr, dataReaderVar);
 				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
 
-				if (Configuration.OptimizeForSequentialAccess)
+				if (Common.Configuration.OptimizeForSequentialAccess)
 					expr = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expr, dataReader.FieldCount, reduce: false);
 			}
 

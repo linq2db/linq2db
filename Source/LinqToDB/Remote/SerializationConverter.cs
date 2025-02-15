@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Common.Internal.Cache;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Remote
 {
-	using Common;
-	using Common.Internal;
-	using Common.Internal.Cache;
-	using Expressions;
-	using Extensions;
-	using Mapping;
-
 	/// <summary>
 	/// Implements conversions support between raw values and string to support de-/serialization of remote data context
 	/// query AST and result values.
@@ -39,7 +39,7 @@ namespace LinqToDB.Remote
 				static (o, ms) =>
 				{
 					var from            = o.Key.from;
-					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 
 					Type? enumType = null;
 
@@ -90,7 +90,7 @@ namespace LinqToDB.Remote
 				static (o, ms) =>
 				{
 					var to = o.Key.to;
-					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 
 					Type? enumType = null;
 

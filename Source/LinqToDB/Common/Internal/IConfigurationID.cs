@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Common.Internal
+﻿namespace LinqToDB.Common.Internal
 {
 	/// <summary>
 	/// For internal use.
