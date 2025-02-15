@@ -68,6 +68,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				current = proxy.Owner;
 			}
+
 			return current;
 		}
 
