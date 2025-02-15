@@ -518,7 +518,6 @@ namespace Tests.Data
 			});
 		}
 
-
 		#endregion
 
 		// informix connection limits interfere with test
