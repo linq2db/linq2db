@@ -551,7 +551,6 @@ namespace LinqToDB.Metadata
 			// flientBuilder.Build();
 			context.StaticInitializer.Append(context.AST.Call(_builderVar.Reference, WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_Build));
 
-
 			// partial static init method, called by static constructor, which could be used by user to add
 			// additional initialization logic
 
