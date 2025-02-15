@@ -26,6 +26,7 @@ namespace LinqToDB.Mapping
 			}
 			catch (InvalidOperationException)
 			{ /* return false below */ }
+
 			return false;
 		});
 

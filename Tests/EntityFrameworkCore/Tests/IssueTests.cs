@@ -12,7 +12,6 @@ using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
 using LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel;
 using LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 
 using Microsoft.EntityFrameworkCore;
 

@@ -4,16 +4,15 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Linq;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.Mapping;
-	using Model;
-
 	[TestFixture]
 	public class SubQueryTests : TestBase
 	{
@@ -885,7 +884,6 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 
 		#region Issue 4458
 		[Table]

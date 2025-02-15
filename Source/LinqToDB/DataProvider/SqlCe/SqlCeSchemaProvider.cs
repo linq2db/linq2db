@@ -5,6 +5,10 @@ using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 /*
 
 	https://blog.sqlauthority.com/2011/10/02/sql-server-ce-list-of-information_schema-system-tables/
@@ -33,10 +37,6 @@ FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
 */
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	sealed class SqlCeSchemaProvider : SchemaProviderBase
 	{
 		private static readonly IReadOnlyList<string> _tableTypes = new[] { "TABLE", "VIEW" };

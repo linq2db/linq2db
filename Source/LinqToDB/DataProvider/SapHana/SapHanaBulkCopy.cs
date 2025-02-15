@@ -4,10 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Data;
-
 	sealed class SapHanaBulkCopy : BasicBulkCopy
 	{
 		private readonly SapHanaDataProvider _provider;

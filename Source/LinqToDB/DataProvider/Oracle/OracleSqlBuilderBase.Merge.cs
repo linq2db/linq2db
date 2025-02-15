@@ -1,7 +1,7 @@
-﻿namespace LinqToDB.DataProvider.Oracle
-{
-	using SqlQuery;
+﻿using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataProvider.Oracle
+{
 	abstract partial class OracleSqlBuilderBase
 	{
 		// Oracle doesn't support TABLE_ALIAS(COLUMN_ALIAS, ...) syntax

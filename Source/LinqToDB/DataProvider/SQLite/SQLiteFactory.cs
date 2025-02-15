@@ -2,10 +2,10 @@
 
 using JetBrains.Annotations;
 
+using LinqToDB.Configuration;
+
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Configuration;
-
 	[UsedImplicitly]
 	sealed class SQLiteFactory : DataProviderFactoryBase
 	{

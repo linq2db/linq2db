@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+
 using LinqToDB.CodeModel;
 using LinqToDB.Metadata;
 

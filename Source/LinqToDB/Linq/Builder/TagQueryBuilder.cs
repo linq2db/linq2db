@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-
 	[BuildsMethodCall(nameof(LinqExtensions.TagQuery))]
 	sealed class TagQueryBuilder : MethodCallBuilder
 	{

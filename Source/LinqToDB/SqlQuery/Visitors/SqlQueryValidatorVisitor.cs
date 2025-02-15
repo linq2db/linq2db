@@ -3,10 +3,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.SqlQuery.Visitors
 {
-	using SqlProvider;
-
 	public class SqlQueryValidatorVisitor : QueryElementVisitor
 	{
 		SelectQuery?     _parentQuery;
@@ -335,6 +335,7 @@ namespace LinqToDB.SqlQuery.Visitors
 					{
 						SetInvalid(ErrorHelper.Error_OUTER_Joins);
 					}
+
 					return element;
 				}
 			}

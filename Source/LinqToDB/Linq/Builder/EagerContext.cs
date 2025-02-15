@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Mapping;
-	using LinqToDB.SqlQuery;
-
 	class EagerContext : BuildContextBase
 	{
 		public override MappingSchema MappingSchema => Context.MappingSchema;

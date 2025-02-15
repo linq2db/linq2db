@@ -25,7 +25,6 @@ namespace LinqToDB.Expressions
 
 		public override Expression     Reduce() => InnerExpression;
 
-
 		public static Expression PreferClientSide(Expression innerExpression)
 		{
 			if (innerExpression is SqlPlaceholderExpression)

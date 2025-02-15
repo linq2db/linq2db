@@ -1,15 +1,14 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
-
 	public interface IClickHouseSpecificTable<out TSource> : ITable<TSource>
 		where TSource : notnull
 	{

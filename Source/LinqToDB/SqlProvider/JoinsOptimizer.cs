@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.SqlProvider
 {
-	using SqlQuery;
-
 	sealed partial class JoinsOptimizer
 	{
 		Dictionary<int,ISqlExpression[][]?>?                                                    _tableKeysCache;

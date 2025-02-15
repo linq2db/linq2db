@@ -5,13 +5,13 @@ using System.Net.NetworkInformation;
 using System.Numerics;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SqlQuery;
-
 	sealed class PostgreSQLMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT

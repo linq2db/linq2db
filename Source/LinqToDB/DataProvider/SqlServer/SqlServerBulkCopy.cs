@@ -4,11 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Data;
-	using SqlProvider;
-
 	sealed class SqlServerBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
@@ -99,6 +99,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					};
 				}
 			}
+
 			return null;
 		}
 

@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests

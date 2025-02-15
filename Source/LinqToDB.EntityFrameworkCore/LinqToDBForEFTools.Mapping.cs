@@ -3,20 +3,19 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Expressions;
-	using Extensions;
-
 	public partial class LinqToDBForEFTools
 	{
 		static void InitializeMapping()
 		{
 			Linq.Expressions.MapMember((DbFunctions f, string m, string p) => f.Like(m, p), (f, m, p) => Sql.Like(m, p));
 		}
-
 
 		#region Sql Server
 
@@ -80,7 +79,6 @@ namespace LinqToDB.EntityFrameworkCore
 				var endExpr = endParameter.Type != typeof(DateTime?)
 					? (Expression) Expression.Convert(endParameter, typeof(DateTime?))
 					: endParameter;
-
 
 				var body   = Expression.Call(dateDiffMethod, Expression.Constant(datePart.Value), startExpr, endExpr);
 				var lambda = Expression.Lambda(body, dbFunctionsParameter, startParameter, endParameter);

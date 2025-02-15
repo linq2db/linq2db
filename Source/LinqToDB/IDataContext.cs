@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Interceptors;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB
 {
-	using Common.Internal;
-	using Interceptors;
-	using Linq;
-	using Mapping;
-	using SqlProvider;
-
 	/// <summary>
 	/// Database connection abstraction interface.
 	/// </summary>

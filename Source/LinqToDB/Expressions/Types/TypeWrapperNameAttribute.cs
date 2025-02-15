@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Expressions.Types
 {
 	// could allow more targets later if needed
 	[AttributeUsage(AttributeTargets.Method)]
