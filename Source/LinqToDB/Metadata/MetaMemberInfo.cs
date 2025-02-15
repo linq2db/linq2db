@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Metadata
+﻿namespace LinqToDB.Metadata
 {
 	sealed class MetaMemberInfo
 	{

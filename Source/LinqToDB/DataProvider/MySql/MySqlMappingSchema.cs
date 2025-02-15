@@ -3,13 +3,13 @@ using System.Collections;
 using System.Data.Linq;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SqlQuery;
-
 	sealed class MySqlMappingSchema : LockedMappingSchema
 	{
 		MySqlMappingSchema() : base(ProviderName.MySql)

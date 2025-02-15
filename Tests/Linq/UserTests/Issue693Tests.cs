@@ -7,10 +7,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.UserTests
 {
-	using Model;
-
 	[TestFixture]
 	public class Issue693Tests : TestBase
 	{

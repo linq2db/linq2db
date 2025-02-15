@@ -111,7 +111,6 @@ namespace LinqToDB.Tools.ModelGeneration
 			}
 		}
 
-
 		protected void MakeTypeMembersNamesUnique(IClass type, string defaultName = "Member", params string[] exceptMethods)
 		{
 			var reservedNames = new [] { type.Name };

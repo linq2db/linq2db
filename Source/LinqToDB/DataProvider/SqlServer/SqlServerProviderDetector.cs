@@ -6,11 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Data;
-
 	sealed class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion>
 	{
 		public SqlServerProviderDetector() : base(SqlServerVersion.AutoDetect, SqlServerVersion.v2012)
@@ -174,6 +174,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return level switch
 			{
+				// coming soon
+				//>= 170 => SqlServerVersion.v2025,
 				>= 160 => SqlServerVersion.v2022,
 				>= 150 => SqlServerVersion.v2019,
 				>= 140 => SqlServerVersion.v2017,

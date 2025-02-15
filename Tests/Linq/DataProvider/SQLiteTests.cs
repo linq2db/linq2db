@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Data.Linq;
-using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,12 +15,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using System.Globalization;
-
-	using Model;
-
 	[TestFixture]
 	public class SQLiteTests : TestBase
 	{

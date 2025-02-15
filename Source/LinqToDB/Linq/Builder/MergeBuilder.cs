@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
+using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
-	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
-
 	[BuildsMethodCall(
 		nameof(LinqExtensions.Merge), 
 		nameof(LinqExtensions.MergeWithOutput), 
@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 				mergeContext.OutputContext = outputContext;
 
 				var selectQuery        = outputContext.SelectQuery;
-				var actionFieldContext = new SingleExpressionContext(builder, actionField, selectQuery);
+				var actionFieldContext = new SingleExpressionContext(builder.GetTranslationModifier(), builder, actionField, selectQuery);
 
 				IBuildContext? sourceTableContext = null;
 

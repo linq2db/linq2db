@@ -1,10 +1,10 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlServer.Translation
 {
-	using Linq.Translation;
-	using SqlQuery;
-
 	public class SqlServer2022MemberTranslator : SqlServer2012MemberTranslator
 	{
 		protected class SqlServer2022MathMemberTranslator : SqlServerMathMemberTranslator

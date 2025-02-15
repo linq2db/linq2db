@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -16,7 +18,6 @@ namespace Tests.UserTests
 			public TestDb(string configuration) : base(configuration)
 			{
 			}
-
 
 			public ITable<Left>      Lefts      => this.GetTable<Left>();
 			public ITable<LeftRight> LeftRights => this.GetTable<LeftRight>();

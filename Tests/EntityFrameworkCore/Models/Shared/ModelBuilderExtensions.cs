@@ -127,6 +127,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.Shared
 					index.SetName(index.GetName().ToSnakeCase());
 #endif
 			}
+
 			return modelBuilder;
 		}
 
@@ -154,6 +155,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.Shared
 						.IsUnique();
 				}
 			}
+
 			return modelBuilder;
 		}
 
@@ -176,6 +178,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.Shared
 						.IsUnique();
 				}
 			}
+
 			return modelBuilder;
 		}
 	}

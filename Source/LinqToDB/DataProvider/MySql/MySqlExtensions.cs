@@ -1,10 +1,9 @@
 ﻿using System;
 
+using LinqToDB.Expressions;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Expressions;
-	using Linq;
-
 	public interface IMySqlExtensions
 	{
 	}

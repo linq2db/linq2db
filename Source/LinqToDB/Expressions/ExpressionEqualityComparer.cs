@@ -10,15 +10,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Extensions;
+using LinqToDB.Linq;
+using LinqToDB.Reflection;
+
 // ReSharper disable SwitchStatementMissingSomeCases
 // ReSharper disable ForCanBeConvertedToForeach
 // ReSharper disable LoopCanBeConvertedToQuery
 namespace LinqToDB.Expressions
 {
-	using Extensions;
-	using Linq;
-	using Reflection;
-
 	/// <summary>
 	///     This API supports the linq2db infrastructure and is not intended to be used
 	///     directly from your code. This API may change or be removed in future releases.

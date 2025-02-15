@@ -1,9 +1,9 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-
 	[BuildsMethodCall(nameof(DataExtensions.SelectQuery))]
 	sealed class SelectQueryBuilder : MethodCallBuilder
 	{
@@ -13,6 +13,7 @@ namespace LinqToDB.Linq.Builder
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = new SelectContext(
+				builder.GetTranslationModifier(),
 				buildInfo.Parent,
 				builder,
 				null,

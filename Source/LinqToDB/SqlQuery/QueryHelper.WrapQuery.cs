@@ -1,12 +1,10 @@
-﻿using System.Collections.Generic;
-using System;
+﻿using System;
+using System.Collections.Generic;
 
-using LinqToDB.Common;
+using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
-	using Visitors;
-
 	public partial class QueryHelper
 	{
 		class WrapQueryVisitor<TContext> : SqlQueryVisitor

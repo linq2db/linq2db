@@ -8,17 +8,17 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer.Translation;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Data;
-	using Extensions;
-	using Linq.Translation;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
-	using Translation;
-
 	sealed class SqlServerDataProvider2005SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2005SystemDataSqlClient   () : base(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient)    {} }
 	sealed class SqlServerDataProvider2008SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2008SystemDataSqlClient   () : base(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient)    {} }
 	sealed class SqlServerDataProvider2012SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2012SystemDataSqlClient   () : base(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient)    {} }
@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
 			: base(
 				name,
-				MappingSchemaInstance.Get(version),
+				MappingSchemaInstance.Get(version, provider),
 				SqlServerProviderAdapter.GetInstance(provider == SqlServerProvider.AutoDetect ? provider = SqlServerProviderDetector.DetectProvider() : provider))
 		{
 			Version  = version;
@@ -103,6 +103,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetProviderField<SqlString  , SqlString  >(SqlTypes.GetSqlStringReaderMethod  , dataReaderType: Adapter.DataReaderType);
 			SetProviderField<SqlXml     , SqlXml     >(Adapter.GetSqlXmlReaderMethod      , dataReaderType: Adapter.DataReaderType);
 
+			if (Adapter.SqlJsonType != null)
+			{
+				SetProviderField(Adapter.SqlJsonType, typeof(string), Adapter.GetSqlJsonReaderMethod!, dataReaderType: Adapter.DataReaderType, typeName: "json");
+				// safe assumption as if SqlJson type found, JsonDocument will also exist
+				var jsonDocumentType = Type.GetType("System.Text.Json.JsonDocument, System.Text.Json");
+				if (jsonDocumentType != null)
+				{
+					SetGetFieldValueReader(jsonDocumentType, typeof(string), dataReaderType: Adapter.DataReaderType, typeName: "json");
+				}
+			}
+
 			SetProviderField<DateTimeOffset>(Adapter.GetDateTimeOffsetReaderMethod        , dataReaderType: Adapter.DataReaderType);
 			SetProviderField<TimeSpan>      (Adapter.GetTimeSpanReaderMethod              , dataReaderType: Adapter.DataReaderType);
 
@@ -126,18 +137,29 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static class MappingSchemaInstance
 		{
-			public static MappingSchema Get(SqlServerVersion version)
+			public static MappingSchema Get(SqlServerVersion version, SqlServerProvider provider)
 			{
-				return version switch
+				return (version, provider) switch
 				{
-					SqlServerVersion.v2005 => new SqlServerMappingSchema.SqlServer2005MappingSchema(),
-					SqlServerVersion.v2012 => new SqlServerMappingSchema.SqlServer2012MappingSchema(),
-					SqlServerVersion.v2014 => new SqlServerMappingSchema.SqlServer2014MappingSchema(),
-					SqlServerVersion.v2016 => new SqlServerMappingSchema.SqlServer2016MappingSchema(),
-					SqlServerVersion.v2017 => new SqlServerMappingSchema.SqlServer2017MappingSchema(),
-					SqlServerVersion.v2019 => new SqlServerMappingSchema.SqlServer2019MappingSchema(),
-					SqlServerVersion.v2022 => new SqlServerMappingSchema.SqlServer2022MappingSchema(),
-					_                      => new SqlServerMappingSchema.SqlServer2008MappingSchema(),
+					(SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2005MappingSchemaSystem(),
+					(SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2008MappingSchemaSystem(),
+					(SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2012MappingSchemaSystem(),
+					(SqlServerVersion.v2014, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2014MappingSchemaSystem(),
+					(SqlServerVersion.v2016, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2016MappingSchemaSystem(),
+					(SqlServerVersion.v2017, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2017MappingSchemaSystem(),
+					(SqlServerVersion.v2019, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2019MappingSchemaSystem(),
+					(SqlServerVersion.v2022, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2022MappingSchemaSystem(),
+
+					(SqlServerVersion.v2005, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2005MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2008MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2012MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2014, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2014MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2016, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2016MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2017, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2017MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2019MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2022MappingSchemaMicrosoft(),
+
+					_ => throw new InvalidOperationException($"Unexpected dialect/provider: {version}, {provider}")
 				};
 			}
 		}
@@ -281,6 +303,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						Adapter.SetUdtTypeName(param, typeName);
 					}
+
 					break;
 
 				case DataType.NText when value is DateTime dt:
@@ -402,6 +425,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.SmallDateTime : type = SqlDbType.SmallDateTime; break;
 				case DataType.Timestamp     : type = SqlDbType.Timestamp;     break;
 				case DataType.Structured    : type = SqlDbType.Structured;    break;
+				case DataType.Json          : type = Adapter.JsonDbType;      break;
 			}
 
 			if (type != null)

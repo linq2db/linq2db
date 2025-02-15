@@ -4,6 +4,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Interceptors;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -13,12 +18,6 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Data;
-	using Expressions;
-	using Interceptors;
-
-	using LinqToDB.Common;
-
 	/// <summary>
 	/// Linq To DB EF.Core data connection.
 	/// </summary>
@@ -51,7 +50,6 @@ namespace LinqToDB.EntityFrameworkCore
 				return _dataConnection.ProcessExpression(expression, args);
 			}
 		}
-
 
 		/// <summary>
 		/// Change tracker enable flag.

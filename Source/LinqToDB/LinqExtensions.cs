@@ -11,17 +11,18 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Async;
+using LinqToDB.DataProvider;
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Reflection;
+using LinqToDB.SqlProvider;
+
+using static LinqToDB.MultiInsertExtensions;
+
 namespace LinqToDB
 {
-	using Async;
-	using DataProvider;
-	using Expressions;
-	using Linq;
-	using Linq.Builder;
-	using Reflection;
-	using SqlProvider;
-	using static MultiInsertExtensions;
-
 	/// <summary>
 	/// Contains extension methods for LINQ queries.
 	/// </summary>
@@ -1635,7 +1636,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				Methods.LinqToDB.Insert.T.AsValueInsertable.MakeGenericMethod(typeof(T)),
+				Methods.LinqToDB.Insert.FromTable.AsValueInsertable.MakeGenericMethod(typeof(T)),
 				currentSource.Expression);
 
 			var query = currentSource.Provider.CreateQuery<T>(expr);
@@ -1781,7 +1782,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				Methods.LinqToDB.Insert.VI.Insert.MakeGenericMethod(typeof(T)),
+				Methods.LinqToDB.Insert.FromValueInsertable.Insert.MakeGenericMethod(typeof(T)),
 				currentSource.Expression);
 
 			return currentSource.Execute<int>(expr);
@@ -1803,7 +1804,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				Methods.LinqToDB.Insert.VI.Insert.MakeGenericMethod(typeof(T)),
+				Methods.LinqToDB.Insert.FromValueInsertable.Insert.MakeGenericMethod(typeof(T)),
 				currentSource.Expression);
 
 			return currentSource.ExecuteAsync<int>(expr, token);
@@ -2380,7 +2381,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				Methods.LinqToDB.Insert.SI.Insert.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+				Methods.LinqToDB.Insert.FromSelectInsertable.Insert.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 				currentSource.Expression);
 
 			return currentSource.Execute<int>(expr);
@@ -2404,7 +2405,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				Methods.LinqToDB.Insert.SI.Insert.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+				Methods.LinqToDB.Insert.FromSelectInsertable.Insert.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 				currentSource.Expression);
 
 			return currentSource.ExecuteAsync<int>(expr, token);
@@ -3882,6 +3883,34 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(IgnoreFilters, source, entityTypes), currentSource.Expression, Expression.Constant(entityTypes));
 
 			return currentSource.Provider.CreateQuery<TSource>(expr);
+		}
+
+		/// <summary>
+		/// Disables filter for specific expression. For internal translator logic
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <returns>Query with disabled filters.</returns>
+		[LinqTunnel]
+		[Pure]
+		internal static IQueryable<TSource> DisableFilterInternal<TSource>(this IQueryable<TSource> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DisableFilterInternal, source), source.Expression);
+
+			return source.Provider.CreateQuery<TSource>(expr);
+		}
+
+		internal static IQueryable<TSource> ApplyModifierInternal<TSource>(this IQueryable<TSource> source, TranslationModifier modifier)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(ApplyModifierInternal, source, modifier), source.Expression, Expression.Constant(modifier));
+			return source.Provider.CreateQuery<TSource>(expr);
 		}
 
 		#endregion

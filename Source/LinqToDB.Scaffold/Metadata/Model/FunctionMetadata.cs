@@ -1,5 +1,4 @@
-﻿using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
+﻿using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Metadata
 {
