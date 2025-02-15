@@ -7,16 +7,16 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.SapHana.Translation;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Common;
-	using Data;
-	using Extensions;
-	using Linq.Translation;
-	using Mapping;
-	using SqlProvider;
-	using Translation;
-
 	sealed class SapHanaNativeDataProvider : SapHanaDataProvider { public SapHanaNativeDataProvider() : base(ProviderName.SapHanaNative, SapHanaProvider.Unmanaged) { } }
 	sealed class SapHanaOdbcDataProvider   : SapHanaDataProvider { public SapHanaOdbcDataProvider  () : base(ProviderName.SapHanaOdbc  , SapHanaProvider.ODBC     ) { } }
 

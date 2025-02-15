@@ -1,9 +1,9 @@
 ﻿using System;
 
+using LinqToDB.Expressions;
+
 namespace LinqToDB
 {
-	using Expressions;
-
 	public partial class Sql
 	{
 		public static class Types

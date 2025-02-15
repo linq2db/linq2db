@@ -8,9 +8,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-#if !EF6 && !EF31
-using LinqToDB.Common.Internal;
-#endif
 using Microsoft.EntityFrameworkCore;
 #if !EF31
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -25,20 +22,19 @@ using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.EntityFrameworkCore.Storage;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Metadata;
+using LinqToDB.SqlQuery;
+
+using EfExpressionPrinter = Microsoft.EntityFrameworkCore.Query.ExpressionPrinter;
+using EfSqlExpression = Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression;
+
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Internal;
-	using Mapping;
-	using Metadata;
-	using Reflection;
-	using SqlQuery;
-
-	using EfSqlExpression = SqlExpression;
-	using EfExpressionPrinter = ExpressionPrinter;
-
 	/// <summary>
 	/// LINQ To DB metadata reader for EF.Core model.
 	/// </summary>
@@ -77,7 +73,7 @@ namespace LinqToDB.EntityFrameworkCore
 				_dependencies         = accessor.GetService<RelationalSqlTranslatingExpressionVisitorDependencies>();
 				_mappingSource        = accessor.GetService<IRelationalTypeMappingSource>();
 #if EF31
-				_annotationProvider = accessor.GetService<IMigrationsAnnotationProvider>();
+				_annotationProvider   = accessor.GetService<IMigrationsAnnotationProvider>();
 #else
 				_annotationProvider   = accessor.GetService<IRelationalAnnotationProvider>();
 				_logger               = accessor.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();
@@ -547,7 +543,6 @@ namespace LinqToDB.EntityFrameworkCore
 
 			private static readonly MethodInfo _constantExpressionFactoryMethod = typeof(Expression).GetMethod(nameof(Constant), [typeof(object), typeof(Type)])
 				?? throw new InvalidOperationException();
-
 
 			public override Expression Quote()
 			{

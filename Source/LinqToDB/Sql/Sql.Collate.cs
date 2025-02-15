@@ -2,11 +2,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB
 {
-	using Expressions;
-	using SqlQuery;
-
 	public static partial class Sql
 	{
 		/// <summary>

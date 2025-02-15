@@ -2,10 +2,10 @@
 
 using JetBrains.Annotations;
 
+using LinqToDB.Configuration;
+
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Configuration;
-
 	[UsedImplicitly]
 	sealed class PostgreSQLFactory : DataProviderFactoryBase
 	{

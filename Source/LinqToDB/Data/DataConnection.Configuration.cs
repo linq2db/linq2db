@@ -5,14 +5,14 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
+using LinqToDB.Async;
+using LinqToDB.Common.Internal;
+using LinqToDB.Configuration;
+using LinqToDB.Data.RetryPolicy;
+using LinqToDB.DataProvider;
+
 namespace LinqToDB.Data
 {
-	using Async;
-	using Common.Internal;
-	using Configuration;
-	using DataProvider;
-	using RetryPolicy;
-
 	public partial class DataConnection
 	{
 		static class Configuration

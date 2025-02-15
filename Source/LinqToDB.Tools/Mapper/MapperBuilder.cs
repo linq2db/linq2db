@@ -6,12 +6,14 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Extensions;
+
+using LinqToDB.Mapping;
+
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Tools.Mapper
 {
-	using Extensions;
-	using Mapping;
-	using Reflection;
-
 	/// <summary>
 	/// Builds a mapper that maps an object of <i>TFrom</i> type to an object of <i>TTo</i> type.
 	/// </summary>

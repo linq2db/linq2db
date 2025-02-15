@@ -5,15 +5,14 @@ using System.Linq;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class AnalyticTests : TestBase
 	{
@@ -65,7 +64,6 @@ namespace Tests.Linq
 						LongCount11 = Sql.Ext.LongCount(p.ParentID, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Rows.ValuePreceding(1).ToValue(),
 						LongCount12 = Sql.Ext.LongCount(p.ParentID, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 						LongCount14 = Sql.Ext.LongCount().Over().ToValue(),
-
 
 						Combination = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ToValue() +
 									  Sql.Sqrt(Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue()) +
@@ -1233,7 +1231,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void TestVarianceOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
@@ -1851,7 +1848,6 @@ namespace Tests.Linq
 								 .ToArray();
 
 				Assert.That(leads, Is.EqualTo(new[] { "Two", "None" }).AsCollection);
-
 
 				var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 1, "None")
 												 	.Over().OrderBy(p.ProcessID).ToValue())

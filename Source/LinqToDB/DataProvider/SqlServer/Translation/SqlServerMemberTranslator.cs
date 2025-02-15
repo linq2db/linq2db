@@ -2,12 +2,12 @@
 using System.Globalization;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlServer.Translation
 {
-	using Common;
-	using Linq.Translation;
-	using SqlQuery;
-
 	public class SqlServerMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault

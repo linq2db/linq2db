@@ -102,7 +102,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			t.BulkCopy(items);
 
-
 			t.Should().HaveCount(items.Count);
 		}
 

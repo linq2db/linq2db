@@ -2,22 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
-using LinqToDB.Reflection;
 using LinqToDB.Mapping;
+using LinqToDB.Reflection;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
-	using Model;
-
 	[TestFixture]
 	public class SelectTests : TestBase
 	{
@@ -1003,7 +1005,6 @@ namespace Tests.Linq
 			internal string? InternalStr { get; set; }
 		}
 
-
 		[Test]
 		public void InternalFieldProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -1201,7 +1202,6 @@ namespace Tests.Linq
 				Query<IntermediateChildResult>.CacheMissCount.Should().Be(cacheMissCount);
 			}
 		}
-
 
 		[Test]
 		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -1707,7 +1707,6 @@ namespace Tests.Linq
 				 	.Distinct()
 				 	.OrderBy(_ => _.Parent.ParentID);
 
-
 				var expectedQuery =
 					from p in Parent
 					from c1 in Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
@@ -1852,7 +1851,6 @@ namespace Tests.Linq
 				Assert.That(res, Is.True);
 			}
 		}
-
 
 		[Table("test_mapping_column_2_prop")]
 		public partial class TestMappingColumn1PropInfo

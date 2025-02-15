@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Data;
+using LinqToDB.Tools;
+
 using AsyncDisposableWrapper = LinqToDB.Tools.ActivityService.AsyncDisposableWrapper;
 
 namespace LinqToDB.Async
 {
-	using Data;
-	using Tools;
-
 	/// <summary>
 	/// Basic <see cref="IAsyncDbTransaction"/> implementation with fallback to synchronous operations if corresponding functionality
 	/// missing from <see cref="DbTransaction"/>.

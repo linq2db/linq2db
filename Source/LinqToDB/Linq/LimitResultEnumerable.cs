@@ -7,9 +7,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using Async;
-	using Common.Internal;
-
 	class LimitResultEnumerable<T> : IResultEnumerable<T>
 	{
 		readonly IResultEnumerable<T> _source;

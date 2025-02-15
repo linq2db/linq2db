@@ -1,10 +1,10 @@
-﻿namespace LinqToDB.DataProvider
-{
-	using Common.Internal;
-	using SqlQuery;
-	using SqlQuery.Visitors;
-	using SqlProvider;
+﻿using LinqToDB.Common.Internal;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+using LinqToDB.SqlQuery.Visitors;
 
+namespace LinqToDB.DataProvider
+{
 	public static class SqlProviderHelper
 	{
 		internal static readonly ObjectPool<SqlQueryValidatorVisitor> ValidationVisitorPool = new(() => new SqlQueryValidatorVisitor(), v => v.Cleanup(), 100);

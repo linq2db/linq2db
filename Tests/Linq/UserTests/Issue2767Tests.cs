@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests
@@ -169,7 +171,6 @@ namespace Tests
 							.ToList(),
 								StartPositionDescription = exerciseStartDescription != null ? exerciseStartDescription.Content : exercise.Startexpl,
 							};
-
 
 				var result = query.ToList();
 

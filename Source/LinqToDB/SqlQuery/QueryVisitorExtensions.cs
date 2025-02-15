@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.SqlQuery.Visitors;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common.Internal;
-	using Visitors;
-
 	public static class QueryVisitorExtensions
 	{
 		internal static readonly ObjectPool<SqlQueryFindVisitor>          FindVisitorPool      = new(() => new SqlQueryFindVisitor(),          v => v.Cleanup(), 100);

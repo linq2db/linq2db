@@ -3,10 +3,10 @@ using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.DataProvider
 {
-	using Common;
-
 	sealed class AssemblyResolver
 	{
 		readonly string?   _path;

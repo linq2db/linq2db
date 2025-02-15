@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -18,10 +17,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class SqlCeTests : DataProviderTestBase
 	{
