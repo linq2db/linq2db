@@ -2,12 +2,12 @@
 
 using HttpClientDemo.Client.DataModel;
 using HttpClientDemo.Server.Components;
+using HttpClientDemo.Server.DataModel;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Extensions.Logging;
-using LinqToDB.Remote;
 using LinqToDB.Remote.HttpClient.Server;
 
 namespace HttpClientDemo.Server
@@ -22,30 +22,20 @@ namespace HttpClientDemo.Server
 				.AddInteractiveServerComponents()
 				.AddInteractiveWebAssemblyComponents();
 
-
-
 			// Add linq2db data context.
 			//
 			DataOptions? options = null;
-
 			builder.Services.AddLinqToDBContext<IDemoDataModel>(provider => new DemoDB(options ??= new DataOptions()
 				.UseSQLite("Data Source=:memory:;Mode=Memory;Cache=Shared")
 				.UseDefaultLogging(provider)),
 				ServiceLifetime.Transient);
 
-			// Add linq2db HttpClient controller.
-			//
 			builder.Services
-//				.AddScoped<LinqService<IDemoDataModel>>(provider =>
-//					new LinqService<IDemoDataModel>(provider.GetRequiredService<IDataContextFactory<IDemoDataModel>>()) { AllowUpdates = true })
 				.AddControllers()
-				// By default, linq2db controller endpoints are mapped to 'api/linq2db'.
-				// If you need to change it, you have to override LinqToDBController class and set it using RouteAttribute on the class.
-				//.AddApplicationPart(typeof(LinqToDB.Remote.Http.Server.LinqToDBController).Assembly)
+				// Add linq2db HttpClient controller.
+				//
 				.AddLinqToDBController<IDemoDataModel>()
 				;
-
-
 
 			var app = builder.Build();
 
@@ -66,8 +56,6 @@ namespace HttpClientDemo.Server
 				.AddInteractiveWebAssemblyRenderMode()
 				.AddAdditionalAssemblies(typeof(Client._Imports).Assembly)
 				;
-
-
 
 			// Map controllers including linq2db HttpClient controller.
 			//

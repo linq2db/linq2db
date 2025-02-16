@@ -4,8 +4,10 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
 
-namespace HttpClientDemo.Client.DataModel
+namespace HttpClientDemo.Server.DataModel
 {
+	using Client.DataModel;
+
 	public class DemoDB : DataConnection, IDemoDataModel
 	{
 		static readonly DataOptions _dataOptions = new DataOptions()
