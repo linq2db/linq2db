@@ -55,6 +55,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenTelemetryExample", "Metrics\OpenTelemetry\OpenTelemetryExample.csproj", "{067C3148-8524-4A43-A0CF-A5FE7BF68490}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HttpClient", "HttpClient", "{3F7C9533-B8E1-4F21-BDA1-949C87746DBA}"
+	ProjectSection(SolutionItems) = preProject
+		Remote\HttpClient\README.md = Remote\HttpClient\README.md
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Extensions", "..\Source\LinqToDB.Extensions\LinqToDB.Extensions.csproj", "{A635A1A9-AA6A-41E7-BA2F-E6B97320EB36}"
 EndProject
