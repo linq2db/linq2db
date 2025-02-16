@@ -21,7 +21,7 @@ namespace Tests.Remote.ServerContainer
 	{
 		private const int Port = 22654;
 
-		private readonly object _syncRoot = new ();
+		private readonly Lock _syncRoot = new ();
 
 		//useful for async tests
 		public bool KeepSamePortBetweenThreads { get; set; } = true;

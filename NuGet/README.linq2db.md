@@ -57,7 +57,7 @@ Code examples and demos can be found [here](https://github.com/linq2db/examples)
 
 ### Related Linq To DB and 3rd-party projects
 
-- [linq2db.EntityFrameworkCore](https://github.com/linq2db/linq2db.EntityFrameworkCore) (adds support for linq2db functionality in EF.Core projects)
+- [linq2db.EntityFrameworkCore](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB.EntityFrameworkCore) (adds support for linq2db functionality in EF.Core projects)
 - [LinqToDB.Identity](https://github.com/linq2db/LinqToDB.Identity) - ASP.NET Core Identity provider using Linq To DB
 - [LINQPad Driver](https://github.com/linq2db/linq2db.LINQPad)
 - [DB2 iSeries Provider](https://github.com/LinqToDB4iSeries/Linq2DB4iSeries)

@@ -9,27 +9,32 @@
 		<WarningsAsErrors>true</WarningsAsErrors>
 		<SignAssembly>False</SignAssembly>
 		<RollForward>Major</RollForward>
+		<RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+		<SelfContained>false</SelfContained>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="$(RID) != ''">
-		<AppHostRuntimeIdentifier>$(RID)</AppHostRuntimeIdentifier>
-		<OutputPath>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\apphosts\$(TargetFramework)\$(RID)\</OutputPath>
-	</PropertyGroup>
-
-	<Target Name="BuildSpecific" AfterTargets="Build" Condition=" '$(RID)' == '' ">
+	<!--build windows executables, inspired by https://github.com/dotnet/sdk/issues/43317-->
+	<Target Name="MultiArchPublish" AfterTargets="Build" Condition="$(RuntimeIdentifier) == ''">
 		<ItemGroup>
-			<TFM Include="$(TargetFrameworks)" Condition=" '$(TargetFramework)' == '' " Label="Build from VS" />
-			<TFM Include="$(TargetFramework)" Condition=" '$(TargetFramework)' != '' " Label="Build from MSBUILD or dotnet" />
+			<!--either property set depends on build type: VS, msbuild, dotnet-->
+			<TFM Include="$(TargetFramework)" />
+			<TFM Include="$(TargetFrameworks)" />
+
+			<!--generate TMF+RID pairs-->
+			<PublishTarget Include="$(RuntimeIdentifiers)">
+				<TargetFramework>%(TFM.Identity)</TargetFramework>
+			</PublishTarget>
 		</ItemGroup>
 
-		<!--we need to remove apphost.exe as Build target doesn't validate already existing file to be compatible with requested RID-->
-		<Delete Files="$(ArtifactsPath)\obj\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\apphost.exe" />
-		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x86;Configuration=$(Configuration)" Targets="Build" />
-		<Copy SourceFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\apphosts\%(TFM.Identity)\win-x86\$(AssemblyName).exe" DestinationFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\$(AssemblyName).win-x86.exe" />
-
-		<Delete Files="$(ArtifactsPath)\obj\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\apphost.exe" />
-		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x64;Configuration=$(Configuration)" Targets="Build" />
-		<Copy SourceFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\apphosts\%(TFM.Identity)\win-x64\$(AssemblyName).exe" DestinationFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\$(AssemblyName).win-x64.exe" />
+		<!--publish each RID+TFM-->
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Publish" BuildInParallel="true" Properties="_IsPublishing=true;RuntimeIdentifier=%(PublishTarget.Identity);TargetFramework=%(PublishTarget.TargetFramework);TargetFrameworks=%(PublishTarget.TargetFramework)" />
+	</Target>
+	
+	<Target Name="MultiArchCleanup" AfterTargets="CopyFilesToPublishDirectory" Condition="$(RuntimeIdentifier) != ''">
+		<!--copy built executables-->
+		<Copy SourceFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\$(AssemblyName).exe" DestinationFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).$(RuntimeIdentifier).exe" />
+		<!--cleanup bin from RID builds-->
+		<RemoveDir Directories="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)" />
 	</Target>
 
 	<ItemGroup>

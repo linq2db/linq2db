@@ -26,7 +26,7 @@
 	</metadata>
 
 	<files>
-		<file src="Nuget\README.FSharp.md"                                    target="README.md"           />
+		<file src="NuGet\README.FSharp.md"                                    target="README.md"           />
 
 		<file src="bin\LinqToDB.FSharp\{0}\net462\linq2db.FSharp.pdb"         target="lib\net462\"         />
 		<file src="bin\LinqToDB.FSharp\{0}\net462\linq2db.FSharp.xml"         target="lib\net462\"         />

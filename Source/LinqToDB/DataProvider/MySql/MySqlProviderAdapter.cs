@@ -17,8 +17,8 @@ namespace LinqToDB.DataProvider.MySql
 	{
 		private static readonly Type[] _ordinalParameters = [typeof(int)];
 
-		private static readonly object _mysqlDataSyncRoot      = new ();
-		private static readonly object _mysqlConnectorSyncRoot = new ();
+		private static readonly Lock _mysqlDataSyncRoot      = new ();
+		private static readonly Lock _mysqlConnectorSyncRoot = new ();
 
 		private static MySqlProviderAdapter? _mysqlDataInstance;
 		private static MySqlProviderAdapter? _mysqlConnectorInstance;

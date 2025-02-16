@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 
 using JetBrains.Annotations;
 
@@ -25,7 +26,7 @@ namespace LinqToDB
 			_query = query;
 		}
 
-		readonly object                   _sync = new ();
+		readonly Lock                     _sync = new ();
 		readonly LambdaExpression         _query;
 		volatile Func<object?[],object?[]?,object?>? _compiledQuery;
 

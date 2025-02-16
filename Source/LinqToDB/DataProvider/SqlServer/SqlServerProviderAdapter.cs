@@ -24,8 +24,8 @@ namespace LinqToDB.DataProvider.SqlServer
 	// We don't take it into account, as there is no reason to use such old provider versions
 	public class SqlServerProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _sysSyncRoot = new ();
-		private static readonly object _msSyncRoot  = new ();
+		private static readonly Lock _sysSyncRoot = new ();
+		private static readonly Lock _msSyncRoot  = new ();
 
 		private static SqlServerProviderAdapter? _systemAdapter;
 		private static SqlServerProviderAdapter? _microsoftAdapter;
