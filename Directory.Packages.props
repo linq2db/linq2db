@@ -158,7 +158,6 @@
 		<PackageVersion Include="Microsoft.Extensions.ObjectPool"                       Version="9.0.1"                 />
 		<PackageVersion Include="OpenTelemetry"                                         Version="1.11.1"                />
 		<PackageVersion Include="OpenTelemetry.Exporter.Console"                        Version="1.11.1"                />
-		<PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation"     Version="4.3.0"                 />
 	</ItemGroup>
 
 	<ItemGroup Label="Compat">

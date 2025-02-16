@@ -7,17 +7,21 @@
 You can install the package via NuGet:
 
 ### Using NuGet Package Manager Console:
+
 ```sh
 Install-Package linq2db.Compat
 ```
 
 ### Using .NET CLI:
+
 ```sh
 dotnet add package linq2db.Compat
 ```
 
 ### Using PackageReference in `csproj`:
+
 Add the following line inside the `<ItemGroup>` section of your `.csproj` file:
+
 ```xml
 <PackageReference Include="linq2db.Compat" Version="6.0.0" />
 ```
