@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 
 using LinqToDB.Common.Internal;
 using LinqToDB.Data;
@@ -102,7 +103,7 @@ namespace LinqToDB.Common
 		         ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>>? _toDatabaseExpressions;
 		         ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>>? _fromDatabaseExpressions;
 
-		readonly object _sync = new();
+		readonly Lock _sync = new();
 
 		ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> GetForSetExpressions(ConversionType conversionType)
 		{

@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -44,13 +45,20 @@ namespace Tests
 					var ctx = CustomTestContext.Get();
 					if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
 					{
-						var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
-						if (trace == null)
+						static StringBuilder GetTraceBuilder(CustomTestContext ctx)
 						{
-							trace = new StringBuilder();
-							ctx.Set(CustomTestContext.TRACE, trace);
+							var builder = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+							if (builder is not null)
+								return builder;
+
+							builder = new();
+							ctx.Set(CustomTestContext.TRACE, builder);
+							return builder;
 						}
 
+						var trace = GetTraceBuilder(ctx);
+
+						// necessary for multi-threaded tests like `Issue1398Tests.cs`
 						lock (trace)
 							trace.AppendLine($"{name}: {message}");
 
@@ -61,7 +69,7 @@ namespace Tests
 							Debug.WriteLine(message, name);
 						}
 
-						traceCount++;
+						Interlocked.Increment(ref traceCount);
 					}
 				};
 
@@ -69,19 +77,19 @@ namespace Tests
 				// Configuration.Linq.GenerateExpressionTest  = true;
 
 #if NETFRAMEWORK
-			var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.CodeBase.Replace("file:///", ""))!;
+				var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.CodeBase.Replace("file:///", ""))!;
 
-			// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
-			try
-			{
-				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
-			}
-			catch // this can fail during tests discovering with NUnitTestAdapter
-			{
-				// ignore
-			}
+				// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
+				try
+				{
+					SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
+				}
+				catch // this can fail during tests discovering with NUnitTestAdapter
+				{
+					// ignore
+				}
 #else
-			var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
+				var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
 #endif
 
 				Environment.CurrentDirectory = assemblyPath;
@@ -91,15 +99,15 @@ namespace Tests
 				DatabaseUtils.CopyDatabases();
 
 #if NETFRAMEWORK
-			LinqToDB.Remote.LinqService.TypeResolver = str =>
-			{
-				return str switch
+				LinqToDB.Remote.LinqService.TypeResolver = str =>
 				{
-					"Tests.Model.Gender" => typeof(Gender),
-					"Tests.Model.Person" => typeof(Person),
-					_ => null,
+					return str switch
+					{
+						"Tests.Model.Gender" => typeof(Gender),
+						"Tests.Model.Person" => typeof(Person),
+						_ => null,
+					};
 				};
-			};
 #endif
 			}
 			catch (Exception ex)

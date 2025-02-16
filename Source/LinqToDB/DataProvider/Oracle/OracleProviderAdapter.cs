@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Xml;
 
 using LinqToDB.Common;
@@ -20,7 +21,7 @@ namespace LinqToDB.DataProvider.Oracle
 		const int NanosecondsPerTick = 100;
 		private static readonly Type[] IndexParams = new[] {typeof(int) };
 
-		private static readonly object                 _nativeSyncRoot = new ();
+		private static readonly Lock                   _nativeSyncRoot = new ();
 		private static          OracleProviderAdapter? _nativeAdapter;
 
 		public const string NativeAssemblyName        = "Oracle.DataAccess";
@@ -28,14 +29,14 @@ namespace LinqToDB.DataProvider.Oracle
 		public const string NativeClientNamespace     = "Oracle.DataAccess.Client";
 		public const string NativeTypesNamespace      = "Oracle.DataAccess.Types";
 
-		private static readonly object                 _managedSyncRoot = new ();
+		private static readonly Lock                   _managedSyncRoot = new ();
 		private static          OracleProviderAdapter? _managedAdapter;
 
 		public const string ManagedAssemblyName    = "Oracle.ManagedDataAccess";
 		public const string ManagedClientNamespace = "Oracle.ManagedDataAccess.Client";
 		public const string ManagedTypesNamespace  = "Oracle.ManagedDataAccess.Types";
 
-		private static readonly object                 _devartSyncRoot = new ();
+		private static readonly Lock                   _devartSyncRoot = new ();
 		private static          OracleProviderAdapter? _devartAdapter;
 
 		public const string DevartAssemblyName    = "Devart.Data.Oracle";
