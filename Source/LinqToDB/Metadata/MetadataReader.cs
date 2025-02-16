@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
@@ -24,7 +25,7 @@ namespace LinqToDB.Metadata
 		readonly MappingAttributesCache                   _cache;
 		readonly string                                   _objectId;
 		readonly ConcurrentDictionary<Type, MemberInfo[]> _dynamicColumns = new();
-		readonly object                                   _syncRoot = new();
+		readonly Lock                                     _syncRoot = new();
 
 		readonly IMetadataReader[]              _readers;
 		public   IReadOnlyList<IMetadataReader> Readers => _readers;
