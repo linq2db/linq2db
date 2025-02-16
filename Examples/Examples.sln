@@ -58,19 +58,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HttpClient", "HttpClient", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Extensions", "..\Source\LinqToDB.Extensions\LinqToDB.Extensions.csproj", "{A635A1A9-AA6A-41E7-BA2F-E6B97320EB36}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpClientDemo.Client", "Remote\HttpClient\HttpClientDemo.Client\HttpClientDemo.Client.csproj", "{9FDA5C06-C812-4A6C-8F38-43CFE567C180}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpClientClient", "Remote\HttpClient\HttpClientClient\HttpClientClient.csproj", "{9FDA5C06-C812-4A6C-8F38-43CFE567C180}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpClientDemo.Server", "Remote\HttpClient\HttpClientDemo.Server\HttpClientDemo.Server.csproj", "{8DF0787C-1138-412C-B5DC-14E5F61C37A4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpClientServer", "Remote\HttpClient\HttpClientServer\HttpClientServer.csproj", "{8DF0787C-1138-412C-B5DC-14E5F61C37A4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Remote.HttpClient.Client", "..\Source\LinqToDB.Remote.HttpClient.Client\LinqToDB.Remote.HttpClient.Client.csproj", "{8C0E01EF-8D3F-4A35-9D1E-8AB3EFC237C9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Remote.HttpClient.Server", "..\Source\LinqToDB.Remote.HttpClient.Server\LinqToDB.Remote.HttpClient.Server.csproj", "{998FA6A5-651A-42BA-BAC8-F0839E0F4C71}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SignalRDemo", "SignalRDemo", "{E101EEF4-6109-4686-858E-527BEB788EB1}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SignalR", "SignalR", "{E101EEF4-6109-4686-858E-527BEB788EB1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRDemo.Client", "Remote\SignalRDemo\SignalRDemo.Client\SignalRDemo.Client.csproj", "{66066955-57F7-4050-B873-5CAF6B3F1A60}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRClient", "Remote\SignalR\SignalRClient\SignalRClient.csproj", "{66066955-57F7-4050-B873-5CAF6B3F1A60}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRDemo.Server", "Remote\SignalRDemo\SignalRDemo.Server\SignalRDemo.Server.csproj", "{26AAB4D2-86C2-4078-B02C-F59F67E04F43}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRServer", "Remote\SignalR\SignalRServer\SignalRServer.csproj", "{26AAB4D2-86C2-4078-B02C-F59F67E04F43}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Remote.SignalR", "..\Source\LinqToDB.Remote.SignalR\LinqToDB.Remote.SignalR.csproj", "{C8C4CDE7-3812-442B-B6FB-0C9BA684571B}"
 EndProject

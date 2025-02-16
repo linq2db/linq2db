@@ -9,7 +9,7 @@ namespace LinqToDB.Remote.SignalR
 
 		public LinqToDBHub(ILinqService<T> linqService)
 		{
-			_linqService                 =   linqService;
+			_linqService                   = linqService;
 			_linqService.RemoteClientTag ??= "Signal/R";
 		}
 

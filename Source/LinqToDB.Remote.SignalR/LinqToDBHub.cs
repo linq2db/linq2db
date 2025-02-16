@@ -34,42 +34,27 @@ namespace LinqToDB.Remote.SignalR
 
 		public virtual Task<LinqServiceInfo> GetInfoAsync(string? configuration)
 		{
-			Console.WriteLine("GetInfoAsync before");
-			var result = LinqService.GetInfoAsync(configuration, default);
-			Console.WriteLine("GetInfoAsync after");
-			return result;
+			return LinqService.GetInfoAsync(configuration, default);
 		}
 
 		public virtual Task<int> ExecuteNonQueryAsync(string? configuration, string queryData)
 		{
-			Console.WriteLine("ExecuteNonQueryAsync before");
-			var result = LinqService.ExecuteNonQueryAsync(configuration, queryData, default);
-			Console.WriteLine("ExecuteNonQueryAsync after");
-			return result;
+			return LinqService.ExecuteNonQueryAsync(configuration, queryData, default);
 		}
 
 		public virtual Task<string?> ExecuteScalarAsync(string? configuration, string queryData)
 		{
-			Console.WriteLine("ExecuteScalarAsync before");
-			var result = LinqService.ExecuteScalarAsync(configuration, queryData, default);
-			Console.WriteLine("ExecuteScalarAsync after");
-			return result;
+			return LinqService.ExecuteScalarAsync(configuration, queryData, default);
 		}
 
 		public virtual Task<string> ExecuteReaderAsync(string? configuration, string queryData)
 		{
-			Console.WriteLine("ExecuteReaderAsync before");
-			var result = LinqService.ExecuteReaderAsync(configuration, queryData, default);
-			Console.WriteLine("ExecuteReaderAsync after");
-			return result;
+			return LinqService.ExecuteReaderAsync(configuration, queryData, default);
 		}
 
 		public virtual Task<int> ExecuteBatchAsync(string? configuration, string queryData)
 		{
-			Console.WriteLine("ExecuteBatchAsync before");
-			var result = LinqService.ExecuteBatchAsync(configuration, queryData, default);
-			Console.WriteLine("ExecuteBatchAsync after");
-			return result;
+			return LinqService.ExecuteBatchAsync(configuration, queryData, default);
 		}
 
 		ILinqService? _linqService;

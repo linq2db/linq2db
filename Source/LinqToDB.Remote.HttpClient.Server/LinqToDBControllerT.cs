@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LinqToDB.Remote.HttpClient.Server
 {
-	[Route("api/linq2db")]
+	//[Route("api/linq2db")]
 	[ApiController]
 	public class LinqToDBController<T> : LinqToDBController
 		where T : IDataContext
