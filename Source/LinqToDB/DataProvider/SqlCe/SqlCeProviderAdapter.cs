@@ -30,7 +30,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			Action<DbParameter, SqlDbType>   dbTypeSetter,
 			Func  <DbParameter, SqlDbType>   dbTypeGetter,
 			Func  <string,      SqlCeEngine> sqlCeEngineCreator,
-
 			LambdaExpression getDecimal)
 		{
 			ConnectionType     = connectionType;
