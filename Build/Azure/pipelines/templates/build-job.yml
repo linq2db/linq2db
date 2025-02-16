@@ -214,6 +214,13 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Compat/Release'
+      artifact: '$(artifact_linq2db_compat_binaries)'
+    displayName: Publish linq2db.Compat build results
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.FSharp/Release'
       artifact: '$(artifact_linq2db_fsharp_binaries)'
     displayName: Publish linq2db.FSharp build results

@@ -2,7 +2,7 @@
 	<!--
 	When multiple versions of same nuget references, don't put it to unconditional ItemGroup
 	as while it works fine in Visual Studio in general there are still issues with tooling (dotnet publish, testing)
-	
+
 	IMPORTANT:
 	avoid use of different package versions in tests for different frameworks just for testing purposes if package referenced by source project
 	as it will result in old package consumed by released package and affect users (especially for projects where user has no control
@@ -155,10 +155,15 @@
 
 	<ItemGroup Label="Examples">
 		<PackageVersion Include="linq2db.t4models"                                      Version="6.0.0-preview.1"       />
-		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="9.0.1"                 />
 		<PackageVersion Include="Microsoft.Extensions.ObjectPool"                       Version="9.0.1"                 />
 		<PackageVersion Include="OpenTelemetry"                                         Version="1.11.1"                />
 		<PackageVersion Include="OpenTelemetry.Exporter.Console"                        Version="1.11.1"                />
+		<PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation"     Version="4.3.0"                 />
+	</ItemGroup>
+
+	<ItemGroup Label="Compat">
+		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="8.0.1"                 Condition="'$(TargetFramework)'=='net6.0'"/>
+		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="9.0.1"                 Condition="'$(TargetFramework)'!='net6.0'"/>
 	</ItemGroup>
 
 </Project>

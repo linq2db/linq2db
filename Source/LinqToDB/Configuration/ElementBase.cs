@@ -1,4 +1,6 @@
-﻿#if NETFRAMEWORK
+﻿#if NETFRAMEWORK && COMPAT
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(LinqToDB.Configuration.ElementBase))]
+#elif NETFRAMEWORK || COMPAT
 using System;
 using System.Collections.Specialized;
 using System.Configuration;
