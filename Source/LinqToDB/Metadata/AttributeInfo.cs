@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Metadata
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-
 	sealed class AttributeInfo
 	{
 		public AttributeInfo(Type type, Dictionary<string,object?> values)

@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB;
+using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using LinqToDB;
-	using LinqToDB.Mapping;
-
 	[TestFixture]
 	public class Issue1222Tests : TestBase
 	{

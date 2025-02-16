@@ -4,19 +4,19 @@ using System.Diagnostics;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Extensions.Logging;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Extensions.Logging;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Common
 {
-	using Model;
-
 	[TestFixture]
 	public class ConnectionBuilderTests : TestBase
 	{

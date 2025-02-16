@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+
 namespace LinqToDB.Data
 {
-	using Common;
-	using Common.Internal;
-
 	/// <param name="MaxBatchSize">
 	/// Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server.
 	/// Returns an integer value or zero if no value has been set.

@@ -5,16 +5,16 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.DataProvider;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery.Visitors;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-	using DataProvider;
-	using Extensions;
-	using Linq.Builder;
-	using Mapping;
-	using SqlProvider;
-	using Visitors;
-
 	public class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
 		SqlProviderFlags  _providerFlags     = default!;
@@ -494,6 +494,7 @@ namespace LinqToDB.SqlQuery
 							{
 
 							}
+
 							if (index < op.SelectQuery.Select.Columns.Count)
 								op.SelectQuery.Select.Columns.RemoveAt(index);
 						}
@@ -1018,6 +1019,7 @@ namespace LinqToDB.SqlQuery
 							{
 								throw new InvalidOperationException("OrderBy not specified for limited recordset.");
 							}
+
 							orderByItems.Add(new SqlOrderByItem(sql.Select.Columns[0].Expression, false, false));
 						}
 					}
@@ -1344,6 +1346,7 @@ namespace LinqToDB.SqlQuery
 				{
 					tableSource.UniqueKeys.AddRange(subQueryTableSource.UniqueKeys);
 				}
+
 				if (subQuery.HasUniqueKeys)
 				{
 					tableSource.UniqueKeys.AddRange(subQuery.UniqueKeys);
@@ -2226,8 +2229,10 @@ namespace LinqToDB.SqlQuery
 								{
 									table.Joins.Insert(joinIndex + ij + 1, join.Table.Joins[ij]);
 								}
+
 								join.Table.Joins.Clear();
 							}
+
 							isModified = true;
 						}
 						else 
@@ -2957,6 +2962,12 @@ namespace LinqToDB.SqlQuery
 						// in theory it could be lifted for providers with Fake column, but we don't have this
 						// information here currently (it's in SqlBuilder)
 						|| element.From.Tables.Count == 0
+						// we can replace
+						// SELECT xxx GROUP BY ...
+						// with
+						// SELECT * GROUP BY ...
+						// only if we know that all columns in source are in group-by, which is not worth of extra logic
+						|| !element.GroupBy.IsEmpty
 					))
 				{
 					element.AddNew(new SqlValue(1), alias: cte != null ? "c1" : null);

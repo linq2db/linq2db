@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-
 	[BuildsMethodCall("HasUniqueKey")]
 	sealed class HasUniqueKeyBuilder : MethodCallBuilder
 	{

@@ -108,11 +108,8 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void ServiceNameTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void ServiceNameTest([IncludeDataSources(TestProvName.AllSqlServerNoAzure)] string context)
 		{
-			if (context == "SqlAzure")
-				return;
-
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ServiceName);
 			Console.WriteLine(result);

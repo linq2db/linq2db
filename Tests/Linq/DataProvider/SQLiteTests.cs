@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Data.Linq;
-using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,12 +15,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using System.Globalization;
-
-	using Model;
-
 	[TestFixture]
 	public class SQLiteTests : TestBase
 	{
@@ -935,5 +933,54 @@ namespace Tests.DataProvider
 		{
 			[PrimaryKey, Identity] public long Id { get; set; }
 		}
+
+		#region issue 4808
+		[Table(nameof(Issue4808Table))]
+		sealed class Issue4808TableRaw
+		{
+			[Column(DataType = DataType.Text)  ] public Guid? ValueText { get; set; }
+			[Column(DataType = DataType.Binary)] public Guid? ValueBinary { get; set; }
+
+			public static readonly Issue4808TableRaw[] Data =
+			[
+				new Issue4808TableRaw()
+				{
+					ValueText = TestData.Guid1,
+					ValueBinary = TestData.Guid2,
+				}
+			];
+		}
+
+		[Table]
+		sealed class Issue4808Table
+		{
+			[Column(DbType = "TEXT")] public Guid? ValueText { get; set; }
+			[Column(DbType = "BINARY")] public Guid? ValueBinary { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4808")]
+		public void Issue4808Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue4808TableRaw.Data);
+			db.InlineParameters = inline;
+
+			var listText = new Guid[] { TestData.Guid1 };
+			var listBinary = new Guid[] {TestData.Guid2 };
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.GetTable<Issue4808TableRaw>().Where(r => listText.Contains(r.ValueText.GetValueOrDefault())).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<Issue4808TableRaw>().Where(r => listBinary.Contains(r.ValueBinary.GetValueOrDefault())).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<Issue4808TableRaw>().Where(r => r.ValueText.HasValue && listText.Contains(r.ValueText.Value)).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<Issue4808TableRaw>().Where(r => r.ValueBinary.HasValue && listBinary.Contains(r.ValueBinary.Value)).Count(), Is.EqualTo(1));
+
+				Assert.That(db.GetTable<Issue4808Table>().Where(r => listText.Contains(r.ValueText.GetValueOrDefault())).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<Issue4808Table>().Where(r => listBinary.Contains(r.ValueBinary.GetValueOrDefault())).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<Issue4808Table>().Where(r => r.ValueText.HasValue && listText.Contains(r.ValueText.Value)).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<Issue4808Table>().Where(r => r.ValueBinary.HasValue && listBinary.Contains(r.ValueBinary.Value)).Count(), Is.EqualTo(1));
+			}
+		}
+		#endregion
 	}
 }

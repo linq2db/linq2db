@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Linq;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Xml;
@@ -10,12 +9,10 @@ using System.Data;
 using System.Globalization;
 using System.Reflection;
 using System.Threading.Tasks;
-using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools.Comparers;
@@ -30,10 +27,10 @@ using IBM.Data.DB2Types;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class DB2Tests : DataProviderTestBase
 	{

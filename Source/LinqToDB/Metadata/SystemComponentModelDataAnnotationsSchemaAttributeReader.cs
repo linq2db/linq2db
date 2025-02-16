@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Reflection;
 
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Metadata
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-
 	/// <summary>
 	/// Metadata provider using mapping attributes from <see cref="System.ComponentModel.DataAnnotations.Schema"/> namespace:
 	/// <list type="bullet">

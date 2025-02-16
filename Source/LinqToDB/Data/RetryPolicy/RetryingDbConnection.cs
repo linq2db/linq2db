@@ -4,11 +4,11 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Async;
+using LinqToDB.Configuration;
+
 namespace LinqToDB.Data.RetryPolicy
 {
-	using Async;
-	using Configuration;
-
 	sealed class RetryingDbConnection : IAsyncDbConnection, IProxy<DbConnection>
 	{
 		readonly DataConnection     _dataConnection;

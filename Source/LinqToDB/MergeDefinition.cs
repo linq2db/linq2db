@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Linq;
+
 namespace LinqToDB
 {
-	using Common;
-	using Linq;
-
 	public enum MergeOperationType
 	{
 		Insert,

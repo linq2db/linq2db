@@ -6,16 +6,19 @@ using System.Data;
 #endif
 
 using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class StringFunctionTests : TestBase
 	{
@@ -324,7 +327,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void ContainsConstant2([DataSources] string context)
 		{
@@ -392,7 +394,6 @@ namespace Tests.Linq
 			db.Person.Count(p => p.ID == 1 && s.Contains(Sql.ToSql(toTest))).Should().Be(1);
 			db.Person.Count(p => p.ID == 1 && !s.Contains(Sql.ToSql(toTest))).Should().Be(0);
 		}
-
 
 		[Test]
 		public void ContainsParameterAll([DataSources] string context,
@@ -1191,6 +1192,38 @@ namespace Tests.Linq
 				var q = from p in db.Person where "123" + p.FirstName.PadLeft(6, '*') == "123**John" && p.ID == 1 select p;
 				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4799")]
+		public void String_PadLeft_Translation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(0, '.'))), Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(3, '.'))), Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(4, '.'))), Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(5, '.'))), Is.EqualTo(".test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(6, '.'))), Is.EqualTo("..test"));
+			});
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4799")]
+		public void String_PadRight_Translation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(0, '.'))), Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(3, '.'))), Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(4, '.'))), Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(5, '.'))), Is.EqualTo("test."));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(6, '.'))), Is.EqualTo("test.."));
+			});
 		}
 
 		[Test]

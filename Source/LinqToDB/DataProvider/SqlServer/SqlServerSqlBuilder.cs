@@ -5,13 +5,13 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder<SqlServerOptions>
 	{
 		protected SqlServerSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
@@ -318,6 +318,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (type.DataType)
 			{
+				case DataType.Json      : StringBuilder.Append("JSON");             return;
 				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
 				case DataType.Variant   : StringBuilder.Append("Sql_Variant");      return;
 				case DataType.NVarChar  :
@@ -349,6 +350,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision})");
 					}
+
 					return;
 			}
 

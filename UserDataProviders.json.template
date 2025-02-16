@@ -6,7 +6,7 @@
 
 			// SQLite-based test configurations
 			"SQLite.Classic",
-			"SQLite.MS",
+			"SQLite.MS"
 			//"SQLite.Classic.MPM",
 			//"SQLite.Classic.MPU",
 			//"Northwind.SQLite",
@@ -49,6 +49,8 @@
 			//"SqlServer.Northwind.MS",
 			//"SqlServer.Azure",
 			//"SqlServer.Azure.MS",
+			//"SqlServer.Azure.MI",
+			//"SqlServer.Azure.MI.MS",
 
 			// MySQL and MariaDB
 			//"MySql.8.0",
@@ -175,6 +177,8 @@
 			//"SqlServer.Northwind.MS",
 			//"SqlServer.Azure",
 			//"SqlServer.Azure.MS",
+			//"SqlServer.Azure.MI",
+			//"SqlServer.Azure.MI.MS",
 
 			// MySQL and MariaDB
 			//"MySql.8.0",
@@ -293,6 +297,8 @@
 			//"SqlServer.Northwind.MS",
 			//"SqlServer.Azure",
 			//"SqlServer.Azure.MS",
+			//"SqlServer.Azure.MI",
+			//"SqlServer.Azure.MI.MS",
 
 			// MySQL and MariaDB
 			//"MySql.8.0",
@@ -411,6 +417,8 @@
 			//"SqlServer.Northwind.MS",
 			//"SqlServer.Azure",
 			//"SqlServer.Azure.MS",
+			//"SqlServer.Azure.MI",
+			//"SqlServer.Azure.MI.MS",
 
 			// MySQL and MariaDB
 			//"MySql.8.0",
@@ -584,6 +592,15 @@
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
+			"SqlServer.Azure.MI": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.Azure.MI.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+
 			"DB2": {
 				"Provider": "IBM.Data.DB2",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"

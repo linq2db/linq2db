@@ -1,6 +1,7 @@
-﻿using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {

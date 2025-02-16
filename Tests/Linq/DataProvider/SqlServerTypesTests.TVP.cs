@@ -10,14 +10,9 @@ using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
-using Microsoft.SqlServer.Server;
-
 using NUnit.Framework;
 
 using Tests.Model;
-
-using SqlDataRecordMS = Microsoft.Data.SqlClient.Server.SqlDataRecord;
-using SqlMetaDataMS = Microsoft.Data.SqlClient.Server.SqlMetaData;
 
 namespace Tests.DataProvider
 {

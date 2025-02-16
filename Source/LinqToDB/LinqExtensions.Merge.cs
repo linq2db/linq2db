@@ -4,17 +4,17 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.Reflection;
+
+using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
 namespace LinqToDB
 {
-	using Expressions;
-	using Linq;
-	using Async;
-	using Reflection;
-
-	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
-
 	public static partial class LinqExtensions
 	{
 

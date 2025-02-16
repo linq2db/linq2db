@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
+
+using LinqToDB.Expressions.Types;
 
 namespace LinqToDB.DataProvider
 {
-	using Expressions;
-
 	public class OdbcProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new object();
+		private static readonly Lock _syncRoot = new();
 		private static OdbcProviderAdapter? _instance;
 
 		public const string AssemblyName    = "System.Data.Odbc";

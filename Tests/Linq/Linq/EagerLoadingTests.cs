@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Async;
-using LinqToDB.Interceptors;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -257,7 +259,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void TestLoadWithAndDuplications([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -273,7 +274,6 @@ namespace Tests.Linq
 					select m;
 
 				query = query.LoadWith(d => d.Details);
-
 
 				var expectedQuery = from m in masterRecords
 					join dd in detailRecords on m.Id1 equals dd.MasterId
@@ -316,7 +316,6 @@ namespace Tests.Linq
 					.LoadWith(a => a.One.d.SubDetails)
 					.LoadWith(b => b.Two.SubDetails).ThenLoad(sd => sd.Detail);
 
-
 				var result = query.ToArray();
 
 				foreach (var item in result)
@@ -330,7 +329,6 @@ namespace Tests.Linq
 				}
 			}
 		}
-
 
 		[Test]
 		public void TestLoadWithToString1([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -449,7 +447,6 @@ FROM
 				var result = query.ToList();
 			}
 		}
-
 
 		[Test]
 		public void TestSelectProjectionList([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -911,7 +908,6 @@ FROM
 				result   = result .Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
 				expected = expected.Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
 
-
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
@@ -1056,7 +1052,6 @@ FROM
 				Assert.That(result, Has.Length.EqualTo(result2.Length));
 			}
 		}
-
 
 		[Test]
 		public void ProjectionWithoutClass([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -1367,7 +1362,6 @@ FROM
 			}
 		}
 #endregion
-
 
 #region issue 2196
 		public class EventScheduleItemBase
@@ -3484,5 +3478,82 @@ FROM
 
 		#endregion
 
+		#region Issue 4797
+
+		[Table]
+		public class Issue4797Parent
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue4797Child.ParentId))]
+			public Issue4797Child[]? Children { get; set; }
+
+			public static readonly Issue4797Parent[] Data =
+			[
+				new Issue4797Parent() { Id = 1 }
+			];
+		}
+
+		[Table]
+		public class Issue4797Child
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column]
+			public int? ParentId { get; set; }
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(Issue4797Parent.Id))]
+			public Issue4797Parent? Parent { get; set; }
+
+			public static readonly Issue4797Child[] Data =
+			[
+				new Issue4797Child() { Id = 1, ParentId = 1 },
+				new Issue4797Child() { Id = 2, ParentId = 1 },
+			];
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4797")]
+		public void Issue4797Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var pt = db.CreateLocalTable(Issue4797Parent.Data);
+			using var ct = db.CreateLocalTable(Issue4797Child.Data);
+
+			var result = pt
+				.LoadWith(
+					x => x.Children,
+					x => x.LoadWith(y => y.Parent, y => y.LoadWith(z => z.Children)))
+				.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Children, Is.Not.Null);
+			});
+			Assert.That(result[0].Children, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Children.Count(r => r.Id == 1), Is.EqualTo(1));
+				Assert.That(result[0].Children.Count(r => r.Id == 2), Is.EqualTo(1));
+			});
+			Assert.That(result[0].Children[0].Parent, Is.Not.Null);
+			Assert.That(result[0].Children[0].Parent.Children, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Children[0].Parent.Children, Has.Length.EqualTo(2));
+				Assert.That(result[0].Children[1].Parent, Is.Not.Null);
+			});
+			Assert.That(result[0].Children[1].Parent.Children, Is.Not.Null);
+			Assert.That(result[0].Children[1].Parent.Children, Has.Length.EqualTo(2));
+
+			// TODO: right now we create separate objects for same record on different levels
+			// if we want to change this behavior - it makes sense to add object equality asserts
+		}
+
+		#endregion
 	}
 }

@@ -5,14 +5,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-
 	partial class TableBuilder
 	{
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
@@ -40,7 +40,8 @@ namespace LinqToDB.Linq.Builder
 
 			#region Init
 
-			public TableContext(ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo, Type originalType) : base (builder, originalType, buildInfo.SelectQuery)
+			public TableContext(TranslationModifier translationModifier, ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo, Type originalType) 
+				: base (translationModifier, builder, originalType, buildInfo.SelectQuery)
 			{
 				Parent         = buildInfo.Parent;
 				Expression     = buildInfo.Expression;
@@ -59,7 +60,8 @@ namespace LinqToDB.Linq.Builder
 				Init(true);
 			}
 
-			public TableContext(ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo, SqlTable table) : base (builder, table.ObjectType, buildInfo.SelectQuery)
+			public TableContext(TranslationModifier translationModifier, ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo, SqlTable table) 
+				: base (translationModifier, builder, table.ObjectType, buildInfo.SelectQuery)
 			{
 				Parent         = buildInfo.Parent;
 				Expression     = buildInfo.Expression;
@@ -79,7 +81,8 @@ namespace LinqToDB.Linq.Builder
 				Init(true);
 			}
 
-			internal TableContext(ExpressionBuilder builder, MappingSchema mappingSchema, SelectQuery selectQuery, SqlTable table, bool isOptional) : base(builder, table.ObjectType, selectQuery)
+			internal TableContext(TranslationModifier translationModifier, ExpressionBuilder builder, MappingSchema mappingSchema, SelectQuery selectQuery, SqlTable table, bool isOptional) 
+				: base(translationModifier, builder, table.ObjectType, selectQuery)
 			{
 				Parent         = null;
 				Expression     = null;
@@ -98,7 +101,8 @@ namespace LinqToDB.Linq.Builder
 				Init(true);
 			}
 
-			public TableContext(ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo) : base (builder, typeof(object), buildInfo.SelectQuery)
+			public TableContext(TranslationModifier translationModifier, ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo) 
+				: base (translationModifier, builder, typeof(object), buildInfo.SelectQuery)
 			{
 				Parent         = buildInfo.Parent;
 				Expression     = buildInfo.Expression;
@@ -133,6 +137,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								param.IsQueryParameter = false;
 							}
+
 							return new SqlPlaceholderExpression(null, param, a);
 						}
 					}
@@ -242,6 +247,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							return ((ContextRefExpression)memberExpression.Expression!).WithType(path.Type);
 						}
+
 						return path;
 					}
 				}
@@ -273,7 +279,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new TableContext(Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable), IsOptional);
+				return new TableContext(TranslationModifier, Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable), IsOptional);
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -507,6 +513,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					throw new LinqToDBException($"Member '{expression}' is not a table column.");
 				}
+
 				return null;
 			}
 

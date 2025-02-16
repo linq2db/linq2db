@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlProvider;
-	using SqlQuery;
-	using Mapping;
-
 	abstract class SqlServerSqlOptimizer : BasicSqlOptimizer
 	{
 		protected readonly SqlServerVersion SQLVersion;

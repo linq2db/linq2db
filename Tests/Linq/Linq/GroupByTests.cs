@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 
 using FluentAssertions;
 
@@ -12,10 +10,10 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class GroupByTests : TestBase
 	{
@@ -941,7 +939,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void MaxInGroup([DataSources] string context)
@@ -968,7 +965,6 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
@@ -997,7 +993,6 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 
 		[Test]
 		public void SelectMax([DataSources] string context)
@@ -2599,6 +2594,7 @@ namespace Tests.Linq
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
+
 			Query.ClearCaches();
 		}
 
@@ -3044,7 +3040,6 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 
 		[Test]
 		public void GroupByInOuterApply([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
@@ -3732,20 +3727,40 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			db.GetTable<Person>()
-				.GroupBy(_ => new
+				.GroupBy(r => new
 				{
-					key = _.ID,
-					sort = _.ID,
+					key = r.ID,
+					sort = r.ID,
 				})
-				.Select(_ => new
+				.Select(r => new
 				{
-					Key = _.Key.key,
-					Sort = _.Key.sort,
+					Key = r.Key.key,
+					Sort = r.Key.sort,
 					label = "label"
 				})
-				.OrderBy(_ => _.Sort)
+				.OrderBy(r => r.Sort)
 				.Take(100)
 				.ToList();
+		}
+
+		[Test]
+		public void Issue_UnusedColumnsElimination([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.GetTable<Person>()
+				.GroupBy(r => new
+				{
+					key = r.ID,
+					sort = r.ID,
+				})
+				.Select(r => new
+				{
+					Key = r.Key.key,
+					Sort = r.Key.sort,
+					label = "label"
+				})
+				.LongCount();
 		}
 	}
 }

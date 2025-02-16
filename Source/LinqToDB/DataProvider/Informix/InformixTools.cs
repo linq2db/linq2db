@@ -1,10 +1,9 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
+
+using LinqToDB.Data;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Data;
-
 	public static class InformixTools
 	{
 		internal static InformixProviderDetector ProviderDetector = new();

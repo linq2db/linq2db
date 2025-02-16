@@ -4,11 +4,11 @@ using System.Data;
 using System.Data.SqlTypes;
 using System.Linq;
 
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Data;
-	using SchemaProvider;
-
 	sealed class SqlServerSchemaProvider : SchemaProviderBase
 	{
 		private bool IsAzure;
@@ -319,6 +319,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (dataType)
 			{
+				case "json"             : return DataType.Json;
 				case "image"            : return DataType.Image;
 				case "text"             : return DataType.Text;
 				case "binary"           : return DataType.Binary;
@@ -407,6 +408,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (dataType)
 			{
+				case "json"        : return typeof(string);
 				case "tinyint"     : return typeof(byte);
 				case "hierarchyid" :
 				case "geography"   :

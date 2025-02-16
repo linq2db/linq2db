@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.SqlProvider
 {
-	using Mapping;
-	using SqlQuery;
-	using Common;
-
 	public interface ISqlBuilder
 	{
 		int  CommandCount(SqlStatement statement);
