@@ -305,7 +305,6 @@ namespace Tests.Linq
 				AreEqual(persons, result);
 				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(currentMiss + 1));
 
-
 				persons.AddRange(new int[] { 3, 4 });
 
 				query = from p in db.GetTable<Person>()
