@@ -31,9 +31,9 @@ namespace SignalRServer
 				.UseDefaultLogging(provider)),
 				ServiceLifetime.Transient);
 
-			// Adds SignalR services and configures the SignalR options.
-			//
 			builder.Services
+				// Adds SignalR services and configures the SignalR options.
+				//
 				.AddLinqToDBService<IDemoDataModel>()
 				.AddSignalR(hubOptions =>
 				{

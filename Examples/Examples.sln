@@ -67,6 +67,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Remote.HttpClient.Server", "..\Source\LinqToDB.Remote.HttpClient.Server\LinqToDB.Remote.HttpClient.Server.csproj", "{998FA6A5-651A-42BA-BAC8-F0839E0F4C71}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SignalR", "SignalR", "{E101EEF4-6109-4686-858E-527BEB788EB1}"
+	ProjectSection(SolutionItems) = preProject
+		Remote\SignalR\README.md = Remote\SignalR\README.md
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRClient", "Remote\SignalR\SignalRClient\SignalRClient.csproj", "{66066955-57F7-4050-B873-5CAF6B3F1A60}"
 EndProject
