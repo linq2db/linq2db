@@ -121,16 +121,25 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			// workaround bug in GetDecimal implementation not trimming scale value but throwing overflow exception
 
-			// trim trailing scale numbers, will throw for out-of-range values
-			var precision = 29;
-			var scale = sqlDecimal.Precision - sqlDecimal.Scale >= 29 ? 1 : 29 - (sqlDecimal.Precision - sqlDecimal.Scale);
 			try
 			{
-				return (decimal)SqlDecimal.ConvertToPrecScale(sqlDecimal, precision, scale);
+				// this is what provider acutally do in GetDecimal
+				return (decimal)sqlDecimal;
 			}
 			catch
 			{
-				return (decimal)SqlDecimal.ConvertToPrecScale(sqlDecimal, precision, scale - 1);
+				// if it doesn't work - try to trim data in decimal part
+				// will throw for out-of-range values as expected
+				var precision = 29;
+				var scale = sqlDecimal.Precision - sqlDecimal.Scale >= 29 ? 1 : 29 - (sqlDecimal.Precision - sqlDecimal.Scale);
+				try
+				{
+					return (decimal)SqlDecimal.ConvertToPrecScale(sqlDecimal, precision, scale);
+				}
+				catch
+				{
+					return (decimal)SqlDecimal.ConvertToPrecScale(sqlDecimal, precision, scale - 1);
+				}
 			}
 		}
 
