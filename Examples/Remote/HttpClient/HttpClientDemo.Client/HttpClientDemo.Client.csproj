@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+		<StaticWebAssetProjectMode>Default</StaticWebAssetProjectMode>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.HttpClient.Client\LinqToDB.Remote.HttpClient.Client.csproj" />
+
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+	</ItemGroup>
+</Project>

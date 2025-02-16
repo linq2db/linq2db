@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Extensions\LinqToDB.Extensions.csproj" />
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.HttpClient.Server\LinqToDB.Remote.HttpClient.Server.csproj" />
+		<ProjectReference Include="..\HttpClientDemo.Client\HttpClientDemo.Client.csproj" />
+
+		<PackageReference Include="Microsoft.Data.Sqlite" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
+	</ItemGroup>
+</Project>

@@ -418,9 +418,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net90", "net90", "{B39B3628
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.EntityFrameworkCore.STS", "Tests\EntityFrameworkCore\Tests.EntityFrameworkCore.STS.csproj", "{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Remote.Http.Client", "Source\LinqToDB.Remote.Http.Client\LinqToDB.Remote.Http.Client.csproj", "{73D3A1B3-4795-4ED2-8644-4F873743E991}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Remote.HttpClient.Client", "Source\LinqToDB.Remote.HttpClient.Client\LinqToDB.Remote.HttpClient.Client.csproj", "{73D3A1B3-4795-4ED2-8644-4F873743E991}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Remote.Http.Server", "Source\LinqToDB.Remote.Http.Server\LinqToDB.Remote.Http.Server.csproj", "{E23B04B8-79B6-43ED-B4ED-D87BDB1D89BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Remote.HttpClient.Server", "Source\LinqToDB.Remote.HttpClient.Server\LinqToDB.Remote.HttpClient.Server.csproj", "{E23B04B8-79B6-43ED-B4ED-D87BDB1D89BE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Scaffold", "Source\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj", "{F56E060D-9A5B-4685-B834-7BD2E33B7559}"
 EndProject
@@ -428,6 +428,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Redist", "Redist", "{5C6DF9
 	ProjectSection(SolutionItems) = preProject
 		Redist\Readme.md = Redist\Readme.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Remote.SignalR", "Source\LinqToDB.Remote.SignalR\LinqToDB.Remote.SignalR.csproj", "{551BD0C3-1B01-4341-ABE6-451D6B68FC52}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -584,6 +586,12 @@ Global
 		{F56E060D-9A5B-4685-B834-7BD2E33B7559}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F56E060D-9A5B-4685-B834-7BD2E33B7559}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F56E060D-9A5B-4685-B834-7BD2E33B7559}.Release|Any CPU.Build.0 = Release|Any CPU
+		{551BD0C3-1B01-4341-ABE6-451D6B68FC52}.Azure|Any CPU.ActiveCfg = Azure|Any CPU
+		{551BD0C3-1B01-4341-ABE6-451D6B68FC52}.Azure|Any CPU.Build.0 = Azure|Any CPU
+		{551BD0C3-1B01-4341-ABE6-451D6B68FC52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{551BD0C3-1B01-4341-ABE6-451D6B68FC52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{551BD0C3-1B01-4341-ABE6-451D6B68FC52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{551BD0C3-1B01-4341-ABE6-451D6B68FC52}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -625,6 +633,7 @@ Global
 		{E23B04B8-79B6-43ED-B4ED-D87BDB1D89BE} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{F56E060D-9A5B-4685-B834-7BD2E33B7559} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{5C6DF933-23D8-4AC5-AE70-D460DBF40485} = {885042E3-18EA-4927-B1CF-5E0E3DBD1C00}
+		{551BD0C3-1B01-4341-ABE6-451D6B68FC52} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}
