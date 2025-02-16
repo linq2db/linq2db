@@ -896,7 +896,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static Expression UnwrapProxy(Expression expression)
 		{
-			if (expression is ContextRefExpression contextRefExpression && contextRefExpression.BuildContext is IBuildProxy proxy)
+			if (expression is ContextRefExpression { BuildContext: IBuildProxy proxy })
 				return UnwrapDefaultIfEmpty(proxy.InnerExpression);
 			return expression;
 		}
