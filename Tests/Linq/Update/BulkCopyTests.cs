@@ -1219,5 +1219,42 @@ namespace Tests.xUpdate
 
 			Assert.That(item.Id, Is.Null);
 		}
+
+		// add more test cases
+		sealed class MultipleRowsTable
+		{
+			public int Id { get; set; }
+
+			public decimal? DecimalValue1 { get; set; }
+
+			public decimal? DecimalValue2 { get; set; }
+
+			public static readonly MultipleRowsTable[] Data =
+			[
+				new MultipleRowsTable() { Id = 1, DecimalValue1 = null, DecimalValue2 = 1M },
+				new MultipleRowsTable() { Id = 2, DecimalValue1 = 1.5M, DecimalValue2 = -2.6M },
+			];
+		}
+
+		[Test(Description = "Test we type first row values properly")]
+		public void MultipleRows_TestTyping([DataSources(false)] string context)
+		{
+			using var db = new DataConnection(context);
+			using var table = db.CreateLocalTable<MultipleRowsTable>();
+
+			var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
+			table.BulkCopy(options, MultipleRowsTable.Data);
+
+			var item = table.OrderBy(r => r.Id).ToArray();
+
+			using (Assert.EnterMultipleScope())
+			{
+				for (var i = 0; i < 2; i++)
+				{
+					Assert.That(item[i].DecimalValue1, Is.EqualTo(MultipleRowsTable.Data[i].DecimalValue1));
+					Assert.That(item[i].DecimalValue2, Is.EqualTo(MultipleRowsTable.Data[i].DecimalValue2));
+				}
+			}
+		}
 	}
 }

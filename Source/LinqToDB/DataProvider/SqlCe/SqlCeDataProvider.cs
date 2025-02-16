@@ -44,6 +44,8 @@ namespace LinqToDB.DataProvider.SqlCe
 			SetCharField("NChar",    (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NVarChar", (r,i) => r.GetString(i).TrimEnd(' '));
 
+			ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), ProviderFieldType = typeof(SqlDecimal), DataReaderType = Adapter.DataReaderType }] = Adapter.GetDecimalExpression;
+
 			_sqlOptimizer = new SqlCeSqlOptimizer(SqlProviderFlags);
 		}
 

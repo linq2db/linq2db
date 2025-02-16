@@ -258,6 +258,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetValueToSqlConverter(typeof(Binary), (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
+			// in SQL Server DECIMAL=DECIMAL(18,0)
+			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 18, 10));
 
 			if (SystemDataSqlServerAttributeReader.SystemDataSqlClientProvider != null)
 				AddMetadataReader(SystemDataSqlServerAttributeReader.SystemDataSqlClientProvider);
