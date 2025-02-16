@@ -11,19 +11,19 @@ namespace LinqToDB.DataProvider.SapHana
 {
 	public class SapHanaProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _unmanagedSyncRoot = new ();
-		private static readonly object _odbcSyncRoot      = new ();
+		private static readonly Lock _unmanagedSyncRoot = new ();
+		private static readonly Lock _odbcSyncRoot      = new ();
 
 		private static SapHanaProviderAdapter? _unmanagedProvider;
 		private static SapHanaProviderAdapter? _odbcProvider;
 
 #if NETFRAMEWORK
-		internal const string UnmanagedAssemblyName       = "Sap.Data.Hana.v4.5";
+		public  const string UnmanagedAssemblyName        = "Sap.Data.Hana.v4.5";
 #else
-		internal const string UnmanagedAssemblyName       = "Sap.Data.Hana.Core.v2.1";
+		public  const string UnmanagedAssemblyName        = "Sap.Data.Hana.Core.v2.1";
 #endif
 
-		internal const string UnmanagedClientNamespace    = "Sap.Data.Hana";
+		public  const string UnmanagedClientNamespace     = "Sap.Data.Hana";
 		private const string UnmanagedProviderFactoryName = "Sap.Data.Hana";
 
 		private SapHanaProviderAdapter(

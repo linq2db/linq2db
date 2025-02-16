@@ -17,9 +17,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 {
 	public class ClickHouseProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _octonicaSyncRoot = new ();
-		private static readonly object _clientSyncRoot   = new ();
-		private static readonly object _mysqlSyncRoot    = new ();
+		private static readonly Lock _octonicaSyncRoot = new ();
+		private static readonly Lock _clientSyncRoot   = new ();
+		private static readonly Lock _mysqlSyncRoot    = new ();
 
 		private static ClickHouseProviderAdapter? _octonicaAdapter;
 		private static ClickHouseProviderAdapter? _clientAdapter;
@@ -519,10 +519,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 			internal sealed class ClickHouseException : TypeWrapper
 			{
 				private static LambdaExpression[] Wrappers { get; } =
-					[
+				[
 						// [0]: get ErrorCode
 						(Expression<Func<ClickHouseException, int>>)((ClickHouseException this_) => this_.ErrorCode),
-					];
+				];
 
 				public ClickHouseException(object instance, Delegate[] wrappers) : base(instance, wrappers)
 				{

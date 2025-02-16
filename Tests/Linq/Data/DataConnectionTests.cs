@@ -462,6 +462,64 @@ namespace Tests.Data
 			});
 		}
 
+		#region issue 4811
+		[Test]
+		public void Issue4811Test1()
+		{
+			var collection = new ServiceCollection();
+			var cs1 = "cs1";
+			var cs2 = "cs2";
+
+			collection.AddLinqToDBContext<DbConnection1>((provider, options) => options.UseConnectionString(ProviderName.SqlServer2022, cs1));
+			collection.AddLinqToDBContext<DbConnection2>((provider, options) => options.UseConnectionString(ProviderName.SqlServer2022, cs2));
+
+			var serviceProvider = collection.BuildServiceProvider();
+			var c1 = serviceProvider.GetService<DbConnection1>()!;
+			var c2 = serviceProvider.GetService<DbConnection2>()!;
+			Assert.Multiple(() =>
+			{
+				Assert.That(c1.ConnectionString, Is.EqualTo(cs1));
+				Assert.That(c2.ConnectionString, Is.EqualTo(cs2));
+			});
+		}
+
+		public class DbConnection11 : DataConnection
+		{
+			public DbConnection11(DataOptions options) : base(options)
+			{
+			}
+		}
+
+		public class DbConnection12 : DataConnection
+		{
+			public DbConnection12(DataOptions options) : base(options)
+			{
+			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4811")]
+		public void Issue4811Test2()
+		{
+			var collection = new ServiceCollection();
+			var cs1 = "cs1";
+			var cs2 = "cs2";
+
+			collection.AddLinqToDBContext<DbConnection11>((provider, options) => options.UseConnectionString(ProviderName.SqlServer2022, cs1));
+			collection.AddLinqToDBContext<DbConnection12>((provider, options) => options.UseConnectionString(ProviderName.SqlServer2022, cs2));
+
+			var serviceProvider = collection.BuildServiceProvider();
+			var c1 = serviceProvider.GetService<DbConnection11>()!;
+			var c2 = serviceProvider.GetService<DbConnection12>()!;
+			Assert.Multiple(() =>
+			{
+				Assert.That(c1.ConnectionString, Is.EqualTo(cs1));
+				Assert.That(c2.ConnectionString, Is.EqualTo(cs2));
+			});
+		}
+
+		#endregion
+
 		// informix connection limits interfere with test
 		[Test]
 		public void MultipleConnectionsTest([DataSources(TestProvName.AllInformix)] string context)
