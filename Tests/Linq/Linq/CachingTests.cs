@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
+using LinqToDB.Linq;
 
 using NUnit.Framework;
 
@@ -245,7 +246,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(4266)]
+		[ActiveIssue(Details = "https://github.com/linq2db/linq2db/issues/4266")]
 		[Test]
 		public void TestExtensionCollectionParameterSameQuery([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -254,6 +255,7 @@ namespace Tests.Linq
 			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
 			db.Execute("CREATE TYPE IntTableType AS TABLE(Id INT)");
 
+			var currentMiss = Query<int>.CacheMissCount;
 			try
 			{
 				var persons = new List<int>() { 1, 2 };
@@ -264,12 +266,14 @@ namespace Tests.Linq
 
 				var result =  query.ToList();
 				AreEqual(persons, result);
+				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(currentMiss + 1));
 
 				persons.AddRange(new int[] { 3, 4 });
 
 				result = query.ToList();
 
 				AreEqual(persons, result);
+				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(currentMiss + 1));
 			}
 			finally
 			{
@@ -277,7 +281,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(4266)]
+		[ActiveIssue(Details = "https://github.com/linq2db/linq2db/issues/4266")]
 		[Test]
 		public void TestExtensionCollectionParameterEqualQuery([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -286,6 +290,8 @@ namespace Tests.Linq
 			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
 			db.Execute("CREATE TYPE IntTableType AS TABLE(Id INT)");
 
+			var currentMiss = Query<int>.CacheMissCount;
+
 			try
 			{
 				var persons = new List<int>() { 1, 2 };
@@ -295,7 +301,9 @@ namespace Tests.Linq
 							select p.ID;
 
 				var result =  query.ToList();
+
 				AreEqual(persons, result);
+				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(currentMiss + 1));
 
 				persons.AddRange(new int[] { 3, 4 });
 
@@ -307,6 +315,7 @@ namespace Tests.Linq
 				result = query.ToList();
 
 				AreEqual(persons, result);
+				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(currentMiss + 1));
 			}
 			finally
 			{
