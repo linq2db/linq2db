@@ -601,6 +601,8 @@ namespace LinqToDB.Linq
 			}
 
 			var mainExpression = ReplaceParameterizedAndClosures(MainExpression, nonComparable, replacements);
+			mainExpression = new LinqToDB.Expressions.ExpressionVisitors.ContainsFilterConstantVisitor().Visit(mainExpression);
+
 			var compareInfo    = new QueryCacheCompareInfo(mainExpression, dynamicAccessors, comparisionFunctions);
 
 			return (compareInfo, parameterAccessors, parameterExpressions);
