@@ -116,7 +116,7 @@
 		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.AspNetCore.SignalR.Client"            Version="6.0.36" />
 		<PackageVersion Condition="'$(TargetFramework)'!='net6.0'" Include="Microsoft.AspNetCore.SignalR.Client"            Version="9.0.2" />
 
-		<PackageVersion Include="Microsoft.Extensions.Http"                             Version="9.0.2"  />
+		<PackageVersion Include="Microsoft.Extensions.Http"                             Version="9.0.1"  />
 		<PackageVersion Include="Microsoft.AspNetCore.SignalR"                          Version="1.2.0" />
 	</ItemGroup>
 

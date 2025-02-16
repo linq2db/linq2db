@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
@@ -7,7 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.HttpClient.Client\LinqToDB.Remote.HttpClient.Client.csproj" />
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.SignalR\LinqToDB.Remote.SignalR.csproj" />
 
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
 	</ItemGroup>

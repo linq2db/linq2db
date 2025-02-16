@@ -1,13 +1,13 @@
 ﻿using System;
 
+using HttpClientDemo.Client.DataModel;
+
 using LinqToDB.Remote.HttpClient.Client;
 
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 namespace HttpClientDemo.Client
 {
-	using DataModel;
-
 	internal class Program
 	{
 		static async Task Main(string[] args)
@@ -18,6 +18,7 @@ namespace HttpClientDemo.Client
 			//
 			builder.Services.AddLinqToDBHttpClientDataContext<IDemoDataModel>(
 				builder.HostEnvironment.BaseAddress,
+				//"api/linq2db",
 				client => new DemoClientData(client));
 
 			var app = builder.Build();

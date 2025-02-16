@@ -6,9 +6,10 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Extensions\LinqToDB.Extensions.csproj" />
-		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.HttpClient.Server\LinqToDB.Remote.HttpClient.Server.csproj" />
-		<ProjectReference Include="..\HttpClientDemo.Client\HttpClientDemo.Client.csproj" />
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.SignalR\LinqToDB.Remote.SignalR.csproj" />
+		<ProjectReference Include="..\SignalRDemo.Client\SignalRDemo.Client.csproj" />
 
 		<PackageReference Include="Microsoft.Data.Sqlite" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
 	</ItemGroup>
 </Project>

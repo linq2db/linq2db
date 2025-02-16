@@ -1,16 +1,16 @@
 ﻿using System;
 
-using HttpClientDemo.Client.DataModel;
-using HttpClientDemo.Server.Components;
-using HttpClientDemo.Server.DataModel;
+using SignalRDemo.Client.DataModel;
+using SignalRDemo.Server.Components;
+using SignalRDemo.Server.DataModel;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Extensions.Logging;
-using LinqToDB.Remote.HttpClient.Server;
+using LinqToDB.Remote.SignalR;
 
-namespace HttpClientDemo.Server
+namespace SignalRDemo.Server
 {
 	public class Program
 	{
@@ -30,14 +30,16 @@ namespace HttpClientDemo.Server
 				.UseDefaultLogging(provider)),
 				ServiceLifetime.Transient);
 
-			builder.Services
-				.AddControllers()
-				// Add linq2db HttpClient controller.
-				//
-				.AddLinqToDBController<IDemoDataModel>(
-					//"api/linq2db"
-					)
-				;
+			// Adds SignalR services and configures the SignalR options.
+			//
+			builder.Services.AddSignalR(hubOptions =>
+				{
+					hubOptions.ClientTimeoutInterval               = TimeSpan.FromSeconds(60);
+					hubOptions.HandshakeTimeout                    = TimeSpan.FromSeconds(30);
+					hubOptions.MaximumParallelInvocationsPerClient = 30;
+					hubOptions.EnableDetailedErrors                = true;
+					hubOptions.MaximumReceiveMessageSize           = 1024 * 1024 * 1024;
+				});
 
 			var app = builder.Build();
 
@@ -59,9 +61,9 @@ namespace HttpClientDemo.Server
 				.AddAdditionalAssemblies(typeof(Client._Imports).Assembly)
 				;
 
-			// Map controllers including linq2db HttpClient controller.
+			// Register linq2db SignalR Hub.
 			//
-			app.MapControllers();
+			app.MapHub<LinqToDBHub>("/hub/linq2db");
 
 			InitDemoDatabase(app.Services);
 
