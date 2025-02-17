@@ -14,7 +14,7 @@ namespace Tests
 				from n in new[] { sp, sp + TestBase.LinqServiceSuffix }
 				select n;
 
-			Providers = new HashSet<string>(allProviders);
+			Providers = [.. allProviders];
 		}
 
 		public HashSet<string> Providers { get; set; }

@@ -36,11 +36,26 @@ namespace LinqToDB.Common
 		}
 
 		[DebuggerStepThrough]
+		public DbDataType(Type systemType, DataType dataType, int? length) : this(systemType)
+		{
+			DataType = dataType;
+			Length   = length;
+		}
+
+		[DebuggerStepThrough]
 		public DbDataType(Type systemType, DataType dataType, string? dbType, int? length) : this(systemType)
 		{
 			DataType   = dataType;
 			DbType     = dbType;
 			Length     = length;
+		}
+
+		[DebuggerStepThrough]
+		public DbDataType(Type systemType, DataType dataType, int? precision, int? scale) : this(systemType)
+		{
+			DataType  = dataType;
+			Precision = precision;
+			Scale     = scale;
 		}
 
 		[DebuggerStepThrough]

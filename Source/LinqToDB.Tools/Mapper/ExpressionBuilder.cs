@@ -629,7 +629,7 @@ namespace LinqToDB.Tools.Mapper
 				dic[key] = value;
 		}
 
-		static HashSet<T> ToHashSet<T>([InstantHandle] IEnumerable<T> source) => new (source);
+		static HashSet<T> ToHashSet<T>([InstantHandle] IEnumerable<T> source) => [.. source];
 
 		static void AddRange<T>(ICollection<T> source, [InstantHandle] IEnumerable<T> items)
 		{

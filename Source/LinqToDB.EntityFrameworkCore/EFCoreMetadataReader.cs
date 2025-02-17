@@ -352,7 +352,7 @@ namespace LinqToDB.EntityFrameworkCore
 						else
 						{
 							var ms = _model != null ? LinqToDBForEFTools.GetMappingSchema(_model, null, null) : MappingSchema.Default;
-							dataType = ms.GetDataType(typeMapping.ClrType).Type.DataType;
+							dataType = ms.GetDbDataType(typeMapping.ClrType).DataType;
 						}
 					}
 

@@ -280,12 +280,12 @@ namespace Tests
 
 		private   List<ParentInheritanceValue>? _parentInheritanceValue;
 		protected List<ParentInheritanceValue> ParentInheritanceValue => _parentInheritanceValue ??=
-					ParentInheritance.Where(p => p is ParentInheritanceValue).Cast<ParentInheritanceValue>().ToList();
+					ParentInheritance.OfType<ParentInheritanceValue>().ToList();
 
 		private   List<ParentInheritance1>? _parentInheritance1;
 		protected List<ParentInheritance1> ParentInheritance1 =>
 			_parentInheritance1 ??=
-				ParentInheritance.Where(p => p is ParentInheritance1).Cast<ParentInheritance1>().ToList();
+				ParentInheritance.OfType<ParentInheritance1>().ToList();
 
 		private   List<ParentInheritanceBase4>? _parentInheritance4;
 		protected List<ParentInheritanceBase4> ParentInheritance4 =>
