@@ -251,7 +251,7 @@ namespace Tests.Linq
 
 		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266")]
-		public void TestExtensionCollectionParameterSameQuery([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestExtensionCollectionParameterSameQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -287,7 +287,7 @@ namespace Tests.Linq
 
 		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266")]
-		public void TestExtensionCollectionParameterEqualQuery([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestExtensionCollectionParameterEqualQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -373,7 +373,7 @@ namespace Tests.Linq
 		private static bool InExtStruct<T>([ExprParameter] T field, [ExprParameter] IntArrayStruct values) where T : struct, IEquatable<int> => throw new NotImplementedException();
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266")]
-		public void Issue4266Test_Class([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Issue4266Test_Class([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetConverter<IntArrayClass, DataParameter>(v => v.CreateParameter());
@@ -411,7 +411,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266")]
-		public void Issue4266Test_Struct([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Issue4266Test_Struct([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetConverter<IntArrayStruct, DataParameter>(v => v.CreateParameter());
