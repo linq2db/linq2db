@@ -8,7 +8,6 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Extensions.Logging;
-using LinqToDB.Remote;
 using LinqToDB.Remote.SignalR;
 
 namespace SignalRServer
@@ -44,9 +43,6 @@ namespace SignalRServer
 					hubOptions.MaximumReceiveMessageSize           = 1024 * 1024 * 1024;
 				})
 				;
-
-			builder.Services.AddScoped<ILinqService<IDemoDataModel>>(
-				provider => new LinqService<IDemoDataModel>(provider.GetRequiredService<IDataContextFactory<IDemoDataModel>>()));
 
 			var app = builder.Build();
 
