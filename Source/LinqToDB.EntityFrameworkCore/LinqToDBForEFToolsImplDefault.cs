@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 
 using JetBrains.Annotations;
 
@@ -386,8 +387,8 @@ namespace LinqToDB.EntityFrameworkCore
 
 			void MapEFCoreType(Type modelType)
 			{
-				var currentType = mappingSchema.GetDataType(modelType);
-				if (currentType != SqlDataType.Undefined)
+				var currentType = mappingSchema.GetDbDataType(modelType);
+				if (currentType != DbDataType.Undefined)
 					return;
 
 				var infos = convertorSelector.Select(modelType).ToArray();
@@ -396,7 +397,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 				var info = infos[0];
 				var providerType = info.ProviderClrType;
-				var dataType = mappingSchema.GetDataType(providerType);
+				var dataType = mappingSchema.GetDbDataType(providerType);
 				var fromParam = Expression.Parameter(modelType, "t");
 				var toParam = Expression.Parameter(providerType, "t");
 				var converter = info.Create();
@@ -414,12 +415,12 @@ namespace LinqToDB.EntityFrameworkCore
 							Expression.Invoke(Expression.Constant(converter.ConvertFromProvider), WithConvertToObject(toParam)),
 							modelType), toParam));
 
-				mappingSchema.SetValueToSqlConverter(modelType, (sb, dt, v)
-					=> sqlConverter.Convert(sb, mappingSchema, dt.Type, dataOptions, converter.ConvertToProvider(v)));
+				mappingSchema.SetValueToSqlConverter(modelType, (StringBuilder sb, DbDataType dt, object v)
+					=> sqlConverter.Convert(sb, mappingSchema, dt, dataOptions, converter.ConvertToProvider(v)));
 			}
 		}
 
-		private static LambdaExpression WithToDataParameter(Expression valueExpression, SqlDataType dataType, ParameterExpression fromParam) 
+		private static LambdaExpression WithToDataParameter(Expression valueExpression, DbDataType dataType, ParameterExpression fromParam) 
 			=> Expression.Lambda
 			(
 				Expression.New
@@ -427,8 +428,8 @@ namespace LinqToDB.EntityFrameworkCore
 					ReflectionMethods.DataParameterConstructor,
 					Expression.Constant("Conv", typeof(string)),
 					valueExpression,
-					Expression.Constant(dataType.Type.DataType, typeof(DataType)),
-					Expression.Constant(dataType.Type.DbType, typeof(string))
+					Expression.Constant(dataType.DataType, typeof(DataType)),
+					Expression.Constant(dataType.DbType, typeof(string))
 				), 
 				fromParam
 			);

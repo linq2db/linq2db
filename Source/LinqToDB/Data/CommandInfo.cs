@@ -1491,7 +1491,7 @@ namespace LinqToDB.Data
 				var value      = parameter.Value;
 
 				if (dbDataType.DataType == DataType.Undefined && value != null)
-					dbDataType = dbDataType.WithDataType(dataConnection.MappingSchema.GetDataType(value.GetType()).Type.DataType);
+					dbDataType = dbDataType.WithDataType(dataConnection.MappingSchema.GetDbDataType(value.GetType()).DataType);
 
 				if (parameter.Direction != null) p.Direction =       parameter.Direction.Value;
 				if (parameter.Size      != null) p.Size      =       parameter.Size     .Value;
@@ -1643,7 +1643,7 @@ namespace LinqToDB.Data
 
 									var columnDbDataType = new DbDataType(memberType, column.DataType, column.DbType, column.Length, column.Precision, column.Scale);
 									if (columnDbDataType.DataType == DataType.Undefined)
-										columnDbDataType = columnDbDataType.WithDataType(dataConnection.MappingSchema.GetDataType(memberType).Type.DataType);
+										columnDbDataType = columnDbDataType.WithDataType(dataConnection.MappingSchema.GetDbDataType(memberType).DataType);
 
 									return (Expression)Expression.MemberInit(
 										Expression.New(typeof(DataParameter)),

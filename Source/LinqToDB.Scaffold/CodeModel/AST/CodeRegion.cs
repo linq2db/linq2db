@@ -13,7 +13,7 @@ namespace LinqToDB.CodeModel
 		{
 			Type     = ownerType;
 			Name     = name;
-			_members = new (members ?? []);
+			_members = [.. members ?? []];
 		}
 
 		public CodeRegion(CodeClass ownerType, string name)

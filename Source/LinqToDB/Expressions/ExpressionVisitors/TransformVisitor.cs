@@ -396,7 +396,7 @@ namespace LinqToDB.Expressions.ExpressionVisitors
 
 				if (e != item)
 				{
-					list ??= new List<T>(source);
+					list ??= [.. source];
 					list[i] = e;
 				}
 			}
@@ -416,7 +416,7 @@ namespace LinqToDB.Expressions.ExpressionVisitors
 
 				if (e != item)
 				{
-					list    ??= new List<T>(source);
+					list    ??= [.. source];
 					list[i] = e;
 				}
 			}
