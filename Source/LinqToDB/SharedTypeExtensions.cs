@@ -53,15 +53,6 @@ namespace LinqToDB
 			=> type is { IsClass: true, IsArray: false }
 				&& type != typeof(string);
 
-		public static bool IsValidComplexType(this Type type)
-			=> !type.IsArray
-				&& !type.IsInterface
-				&& !IsScalarType(type);
-
-		public static bool IsScalarType(this Type type)
-			=> type == typeof(string)
-				|| CommonTypeDictionary.ContainsKey(type);
-
 		public static bool IsPropertyBagType(/*[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] */ this Type type)
 		{
 			if (type.IsGenericTypeDefinition)
