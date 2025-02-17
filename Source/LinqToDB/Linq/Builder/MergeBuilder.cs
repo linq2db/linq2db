@@ -5,7 +5,7 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 

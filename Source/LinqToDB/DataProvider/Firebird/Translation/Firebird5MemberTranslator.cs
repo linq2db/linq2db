@@ -1,5 +1,5 @@
-﻿using LinqToDB.Linq.Translation;
-using LinqToDB.SqlQuery;
+﻿using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.DataProvider.Firebird.Translation
 {

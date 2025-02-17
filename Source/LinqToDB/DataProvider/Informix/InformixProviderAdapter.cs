@@ -2,7 +2,6 @@
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
-using System.Threading;
 
 using LinqToDB.Common;
 using LinqToDB.DataProvider.DB2;

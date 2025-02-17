@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using LinqToDB.Common;
 using LinqToDB.Common.Internal.Cache;
 using LinqToDB.Infrastructure;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Linq

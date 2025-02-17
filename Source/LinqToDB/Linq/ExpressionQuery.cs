@@ -13,8 +13,8 @@ using LinqToDB.Compatibility.System;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Internal;
-using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Linq

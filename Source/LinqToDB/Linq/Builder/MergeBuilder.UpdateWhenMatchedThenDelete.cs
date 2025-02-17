@@ -3,7 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 

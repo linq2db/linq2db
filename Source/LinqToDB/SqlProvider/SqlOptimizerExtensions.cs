@@ -1,6 +1,6 @@
 ﻿using LinqToDB.DataProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.SqlProvider
 {

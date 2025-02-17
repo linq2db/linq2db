@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Data;
 
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Scaffold
 {

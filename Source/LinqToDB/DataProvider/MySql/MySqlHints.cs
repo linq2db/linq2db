@@ -7,9 +7,9 @@ using System.Text;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.MySql
 {

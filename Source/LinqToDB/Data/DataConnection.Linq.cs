@@ -3,8 +3,8 @@ using System.Data.Common;
 using System.Linq.Expressions;
 
 using LinqToDB.DataProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Data
 {

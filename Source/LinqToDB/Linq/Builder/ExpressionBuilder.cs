@@ -14,10 +14,10 @@ using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Builder.Visitors;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Linq.Builder

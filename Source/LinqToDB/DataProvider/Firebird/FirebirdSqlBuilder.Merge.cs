@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Firebird

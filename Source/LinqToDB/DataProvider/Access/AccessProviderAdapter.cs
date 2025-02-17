@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
-using System.Threading;
 
 using OdbcType = LinqToDB.DataProvider.OdbcProviderAdapter.OdbcType;
 using OleDbType = LinqToDB.DataProvider.OleDbProviderAdapter.OleDbType;

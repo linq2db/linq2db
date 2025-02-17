@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Threading;
 
 using LinqToDB.Extensions;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Expressions
 {

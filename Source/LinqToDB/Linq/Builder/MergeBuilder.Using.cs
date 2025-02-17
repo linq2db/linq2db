@@ -2,7 +2,7 @@
 using System.Reflection;
 
 using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 

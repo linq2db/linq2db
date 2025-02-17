@@ -4,8 +4,9 @@ using System.Linq;
 
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.SqlQuery;
-using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.DataProvider
 {

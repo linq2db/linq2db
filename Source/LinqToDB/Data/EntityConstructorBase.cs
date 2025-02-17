@@ -9,11 +9,11 @@ using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
 using LinqToDB.Interceptors.Internal;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
-using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Data

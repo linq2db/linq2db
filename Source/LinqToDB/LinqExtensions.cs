@@ -3926,7 +3926,7 @@ namespace LinqToDB
 		/// <returns>Test source code.</returns>
 		public static string GenerateTestString<T>(this IQueryable<T> query, bool mangleNames = false)
 		{
-			return new ExpressionTestGenerator(mangleNames, Internals.GetDataContext(query) ?? throw new ArgumentException("Query is not a Linq To DB query", nameof(query)))
+			return new ExpressionTestGenerator(mangleNames, Linq.Internals.GetDataContext(query) ?? throw new ArgumentException("Query is not a Linq To DB query", nameof(query)))
 				.GenerateSourceString(query.Expression);
 		}
 

@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
 

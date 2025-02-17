@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Scaffold
 {

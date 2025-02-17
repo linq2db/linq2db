@@ -2,8 +2,8 @@
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Builder;
-using LinqToDB.SqlQuery;
 
 // ReSharper disable CheckNamespace
 

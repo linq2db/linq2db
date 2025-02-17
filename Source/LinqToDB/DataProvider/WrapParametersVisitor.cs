@@ -1,7 +1,7 @@
 ﻿using System;
 
-using LinqToDB.SqlQuery;
-using LinqToDB.SqlQuery.Visitors;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.DataProvider
 {

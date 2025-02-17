@@ -8,10 +8,10 @@ using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using static LinqToDB.Linq.QueryCacheCompareInfo;
 

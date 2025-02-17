@@ -5,14 +5,13 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
 using Tests.Model;
-
 using Tests.xUpdate;
 
 using static Tests.xUpdate.MergeTests;

@@ -6,6 +6,7 @@ using System.Text;
 
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;

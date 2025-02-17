@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Data.Common;
-using System.Linq.Expressions;
-using System.Threading;
 
 using LinqToDB.Expressions.Types;
 

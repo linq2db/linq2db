@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Linq

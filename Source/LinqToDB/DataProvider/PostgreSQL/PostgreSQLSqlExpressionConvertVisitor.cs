@@ -2,6 +2,7 @@
 
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 

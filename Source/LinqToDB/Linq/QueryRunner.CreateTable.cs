@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;

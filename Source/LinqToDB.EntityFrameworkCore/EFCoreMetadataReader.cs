@@ -28,10 +28,11 @@ using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
-using LinqToDB.SqlQuery;
 
 using EfExpressionPrinter = Microsoft.EntityFrameworkCore.Query.ExpressionPrinter;
 using EfSqlExpression = Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression;
+
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.EntityFrameworkCore
 {

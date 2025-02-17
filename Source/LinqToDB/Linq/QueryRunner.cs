@@ -20,9 +20,9 @@ using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Reflection;
-using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Linq

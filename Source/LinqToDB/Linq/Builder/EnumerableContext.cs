@@ -8,9 +8,9 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {

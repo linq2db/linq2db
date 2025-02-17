@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {

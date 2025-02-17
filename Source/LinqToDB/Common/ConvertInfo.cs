@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Threading;
 
 using LinqToDB.Common.Internal;
 using LinqToDB.Data;

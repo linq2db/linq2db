@@ -7,8 +7,8 @@ using System.Linq.Expressions;
 using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {

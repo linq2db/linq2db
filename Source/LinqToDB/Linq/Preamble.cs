@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Linq
 {

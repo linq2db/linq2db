@@ -1,4 +1,5 @@
-﻿using LinqToDB.SqlQuery;
+﻿using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
