@@ -59,22 +59,22 @@ namespace LinqToDB.DataProvider.DB2
 
 		DB2MappingSchema() : base(ProviderName.DB2)
 		{
-			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
-			SetDataType(typeof(byte), new SqlDataType(DataType.Int16, typeof(byte)));
+			SetDataType(typeof(string), new DbDataType(typeof(string), DataType.NVarChar, null, 255));
+			SetDataType(typeof(byte), new DbDataType(typeof(byte), DataType.Int16));
 
-			SetValueToSqlConverter(typeof(Guid),     (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Guid)v).ToByteArray()));
-			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
-			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(TimeSpan), (sb, _,_,v) => ConvertTimeToSql    (sb, (TimeSpan)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(Guid),     (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertBinaryToSql  (sb, ((Guid)v).ToByteArray()));
+			SetValueToSqlConverter(typeof(string),   (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertStringToSql  (sb, (string)v));
+			SetValueToSqlConverter(typeof(char),     (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),   (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertBinaryToSql  (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),   (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(TimeSpan), (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertTimeToSql    (sb, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, _, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
 
 			// set reader conversions from literals
 			SetConverter<string, DateTime>(ParseDateTime);
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 			SetConverter<string, DateOnly>(ParseDateOnly);
 #endif
 		}
@@ -102,13 +102,13 @@ namespace LinqToDB.DataProvider.DB2
 #else
 			string
 #endif
-		GetTimestampFormat(SqlDataType type)
+		GetTimestampFormat(DbDataType type)
 		{
-			var precision = type.Type.Precision;
+			var precision = type.Precision;
 
-			if (precision == null && type.Type.DbType != null)
+			if (precision == null && type.DbType != null)
 			{
-				var dbtype = type.Type.DbType.ToLowerInvariant();
+				var dbtype = type.DbType.ToLowerInvariant();
 				if (dbtype.StartsWith("timestamp("))
 				{
 					if (int.TryParse(dbtype.Substring(10, dbtype.Length - 11), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var fromDbType))
@@ -131,7 +131,7 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 #if NET6_0_OR_GREATER
-		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
 		{
 			stringBuilder.Append('\'');
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
@@ -156,10 +156,10 @@ namespace LinqToDB.DataProvider.DB2
 		}
 #endif
 
-		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType type, DateTime value)
+		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DbDataType type, DateTime value)
 		{
 			stringBuilder.Append('\'');
-			if (type.Type.DataType == DataType.Date || "date".Equals(type.Type.DbType, StringComparison.OrdinalIgnoreCase))
+			if (type.DataType == DataType.Date || "date".Equals(type.DbType, StringComparison.OrdinalIgnoreCase))
 				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FORMAT, value);
 			else
 				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, GetTimestampFormat(type), value);

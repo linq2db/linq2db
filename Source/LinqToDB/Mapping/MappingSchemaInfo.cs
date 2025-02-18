@@ -202,25 +202,25 @@ namespace LinqToDB.Mapping
 
 		#region DataTypes
 
-		volatile ConcurrentDictionary<Type,SqlDataType>? _dataTypes;
+		volatile ConcurrentDictionary<Type,DbDataType>? _dataTypes;
 
-		public Option<SqlDataType> GetDataType(Type type)
+		public Option<DbDataType> GetDataType(Type type)
 		{
 			if (_dataTypes != null)
 			{
 				if (_dataTypes.TryGetValue(type, out var dataType))
-					return Option<SqlDataType>.Some(dataType);
+					return Option<DbDataType>.Some(dataType);
 			}
 
-			return Option<SqlDataType>.None;
+			return Option<DbDataType>.None;
 		}
 
 		public void SetDataType(Type type, DataType dataType)
 		{
-			SetDataType(type, new SqlDataType(dataType, type, null, null, null, null));
+			SetDataType(type, new DbDataType(type, dataType));
 		}
 
-		public void SetDataType(Type type, SqlDataType dataType)
+		public void SetDataType(Type type, DbDataType dataType)
 		{
 			if (_dataTypes == null)
 				lock (_syncRoot)
@@ -230,7 +230,7 @@ namespace LinqToDB.Mapping
 
 			var nullableType = type.MakeNullable();
 			if (nullableType != type)
-				_dataTypes[nullableType] = new SqlDataType(dataType.Type.WithSystemType(dataType.Type.SystemType.MakeNullable()));
+				_dataTypes[nullableType] = dataType.WithSystemType(dataType.SystemType.MakeNullable());
 
 			ResetID();
 		}

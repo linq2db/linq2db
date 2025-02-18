@@ -360,7 +360,7 @@ namespace LinqToDB.DataProvider.Informix
 
 				if (dbDataType.DataType == DataType.Undefined)
 				{
-					dbDataType = MappingSchema.GetDataType(dbDataType.SystemType).Type;
+					dbDataType = MappingSchema.GetDbDataType(dbDataType.SystemType);
 				}
 
 				if (paramValue.ProviderValue is byte[] bytes)

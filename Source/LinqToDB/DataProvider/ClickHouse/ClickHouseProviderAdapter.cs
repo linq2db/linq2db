@@ -218,7 +218,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			if (decimalType != null)
 			{
 				mappingSchema = new ();
-				mappingSchema.AddScalarType(decimalType, new SqlDataType(new DbDataType(decimalType, DataType.Decimal256, null, null, 76, ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)));
+				mappingSchema.AddScalarType(decimalType, new DbDataType(decimalType, DataType.Decimal256, null, null, 76, ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE));
 
 				typeMapper.RegisterTypeWrapper<ClientWrappers.ClickHouseDecimal>(decimalType);
 				typeMapper.FinalizeMappings();

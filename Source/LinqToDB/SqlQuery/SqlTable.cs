@@ -67,17 +67,17 @@ namespace LinqToDB.SqlQuery
 
 				if (field.Type.DataType == DataType.Undefined)
 				{
-					var dataType = entityDescriptor.MappingSchema.GetDataType(field.Type.SystemType);
+					var dataType = entityDescriptor.MappingSchema.GetDbDataType(field.Type.SystemType);
 
-					if (dataType.Type.DataType == DataType.Undefined)
+					if (dataType.DataType == DataType.Undefined)
 					{
-						dataType = entityDescriptor.MappingSchema.GetUnderlyingDataType(field.Type.SystemType, out var canBeNull);
+						dataType = entityDescriptor.MappingSchema.GetUnderlyingDbDataType(field.Type.SystemType, out var canBeNull);
 
 						if (canBeNull)
 							field.CanBeNull = true;
 					}
 
-					field.Type = field.Type.WithDataType(dataType.Type.DataType);
+					field.Type = field.Type.WithDataType(dataType.DataType);
 
 					// try to get type from converter
 					if (field.Type.DataType == DataType.Undefined)
@@ -100,9 +100,9 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 
-					if (field.Type.Length    == null) field.Type = field.Type.WithLength   (dataType.Type.Length);
-					if (field.Type.Precision == null) field.Type = field.Type.WithPrecision(dataType.Type.Precision);
-					if (field.Type.Scale     == null) field.Type = field.Type.WithScale    (dataType.Type.Scale);
+					if (field.Type.Length    == null) field.Type = field.Type.WithLength   (dataType.Length);
+					if (field.Type.Precision == null) field.Type = field.Type.WithPrecision(dataType.Precision);
+					if (field.Type.Scale     == null) field.Type = field.Type.WithScale    (dataType.Scale);
 				}
 			}
 

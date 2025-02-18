@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -27,7 +28,7 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			ms.SetDataType(typeof(LocalDateTime), new SqlDataType(new DbDataType(typeof(DateTime), DataType.DateTime)));
+			ms.SetDataType(typeof(LocalDateTime), new DbDataType(typeof(DateTime), DataType.DateTime));
 
 			ms.SetConverter<LocalDateTime, DataParameter>(timeStamp =>
 				new DataParameter
@@ -41,7 +42,7 @@ namespace Tests.UserTests
 				new DateTime(timeStamp.Year, timeStamp.Month, timeStamp.Day, timeStamp.Hour,
 					timeStamp.Minute, timeStamp.Second, timeStamp.Millisecond));
 
-			ms.SetValueToSqlConverter(typeof(LocalDateTime), (sb, dt, v) =>
+			ms.SetValueToSqlConverter(typeof(LocalDateTime), (StringBuilder sb, DbDataType dt, object v) =>
 				{
 					var d = (LocalDateTime)v;
 					var d1 = new DateTime(d.Year, d.Month, d.Day, d.Hour,
