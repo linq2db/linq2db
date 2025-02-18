@@ -4,16 +4,15 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
+using LinqToDB.Data;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.Async;
-	using LinqToDB.Data;
-	using Model;
-	using Tools;
-
 	[TestFixture]
 	public class DataContextTests : TestBase
 	{

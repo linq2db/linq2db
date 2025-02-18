@@ -2,15 +2,16 @@
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
+
+using LinqToDB.Expressions.Types;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Expressions;
-
 	public class SybaseProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _nativeSyncRoot = new ();
-		private static readonly object _managedSyncRoot = new ();
+		private static readonly Lock _nativeSyncRoot = new ();
+		private static readonly Lock _managedSyncRoot = new ();
 
 		private static SybaseProviderAdapter? _nativeInstance;
 		private static SybaseProviderAdapter? _managedInstance;

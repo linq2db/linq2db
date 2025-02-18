@@ -2,8 +2,6 @@
 
 using NUnit.Framework;
 
-using Tests;
-
 namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	public class PomeloMySqlTests : NorthwindContextTestBase

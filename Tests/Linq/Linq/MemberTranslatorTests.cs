@@ -2,13 +2,13 @@
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 
+using LinqToDB;
+using LinqToDB.Linq.Translation;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB;
-	using LinqToDB.Linq.Translation;
-
 	public class MemberTranslatorTests : TestBase
 	{
 		class RegExprMemberTranslator : MemberTranslatorBase
@@ -40,7 +40,6 @@ namespace Tests.Linq
 				return translationContext.CreatePlaceholder(sc, methodCall);
 			}
 		}
-
 
 		[Test]
 		public void MemberTranslatorTest([IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)

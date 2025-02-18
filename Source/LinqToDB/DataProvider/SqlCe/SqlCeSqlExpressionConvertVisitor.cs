@@ -1,12 +1,12 @@
 ﻿using System;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Extensions;
-	using SqlProvider;
-	using SqlQuery;
-	using Common;
-
 	public class SqlCeSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public SqlCeSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)

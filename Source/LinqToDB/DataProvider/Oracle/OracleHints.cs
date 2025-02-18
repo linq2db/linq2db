@@ -5,12 +5,12 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
-
 	public static partial class OracleHints
 	{
 		// https://docs.oracle.com/cd/B19306_01/server.102/b14200/sql_elements006.htm

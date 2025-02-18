@@ -1,0 +1,4 @@
+[*.{cs,vb}]
+
+# Namespaces
+dotnet_style_namespace_match_folder = true:warning

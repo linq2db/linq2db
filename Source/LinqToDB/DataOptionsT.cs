@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB
+﻿namespace LinqToDB
 {
 	/// <summary>
 	/// Typed <see cref="DataOptions"/> wrapper to support multiple option objects registration in DI containers.

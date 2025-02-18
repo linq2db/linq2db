@@ -3,18 +3,17 @@ using System.Collections.Concurrent;
 using System.Data.Common;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Interceptors;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.Tools;
+
 namespace LinqToDB.Expressions
 {
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Interceptors;
-	using Linq;
-	using Mapping;
-	using Reflection;
-	using Tools;
-	using Infrastructure;
-
 	sealed class ConvertFromDataReaderExpression : Expression
 	{
 		public ConvertFromDataReaderExpression(Type type, int idx, IValueConverter? converter, Expression dataReaderParam, bool? canBeNull)
@@ -58,7 +57,7 @@ namespace LinqToDB.Expressions
 
 			var columnReader = new ColumnReader(dataContext, dataContext.MappingSchema, _type, _idx, Converter, slowMode);
 
-			if (slowMode && Configuration.OptimizeForSequentialAccess)
+			if (slowMode && Common.Configuration.OptimizeForSequentialAccess)
 				return Convert(Call(Constant(columnReader), Methods.LinqToDB.ColumnReader.GetValueSequential, _dataReaderParam, Call(_dataReaderParam, Methods.ADONet.IsDBNull, ExpressionInstances.Int32Array(_idx)), Call(Methods.LinqToDB.ColumnReader.RawValuePlaceholder)), _type);
 			else
 				return Convert(Call(Constant(columnReader), Methods.LinqToDB.ColumnReader.GetValue, _dataReaderParam), _type);

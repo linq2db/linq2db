@@ -4,14 +4,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Internal;
-	using Reflection;
-	using Mapping;
-
 	[BuildsMethodCall("LoadWith", "ThenLoad", "LoadWithAsTable", "LoadWithInternal")]
 	sealed class LoadWithBuilder : MethodCallBuilder
 	{
@@ -391,6 +391,7 @@ namespace LinqToDB.Linq.Builder
 					if (flags.IsAssociationRoot())
 						return new ContextRefExpression(path.Type, RegisterContext);
 				}
+
 				return base.MakeExpression(path, flags);
 			}
 

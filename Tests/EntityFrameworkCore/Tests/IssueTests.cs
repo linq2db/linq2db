@@ -12,7 +12,6 @@ using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
 using LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel;
 using LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -977,6 +976,23 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				});
 			ctx.SaveChanges();
 			await ctx.IssueEnum.ToListAsyncLinqToDB();
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4816")]
+		public void Issue4816Test([EFIncludeDataSources(TestProvName.AllSqlServer2017Plus)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.GetTable<Issue4816Table>()
+				.GroupBy(r => r.Id)
+				.Select(g => new
+				{
+					g.Key,
+					VarChar = Sql.StringAggregate(g.Select(g => g.ValueVarChar), ",").ToValue(),
+					NVarChar = Sql.StringAggregate(g.Select(g => g.ValueNVarChar), ",").ToValue(),
+				})
+				.ToArray();
 		}
 	}
 

@@ -5,17 +5,19 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB
 {
-	using Common.Internal;
-	using Expressions;
-	using Extensions;
-	using Linq.Builder;
-	using Mapping;
-	using SqlQuery;
-
 	partial class Sql
 	{
 		/// <summary>
@@ -215,6 +217,7 @@ namespace LinqToDB
 							if (prevMatch == match.Index && prevNotEmptyMatch == match.Index - 3 || (prevNotEmptyMatch >= 0 && e[prevNotEmptyMatch] != ' '))
 								res = " " + calculated;
 						}
+
 						spaceNeeded = false;
 					}
 

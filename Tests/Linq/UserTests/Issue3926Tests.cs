@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -68,7 +70,6 @@ namespace Tests.UserTests
 
 			public List<DIALOG_CATEGORY> Categories { get; set; } = null!;
 		}
-
 
 		private static EntityMappingBuilder<T> MapDataObject<T>(FluentMappingBuilder builder, string tableName)
 			where T : GuidDataObject

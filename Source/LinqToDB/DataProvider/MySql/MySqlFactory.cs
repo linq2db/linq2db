@@ -2,10 +2,10 @@
 
 using JetBrains.Annotations;
 
+using LinqToDB.Configuration;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Configuration;
-
 	[UsedImplicitly]
 	sealed class MySqlFactory : DataProviderFactoryBase
 	{

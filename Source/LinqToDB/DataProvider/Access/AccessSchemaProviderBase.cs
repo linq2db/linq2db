@@ -1,11 +1,11 @@
 ﻿using System;
 using System.IO;
 
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Data;
-	using SchemaProvider;
-
 	abstract class AccessSchemaProviderBase : SchemaProviderBase
 	{
 		protected AccessSchemaProviderBase()

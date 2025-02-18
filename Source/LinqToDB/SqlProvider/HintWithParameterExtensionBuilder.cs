@@ -1,11 +1,10 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
+
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.SqlProvider
 {
-	using SqlQuery;
-
 	sealed class HintWithParameterExtensionBuilder : ISqlQueryExtensionBuilder
 	{
 		void ISqlQueryExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)

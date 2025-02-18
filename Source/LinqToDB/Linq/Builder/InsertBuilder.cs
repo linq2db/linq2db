@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using SqlQuery;
-	using Common;
-	using LinqToDB.Expressions;
-	using LinqToDB.Data;
-
 	[BuildsMethodCall(
 		nameof(LinqExtensions.Insert), 
 		nameof(LinqExtensions.InsertWithIdentity), 

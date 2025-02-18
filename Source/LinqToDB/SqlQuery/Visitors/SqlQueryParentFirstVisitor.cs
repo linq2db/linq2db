@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery.Visitors
 {
-	using Common;
-
 	public class SqlQueryParentFirstVisitor : QueryElementVisitor
 	{
 		Func<IQueryElement, bool> _action = default!;

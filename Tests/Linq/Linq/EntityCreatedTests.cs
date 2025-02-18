@@ -1,15 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
+using LinqToDB.Interceptors;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.Interceptors;
-	using Model;
-
 	[TestFixture]
 	public class EntityCreatedTests : TestBase
 	{

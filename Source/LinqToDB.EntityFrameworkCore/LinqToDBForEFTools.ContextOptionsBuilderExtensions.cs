@@ -1,12 +1,12 @@
 ﻿using System;
 
+using LinqToDB.EntityFrameworkCore.Internal;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Internal;
-
 	public static partial class LinqToDBForEFTools
 	{
 		/// <summary>

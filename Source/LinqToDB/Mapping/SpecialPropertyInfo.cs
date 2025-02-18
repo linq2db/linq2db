@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Mapping
 {
-	using Reflection;
-
 	/// <inheritdoc />
 	/// <summary>
 	/// Represents a dynamic column, which doesn't have a backing field in it's declaring type.

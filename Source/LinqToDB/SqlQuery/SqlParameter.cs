@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-
 	public class SqlParameter : SqlExpressionBase
 	{
 		public SqlParameter(DbDataType type, string? name, object? value)

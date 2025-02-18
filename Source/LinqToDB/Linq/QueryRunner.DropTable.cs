@@ -1,13 +1,11 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Linq
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-	using Tools;
-
 	static partial class QueryRunner
 	{
 		public static class DropTable<T>
