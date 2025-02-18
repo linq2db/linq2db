@@ -1,4 +1,4 @@
-﻿using LinqToDB.Expressions;
+﻿using LinqToDB.Internal.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {

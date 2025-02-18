@@ -6,8 +6,8 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Expressions;
 
 namespace LinqToDB.Mapping
 {

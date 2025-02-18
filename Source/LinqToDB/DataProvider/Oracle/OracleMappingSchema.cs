@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

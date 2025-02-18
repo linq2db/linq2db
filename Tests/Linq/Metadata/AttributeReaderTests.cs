@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 

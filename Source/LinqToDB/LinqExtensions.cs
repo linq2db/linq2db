@@ -14,6 +14,7 @@ using JetBrains.Annotations;
 using LinqToDB.Async;
 using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
@@ -3926,7 +3927,7 @@ namespace LinqToDB
 		/// <returns>Test source code.</returns>
 		public static string GenerateTestString<T>(this IQueryable<T> query, bool mangleNames = false)
 		{
-			return new ExpressionTestGenerator(mangleNames, Linq.Internals.GetDataContext(query) ?? throw new ArgumentException("Query is not a Linq To DB query", nameof(query)))
+			return new ExpressionTestGenerator(mangleNames, Internals.GetDataContext(query) ?? throw new ArgumentException("Query is not a Linq To DB query", nameof(query)))
 				.GenerateSourceString(query.Expression);
 		}
 

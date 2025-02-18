@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 
 namespace Tests.Linq
 {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {

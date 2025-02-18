@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.Internal;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 

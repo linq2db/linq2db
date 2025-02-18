@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Expressions.Types;
+using LinqToDB.Internal.Expressions.Types;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

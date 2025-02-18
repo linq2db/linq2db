@@ -5,7 +5,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
-using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;

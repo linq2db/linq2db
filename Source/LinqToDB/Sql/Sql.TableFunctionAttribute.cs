@@ -71,7 +71,8 @@ namespace LinqToDB
 				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter, false, out var error)!;
 
 				if (error != null)
-					throw Expressions.SqlErrorExpression.EnsureError(error).CreateException();
+
+					throw Internal.Expressions.SqlErrorExpression.EnsureError(error).CreateException();
 			}
 
 			public override string GetObjectID()

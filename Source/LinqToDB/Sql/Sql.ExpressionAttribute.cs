@@ -8,10 +8,10 @@ using System.Text.RegularExpressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.ExpressionVisitors;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;

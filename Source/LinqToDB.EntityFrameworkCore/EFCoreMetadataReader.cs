@@ -23,7 +23,6 @@ using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.EntityFrameworkCore.Storage;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
@@ -33,6 +32,7 @@ using EfSqlExpression = Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlEx
 
 using LinqToDB.SqlQuery;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
 
 namespace LinqToDB.EntityFrameworkCore
 {

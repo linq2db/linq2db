@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;

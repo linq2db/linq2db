@@ -9,8 +9,8 @@ using JetBrains.Annotations;
 
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Tools.Comparers

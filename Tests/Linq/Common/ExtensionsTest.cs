@@ -2,8 +2,8 @@
 
 using FluentAssertions;
 
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Expressions;
 
 using NUnit.Framework;
 

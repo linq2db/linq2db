@@ -6,10 +6,10 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.ExpressionVisitors;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Linq.Builder.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;

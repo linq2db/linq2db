@@ -13,7 +13,7 @@ using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.EntityFrameworkCore.Internal;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;

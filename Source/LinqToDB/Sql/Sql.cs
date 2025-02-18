@@ -9,7 +9,8 @@ using JetBrains.Annotations;
 
 using LinqToDB.Common;
 using LinqToDB.Expressions;
-using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.SqlQuery;

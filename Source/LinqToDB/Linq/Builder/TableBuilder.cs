@@ -3,9 +3,9 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Common.Internal;
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 

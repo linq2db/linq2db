@@ -31,6 +31,7 @@ using LinqToDB.Tools;
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
 
 namespace LinqToDB.Data
 {

@@ -9,8 +9,8 @@ using System.Xml;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Common

@@ -4,9 +4,9 @@ using System.Data.Common;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.Types;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.Types;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.DB2

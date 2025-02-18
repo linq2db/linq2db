@@ -7,8 +7,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Common

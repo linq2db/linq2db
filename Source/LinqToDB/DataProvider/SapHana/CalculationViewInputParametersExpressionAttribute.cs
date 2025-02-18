@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Expressions.Internal;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;

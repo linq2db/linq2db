@@ -14,10 +14,10 @@ using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
-using LinqToDB.Expressions;
 using LinqToDB.Infrastructure;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 

@@ -11,6 +11,7 @@ open System.Reflection
 open LinqToDB.Expressions
 open LinqToDB.Extensions
 open LinqToDB.Interceptors.Internal
+open LinqToDB.Internal.Expressions
 open LinqToDB.Reflection
 
 /// Provides Linq To DB interceptor with F# support implementation.

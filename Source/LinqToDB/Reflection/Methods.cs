@@ -8,9 +8,8 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 
