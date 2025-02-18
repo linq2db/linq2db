@@ -32,7 +32,7 @@ namespace Tests.UserTests
 		[Table("Country")]
 		public class Country
 		{
-			[Column(CanBeNull = false)]
+			[Column(CanBeNull = false, Length = 10)]
 			[PrimaryKey]
 			public string? Code { get; set; }
 

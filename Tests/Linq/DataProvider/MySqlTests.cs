@@ -1601,7 +1601,7 @@ namespace Tests.DataProvider
 				{
 					var sql = db.LastQuery!;
 
-					Assert.That(sql, Does.Contain("\t`VarCharDefault`   VARCHAR(4000)         NULL"));
+					Assert.That(sql, Does.Contain("\t`VarCharDefault`   VARCHAR(255)          NULL"));
 					Assert.That(sql, Does.Contain("\t`VarChar1`         VARCHAR(1)            NULL"));
 					Assert.That(sql, Does.Contain("\t`VarChar112`       VARCHAR(112)          NULL"));
 					Assert.That(sql, Does.Contain("\t`Char`             CHAR              NOT NULL"));
