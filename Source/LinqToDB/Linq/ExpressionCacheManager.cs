@@ -453,7 +453,7 @@ namespace LinqToDB.Linq
 				var usedEntries = _parameterEntries.Where(e => knownParameters.Any(p => p.AccessorId == e.Key)).Select(e => e.Value).ToList();
 				if (usedEntries.Count > 0)
 				{
-					nonComparable = new HashSet<Expression>(NonComparableExpressions);
+					nonComparable = [.. NonComparableExpressions];
 
 					parameterAccessors = new List<ParameterAccessor>(usedEntries.Count);
 					foreach (var (paramExpr, entry) in usedEntries)
