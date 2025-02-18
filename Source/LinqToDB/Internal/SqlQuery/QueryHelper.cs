@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;

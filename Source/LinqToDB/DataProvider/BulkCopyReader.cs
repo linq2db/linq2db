@@ -9,9 +9,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.Async;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider

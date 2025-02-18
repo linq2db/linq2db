@@ -19,8 +19,6 @@ using System.Text;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Async;
-using LinqToDB.Common.Internal.Cache;
 using LinqToDB.Common.Internal;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
@@ -30,7 +28,9 @@ using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
-using LinqToDB.Compatibility.System;
+using LinqToDB.Internal.Cache;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Data
 {

@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common.Internal;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;

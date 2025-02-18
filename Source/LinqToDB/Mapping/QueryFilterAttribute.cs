@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Mapping
 {

@@ -2,8 +2,8 @@
 using System.Data;
 using System.Data.Common;
 
-using LinqToDB.Common.Internal.Cache;
 using LinqToDB.Data;
+using LinqToDB.Internal.Cache;
 using LinqToDB.Tools;
 
 namespace LinqToDB.DataProvider

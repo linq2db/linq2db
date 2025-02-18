@@ -9,7 +9,7 @@ namespace LinqToDB.Internal.SqlQuery
 		public string SqlText => this.ToDebugString(SelectQuery);
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		protected string DebugSqlText => Common.Tools.ToDebugDisplay(SqlText);
+		protected string DebugSqlText => LinqToDB.Common.Tools.ToDebugDisplay(SqlText);
 
 		public abstract QueryType QueryType { get; }
 

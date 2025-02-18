@@ -12,14 +12,14 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
-using LinqToDB.Common.Internal.Cache;
 using LinqToDB.Common.Logging;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Cache;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Reflection;

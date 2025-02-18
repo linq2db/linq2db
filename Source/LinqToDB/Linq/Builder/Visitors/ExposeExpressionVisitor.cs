@@ -7,10 +7,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 

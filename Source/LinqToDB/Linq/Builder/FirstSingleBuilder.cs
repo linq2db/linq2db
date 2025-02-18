@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Async;
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Async;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Linq.Builder

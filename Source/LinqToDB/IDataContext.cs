@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;

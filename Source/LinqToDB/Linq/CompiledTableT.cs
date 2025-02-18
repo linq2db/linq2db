@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using LinqToDB.Common.Internal.Cache;
+using LinqToDB.Internal.Cache;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Linq.Internal;
 

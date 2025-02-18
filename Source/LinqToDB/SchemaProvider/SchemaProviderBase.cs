@@ -6,8 +6,8 @@ using System.Linq;
 using System.Text;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.SchemaProvider
 {

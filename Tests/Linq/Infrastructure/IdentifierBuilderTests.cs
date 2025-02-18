@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 

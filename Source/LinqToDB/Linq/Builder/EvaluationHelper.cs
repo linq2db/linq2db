@@ -1,8 +1,8 @@
 ﻿using System.Linq.Expressions;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.Internal;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Linq.Builder
 {

@@ -5,8 +5,8 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Metadata

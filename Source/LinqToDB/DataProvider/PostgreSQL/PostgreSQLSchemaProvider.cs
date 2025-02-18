@@ -9,8 +9,8 @@ using System.Net.NetworkInformation;
 using System.Text.RegularExpressions;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.SchemaProvider;
 using LinqToDB.SqlQuery;
 

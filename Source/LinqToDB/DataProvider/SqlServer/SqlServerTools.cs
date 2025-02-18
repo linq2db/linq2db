@@ -4,8 +4,8 @@ using System.Text;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.DataProvider.SqlServer
 {

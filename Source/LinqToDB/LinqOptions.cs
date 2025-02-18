@@ -3,8 +3,8 @@ using System.ComponentModel;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Linq;
 
 namespace LinqToDB

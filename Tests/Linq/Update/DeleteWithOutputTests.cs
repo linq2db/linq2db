@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Async;
+using LinqToDB.Internal.Async;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
