@@ -24,7 +24,11 @@ namespace LinqToDB.Linq.Builder
 				argument = SequenceHelper.MoveToScopedContext(argument, buildInfo.Parent);
 			}
 
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, argument));
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, argument));
+			if (buildResult.BuildContext == null)
+				return buildResult;
+
+			var sequence = buildResult.BuildContext;
 
 			JoinType joinType;
 			var conditionIndex = 1;
