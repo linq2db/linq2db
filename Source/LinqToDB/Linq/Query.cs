@@ -12,11 +12,11 @@ using LinqToDB.Common.Logging;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.ExpressionVisitors;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.Tools;
 
 // ReSharper disable StaticMemberInGenericType

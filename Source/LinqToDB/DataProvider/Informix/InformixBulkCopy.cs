@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.DataProvider.Informix
 {

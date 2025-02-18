@@ -10,9 +10,9 @@ using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB

@@ -5,10 +5,10 @@ using System.Globalization;
 using System.Linq;
 
 using LinqToDB.CodeModel;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Metadata;
 using LinqToDB.Scaffold;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataModel
 {

@@ -10,7 +10,7 @@ using LinqToDB.Mapping;
 
 using ConverterType = System.Action<System.Text.StringBuilder, LinqToDB.Common.DbDataType, LinqToDB.DataOptions, object>;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
 	public class ValueToSqlConverter
 	{

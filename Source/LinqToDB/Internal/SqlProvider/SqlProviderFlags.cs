@@ -4,11 +4,12 @@ using System.Data;
 using System.Linq;
 using System.Runtime.Serialization;
 
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.DataProvider;
 using LinqToDB.Internal.SqlQuery;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
 	[DataContract]
 	public sealed class SqlProviderFlags

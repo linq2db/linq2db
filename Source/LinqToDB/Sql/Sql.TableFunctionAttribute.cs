@@ -2,9 +2,9 @@
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 // ReSharper disable CheckNamespace
 

@@ -1,7 +1,7 @@
 ﻿using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
 	public interface ISqlOptimizer
 	{

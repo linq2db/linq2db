@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Informix.Translation;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq.Internal;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.Informix
 {

@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 namespace Tests.Model
 {

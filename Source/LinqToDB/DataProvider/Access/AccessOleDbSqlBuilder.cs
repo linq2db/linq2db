@@ -1,5 +1,6 @@
 ﻿using System.Data.Common;
 
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 

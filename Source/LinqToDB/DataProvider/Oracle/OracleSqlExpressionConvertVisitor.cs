@@ -2,8 +2,8 @@
 
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.Oracle
 {

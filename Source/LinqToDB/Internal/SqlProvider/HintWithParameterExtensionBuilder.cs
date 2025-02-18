@@ -3,7 +3,7 @@ using System.Text;
 
 using LinqToDB.Internal.SqlQuery;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
 	sealed class HintWithParameterExtensionBuilder : ISqlQueryExtensionBuilder
 	{

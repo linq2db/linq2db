@@ -1,4 +1,4 @@
-﻿using LinqToDB.SqlProvider;
+﻿using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.DataProvider.Firebird
 {

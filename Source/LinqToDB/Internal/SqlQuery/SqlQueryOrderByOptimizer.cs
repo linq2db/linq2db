@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery.Visitors;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Internal.SqlQuery
 {

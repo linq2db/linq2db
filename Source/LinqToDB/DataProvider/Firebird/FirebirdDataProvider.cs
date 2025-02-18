@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird.Translation;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.Firebird
 {

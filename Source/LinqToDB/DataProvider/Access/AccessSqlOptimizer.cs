@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.Access
 {

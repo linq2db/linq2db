@@ -2,17 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 // ReSharper disable InconsistentNaming
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -472,7 +474,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var prevQuery = sc;
 
-					for (int i = 0; i < sc.SetOperators.Count; i++)
+					for (var i = 0; i < sc.SetOperators.Count; i++)
 					{
 						var currentOperator = sc.SetOperators[i];
 						var currentQuery    = currentOperator.SelectQuery;
@@ -840,7 +842,7 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlDeleteStatement GetAlternativeDelete(SqlDeleteStatement deleteStatement, DataOptions dataOptions)
 		{
-			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0))
+			if (deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0)
 			{
 				var table = deleteStatement.Table ?? deleteStatement.SelectQuery.From.Tables[0].Source as SqlTable;
 
@@ -915,7 +917,7 @@ namespace LinqToDB.SqlProvider
 			List<ISqlPredicate>? predicatesForDestination = null;
 			List<ISqlPredicate>? predicatesCommon         = null;
 
-			ISqlTableSource[] tableSources = { (ISqlTableSource)table };
+			ISqlTableSource[] tableSources = { table };
 
 			foreach (var p in source.Predicates)
 			{
@@ -1050,7 +1052,7 @@ namespace LinqToDB.SqlProvider
 		{
 			replaceTree = new Dictionary<IQueryElement, IQueryElement>();
 			var clonedQuery = tableToClone.Clone(tableToClone, replaceTree,
-				static (t, e) => (e is SqlTable table && table == t) || (e is SqlField field && field.Table == t));
+				static (t, e) => e is SqlTable table && table == t || e is SqlField field && field.Table == t);
 
 			return clonedQuery;
 		}

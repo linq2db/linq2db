@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Linq;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlProvider;
 
 using DB2BulkCopyOptions = LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopyOptions;
 
@@ -61,7 +62,7 @@ namespace LinqToDB.DataProvider.DB2
 				bc.DestinationTableName = tableName;
 
 				for (var i = 0; i < columns.Count; i++)
-					bc.ColumnMappings.Add(bulkCopy.CreateColumnMapping(i, sqlBuilder.ConvertInline(columns[i].ColumnName, SqlProvider.ConvertType.NameToQueryField)));
+					bc.ColumnMappings.Add(bulkCopy.CreateColumnMapping(i, sqlBuilder.ConvertInline(columns[i].ColumnName, ConvertType.NameToQueryField)));
 
 				traceAction(
 					dataConnection,

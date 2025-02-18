@@ -11,10 +11,10 @@ using System.Xml.Linq;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlCe.Translation;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.SqlCe
 {

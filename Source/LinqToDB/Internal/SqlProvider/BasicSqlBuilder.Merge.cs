@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 

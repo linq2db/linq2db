@@ -5,9 +5,9 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions.Internal;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.SapHana
 {

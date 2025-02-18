@@ -1,8 +1,9 @@
 ﻿using LinqToDB.Common;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
 	public abstract class BasicSqlBuilder<T> : BasicSqlBuilder
 	where T : DataProviderOptions<T>, IOptionSet, new()

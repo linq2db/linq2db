@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
@@ -11,7 +12,7 @@ using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
 	public class SqlExpressionOptimizerVisitor : SqlQueryVisitor
 	{
@@ -221,7 +222,7 @@ namespace LinqToDB.SqlProvider
 
 			if (GetVisitMode(element) == VisitMode.Modify)
 			{
-				for (int i = 0; i < element._cases.Count; i++)
+				for (var i = 0; i < element._cases.Count; i++)
 				{
 					var caseItem = element._cases[i];
 					if (caseItem.Condition == SqlPredicate.True)
@@ -240,7 +241,7 @@ namespace LinqToDB.SqlProvider
 			}
 			else
 			{
-				for (int i = 0; i < element._cases.Count; i++)
+				for (var i = 0; i < element._cases.Count; i++)
 				{
 					var caseItem = element._cases[i];
 					if (caseItem.Condition == SqlPredicate.True)
@@ -953,7 +954,7 @@ namespace LinqToDB.SqlProvider
 
 			if (TryEvaluate(predicate.Expr1, out var value))
 			{
-				return SqlPredicate.MakeBool((value == null) != predicate.IsNot);
+				return SqlPredicate.MakeBool(value == null != predicate.IsNot);
 			}
 
 			var unwrapped = QueryHelper.UnwrapNullablity(predicate.Expr1);
@@ -1180,7 +1181,7 @@ namespace LinqToDB.SqlProvider
 
 			if (element.SearchCondition.IsOr)
 			{
-				SqlSearchCondition newSearchCondition = element.SearchCondition.Predicates switch
+				var newSearchCondition = element.SearchCondition.Predicates switch
 				{
 					[]       => new SqlSearchCondition(false),
 					[var p0] => new SqlSearchCondition(false, p0),
@@ -1241,7 +1242,7 @@ namespace LinqToDB.SqlProvider
 					{
 						if (predicate.Expr1 is not ISqlTableSource)
 						{
-							bool noValues = !items.Cast<object?>().Any();
+							var noValues = !items.Cast<object?>().Any();
 							if (noValues)
 								return SqlPredicate.MakeBool(predicate.IsNot);
 						}
@@ -1443,7 +1444,7 @@ namespace LinqToDB.SqlProvider
 						var resultCondition = new SqlSearchCondition(true);
 
 						var notMatches = new List<ISqlPredicate>();
-						for (int index = 0; index < caseMatch.Length; index++)
+						for (var index = 0; index < caseMatch.Length; index++)
 						{
 							if (caseMatch[index])
 							{

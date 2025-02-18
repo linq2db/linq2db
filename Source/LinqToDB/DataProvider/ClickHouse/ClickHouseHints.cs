@@ -6,9 +6,9 @@ using System.Text;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {

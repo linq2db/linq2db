@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Data;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.DataProvider.SQLite
 {
