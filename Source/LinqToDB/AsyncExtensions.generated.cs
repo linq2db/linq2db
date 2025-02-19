@@ -10,6 +10,8 @@ namespace LinqToDB
 	using Async;
 	using Linq;
 
+	using LinqToDB.Internal.Linq;
+
 	public static partial class AsyncExtensions
 	{
 		#region FirstAsync<TSource>

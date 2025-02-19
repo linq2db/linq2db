@@ -7,7 +7,7 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Tools;
 
 using NUnit.Framework;

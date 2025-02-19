@@ -4,8 +4,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;
 
 namespace LinqToDB

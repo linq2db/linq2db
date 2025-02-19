@@ -366,7 +366,7 @@ namespace LinqToDB.Reflection
 
 			internal static class Exceptions
 			{
-				public static readonly MethodInfo DefaultInheritanceMappingException = MemberHelper.MethodOf(() => Linq.Exceptions.DefaultInheritanceMappingException(null!, null!));
+				public static readonly MethodInfo DefaultInheritanceMappingException = MemberHelper.MethodOf(() => Internal.Linq.Exceptions.DefaultInheritanceMappingException(null!, null!));
 			}
 
 			internal static class Sql

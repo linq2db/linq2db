@@ -11,7 +11,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Extensions;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Reflection;
 
 // ReSharper disable SwitchStatementMissingSomeCases

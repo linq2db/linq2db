@@ -12,8 +12,8 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer.Translation;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
-using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 

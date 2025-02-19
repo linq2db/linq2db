@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Linq;
 
 using NUnit.Framework;

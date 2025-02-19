@@ -12,7 +12,7 @@ using System.Threading;
 
 using LinqToDB;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.Common
 {

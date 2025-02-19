@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Linq;
+using LinqToDB.Internal.Linq;
 
 using PN = LinqToDB.ProviderName;
 

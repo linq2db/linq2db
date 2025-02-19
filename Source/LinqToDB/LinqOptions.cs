@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Linq;
 
 namespace LinqToDB
 {

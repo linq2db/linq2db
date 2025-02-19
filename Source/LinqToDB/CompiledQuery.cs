@@ -9,8 +9,8 @@ using LinqToDB.Common;
 using LinqToDB.Common.Internal;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Linq;
-using LinqToDB.Linq.Builder;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Builder;
 
 namespace LinqToDB
 {

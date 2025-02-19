@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Informix.Translation;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
-using LinqToDB.Linq.Internal;
-using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.Informix

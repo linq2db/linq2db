@@ -14,7 +14,8 @@ using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq.Translation;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Mapping;
 
 // ReSharper disable once CheckNamespace
@@ -185,7 +186,7 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// <para />
 		/// It is not recommended to enable this option as it could lead to severe slowdown. Better approach will be
-		/// to call <see cref="Linq.Query{T}.ClearCache"/> method to cleanup cache after queries, that produce severe memory leaks you need to fix.
+		/// to call <see cref="Query{T}.ClearCache"/> method to cleanup cache after queries, that produce severe memory leaks you need to fix.
 		/// <para />
 		/// <a href="https://github.com/linq2db/linq2db/issues/256">More details</a>.
 		/// </summary>
@@ -426,7 +427,7 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// <para />
 		/// It is not recommended to enable this option as it could lead to severe slowdown. Better approach will be
-		/// to call <see cref="Linq.Query{T}.ClearCache"/> method to cleanup cache after queries, that produce severe memory leaks you need to fix.
+		/// to call <see cref="Query{T}.ClearCache"/> method to cleanup cache after queries, that produce severe memory leaks you need to fix.
 		/// <para />
 		/// <a href="https://github.com/linq2db/linq2db/issues/256">More details</a>.
 		/// </summary>

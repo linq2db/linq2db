@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Linq;
 
 using PN = LinqToDB.ProviderName;
 

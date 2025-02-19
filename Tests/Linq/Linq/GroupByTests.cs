@@ -4,8 +4,8 @@ using System.Linq;
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

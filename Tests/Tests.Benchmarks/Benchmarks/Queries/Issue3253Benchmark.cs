@@ -9,7 +9,7 @@ using BenchmarkDotNet.Attributes;
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Benchmarks.Queries

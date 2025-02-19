@@ -11,8 +11,8 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SapHana.Translation;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
-using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.SapHana
