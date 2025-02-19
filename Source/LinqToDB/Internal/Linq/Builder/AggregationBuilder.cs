@@ -8,7 +8,6 @@ using LinqToDB;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder

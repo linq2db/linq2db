@@ -2,11 +2,9 @@
 using System.Diagnostics;
 using System.Linq.Expressions;
 
-using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 

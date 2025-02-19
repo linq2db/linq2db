@@ -5,7 +5,6 @@ using System.Reflection;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Mapping;
 
 using static LinqToDB.Data.EntityConstructorBase;

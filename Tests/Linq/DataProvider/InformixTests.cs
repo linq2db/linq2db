@@ -14,6 +14,7 @@ using IBM.Data.Informix;
 using NUnit.Framework;
 
 using Tests.Model;
+
 using LinqToDB.Internal.DataProvider.Informix;
 
 namespace Tests.DataProvider

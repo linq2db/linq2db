@@ -9,7 +9,6 @@ using LinqToDB.Common.Internal;
 using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 

@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Internal.Expressions
 {

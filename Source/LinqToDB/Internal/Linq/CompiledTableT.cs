@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Linq.Builder;
-using LinqToDB.Linq;
 
 namespace LinqToDB.Internal.Linq
 {

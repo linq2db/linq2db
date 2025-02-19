@@ -8,6 +8,7 @@ using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
 using LinqToDB.Internal.Expressions;
 
 

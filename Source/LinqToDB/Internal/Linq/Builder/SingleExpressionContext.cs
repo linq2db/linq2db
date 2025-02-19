@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder

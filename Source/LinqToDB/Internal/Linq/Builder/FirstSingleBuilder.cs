@@ -6,7 +6,6 @@ using LinqToDB;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Linq;
 
 namespace LinqToDB.Internal.Linq.Builder
 {

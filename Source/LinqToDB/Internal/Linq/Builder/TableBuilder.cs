@@ -6,8 +6,6 @@ using LinqToDB.Common.Internal;
 using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Linq;
-using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 

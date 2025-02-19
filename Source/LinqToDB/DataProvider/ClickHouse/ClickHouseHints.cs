@@ -9,7 +9,6 @@ using LinqToDB.Expressions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {

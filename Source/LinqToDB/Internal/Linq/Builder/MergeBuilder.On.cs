@@ -4,7 +4,6 @@ using System.Reflection;
 
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Linq.Builder;
 
 using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 

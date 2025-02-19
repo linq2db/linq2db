@@ -1,5 +1,4 @@
-﻿using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.Internal.SqlProvider;
+﻿using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 

@@ -1,5 +1,4 @@
 ﻿using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;

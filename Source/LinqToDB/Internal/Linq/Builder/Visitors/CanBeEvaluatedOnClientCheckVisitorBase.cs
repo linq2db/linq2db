@@ -3,7 +3,6 @@ using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Linq.Builder;
 
 namespace LinqToDB.Internal.Linq.Builder.Visitors
 {
