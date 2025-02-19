@@ -1,11 +1,7 @@
 ﻿using System.Globalization;
 
-
 #if NETFRAMEWORK || NETSTANDARD2_0
 using System.Text;
-
-using LinqToDB;
-
 #endif
 
 using LinqToDB.Common;
