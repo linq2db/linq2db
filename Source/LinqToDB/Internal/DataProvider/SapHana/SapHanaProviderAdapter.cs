@@ -215,19 +215,19 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				= new object[]
 			{
 				// [0]: Dispose
-				                                   (HanaBulkCopy this_                    ) => ((IDisposable)this_).Dispose(),
+				(Expression<Action<HanaBulkCopy>>                                   )((HanaBulkCopy this_                    ) => ((IDisposable)this_).Dispose()),
 				// [1]: WriteToServer
-				                      (HanaBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader),
+				(Expression<Action<HanaBulkCopy, IDataReader>>                      )((HanaBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
 				// [2]: get NotifyAfter
-				                                (HanaBulkCopy this_                    ) => this_.NotifyAfter,
+				(Expression<Func<HanaBulkCopy, int>>                                )((HanaBulkCopy this_                    ) => this_.NotifyAfter),
 				// [3]: get BatchSize
-				                                (HanaBulkCopy this_                    ) => this_.BatchSize,
+				(Expression<Func<HanaBulkCopy, int>>                                )((HanaBulkCopy this_                    ) => this_.BatchSize),
 				// [4]: get BulkCopyTimeout
-				                                (HanaBulkCopy this_                    ) => this_.BulkCopyTimeout,
+				(Expression<Func<HanaBulkCopy, int>>                                )((HanaBulkCopy this_                    ) => this_.BulkCopyTimeout),
 				// [5]: get DestinationTableName
-				                            (HanaBulkCopy this_                    ) => this_.DestinationTableName,
+				(Expression<Func<HanaBulkCopy, string?>>                            )((HanaBulkCopy this_                    ) => this_.DestinationTableName),
 				// [6]: get ColumnMappings
-				(HanaBulkCopy this_                    ) => this_.ColumnMappings,
+				(Expression<Func<HanaBulkCopy, HanaBulkCopyColumnMappingCollection>>)((HanaBulkCopy this_                    ) => this_.ColumnMappings),
 				// [7]: set NotifyAfter
 				PropertySetter((HanaBulkCopy this_) => this_.NotifyAfter),
 				// [8]: set BatchSize
@@ -238,7 +238,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				PropertySetter((HanaBulkCopy this_) => this_.DestinationTableName),
 				// [11]: WriteToServerAsync
 				new Tuple<LambdaExpression, bool>
-				((HanaBulkCopy this_, IDataReader reader, CancellationToken cancellationToken) => this_.WriteToServerAsync(reader, cancellationToken), true),
+				((Expression<Func<HanaBulkCopy, IDataReader, CancellationToken, Task>>)((HanaBulkCopy this_, IDataReader reader, CancellationToken cancellationToken) => this_.WriteToServerAsync(reader, cancellationToken)), true),
 			};
 
 			private static string[] Events { get; }
@@ -305,9 +305,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				= new LambdaExpression[]
 			{
 				// [0]: get RowsCopied
-				(HanaRowsCopiedEventArgs this_) => this_.RowsCopied,
+				(Expression<Func<HanaRowsCopiedEventArgs, long>>)((HanaRowsCopiedEventArgs this_) => this_.RowsCopied),
 				// [1]: get Abort
-				(HanaRowsCopiedEventArgs this_) => this_.Abort,
+				(Expression<Func<HanaRowsCopiedEventArgs, bool>>)((HanaRowsCopiedEventArgs this_) => this_.Abort),
 				// [2]: set Abort
 				PropertySetter((HanaRowsCopiedEventArgs this_) => this_.Abort),
 			};
@@ -335,7 +335,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				= new LambdaExpression[]
 			{
 				// [0]: Add
-				(HanaBulkCopyColumnMappingCollection this_, HanaBulkCopyColumnMapping column) => this_.Add(column),
+				(Expression<Func<HanaBulkCopyColumnMappingCollection, HanaBulkCopyColumnMapping, HanaBulkCopyColumnMapping>>)((HanaBulkCopyColumnMappingCollection this_, HanaBulkCopyColumnMapping column) => this_.Add(column)),
 			};
 
 			public HanaBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)

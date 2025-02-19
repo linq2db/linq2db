@@ -117,9 +117,9 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 				= new LambdaExpression[]
 			{
 				// [0]: CreateDatabase
-				(SqlCeEngine this_) => this_.CreateDatabase(),
+				(Expression<Action<SqlCeEngine>>)((SqlCeEngine this_) => this_.CreateDatabase()),
 				// [1]: Dispose
-				(SqlCeEngine this_) => this_.Dispose(),
+				(Expression<Action<SqlCeEngine>>)((SqlCeEngine this_) => this_.Dispose()),
 			};
 
 			public SqlCeEngine(object instance, Delegate[] wrappers) : base(instance, wrappers)

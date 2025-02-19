@@ -403,17 +403,17 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				= new LambdaExpression[]
 			{
 				// [0]: Dispose
-				                                  (IfxBulkCopy this_                    ) => ((IDisposable)this_).Dispose(),
+				(Expression<Action<IfxBulkCopy>>                                  )((IfxBulkCopy this_                    ) => ((IDisposable)this_).Dispose()),
 				// [1]: WriteToServer
-				                     (IfxBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader),
+				(Expression<Action<IfxBulkCopy, IDataReader>>                     )((IfxBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
 				// [2]: get NotifyAfter
-				                               (IfxBulkCopy this_                    ) => this_.NotifyAfter,
+				(Expression<Func<IfxBulkCopy, int>>                               )((IfxBulkCopy this_                    ) => this_.NotifyAfter),
 				// [3]: get BulkCopyTimeout
-				                               (IfxBulkCopy this_                    ) => this_.BulkCopyTimeout,
+				(Expression<Func<IfxBulkCopy, int>>                               )((IfxBulkCopy this_                    ) => this_.BulkCopyTimeout),
 				// [4]: get DestinationTableName
-				                           (IfxBulkCopy this_                    ) => this_.DestinationTableName,
+				(Expression<Func<IfxBulkCopy, string?>>                           )((IfxBulkCopy this_                    ) => this_.DestinationTableName),
 				// [5]: get ColumnMappings
-				(IfxBulkCopy this_                    ) => this_.ColumnMappings,
+				(Expression<Func<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>>)((IfxBulkCopy this_                    ) => this_.ColumnMappings),
 				// [6]: set NotifyAfter
 				PropertySetter((IfxBulkCopy this_) => this_.NotifyAfter),
 				// [7]: set BulkCopyTimeout
@@ -480,9 +480,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				= new LambdaExpression[]
 			{
 				// [0]: get RowsCopied
-				 (IfxRowsCopiedEventArgs this_) => this_.RowsCopied,
+				(Expression<Func<IfxRowsCopiedEventArgs, int>> )((IfxRowsCopiedEventArgs this_) => this_.RowsCopied),
 				// [1]: get Abort
-				(IfxRowsCopiedEventArgs this_) => this_.Abort,
+				(Expression<Func<IfxRowsCopiedEventArgs, bool>>)((IfxRowsCopiedEventArgs this_) => this_.Abort),
 				// [2]: set Abort
 				PropertySetter((IfxRowsCopiedEventArgs this_) => this_.Abort),
 			};
@@ -510,7 +510,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				= new LambdaExpression[]
 			{
 				// [0]: Add
-				(IfxBulkCopyColumnMappingCollection this_, IfxBulkCopyColumnMapping column) => this_.Add(column),
+				(Expression<Func<IfxBulkCopyColumnMappingCollection, IfxBulkCopyColumnMapping, IfxBulkCopyColumnMapping>>)((IfxBulkCopyColumnMappingCollection this_, IfxBulkCopyColumnMapping column) => this_.Add(column)),
 			};
 
 			public IfxBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)

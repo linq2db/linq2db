@@ -51,7 +51,7 @@ namespace Tests.Linq
 
 			var toString = query.Where(r => r.ID == 1).ToString();
 
-			Assert.That(toString, Is.EqualTo("LinqToDB.Linq.ExpressionQueryImpl`1[Tests.Model.Person]"));
+			Assert.That(toString, Is.EqualTo("LinqToDB.Internal.Linq.ExpressionQueryImpl`1[Tests.Model.Person]"));
 		}
 
 		[Test]

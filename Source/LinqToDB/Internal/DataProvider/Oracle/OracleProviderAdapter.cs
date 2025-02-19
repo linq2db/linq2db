@@ -1180,19 +1180,19 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					= new LambdaExpression[]
 				{
 					// [0]: Dispose
-					                            (OracleLoader this_                    ) => this_.Dispose(),
+					(Expression<Action<OracleLoader>>                            )((OracleLoader this_                    ) => ((IDisposable)this_).Dispose()),
 					// [1]: LoadTable
-					               (OracleLoader this_, IDataReader reader) => this_.LoadTable(reader),
+					(Expression<Action<OracleLoader, IDataReader>>               )((OracleLoader this_, IDataReader reader) => this_.LoadTable(reader)),
 					// [2]: get NotifyAfter
-					                         (OracleLoader this_                    ) => this_.NotifyAfter,
+					(Expression<Func<OracleLoader, int>>                         )((OracleLoader this_                    ) => this_.NotifyAfter),
 					// [3]: set NotifyAfter
 					PropertySetter((OracleLoader this_) => this_.NotifyAfter),
 					// [4]: get BatchSize
-					                        (OracleLoader this_                    ) => this_.BatchSize,
+					(Expression<Func<OracleLoader, int?>>                        )((OracleLoader this_                    ) => this_.BatchSize),
 					// [5]: set BatchSize
 					PropertySetter((OracleLoader this_) => this_.BatchSize),
 					// [6]: get ColumnMappings
-					(OracleLoader this_                    ) => this_.Columns,
+					(Expression<Func<OracleLoader, OracleLoaderColumnCollection>>)((OracleLoader this_                    ) => this_.Columns),
 				};
 
 				private static string[] Events { get; }
@@ -1239,14 +1239,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
-				{
-				// [0]: get RowsCopied
-				(OracleLoaderRowsCopiedEventArgs this_) => this_.RowsCopied,
-				// [1]: get Abort
-				(OracleLoaderRowsCopiedEventArgs this_) => this_.Abort,
-				// [2]: set Abort
-				PropertySetter((OracleLoaderRowsCopiedEventArgs this_) => this_.Abort),
-				};
+					{
+						// [0]: get RowsCopied
+						(Expression<Func<OracleLoaderRowsCopiedEventArgs, int>>)((OracleLoaderRowsCopiedEventArgs this_) => this_.RowsCopied),
+						// [1]: get Abort
+						(Expression<Func<OracleLoaderRowsCopiedEventArgs, bool>>)((OracleLoaderRowsCopiedEventArgs this_) => this_.Abort),
+						// [2]: set Abort
+						PropertySetter((OracleLoaderRowsCopiedEventArgs this_) => this_.Abort),
+					};
 
 				public OracleLoaderRowsCopiedEventArgs(object instance, Delegate[] wrappers) : base(instance, wrappers)
 				{
@@ -1269,10 +1269,10 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
-				{
-					// [0]: Add
-					(OracleLoaderColumnCollection this_, OracleLoaderColumn column) => this_.Add(column),
-				};
+					{
+						// [0]: Add
+						(Expression<Func<OracleLoaderColumnCollection, OracleLoaderColumn, int>>)((OracleLoaderColumnCollection this_, OracleLoaderColumn column) => this_.Add(column)),
+					};
 
 				public OracleLoaderColumnCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
 				{
@@ -1463,11 +1463,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					= new LambdaExpression[]
 				{
 					// [0]: Open
-					         (OracleConnection this_) => this_.Open(),
+					(Expression<Action<OracleConnection>>         )((OracleConnection this_) => this_.Open()),
 					// [1]: CreateCommand
-					(OracleConnection this_) => this_.CreateCommand(),
+					(Expression<Func<OracleConnection, DbCommand>>)((OracleConnection this_) => this_.CreateCommand()),
 					// [2]: Dispose
-					         (OracleConnection this_) => this_.Dispose(),
+					(Expression<Action<OracleConnection>>         )((OracleConnection this_) => this_.Dispose()),
 				};
 
 				public OracleConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -1536,40 +1536,40 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
-				{
-					// [0]: Dispose
-					                                     (OracleBulkCopy this_                    ) => this_.Dispose(),
-					// [1]: WriteToServer
-					                        (OracleBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader),
-					// [2]: get NotifyAfter
-					                                  (OracleBulkCopy this_                    ) => this_.NotifyAfter,
-					// [3]: get BatchSize
-					                                  (OracleBulkCopy this_                    ) => this_.BatchSize,
-					// [4]: get BulkCopyTimeout
-					                                  (OracleBulkCopy this_                    ) => this_.BulkCopyTimeout,
-					// [5]: get DestinationTableName
-					                              (OracleBulkCopy this_                    ) => this_.DestinationTableName,
-					// [6]: get DestinationSchemaName
-					                              (OracleBulkCopy this_                    ) => this_.DestinationSchemaName,
-					// [7]: get ColumnMappings
-					(OracleBulkCopy this_                    ) => this_.ColumnMappings,
-					// [8]: set NotifyAfter
-					PropertySetter((OracleBulkCopy this_) => this_.NotifyAfter),
-					// [9]: set BatchSize
-					PropertySetter((OracleBulkCopy this_) => this_.BatchSize),
-					// [10]: set BulkCopyTimeout
-					PropertySetter((OracleBulkCopy this_) => this_.BulkCopyTimeout),
-					// [11]: set DestinationTableName
-					PropertySetter((OracleBulkCopy this_) => this_.DestinationTableName),
-					// [12]: set DestinationSchemaName
-					PropertySetter((OracleBulkCopy this_) => this_.DestinationSchemaName),
-				};
+					{
+						// [0]: Dispose
+						(Expression<Action<OracleBulkCopy>>                                     )((OracleBulkCopy this_                    ) => ((IDisposable)this_).Dispose()),
+						// [1]: WriteToServer
+						(Expression<Action<OracleBulkCopy, IDataReader>>                        )((OracleBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
+						// [2]: get NotifyAfter
+						(Expression<Func<OracleBulkCopy, int>>                                  )((OracleBulkCopy this_                    ) => this_.NotifyAfter),
+						// [3]: get BatchSize
+						(Expression<Func<OracleBulkCopy, int>>                                  )((OracleBulkCopy this_                    ) => this_.BatchSize),
+						// [4]: get BulkCopyTimeout
+						(Expression<Func<OracleBulkCopy, int>>                                  )((OracleBulkCopy this_                    ) => this_.BulkCopyTimeout),
+						// [5]: get DestinationTableName
+						(Expression<Func<OracleBulkCopy, string?>>                              )((OracleBulkCopy this_                    ) => this_.DestinationTableName),
+						// [6]: get DestinationSchemaName
+						(Expression<Func<OracleBulkCopy, string?>>                              )((OracleBulkCopy this_                    ) => this_.DestinationSchemaName),
+						// [7]: get ColumnMappings
+						(Expression<Func<OracleBulkCopy, OracleBulkCopyColumnMappingCollection>>)((OracleBulkCopy this_                    ) => this_.ColumnMappings),
+						// [8]: set NotifyAfter
+						PropertySetter((OracleBulkCopy this_) => this_.NotifyAfter),
+						// [9]: set BatchSize
+						PropertySetter((OracleBulkCopy this_) => this_.BatchSize),
+						// [10]: set BulkCopyTimeout
+						PropertySetter((OracleBulkCopy this_) => this_.BulkCopyTimeout),
+						// [11]: set DestinationTableName
+						PropertySetter((OracleBulkCopy this_) => this_.DestinationTableName),
+						// [12]: set DestinationSchemaName
+						PropertySetter((OracleBulkCopy this_) => this_.DestinationSchemaName),
+					};
 
 				private static string[] Events { get; }
 					= new[]
-				{
-					nameof(OracleRowsCopied)
-				};
+					{
+						nameof(OracleRowsCopied)
+					};
 
 				public OracleBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
 				{
@@ -1627,14 +1627,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
-				{
-					// [0]: get RowsCopied
-					(OracleRowsCopiedEventArgs this_) => this_.RowsCopied,
-					// [1]: get Abort
-					(OracleRowsCopiedEventArgs this_) => this_.Abort,
-					// [2]: set Abort
-					PropertySetter((OracleRowsCopiedEventArgs this_) => this_.Abort),
-				};
+					{
+						// [0]: get RowsCopied
+						(Expression<Func<OracleRowsCopiedEventArgs, long>>)((OracleRowsCopiedEventArgs this_) => this_.RowsCopied),
+						// [1]: get Abort
+						(Expression<Func<OracleRowsCopiedEventArgs, bool>>)((OracleRowsCopiedEventArgs this_) => this_.Abort),
+						// [2]: set Abort
+						PropertySetter((OracleRowsCopiedEventArgs this_) => this_.Abort),
+					};
 
 				public OracleRowsCopiedEventArgs(object instance, Delegate[] wrappers) : base(instance, wrappers)
 				{
@@ -1657,10 +1657,10 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
-				{
-					// [0]: Add
-					(OracleBulkCopyColumnMappingCollection this_, OracleBulkCopyColumnMapping column) => this_.Add(column),
-				};
+					{
+						// [0]: Add
+						(Expression<Func<OracleBulkCopyColumnMappingCollection, OracleBulkCopyColumnMapping, OracleBulkCopyColumnMapping>>)((OracleBulkCopyColumnMappingCollection this_, OracleBulkCopyColumnMapping column) => this_.Add(column)),
+					};
 
 				public OracleBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
 				{

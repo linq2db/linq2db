@@ -503,15 +503,15 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				{
 					// [0]: WriteToServer (version < 2.0.0)
 					new Tuple<LambdaExpression, bool>
-					(               (MySqlBulkCopy this_, IDataReader            dataReader) => this_.WriteToServer1(dataReader), true),
+					((Expression<Action<MySqlBulkCopy, IDataReader>>              )((MySqlBulkCopy this_, IDataReader            dataReader) => this_.WriteToServer1(dataReader)), true),
 					// [1]: get NotifyAfter
-					                         (MySqlBulkCopy this_                                   ) => this_.NotifyAfter,
+					(Expression<Func<MySqlBulkCopy, int>>                         )((MySqlBulkCopy this_                                   ) => this_.NotifyAfter),
 					// [2]: get BulkCopyTimeout
-					                         (MySqlBulkCopy this_                                   ) => this_.BulkCopyTimeout,
+					(Expression<Func<MySqlBulkCopy, int>>                         )((MySqlBulkCopy this_                                   ) => this_.BulkCopyTimeout),
 					// [3]: get DestinationTableName
-					                     (MySqlBulkCopy this_                                   ) => this_.DestinationTableName,
+					(Expression<Func<MySqlBulkCopy, string?>>                     )((MySqlBulkCopy this_                                   ) => this_.DestinationTableName),
 					// [4]: this.ColumnMappings.Add(column)
-					(MySqlBulkCopy this_, MySqlBulkCopyColumnMapping column) => this_.ColumnMappings.Add(column),
+					(Expression<Action<MySqlBulkCopy, MySqlBulkCopyColumnMapping>>)((MySqlBulkCopy this_, MySqlBulkCopyColumnMapping column) => this_.ColumnMappings.Add(column)),
 					// [5]: set NotifyAfter
 					PropertySetter((MySqlBulkCopy this_) => this_.NotifyAfter),
 					// [6]: set BulkCopyTimeout
@@ -520,20 +520,20 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					PropertySetter((MySqlBulkCopy this_) => this_.DestinationTableName),
 					// [8]: WriteToServerAsync (version < 2.0.0)
 					new Tuple<LambdaExpression, bool>
-					(     (MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync1 (dataReader, cancellationToken), true),
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>>     )((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync1 (dataReader, cancellationToken)), true),
 					// [9]: WriteToServer (version >= 2.0.0)
 					new Tuple<LambdaExpression, bool>
-					((MySqlBulkCopy this_, IDataReader            dataReader) => this_.WriteToServer2(dataReader), true),
+					((Expression<Func<MySqlBulkCopy, IDataReader, MySqlBulkCopyResult>>)((MySqlBulkCopy this_, IDataReader            dataReader) => this_.WriteToServer2(dataReader)), true),
 					// [10]: WriteToServerAsync (version >= 2.0.0)
 					new Tuple<LambdaExpression, bool>
-					((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync2 (dataReader, cancellationToken), true),
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, Task<MySqlBulkCopyResult>>>)((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync2 (dataReader, cancellationToken)), true),
 #if !NETFRAMEWORK
 					// [11]: WriteToServerAsync (version < 2.0.0)
 					new Tuple<LambdaExpression, bool>
-					((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync3(dataReader, cancellationToken), true),
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>>)((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync3(dataReader, cancellationToken)), true),
 					// [12]: WriteToServerAsync (version >= 2.0.0)
 					new Tuple<LambdaExpression, bool>
-					((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync4(dataReader, cancellationToken), true),
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask<MySqlBulkCopyResult>>>)((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync4(dataReader, cancellationToken)), true),
 #endif
 				};
 
@@ -659,9 +659,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					= new LambdaExpression[]
 				{
 					// [0]: get RowsCopied
-					 (MySqlRowsCopiedEventArgs this_) => this_.RowsCopied,
+					(Expression<Func<MySqlRowsCopiedEventArgs, long>>)((MySqlRowsCopiedEventArgs this_) => this_.RowsCopied),
 					// [1]: get Abort
-					(MySqlRowsCopiedEventArgs this_) => this_.Abort,
+					(Expression<Func<MySqlRowsCopiedEventArgs, bool>>)((MySqlRowsCopiedEventArgs this_) => this_.Abort),
 					// [3]: set Abort
 					PropertySetter((MySqlRowsCopiedEventArgs this_) => this_.Abort),
 				};
