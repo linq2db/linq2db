@@ -16,6 +16,7 @@ using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.SqlProvider;
 
@@ -125,6 +126,25 @@ namespace LinqToDB
 			where T : notnull
 		{
 			var result = ((ITableMutable<T>)table).ChangeSchemaName(name);
+			return result;
+		}
+
+		/// <summary>
+		/// Used internally to pass entity descriptor into Expression Tree.
+		/// Consider to rewrite such functionality in V7
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="entityDescriptor"></param>
+		/// <returns></returns>
+		[LinqTunnel]
+		[Pure]
+		internal static ITable<T> UseTableDescriptor<T>(this ITable<T> table, [SqlQueryDependent] EntityDescriptor entityDescriptor)
+			where T : class
+		{
+			if (table            == null) throw new ArgumentNullException(nameof(table));
+			if (entityDescriptor == null) throw new ArgumentNullException(nameof(entityDescriptor));
+
+			var result = ((ITableMutable<T>)table).ChangeTableDescriptor(entityDescriptor);
 			return result;
 		}
 

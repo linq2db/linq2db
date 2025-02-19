@@ -26,9 +26,10 @@ namespace LinqToDB.Linq
 		internal Table(IDataContext dataContext, Table<T> basedOn)
 		{
 			Init(dataContext, basedOn.Expression);
-			_tableOptions = basedOn.TableOptions;
-			_tableID = basedOn.TableID;
-			_name = basedOn._name;
+			_tableOptions   = basedOn.TableOptions;
+			_tableID        = basedOn.TableID;
+			_name           = basedOn._name;
+			TableDescriptor = basedOn.TableDescriptor;
 		}
 
 		internal Table(IDataContext dataContext, EntityDescriptor? tableDescriptor)
@@ -60,6 +61,8 @@ namespace LinqToDB.Linq
 					expression = ApplyDatabaseName(expression, tableDescriptor.Name.Database);
 				if (!string.IsNullOrEmpty(tableDescriptor.Name.Server))
 					expression = ApplyServerName(expression, tableDescriptor.Name.Server);
+
+				expression = ApplyTableDescriptor(expression, tableDescriptor);
 			}
 
 			Init(dataContext, expression);
@@ -70,6 +73,8 @@ namespace LinqToDB.Linq
 			_tableOptions = ed.TableOptions;
 		}
 
+		internal EntityDescriptor? TableDescriptor { get; set; }
+
 		// ReSharper disable StaticMemberInGenericType
 		static MethodInfo? _serverNameMethodInfo;
 		static MethodInfo? _databaseNameMethodInfo;
@@ -77,6 +82,7 @@ namespace LinqToDB.Linq
 		static MethodInfo? _tableNameMethodInfo;
 		static MethodInfo? _tableOptionsMethodInfo;
 		static MethodInfo? _tableIDMethodInfo;
+		static MethodInfo? _tableDescriptorMethodInfo;
 		// ReSharper restore StaticMemberInGenericType
 
 		static Expression ApplyTableOptions(Expression expression, TableOptions tableOptions)
@@ -121,6 +127,15 @@ namespace LinqToDB.Linq
 				null,
 				_serverNameMethodInfo ??= Methods.LinqToDB.Table.ServerName.MakeGenericMethod(typeof(T)),
 				expression, Expression.Constant(serverName));
+			return expression;
+		}
+
+		static Expression ApplyTableDescriptor(Expression expression, EntityDescriptor entityDescriptor)
+		{
+			expression = Expression.Call(
+				null,
+				_tableDescriptorMethodInfo ??= Methods.LinqToDB.Table.UseTableDescriptor.MakeGenericMethod(typeof(T)),
+				expression, Expression.Constant(entityDescriptor));
 			return expression;
 		}
 
@@ -264,17 +279,26 @@ namespace LinqToDB.Linq
 			};
 		}
 
+		public ITable<T> ChangeTableDescriptor(EntityDescriptor tableDescriptor)
+		{
+			return new Table<T>(DataContext, this)
+			{
+				TableDescriptor = tableDescriptor
+			};
+		}
+
 		public ITable<T> ChangeTableID(string? tableID)
 		{
-			return new Table<T>(DataContext)
+			return new Table<T>(DataContext, this)
 			{
-				SchemaName   = SchemaName,
-				ServerName   = ServerName,
-				DatabaseName = DatabaseName,
-				Expression   = Expression,
-				TableName    = TableName,
-				TableOptions = TableOptions,
-				TableID      = tableID,
+				SchemaName      = SchemaName,
+				ServerName      = ServerName,
+				DatabaseName    = DatabaseName,
+				Expression      = Expression,
+				TableName       = TableName,
+				TableOptions    = TableOptions,
+				TableDescriptor = TableDescriptor,
+				TableID         = tableID,
 			};
 		}
 

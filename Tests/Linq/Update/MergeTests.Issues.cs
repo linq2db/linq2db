@@ -1043,7 +1043,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeSubquery([MergeDataContextSource(false)] string context)
+		public void MergeSubquery([MergeDataContextSource(false)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db  = GetDataConnection(context);
 
@@ -1058,6 +1058,8 @@ namespace Tests.xUpdate
 					.Property(t => t.Name)
 						.HasLength(20));
 
+			var cacheMiss = tmp.GetCacheMissCount();
+
 			tmp.InsertOrUpdate(
 				() => new
 				{
@@ -1065,6 +1067,11 @@ namespace Tests.xUpdate
 					Name = "John II"
 				},
 				s => new { s.ID, s.Name });
+
+			if (iteration == 2)
+			{
+				Assert.That(tmp.GetCacheMissCount(), Is.EqualTo(cacheMiss));
+			}
 		}
 	}
 }

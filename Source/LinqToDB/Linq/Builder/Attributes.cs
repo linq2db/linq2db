@@ -41,5 +41,6 @@ namespace LinqToDB.Linq.Builder
 		public BuildsMethodCallAttribute(string method1, string method2, string method3, string method4, string method5) { }
 		public BuildsMethodCallAttribute(string method1, string method2, string method3, string method4, string method5, string method6) { }
 		public BuildsMethodCallAttribute(string method1, string method2, string method3, string method4, string method5, string method6, string method7) { }
+		public BuildsMethodCallAttribute(string method1, string method2, string method3, string method4, string method5, string method6, string method7, string method8) { }
 	}
 }
