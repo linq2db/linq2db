@@ -70,6 +70,7 @@ namespace LinqToDB.CommandLine
 			AddOption(_dataModelOptions, DataModel.DataContextBaseClass);
 			AddOption(_dataModelOptions, DataModel.DataContextModifier);
 			AddOption(_dataModelOptions, DataModel.EmitInitDataContextMethod);
+			AddOption(_dataModelOptions, DataModel.EmitStaticInitDataContextMethod);
 			AddOption(_dataModelOptions, DataModel.EmitAssociations);
 			AddOption(_dataModelOptions, DataModel.EmitAssociationExtensions);
 			// combines AssociationCollectionAsArray + AssociationCollectionType options
