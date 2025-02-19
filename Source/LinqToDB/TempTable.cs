@@ -659,13 +659,13 @@ namespace LinqToDB
 
 		#region ITableMutable<T> implementation
 
-		ITable<T> ITableMutable<T>.ChangeServerName     (string?          serverName)       => ((ITableMutable<T>)_table).ChangeServerName     (serverName);
-		ITable<T> ITableMutable<T>.ChangeDatabaseName   (string?          databaseName)     => ((ITableMutable<T>)_table).ChangeDatabaseName   (databaseName);
-		ITable<T> ITableMutable<T>.ChangeSchemaName     (string?          schemaName)       => ((ITableMutable<T>)_table).ChangeSchemaName     (schemaName);
-		ITable<T> ITableMutable<T>.ChangeTableName      (string           tableName)        => ((ITableMutable<T>)_table).ChangeTableName      (tableName);
-		ITable<T> ITableMutable<T>.ChangeTableOptions   (TableOptions     options)          => ((ITableMutable<T>)_table).ChangeTableOptions   (options);
-		ITable<T> ITableMutable<T>.ChangeTableDescriptor(EntityDescriptor entityDescriptor) => ((ITableMutable<T>)_table).ChangeTableDescriptor(entityDescriptor);
-		ITable<T> ITableMutable<T>.ChangeTableID        (string?          tableID)          => ((ITableMutable<T>)_table).ChangeTableID        (tableID);
+		ITable<T> ITableMutable<T>.ChangeServerName     (string?          serverName)      => ((ITableMutable<T>)_table).ChangeServerName     (serverName);
+		ITable<T> ITableMutable<T>.ChangeDatabaseName   (string?          databaseName)    => ((ITableMutable<T>)_table).ChangeDatabaseName   (databaseName);
+		ITable<T> ITableMutable<T>.ChangeSchemaName     (string?          schemaName)      => ((ITableMutable<T>)_table).ChangeSchemaName     (schemaName);
+		ITable<T> ITableMutable<T>.ChangeTableName      (string           tableName)       => ((ITableMutable<T>)_table).ChangeTableName      (tableName);
+		ITable<T> ITableMutable<T>.ChangeTableOptions   (TableOptions     options)         => ((ITableMutable<T>)_table).ChangeTableOptions   (options);
+		ITable<T> ITableMutable<T>.ChangeTableDescriptor(EntityDescriptor tableDescriptor) => ((ITableMutable<T>)_table).ChangeTableDescriptor(tableDescriptor);
+		ITable<T> ITableMutable<T>.ChangeTableID        (string?          tableID)         => ((ITableMutable<T>)_table).ChangeTableID        (tableID);
 
 		#endregion
 

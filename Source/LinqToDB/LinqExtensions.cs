@@ -134,17 +134,17 @@ namespace LinqToDB
 		/// Consider to rewrite such functionality in V7
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
-		/// <param name="entityDescriptor"></param>
+		/// <param name="tableDescriptor"></param>
 		/// <returns></returns>
 		[LinqTunnel]
 		[Pure]
-		internal static ITable<T> UseTableDescriptor<T>(this ITable<T> table, [SqlQueryDependent] EntityDescriptor entityDescriptor)
+		internal static ITable<T> UseTableDescriptor<T>(this ITable<T> table, [SqlQueryDependent] EntityDescriptor tableDescriptor)
 			where T : class
 		{
-			if (table            == null) throw new ArgumentNullException(nameof(table));
-			if (entityDescriptor == null) throw new ArgumentNullException(nameof(entityDescriptor));
+			if (table           == null) throw new ArgumentNullException(nameof(table));
+			if (tableDescriptor == null) throw new ArgumentNullException(nameof(tableDescriptor));
 
-			var result = ((ITableMutable<T>)table).ChangeTableDescriptor(entityDescriptor);
+			var result = ((ITableMutable<T>)table).ChangeTableDescriptor(tableDescriptor);
 			return result;
 		}
 
