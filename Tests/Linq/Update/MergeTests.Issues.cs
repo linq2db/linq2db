@@ -1041,5 +1041,30 @@ namespace Tests.xUpdate
 
 			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(6));
 		}
+
+		[Test]
+		public void MergeSubquery([MergeDataContextSource(false)] string context)
+		{
+			using var db  = GetDataConnection(context);
+
+			db.BeginTransaction();
+
+			using var tmp = db.CreateTempTable(
+				"MergeTemp",
+				[new { ID = 1, Name = "John" }],
+				mb => mb
+					.Property(t => t.ID)
+						.IsPrimaryKey()
+					.Property(t => t.Name)
+						.HasLength(20));
+
+			tmp.InsertOrUpdate(
+				() => new
+				{
+					ID   = (from t in tmp where t.Name == "John" select t.ID).Single(),
+					Name = "John II"
+				},
+				s => new { s.ID, s.Name });
+		}
 	}
 }
