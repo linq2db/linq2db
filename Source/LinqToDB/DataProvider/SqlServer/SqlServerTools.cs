@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.SqlServer;
 
 namespace LinqToDB.DataProvider.SqlServer
 {

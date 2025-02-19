@@ -8,7 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.SQLite.Translation;
+using LinqToDB.Internal.DataProvider.SQLite.Translation;
 using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;

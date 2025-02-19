@@ -4,7 +4,7 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.Informix;
+using LinqToDB.Internal.DataProvider.Informix;
 
 using Tests.Model;
 using Tests.Tools;

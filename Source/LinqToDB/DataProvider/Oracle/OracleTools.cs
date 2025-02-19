@@ -1,6 +1,7 @@
 ﻿using System.Data.Common;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.DataProvider.Oracle;
 
 namespace LinqToDB.DataProvider.Oracle
 {

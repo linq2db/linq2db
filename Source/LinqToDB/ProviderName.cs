@@ -1,8 +1,17 @@
 ﻿using JetBrains.Annotations;
 
-using LinqToDB.DataProvider.DB2;
-using LinqToDB.DataProvider.MySql;
-using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal.DataProvider.Access;
+using LinqToDB.Internal.DataProvider.DB2;
+using LinqToDB.Internal.DataProvider.Firebird;
+using LinqToDB.Internal.DataProvider.Informix;
+using LinqToDB.Internal.DataProvider.MySql;
+using LinqToDB.Internal.DataProvider.Oracle;
+using LinqToDB.Internal.DataProvider.PostgreSQL;
+using LinqToDB.Internal.DataProvider.SapHana;
+using LinqToDB.Internal.DataProvider.SqlCe;
+using LinqToDB.Internal.DataProvider.SQLite;
+using LinqToDB.Internal.DataProvider.SqlServer;
+using LinqToDB.Internal.DataProvider.Sybase;
 
 namespace LinqToDB
 {
@@ -15,37 +24,37 @@ namespace LinqToDB
 	{
 		/// <summary>
 		/// Microsoft Access OleDb provider (with JET or ACE detection).
-		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
+		/// Used as configuration name for Access mapping schema <see cref="AccessMappingSchema"/>.
 		/// </summary>
 		public const string Access        = "Access";
 
 		/// <summary>
 		/// Microsoft Access ODBC provider (with JET or ACE detection).
-		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
+		/// Used as configuration name for Access mapping schema <see cref="AccessMappingSchema"/>.
 		/// </summary>
 		public const string AccessOdbc    = "Access.Odbc";
 
 		/// <summary>
 		/// Microsoft Access JET OleDb provider.
-		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
+		/// Used as configuration name for Access mapping schema <see cref="AccessMappingSchema"/>.
 		/// </summary>
 		public const string AccessJetOleDb        = "Access.Jet.OleDb";
 
 		/// <summary>
 		/// Microsoft Access JET ODBC provider.
-		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
+		/// Used as configuration name for Access mapping schema <see cref="AccessMappingSchema"/>.
 		/// </summary>
 		public const string AccessJetOdbc    = "Access.Jet.Odbc";
 
 		/// <summary>
 		/// Microsoft Access ACE OleDb provider.
-		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
+		/// Used as configuration name for Access mapping schema <see cref="AccessMappingSchema"/>.
 		/// </summary>
 		public const string AccessAceOleDb        = "Access.Ace.OleDb";
 
 		/// <summary>
 		/// Microsoft Access ACE ODBC provider.
-		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
+		/// Used as configuration name for Access mapping schema <see cref="AccessMappingSchema"/>.
 		/// </summary>
 		public const string AccessAceOdbc    = "Access.Ace.Odbc";
 
@@ -66,37 +75,37 @@ namespace LinqToDB
 		public const string DB2zOS        = "DB2.z/OS";
 		/// <summary>
 		/// Firebird provider.
-		/// Used as configuration name for Firebird mapping schema <see cref="DataProvider.Firebird.FirebirdMappingSchema"/>.
+		/// Used as configuration name for Firebird mapping schema <see cref="FirebirdMappingSchema"/>.
 		/// </summary>
 		public const string Firebird      = "Firebird";
 		/// <summary>
 		/// Firebird 2.5 provider.
-		/// Used as configuration name for Firebird mapping schema <see cref="DataProvider.Firebird.FirebirdMappingSchema.Firebird25MappingSchema"/>.
+		/// Used as configuration name for Firebird mapping schema <see cref="FirebirdMappingSchema.Firebird25MappingSchema"/>.
 		/// </summary>
 		public const string Firebird25      = "Firebird.2.5";
 		/// <summary>
 		/// Firebird 3 provider.
-		/// Used as configuration name for Firebird mapping schema <see cref="DataProvider.Firebird.FirebirdMappingSchema.Firebird3MappingSchema"/>.
+		/// Used as configuration name for Firebird mapping schema <see cref="FirebirdMappingSchema.Firebird3MappingSchema"/>.
 		/// </summary>
 		public const string Firebird3      = "Firebird.3";
 		/// <summary>
 		/// Firebird 4 provider.
-		/// Used as configuration name for Firebird mapping schema <see cref="DataProvider.Firebird.FirebirdMappingSchema.Firebird4MappingSchema"/>.
+		/// Used as configuration name for Firebird mapping schema <see cref="FirebirdMappingSchema.Firebird4MappingSchema"/>.
 		/// </summary>
 		public const string Firebird4      = "Firebird.4";
 		/// <summary>
 		/// Firebird 5 provider.
-		/// Used as configuration name for Firebird mapping schema <see cref="DataProvider.Firebird.FirebirdMappingSchema.Firebird5MappingSchema"/>.
+		/// Used as configuration name for Firebird mapping schema <see cref="FirebirdMappingSchema.Firebird5MappingSchema"/>.
 		/// </summary>
 		public const string Firebird5      = "Firebird.5";
 		/// <summary>
 		/// Informix IBM.Data.Informix provider (including IDS provider).
-		/// Used as configuration name for Informix mapping schema <see cref="DataProvider.Informix.InformixMappingSchema"/>.
+		/// Used as configuration name for Informix mapping schema <see cref="InformixMappingSchema"/>.
 		/// </summary>
 		public const string Informix      = "Informix";
 		/// <summary>
 		/// Informix over IBM.Data.DB2 IDS provider.
-		/// Used as configuration name for Informix mapping schema <see cref="DataProvider.Informix.InformixMappingSchema"/>.
+		/// Used as configuration name for Informix mapping schema <see cref="InformixMappingSchema"/>.
 		/// </summary>
 		public const string InformixDB2   = "Informix.DB2";
 		/// <summary>
@@ -196,42 +205,42 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Oracle ODP.NET autodetected provider (native or managed).
-		/// Used as configuration name for Oracle base mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema"/>.
+		/// Used as configuration name for Oracle base mapping schema <see cref="OracleMappingSchema"/>.
 		/// </summary>
 		public const string Oracle        = "Oracle";
 		/// <summary>
 		/// Oracle (11g dialect) ODP.NET native provider.
-		/// Used as configuration name for Oracle native provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Native11MappingSchema"/>.
+		/// Used as configuration name for Oracle native provider mapping schema <see cref="OracleMappingSchema.Native11MappingSchema"/>.
 		/// </summary>
 		public const string Oracle11Native = "Oracle.11.Native";
 		/// <summary>
 		/// Oracle (11g dialect) Devart provider.
-		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Devart11MappingSchema"/>.
+		/// Used as configuration name for Oracle managed provider mapping schema <see cref="OracleMappingSchema.Devart11MappingSchema"/>.
 		/// </summary>
 		public const string Oracle11Devart = "Oracle.11.Devart";
 		/// <summary>
 		/// Oracle (11g dialect) ODP.NET managed provider.
-		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Managed11MappingSchema"/>.
+		/// Used as configuration name for Oracle managed provider mapping schema <see cref="OracleMappingSchema.Managed11MappingSchema"/>.
 		/// </summary>
 		public const string Oracle11Managed = "Oracle.11.Managed";
 		/// <summary>
 		/// Oracle ODP.NET native provider.
-		/// Used as configuration name for Oracle native provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.NativeMappingSchema"/>.
+		/// Used as configuration name for Oracle native provider mapping schema <see cref="OracleMappingSchema.NativeMappingSchema"/>.
 		/// </summary>
 		public const string OracleNative  = "Oracle.Native";
 		/// <summary>
 		/// Oracle ODP.NET managed provider.
-		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.ManagedMappingSchema"/>.
+		/// Used as configuration name for Oracle managed provider mapping schema <see cref="OracleMappingSchema.ManagedMappingSchema"/>.
 		/// </summary>
 		public const string OracleManaged = "Oracle.Managed";
 		/// <summary>
 		/// Oracle Devart provider.
-		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.DevartMappingSchema"/>.
+		/// Used as configuration name for Oracle managed provider mapping schema <see cref="OracleMappingSchema.DevartMappingSchema"/>.
 		/// </summary>
 		public const string OracleDevart = "Oracle.Devart";
 		/// <summary>
 		/// PostgreSQL 9.2- data provider.
-		/// Used as configuration name for PostgreSQL mapping schema <see cref="DataProvider.PostgreSQL.PostgreSQLMappingSchema"/>.
+		/// Used as configuration name for PostgreSQL mapping schema <see cref="PostgreSQLMappingSchema"/>.
 		/// </summary>
 		public const string PostgreSQL    = "PostgreSQL";
 		/// <summary>
@@ -252,12 +261,12 @@ namespace LinqToDB
 		public const string PostgreSQL15 = "PostgreSQL.15";
 		/// <summary>
 		/// Microsoft SQL Server Compact Edition provider.
-		/// Used as configuration name for SQL CE mapping schema <see cref="DataProvider.SqlCe.SqlCeMappingSchema"/>.
+		/// Used as configuration name for SQL CE mapping schema <see cref="SqlCeMappingSchema"/>.
 		/// </summary>
 		public const string SqlCe         = "SqlCe";
 		/// <summary>
 		/// SQLite provider.
-		/// Used as configuration name for SQLite mapping schema <see cref="DataProvider.SQLite.SQLiteMappingSchema"/>.
+		/// Used as configuration name for SQLite mapping schema <see cref="SQLiteMappingSchema"/>.
 		/// </summary>
 		public const string SQLite        = "SQLite";
 		/// <summary>
@@ -270,27 +279,27 @@ namespace LinqToDB
 		public const string SQLiteMS      = "SQLite.MS";
 		/// <summary>
 		/// Native SAP/Sybase ASE provider.
-		/// Used as configuration name for Sybase ASE mapping schema <see cref="DataProvider.Sybase.SybaseMappingSchema.NativeMappingSchema"/>.
+		/// Used as configuration name for Sybase ASE mapping schema <see cref="SybaseMappingSchema.NativeMappingSchema"/>.
 		/// </summary>
 		public const string Sybase        = "Sybase";
 		/// <summary>
 		/// Managed Sybase/SAP ASE provider from <a href="https://github.com/DataAction/AdoNetCore.AseClient">DataAction</a>.
-		/// Used as configuration name for Sybase ASE mapping schema <see cref="DataProvider.Sybase.SybaseMappingSchema.ManagedMappingSchema"/>.
+		/// Used as configuration name for Sybase ASE mapping schema <see cref="SybaseMappingSchema.ManagedMappingSchema"/>.
 		/// </summary>
 		public const string SybaseManaged = "Sybase.Managed";
 		/// <summary>
 		/// SAP HANA provider.
-		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema"/>.
+		/// Used as configuration name for SAP HANA mapping schema <see cref="SapHanaMappingSchema"/>.
 		/// </summary>
 		public const string SapHana       = "SapHana";
 		/// <summary>
 		/// SAP HANA provider.
-		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.NativeMappingSchema"/>.
+		/// Used as configuration name for SAP HANA mapping schema <see cref="SapHanaMappingSchema.NativeMappingSchema"/>.
 		/// </summary>
 		public const string SapHanaNative = "SapHana.Native";
 		/// <summary>
 		/// SAP HANA ODBC provider.
-		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.OdbcMappingSchema"/>.
+		/// Used as configuration name for SAP HANA mapping schema <see cref="SapHanaMappingSchema.OdbcMappingSchema"/>.
 		/// </summary>
 		public const string SapHanaOdbc   = "SapHana.Odbc";
 		/// <summary>

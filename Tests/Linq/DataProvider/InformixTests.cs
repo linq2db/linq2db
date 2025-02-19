@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.Informix;
 using LinqToDB.Mapping;
 
 #if NETFRAMEWORK
@@ -15,6 +14,7 @@ using IBM.Data.Informix;
 using NUnit.Framework;
 
 using Tests.Model;
+using LinqToDB.Internal.DataProvider.Informix;
 
 namespace Tests.DataProvider
 {

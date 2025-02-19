@@ -6,6 +6,7 @@ using System.Security;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.Access;
 
 namespace LinqToDB.DataProvider.Access
 {

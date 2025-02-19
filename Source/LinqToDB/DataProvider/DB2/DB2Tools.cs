@@ -4,6 +4,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.DataProvider.DB2;
 
 namespace LinqToDB.DataProvider.DB2
 {
