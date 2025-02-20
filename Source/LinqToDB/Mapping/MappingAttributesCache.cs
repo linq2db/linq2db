@@ -103,7 +103,7 @@ namespace LinqToDB.Mapping
 							else if (attrs.Length == 0)
 								attrs = ifaceAttrs;
 							else
-								(list = new(attrs)).AddRange(ifaceAttrs);
+								(list = [.. attrs]).AddRange(ifaceAttrs);
 						}
 					}
 				}
@@ -121,7 +121,7 @@ namespace LinqToDB.Mapping
 							else if (attrs.Length == 0)
 								attrs = baseAttrs;
 							else
-								(list = new(attrs)).AddRange(baseAttrs);
+								(list = [.. attrs]).AddRange(baseAttrs);
 						}
 					}
 				}
