@@ -59,7 +59,7 @@ namespace LinqToDB.Internal.Expressions
 		{
 			unchecked
 			{
-				return _type.GetHashCode() * 397 ^ Expression.GetHashCode();
+				return (_type.GetHashCode() * 397) ^ Expression.GetHashCode();
 			}
 		}
 

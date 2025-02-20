@@ -713,12 +713,12 @@ namespace LinqToDB.Internal.Expressions
 			{
 				appendAction("");
 
-				var argumentNames = (isSimpleMethodOrProperty, extensionMethod) switch
-				{
-					(false, true)  => method.GetParameters().Skip(1).Select(p => p.Name).ToList(),
-					(false, false) => method.GetParameters().Select(p => p.Name).ToList(),
-					_              => [],
-				};
+				var argumentNames
+					= !isSimpleMethodOrProperty
+						? extensionMethod
+							? method.GetParameters().Skip(1).Select(p => (string?)p.Name).ToList()
+							: method.GetParameters().Select(p => (string?)p.Name).ToList()
+						: new List<string?>();
 
 				IDisposable? indent = null;
 

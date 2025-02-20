@@ -88,7 +88,7 @@ namespace LinqToDB.Internal.Expressions
 			unchecked
 			{
 				var hashCode = ExpressionEqualityComparer.Instance.GetHashCode(SequenceExpression);
-				hashCode = hashCode * 397 ^ (Predicate != null ? ExpressionEqualityComparer.Instance.GetHashCode(Predicate) : 0);
+				hashCode = (hashCode * 397) ^ (Predicate != null ? ExpressionEqualityComparer.Instance.GetHashCode(Predicate) : 0);
 				return hashCode;
 			}
 		}

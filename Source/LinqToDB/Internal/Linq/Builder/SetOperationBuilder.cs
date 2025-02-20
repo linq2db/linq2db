@@ -49,10 +49,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			var elementType = methodCall.Method.GetGenericArguments()[0];
 
 			var needsEmulation = !builder.DataContext.SqlProviderFlags.IsAllSetOperationsSupported &&
-			                     setOperation is SetOperation.ExceptAll or SetOperation.IntersectAll
+			                     (setOperation is SetOperation.ExceptAll or SetOperation.IntersectAll)
 			                     ||
 			                     !builder.DataContext.SqlProviderFlags.IsDistinctSetOperationsSupported &&
-			                     setOperation is SetOperation.Except or SetOperation.Intersect;
+			                     (setOperation is SetOperation.Except or SetOperation.Intersect);
 
 			var set1 = new SubQueryContext(sequence1);
 			var set2 = new SubQueryContext(sequence2);
@@ -312,7 +312,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return true;
 
 				if (expression is SqlPlaceholderExpression placeholder)
-					return placeholder.Sql.IsNullValue();
+					return QueryHelper.IsNullValue(placeholder.Sql);
 
 				return false;
 			}
@@ -367,7 +367,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						if (!column1.Expression.CanBeNullable(nullability1))
 						{
-							if (column2.Expression.IsNullValue())
+							if (QueryHelper.IsNullValue(column2.Expression))
 							{
 								return MakeNullCondition(new SqlPathExpression(map.Key, placeholder1.Type), isLeft == true);
 							}
@@ -375,7 +375,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 						else if (!column2.Expression.CanBeNullable(nullability2))
 						{
-							if (column1.Expression.IsNullValue())
+							if (QueryHelper.IsNullValue(column1.Expression))
 								return MakeNullCondition(new SqlPathExpression(map.Key, placeholder2.Type), isLeft == false);
 						}
 					}
@@ -505,7 +505,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var resultParameters = new List<SqlGenericConstructorExpression.Parameter>(generic1.Parameters.Count);
 
-						for (var i = 0; i < generic1.Parameters.Count; i++)
+						for (int i = 0; i < generic1.Parameters.Count; i++)
 						{
 							if (!TryMergeProjections(generic1.Parameters[i].Expression,
 								    generic2.Parameters[i].Expression, flags, out var mergedAssignment))
@@ -1041,7 +1041,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var arguments = new List<Expression>(node.Arguments.Count);
 
-					for (var i = 0; i < node.Arguments.Count; i++)
+					for (int i = 0; i < node.Arguments.Count; i++)
 					{
 						_stack.Push(Expression.Constant(i));
 
@@ -1070,7 +1070,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var saveIDictionary = _isDictionary;
 					_isDictionary = typeof(IDictionary<,>).IsSameOrParentOf(node.Type);
 
-					for (var i = 0; i < node.Initializers.Count; i++)
+					for (int i = 0; i < node.Initializers.Count; i++)
 					{
 						_stack.Push(Expression.Constant(i));
 						initializers.Add(VisitElementInit(node.Initializers[i]));
@@ -1093,7 +1093,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var args = new List<Expression>(node.Arguments.Count);
 
-					for (var i = 0; i < node.Arguments.Count; i++)
+					for (int i = 0; i < node.Arguments.Count; i++)
 					{
 						_stack.Push(Expression.Constant(i));
 						args.Add(Visit(node.Arguments[i]));
@@ -1115,7 +1115,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var args = new List<Expression>(node.Expressions.Count);
 
-					for (var i = 0; i < node.Expressions.Count; i++)
+					for (int i = 0; i < node.Expressions.Count; i++)
 					{
 						_stack.Push(Expression.Constant(i));
 						args.Add(Visit(node.Expressions[i]));
@@ -1278,7 +1278,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var sc = new SqlSearchCondition();
 
-				for (var i = 0; i < _sequence1.SelectQuery.Select.Columns.Count; i++)
+				for (int i = 0; i < _sequence1.SelectQuery.Select.Columns.Count; i++)
 				{
 					var column1 = _sequence1.SelectQuery.Select.Columns[i];
 					var column2 = _sequence2.SelectQuery.Select.Columns[i];

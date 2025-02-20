@@ -68,7 +68,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 				SetToType<DbDataReader, sbyte,  int>("INTEGER",    (r, i) => unchecked((sbyte)r.GetInt32(i)));
 				SetToType<DbDataReader, uint,   int>("INTEGER",    (r, i) => unchecked((uint)r.GetInt32(i)));
-				SetToType<DbDataReader, ulong,  int>("INTEGER",    (r, i) => unchecked((uint)r.GetInt32(i)));
+				SetToType<DbDataReader, ulong,  int>("INTEGER",    (r, i) => unchecked((ulong)(uint)r.GetInt32(i)));
 				SetToType<DbDataReader, ushort, short>("SMALLINT", (r, i) => unchecked((ushort)r.GetInt16(i)));
 			}
 

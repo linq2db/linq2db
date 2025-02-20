@@ -7,8 +7,8 @@ namespace LinqToDB.Internal.Expressions.Types
 	{
 		bool ICustomMapper.CanMap(Expression expression)
 		{
-			return !expression.Type.IsGenericType && expression.Type.FullName == "System.Threading.Tasks.ValueTask"
-				|| expression.Type.IsGenericType && expression.Type.GetGenericTypeDefinition().FullName == "System.Threading.Tasks.ValueTask`1";
+			return (!expression.Type.IsGenericType && expression.Type.FullName == "System.Threading.Tasks.ValueTask")
+				|| (expression.Type.IsGenericType && expression.Type.GetGenericTypeDefinition().FullName == "System.Threading.Tasks.ValueTask`1");
 		}
 
 		Expression ICustomMapper.Map(Expression expression)

@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.Expressions
 			{
 				unchecked
 				{
-					return (Type != null ? Type.GetHashCode() : 0) * 397 ^ MemberInfo.GetHashCode();
+					return ((Type != null ? Type.GetHashCode() : 0) * 397) ^ MemberInfo.GetHashCode();
 				}
 			}
 		}
@@ -137,7 +137,7 @@ namespace LinqToDB.Internal.Expressions
 					? new MemberInfoWithType(me.Expression?.Type, me.Member)
 					: expr is MethodCallExpression mce
 						? new MemberInfoWithType(mce.Object?.Type ?? mce.Method.ReflectedType, mce.Method)
-						: new MemberInfoWithType(expr.Type, ((NewExpression)expr).Constructor!);
+						: new MemberInfoWithType(expr.Type, (MemberInfo)((NewExpression)expr).Constructor!);
 		}
 
 		public static MemberInfo MemberOf<T>(Expression<Func<T,object?>> func)

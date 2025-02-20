@@ -46,8 +46,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					// This condition matches OracleSqlExpressionConvertVisitor.ConvertExprExprPredicate, 
 					// where we transform empty strings "" into null-handling expressions.
 					if (withNull != null ||
-						dataOptions.LinqOptions.CompareNulls != CompareNulls.LikeSql &&
-							op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
+						(dataOptions.LinqOptions.CompareNulls != CompareNulls.LikeSql &&
+							op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
 					{
 						if (IsTextType(a, mappingSchema) && a.CanBeEvaluated(true))
 							return true;

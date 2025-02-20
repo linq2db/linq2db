@@ -180,7 +180,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					var toDoubleConverter  = typeMapper.MapLambda((MySqlDecimal d) => d.ToDouble());
 					var dateTimeConverter  = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
 
-					_connectionFactory = typeMapper.BuildTypedFactory<string, MySqlConnection, DbConnection>((connectionString) => new MySqlConnection(connectionString));
+					_connectionFactory = typeMapper.BuildTypedFactory<string, MySqlConnection, DbConnection>((string connectionString) => new MySqlConnection(connectionString));
 
 					var mappingSchema = new MySqlDataAdapterMappingSchema();
 
@@ -362,7 +362,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					else
 						typeMapper.FinalizeMappings();
 
-					_connectionFactory = typeMapper.BuildTypedFactory<string, MySqlConnection, DbConnection>((connectionString) => new MySqlConnection(connectionString));
+					_connectionFactory = typeMapper.BuildTypedFactory<string, MySqlConnection, DbConnection>((string connectionString) => new MySqlConnection(connectionString));
 
 					var typeGetter        = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
 					var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());

@@ -24,12 +24,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			if (options.ProviderName?.Contains("Octonica") == true && options.ProviderName?.Contains("ClickHouse") == true
-				|| options.ConfigurationString?.Contains("Octonica") == true && options.ConfigurationString?.Contains("ClickHouse") == true)
+			if ((options.ProviderName?.Contains("Octonica") == true && options.ProviderName?.Contains("ClickHouse") == true)
+				|| (options.ConfigurationString?.Contains("Octonica") == true && options.ConfigurationString?.Contains("ClickHouse") == true))
 				return _octonicaDataProvider.Value;
 
-			if (options.ProviderName?.Contains("ClickHouse") == true && options.ProviderName?.Contains("MySql") == true
-				|| options.ConfigurationString?.Contains("ClickHouse") == true && options.ConfigurationString?.Contains("MySql") == true)
+			if ((options.ProviderName?.Contains("ClickHouse") == true && options.ProviderName?.Contains("MySql") == true)
+				|| (options.ConfigurationString?.Contains("ClickHouse") == true && options.ConfigurationString?.Contains("MySql") == true))
 				return _mysqlDataProvider.Value;
 
 			if (options.ProviderName?.Contains("ClickHouse.Client") == true || options.ConfigurationString?.Contains("ClickHouse.Client") == true)

@@ -67,7 +67,7 @@ namespace LinqToDB.Internal.DataProvider
 
 				string GetCurrentAlias(SqlTableSource tableSource)
 				{
-					if (tableSource.Alias is "$F" or "$") 
+					if (tableSource.Alias is ("$F" or "$")) 
 						return tableSource.Alias;
 
 					return TruncateAlias(tableSource.Alias ?? string.Empty);
@@ -219,7 +219,7 @@ namespace LinqToDB.Internal.DataProvider
 
 				if (element.Cte != null)
 				{
-					for (var i = 0; i < element.Fields.Count; i++)
+					for (int i = 0; i < element.Fields.Count; i++)
 					{
 						var field    = element.Fields[i];
 						var cteField = element.Cte.Fields.FirstOrDefault(f => f.Name == field.PhysicalName);

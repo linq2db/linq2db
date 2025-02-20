@@ -81,7 +81,7 @@ namespace LinqToDB.Internal.Expressions
 		{
 			unchecked
 			{
-				return ((IConfigurationID)MappingSchema).ConfigurationID.GetHashCode() * 397 ^ ContextType.GetHashCode();
+				return (((IConfigurationID)MappingSchema).ConfigurationID.GetHashCode() * 397) ^ ContextType.GetHashCode();
 			}
 		}
 

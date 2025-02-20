@@ -236,9 +236,9 @@ namespace LinqToDB.Internal.Expressions
 			unchecked
 			{
 				var hashCode = SelectQuery != null ? SelectQuery.GetHashCode() : 0;
-				hashCode = hashCode * 397 ^ ExpressionEqualityComparer.Instance.GetHashCode(Path);
-				hashCode = hashCode * 397 ^ Index.GetHashCode();
-				hashCode = hashCode * 397 ^ ConvertType.GetHashCode();
+				hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(Path);
+				hashCode = (hashCode * 397) ^ Index.GetHashCode();
+				hashCode = (hashCode * 397) ^ ConvertType.GetHashCode();
 				return hashCode;
 			}
 		}

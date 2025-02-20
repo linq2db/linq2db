@@ -40,7 +40,7 @@ namespace LinqToDB.Internal.Linq
 			if (Arguments == null || other.Arguments == null || Arguments.Count != other.Arguments.Count)
 				return false;
 
-			for (var i = 0; i < Arguments.Count; i++)
+			for (int i = 0; i < Arguments.Count; i++)
 			{
 				if (!Arguments[i].Equals(other.Arguments[i]))
 					return false;
@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.Linq
 		{
 			unchecked
 			{
-				return MemberInfo.GetHashCode() * 397 ^ (Arguments != null ? Arguments.GetHashCode() : 0);
+				return (MemberInfo.GetHashCode() * 397) ^ (Arguments != null ? Arguments.GetHashCode() : 0);
 			}
 		}
 	}

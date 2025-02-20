@@ -155,21 +155,24 @@ namespace LinqToDB.Internal.Expressions
 
 		public static Expression Replace(this Expression expression, Expression toReplace, Expression replacedBy)
 		{
-			return expression.Transform(
+			return Transform(
+				expression,
 				(toReplace, replacedBy),
 				static (context, e) => e == context.toReplace ? context.replacedBy : e);
 		}
 
 		public static Expression Replace(this Expression expression, Expression toReplace, Expression replacedBy, IEqualityComparer<Expression> equalityComparer)
 		{
-			return expression.Transform(
+			return Transform(
+				expression,
 				(toReplace, replacedBy, equalityComparer),
 				static (context, e) => context.equalityComparer.Equals(e, context.toReplace) ? context.replacedBy : e);
 		}
 
 		public static Expression Replace(this Expression expression, IReadOnlyDictionary<Expression, Expression> replaceMap)
 		{
-			return expression.Transform(
+			return Transform(
+				expression,
 				replaceMap,
 				static (map, e) => map.TryGetValue(e, out var newExpression) ? newExpression : e);
 		}
@@ -180,7 +183,8 @@ namespace LinqToDB.Internal.Expressions
 		/// </summary>
 		public static Expression GetBody(this LambdaExpression lambda, Expression exprToReplaceParameter)
 		{
-			return lambda.Body.Transform(
+			return Transform(
+				lambda.Body,
 				(parameter: lambda.Parameters[0], exprToReplaceParameter),
 				static (context, e) => e == context.parameter ? context.exprToReplaceParameter : e);
 		}
@@ -191,7 +195,8 @@ namespace LinqToDB.Internal.Expressions
 		/// </summary>
 		public static Expression GetBody(this LambdaExpression lambda, Expression exprToReplaceParameter1, Expression exprToReplaceParameter2)
 		{
-			return lambda.Body.Transform(
+			return Transform(
+				lambda.Body,
 				(parameters: lambda.Parameters, exprToReplaceParameter1, exprToReplaceParameter2),
 				static (context, e) =>
 					e == context.parameters[0] ? context.exprToReplaceParameter1 :
@@ -204,7 +209,8 @@ namespace LinqToDB.Internal.Expressions
 		/// </summary>
 		public static Expression GetBody(this LambdaExpression lambda, Expression exprToReplaceParameter1, Expression exprToReplaceParameter2, Expression exprToReplaceParameter3)
 		{
-			return lambda.Body.Transform(
+			return Transform(
+				lambda.Body,
 				(parameters: lambda.Parameters, exprToReplaceParameter1, exprToReplaceParameter2, exprToReplaceParameter3),
 				static (context, e) =>
 					e.NodeType != ExpressionType.Parameter ? e                               :
@@ -219,7 +225,7 @@ namespace LinqToDB.Internal.Expressions
 		/// </summary>
 		public static Expression GetBody(this LambdaExpression lambda, params Expression[] replacement)
 		{
-			return lambda.Body.Transform(e =>
+			return Transform(lambda.Body, e =>
 			{
 				if (e.NodeType == ExpressionType.Parameter)
 				{
@@ -238,7 +244,7 @@ namespace LinqToDB.Internal.Expressions
 		/// </summary>
 		public static Expression GetBody(this LambdaExpression lambda, ReadOnlyCollection<Expression> replacement)
 		{
-			return lambda.Body.Transform(e =>
+			return Transform(lambda.Body, e =>
 			{
 				if (e.NodeType == ExpressionType.Parameter)
 				{

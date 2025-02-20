@@ -59,7 +59,7 @@ namespace LinqToDB.Internal.Expressions
 				return true;
 			}
 
-			if (obj.GetType() != GetType())
+			if (obj.GetType() != this.GetType())
 			{
 				return false;
 			}
@@ -72,7 +72,7 @@ namespace LinqToDB.Internal.Expressions
 			unchecked
 			{
 				var hashCode = ExpressionEqualityComparer.Instance.GetHashCode(Constructor);
-				hashCode = hashCode * 397 ^ ParameterInfo.GetHashCode();
+				hashCode = (hashCode * 397) ^ ParameterInfo.GetHashCode();
 				return hashCode;
 			}
 		}

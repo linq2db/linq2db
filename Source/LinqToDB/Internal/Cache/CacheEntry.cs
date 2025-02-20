@@ -204,7 +204,7 @@ namespace LinqToDB.Internal.Cache
 				return true;
 			}
 
-			if (_slidingExpiration.HasValue && now - LastAccessed >= _slidingExpiration)
+			if (_slidingExpiration.HasValue && (now - LastAccessed) >= _slidingExpiration)
 			{
 				SetExpired(EvictionReason.Expired);
 				return true;
@@ -274,7 +274,7 @@ namespace LinqToDB.Internal.Cache
 				if (registrations != null)
 				{
 					_expirationTokenRegistrations = null;
-					for (var i = 0; i < registrations.Count; i++)
+					for (int i = 0; i < registrations.Count; i++)
 					{
 						var registration = registrations[i];
 						registration.Dispose();
@@ -301,7 +301,7 @@ namespace LinqToDB.Internal.Cache
 				return;
 			}
 
-			for (var i = 0; i < callbackRegistrations.Count; i++)
+			for (int i = 0; i < callbackRegistrations.Count; i++)
 			{
 				var registration = callbackRegistrations[i];
 

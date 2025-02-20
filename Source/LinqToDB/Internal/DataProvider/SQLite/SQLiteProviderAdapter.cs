@@ -106,11 +106,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			Func<string, DbConnection> connectionFactory;
 			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
 			{
-				connectionFactory = typeMapper.BuildTypedFactory<string, SqliteConnection, DbConnection>((connectionString) => new SqliteConnection(connectionString));
+				connectionFactory = typeMapper.BuildTypedFactory<string, SqliteConnection, DbConnection>((string connectionString) => new SqliteConnection(connectionString));
 			}
 			else
 			{
-				connectionFactory = typeMapper.BuildTypedFactory<string, SQLiteConnection, DbConnection>((connectionString) => new SQLiteConnection(connectionString));
+				connectionFactory = typeMapper.BuildTypedFactory<string, SQLiteConnection, DbConnection>((string connectionString) => new SQLiteConnection(connectionString));
 			}
 
 			return new SQLiteProviderAdapter(

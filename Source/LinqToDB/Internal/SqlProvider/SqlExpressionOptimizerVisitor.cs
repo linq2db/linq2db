@@ -222,7 +222,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (GetVisitMode(element) == VisitMode.Modify)
 			{
-				for (var i = 0; i < element._cases.Count; i++)
+				for (int i = 0; i < element._cases.Count; i++)
 				{
 					var caseItem = element._cases[i];
 					if (caseItem.Condition == SqlPredicate.True)
@@ -241,7 +241,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 			else
 			{
-				for (var i = 0; i < element._cases.Count; i++)
+				for (int i = 0; i < element._cases.Count; i++)
 				{
 					var caseItem = element._cases[i];
 					if (caseItem.Condition == SqlPredicate.True)
@@ -954,7 +954,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (TryEvaluate(predicate.Expr1, out var value))
 			{
-				return SqlPredicate.MakeBool(value == null != predicate.IsNot);
+				return SqlPredicate.MakeBool((value == null) != predicate.IsNot);
 			}
 
 			var unwrapped = QueryHelper.UnwrapNullablity(predicate.Expr1);
@@ -1181,7 +1181,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (element.SearchCondition.IsOr)
 			{
-				var newSearchCondition = element.SearchCondition.Predicates switch
+				SqlSearchCondition newSearchCondition = element.SearchCondition.Predicates switch
 				{
 					[]       => new SqlSearchCondition(false),
 					[var p0] => new SqlSearchCondition(false, p0),
@@ -1242,7 +1242,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						if (predicate.Expr1 is not ISqlTableSource)
 						{
-							var noValues = !items.Cast<object?>().Any();
+							bool noValues = !items.Cast<object?>().Any();
 							if (noValues)
 								return SqlPredicate.MakeBool(predicate.IsNot);
 						}
@@ -1444,7 +1444,7 @@ namespace LinqToDB.Internal.SqlProvider
 						var resultCondition = new SqlSearchCondition(true);
 
 						var notMatches = new List<ISqlPredicate>();
-						for (var index = 0; index < caseMatch.Length; index++)
+						for (int index = 0; index < caseMatch.Length; index++)
 						{
 							if (caseMatch[index])
 							{

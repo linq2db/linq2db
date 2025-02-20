@@ -74,7 +74,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 						"LIMIT {0}, {1}",
 						WithStringBuilderBuildExpression(skipExpr),
 						takeExpr == null ?
-							long.MaxValue :
+							(object)long.MaxValue :
 							WithStringBuilderBuildExpression(takeExpr))
 					.AppendLine();
 			}
@@ -238,7 +238,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			var table = deleteStatement.Table != null ?
-				deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table :
+				(deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table) :
 				deleteStatement.SelectQuery.From.Tables[0];
 
 			var alias = GetTableAlias(table);

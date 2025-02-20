@@ -296,8 +296,8 @@ namespace LinqToDB.Internal.Expressions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsNullValue(this Expression expr)
 		{
-			return expr is ConstantExpression { Value: null }
-				|| expr is DefaultExpression or DefaultValueExpression && expr.Type.IsNullableType();
+			return (expr is ConstantExpression { Value: null })
+				|| (expr is DefaultExpression or DefaultValueExpression && expr.Type.IsNullableType());
 		}
 
 		public static Expression? GetArgumentByName(this MethodCallExpression methodCall, string parameterName)
@@ -319,11 +319,11 @@ namespace LinqToDB.Internal.Expressions
 			return expression?.NodeType switch
 			{
 				null                        => true,
-				ExpressionType.Convert or ExpressionType.ConvertChecked => ((UnaryExpression)expression).Operand.IsEvaluable(mappingSchema),
+				ExpressionType.Convert or ExpressionType.ConvertChecked => IsEvaluable(((UnaryExpression)expression).Operand, mappingSchema),
 				ExpressionType.Default      => true,
 				// don't return true for closure classes
 				ExpressionType.Constant     => expression is ConstantExpression c && (c.Value == null || c.Value is string || c.Value.GetType().IsValueType),
-				ExpressionType.MemberAccess => ((MemberExpression)expression).Member.GetExpressionAttribute(mappingSchema)?.ServerSideOnly != true && ((MemberExpression)expression).Expression.IsEvaluable(mappingSchema),
+				ExpressionType.MemberAccess => ((MemberExpression)expression).Member.GetExpressionAttribute(mappingSchema)?.ServerSideOnly != true && IsEvaluable(((MemberExpression)expression).Expression, mappingSchema),
 				_                           => false,
 			};
 		}
@@ -344,8 +344,8 @@ namespace LinqToDB.Internal.Expressions
 			var newExpr = e;
 			if (e is BinaryExpression binary)
 			{
-				var left  = binary.Left.OptimizeExpression(mappingSchema)!;
-				var right = binary.Right.OptimizeExpression(mappingSchema)!;
+				var left  = OptimizeExpression(binary.Left, mappingSchema)!;
+				var right = OptimizeExpression(binary.Right, mappingSchema)!;
 
 				if (left.Type != binary.Left.Type)
 					left = Expression.Convert(left, binary.Left.Type);
@@ -353,11 +353,11 @@ namespace LinqToDB.Internal.Expressions
 				if (right.Type != binary.Right.Type)
 					right = Expression.Convert(right, binary.Right.Type);
 
-				newExpr = binary.Update(left, binary.Conversion.OptimizeExpression(mappingSchema) as LambdaExpression, right);
+				newExpr = binary.Update(left, OptimizeExpression(binary.Conversion, mappingSchema) as LambdaExpression, right);
 			}
 			else if (e is UnaryExpression unaryExpression)
 			{
-				newExpr = unaryExpression.Update(unaryExpression.Operand.OptimizeExpression(mappingSchema));
+				newExpr = unaryExpression.Update(OptimizeExpression(unaryExpression.Operand, mappingSchema));
 				if (newExpr.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked && ((UnaryExpression)newExpr).Operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
 					// remove double convert
@@ -366,7 +366,7 @@ namespace LinqToDB.Internal.Expressions
 				}
 			}
 
-			if (newExpr.IsEvaluable(mappingSchema))
+			if (IsEvaluable(newExpr, mappingSchema))
 			{
 				newExpr = newExpr.NodeType == ExpressionType.Constant
 					? newExpr
@@ -380,24 +380,24 @@ namespace LinqToDB.Internal.Expressions
 					{
 						return new TransformInfo(newExpr, true);
 					}
-					case UnaryExpression unary when unary.Operand.IsEvaluable(mappingSchema):
+					case UnaryExpression unary when IsEvaluable(unary.Operand, mappingSchema):
 					{
 						newExpr = Expression.Constant(unary.EvaluateExpression());
 						break;
 					}
-					case MemberExpression { Expression.NodeType: ExpressionType.Constant } me when me.Expression.IsEvaluable(mappingSchema):
+					case MemberExpression { Expression.NodeType: ExpressionType.Constant } me when IsEvaluable(me.Expression, mappingSchema):
 					{
 						newExpr = Expression.Constant(me.EvaluateExpression());
 						break;
 					}
-					case BinaryExpression be when be.Left.IsEvaluable(mappingSchema) && be.Right.IsEvaluable(mappingSchema):
+					case BinaryExpression be when IsEvaluable(be.Left, mappingSchema) && IsEvaluable(be.Right, mappingSchema):
 					{
 						newExpr = Expression.Constant(be.EvaluateExpression());
 						break;
 					}
 					case BinaryExpression { NodeType: ExpressionType.AndAlso } be:
 					{
-						if (be.Left.IsEvaluable(mappingSchema))
+						if (IsEvaluable(be.Left, mappingSchema))
 						{
 							var leftBool = be.Left.EvaluateExpression() as bool?;
 							if (leftBool == true)
@@ -405,7 +405,7 @@ namespace LinqToDB.Internal.Expressions
 							else if (leftBool == false)
 								newExpr = ExpressionInstances.False;
 						}
-						else if (be.Right.IsEvaluable(mappingSchema))
+						else if (IsEvaluable(be.Right, mappingSchema))
 						{
 							var rightBool = be.Right.EvaluateExpression() as bool?;
 							if (rightBool == true)
@@ -418,7 +418,7 @@ namespace LinqToDB.Internal.Expressions
 					}
 					case BinaryExpression { NodeType: ExpressionType.OrElse } be:
 					{
-						if (be.Left.IsEvaluable(mappingSchema))
+						if (IsEvaluable(be.Left, mappingSchema))
 						{
 							var leftBool = be.Left.EvaluateExpression() as bool?;
 							if (leftBool == false)
@@ -426,7 +426,7 @@ namespace LinqToDB.Internal.Expressions
 							else if (leftBool == true)
 								newExpr = ExpressionInstances.True;
 						}
-						else if (be.Right.IsEvaluable(mappingSchema))
+						else if (IsEvaluable(be.Right, mappingSchema))
 						{
 							var rightBool = be.Right.EvaluateExpression() as bool?;
 							if (rightBool == false)

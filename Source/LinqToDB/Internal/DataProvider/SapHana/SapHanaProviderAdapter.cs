@@ -140,7 +140,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 							typeMapper.FinalizeMappings();
 
-							var connectionFactory = typeMapper.BuildTypedFactory<string, HanaConnection, DbConnection>((connectionString) => new HanaConnection(connectionString));
+							var connectionFactory = typeMapper.BuildTypedFactory<string, HanaConnection, DbConnection>((string connectionString) => new HanaConnection(connectionString));
 
 							var typeSetter = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType).BuildSetter<DbParameter>();
 

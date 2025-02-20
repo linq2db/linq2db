@@ -91,12 +91,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 					for (var tIndex = 0; tIndex < sqlQuery.From.Tables.Count; tIndex++)
 					{
 						var t = sqlQuery.From.Tables[tIndex];
-						for (var i = 0; i < t.Joins.Count; i++)
+						for (int i = 0; i < t.Joins.Count; i++)
 						{
 							var join = t.Joins[i];
 							if (join.JoinType == JoinType.Inner)
 							{
-								var moveUp = false;
+								bool moveUp = false;
 
 								if (join.Table.Joins.Count > 0 && join.Table.Joins[0].JoinType == JoinType.Inner)
 								{

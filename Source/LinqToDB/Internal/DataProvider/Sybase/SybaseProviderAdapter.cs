@@ -157,7 +157,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			var paramMapper   = typeMapper.Type<AseParameter>();
 			var dbTypeBuilder = paramMapper.Member(p => p.AseDbType);
 
-			var connectionFactory = typeMapper.BuildTypedFactory<string, AseConnection, DbConnection>((connectionString) => new AseConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, AseConnection, DbConnection>((string connectionString) => new AseConnection(connectionString));
 
 			return new SybaseProviderAdapter(
 				connectionType,

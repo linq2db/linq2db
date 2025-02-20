@@ -363,7 +363,7 @@ namespace LinqToDB.Internal.Cache
 		/// ?. Larger objects - estimated by object graph size, inaccurate.
 		public void Compact(double percentage)
 		{
-			var removalCountTarget = (int)(_entries.Count * percentage);
+			int removalCountTarget = (int)(_entries.Count * percentage);
 			Compact(removalCountTarget, _ => 1);
 		}
 

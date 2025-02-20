@@ -694,7 +694,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 
 				return new SqlPredicate.Like(valueExpr, predicate.IsNot, patternExpr,
-					LikeIsEscapeSupported && patternValue != patternRawValue ? new SqlValue(LikeEscapeCharacter) : null);
+					LikeIsEscapeSupported && (patternValue != patternRawValue) ? new SqlValue(LikeEscapeCharacter) : null);
 			}
 			else
 			{
@@ -1122,7 +1122,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var sc = new SqlSearchCondition(false);
 
-			for (var i = 0; i < testExpressions.Length; i++)
+			for (int i = 0; i < testExpressions.Length; i++)
 			{
 				var testValue = testExpressions[i];
 				var expr      = subQuery.Select.Columns[i].Expression;
@@ -1256,7 +1256,7 @@ namespace LinqToDB.Internal.SqlProvider
 						}
 					}
 
-					wrap = !SqlProviderFlags.SupportsBooleanType || !withNull && p.CanBeUnknown(NullabilityContext) || forceConvert;
+					wrap = !SqlProviderFlags.SupportsBooleanType || (!withNull && p.CanBeUnknown(NullabilityContext)) || forceConvert;
 				}
 
 				if (wrap)
@@ -1459,7 +1459,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				// (a1, a2) =  (b1, b2) => a1 =  b1 and a2 = b2
 				// (a1, a2) <> (b1, b2) => a1 <> b1 or  a2 <> b2
-				var isOr = op == SqlPredicate.Operator.NotEqual;
+				bool isOr = op == SqlPredicate.Operator.NotEqual;
 
 				var rewrite = new SqlSearchCondition(isOr);
 
@@ -1471,7 +1471,7 @@ namespace LinqToDB.Internal.SqlProvider
 					// We use `a >= null` instead, which is equivalent (always evaluates to `unknown`) but is never reduced by ExprExpr.
 					// Reducing to `false` is an inaccuracy that causes problems when composed in more complicated ways,
 					// e.g. the NOT IN SqlRow tests fail.
-					var nullSafeOp = a.TryEvaluateExpression(context, out var val) && val == null ||
+					SqlPredicate.Operator nullSafeOp = a.TryEvaluateExpression(context, out var val) && val == null ||
 					                                   b.TryEvaluateExpression(context, out     val) && val == null
 						? SqlPredicate.Operator.GreaterOrEqual
 						: op;
@@ -1496,10 +1496,10 @@ namespace LinqToDB.Internal.SqlProvider
 				var values1 = row1.Values;
 				var values2 = row2.Values;
 
-				for (var i = 0; i < values1.Length; ++i)
+				for (int i = 0; i < values1.Length; ++i)
 				{
 					var sub = new SqlSearchCondition();
-					for (var j = 0; j < i; j++)
+					for (int j = 0; j < i; j++)
 					{
 						sub.Add(new SqlPredicate.ExprExpr(values1[j], SqlPredicate.Operator.Equal, values2[j], withNull : null));
 					}
@@ -1671,7 +1671,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!supportsParameters && last is SqlParameter p1)
 				p1.IsQueryParameter = false;
 
-			for (var i = coalesce.Expressions.Length - 2; i >= 0; i--)
+			for (int i = coalesce.Expressions.Length - 2; i >= 0; i--)
 			{
 				var param = coalesce.Expressions[i];
 				if (!supportsParameters && param is SqlParameter p2)

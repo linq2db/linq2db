@@ -50,7 +50,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		{
 			// for now just generate DAYS TO FRACTION(5) interval, hardly anyone needs YEAR TO MONTH one
 			// and if he needs, it is easy to workaround by adding another one converter to mapping schema
-			var absoluteTs = interval < TimeSpan.Zero ? TimeSpan.Zero - interval : interval;
+			var absoluteTs = interval < TimeSpan.Zero ? (TimeSpan.Zero - interval) : interval;
 			sb.AppendFormat(
 				CultureInfo.InvariantCulture,
 				INTERVAL5_FORMAT,
@@ -58,7 +58,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				absoluteTs.Hours,
 				absoluteTs.Minutes,
 				absoluteTs.Seconds,
-				absoluteTs.Ticks / 100 % 100000);
+				(absoluteTs.Ticks / 100) % 100000);
 		}
 
 		static readonly Action<StringBuilder,int> _appendConversionAction = AppendConversion;
@@ -100,7 +100,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			string format;
 #endif
 
-			if (value.Ticks % 10000000 / 100 != 0)
+			if ((value.Ticks % 10000000) / 100 != 0)
 			{
 				var ifxo = options.FindOrDefault(InformixOptions.Default);
 

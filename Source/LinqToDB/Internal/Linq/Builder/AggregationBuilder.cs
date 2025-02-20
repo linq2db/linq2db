@@ -208,7 +208,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (chain != null)
 			{
-				for (var i = chain.Count - 1; i >= 0; i--)
+				for (int i = chain.Count - 1; i >= 0; i--)
 				{
 					var method = chain[i];
 					if (method.IsQueryable(nameof(Queryable.Distinct)))
@@ -333,11 +333,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			SqlPlaceholderExpression functionPlaceholder;
 			AggregationContext       context;
 
-			var aggregationType = GetAggregationType(
+			AggregationType aggregationType = GetAggregationType(
 				methodCall,
-				out var argumentsCount,
-				out var functionName,
-				out var returnType);
+				out int argumentsCount,
+				out string functionName,
+				out Type returnType);
 
 			var sequenceArgument = builder.BuildAggregationRootExpression(methodCall.Arguments[0]);
 

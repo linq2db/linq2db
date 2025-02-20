@@ -177,13 +177,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			return Version switch
-			{
-				>= SqlServerVersion.v2022 => new SqlServer2022MemberTranslator(),
-				>= SqlServerVersion.v2012 => new SqlServer2012MemberTranslator(),
-				SqlServerVersion.v2005    => new SqlServer2005MemberTranslator(),
-				_                         => new SqlServerMemberTranslator(),
-			};
+			if (Version >= SqlServerVersion.v2022)
+				return new SqlServer2022MemberTranslator();
+
+			if (Version >= SqlServerVersion.v2012)
+				return new SqlServer2012MemberTranslator();
+
+			if (Version == SqlServerVersion.v2005)
+				return new SqlServer2005MemberTranslator();
+
+			return new SqlServerMemberTranslator();
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
@@ -256,7 +259,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				case DataType.DateTime2 when value is DateTimeOffset dto:
 					if (Version == SqlServerVersion.v2005)
-						value = dto.LocalDateTime.WithPrecision(dataType.Precision > 3 ? 3 : dataType.Precision ?? 3);
+						value = dto.LocalDateTime.WithPrecision(dataType.Precision > 3 ? 3 : (dataType.Precision ?? 3));
 					else
 						value = dto.WithPrecision(dataType.Precision ?? 7).LocalDateTime;
 					break;
@@ -264,7 +267,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				case DataType.DateTimeOffset when value is DateTimeOffset dto:
 				{
 					if (Version == SqlServerVersion.v2005)
-						value = dto.LocalDateTime.WithPrecision(dataType.Precision > 3 ? 3 : dataType.Precision ?? 3);
+						value = dto.LocalDateTime.WithPrecision(dataType.Precision > 3 ? 3 : (dataType.Precision ?? 3));
 					else
 						value = dto.WithPrecision(dataType.Precision ?? 7);
 					break;
@@ -367,7 +370,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.VarChar:
 						{
 							var strValue = value as string;
-							if (strValue != null && strValue.Length > 8000 || value != null && strValue == null)
+							if ((strValue != null && strValue.Length > 8000) || (value != null && strValue == null))
 								parameter.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 8000 && (strValue == null || strValue.Length <= dataType.Length))
 								parameter.Size = dataType.Length.Value;
@@ -379,7 +382,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.NVarChar:
 						{
 							var strValue = value as string;
-							if (strValue != null && strValue.Length > 4000 || value != null && strValue == null)
+							if ((strValue != null && strValue.Length > 4000) || (value != null && strValue == null))
 								parameter.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 4000 && (strValue == null || strValue.Length <= dataType.Length))
 								parameter.Size = dataType.Length.Value;
@@ -391,7 +394,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.VarBinary:
 						{
 							var binaryValue = value as byte[];
-							if (binaryValue != null && binaryValue.Length > 8000 || value != null && binaryValue == null)
+							if ((binaryValue != null && binaryValue.Length > 8000) || (value != null && binaryValue == null))
 								parameter.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 8000 && (binaryValue == null || binaryValue.Length <= dataType.Length))
 								parameter.Size = dataType.Length.Value;

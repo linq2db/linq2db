@@ -162,7 +162,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				// When using array bindings, _all_ parameters must be arrays and have the same length.
 				if (Adapter.SetArrayBindCount != null)
 				{
-					var arrayBindCount = parameters?.Length > 0 && parameters[0] is { IsArray: true, Value: object[] value }
+					int arrayBindCount = parameters?.Length > 0 && parameters[0] is { IsArray: true, Value: object[] value }
 						? value.Length
 						: 0;
 

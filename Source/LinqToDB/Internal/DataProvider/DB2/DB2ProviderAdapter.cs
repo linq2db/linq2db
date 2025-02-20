@@ -122,7 +122,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				typeMapper.BuildWrappedFactory((DbConnection connection, DB2BulkCopyOptions options) => new DB2BulkCopy((DB2Connection)(object)connection, options)),
 				typeMapper.BuildWrappedFactory((int source, string destination) => new DB2BulkCopyColumnMapping(source, destination)));
 
-			_connectionFactory = typeMapper.BuildTypedFactory<string, DB2Connection, DbConnection>((connectionString) => new DB2Connection(connectionString));
+			_connectionFactory = typeMapper.BuildTypedFactory<string, DB2Connection, DbConnection>((string connectionString) => new DB2Connection(connectionString));
 			ConnectionWrapper  = typeMapper.Wrap<DB2Connection>;
 
 			Type? LoadType(string typeName, DataType dataType, bool optional = false, bool obsolete = false, bool register = true)

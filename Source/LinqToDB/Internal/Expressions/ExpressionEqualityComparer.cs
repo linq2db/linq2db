@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.Expressions
 			{
 				var hashCode = (int)obj.NodeType;
 
-				hashCode += hashCode * 397 ^ obj.Type.GetHashCode();
+				hashCode += (hashCode * 397) ^ obj.Type.GetHashCode();
 
 				switch (obj.NodeType)
 				{
@@ -64,7 +64,7 @@ namespace LinqToDB.Internal.Expressions
 							hashCode += hashCode * 397 ^ unaryExpression.Method.GetHashCode();
 						}
 
-						hashCode += hashCode * 397 ^ GetHashCode(unaryExpression.Operand);
+						hashCode += (hashCode * 397) ^ GetHashCode(unaryExpression.Operand);
 
 						break;
 					}
@@ -96,8 +96,8 @@ namespace LinqToDB.Internal.Expressions
 					{
 						var binaryExpression = (BinaryExpression)obj;
 
-						hashCode += hashCode * 397 ^ GetHashCode(binaryExpression.Left);
-						hashCode += hashCode * 397 ^ GetHashCode(binaryExpression.Right);
+						hashCode += (hashCode * 397) ^ GetHashCode(binaryExpression.Left);
+						hashCode += (hashCode * 397) ^ GetHashCode(binaryExpression.Right);
 
 						break;
 					}
@@ -105,8 +105,8 @@ namespace LinqToDB.Internal.Expressions
 					{
 						var typeBinaryExpression = (TypeBinaryExpression)obj;
 
-						hashCode += hashCode * 397 ^ GetHashCode(typeBinaryExpression.Expression);
-						hashCode += hashCode * 397 ^ typeBinaryExpression.TypeOperand.GetHashCode();
+						hashCode += (hashCode * 397) ^ GetHashCode(typeBinaryExpression.Expression);
+						hashCode += (hashCode * 397) ^ typeBinaryExpression.TypeOperand.GetHashCode();
 
 						break;
 					}
@@ -116,9 +116,9 @@ namespace LinqToDB.Internal.Expressions
 
 						if (constantExpression.Value != null
 							&& constantExpression.Value is not IQueryable 
-							&& constantExpression.Value is string or not IEnumerable)
+							&& (constantExpression.Value is string or not IEnumerable))
 						{
-							hashCode += hashCode * 397 ^ constantExpression.Value.GetHashCode();
+							hashCode += (hashCode * 397) ^ constantExpression.Value.GetHashCode();
 						}
 
 						break;
@@ -140,8 +140,8 @@ namespace LinqToDB.Internal.Expressions
 					{
 						var memberExpression = (MemberExpression)obj;
 
-						hashCode += hashCode * 397 ^ MemberInfoEqualityComparer.Default.GetHashCode(memberExpression.Member);
-						hashCode += hashCode * 397 ^ GetHashCode(memberExpression.Expression);
+						hashCode += (hashCode * 397) ^ MemberInfoEqualityComparer.Default.GetHashCode(memberExpression.Member);
+						hashCode += (hashCode * 397) ^ GetHashCode(memberExpression.Expression);
 
 						break;
 					}
@@ -149,9 +149,9 @@ namespace LinqToDB.Internal.Expressions
 					{
 						var methodCallExpression = (MethodCallExpression)obj;
 
-						hashCode += hashCode * 397 ^ methodCallExpression.Method.GetHashCode();
-						hashCode += hashCode * 397 ^ GetHashCode(methodCallExpression.Object);
-						hashCode += hashCode * 397 ^ GetHashCode(methodCallExpression.Arguments);
+						hashCode += (hashCode * 397) ^ methodCallExpression.Method.GetHashCode();
+						hashCode += (hashCode * 397) ^ GetHashCode(methodCallExpression.Object);
+						hashCode += (hashCode * 397) ^ GetHashCode(methodCallExpression.Arguments);
 
 						break;
 					}
@@ -159,9 +159,9 @@ namespace LinqToDB.Internal.Expressions
 					{
 						var lambdaExpression = (LambdaExpression)obj;
 
-						hashCode += hashCode * 397 ^ lambdaExpression.ReturnType.GetHashCode();
-						hashCode += hashCode * 397 ^ GetHashCode(lambdaExpression.Body);
-						hashCode += hashCode * 397 ^ GetHashCode(lambdaExpression.Parameters);
+						hashCode += (hashCode * 397) ^ lambdaExpression.ReturnType.GetHashCode();
+						hashCode += (hashCode * 397) ^ GetHashCode(lambdaExpression.Body);
+						hashCode += (hashCode * 397) ^ GetHashCode(lambdaExpression.Parameters);
 
 						break;
 					}
@@ -169,17 +169,17 @@ namespace LinqToDB.Internal.Expressions
 					{
 						var newExpression = (NewExpression)obj;
 
-						hashCode += hashCode * 397 ^ (newExpression.Constructor?.GetHashCode() ?? 0);
+						hashCode += (hashCode * 397) ^ (newExpression.Constructor?.GetHashCode() ?? 0);
 
 						if (newExpression.Members != null)
 						{
 							for (var i = 0; i < newExpression.Members.Count; i++)
 							{
-								hashCode += hashCode * 397 ^ newExpression.Members[i].GetHashCode();
+								hashCode += (hashCode * 397) ^ newExpression.Members[i].GetHashCode();
 							}
 						}
 
-						hashCode += hashCode * 397 ^ GetHashCode(newExpression.Arguments);
+						hashCode += (hashCode * 397) ^ GetHashCode(newExpression.Arguments);
 
 						break;
 					}
@@ -188,7 +188,7 @@ namespace LinqToDB.Internal.Expressions
 					{
 						var newArrayExpression = (NewArrayExpression)obj;
 
-						hashCode += hashCode * 397 ^ GetHashCode(newArrayExpression.Expressions);
+						hashCode += (hashCode * 397) ^ GetHashCode(newArrayExpression.Expressions);
 
 						break;
 					}
@@ -196,8 +196,8 @@ namespace LinqToDB.Internal.Expressions
 					{
 						var invocationExpression = (InvocationExpression)obj;
 
-						hashCode += hashCode * 397 ^ GetHashCode(invocationExpression.Expression);
-						hashCode += hashCode * 397 ^ GetHashCode(invocationExpression.Arguments);
+						hashCode += (hashCode * 397) ^ GetHashCode(invocationExpression.Expression);
+						hashCode += (hashCode * 397) ^ GetHashCode(invocationExpression.Arguments);
 
 						break;
 					}
@@ -205,8 +205,8 @@ namespace LinqToDB.Internal.Expressions
 					{
 						var memberInitExpression = (MemberInitExpression)obj;
 
-						hashCode += hashCode * 397 ^ GetHashCode(memberInitExpression.NewExpression);
-						hashCode += hashCode * 397 ^ GetHashCode(memberInitExpression.Bindings);
+						hashCode += (hashCode * 397) ^ GetHashCode(memberInitExpression.NewExpression);
+						hashCode += (hashCode * 397) ^ GetHashCode(memberInitExpression.Bindings);
 
 						break;
 					}
@@ -214,11 +214,11 @@ namespace LinqToDB.Internal.Expressions
 					{
 						var listInitExpression = (ListInitExpression)obj;
 
-						hashCode += hashCode * 397 ^ GetHashCode(listInitExpression.NewExpression);
+						hashCode += (hashCode * 397) ^ GetHashCode(listInitExpression.NewExpression);
 
 						for (var i = 0; i < listInitExpression.Initializers.Count; i++)
 						{
-							hashCode += hashCode * 397 ^ GetHashCode(listInitExpression.Initializers[i].Arguments);
+							hashCode += (hashCode * 397) ^ GetHashCode(listInitExpression.Initializers[i].Arguments);
 						}
 
 						break;
@@ -227,25 +227,25 @@ namespace LinqToDB.Internal.Expressions
 					{
 						var conditionalExpression = (ConditionalExpression)obj;
 
-						hashCode += hashCode * 397 ^ GetHashCode(conditionalExpression.Test);
-						hashCode += hashCode * 397 ^ GetHashCode(conditionalExpression.IfTrue);
-						hashCode += hashCode * 397 ^ GetHashCode(conditionalExpression.IfFalse);
+						hashCode += (hashCode * 397) ^ GetHashCode(conditionalExpression.Test);
+						hashCode += (hashCode * 397) ^ GetHashCode(conditionalExpression.IfTrue);
+						hashCode += (hashCode * 397) ^ GetHashCode(conditionalExpression.IfFalse);
 
 						break;
 					}
 					case ExpressionType.Default:
 					{
-						hashCode += hashCode * 397 ^ obj.Type.GetHashCode();
+						hashCode += (hashCode * 397) ^ obj.Type.GetHashCode();
 						break;
 					}
 					case ExpressionType.Extension:
 					{
-						hashCode += hashCode * 397 ^ obj.GetHashCode();
+						hashCode += (hashCode * 397) ^ obj.GetHashCode();
 						break;
 					}
 					case ChangeTypeExpression.ChangeTypeType:
 					{
-						hashCode += hashCode * 397 ^ obj.GetHashCode();
+						hashCode += (hashCode * 397) ^ obj.GetHashCode();
 						break;
 					}
 					case ExpressionType.Block:
@@ -253,12 +253,12 @@ namespace LinqToDB.Internal.Expressions
 						var blockExpression = (BlockExpression)obj;
 						for (var i = 0; i < blockExpression.Variables.Count; i++)
 						{
-							hashCode += hashCode * 397 ^ GetHashCode(blockExpression.Variables[i]);
+							hashCode += (hashCode * 397) ^ GetHashCode(blockExpression.Variables[i]);
 						}
 
 						for (var i = 0; i < blockExpression.Expressions.Count; i++)
 						{
-							hashCode += hashCode * 397 ^ GetHashCode(blockExpression.Expressions[i]);
+							hashCode += (hashCode * 397) ^ GetHashCode(blockExpression.Expressions[i]);
 						}
 
 						break;
@@ -266,10 +266,10 @@ namespace LinqToDB.Internal.Expressions
 					case ExpressionType.Index:
 					{
 						var indexExpression = (IndexExpression)obj;
-						hashCode += hashCode * 397 ^ GetHashCode(indexExpression.Object);
+						hashCode += (hashCode * 397) ^ GetHashCode(indexExpression.Object);
 						for (var i = 0; i < indexExpression.Arguments.Count; i++)
 						{
-							hashCode += hashCode * 397 ^ GetHashCode(indexExpression.Arguments[i]);
+							hashCode += (hashCode * 397) ^ GetHashCode(indexExpression.Arguments[i]);
 						}
 
 						break;
@@ -278,16 +278,16 @@ namespace LinqToDB.Internal.Expressions
 					{
 						var switchExpression = (SwitchExpression)obj;
 
-						hashCode += hashCode * 397 ^ GetHashCode(switchExpression.SwitchValue);
+						hashCode += (hashCode * 397) ^ GetHashCode(switchExpression.SwitchValue);
 
 						for (var i = 0; i < switchExpression.Cases.Count; i++)
 						{
 							var switchCase = switchExpression.Cases[i];
-							hashCode += hashCode * 397 ^ GetHashCode(switchCase.TestValues);
-							hashCode += hashCode * 397 ^ GetHashCode(switchCase.Body);
+							hashCode += (hashCode * 397) ^ GetHashCode(switchCase.TestValues);
+							hashCode += (hashCode * 397) ^ GetHashCode(switchCase.Body);
 						}
 
-						hashCode += hashCode * 397 ^ GetHashCode(switchExpression.DefaultBody);
+						hashCode += (hashCode * 397) ^ GetHashCode(switchExpression.DefaultBody);
 
 						break;
 					}
@@ -306,15 +306,15 @@ namespace LinqToDB.Internal.Expressions
 			{
 				var memberBinding = bindings[i];
 
-				hashCode += hashCode * 397 ^ memberBinding.Member.GetHashCode();
-				hashCode += hashCode * 397 ^ (int)memberBinding.BindingType;
+				hashCode += (hashCode * 397) ^ memberBinding.Member.GetHashCode();
+				hashCode += (hashCode * 397) ^ (int)memberBinding.BindingType;
 
 				switch (memberBinding.BindingType)
 				{
 					case MemberBindingType.Assignment:
 					{
 						var memberAssignment = (MemberAssignment)memberBinding;
-						hashCode += hashCode * 397 ^ GetHashCode(memberAssignment.Expression);
+						hashCode += (hashCode * 397) ^ GetHashCode(memberAssignment.Expression);
 						break;
 					}
 					case MemberBindingType.ListBinding:
@@ -322,7 +322,7 @@ namespace LinqToDB.Internal.Expressions
 						var memberListBinding = (MemberListBinding)memberBinding;
 						for (var j = 0; j < memberListBinding.Initializers.Count; j++)
 						{
-							hashCode += hashCode * 397 ^
+							hashCode += (hashCode * 397) ^
 							            GetHashCode(memberListBinding.Initializers[j].Arguments);
 						}
 
@@ -332,7 +332,7 @@ namespace LinqToDB.Internal.Expressions
 					{
 						var memberMemberBinding = (MemberMemberBinding)memberBinding;
 
-						hashCode += hashCode * 397 ^ GetHashCode(memberMemberBinding.Bindings);
+						hashCode += (hashCode * 397) ^ GetHashCode(memberMemberBinding.Bindings);
 
 						break;
 					}
@@ -351,7 +351,7 @@ namespace LinqToDB.Internal.Expressions
 
 			for (var i = 0; i < expressions.Count; i++)
 			{
-				hashCode += hashCode * 397 ^ GetHashCode(expressions[i]);
+				hashCode += (hashCode * 397) ^ GetHashCode(expressions[i]);
 			}
 
 			return hashCode;

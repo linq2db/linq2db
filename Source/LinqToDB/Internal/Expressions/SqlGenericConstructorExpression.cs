@@ -155,7 +155,7 @@ namespace LinqToDB.Internal.Expressions
 			var methodParameters = method.GetParameters();
 
 			var parameters = new List<Parameter>(methodParameters.Length);
-			for (var i = 0; i < arguments.Count; i++)
+			for (int i = 0; i < arguments.Count; i++)
 			{
 				var methodParameter = methodParameters[i];
 				parameters.Add(new Parameter(arguments[i], methodParameter,
@@ -340,7 +340,7 @@ namespace LinqToDB.Internal.Expressions
 				var hashCode = 0;
 				foreach (var item in collection)
 				{
-					hashCode = hashCode * 397 ^ (item == null ? 0 : comparer.GetHashCode(item));
+					hashCode = (hashCode * 397) ^ (item == null ? 0 : comparer.GetHashCode(item));
 				}
 
 				return hashCode;
@@ -351,7 +351,7 @@ namespace LinqToDB.Internal.Expressions
 		{
 			if (list1.Count != list2.Count) return false;
 
-			for (var i = 0; i < list1.Count; i++)
+			for (int i = 0; i < list1.Count; i++)
 			{
 				if (!comparer.Equals(list1[i], list2[i]))
 					return false;
@@ -411,12 +411,12 @@ namespace LinqToDB.Internal.Expressions
 		{
 			unchecked
 			{
-				var hashCode = NewExpression != null ? NewExpression.GetHashCode() : 0;
-				hashCode = hashCode * 397 ^ (Constructor       != null ? Constructor.GetHashCode() : 0);
-				hashCode = hashCode * 397 ^ (ConstructorMethod != null ? ConstructorMethod.GetHashCode() : 0);
-				hashCode = hashCode * 397 ^ (int)ConstructType;
-				hashCode = hashCode * 397 ^ ObjectType.GetHashCode();
-				hashCode = hashCode * 397 ^ GetHashCode(Parameters, Parameter.ParameterComparer);
+				var hashCode = (NewExpression != null ? NewExpression.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ (Constructor       != null ? Constructor.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ (ConstructorMethod != null ? ConstructorMethod.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ (int)ConstructType;
+				hashCode = (hashCode * 397) ^ ObjectType.GetHashCode();
+				hashCode = (hashCode * 397) ^ GetHashCode(Parameters, Parameter.ParameterComparer);
 				return hashCode;
 			}
 		}
@@ -514,9 +514,9 @@ namespace LinqToDB.Internal.Expressions
 					unchecked
 					{
 						var hashCode = obj.MemberInfo.GetHashCode();
-						hashCode = hashCode * 397 ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
-						hashCode = hashCode * 397 ^ obj.IsMandatory.GetHashCode();
-						hashCode = hashCode * 397 ^ obj.IsLoaded.GetHashCode();
+						hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
+						hashCode = (hashCode * 397) ^ obj.IsMandatory.GetHashCode();
+						hashCode = (hashCode * 397) ^ obj.IsLoaded.GetHashCode();
 						return hashCode;
 					}
 				}
@@ -587,9 +587,9 @@ namespace LinqToDB.Internal.Expressions
 				{
 					unchecked
 					{
-						var hashCode = obj.MemberInfo != null ? obj.MemberInfo.GetHashCode() : 0;
-						hashCode = hashCode * 397 ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
-						hashCode = hashCode * 397 ^ obj.ParameterInfo.GetHashCode();
+						var hashCode = (obj.MemberInfo != null ? obj.MemberInfo.GetHashCode() : 0);
+						hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
+						hashCode = (hashCode * 397) ^ obj.ParameterInfo.GetHashCode();
 						return hashCode;
 					}
 				}

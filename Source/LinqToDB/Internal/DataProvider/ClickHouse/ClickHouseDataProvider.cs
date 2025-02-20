@@ -77,14 +77,14 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			{
 				// FixedString binary readers and string fallback for other target types
 				// read as binary only for binary mappings
-				SetProviderField<DbDataReader, byte[], byte[]>((rd, idx) => rd.GetFieldValue<byte[]>(idx));
-				SetProviderField<DbDataReader, Binary, byte[]>((rd, idx) => new Binary(rd.GetFieldValue<byte[]>(idx)));
+				SetProviderField<DbDataReader, byte[], byte[]>((DbDataReader rd, int idx) => rd.GetFieldValue<byte[]>(idx));
+				SetProviderField<DbDataReader, Binary, byte[]>((DbDataReader rd, int idx) => new Binary(rd.GetFieldValue<byte[]>(idx)));
 				// for other target types read as string for better compatibility with string-based conversions
 				ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(byte[]) }] = (DbDataReader rd, int idx) => Encoding.UTF8.GetString(rd.GetFieldValue<byte[]>(idx));
 
 				// String as binary data
-				SetProviderField<DbDataReader, byte[], string>((rd, idx) => rd.GetFieldValue<byte[]>(idx));
-				SetProviderField<DbDataReader, Binary, string>((rd, idx) => new Binary(rd.GetFieldValue<byte[]>(idx)));
+				SetProviderField<DbDataReader, byte[], string>((DbDataReader rd, int idx) => rd.GetFieldValue<byte[]>(idx));
+				SetProviderField<DbDataReader, Binary, string>((DbDataReader rd, int idx) => new Binary(rd.GetFieldValue<byte[]>(idx)));
 			}
 
 			if (Provider == ClickHouseProvider.MySqlConnector)
@@ -193,7 +193,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 #endif
 					// https://github.com/Octonica/ClickHouseClient/issues/28
 					(ClickHouseProvider.Octonica, DataType.Decimal or DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256, string val) => decimal.Parse(val, CultureInfo.InvariantCulture),
-					(ClickHouseProvider.Octonica, DataType.IPv4, uint val)                                                                                                => new IPAddress(new byte[] { (byte)(val >> 24 & 0xFF), (byte)(val >> 16 & 0xFF), (byte)(val >> 8 & 0xFF), (byte)(val & 0xFF) }),
+					(ClickHouseProvider.Octonica, DataType.IPv4, uint val)                                                                                                => new IPAddress(new byte[] { (byte)((val >> 24) & 0xFF), (byte)((val >> 16) & 0xFF), (byte)((val >> 8) & 0xFF), (byte)(val & 0xFF) }),
 					(ClickHouseProvider.Octonica, DataType.IPv4 or DataType.IPv6, string val)                                                                             => IPAddress.Parse(val),
 					(ClickHouseProvider.Octonica, DataType.IPv6, byte[] val)                                                                                              => new IPAddress(val),
 
@@ -204,7 +204,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					(ClickHouseProvider.ClickHouseClient, DataType.Date or DataType.Date32, DateTimeOffset val) => val.Date,
 					// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 					(ClickHouseProvider.ClickHouseClient, DataType.VarBinary or DataType.Binary, byte[] val)    => Encoding.UTF8.GetString(val),
-					(ClickHouseProvider.ClickHouseClient, DataType.IPv4, uint val)                              => new IPAddress(new byte[] { (byte)(val >> 24 & 0xFF), (byte)(val >> 16 & 0xFF), (byte)(val >> 8 & 0xFF), (byte)(val & 0xFF) }).ToString(),
+					(ClickHouseProvider.ClickHouseClient, DataType.IPv4, uint val)                              => new IPAddress(new byte[] { (byte)((val >> 24) & 0xFF), (byte)((val >> 16) & 0xFF), (byte)((val >> 8) & 0xFF), (byte)(val & 0xFF) }).ToString(),
 					// https://github.com/DarkWanderer/ClickHouse.Client/issues/145
 					(ClickHouseProvider.ClickHouseClient, DataType.IPv6, IPAddress val)                         => val.AddressFamily == AddressFamily.InterNetworkV6 ? val : val.MapToIPv6(),
 					// https://github.com/DarkWanderer/ClickHouse.Client/issues/145

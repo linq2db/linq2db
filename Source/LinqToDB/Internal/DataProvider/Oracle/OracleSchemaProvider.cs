@@ -251,8 +251,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					DataType    = dataType,
 					IsNullable  = isNullable,
 					Ordinal     = ordinal,
-					Precision   = rd.IsDBNull(7) ? null : rd.GetInt32(7),
-					Scale       = rd.IsDBNull(8) ? null : rd.GetInt32(8),
+					Precision   = rd.IsDBNull(7) ? (int?)null : rd.GetInt32(7),
+					Scale       = rd.IsDBNull(8) ? (int?)null : rd.GetInt32(8),
 					IsIdentity  = rd.GetInt32(9) != 0,
 					Description = rd.IsDBNull(10) ? null : rd.GetString(10),
 					Length      = dataType == "CHAR" || dataType == "NCHAR" || dataType == "NVARCHAR2" || dataType == "VARCHAR2" || dataType == "VARCHAR"

@@ -1002,10 +1002,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (typeNamespaceList.All(type =>
 				{
-					return !IsUserType(type) ||
+					return (!IsUserType(type) ||
 							IsAnonymous(type) ||
 							type.Assembly == GetType().Assembly ||
-							type.IsGenericType && type.GetGenericTypeDefinition() != type;
+							type.IsGenericType && type.GetGenericTypeDefinition() != type);
 				}))
 					continue;
 				_typeBuilder.AppendLine("namespace " + MangleName(IsUserNamespace(typeNamespaceList.Key), typeNamespaceList.Key, "T"));

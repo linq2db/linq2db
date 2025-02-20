@@ -64,7 +64,7 @@ namespace LinqToDB.Internal.Expressions
 				return true;
 			}
 
-			if (obj.GetType() != GetType())
+			if (obj.GetType() != this.GetType())
 			{
 				return false;
 			}
@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.Expressions
 		{
 			unchecked
 			{
-				return Placeholder.GetHashCode() * 397 ^ IsNot.GetHashCode();
+				return (Placeholder.GetHashCode() * 397) ^ IsNot.GetHashCode();
 			}
 		}
 

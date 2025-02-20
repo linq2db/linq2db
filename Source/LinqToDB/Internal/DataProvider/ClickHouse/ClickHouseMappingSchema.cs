@@ -81,7 +81,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			// IPAddress <=> uint (IPv4)
 			SetConvertExpression((IPAddress v) => IPAddressToUInt(v));
-			SetConvertExpression((uint v) => new IPAddress(new byte[] { (byte)(v >> 24 & 0xFF), (byte)(v >> 16 & 0xFF), (byte)(v >> 8 & 0xFF), (byte)(v & 0xFF) }));
+			SetConvertExpression((uint v) => new IPAddress(new byte[] { (byte)((v >> 24) & 0xFF), (byte)((v >> 16) & 0xFF), (byte)((v >> 8) & 0xFF), (byte)(v & 0xFF) }));
 
 			// IPAddress <=> byte[4/16] (IPv6)
 			SetConvertExpression((byte[] v) => new IPAddress(v));
@@ -290,7 +290,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				case DataType.IntervalMinute   : ConvertInt64(sb, dt, (long)value.TotalMinutes);    break;
 				case DataType.IntervalHour     : ConvertInt64(sb, dt, (long)value.TotalHours);      break;
 				case DataType.IntervalDay      : ConvertInt64(sb, dt, (long)value.TotalDays);       break;
-				case DataType.IntervalWeek     : ConvertInt64(sb, dt, (long)value.TotalDays / 7); break;
+				case DataType.IntervalWeek     : ConvertInt64(sb, dt, ((long)value.TotalDays) / 7); break;
 				// cannot be mapped to timespan as it cannot be represented as fixed-value time interval
 				//case DataType.IntervalMonth  :
 				//case DataType.IntervalQuarter:
@@ -399,9 +399,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				case DataType.Undefined:
 				case DataType.UInt16   : BuildUInt16Literal(sb, value);                 return;
 				case DataType.Int16    : BuildInt16Literal(sb, checked((short)value));  return;
-				case DataType.UInt32   : BuildUInt32Literal(sb, checked(value));  return;
+				case DataType.UInt32   : BuildUInt32Literal(sb, checked((uint)value));  return;
 				case DataType.Int32    : BuildInt32Literal(sb, value);                  return;
-				case DataType.UInt64   : BuildUInt64Literal(sb, checked(value)); return;
+				case DataType.UInt64   : BuildUInt64Literal(sb, checked((ulong)value)); return;
 				case DataType.Int64    : BuildInt64Literal(sb, value);                  return;
 				case DataType.UInt128  : BuildUInt128Literal(sb, value);                return;
 				case DataType.Int128   : BuildInt128Literal(sb, value);                 return;
@@ -451,7 +451,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				case DataType.Undefined:
 				case DataType.UInt32   : BuildUInt32Literal(sb, value);                  return;
 				case DataType.Int32    : BuildInt32Literal(sb, checked((int)value));     return;
-				case DataType.UInt64   : BuildUInt64Literal(sb, checked(value));  return;
+				case DataType.UInt64   : BuildUInt64Literal(sb, checked((ulong)value));  return;
 				case DataType.Int64    : BuildInt64Literal(sb, value);                   return;
 				case DataType.UInt128  : BuildUInt128Literal(sb, value);                 return;
 				case DataType.Int128   : BuildInt128Literal(sb, value);                  return;
@@ -838,7 +838,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		private static void BuildIPv4Literal(StringBuilder sb, uint value)
 		{
-			sb.AppendFormat(CultureInfo.InvariantCulture, "toIPv4('{0}.{1}.{2}.{3}')", value >> 24 & 0xFF, value >> 16 & 0xFF, value >> 8 & 0xFF, value & 0xFF);
+			sb.AppendFormat(CultureInfo.InvariantCulture, "toIPv4('{0}.{1}.{2}.{3}')", (value >> 24) & 0xFF, (value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF);
 		}
 
 #endregion

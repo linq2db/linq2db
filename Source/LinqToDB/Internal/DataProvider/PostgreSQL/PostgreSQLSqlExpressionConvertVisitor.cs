@@ -113,7 +113,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				var right = QueryHelper.GetDbDataType(predicate.Expr2, MappingSchema);
 
 				// | is correct, we need to run both
-				if (IsJson(left, out var leftJsonB) | IsJson(right, out var rightJsonB) && !(leftJsonB && rightJsonB))
+				if ((IsJson(left, out var leftJsonB) | IsJson(right, out var rightJsonB)) && !(leftJsonB && rightJsonB))
 				{
 					var expr1 = leftJsonB
 						? predicate.Expr1

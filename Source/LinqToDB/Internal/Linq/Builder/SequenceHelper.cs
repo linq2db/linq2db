@@ -54,7 +54,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public static bool IsSameContext(Expression? expression, IBuildContext context)
 		{
 			return expression == null
-				|| expression is ContextRefExpression contextRef && contextRef.BuildContext == context;
+				|| (expression is ContextRefExpression contextRef && contextRef.BuildContext == context);
 		}
 
 		public static ContextRefExpression CreateRef(IBuildContext buildContext)
@@ -135,7 +135,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var contextRef = toPath as ContextRefExpression;
 
-					for (var i = 0; i < generic.Assignments.Count; i++)
+					for (int i = 0; i < generic.Assignments.Count; i++)
 					{
 						var assignment = generic.Assignments[i];
 
@@ -163,7 +163,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (assignments == null)
 							{
 								assignments = new();
-								for (var j = 0; j < i; j++)
+								for (int j = 0; j < i; j++)
 								{
 									assignments.Add(generic.Assignments[j]);
 								}
@@ -197,7 +197,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (parameters == null)
 							{
 								parameters = new();
-								for (var j = 0; j < i; j++)
+								for (int j = 0; j < i; j++)
 								{
 									parameters.Add(generic.Parameters[j]);
 								}
@@ -328,7 +328,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var contextRef = toPath as ContextRefExpression;
 
-				for (var i = 0; i < generic.Assignments.Count; i++)
+				for (int i = 0; i < generic.Assignments.Count; i++)
 				{
 					var assignment = generic.Assignments[i];
 
@@ -358,7 +358,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (assignments == null)
 						{
 							assignments = new();
-							for (var j = 0; j < i; j++)
+							for (int j = 0; j < i; j++)
 							{
 								assignments.Add(generic.Assignments[j]);
 							}
@@ -370,7 +370,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						assignments?.Add(assignment);
 				}
 
-				for (var i = 0; i < generic.Parameters.Count; i++)
+				for (int i = 0; i < generic.Parameters.Count; i++)
 				{
 					var parameter = generic.Parameters[i];
 
@@ -404,7 +404,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (parameters == null)
 						{
 							parameters = new();
-							for (var j = 0; j < i; j++)
+							for (int j = 0; j < i; j++)
 							{
 								parameters.Add(generic.Parameters[j]);
 							}
@@ -467,7 +467,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var contextRef = toPath as ContextRefExpression;
 
-					for (var i = 0; i < generic.Assignments.Count; i++)
+					for (int i = 0; i < generic.Assignments.Count; i++)
 					{
 						var assignment = generic.Assignments[i];
 
@@ -490,7 +490,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (assignments == null)
 							{
 								assignments = new();
-								for (var j = 0; j < i; j++)
+								for (int j = 0; j < i; j++)
 								{
 									assignments.Add(generic.Assignments[j]);
 								}
@@ -502,7 +502,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							assignments?.Add(assignment);
 					}
 
-					for (var i = 0; i < generic.Parameters.Count; i++)
+					for (int i = 0; i < generic.Parameters.Count; i++)
 					{
 						var parameter = generic.Parameters[i];
 
@@ -523,7 +523,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (parameters == null)
 							{
 								parameters = new();
-								for (var j = 0; j < i; j++)
+								for (int j = 0; j < i; j++)
 								{
 									parameters.Add(generic.Parameters[j]);
 								}
@@ -557,7 +557,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				case SqlPlaceholderExpression placeholder:
 				{
-					if (placeholder.Sql.IsNullValue())
+					if (QueryHelper.IsNullValue(placeholder.Sql))
 						return Expression.Default(placeholder.Type);
 
 					if (placeholder.Type == toPath.Type)

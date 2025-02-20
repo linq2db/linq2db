@@ -171,7 +171,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		static bool NeedsEncoding(string str)
 		{
-			foreach (var t in str)
+			foreach (char t in str)
 				if (NeedsEncoding(t))
 					return true;
 

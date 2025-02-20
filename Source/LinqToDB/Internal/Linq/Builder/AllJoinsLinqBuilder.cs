@@ -18,12 +18,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!call.IsQueryable())
 				return false;
 
-			return call.Arguments.Count == call.Method.Name switch
+			return call.Arguments.Count == (call.Method.Name switch
 			{
 				"Join" => 5,
 				"CrossJoin" => 3,
 				_ => 4,
-			};
+			});
 		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

@@ -473,7 +473,7 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					var prevQuery = sc;
 
-					for (var i = 0; i < sc.SetOperators.Count; i++)
+					for (int i = 0; i < sc.SetOperators.Count; i++)
 					{
 						var currentOperator = sc.SetOperators[i];
 						var currentQuery    = currentOperator.SelectQuery;
@@ -841,7 +841,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected SqlDeleteStatement GetAlternativeDelete(SqlDeleteStatement deleteStatement, DataOptions dataOptions)
 		{
-			if (deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0)
+			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0))
 			{
 				var table = deleteStatement.Table ?? deleteStatement.SelectQuery.From.Tables[0].Source as SqlTable;
 
@@ -916,7 +916,7 @@ namespace LinqToDB.Internal.SqlProvider
 			List<ISqlPredicate>? predicatesForDestination = null;
 			List<ISqlPredicate>? predicatesCommon         = null;
 
-			ISqlTableSource[] tableSources = { table };
+			ISqlTableSource[] tableSources = { (ISqlTableSource)table };
 
 			foreach (var p in source.Predicates)
 			{
@@ -1051,7 +1051,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			replaceTree = new Dictionary<IQueryElement, IQueryElement>();
 			var clonedQuery = tableToClone.Clone(tableToClone, replaceTree,
-				static (t, e) => e is SqlTable table && table == t || e is SqlField field && field.Table == t);
+				static (t, e) => (e is SqlTable table && table == t) || (e is SqlField field && field.Table == t));
 
 			return clonedQuery;
 		}

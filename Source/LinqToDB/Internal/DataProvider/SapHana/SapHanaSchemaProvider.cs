@@ -505,10 +505,10 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			if (procedure.IsTableFunction)
 			{
 				commandText = "SELECT * FROM " + commandText + "(";
-				commandText += string.Join(",", procedure.Parameters.Select(p => 
+				commandText += string.Join(",", procedure.Parameters.Select(p => (
 					p.SystemType == typeof (DateTime)
 						? string.Format(CultureInfo.InvariantCulture, "'{0}'", DateTime.Now)
-						: string.Format(CultureInfo.InvariantCulture, "{0}", DefaultValue.GetValue(p.SystemType ?? typeof(object)) ?? "''")));
+						: string.Format(CultureInfo.InvariantCulture, "{0}", DefaultValue.GetValue(p.SystemType ?? typeof(object)) ?? "''"))));
 
 				commandText += ")";
 				commandType = CommandType.Text;
@@ -518,8 +518,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			{
 				commandType = CommandType.StoredProcedure;
 				parameters = HanaSchemaOptions != null
-					? HanaSchemaOptions.GetStoredProcedureParameters(procedure) ??
-					  GetStoredProcedureDataParameters(procedure)
+					? (HanaSchemaOptions.GetStoredProcedureParameters(procedure) ??
+					  GetStoredProcedureDataParameters(procedure))
 					: GetStoredProcedureDataParameters(procedure);
 			}
 
@@ -571,7 +571,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 								? DateTime.Now
 								: DefaultValue.GetValue(p.SystemType ?? typeof(object)),
 					DataType = p.DataType,
-					Size = p.Size,
+					Size = (int?)p.Size,
 					Direction =
 						p.IsIn
 							? p.IsOut

@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				}
 			}
 
-			precision = precision == null || precision < 0 ? 6 : precision > 7 ? 7 : precision;
+			precision = precision == null || precision < 0 ? 6 : (precision > 7 ? 7 : precision);
 			return precision switch
 			{
 				0    => TIMESTAMP0_FORMAT,

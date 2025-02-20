@@ -60,7 +60,7 @@ namespace LinqToDB.Internal.Common
 		internal static bool IsSignedType(this Type? type)
 		{
 			return type != null &&
-			       (type.IsSignedInteger()
+			       (IsSignedInteger(type)
 			        || type == typeof(decimal)
 			        || type == typeof(double)
 			        || type == typeof(float)

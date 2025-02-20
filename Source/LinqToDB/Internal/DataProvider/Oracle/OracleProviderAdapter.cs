@@ -600,7 +600,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			var dbTypeSetter = dbTypeBuilder.BuildSetter<DbParameter>();
 			var dbTypeGetter = dbTypeBuilder.BuildGetter<DbParameter>();
 
-			var connectionFactory = typeMapper.BuildTypedFactory<string, OracleWrappers.OracleConnection, DbConnection>((connectionString) => new OracleWrappers.OracleConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, OracleWrappers.OracleConnection, DbConnection>((string connectionString) => new OracleWrappers.OracleConnection(connectionString));
 
 			return new OracleProviderAdapter(
 				connectionType,
@@ -791,7 +791,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			// command.ExecuteArray(int)
 			var executeArray = typeMapper.BuildFunc<DbCommand, int, int>(typeMapper.MapLambda((DevartWrappers.OracleCommand conn, int iters) => conn.ExecuteArray(iters)));
 
-			var connectionFactory = typeMapper.BuildTypedFactory<string, DevartWrappers.OracleConnection, DbConnection>((connectionString) => new DevartWrappers.OracleConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, DevartWrappers.OracleConnection, DbConnection>((string connectionString) => new DevartWrappers.OracleConnection(connectionString));
 
 			return new OracleProviderAdapter(
 				connectionType,

@@ -100,7 +100,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			unchecked
 			{
 				var hashCode = Context.GetHashCode();
-				hashCode = hashCode * 397 ^ UpTo.GetHashCode();
+				hashCode = (hashCode * 397) ^ UpTo.GetHashCode();
 				return hashCode;
 			}
 		}

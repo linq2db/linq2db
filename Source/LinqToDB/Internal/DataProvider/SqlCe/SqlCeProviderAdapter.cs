@@ -90,7 +90,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
 						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
 
-						var connectionFactory = typeMapper.BuildTypedFactory<string, SqlCeConnection, DbConnection>((connectionString) => new SqlCeConnection(connectionString));
+						var connectionFactory = typeMapper.BuildTypedFactory<string, SqlCeConnection, DbConnection>((string connectionString) => new SqlCeConnection(connectionString));
 
 						_instance = new SqlCeProviderAdapter(
 							connectionType,

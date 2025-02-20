@@ -41,9 +41,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// We are trying to keep fast cache hit behaviour, so cache check should be added only if needed
 			//
-			var shouldAddCacheCheck = false;
+			bool shouldAddCacheCheck = false;
 
-			var cacheCheckAdded = false;
+			bool cacheCheckAdded = false;
 
 			LambdaExpression? definedQueryMethod  = null;
 			if (association.HasQueryMethod())
@@ -78,7 +78,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var definedCount = definedQueryMethod.Parameters.Count;
 					var argumentsCount = onMember.Arguments.Count;
 					var diff = definedCount - argumentsCount;
-					for (var i = definedCount - 1; i >= diff; i--)
+					for (int i = definedCount - 1; i >= diff; i--)
 					{
 						parameterMatch.Add(definedQueryMethod.Parameters[i], onMember.Arguments[i - diff]);
 					}
@@ -142,7 +142,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (expressionPredicate != null)
 				{
-					shouldAddDefaultIfEmpty = shouldAddDefaultIfEmpty || association.CanBeNull && inline;
+					shouldAddDefaultIfEmpty = shouldAddDefaultIfEmpty || (association.CanBeNull && inline);
 					shouldAddCacheCheck     = true;
 
 					var replacedBody = expressionPredicate.GetBody(parentParam, childParam);

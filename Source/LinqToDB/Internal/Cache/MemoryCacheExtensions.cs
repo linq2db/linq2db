@@ -84,7 +84,7 @@ namespace LinqToDB.Internal.Cache
 				entry.Value = result;
 			}
 
-			return result!;
+			return (TItem)result!;
 		}
 
 		public static TItem GetOrCreate<TItem,TKey,TContext>(this IMemoryCache<TKey,TItem> cache, TKey key, TContext context, Func<ICacheEntry<TKey,TItem>,TContext,TItem> factory)
@@ -98,7 +98,7 @@ namespace LinqToDB.Internal.Cache
 				entry.Value = result;
 			}
 
-			return result!;
+			return (TItem)result!;
 		}
 
 		public static TItem GetOrCreate<TItem,TKey,TDerivedKey,TContext>(this IMemoryCache<TKey,TItem> cache, TDerivedKey key, TContext context, Func<ICacheEntry<TKey,TItem>,TDerivedKey,TContext,TItem> factory)
@@ -113,7 +113,7 @@ namespace LinqToDB.Internal.Cache
 				entry.Value = result;
 			}
 
-			return result!;
+			return (TItem)result!;
 		}
 
 		public static async Task<TItem> GetOrCreateAsync<TKey,TItem>(this IMemoryCache<TKey,TItem> cache, TKey key, Func<ICacheEntry<TKey,TItem>,Task<TItem>> factory)

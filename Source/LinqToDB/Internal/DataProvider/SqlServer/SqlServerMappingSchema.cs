@@ -442,7 +442,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					if (precision < 0 || precision > 7)
 						throw new InvalidOperationException(FormattableString.Invariant($"TIME type precision is out-of-bounds: {precision}"));
 
-					var ticks = value.Ticks - value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision];
+					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
 
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, TIME_TICKS_FORMAT, ticks);
 					break;
@@ -453,7 +453,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					if (precision < 0 || precision > 7)
 						throw new InvalidOperationException(FormattableString.Invariant($"TIME type precision is out-of-bounds: {precision}"));
 
-					var ticks = value.Ticks - value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision];
+					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
 
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "'{0:c}'", TimeSpan.FromTicks(ticks));
 					break;
@@ -464,7 +464,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					if (precision < 0 || precision > 7)
 						throw new InvalidOperationException(FormattableString.Invariant($"TIME type precision is out-of-bounds: {precision}"));
 
-					var ticks = value.Ticks - value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision];
+					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
 
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "N'{0:c}'", TimeSpan.FromTicks(ticks));
 					break;
@@ -490,7 +490,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static long GetFractionalSecondFromTicks(long ticks, int precision) => ticks % ValueExtensions.TICKS_DIVIDERS[0] / ValueExtensions.TICKS_DIVIDERS[precision];
+		private static long GetFractionalSecondFromTicks(long ticks, int precision) => (ticks % ValueExtensions.TICKS_DIVIDERS[0]) / ValueExtensions.TICKS_DIVIDERS[precision];
 
 #if NET6_0_OR_GREATER
 		static void ConvertDateToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, DateOnly value, bool v2008plus, bool supportsFromParts)

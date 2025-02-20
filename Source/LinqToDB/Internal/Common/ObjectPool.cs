@@ -84,7 +84,7 @@ namespace LinqToDB.Internal.Common
 			var items = _items;
 			T? inst;
 
-			for (var i = 0; i < items.Length; i++)
+			for (int i = 0; i < items.Length; i++)
 			{
 				// Note that the read is optimistically not synchronized. That is intentional.
 				// We will interlock only when we have a candidate. in a worst case we may miss some
@@ -115,7 +115,7 @@ namespace LinqToDB.Internal.Common
 			_cleanup(obj);
 
 			var items = _items;
-			for (var i = 0; i < items.Length; i++)
+			for (int i = 0; i < items.Length; i++)
 			{
 				if (items[i].Value == null)
 				{

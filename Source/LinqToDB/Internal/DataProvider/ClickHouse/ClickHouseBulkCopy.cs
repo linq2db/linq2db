@@ -175,7 +175,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			// as alternative to EnumerableHelper.Batch we can use MaxBlockSize, but it will not make difference
 			foreach (var batch in EnumerableHelper.Batch(source, options.MaxBatchSize ?? int.MaxValue))
 			{
-				var rows = 0;
+				int rows = 0;
 
 				if (clear)
 					foreach (var list in data)
@@ -289,7 +289,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				// as alternative to EnumerableHelper.Batch we can use MaxBlockSize, but it will not make difference
 				foreach (var batch in EnumerableHelper.Batch(source, options.MaxBatchSize ?? int.MaxValue))
 				{
-					var rows = 0;
+					int rows = 0;
 
 					if (clear)
 						foreach (var list in data)
@@ -407,7 +407,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 				await foreach (var batch in batches.WithCancellation(cancellationToken).ConfigureAwait(false))
 				{
-					var rows = 0;
+					int rows = 0;
 
 					if (clear)
 						foreach (var list in data)

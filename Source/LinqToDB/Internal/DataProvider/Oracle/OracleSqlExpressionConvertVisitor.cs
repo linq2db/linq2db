@@ -43,8 +43,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			//       same way as LikeSqlExceptParameters (for backward compatibility).
 
 			if (withNull != null
-				|| DataOptions.LinqOptions.CompareNulls != CompareNulls.LikeSql
-					&& op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
+				|| (DataOptions.LinqOptions.CompareNulls != CompareNulls.LikeSql
+					&& op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
 			{
 				if (Oracle11SqlOptimizer.IsTextType(b, MappingSchema)                   &&
 				    b.TryEvaluateExpressionForServer(EvaluationContext, out var bValue) &&

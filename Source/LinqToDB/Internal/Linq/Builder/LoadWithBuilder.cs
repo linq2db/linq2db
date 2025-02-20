@@ -196,7 +196,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static (ILoadWithContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
 		{
-			var context    = parentContext;
+			ILoadWithContext? context    = parentContext;
 			MemberInfo?       lastMember = null;
 
 			var members = new List<MemberInfo>();

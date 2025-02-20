@@ -919,7 +919,7 @@ SELECT	r.ROUTINE_CATALOG,
 					// https://github.com/npgsql/npgsql/issues/1693
 					let isNullable   = r.IsNull("AllowDBNull")      ? true       : r.Field<bool>("AllowDBNull")
 					// see https://github.com/npgsql/npgsql/issues/2243
-					let length       = r.IsNull("ColumnSize")       ? (int?)null : r.Field<int>("ColumnSize") == -1 && columnType == "character" ? 1 : r.Field<int>("ColumnSize")
+					let length       = r.IsNull("ColumnSize")       ? (int?)null : (r.Field<int>("ColumnSize") == -1 && columnType == "character" ? 1 : r.Field<int>("ColumnSize"))
 					let precision    = r.IsNull("NumericPrecision") ? (int?)null : r.Field<int>("NumericPrecision")
 					let scale        = r.IsNull("NumericScale")     ? (int?)null : r.Field<int>("NumericScale")
 					let providerType = r.IsNull("DataType")         ? null       : r.Field<Type>("DataType")

@@ -722,7 +722,7 @@ namespace LinqToDB.Internal.Expressions.Types
 									var method   = replacement.GetMethodEx(methodName, typeArgs.Length, types);
 
 									if (method == null
-										|| customReturnMapper == null && !mc.Method.ReturnType.IsAssignableFrom(method.ReturnType) && (!context.Mapper.TryMapType(mc.Method.ReturnType, out var newReturnType) || method.ReturnType != newReturnType))
+										|| (customReturnMapper == null && !mc.Method.ReturnType.IsAssignableFrom(method.ReturnType) && (!context.Mapper.TryMapType(mc.Method.ReturnType, out var newReturnType) || method.ReturnType != newReturnType)))
 									{
 										if (context.IgnoreMissingMembers)
 										{
@@ -762,7 +762,7 @@ namespace LinqToDB.Internal.Expressions.Types
 									var method = replacement.GetMethod(methodName, types);
 
 									if (method == null
-										|| customReturnMapper == null && !mc.Method.ReturnType.IsAssignableFrom(method.ReturnType) && (!context.Mapper.TryMapType(mc.Method.ReturnType, out var newReturnType) || method.ReturnType != newReturnType))
+										|| (customReturnMapper == null && !mc.Method.ReturnType.IsAssignableFrom(method.ReturnType) && (!context.Mapper.TryMapType(mc.Method.ReturnType, out var newReturnType) || method.ReturnType != newReturnType)))
 									{
 										if (context.IgnoreMissingMembers)
 										{
@@ -853,7 +853,7 @@ namespace LinqToDB.Internal.Expressions.Types
 			var parameters = new ParameterExpression[paramTypes.Length];
 			var generator  = new ExpressionGenerator(this);
 
-			for (var i = 0; i < paramTypes.Length; i++)
+			for (int i = 0; i < paramTypes.Length; i++)
 			{
 				var parameter = lambda.Parameters[i];
 				if (paramTypes[i] != parameter.Type)

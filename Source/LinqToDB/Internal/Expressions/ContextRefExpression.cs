@@ -101,7 +101,7 @@ namespace LinqToDB.Internal.Expressions
 			unchecked
 			{
 				var hashCode = ElementType.GetHashCode();
-				hashCode = hashCode * 397 ^ BuildContext.GetHashCode();
+				hashCode = (hashCode * 397) ^ BuildContext.GetHashCode();
 				return hashCode;
 			}
 		}

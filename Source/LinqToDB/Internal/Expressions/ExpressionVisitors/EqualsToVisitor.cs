@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 			bool            compareConstantValues = false)
 		{
 			var equalsInfo = PrepareEqualsInfo(dataContext, compareConstantValues);
-			var result     = expr1.EqualsTo(expr2, equalsInfo);
+			var result     = EqualsTo(expr1, expr2, equalsInfo);
 
 			return result;
 		}
@@ -400,9 +400,9 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 			{
 				if (arg1.NodeType == ExpressionType.Constant && arg2.NodeType == ExpressionType.Constant)
 				{
-					var query1 = arg1.EvaluateExpression<Sql.IQueryableContainer>()!.Query;
-					var query2 = arg2.EvaluateExpression<Sql.IQueryableContainer>()!.Query;
-					return query1.Expression.EqualsTo(query2.Expression, info);
+					var query1 = (arg1.EvaluateExpression<Sql.IQueryableContainer>()!).Query;
+					var query2 = (arg2.EvaluateExpression<Sql.IQueryableContainer>()!).Query;
+					return EqualsTo(query1.Expression, query2.Expression, info);
 				}
 			}
 

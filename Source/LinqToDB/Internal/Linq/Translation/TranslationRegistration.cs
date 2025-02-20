@@ -48,7 +48,7 @@ namespace LinqToDB.Internal.Linq.Translation
 		{
 			var memberInfo = MemberHelper.GetMemberInfo(memberAccessPattern);
 
-			if (memberInfo.MemberType is not MemberTypes.Constructor)
+			if (memberInfo.MemberType is not (MemberTypes.Constructor))
 				throw new ArgumentException("MemberAccessPattern must be a constructor access.");
 
 			_translations.Remove(memberInfo);
@@ -65,7 +65,7 @@ namespace LinqToDB.Internal.Linq.Translation
 			if (pattern.Parameters.Count != replacement.Parameters.Count)
 				throw new ArgumentException("MemberAccessPattern and replacement must have the same number of parameters.");
 
-			for (var i = 0; i < pattern.Parameters.Count; i++)
+			for (int i = 0; i < pattern.Parameters.Count; i++)
 			{
 				if (pattern.Parameters[i].Type != replacement.Parameters[i].Type)
 					throw new ArgumentException("MemberAccessPattern and replacement must have the same parameter types.");

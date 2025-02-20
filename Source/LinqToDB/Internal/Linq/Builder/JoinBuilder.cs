@@ -83,7 +83,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			sql.From.Tables[0].Joins.Add(join.JoinedTable);
 
-			var allowNullComparison = outerKeySelector is SqlGenericConstructorExpression ||
+			bool allowNullComparison = outerKeySelector is SqlGenericConstructorExpression ||
 			                           innerKeySelector is SqlGenericConstructorExpression;
 
 			if (!allowNullComparison && builder.CompareNulls is CompareNulls.LikeClr or CompareNulls.LikeSqlExceptParameters)

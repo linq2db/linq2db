@@ -1158,7 +1158,6 @@ namespace Tests.DataProvider
 		public void OpenJson1([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-
 			var result = db.GetTable<SqlFn.JsonData>(null, MethodHelper.GetMethodInfo(SqlFn.OpenJson, string.Empty), /*lang=json,strict*/ "{ \"test\" : 1 }").ToArray();
 			Console.WriteLine(result);
 
@@ -1174,7 +1173,6 @@ namespace Tests.DataProvider
 		public void OpenJson2([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-
 			var result = db.GetTable<SqlFn.JsonData>(null, MethodHelper.GetMethodInfo(SqlFn.OpenJson, string.Empty, string.Empty), /*lang=json,strict*/ "{ \"test\" : [ 10, 20 ] }", "$.test").ToArray();
 			Console.WriteLine(result);
 
@@ -1191,7 +1189,6 @@ namespace Tests.DataProvider
 		public void OpenJson3([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-
 			var result = db.GetTable<SqlFn.JsonData>(null, MethodHelper.GetMethodInfo(SqlFn.OpenJson, string.Empty), /*lang=json,strict*/ "[ 10, 20, 30, 40, 50, 60, 70 ]")
 				.Where(jd => jd.Key != "2")
 				.Where(jd => jd.Value != "60")

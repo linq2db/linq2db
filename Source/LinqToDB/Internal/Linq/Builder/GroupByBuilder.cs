@@ -45,7 +45,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			return call.Arguments[call.Arguments.Count - 1].Unwrap().NodeType == ExpressionType.Lambda;
+			return (call.Arguments[call.Arguments.Count - 1].Unwrap().NodeType == ExpressionType.Lambda);
 		}
 
 		static IEnumerable<Expression> EnumGroupingSets(Expression expression)
@@ -476,7 +476,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return result;
 				}
 
-				if (isSameContext && flags.IsExpression()/* || flags.IsExtractProjection()*//* && GetInterfaceGroupingType().IsSameOrParentOf(path.Type)*/)
+				if (isSameContext && (flags.IsExpression()/* || flags.IsExtractProjection()*/)/* && GetInterfaceGroupingType().IsSameOrParentOf(path.Type)*/)
 				{
 					if (!IsGroupingGuardDisabled)
 					{

@@ -242,7 +242,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			SqlServerTransientExceptionDetector.RegisterExceptionType(sqlExceptionType, exceptionErrorsGettter);
 
-			var connectionFactory = typeMapper.BuildTypedFactory<string, SqlConnection, DbConnection>((connectionString) => new SqlConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, SqlConnection, DbConnection>((string connectionString) => new SqlConnection(connectionString));
 
 			MappingSchema? mappingSchema = null;
 			Type?          sqlJsonType   = null;

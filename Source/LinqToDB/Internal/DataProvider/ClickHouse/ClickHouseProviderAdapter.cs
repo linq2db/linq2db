@@ -233,7 +233,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			else
 				typeMapper.FinalizeMappings();
 
-			var connectionFactory = typeMapper.BuildTypedFactory<string, ClientWrappers.ClickHouseConnection, DbConnection>((connectionString) => new ClientWrappers.ClickHouseConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, ClientWrappers.ClickHouseConnection, DbConnection>((string connectionString) => new ClientWrappers.ClickHouseConnection(connectionString));
 
 			return new ClickHouseProviderAdapter(
 				connectionType,
@@ -302,7 +302,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			ClickHouseTransientExceptionDetector.RegisterExceptionType(sqlExceptionType, exceptionErrorsGettter);
 
-			var connectionFactory = typeMapper.BuildTypedFactory<string, OctonicaWrappers.ClickHouseConnection, DbConnection>((connectionString) => new OctonicaWrappers.ClickHouseConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, OctonicaWrappers.ClickHouseConnection, DbConnection>((string connectionString) => new OctonicaWrappers.ClickHouseConnection(connectionString));
 
 			return new ClickHouseProviderAdapter(
 				connectionType,

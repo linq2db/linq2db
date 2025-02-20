@@ -262,7 +262,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			else
 				typeMapper.FinalizeMappings();
 
-			var connectionFactory = typeMapper.BuildTypedFactory<string, IfxConnection, DbConnection>((connectionString) => new IfxConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, IfxConnection, DbConnection>((string connectionString) => new IfxConnection(connectionString));
 
 			var paramMapper   = typeMapper.Type<IfxParameter>();
 			var dbTypeBuilder = paramMapper.Member(p => p.IfxType);

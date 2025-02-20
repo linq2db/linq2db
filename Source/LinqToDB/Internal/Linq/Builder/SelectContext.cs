@@ -86,7 +86,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsTable() || flags.IsTraverse() || flags.IsSubquery() || flags.IsExpand() && !flags.IsKeys() || flags.IsMemberRoot())
+				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsTable() || flags.IsTraverse() || flags.IsSubquery() || (flags.IsExpand() && !flags.IsKeys()) || flags.IsMemberRoot())
 				{
 					var isTypeMatch = path.Type.IsSameOrParentOf(ElementType) || ElementType.IsSameOrParentOf(path.Type);
 

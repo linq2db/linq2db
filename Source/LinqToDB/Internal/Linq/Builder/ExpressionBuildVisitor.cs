@@ -1767,7 +1767,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return Visit(condition);
 			}
 
-			if (_buildFlags.HasFlag(BuildFlags.ForMemberRoot) && _buildFlags.HasFlag(BuildFlags.ForExpanding))
+			if ((_buildFlags.HasFlag(BuildFlags.ForMemberRoot) && _buildFlags.HasFlag(BuildFlags.ForExpanding)))
 			{
 				if (innerExpression is ContextRefExpression contextRef)
 				{
@@ -1898,7 +1898,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (sqlExpr is not SqlPlaceholderExpression placeholder)
 					return null;
 
-				return placeholder.Sql.IsNullValue();
+				return QueryHelper.IsNullValue(placeholder.Sql);
 			}
 
 			if (expr.NodeType == ExpressionType.Equal || expr.NodeType == ExpressionType.NotEqual)
@@ -2342,7 +2342,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					ISqlExpression? sql = null;
 
-					var preferConvert = _buildPurpose is BuildPurpose.Sql || _buildPurpose == BuildPurpose.Expression && _buildFlags.HasFlag(BuildFlags.ForSetProjection);
+					var preferConvert = _buildPurpose is BuildPurpose.Sql || (_buildPurpose == BuildPurpose.Expression && _buildFlags.HasFlag(BuildFlags.ForSetProjection));
 
 					if (!preferConvert)
 					{
@@ -3114,7 +3114,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (sqlExpr is not SqlPlaceholderExpression placeholder)
 				return null;
 
-			return placeholder.Sql.IsNullValue();
+			return QueryHelper.IsNullValue(placeholder.Sql);
 		}
 
 		#region SearchCondition
@@ -3217,7 +3217,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			else if (node.Method.Name == "Contains")
 			{
 				if (node.Method.DeclaringType == typeof(Enumerable) ||
-					node.Method.DeclaringType == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0]) ||
+					(node.Method.DeclaringType == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0])) ||
 					typeof(IList).IsSameOrParentOf(node.Method.DeclaringType!) ||
 					typeof(ICollection<>).IsSameOrParentOf(node.Method.DeclaringType!) ||
 					typeof(IReadOnlyCollection<>).IsSameOrParentOf(node.Method.DeclaringType!))
@@ -3291,7 +3291,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!Builder.DataContext.SqlProviderFlags.SupportsBooleanType
 				|| forceEquality
 				|| valueConverter != null
-				|| columnDescriptor != null && columnDescriptor.GetDbDataType(true).DataType is not DataType.Boolean)
+				|| (columnDescriptor != null && columnDescriptor.GetDbDataType(true).DataType is not DataType.Boolean))
 			{
 				using var descriptorSaver = UsingColumnDescriptor(columnDescriptor);
 
@@ -3616,10 +3616,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var strict = leftConstructor.ConstructType  == SqlGenericConstructorExpression.CreateType.Full &&
 							 rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.Full ||
-							 leftConstructor.ConstructType  == SqlGenericConstructorExpression.CreateType.New &&
-							  rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.New ||
-							 leftConstructor.ConstructType  == SqlGenericConstructorExpression.CreateType.MemberInit &&
-							  rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.MemberInit;
+							 (leftConstructor.ConstructType  == SqlGenericConstructorExpression.CreateType.New &&
+							  rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.New) ||
+							 (leftConstructor.ConstructType  == SqlGenericConstructorExpression.CreateType.MemberInit &&
+							  rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.MemberInit);
 
 				var isNot           = nodeType == ExpressionType.NotEqual;
 				var searchCondition = new SqlSearchCondition(isNot);
@@ -4302,7 +4302,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// handle char replaced with int
 				// (int)chr op CONST
 				if (op1.Type == typeof(int) && op1conv.Operand.Type == typeof(char)
-					&& op2.NodeType is ExpressionType.Constant or ExpressionType.Convert or ExpressionType.ConvertChecked)
+					&& (op2.NodeType is ExpressionType.Constant or ExpressionType.Convert or ExpressionType.ConvertChecked))
 				{
 					op1 = op1conv.Operand;
 					op2 = op2.NodeType == ExpressionType.Constant
@@ -4313,7 +4313,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// (int?)chr? op CONST
 				else if (op1.Type == typeof(int?) && op1conv.Operand.Type == typeof(char?)
 					&& (op2.NodeType == ExpressionType.Constant
-						|| op2.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked && ((UnaryExpression)op2).Operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked))
+						|| (op2.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked && ((UnaryExpression)op2).Operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)))
 				{
 					op1 = op1conv.Operand;
 					op2 = op2.NodeType == ExpressionType.Constant
@@ -4609,7 +4609,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		void BuildObjectGetters(SqlGenericConstructorExpression generic, ParameterExpression rootParam, Expression root, List<SqlGetValue> getters)
 		{
-			for (var i = 0; i < generic.Assignments.Count; i++)
+			for (int i = 0; i < generic.Assignments.Count; i++)
 			{
 				var assignment = generic.Assignments[i];
 
@@ -5220,9 +5220,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					unchecked
 					{
 						var hashCode = obj.ResultType.GetHashCode();
-						hashCode = hashCode * 397 ^ (obj.Expression != null ? ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression) : 0);
-						hashCode = hashCode * 397 ^ obj.SelectQuery?.GetHashCode() ?? 0;
-						hashCode = hashCode * 397 ^ (obj.ParentQuery != null ? obj.ParentQuery.GetHashCode() : 0);
+						hashCode = (hashCode * 397) ^ (obj.Expression != null ? ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression) : 0);
+						hashCode = (hashCode * 397) ^ obj.SelectQuery?.GetHashCode() ?? 0;
+						hashCode = (hashCode * 397) ^ (obj.ParentQuery != null ? obj.ParentQuery.GetHashCode() : 0);
 						return hashCode;
 					}
 				}
@@ -5265,10 +5265,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					unchecked
 					{
 						var hashCode = ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
-						hashCode = hashCode * 397 ^ (obj.Context          != null ? obj.Context.GetHashCode() : 0);
-						hashCode = hashCode * 397 ^ (obj.SelectQuery      != null ? obj.SelectQuery.GetHashCode() : 0);
-						hashCode = hashCode * 397 ^ (obj.ColumnDescriptor != null ? obj.ColumnDescriptor.GetHashCode() : 0);
-						hashCode = hashCode * 397 ^ (int)obj.Flags;
+						hashCode = (hashCode * 397) ^ (obj.Context          != null ? obj.Context.GetHashCode() : 0);
+						hashCode = (hashCode * 397) ^ (obj.SelectQuery      != null ? obj.SelectQuery.GetHashCode() : 0);
+						hashCode = (hashCode * 397) ^ (obj.ColumnDescriptor != null ? obj.ColumnDescriptor.GetHashCode() : 0);
+						hashCode = (hashCode * 397) ^ (int)obj.Flags;
 						return hashCode;
 					}
 				}
