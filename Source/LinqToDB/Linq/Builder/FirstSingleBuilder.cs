@@ -240,7 +240,7 @@ namespace LinqToDB.Linq.Builder
 					return;
 
 				// process as subquery
-				if (Parent.SelectQuery.From.Tables.Count == 0)
+				if (Parent.SelectQuery.From.Tables.Count == 0 || !QueryHelper.IsDependsOnOuterSources(SelectQuery))
 				{
 					_asSubquery = true;
 					return;

@@ -166,6 +166,8 @@ namespace LinqToDB.Reflection
 
 				public static readonly MethodInfo With                = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.With(""));
 				public static readonly MethodInfo WithTableExpression = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.WithTableExpression(""));
+
+				internal static readonly MethodInfo UseTableDescriptor = MemberHelper.MethodOfGeneric<ITable<object>>(t => t.UseTableDescriptor(null!));
 			}
 
 			public static class GroupBy
