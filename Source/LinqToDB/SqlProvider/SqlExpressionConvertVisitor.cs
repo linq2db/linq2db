@@ -1159,7 +1159,7 @@ namespace LinqToDB.SqlProvider
 				{
 					if (element.Expr1.SystemType == typeof(string) && element.Expr2.SystemType != typeof(string))
 					{
-						var len = element.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(MappingSchema.GetDataType(element.Expr2.SystemType).Type.DataType);
+						var len = element.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(MappingSchema.GetDbDataType(element.Expr2.SystemType).DataType);
 
 						if (len == null || len <= 0)
 							len = 100;
@@ -1168,20 +1168,20 @@ namespace LinqToDB.SqlProvider
 							element.SystemType,
 							element.Expr1,
 							element.Operation,
-							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, new DbDataType(typeof(string), DataType.VarChar, null, len.Value))),
+							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, new DbDataType(typeof(string), DataType.VarChar, null, length: len.Value))),
 							element.Precedence);
 					}
 
 					if (element.Expr1.SystemType != typeof(string) && element.Expr2.SystemType == typeof(string))
 					{
-						var len = element.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(MappingSchema.GetDataType(element.Expr1.SystemType).Type.DataType);
+						var len = element.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(MappingSchema.GetDbDataType(element.Expr1.SystemType).DataType);
 
 						if (len == null || len <= 0)
 							len = 100;
 
 						return new SqlBinaryExpression(
 							element.SystemType,
-							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, new DbDataType(typeof(string), DataType.VarChar, null, len.Value))),
+							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, new DbDataType(typeof(string), DataType.VarChar, null, length: len.Value))),
 							element.Operation,
 							element.Expr2,
 							element.Precedence);

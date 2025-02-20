@@ -298,8 +298,8 @@ namespace LinqToDB
 							genericTypes = new List<SqlDataType>();
 							foreach (var t in mc.Method.DeclaringType.GetGenericArguments())
 							{
-								var type = mappingSchema.GetDataType(t);
-								if (type.Type.DataType == DataType.Undefined)
+								var type = mappingSchema.GetDbDataType(t);
+								if (type.DataType == DataType.Undefined)
 								{
 									pi ??= mc.Method.GetParameters();
 									for (var i = 0; i < pi.Length; i++)
@@ -313,13 +313,13 @@ namespace LinqToDB
 											{
 												var dbType = QueryHelper.GetDbDataType(placeholder.Sql, mappingSchema);
 												if (dbType.DataType != DataType.Undefined)
-													type = new SqlDataType(dbType);
+													type = dbType;
 											}
 										}
 									}
 								}
 
-								genericTypes.Add(type);
+								genericTypes.Add(new SqlDataType(type));
 							}
 						}
 
@@ -328,8 +328,8 @@ namespace LinqToDB
 							genericTypes ??= new List<SqlDataType>();
 							foreach (var t in mc.Method.GetGenericArguments())
 							{
-								var type = mappingSchema.GetDataType(t);
-								if (type.Type.DataType == DataType.Undefined)
+								var type = mappingSchema.GetDbDataType(t);
+								if (type.DataType == DataType.Undefined)
 								{
 									pi ??= mc.Method.GetParameters();
 									for (var i = 0; i < pi.Length; i++)
@@ -343,13 +343,13 @@ namespace LinqToDB
 											{
 												var dbType = QueryHelper.GetDbDataType(placeholder.Sql, mappingSchema);
 												if (dbType.DataType != DataType.Undefined)
-													type = new SqlDataType(dbType);
+													type = dbType;
 											}
 										}
 									}
 								}
 
-								genericTypes.Add(type);
+								genericTypes.Add(new SqlDataType(type));
 							}
 						}
 					}

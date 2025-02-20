@@ -234,7 +234,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var ctx = CreateContext(provider);
 
-			var ms = LinqToDBForEFTools.GetMappingSchema(ctx.Model, ctx, null);
+			var ms = LinqToDBForEFTools.GetMappingSchema(ctx.Model, ctx);
 
 			var customerPk = ms.GetAttribute<ColumnAttribute>(typeof(Customer),
 				MemberHelper.MemberOf<Customer>(c => c.CustomerId));
@@ -252,7 +252,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var ctx = CreateContext(provider);
 
-			var ms = LinqToDBForEFTools.GetMappingSchema(ctx.Model, ctx, null);
+			var ms = LinqToDBForEFTools.GetMappingSchema(ctx.Model, ctx);
 
 			var associationOrder = ms.GetAttribute<AssociationAttribute>(typeof(Customer),
 				MemberHelper.MemberOf<Customer>(c => c.Orders));

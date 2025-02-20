@@ -167,5 +167,17 @@ namespace LinqToDB.SqlQuery
 				? call.Arguments
 				: throw new LinqToDBException("Calls to Sql.Row() are the only valid expressions of type SqlRow.");
 		}
+
+		internal static bool IsCharDataType(this DataType dataType)
+		{
+			switch (dataType)
+			{
+				case DataType.Char:
+				case DataType.NChar:
+				case DataType.VarChar:
+				case DataType.NVarChar: return true;
+				default: return false;
+			}
+		}
 	}
 }

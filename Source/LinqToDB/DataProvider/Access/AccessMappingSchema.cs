@@ -23,19 +23,19 @@ namespace LinqToDB.DataProvider.Access
 		{
 			SetDataType(typeof(DateTime),  DataType.DateTime);
 
-			SetValueToSqlConverter(typeof(bool),     (sb,_,_,v) => sb.Append((bool)v));
-			SetValueToSqlConverter(typeof(Guid),     (sb,_,_,v) => sb.Append(CultureInfo.InvariantCulture, $"'{(Guid)v:B}'"));
-			SetValueToSqlConverter(typeof(DateTime), (sb,_,_,v) => ConvertDateTimeToSql(sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(bool),     (StringBuilder sb, DbDataType _, DataOptions _, object v) => sb.Append((bool)v));
+			SetValueToSqlConverter(typeof(Guid),     (StringBuilder sb, DbDataType _, DataOptions _, object v) => sb.Append(CultureInfo.InvariantCulture, $"'{(Guid)v:B}'"));
+			SetValueToSqlConverter(typeof(DateTime), (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertDateTimeToSql(sb, (DateTime)v));
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 #endif
 
-			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+			SetDataType(typeof(string), new DbDataType(typeof(string), DataType.NVarChar, null, 255));
 
-			SetValueToSqlConverter(typeof(string),   (sb,_,_,v) => ConvertStringToSql  (sb, (string)v));
-			SetValueToSqlConverter(typeof(char),     (sb,_,_,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),   (sb,_,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),   (sb,_,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string),   (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertStringToSql  (sb, (string)v));
+			SetValueToSqlConverter(typeof(char),     (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),   (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertBinaryToSql  (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),   (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
 			// Why:
 			// 1. Access use culture-specific string format for decimals
@@ -95,9 +95,9 @@ namespace LinqToDB.DataProvider.Access
 				// Because ODBC defines the curly brace as an escape code for vendor specific escape clauses, you must turn off escape clause scanning when you use literal GUIDs in SQL statements with the Microsoft Access ODBC driver. Note that this functionality is not supported in the Microsoft Access ODBC driver that ships with MDAC 2.1 or later.
 #if NETFRAMEWORK
 				// NETFX format parser fails to digest format string (even v4.8)
-				SetValueToSqlConverter(typeof(Guid), (sb, _, _, v) => sb.Append('{').Append(CultureInfo.InvariantCulture, $"guid {(Guid)v:B}").Append('}'));
+				SetValueToSqlConverter(typeof(Guid), (StringBuilder sb, DbDataType _, DataOptions _, object v) => sb.Append('{').Append(CultureInfo.InvariantCulture, $"guid {(Guid)v:B}").Append('}'));
 #else
-				SetValueToSqlConverter(typeof(Guid), (sb, _, _, v) => sb.Append(CultureInfo.InvariantCulture, $"{{guid {(Guid)v:B}}}"));
+				SetValueToSqlConverter(typeof(Guid), (StringBuilder sb, DbDataType _, DataOptions _, object v) => sb.Append(CultureInfo.InvariantCulture, $"{{guid {(Guid)v:B}}}"));
 #endif
 			}
 		}

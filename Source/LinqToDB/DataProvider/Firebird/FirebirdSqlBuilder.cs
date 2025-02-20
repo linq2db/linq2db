@@ -269,7 +269,7 @@ namespace LinqToDB.DataProvider.Firebird
 				if (dbDataType.DataType == DataType.Undefined)
 				{
 					// TODO: We should avoid such tricks, proper TypeMapping required
-					dbDataType = MappingSchema.GetDataType(dbDataType.SystemType).Type;
+					dbDataType = MappingSchema.GetDbDataType(dbDataType.SystemType);
 				}
 
 				// Same code in DB2 provider

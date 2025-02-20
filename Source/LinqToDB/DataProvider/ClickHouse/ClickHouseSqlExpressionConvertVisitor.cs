@@ -292,8 +292,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						toType = sqlDataType.Type;
 						if (toType.DataType == DataType.Undefined && toType.SystemType.IsNullableType())
 						{
-							sqlDataType = MappingSchema.GetDataType(toType.SystemType.UnwrapNullableType());
-							toType      = sqlDataType.Type;
+							toType = MappingSchema.GetDbDataType(toType.SystemType.UnwrapNullableType());
 						}
 					}
 					else if (toTypeExpr.SystemType == null)
@@ -302,8 +301,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					}
 					else
 					{
-						sqlDataType = MappingSchema.GetDataType(toTypeExpr.SystemType);
-						toType      = sqlDataType.Type;
+						toType = MappingSchema.GetDbDataType(toTypeExpr.SystemType);
 					}
 
 					return MakeConversion(func.Parameters[2], toType, true, func.Name == PseudoFunctions.TRY_CONVERT_OR_DEFAULT ? func.Parameters[3] : null);
