@@ -275,7 +275,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 				{
 					if (parameters[i].HasAttribute<NotParameterizedAttribute>())
 					{
-						newArguments ??= new List<Expression>(node.Arguments.Take(i));
+						newArguments ??= [.. node.Arguments.Take(i)];
 
 						newArguments.Add(Expression.Call(ReflectionMethods.ToSql.MakeGenericMethod(arg.Type), arg));
 						continue;

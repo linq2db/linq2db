@@ -23,8 +23,10 @@ namespace LinqToDB.Metadata
 
 		public FluentMetadataReader(IReadOnlyDictionary<Type, List<MappingAttribute>> typeAttributes, IReadOnlyDictionary<MemberInfo, List<MappingAttribute>> memberAttributes, IReadOnlyList<MemberInfo> orderedMembers)
 		{
+#pragma warning disable IDE0306
 			_types   = new(typeAttributes  .Select(kvp => new KeyValuePair<Type, MappingAttribute[]>      (kvp.Key, kvp.Value.ToArray())));
 			_members = new(memberAttributes.Select(kvp => new KeyValuePair<MemberInfo, MappingAttribute[]>(kvp.Key, kvp.Value.ToArray())));
+#pragma warning restore IDE0306
 
 			// dynamic columns collection
 			Dictionary<Type,List<MemberInfo>>? dynamicColumns = null;
