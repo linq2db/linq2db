@@ -3,9 +3,10 @@ using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 
+using LinqToDB.DataProvider;
 using LinqToDB.Internal.Expressions.Types;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.Internal.DataProvider
 {
 	public class OleDbProviderAdapter : IDynamicProviderAdapter
 	{
@@ -75,7 +76,7 @@ namespace LinqToDB.DataProvider
 #if NETFRAMEWORK
 						var assembly = typeof(System.Data.OleDb.OleDbConnection).Assembly;
 #else
-						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
+						var assembly = LinqToDB.Common.Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 #endif
@@ -105,7 +106,7 @@ namespace LinqToDB.DataProvider
 							parameterType,
 							commandType,
 							transactionType,
-							typeMapper.BuildTypedFactory<string, OleDbConnection, DbConnection>((string connectionString) => new OleDbConnection(connectionString)),
+							typeMapper.BuildTypedFactory<string, OleDbConnection, DbConnection>((connectionString) => new OleDbConnection(connectionString)),
 							typeSetter,
 							typeGetter,
 							oleDbSchemaTableGetter,
@@ -136,7 +137,7 @@ namespace LinqToDB.DataProvider
 			private static LambdaExpression[] Wrappers { get; } =
 			{
 				// [0]: get Provider
-				(Expression<Func<OleDbConnection, string>>)((OleDbConnection this_) => this_.Provider),
+				(OleDbConnection this_) => this_.Provider,
 			};
 
 			public OleDbConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)

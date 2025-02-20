@@ -4,6 +4,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.DataProvider.SapHana;
 
 namespace LinqToDB.DataProvider.SapHana

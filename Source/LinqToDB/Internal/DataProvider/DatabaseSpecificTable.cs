@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Linq;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.Internal.DataProvider
 {
 	abstract class DatabaseSpecificTable<TSource> : ITable<TSource>
 		where TSource : notnull

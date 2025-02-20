@@ -5,7 +5,7 @@ using System.Text;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.Internal.DataProvider
 {
 	sealed class TableSpecHintExtensionBuilder : ISqlTableExtensionBuilder
 	{

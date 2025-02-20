@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.DataProvider;
+using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.SqlProvider

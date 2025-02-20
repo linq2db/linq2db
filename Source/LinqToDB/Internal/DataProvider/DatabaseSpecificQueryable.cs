@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Async;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.Internal.DataProvider
 {
 	abstract class DatabaseSpecificQueryable<TSource> : IQueryable<TSource>, IQueryProviderAsync
 	{

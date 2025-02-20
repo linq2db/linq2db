@@ -15,8 +15,8 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 
-using OdbcType = LinqToDB.DataProvider.OdbcProviderAdapter.OdbcType;
-using OleDbType = LinqToDB.DataProvider.OleDbProviderAdapter.OleDbType;
+using OdbcType = LinqToDB.Internal.DataProvider.OdbcProviderAdapter.OdbcType;
+using OleDbType = LinqToDB.Internal.DataProvider.OleDbProviderAdapter.OleDbType;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {

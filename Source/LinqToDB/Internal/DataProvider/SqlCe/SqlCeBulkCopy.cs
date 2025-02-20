@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 
 namespace LinqToDB.Internal.DataProvider.SqlCe
 {

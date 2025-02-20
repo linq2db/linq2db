@@ -1,6 +1,4 @@
-﻿using LinqToDB.DataProvider;
-
-namespace LinqToDB.Internal.DataProvider.Access
+﻿namespace LinqToDB.Internal.DataProvider.Access
 {
 	sealed class AccessBulkCopy : BasicBulkCopy
 	{

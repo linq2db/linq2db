@@ -8,7 +8,6 @@ using System.Text.RegularExpressions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Access

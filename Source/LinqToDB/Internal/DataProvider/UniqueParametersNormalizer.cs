@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.DataProvider
+using LinqToDB.DataProvider;
+
+namespace LinqToDB.Internal.DataProvider
 {
 	/// <summary>
 	/// Parameter name rules, implemented by this policy:

@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 using LinqToDB.Interceptors;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.Internal.DataProvider
 {
 	// TODO: V6: refactor to readonly struct
 	[DebuggerDisplay("DataReaderType={DataReaderType}, ToType={ToType}, ProviderFieldType={ProviderFieldType}, FieldType={FieldType}, DataTypeName={DataTypeName}")]

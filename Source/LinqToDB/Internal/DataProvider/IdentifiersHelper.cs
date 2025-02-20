@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider
+﻿using LinqToDB.DataProvider;
+
+namespace LinqToDB.Internal.DataProvider
 {
 	public static class IdentifiersHelper
 	{

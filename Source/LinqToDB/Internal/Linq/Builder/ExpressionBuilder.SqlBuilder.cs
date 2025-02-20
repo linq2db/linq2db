@@ -9,9 +9,9 @@ using System.Runtime.CompilerServices;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.SqlQuery;

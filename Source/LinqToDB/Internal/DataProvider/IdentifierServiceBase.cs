@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace LinqToDB.DataProvider
+using LinqToDB.DataProvider;
+
+namespace LinqToDB.Internal.DataProvider
 {
 	public abstract class IdentifierServiceBase :  IIdentifierService
 	{

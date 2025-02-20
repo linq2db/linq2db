@@ -4,7 +4,6 @@ using System.Data.Common;
 using System.Linq;
 
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.Internal.SqlProvider;
 
 using DB2BulkCopyOptions = LinqToDB.Internal.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopyOptions;

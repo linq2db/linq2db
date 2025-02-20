@@ -9,10 +9,10 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 
 using LinqToDB.Common;
-using LinqToDB.DataProvider;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq.Builder.Visitors;
 using LinqToDB.Internal.Linq.Translation;

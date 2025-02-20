@@ -1,6 +1,4 @@
-﻿using LinqToDB.DataProvider;
-
-namespace LinqToDB.Internal.DataProvider.Sybase
+﻿namespace LinqToDB.Internal.DataProvider.Sybase
 {
 	public sealed class SybaseParametersNormalizer : UniqueParametersNormalizer
 	{

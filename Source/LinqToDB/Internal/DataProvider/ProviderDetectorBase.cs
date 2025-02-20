@@ -3,10 +3,11 @@ using System.Data;
 using System.Data.Common;
 
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.Internal.Cache;
 using LinqToDB.Tools;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.Internal.DataProvider
 {
 	abstract class ProviderDetectorBase<TProvider,TVersion>
 		where TProvider   : struct, Enum
@@ -79,7 +80,7 @@ namespace LinqToDB.DataProvider
 
 			var version = _providerCache.GetOrCreate(connectionString, entry =>
 			{
-				entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+				entry.SlidingExpiration = LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration;
 
 				using var conn = CreateConnection(provider, connectionString);
 				return DetectVersion(options, conn);

@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB.Common;
+using LinqToDB.DataProvider;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.Internal.DataProvider
 {
 	public static class AliasesHelper
 	{
@@ -66,7 +67,7 @@ namespace LinqToDB.DataProvider
 
 				string GetCurrentAlias(SqlTableSource tableSource)
 				{
-					if (tableSource.Alias is ("$F" or "$")) 
+					if (tableSource.Alias is "$F" or "$") 
 						return tableSource.Alias;
 
 					return TruncateAlias(tableSource.Alias ?? string.Empty);
@@ -218,7 +219,7 @@ namespace LinqToDB.DataProvider
 
 				if (element.Cte != null)
 				{
-					for (int i = 0; i < element.Fields.Count; i++)
+					for (var i = 0; i < element.Fields.Count; i++)
 					{
 						var field    = element.Fields[i];
 						var cteField = element.Cte.Fields.FirstOrDefault(f => f.Name == field.PhysicalName);

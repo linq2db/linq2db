@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;

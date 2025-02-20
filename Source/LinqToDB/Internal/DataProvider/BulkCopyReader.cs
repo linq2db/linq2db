@@ -9,12 +9,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Internal.Async;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.Internal.DataProvider
 {
 	public class BulkCopyReader<T> : BulkCopyReader, IAsyncDisposable
 	{

@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.MySql;
 using LinqToDB.Internal.DataProvider.MySql.Translation;
 using LinqToDB.Internal.Linq.Translation;

@@ -14,6 +14,7 @@ using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Mapping;

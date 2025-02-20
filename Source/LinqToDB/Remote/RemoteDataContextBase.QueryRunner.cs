@@ -10,13 +10,13 @@ using System.Text;
 #endif
 
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.DataProvider;
 
 namespace LinqToDB.Remote
 {

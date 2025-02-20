@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using LinqToDB.Common;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider;
 
 namespace LinqToDB.Data
 {
@@ -99,11 +100,11 @@ namespace LinqToDB.Data
 	/// </param>
 	/// <param name="UseParameters">
 	/// Gets or sets whether to Always use Parameters for MultipleRowsCopy. Default is false.
-	/// If True, provider's override for <see cref="DataProvider.BasicBulkCopy.MaxParameters"/> will be used to determine the maximum number of rows per insert,
+	/// If True, provider's override for <see cref="BasicBulkCopy.MaxParameters"/> will be used to determine the maximum number of rows per insert,
 	/// Unless overridden by <see cref="MaxParametersForBatch"/>.
 	/// </param>
 	/// <param name="MaxParametersForBatch">
-	/// If set, will override the Maximum parameters per batch statement from <see cref="DataProvider.BasicBulkCopy.MaxParameters"/>.
+	/// If set, will override the Maximum parameters per batch statement from <see cref="BasicBulkCopy.MaxParameters"/>.
 	/// </param>
 	/// <param name="MaxDegreeOfParallelism">
 	/// Implemented only by ClickHouse.Client provider. Defines number of connections, used for parallel insert in <see cref="BulkCopyType.ProviderSpecific"/> mode.

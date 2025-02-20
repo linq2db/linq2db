@@ -2,8 +2,9 @@
 using System.Linq;
 
 using LinqToDB.Configuration;
+using LinqToDB.DataProvider;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.Internal.DataProvider
 {
 	public abstract class DataProviderFactoryBase : IDataProviderFactory
 	{

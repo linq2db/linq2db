@@ -2,9 +2,10 @@
 using System.Data.Common;
 using System.Linq.Expressions;
 
+using LinqToDB.DataProvider;
 using LinqToDB.Internal.Expressions.Types;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.Internal.DataProvider
 {
 	public class OdbcProviderAdapter : IDynamicProviderAdapter
 	{
@@ -68,7 +69,7 @@ namespace LinqToDB.DataProvider
 #if NETFRAMEWORK
 						var assembly = typeof(System.Data.Odbc.OdbcConnection).Assembly;
 #else
-						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
+						var assembly = LinqToDB.Common.Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 #endif
@@ -86,7 +87,7 @@ namespace LinqToDB.DataProvider
 						typeMapper.RegisterTypeWrapper<OdbcConnection>(connectionType);
 						typeMapper.FinalizeMappings();
 
-						var connectionFactory = typeMapper.BuildTypedFactory<string, OdbcConnection, DbConnection>((string connectionString) => new OdbcConnection(connectionString));
+						var connectionFactory = typeMapper.BuildTypedFactory<string, OdbcConnection, DbConnection>((connectionString) => new OdbcConnection(connectionString));
 
 						var dbTypeBuilder = typeMapper.Type<OdbcParameter>().Member(p => p.OdbcType);
 						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
@@ -116,7 +117,7 @@ namespace LinqToDB.DataProvider
 			private static LambdaExpression[] Wrappers { get; } =
 			{
 				// [0]: get Driver
-				(Expression<Func<OdbcConnection, string>>)((OdbcConnection this_) => this_.Driver),
+				(OdbcConnection this_) => this_.Driver,
 			};
 
 			public OdbcConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)

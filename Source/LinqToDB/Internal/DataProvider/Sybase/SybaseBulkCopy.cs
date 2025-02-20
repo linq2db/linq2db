@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 
 namespace LinqToDB.Internal.DataProvider.Sybase
 {

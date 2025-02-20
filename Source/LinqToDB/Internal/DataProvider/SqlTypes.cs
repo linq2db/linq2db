@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.DataProvider
+﻿namespace LinqToDB.Internal.DataProvider
 {
 	internal static class SqlTypes
 	{

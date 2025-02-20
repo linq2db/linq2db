@@ -16,7 +16,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlProvider;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.Internal.DataProvider
 {
 	public class BasicBulkCopy
 	{

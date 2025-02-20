@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 
 namespace LinqToDB.Internal.DataProvider.DB2

@@ -14,6 +14,7 @@ using System.Xml.Linq;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.Infrastructure;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
@@ -22,7 +23,7 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.Internal.DataProvider
 {
 	public abstract class DataProviderBase : IDataProvider, IInfrastructure<IServiceProvider>
 	{
