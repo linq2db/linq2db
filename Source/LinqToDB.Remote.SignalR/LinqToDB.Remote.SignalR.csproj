@@ -3,6 +3,10 @@
 		<TargetFrameworks>netstandard2.0;net462;net6.0;net8.0;net9.0</TargetFrameworks>
 
 		<IsAotCompatible Condition="$(TargetFramework) == 'net8.0' OR $(TargetFramework) == 'net9.0'">true</IsAotCompatible>
+
+		<Title>Linq to DB Signal/R Remote</Title>
+		<Description>Linq to DB support for querying remote data contexts over Signal/R</Description>
+		<Product>$(Title)</Product>
 	</PropertyGroup>
 
 	<ItemGroup>

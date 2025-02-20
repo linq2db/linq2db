@@ -1,12 +1,12 @@
-# LINQ to DB Remote Data Context Over gRPC<!-- omit in toc -->
+# LINQ to DB Remote Data Context Over HttpClient<!-- omit in toc -->
 
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
 
 ## About
 
-This package provides required server and client classes to query database from remote client using [Linq To DB](https://github.com/linq2db/linq2db) library over gRPC transport.
+This package provides required server classes to query database from remote client using [Linq To DB](https://github.com/linq2db/linq2db) library over HttpClient transport.
 
-You can find working example [here](https://github.com/linq2db/linq2db/tree/master/Examples\Remote\Grpc).
+You can find working example [here](https://github.com/linq2db/linq2db/tree/master/Examples\Remote\HttpClient).
 
 ## Other Transports
 
