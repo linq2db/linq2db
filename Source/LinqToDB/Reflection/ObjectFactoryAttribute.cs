@@ -1,9 +1,9 @@
 ﻿using System;
 
+using LinqToDB.Common.Internal;
+
 namespace LinqToDB.Reflection
 {
-	using Common.Internal;
-
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
 	public class ObjectFactoryAttribute : Attribute
 	{

@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
-using Tests.Model;
-
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -274,7 +276,6 @@ namespace Tests.Linq
 				Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
 			}
 		}
-
 
 		static class AdditionalSql
 		{
@@ -572,7 +573,6 @@ namespace Tests.Linq
 		{
 			return db.Person.Where(p => p.ID == personId!.Value);
 		}
-
 
 		[Test]
 		public void TestParametersByEquality([DataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
@@ -1710,7 +1710,6 @@ namespace Tests.Linq
 						  select c).ToList();
 		}
 
-
 		int GetId(int id, int increment)
 		{
 			return id + increment;
@@ -1746,7 +1745,6 @@ namespace Tests.Linq
 			if (!context.IsAnyOf(TestProvName.AllClickHouse))
 				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
 		}
-
 
 #if NET6_0_OR_GREATER
 		[Table]
@@ -1918,6 +1916,15 @@ namespace Tests.Linq
 
 				Assert.That(record.Value, Is.EqualTo(!value));
 			}
+		}
+
+		[ActiveIssue]
+		[Test]
+		public void Issue_NRE_InAccessor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Assert.That(db.Select(() => Sql.AsSql(Sql.PadLeft(null, 1, '.'))), Is.EqualTo(null));
 		}
 	}
 }

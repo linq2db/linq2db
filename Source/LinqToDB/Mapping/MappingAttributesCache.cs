@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
-namespace LinqToDB.Metadata
-{
-	using Common;
-	using Extensions;
-	using Mapping;
+using LinqToDB.Extensions;
 
+namespace LinqToDB.Mapping
+{
 	internal sealed class MappingAttributesCache
 	{
 		record struct CacheKey(Type AttributeType, Key SourceKey);
@@ -106,7 +103,7 @@ namespace LinqToDB.Metadata
 							else if (attrs.Length == 0)
 								attrs = ifaceAttrs;
 							else
-								(list = new(attrs)).AddRange(ifaceAttrs);
+								(list = [.. attrs]).AddRange(ifaceAttrs);
 						}
 					}
 				}
@@ -124,7 +121,7 @@ namespace LinqToDB.Metadata
 							else if (attrs.Length == 0)
 								attrs = baseAttrs;
 							else
-								(list = new(attrs)).AddRange(baseAttrs);
+								(list = [.. attrs]).AddRange(baseAttrs);
 						}
 					}
 				}

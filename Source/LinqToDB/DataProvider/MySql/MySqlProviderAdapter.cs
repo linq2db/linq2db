@@ -7,18 +7,18 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Expressions.Types;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	public abstract class MySqlProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Type[] _ordinalParameters = [typeof(int)];
 
-		private static readonly object _mysqlDataSyncRoot      = new ();
-		private static readonly object _mysqlConnectorSyncRoot = new ();
+		private static readonly Lock _mysqlDataSyncRoot      = new ();
+		private static readonly Lock _mysqlConnectorSyncRoot = new ();
 
 		private static MySqlProviderAdapter? _mysqlDataInstance;
 		private static MySqlProviderAdapter? _mysqlConnectorInstance;

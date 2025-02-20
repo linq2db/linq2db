@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Text;
 using System.Globalization;
+using System.Text;
 
 using LinqToDB.CodeModel;
 using LinqToDB.DataModel;

@@ -7,13 +7,12 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	[PublicAPI]
 	public static class SqlFn
 	{

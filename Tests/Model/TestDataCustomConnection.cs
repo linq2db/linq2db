@@ -37,7 +37,6 @@ namespace Tests.Model
 			Connection = new TestDataConnection();
 		}
 
-
 		public ITable<Person> Person => Connection.Person;
 
 		public ITable<ComplexPerson> ComplexPerson => Connection.ComplexPerson;
@@ -111,7 +110,6 @@ namespace Tests.Model
 		public string? ConfigurationString => ((IDataContext)Connection).ConfigurationString;
 
 		public int ConfigurationID => ((IConfigurationID)Connection).ConfigurationID;
-
 
 		public void AddInterceptor(IInterceptor interceptor)
 		{

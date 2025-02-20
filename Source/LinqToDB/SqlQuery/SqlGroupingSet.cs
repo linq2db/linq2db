@@ -38,6 +38,7 @@ namespace LinqToDB.SqlQuery
 				if (i < Items.Count - 1)
 					writer.Append(", ");
 			}
+
 			writer.Append(')');
 			return writer;
 		}

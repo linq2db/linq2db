@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using LinqToDB.Common;
 
 namespace LinqToDB.CodeModel
 {
@@ -26,8 +25,8 @@ namespace LinqToDB.CodeModel
 			Callee               = callee;
 			MethodName           = method;
 			CanSkipTypeArguments = skipTypeArguments;
-			_genericArguments    = new (genericArguments ?? []);
-			_parameters          = new (parameters       ?? []);
+			_genericArguments    = [.. genericArguments ?? []];
+			_parameters          = [.. parameters       ?? []];
 			_wrapTrivia          = wrapTrivia == null ? null : new(wrapTrivia);
 		}
 

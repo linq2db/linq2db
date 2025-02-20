@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+
 namespace LinqToDB.Data
 {
-	using Common;
-	using Common.Internal;
-
 	/// <param name="TraceLevel">
 	/// Gets custom trace level to use with <see cref="DataConnection"/> instance.
 	/// </param>

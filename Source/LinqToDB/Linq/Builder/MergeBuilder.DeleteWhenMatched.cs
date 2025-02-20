@@ -1,12 +1,12 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
+using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
-	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
-
 	internal partial class MergeBuilder
 	{
 		[BuildsMethodCall(nameof(LinqExtensions.DeleteWhenMatchedAnd))]

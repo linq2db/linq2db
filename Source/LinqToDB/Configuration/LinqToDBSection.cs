@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Security;
+
 using CSS = System.Configuration.ConnectionStringSettings;
 
 namespace LinqToDB.Configuration

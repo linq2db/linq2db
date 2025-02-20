@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using LinqToDB.Common;
 
 namespace LinqToDB.CodeModel
 {
@@ -19,8 +18,8 @@ namespace LinqToDB.CodeModel
 			IEnumerable<CodeNamedParameter>? namedParameters)
 		{
 			Type             = type;
-			_parameters      = new (parameters      ?? []);
-			_namedParameters = new (namedParameters ?? []);
+			_parameters      = [.. parameters      ?? []];
+			_namedParameters = [.. namedParameters ?? []];
 		}
 
 		public CodeAttribute(IType type)

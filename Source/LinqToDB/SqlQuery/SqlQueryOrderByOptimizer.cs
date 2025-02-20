@@ -253,7 +253,6 @@ namespace LinqToDB.SqlQuery
 
 			_disableOrderBy = false;
 
-
 			expression = base.VisitSqlColumnExpression(column, expression);
 
 			_disableOrderBy = saveDisableOrderBy;

@@ -11,14 +11,13 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Async
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-
 	/// <summary>
 	/// Provides factory methods to create async wrappers for <see cref="DbConnection"/> and <see cref="DbTransaction"/> instances.
 	/// </summary>

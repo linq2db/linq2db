@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
+
 using NUnit.Framework;
+
+using Tests.Model;
+using Tests.UserTests;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Async;
-
-	using Model;
-	using UserTests;
-
 	[TestFixture]
 	public class AsyncTests : TestBase
 	{

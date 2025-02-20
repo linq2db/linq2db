@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using LinqToDB.Common;
 
 namespace LinqToDB.CodeModel
 {
@@ -23,7 +22,7 @@ namespace LinqToDB.CodeModel
 		{
 			Class           = @class;
 			ThisCall        = thisCall;
-			_baseParameters = new (baseArguments ?? []);
+			_baseParameters = [.. baseArguments ?? []];
 		}
 
 		public CodeConstructor(CodeClass @class)

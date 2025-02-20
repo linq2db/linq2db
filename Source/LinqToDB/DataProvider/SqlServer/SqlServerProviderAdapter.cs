@@ -10,21 +10,22 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Expressions;
-	using LinqToDB.Common;
-	using LinqToDB.Mapping;
-	using LinqToDB.Reflection;
-	using LinqToDB.SqlQuery;
-
 	// old System.Data.SqlClient versions for .net core (< 4.5.0)
 	// miss UDT and BulkCopy support
 	// We don't take it into account, as there is no reason to use such old provider versions
 	public class SqlServerProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _sysSyncRoot = new ();
-		private static readonly object _msSyncRoot  = new ();
+		private static readonly Lock _sysSyncRoot = new ();
+		private static readonly Lock _msSyncRoot  = new ();
 
 		private static SqlServerProviderAdapter? _systemAdapter;
 		private static SqlServerProviderAdapter? _microsoftAdapter;
@@ -95,7 +96,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public SqlServerProvider Provider { get; }
 
-		#region IDynamicProviderAdapter
+#region IDynamicProviderAdapter
 
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
@@ -182,7 +183,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			else
 #endif
 			{
-				assembly = Tools.TryLoadAssembly(assemblyName, factoryName);
+				assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
 			}
 
 			if (assembly == null)

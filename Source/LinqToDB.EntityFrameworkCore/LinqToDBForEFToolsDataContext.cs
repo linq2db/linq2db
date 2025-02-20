@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.DataProvider;
+using LinqToDB.Interceptors;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using DataProvider;
-	using Interceptors;
-
 	/// <summary>
 	/// Linq To DB EF.Core data context.
 	/// </summary>

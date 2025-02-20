@@ -1,7 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -84,7 +86,6 @@ namespace Tests.UserTests
 				FluentActions.Enumerating(() => concat).Should().NotThrow();
 			}
 		}
-
 
 		[Test]
 		public void OrderByExcept([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, TestProvName.AllAccess)] string context)

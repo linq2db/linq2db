@@ -65,6 +65,7 @@ namespace LinqToDB.SqlQuery
 							firstField = false;
 							writer.AppendElement(field);
 						}
+
 						writer.AppendLine(")");
 					}
 					else

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using LinqToDB.Common;
 
 namespace LinqToDB.CodeModel
 {
@@ -23,8 +22,8 @@ namespace LinqToDB.CodeModel
 		{
 			Parent          = parent;
 			Inherits        = inherits;
-			_implements     = new (implements ?? []);
-			_members        = new (members    ?? []);
+			_implements     = [.. implements ?? []];
+			_members        = [.. members    ?? []];
 			TypeInitializer = typeInitializer;
 			This            = new CodeThis(this);
 		}
