@@ -119,8 +119,24 @@ namespace LinqToDB.Data
 					if (DataConnection.DataProvider.Name != sqlProvider.Name)
 						sb.Append(' ').Append(sqlProvider.Name);
 
+					if (IsAsync || DataConnection.Tag is not null)
+						sb.Append(" (");
+
 					if (IsAsync)
-						sb.Append(" (asynchronously)");
+					{
+						sb.Append("asynchronously");
+
+						if (DataConnection.Tag is not null)
+							sb.Append(", ");
+					}
+
+#pragma warning disable RS0030 // Do not used banned APIs
+					if (DataConnection.Tag is not null)
+						sb.Append(DataConnection.Tag);
+#pragma warning restore RS0030 // Do not used banned APIs
+
+					if (IsAsync || DataConnection.Tag is not null)
+						sb.Append(')');
 
 					sb.AppendLine();
 
@@ -128,7 +144,7 @@ namespace LinqToDB.Data
 
 					sb.AppendLine(Command.CommandText);
 
-					while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
+					while (sb[^1] is '\n' or '\r')
 						sb.Length--;
 
 					sb.AppendLine();

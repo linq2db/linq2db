@@ -38,7 +38,7 @@ namespace LinqToDB.Data
 		static ILinqToDBSettings? _defaultSettings;
 
 		/// <summary>
-		/// Gets or sets default connection settings. By default contains settings from linq2db configuration section from configuration file (not supported by .Net Core).
+		/// Gets or sets default connection settings. By default, contains settings from linq2db configuration section from configuration file (not supported by .Net Core).
 		/// <seealso cref="ILinqToDBSettings"/>
 		/// </summary>
 		public static ILinqToDBSettings? DefaultSettings
@@ -518,11 +518,25 @@ namespace LinqToDB.Data
 					return;
 				}
 
+				if (DefaultConfiguration == null)
+				{
+					DefaultConfiguration = options.ConfigurationString ?? "";
+				}
+
 				var dataProvider = options.DataProviderFactory == null ? options.DataProvider : options.DataProviderFactory(options);
-				var doSave       = true;
+
+				if (DefaultSettings == null)
+				{
+					DefaultSettings = new LinqToDBSettings(
+						options.ConfigurationString ?? DefaultConfiguration,
+						options.ProviderName        ?? dataProvider?.Name ?? DefaultDataProvider ?? string.Empty,
+						options.ConnectionString    ?? string.Empty);
+				}
+
+				var doSave = true;
 
 				switch (
-				          options.ConfigurationString,
+				          options.ConfigurationString ?? DefaultConfiguration ?? string.Empty,
 				                           options.ConnectionString,
 				                                                dataProvider,
 				                                                             options.ProviderName,

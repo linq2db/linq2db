@@ -1,0 +1,5 @@
+﻿@page "/InteractiveWebAssemblyNoPrerender"
+@attribute [StreamRendering]
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender:false))
+
+<Weather />
