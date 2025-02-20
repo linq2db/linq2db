@@ -16,6 +16,7 @@ using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
+using LinqToDB.Remote;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -372,10 +373,15 @@ namespace Tests.Data
 		public void TestServiceCollection4([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var collection = new ServiceCollection();
-			collection.AddTransient<DummyService>();
-			collection.AddLinqToDBContext<DbConnection4>(serviceProvider => new DbConnection4(new DataOptions<IDataContext>(new DataOptions().UseConfigurationString(context))));
+
+			collection
+				.AddTransient<DummyService>()
+				.AddLinqToDBContext<DbConnection4>(serviceProvider => new DbConnection4(new DataOptions<IDataContext>(new DataOptions().UseConfigurationString(context))));
+
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<DbConnection3>()!;
+			var con      = provider.GetRequiredService<DbConnection4>()!;
+			var fcon     = provider.GetRequiredService<IDataContextFactory<DbConnection4>>()!;
+
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
 
