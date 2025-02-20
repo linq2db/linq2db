@@ -678,5 +678,43 @@ namespace LinqToDB.Extensions.DependencyInjection
 
 			return serviceCollection;
 		}
+
+		/// <summary>
+		/// Adds a LinqToDB service to the <see cref="IServiceCollection" />.
+		/// </summary>
+		/// <typeparam name="TContext">
+		/// The class or interface that will be used to resolve the context from the container.
+		/// </typeparam>
+		/// <param name="service">The <see cref="IServiceCollection" /> to add services to.</param>
+		/// <returns>The same service collection so that multiple calls can be chained.</returns>
+		public static IServiceCollection AddLinqToDBService<TContext>(this IServiceCollection service, bool allowUpdates = false)
+			where TContext : IDataContext
+		{
+			if (service.All(s => s.ServiceType != typeof(ILinqService<TContext>)))
+			{
+				service.AddScoped<ILinqService<TContext>>(provider => new LinqService<TContext>(provider.GetRequiredService<IDataContextFactory<TContext>>())
+				{
+					AllowUpdates = allowUpdates
+				});
+			}
+
+			return service;
+		}
+
+		/// <summary>
+		/// Adds a LinqToDB service to the <see cref="IServiceCollection" />.
+		/// </summary>
+		/// <typeparam name="TContext">
+		/// The class or interface that will be used to resolve the context from the container.
+		/// </typeparam>
+		/// <param name="service">The <see cref="IServiceCollection" /> to add services to.</param>
+		/// <returns>The same service collection so that multiple calls can be chained.</returns>
+		public static IServiceCollection AddLinqToDBService<TContext>(
+			this IServiceCollection service,
+			Func<IServiceProvider,ILinqService<TContext>> getService)
+			where TContext : IDataContext
+		{
+			return service.AddScoped(getService);
+		}
 	}
 }

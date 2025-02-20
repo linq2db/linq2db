@@ -36,11 +36,14 @@ namespace LinqToDB.Remote.HttpClient.Server
 		/// </summary>
 		/// <param name="builder">The <see cref="IMvcBuilder"/>.</param>
 		/// <returns>The <see cref="IMvcBuilder"/>.</returns>
-		public static IMvcBuilder AddLinqToDBController<TContext>(this IMvcBuilder builder, string route = "api/linq2db")
+		public static IMvcBuilder AddLinqToDBController<TContext>(this IMvcBuilder builder, string route = "api/linq2db", bool allowUpdate = false)
 			where TContext : IDataContext
 		{
 			if (builder.Services.All(s => s.ServiceType != typeof(ILinqService<TContext>)))
-				builder.Services.AddScoped<ILinqService<TContext>>(provider => new LinqService<TContext>(provider.GetRequiredService<IDataContextFactory<TContext>>()));
+				builder.Services.AddScoped<ILinqService<TContext>>(provider => new LinqService<TContext>(provider.GetRequiredService<IDataContextFactory<TContext>>())
+				{
+					AllowUpdates = allowUpdate
+				});
 
 			return builder.Services
 				.AddControllers(options => options.Conventions.Add(new ControllerRouteConvention<LinqToDBController<TContext>>(route)))

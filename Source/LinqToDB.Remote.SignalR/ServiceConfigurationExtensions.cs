@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
@@ -126,23 +125,6 @@ namespace LinqToDB.Remote.SignalR
 			{
 				await signalRDataContext.ConfigureAsync(default).ConfigureAwait(false);
 			}
-		}
-
-		/// <summary>
-		/// Adds a LinqToDB service to the <see cref="IServiceCollection" />.
-		/// </summary>
-		/// <typeparam name="TContext">
-		/// The class or interface that will be used to resolve the context from the container.
-		/// </typeparam>
-		/// <param name="service">The <see cref="IServiceCollection" /> to add services to.</param>
-		/// <returns>The same service collection so that multiple calls can be chained.</returns>
-		public static IServiceCollection AddLinqToDBService<TContext>(this IServiceCollection service)
-			where TContext : IDataContext
-		{
-			if (service.All(s => s.ServiceType != typeof(ILinqService<TContext>)))
-				service.AddScoped<ILinqService<TContext>>(provider => new LinqService<TContext>(provider.GetRequiredService<IDataContextFactory<TContext>>()));
-
-			return service;
 		}
 	}
 }
