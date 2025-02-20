@@ -15,9 +15,10 @@ using Microsoft.EntityFrameworkCore.Query;
 #endif
 
 using LinqToDB.Async;
-using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.EntityFrameworkCore.Internal
 {

@@ -2,8 +2,8 @@
 using System.Data.Common;
 
 using LinqToDB.Data;
-using LinqToDB.DataProvider.Oracle;
-using LinqToDB.Expressions.Types;
+using LinqToDB.Internal.DataProvider.Oracle;
+using LinqToDB.Internal.Expressions.Types;
 
 using NUnit.Framework;
 

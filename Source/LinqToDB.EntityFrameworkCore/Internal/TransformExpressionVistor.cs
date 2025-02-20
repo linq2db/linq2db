@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Reflection;
 
 using Microsoft.EntityFrameworkCore;
@@ -13,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 
-using ExpressionEqualityComparer = LinqToDB.Expressions.ExpressionEqualityComparer;
-using SqlQueryRootExpression = LinqToDB.Expressions.SqlQueryRootExpression;
+using ExpressionEqualityComparer = LinqToDB.Internal.Expressions.ExpressionEqualityComparer;
+using SqlQueryRootExpression = LinqToDB.Internal.Expressions.SqlQueryRootExpression;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 

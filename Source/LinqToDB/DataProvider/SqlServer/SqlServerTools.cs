@@ -1,12 +1,12 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Reflection;
 using System.Text;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.SqlServer;
 
 namespace LinqToDB.DataProvider.SqlServer
 {

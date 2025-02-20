@@ -5,14 +5,13 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
 using Tests.Model;
-
 using Tests.xUpdate;
 
 using static Tests.xUpdate.MergeTests;
@@ -52,7 +51,7 @@ namespace Tests.Linq
 
 			var toString = query.Where(r => r.ID == 1).ToString();
 
-			Assert.That(toString, Is.EqualTo("LinqToDB.Linq.ExpressionQueryImpl`1[Tests.Model.Person]"));
+			Assert.That(toString, Is.EqualTo("LinqToDB.Internal.Linq.ExpressionQueryImpl`1[Tests.Model.Person]"));
 		}
 
 		[Test]

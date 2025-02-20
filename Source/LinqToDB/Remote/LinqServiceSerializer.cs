@@ -11,6 +11,7 @@ using System.Text;
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

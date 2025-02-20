@@ -3,9 +3,9 @@ using System.ComponentModel;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Linq;
 
 namespace LinqToDB
 {

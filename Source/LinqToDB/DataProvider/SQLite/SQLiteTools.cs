@@ -4,6 +4,8 @@ using System.IO;
 using System.Reflection;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.SQLite;
 
 namespace LinqToDB.DataProvider.SQLite
 {

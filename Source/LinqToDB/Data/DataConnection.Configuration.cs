@@ -10,6 +10,7 @@ using LinqToDB.Common.Internal;
 using LinqToDB.Configuration;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Data
 {

@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools.Mapper;

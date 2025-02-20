@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Linq;
 
 using LinqToDB.DataProvider;
+using LinqToDB.Internal.DataProvider;
 
 namespace LinqToDB.Configuration
 {

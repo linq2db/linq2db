@@ -12,8 +12,9 @@ using JetBrains.Annotations;
 
 using LinqToDB.Async;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 

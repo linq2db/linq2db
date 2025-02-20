@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Naming;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Scaffold.Internal
 {

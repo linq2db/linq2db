@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 

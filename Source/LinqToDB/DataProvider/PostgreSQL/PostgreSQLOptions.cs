@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.PostgreSQL;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {

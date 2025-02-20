@@ -6,7 +6,7 @@ using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

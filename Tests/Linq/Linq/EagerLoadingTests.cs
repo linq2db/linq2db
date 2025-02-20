@@ -7,9 +7,8 @@ using System.Threading.Tasks;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Async;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 

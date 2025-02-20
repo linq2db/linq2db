@@ -8,8 +8,9 @@ using System.Threading;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Linq;
-using LinqToDB.Linq.Builder;
 
 namespace LinqToDB
 {

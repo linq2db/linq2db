@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 
 using LinqToDB;
-using LinqToDB.Linq.Translation;
+using LinqToDB.Internal.Linq.Translation;
 
 using NUnit.Framework;
 

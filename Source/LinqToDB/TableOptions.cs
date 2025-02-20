@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 using JetBrains.Annotations;
 
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB
 {

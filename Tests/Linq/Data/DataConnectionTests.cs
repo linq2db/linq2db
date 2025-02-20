@@ -15,6 +15,8 @@ using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.DataProvider.DB2;
+using LinqToDB.Internal.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 
 using Microsoft.Extensions.DependencyInjection;

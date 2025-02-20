@@ -12,12 +12,14 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 using LinqToDB.Async;
-using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq;
-using LinqToDB.Linq.Builder;
 using LinqToDB.Reflection;
-using LinqToDB.SqlProvider;
 
 using static LinqToDB.MultiInsertExtensions;
 
