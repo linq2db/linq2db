@@ -24,7 +24,7 @@ namespace LinqToDB.Mapping
 			if (values == null)
 				throw new ArgumentNullException(nameof(values));
 
-			Values = new HashSet<object?>(values);
+			Values = [.. values];
 		}
 
 		/// <summary>
