@@ -38,6 +38,14 @@ namespace LinqToDB.Remote
 
 		public string?          ConfigurationString { get; set; }
 
+		public IDataContext AddMappingSchema(MappingSchema mappingSchema)
+		{
+			MappingSchema    = MappingSchema.CombineSchemas(mappingSchema, MappingSchema);
+			_configurationID = null;
+
+			return this;
+		}
+
 		protected void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
 			serviceProvider.AddService(GetConfigurationInfo().MemberTranslator);
@@ -119,7 +127,7 @@ namespace LinqToDB.Remote
 				ProviderTranslator = providerTranslator;
 			}
 
-			public Expression? Translate(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags) 
+			public Expression? Translate(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
 				=> ProviderTranslator.Translate(translationContext, memberExpression, translationFlags);
 		}
 

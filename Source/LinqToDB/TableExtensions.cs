@@ -97,7 +97,7 @@ namespace LinqToDB
 		}
 
 		// internal API
-		internal static DataConnection GetDataConnection<T>(this ITable<T> table)
+		internal static DataConnection? GetDataConnection<T>(this ITable<T> table, bool throwException = true)
 			where T : notnull
 		{
 			if (table.DataContext is DataConnection dataConnection)
@@ -105,7 +105,10 @@ namespace LinqToDB
 			if (table.DataContext is DataContext dataContext)
 				return dataContext.GetDataConnection();
 
-			throw new ArgumentException($"Data context must be of {nameof(DataConnection)} or {nameof(DataContext)} type.", nameof(table));
+			if (throwException)
+				throw new ArgumentException($"Data context must be of {nameof(DataConnection)} or {nameof(DataContext)} type.", nameof(table));
+
+			return null;
 		}
 
 		// internal API
