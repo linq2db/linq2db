@@ -20,4 +20,14 @@
 	var extraOptions = string.Join(" ", options);
 
 	RunCliTool("SQLite"         , null                 , "Cli.NewCliFeatures.SQLite"             , Path.Combine(targetDir, "SQLite")             , mode, connectionString: sqliteCN, extraOptions: extraOptions);
+
+	options = new string[]
+	{
+		"--metadata fluent",
+		"--fluent-entity-type-helpers SpecificTypeHelper,AllTypesHelper",
+	};
+
+	extraOptions = string.Join(" ", options);
+
+	RunCliTool("SQLite"         , null                 , "Cli.NewCliFeatures.FluentSQLite"       , Path.Combine(targetDir, "SQLite.Fluent")      , mode, connectionString: sqliteCN, extraOptions: extraOptions);
 #>
