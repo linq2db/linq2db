@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB
@@ -283,16 +284,18 @@ namespace LinqToDB
 
 		#region Percenile Cont
 
-		public static TValue PercentileCont<TKey, TElement, TValue>(this IGrouping<TKey, TElement> group, double argument, 
-			Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>>                                        func
+		public static TValue PercentileCont<TElement, TValue>(
+			this IEnumerable<TElement>                                 source, 
+			double                                                     argument, 
+			Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>> func
 			) => throw new ServerSideOnlyException(nameof(PercentileCont));
 
 		#endregion
 
 		#region Percenile Disc
 
-		public static TValue PercentileDisc<TKey, TElement, TValue>(
-			this IGrouping<TKey, TElement>                                 group, 
+		public static TValue PercentileDisc<TElement, TValue>(
+			this IEnumerable<TElement>                                     source,
 			double                                                         argument,
 			Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>> func
 		) => throw new ServerSideOnlyException(nameof(PercentileDisc));

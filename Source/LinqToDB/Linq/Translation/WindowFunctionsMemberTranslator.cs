@@ -16,6 +16,7 @@ namespace LinqToDB.Linq.Translation
 		public WindowFunctionsMemberTranslator()
 		{
 			Registration.RegisterMethod(() => Sql.Window.RowNumber(f => f.OrderBy(1)), TranslateRowNumber);
+			Registration.RegisterMethod((IGrouping<int, int> g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont);
 
 			RegisterSum();
 		}
@@ -265,12 +266,53 @@ namespace LinqToDB.Linq.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);
 		}
 
+		static LambdaExpression SimplifyEntityLambda(LambdaExpression lambda, int parameterIndex, Expression contextExpression)
+		{
+			var newBody = lambda.Body.Transform(e =>
+			{
+				if (e is ParameterExpression parameterExpression)
+				{
+					var index = lambda.Parameters.IndexOf(parameterExpression);
+					if (index >= 0)
+					{
+						if (contextExpression is ContextRefExpression contextRefExpression)
+						{
+							var contextTyped = contextRefExpression.WithType(parameterExpression.Type);
+							return contextTyped;
+						}
+					}
+				}
+				return e;
+			});
+
+			var newParameters = lambda.Parameters.ToList();
+			newParameters.RemoveAt(parameterIndex);
+
+			return Expression.Lambda(newBody, newParameters);
+		}
+
 		public virtual Expression? TranslateRowNumber(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			var factory = translationContext.ExpressionFactory;
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "ROW_NUMBER");
+		}
+
+		public virtual Expression? TranslatePercentileCont(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var enumerableContext = translationContext.GetEnumerableContext(methodCall.Arguments[0]);
+			if (enumerableContext == null)
+				return translationContext.CreateErrorExpression(methodCall.Arguments[0], "Enumerable context is not discoverable.", methodCall.Type);
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[2], out var argumentSql))
+				return translationContext.CreateErrorExpression(methodCall.Arguments[2], type : methodCall.Type);
+
+			var builderLambda = methodCall.Arguments[2].UnwrapLambda();
+
+			builderLambda = SimplifyEntityLambda(builderLambda, 0, enumerableContext);
+
+			return null;
 		}
 
 		public virtual Expression? TranslateSum(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

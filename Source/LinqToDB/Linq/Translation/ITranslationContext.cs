@@ -32,6 +32,8 @@ namespace LinqToDB.Linq.Translation
 		SqlPlaceholderExpression CreatePlaceholder(SelectQuery    selectQuery, ISqlExpression sqlExpression,  Expression basedOn);
 		SqlErrorExpression       CreateErrorExpression(Expression basedOn,     string?        message = null, Type?      type = null);
 
+		Expression? GetEnumerableContext(Expression expression);
+
 		public bool CanBeEvaluatedOnClient(Expression expression);
 
 		bool    CanBeEvaluated(Expression     expression);

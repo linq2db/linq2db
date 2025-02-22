@@ -5044,6 +5044,11 @@ namespace LinqToDB.Linq.Builder
 				return new SqlErrorExpression(basedOn, message, type ?? basedOn.Type);
 			}
 
+			public Expression? GetEnumerableContext(Expression expression)
+			{
+				return Builder.BuildAggregationRootExpression(expression);
+			}
+
 			public bool CanBeEvaluatedOnClient(Expression expression)
 			{
 				return Builder.CanBeEvaluatedOnClient(expression);
