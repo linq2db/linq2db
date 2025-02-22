@@ -4856,6 +4856,7 @@ namespace LinqToDB.Linq.Builder
 			var info = new BuildInfo(BuildContext, expr, new SelectQuery())
 			{
 				CreateSubQuery = true,
+				IsSubqueryExpression = true
 			};
 
 			if (_buildFlags.HasFlag(BuildFlags.ForceOuter))

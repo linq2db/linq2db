@@ -28,13 +28,14 @@ namespace LinqToDB.SqlQuery
 		int               _version;
 		bool              _removeWeakJoins;
 
-		SelectQuery?    _parentSelect;
-		SqlSetOperator? _currentSetOperator;
-		SelectQuery?    _applySelect;
-		SelectQuery?    _inSubquery;
-		bool            _isInRecursiveCte;
-		bool            _isInsideNot;
-		SelectQuery?    _updateQuery;
+		SelectQuery?     _parentSelect;
+		SqlSetOperator?  _currentSetOperator;
+		SelectQuery?     _applySelect;
+		SelectQuery?     _inSubquery;
+		bool             _isInRecursiveCte;
+		bool             _isInsideNot;
+		SelectQuery?     _updateQuery;
+		ISqlTableSource? _updateTable;
 
 		readonly SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
 		readonly SqlQueryColumnUsageCollector   _columnUsageCollector        = new();
@@ -78,6 +79,7 @@ namespace LinqToDB.SqlQuery
 			_applySelect       = default!;
 			_inSubquery        = default!;
 			_updateQuery       = default!;
+			_updateTable       = default!;
 
 			// OUTER APPLY Queries usually may have wrong nesting in WHERE clause.
 			// Making it consistent in LINQ Translator is bad for performance and it is hard to implement task.
@@ -139,6 +141,7 @@ namespace LinqToDB.SqlQuery
 			_version           = default;
 			_isInRecursiveCte  = false;
 			_updateQuery       = default;
+			_updateTable       = default;
 
 			_columnNestingCorrector.Cleanup();
 			_columnUsageCollector.Cleanup();
@@ -346,8 +349,10 @@ namespace LinqToDB.SqlQuery
 		protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
 		{
 			_updateQuery = element.SelectQuery;
+			_updateTable = element.Update.Table as ISqlTableSource ?? element.Update.TableSource;
 			var result = base.VisitSqlUpdateStatement(element);
 			_updateQuery = null;
+			_updateTable = null;
 			return result;
 		}
 
@@ -908,9 +913,6 @@ namespace LinqToDB.SqlQuery
 			var accessible = QueryHelper.EnumerateAccessibleSources(joinTable.Table).ToList();
 
 			var optimized = false;
-
-			if (!joinTable.CanConvertApply)
-				return optimized;
 
 			if (!QueryHelper.IsDependsOnOuterSources(joinSource.Source))
 			{
@@ -2454,9 +2456,17 @@ namespace LinqToDB.SqlQuery
 						    join.JoinType == JoinType.Left       ||
 						    join.JoinType == JoinType.CrossApply)
 						{
+							bool? isSingeRecord = null;
+
 							if (join.JoinType == JoinType.CrossApply)
 							{
-								if (_applySelect == null)
+								if ((join.Cardinality & SourceCardinality.One) != 0)
+								{
+									if (join.IsSubqueryExpression)
+										isSingeRecord = true;
+								}
+
+								if (_applySelect is null && isSingeRecord is null)
 								{
 									continue;
 								}
@@ -2475,7 +2485,11 @@ namespace LinqToDB.SqlQuery
 									}
 								}
 
-								if (!IsLimitedToOneRecord(sq, joinQuery, evaluationContext))
+								if (!(isSingeRecord == true || IsLimitedToOneRecord(sq, joinQuery, evaluationContext)))
+									continue;
+
+								// do not move to subquery expression if update table in the query.
+								if (_updateTable != null && joinQuery.HasElement(_updateTable))
 									continue;
 
 								var isNoTableQuery = joinQuery.From.Tables.Count == 0;

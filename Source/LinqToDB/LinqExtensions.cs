@@ -2734,6 +2734,20 @@ namespace LinqToDB
 
 		#endregion
 
+		#region Internal
+
+		internal static TSource AssociationRecord<TSource>(this IQueryable<TSource> source)
+		{
+			throw new LinqToDBException("This method is not intended to be called directly.");
+		}
+
+		internal static TSource? AssociationOptionalRecord<TSource>(this IQueryable<TSource> source)
+		{
+			throw new LinqToDBException("This method is not intended to be called directly.");
+		}
+
+		#endregion Internal
+
 		#region Drop
 
 		static readonly MethodInfo _dropMethodInfo2 = MemberHelper.MethodOf(() => Drop<int>(null!, true)).GetGenericMethodDefinition();
