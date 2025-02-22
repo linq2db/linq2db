@@ -11,10 +11,10 @@ using System;
 #pragma warning disable 1573, 1591
 #nullable enable
 
-namespace Cli.Interceptors.SQLite
+namespace Cli.NewCliFeatures.SQLite
 {
-	[Table("TestMerge1")]
-	public class TestMerge1
+	[Table("TestMerge2")]
+	public class TestMerge2
 	{
 		[Column("Id"             )] public long      Id              { get; internal set; } // integer
 		[Column("Field1"         )] public long?     Field1          { get; internal set; } // integer

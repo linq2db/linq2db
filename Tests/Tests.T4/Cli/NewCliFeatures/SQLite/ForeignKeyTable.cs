@@ -10,20 +10,20 @@ using LinqToDB.Mapping;
 #pragma warning disable 1573, 1591
 #nullable enable
 
-namespace Cli.Interceptors.SQLite
+namespace Cli.NewCliFeatures.SQLite
 {
-	[Table("Doctor")]
-	public class Doctor
+	[Table("ForeignKeyTable")]
+	public class ForeignKeyTable
 	{
-		[Column("PersonID", IsPrimaryKey = true )] public long   PersonId { get; internal set; } // integer
-		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; internal set; } = null!; // nvarchar(50)
+		[Column("PrimaryKeyTableID"                   )] public long   PrimaryKeyTableId { get; internal set; } // integer
+		[Column("Name"             , CanBeNull = false)] public string Name              { get; internal set; } = null!; // nvarchar(50)
 
 		#region Associations
 		/// <summary>
-		/// FK_Doctor_0_0
+		/// FK_ForeignKeyTable_0_0
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
-		public Person FkDoctor00 { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PrimaryKeyTableId), OtherKey = nameof(SQLite.PrimaryKeyTable.Id))]
+		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
 		#endregion
 	}
 }

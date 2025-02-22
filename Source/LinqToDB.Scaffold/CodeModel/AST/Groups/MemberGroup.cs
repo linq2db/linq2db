@@ -13,7 +13,7 @@ namespace LinqToDB.CodeModel
 
 		protected MemberGroup(IEnumerable<TMember>? members)
 		{
-			_members = new List<TMember>(members ?? []);
+			_members = [.. members ?? []];
 		}
 
 		/// <summary>

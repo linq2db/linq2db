@@ -10,11 +10,13 @@ using LinqToDB.Mapping;
 #pragma warning disable 1573, 1591
 #nullable enable
 
-namespace Cli.Interceptors.SQLite
+namespace Cli.NewCliFeatures.SQLite
 {
-	[Table("Dual")]
-	public class Dual
+	[Table("InheritanceParent")]
+	public class InheritanceParent
 	{
-		[Column("Dummy")] public string? Dummy { get; internal set; } // varchar(10)
+		[Column("InheritanceParentId")] public long    InheritanceParentId { get; internal set; } // integer
+		[Column("TypeDiscriminator"  )] public long?   TypeDiscriminator   { get; internal set; } // integer
+		[Column("Name"               )] public string? Name                { get; internal set; } // nvarchar(50)
 	}
 }

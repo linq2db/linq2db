@@ -13,7 +13,7 @@ namespace LinqToDB.CodeModel
 
 		protected CodeElementList(IEnumerable<TElement>? items)
 		{
-			_items = new (items ?? []);
+			_items = [.. items ?? []];
 		}
 
 		public IReadOnlyList<TElement> Items => _items;

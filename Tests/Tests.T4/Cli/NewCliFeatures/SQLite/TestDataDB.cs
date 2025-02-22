@@ -14,10 +14,14 @@ using System.Threading.Tasks;
 #pragma warning disable 1573, 1591
 #nullable enable
 
-namespace Cli.Interceptors.SQLite
+namespace Cli.NewCliFeatures.SQLite
 {
 	internal partial class TestDataDB : DataConnection
 	{
+		static TestDataDB()
+		{
+			StaticInitDataContext();
+		}
 		public TestDataDB()
 		{
 			InitDataContext();
@@ -35,6 +39,7 @@ namespace Cli.Interceptors.SQLite
 			InitDataContext();
 		}
 
+		static partial void StaticInitDataContext();
 		partial void InitDataContext();
 
 		public ITable<AllType>           AllTypes            => this.GetTable<AllType>();
