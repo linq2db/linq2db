@@ -39,7 +39,7 @@ namespace LinqToDB.Data
 		static ILinqToDBSettings? _defaultSettings;
 
 		/// <summary>
-		/// Gets or sets default connection settings. By default contains settings from linq2db configuration section from configuration file (not supported by .Net Core).
+		/// Gets or sets default connection settings. By default, contains settings from linq2db configuration section from configuration file (not supported by .Net Core).
 		/// <seealso cref="ILinqToDBSettings"/>
 		/// </summary>
 		public static ILinqToDBSettings? DefaultSettings

@@ -222,7 +222,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		class CteProxy : BuildProxyBase<CteContext>
 		{
-			public CteProxy(CteContext ownerContext, Expression currentPath, Expression innerExpression) 
+			public CteProxy(CteContext ownerContext, Expression? currentPath, Expression innerExpression) 
 				: base(ownerContext, ownerContext.CteInnerQueryContext!, currentPath, innerExpression)
 			{
 				if (ownerContext.CteInnerQueryContext == null)
@@ -251,7 +251,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return field;
 			}
 
-			public override BuildProxyBase<CteContext> CreateProxy(CteContext ownerContext, IBuildContext buildContext, Expression currentPath, Expression innerExpression)
+			public override BuildProxyBase<CteContext> CreateProxy(CteContext ownerContext, IBuildContext buildContext, Expression? currentPath, Expression innerExpression)
 			{
 				return new CteProxy(ownerContext, currentPath, innerExpression);
 			}

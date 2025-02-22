@@ -5,6 +5,7 @@ using System.Linq;
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
 using LinqToDB.DataModel;
+using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Schema;
@@ -157,6 +158,16 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public bool GenerateScale { get; set; }
+
+		/// <summary>
+		/// Specify custom extension methods names for <see cref="EntityMappingBuilder{TEntity}"/> type, that will be called for each entity builder if fluent mapping metadata generation enabled.
+		/// Except <c>EntityMappingBuilder</c> parameter, method takes second null parameter of entity type (could be generic).
+		/// <list type="bullet">
+		/// <item>Default: <c>empty</c></item>
+		/// <item>In T4 compability mode: <c>empty</c></item>
+		/// </list>
+		/// </summary>
+		public IReadOnlyCollection<string>? FluentEntityTypeHelpers { get; set; } = [];
 		#endregion
 
 		#region Context
@@ -254,6 +265,15 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public bool GenerateInitDataContextMethod { get; set; } = true;
+
+		/// <summary>
+		/// Enables generation of StaticInitDataContext partial method on data context class. Method will be called from static constructor as a last init step and will force generation of static constructor.
+		/// <list type="bullet">
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
+		/// </list>
+		/// </summary>
+		public bool GenerateStaticInitDataContextMethod { get; set; }
 		#endregion
 
 		#region Associations

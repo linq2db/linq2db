@@ -336,6 +336,39 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					value = TimeSpan.FromTicks(ts.GetTicks(dataType.Precision ?? 7));
 					break;
 
+				case DataType.Money     :
+				case DataType.SmallMoney:
+					parameter.Precision = 0;
+					parameter.Scale     = 0;
+					break;
+
+				case DataType.Decimal:
+					if (parameter.Precision != 0 || parameter.Scale != 0)
+					{
+						SqlDecimal sqlDecimal;
+
+						if (value is SqlDecimal sqlDec)
+							sqlDecimal = sqlDec;
+						else if (value is decimal dec)
+							sqlDecimal = dec;
+						else
+						{
+							// better safe than sorry
+							parameter.Precision = 0;
+							parameter.Scale     = 0;
+							break;
+						}
+
+						// reset precison/scale if default mappings doesn't fit value
+						if ((parameter.Precision - parameter.Scale) < (sqlDecimal.Precision - sqlDecimal.Scale) || parameter.Scale < sqlDecimal.Scale)
+						{
+							parameter.Precision = sqlDecimal.Precision;
+							parameter.Scale     = sqlDecimal.Scale;
+						}
+					}
+
+					break;
+
 				case DataType.Undefined:
 					if (value != null
 						&& (value is DataTable

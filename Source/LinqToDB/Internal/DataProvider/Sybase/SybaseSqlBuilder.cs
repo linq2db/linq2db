@@ -68,6 +68,8 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				case DataType.Guid      : StringBuilder.Append("VARCHAR(36)"); return;
 				case DataType.DateTime2 : StringBuilder.Append("DateTime");    return;
+				case DataType.Money     : StringBuilder.Append("MONEY");       return;
+				case DataType.SmallMoney: StringBuilder.Append("SMALLMONEY");  return;
 				case DataType.NVarChar  :
 					// yep, 5461...
 					if (type.Length == null || type.Length > 5461 || type.Length < 1)

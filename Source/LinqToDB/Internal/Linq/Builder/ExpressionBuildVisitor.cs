@@ -2492,6 +2492,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			else
 			{
+				if (calculatedContext.SelectQuery != ctx.SelectQuery)
+				{
+					ctx = new ScopeContext(ctx, calculatedContext);
+				}
+
 				subqueryExpression = new ContextRefExpression(node.Type, ctx, alias : _alias);
 
 				if (_buildFlags.HasFlag(BuildFlags.ForExpanding))
@@ -3515,6 +3520,11 @@ namespace LinqToDB.Internal.Linq.Builder
 						Expression.AndAlso(Expression.Not(conditionalExpression.Test), falseCondition));
 				}
 
+				if (current is ContextRefExpression { BuildContext: IBuildProxy proxy })
+				{
+					return CollectNullCompareExpressionExpression(proxy.InnerExpression);
+				}
+
 				return null;
 			}
 
@@ -3802,7 +3812,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						rightExpr = Builder.ParseGenericConstructor(rightExpr, ProjectFlags.SQL | ProjectFlags.Keys, columnDescriptor, true);
 
 						if (SequenceHelper.UnwrapDefaultIfEmpty(leftExpr) is SqlGenericConstructorExpression leftGenericConstructor &&
-							SequenceHelper.UnwrapDefaultIfEmpty(rightExpr) is SqlGenericConstructorExpression rightGenericConstructor)
+						    SequenceHelper.UnwrapDefaultIfEmpty(rightExpr) is SqlGenericConstructorExpression rightGenericConstructor)
 						{
 							return GenerateConstructorComparison(leftGenericConstructor, rightGenericConstructor);
 						}
