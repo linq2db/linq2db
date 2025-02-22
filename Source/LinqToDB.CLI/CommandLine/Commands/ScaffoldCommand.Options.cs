@@ -650,6 +650,20 @@ Add as many as needed. Both concrete types and marker interfaces work.
 					_t4ModeOptions.DataModel.GenerateInitDataContextMethod);
 
 			/// <summary>
+			/// Generate StaticInitDataContext partial method on data context class option.
+			/// </summary>
+			public static readonly CliOption EmitStaticInitDataContextMethod = new BooleanCliOption(
+					"add-static-init-context",
+					null,
+					false,
+					"generate StaticInitDataContext partial method on data context for custom context setup. Called from generated context's static constructor after all other code and forces static constructor generation.",
+					null,
+					null,
+					null,
+					_defaultOptions.DataModel.GenerateStaticInitDataContextMethod,
+					_t4ModeOptions.DataModel.GenerateStaticInitDataContextMethod);
+
+			/// <summary>
 			/// Default data context contructor generation option.
 			/// </summary>
 			public static readonly CliOption EmitDefaultConstructor = new BooleanCliOption(

@@ -321,6 +321,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Json      : StringBuilder.Append("JSON");             return;
 				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
 				case DataType.Variant   : StringBuilder.Append("Sql_Variant");      return;
+				case DataType.Money     : StringBuilder.Append("MONEY");            return;
+				case DataType.SmallMoney: StringBuilder.Append("SMALLMONEY");       return;
 				case DataType.NVarChar  :
 					if (type.Length is null or > 4000 or < 1)
 					{

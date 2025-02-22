@@ -362,7 +362,7 @@ namespace LinqToDB.Expressions.ExpressionVisitors
 				var e    = func(item);
 
 				if (e != item)
-					(list ??= new(source))[i] = e;
+					(list ??= [.. source])[i] = e;
 			}
 
 			return list?.AsReadOnly() ?? source;
@@ -379,7 +379,7 @@ namespace LinqToDB.Expressions.ExpressionVisitors
 				var e    = (T)Transform(item)!;
 
 				if (e != item)
-					(list ??= new(source))[i] = e;
+					(list ??= [.. source])[i] = e;
 			}
 
 			return list?.AsReadOnly() ?? source;

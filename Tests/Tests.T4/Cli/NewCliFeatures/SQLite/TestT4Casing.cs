@@ -10,7 +10,7 @@ using LinqToDB.Mapping;
 #pragma warning disable 1573, 1591
 #nullable enable
 
-namespace Cli.Interceptors.SQLite
+namespace Cli.NewCliFeatures.SQLite
 {
 	[Table("TEST_T4_CASING")]
 	public class TestT4Casing

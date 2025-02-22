@@ -1223,10 +1223,10 @@ namespace Tests.Linq
 			using var db = GetDataContext(context, TenderId.LinqToDbMapping());
 			using var tb = db.CreateLocalTable<Tender>();
 
-			var tenderIdsGuid = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
+			var tenderIdsGuid = new List<Guid> { TestData.Guid1, TestData.Guid2 };
 			db.GetTable<Tender>().Where(i => tenderIdsGuid.Contains(i.Id)).Any();
 
-			TenderId? tenderId = new TenderId { Value = Guid.NewGuid() };
+			TenderId? tenderId = new TenderId { Value = TestData.Guid1 };
 			db.GetTable<Tender>().Where(i => tenderId != null && i.Id == tenderId).Any();
 		}
 
