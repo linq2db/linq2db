@@ -88,7 +88,7 @@ namespace LinqToDB.CommandLine
 			AddOption(_dataModelOptions, DataModel.FindParametersInOrdinalOrder);
 			AddOption(_dataModelOptions, DataModel.EntityClassIsPartial);
 			AddOption(_dataModelOptions, DataModel.SchemaTypeClassNames);
-			AddOption(_dataModelOptions, DataModel.FluentEntityTypeDiscriminators);
+			AddOption(_dataModelOptions, DataModel.FluentEntityTypeHelpers);
 			// naming options
 			AddOption(_dataModelOptions, DataModel.DataContextClassNaming);
 			AddOption(_dataModelOptions, DataModel.EntityClassNaming);

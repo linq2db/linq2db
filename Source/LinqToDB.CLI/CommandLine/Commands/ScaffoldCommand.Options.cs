@@ -601,25 +601,37 @@ If you don't specify some property, CLI will use default value for current optio
 					_t4ModeOptions.DataModel.GenerateScale);
 
 			/// <summary>
-			/// Generate database type scale on entity columns mappings option.
+			/// For fluent mapping generate calls to specified extension methods on each entity builder.
 			/// </summary>
-			public static readonly CliOption FluentEntityTypeDiscriminators = new StringCliOption(
-					"fluent-entity-type-discriminators",
+			public static readonly CliOption FluentEntityTypeHelpers = new StringCliOption(
+					"fluent-entity-type-helpers",
 					null,
 					false,
 					true,
-					"Enables the use of entity extension methods with type discriminator parameter in fluent mapping.",
-					@"Enabling this requires a set of extension methods, with matching names, taking (this EntityMappingBuilder<T> builder) and type discriminators, are in scope.
-Ex.
-public static EntityMappingBuilder<T> MyTenantDiscriminator<T>( this EntityMappingBuilder<T> builder, IHasTenantId? _) where T : IHasTenantId {
-  return builder.HasQueryFilter( (T e, DbContext db) => e.TenantId == db.CurrentTenantId );
-}
-Add as many as needed. Both concrete types and marker interfaces work.
+					"Enables generation of entity builder extension method calls for each fluent entity builder.",
+					@"Enabling this requires one or more extension methods, with same name, taking ""this EntityMappingBuilder<T> builder"" as first parameter and nullable entity value (passed as null) as second parameter. Entity parameter type could be specific or generic type.
+E.g. following example defines two fluent mapping helpers:
+ - ConfigureEntity is a set of methods, with entity parameter constrained to specific type or interface and optional fallback method to handle other types.
+ - ConfigureAllEntities is a single method that accept any entity
+
+static class CustomFluentExtensions
+{
+    // called for builder of specific entity type or it's childs only
+	internal static EntityMappingBuilder<T> ConfigureEntity<T>(this EntityMappingBuilder<T> builder, Person? _) where T : Person => ...;
+    // called for builder of entities with specific interface
+	internal static EntityMappingBuilder<T> ConfigureEntity<T>(this EntityMappingBuilder<T> builder, Child? _) where T : IEntities => ...;
+	// called for all other entities. As example it annotated with Obsolete attribute to catch new entities not convered by methods above in build-time
+	[Obsolete(""Define ConfigureEntity method for this entity type"")]
+	internal static EntityMappingBuilder<T> ConfigureEntity<T>(this EntityMappingBuilder<T> builder, T? _) where T : class => ...;
+
+	// single method to call for all entity builder to perform generic configuration or dispatch entity configuration by type dynamically by method itself
+	internal static EntityMappingBuilder<T> ConfigureAllEntities<T>(this EntityMappingBuilder<T> builder, T? _) where T : class => ...;
+	}
 ",
 					null,
 					null,
-					_defaultOptions.DataModel.FluentEntityTypeDiscriminators?.ToArray(),
-					_t4ModeOptions.DataModel.FluentEntityTypeDiscriminators?.ToArray());
+					_defaultOptions.DataModel.FluentEntityTypeHelpers?.ToArray(),
+					_t4ModeOptions.DataModel.FluentEntityTypeHelpers?.ToArray());
 
 			/// <summary>
 			/// Generate database information comment on data context class option.
@@ -656,8 +668,8 @@ Add as many as needed. Both concrete types and marker interfaces work.
 					"add-static-init-context",
 					null,
 					false,
-					"generate StaticInitDataContext partial method on data context for custom context setup. Called from generated context's static constructor after all other code and forces static constructor generation.",
-					null,
+					"generate StaticInitDataContext partial method on data context for custom context setup",
+					"Method will be called from generated context's static constructor after all other code. Enabling this option will force static constructor generation.",
 					null,
 					null,
 					_defaultOptions.DataModel.GenerateStaticInitDataContextMethod,

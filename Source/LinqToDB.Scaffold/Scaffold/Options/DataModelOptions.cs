@@ -6,6 +6,7 @@ using System.Reflection;
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
 using LinqToDB.DataModel;
+using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Schema;
@@ -160,14 +161,14 @@ namespace LinqToDB.Scaffold
 		public bool GenerateScale { get; set; }
 
 		/// <summary>
-		/// Enables the use of a type discriminator parameter in fluent mapping.
-		/// Enabling this requires that a set of extension methods taking (this FluentMappingBuilder builder) and type discriminators.
+		/// Specify custom extension methods names for <see cref="EntityMappingBuilder{TEntity}"/> type, that will be called for each entity builder if fluent mapping metadata generation enabled.
+		/// Except <c>EntityMappingBuilder</c> parameter, method takes second null parameter of entity type (could be generic).
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <c>empty</c></item>
+		/// <item>In T4 compability mode: <c>empty</c></item>
 		/// </list>
 		/// </summary>
-		public IReadOnlyCollection<string> FluentEntityTypeDiscriminators { get; set; } = [];
+		public IReadOnlyCollection<string>? FluentEntityTypeHelpers { get; set; } = [];
 		#endregion
 
 		#region Context
