@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 
 using LinqToDB.DataModel;
@@ -628,6 +627,20 @@ If you don't specify some property, CLI will use default value for current optio
 					null,
 					_defaultOptions.DataModel.GenerateInitDataContextMethod,
 					_t4ModeOptions.DataModel.GenerateInitDataContextMethod);
+
+			/// <summary>
+			/// Generate StaticInitDataContext partial method on data context class option.
+			/// </summary>
+			public static readonly CliOption EmitStaticInitDataContextMethod = new BooleanCliOption(
+					"add-static-init-context",
+					null,
+					false,
+					"generate StaticInitDataContext partial method on data context for custom context setup. Called from generated context's static constructor after all other code and forces static constructor generation.",
+					null,
+					null,
+					null,
+					_defaultOptions.DataModel.GenerateStaticInitDataContextMethod,
+					_t4ModeOptions.DataModel.GenerateStaticInitDataContextMethod);
 
 			/// <summary>
 			/// Default data context contructor generation option.

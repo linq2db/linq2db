@@ -12,16 +12,16 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.DataProvider;
+using LinqToDB.Extensions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using Common.Internal;
-	using DataProvider;
-	using Extensions;
-	using Infrastructure;
-	using Mapping;
-	using SqlQuery;
-
 	public abstract partial class BasicSqlBuilder : ISqlBuilder
 	{
 		#region Init
@@ -640,6 +640,7 @@ namespace LinqToDB.SqlProvider
 							firstField = false;
 							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 						}
+
 						StringBuilder.AppendLine(")");
 					}
 					else
@@ -3558,6 +3559,7 @@ namespace LinqToDB.SqlProvider
 				BuildExpression(value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
 				StringBuilder.Append(InlineComma);
 			}
+
 			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
 			StringBuilder.Append(')');
 		}
@@ -3586,6 +3588,7 @@ namespace LinqToDB.SqlProvider
 					{
 						throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 					}
+
 					BuildParameter(new SqlParameter(dataType.Value, "value", value));
 				}
 			}
@@ -4138,35 +4141,38 @@ namespace LinqToDB.SqlProvider
 
 		private bool PrintParameterValue(StringBuilder sb, object? value)
 		{
+			var maxBinaryLogging = Common.Configuration.MaxBinaryParameterLengthLogging;
+			var maxStringLogging = Common.Configuration.MaxStringParameterLengthLogging;
+
 			if (value is byte[] bytes &&
-				Configuration.MaxBinaryParameterLengthLogging >= 0 &&
-				bytes.Length > Configuration.MaxBinaryParameterLengthLogging &&
+				maxBinaryLogging >= 0 &&
+				bytes.Length > maxBinaryLogging &&
 				MappingSchema.ValueToSqlConverter.CanConvert(typeof(byte[])))
 			{
-				var trimmed = new byte[Configuration.MaxBinaryParameterLengthLogging];
-				Array.Copy(bytes, 0, trimmed, 0, Configuration.MaxBinaryParameterLengthLogging);
+				var trimmed = new byte[maxBinaryLogging];
+				Array.Copy(bytes, 0, trimmed, 0, maxBinaryLogging);
 				MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
 				return true;
 			}
 			else if (value is Binary binaryData &&
-					 Configuration.MaxBinaryParameterLengthLogging >= 0 &&
-					 binaryData.Length > Configuration.MaxBinaryParameterLengthLogging &&
+					 maxBinaryLogging >= 0 &&
+					 binaryData.Length > maxBinaryLogging &&
 					 MappingSchema.ValueToSqlConverter.CanConvert(typeof(Binary)))
 			{
 				//We aren't going to create a new Binary here,
 				//since ValueToSql always just .ToArray() anyway
-				var trimmed = new byte[Configuration.MaxBinaryParameterLengthLogging];
-				Array.Copy(binaryData.ToArray(), 0, trimmed, 0, Configuration.MaxBinaryParameterLengthLogging);
+				var trimmed = new byte[maxBinaryLogging];
+				Array.Copy(binaryData.ToArray(), 0, trimmed, 0, maxBinaryLogging);
 				MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
 				MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
 				return true;
 			}
 			else if (value is string s &&
-					 Configuration.MaxStringParameterLengthLogging >= 0 &&
-					 s.Length > Configuration.MaxStringParameterLengthLogging &&
+					 maxStringLogging >= 0 &&
+					 s.Length > maxStringLogging &&
 					 MappingSchema.ValueToSqlConverter.CanConvert(typeof(string)))
 			{
-				var trimmed = s.Substring(0, Configuration.MaxStringParameterLengthLogging);
+				var trimmed = s.Substring(0, maxStringLogging);
 				MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
 				return true;
 			}
@@ -4198,7 +4204,7 @@ namespace LinqToDB.SqlProvider
 			}
 			else if (value is IEnumerable collection)
 			{
-				var limit   = Configuration.MaxArrayParameterLengthLogging >= 0 ? Configuration.MaxArrayParameterLengthLogging : int.MaxValue;
+				var limit   = Common.Configuration.MaxArrayParameterLengthLogging >= 0 ? Common.Configuration.MaxArrayParameterLengthLogging : int.MaxValue;
 				var trimmed = false;
 				var pos     = 0;
 
@@ -4217,6 +4223,7 @@ namespace LinqToDB.SqlProvider
 
 					trimmed = PrintParameterValue(sb, item) || trimmed;
 				}
+
 				sb.Append('}');
 
 				return trimmed;

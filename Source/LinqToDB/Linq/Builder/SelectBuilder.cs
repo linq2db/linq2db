@@ -2,12 +2,12 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	[BuildsMethodCall("Select")]
 	sealed class SelectBuilder : MethodCallBuilder
 	{
@@ -66,6 +66,34 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			public override MappingSchema MappingSchema => Builder.MappingSchema;
+
+			static IBuildContext GetOrderSequence(IBuildContext context)
+			{
+				var prevSequence = context;
+				while (true)
+				{
+					if (prevSequence.SelectQuery.Select.HasModifier)
+					{
+						break;
+					}
+
+					if (!prevSequence.SelectQuery.OrderBy.IsEmpty)
+						break;
+
+					if (prevSequence is SubQueryContext { IsSelectWrapper: true } subQuery)
+					{
+						prevSequence = subQuery.SubQuery;
+					}
+					else if (prevSequence is SelectContext { InnerContext: not null } selectContext)
+					{
+						prevSequence = selectContext.InnerContext;
+					}
+					else
+						break;
+				}
+
+				return prevSequence;
+			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{

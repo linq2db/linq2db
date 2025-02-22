@@ -1,11 +1,14 @@
-﻿using LinqToDB;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
@@ -115,7 +118,6 @@ namespace Tests.xUpdate
 			using var source = db.CreateLocalTable(sourceData);
 			using var dest1  = db.CreateLocalTable<Dest1>();
 			using var dest2  = db.CreateLocalTable<Dest2>();
-
 
 			var sourceQuery =
 				from s in source

@@ -8,17 +8,17 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer.Translation;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Data;
-	using Extensions;
-	using Linq.Translation;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
-	using Translation;
-
 	sealed class SqlServerDataProvider2005SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2005SystemDataSqlClient   () : base(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient)    {} }
 	sealed class SqlServerDataProvider2008SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2008SystemDataSqlClient   () : base(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient)    {} }
 	sealed class SqlServerDataProvider2012SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2012SystemDataSqlClient   () : base(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient)    {} }
@@ -303,6 +303,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						Adapter.SetUdtTypeName(param, typeName);
 					}
+
 					break;
 
 				case DataType.NText when value is DateTime dt:
@@ -331,6 +332,39 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 				case DataType.Time when value is TimeSpan ts:
 					value = TimeSpan.FromTicks(ts.GetTicks(dataType.Precision ?? 7));
+					break;
+
+				case DataType.Money     :
+				case DataType.SmallMoney:
+					parameter.Precision = 0;
+					parameter.Scale     = 0;
+					break;
+
+				case DataType.Decimal:
+					if (parameter.Precision != 0 || parameter.Scale != 0)
+					{
+						SqlDecimal sqlDecimal;
+
+						if (value is SqlDecimal sqlDec)
+							sqlDecimal = sqlDec;
+						else if (value is decimal dec)
+							sqlDecimal = dec;
+						else
+						{
+							// better safe than sorry
+							parameter.Precision = 0;
+							parameter.Scale     = 0;
+							break;
+						}
+
+						// reset precison/scale if default mappings doesn't fit value
+						if ((parameter.Precision - parameter.Scale) < (sqlDecimal.Precision - sqlDecimal.Scale) || parameter.Scale < sqlDecimal.Scale)
+						{
+							parameter.Precision = sqlDecimal.Precision;
+							parameter.Scale     = sqlDecimal.Scale;
+						}
+					}
+
 					break;
 
 				case DataType.Undefined:

@@ -24,7 +24,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.ForMapping
 
 		public DbSet<SkipModesTable> SkipModes { get; set; } = null!;
 
-
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);

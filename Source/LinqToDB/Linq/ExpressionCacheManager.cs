@@ -4,18 +4,19 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Linq.Internal;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
+using static LinqToDB.Linq.QueryCacheCompareInfo;
+
 namespace LinqToDB.Linq
 {
-	using LinqToDB.Expressions;
-	using Infrastructure;
-	using Builder;
-	using Mapping;
-	using Internal;
-	using Extensions;
-	using Common;
-	using SqlQuery;
-	using static QueryCacheCompareInfo;
-
 	sealed class ParameterCacheEntry
 	{
 		public ParameterCacheEntry(
@@ -66,7 +67,6 @@ namespace LinqToDB.Linq
 			IsEvaluated = true;
 		}
 	}
-
 
 	class ExpressionCacheManager
 	{
@@ -158,7 +158,7 @@ namespace LinqToDB.Linq
 						return new TransformInfo(expr, true);
 					}
 
-					if (expr.NodeType == ExpressionType.Constant && context.paramContext.GetAccessorExpression(expr, out var accessor))
+					if (expr is ConstantExpression { Value: not null } && context.paramContext.GetAccessorExpression(expr, out var accessor))
 					{
 						 context.modified.Add(expr);
 
@@ -453,7 +453,7 @@ namespace LinqToDB.Linq
 				var usedEntries = _parameterEntries.Where(e => knownParameters.Any(p => p.AccessorId == e.Key)).Select(e => e.Value).ToList();
 				if (usedEntries.Count > 0)
 				{
-					nonComparable = new HashSet<Expression>(NonComparableExpressions);
+					nonComparable = [.. NonComparableExpressions];
 
 					parameterAccessors = new List<ParameterAccessor>(usedEntries.Count);
 					foreach (var (paramExpr, entry) in usedEntries)
@@ -491,7 +491,6 @@ namespace LinqToDB.Linq
 							var dbDataTypeAccessorLambda = Expression.Lambda<Func<object?, DbDataType>>(dbDataTypeAccessorExpr.EnsureType<DbDataType>(), ParametersContext.ItemParameter);
 							dbDataTypeAccessor = dbDataTypeAccessorLambda.CompileExpression();
 						}
-
 
 						var accessor = new ParameterAccessor(
 							entry.ParameterId, 

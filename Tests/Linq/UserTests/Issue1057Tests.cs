@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using LinqToDB;
-	using LinqToDB.Mapping;
-
 	public class Issue1057Tests : TestBase
 	{
 		[Table, InheritanceMapping(Code = "bda.Requests", Type = typeof(BdaTask))]
@@ -109,7 +110,6 @@ namespace Tests.UserTests
 						Assert.That(res[0].Instance, Is.Not.Null);
 						Assert.That(res[0].ActualStageId, Is.EqualTo(2));
 					});
-
 
 					var query2 = db.GetTable<Task>()
 						.Select(p => new

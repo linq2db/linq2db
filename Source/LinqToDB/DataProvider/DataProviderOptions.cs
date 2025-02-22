@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-
 	/// <param name="BulkCopyType">
 	/// Default bulk copy mode, used by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
 	/// methods, if mode is not specified explicitly.

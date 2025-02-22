@@ -1,8 +1,10 @@
 ﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -271,7 +273,6 @@ namespace Tests.Linq
 				var query2Str = query2.ToSqlQuery().Sql;
 
 				BaselinesManager.LogQuery(query2Str);
-
 
 				var query3 = db.FromSql<FreeTextKey<int>>(
 					$"FREETEXTTABLE({Sql.TableExpr(table)}, {Sql.FieldExpr(table, t => t.Value)}, {queryText})");

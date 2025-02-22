@@ -2,14 +2,14 @@
 using System.Diagnostics;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Reflection;
-	using SqlQuery;
-	using Common;
-	using Mapping;
-	using LinqToDB.Expressions;
-
 	[BuildsMethodCall("GroupJoin")]
 	sealed class GroupJoinBuilder : MethodCallBuilder
 	{

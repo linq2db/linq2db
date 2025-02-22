@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	internal sealed class CteTableContext: BuildContextBase, ITableContext
 	{
 		readonly Type          _objectType;
@@ -117,7 +117,7 @@ namespace LinqToDB.Linq.Builder
 
 		class CteTableProxy : BuildProxyBase<CteTableContext>
 		{
-			public CteTableProxy(CteTableContext ownerContext, Expression currentPath, Expression innerExpression) : base(ownerContext, ownerContext.CteContext, currentPath, innerExpression)
+			public CteTableProxy(CteTableContext ownerContext, Expression? currentPath, Expression innerExpression) : base(ownerContext, ownerContext.CteContext, currentPath, innerExpression)
 			{
 			}
 
@@ -133,7 +133,7 @@ namespace LinqToDB.Linq.Builder
 				return placeholder;
 			}
 
-			public override BuildProxyBase<CteTableContext> CreateProxy(CteTableContext ownerContext, IBuildContext buildContext, Expression currentPath, Expression innerExpression)
+			public override BuildProxyBase<CteTableContext> CreateProxy(CteTableContext ownerContext, IBuildContext buildContext, Expression? currentPath, Expression innerExpression)
 			{
 				return new CteTableProxy(ownerContext, currentPath, innerExpression);
 			}

@@ -4,13 +4,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	[BuildsMethodCall("Average", "Min", "Max", "Sum", "Count", "LongCount")]
 	[BuildsMethodCall("AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync", 
 		CanBuildName = nameof(CanBuildAsyncMethod))]
@@ -587,6 +586,7 @@ namespace LinqToDB.Linq.Builder
 
 							sql = valueSqlExpression;
 						}
+
 						break;
 					}
 					case AggregationType.Custom:

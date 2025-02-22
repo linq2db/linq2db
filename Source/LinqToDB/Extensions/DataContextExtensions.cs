@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 // ReSharper disable once CheckNamespace
-namespace LinqToDB
+namespace LinqToDB.Extensions
 {
 	/// <summary>
 	/// Internal data context helpers.

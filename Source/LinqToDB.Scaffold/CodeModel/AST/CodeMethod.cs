@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using LinqToDB.Common;
 
 namespace LinqToDB.CodeModel
 {
@@ -24,7 +23,7 @@ namespace LinqToDB.CodeModel
 		{
 			Name           = name;
 			ReturnType     = returnType;
-			_typeArguments = new (typeParameters ?? []);
+			_typeArguments = [.. typeParameters ?? []];
 
 			Name.OnChange += _ => ChangeHandler?.Invoke(this);
 			if (ReturnType != null)

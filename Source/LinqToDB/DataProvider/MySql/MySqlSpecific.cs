@@ -1,15 +1,14 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
-
 	public interface IMySqlSpecificTable<out TSource> : ITable<TSource>
 		where TSource : notnull
 	{

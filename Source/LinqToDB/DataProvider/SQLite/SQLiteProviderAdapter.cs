@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
+
+using LinqToDB.Expressions.Types;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Expressions;
-
 	public class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _systemSyncRoot = new ();
-		private static readonly object _msSyncRoot     = new ();
+		private static readonly Lock _systemSyncRoot = new ();
+		private static readonly Lock _msSyncRoot     = new ();
 
 		private static SQLiteProviderAdapter? _systemDataSQLite;
 		private static SQLiteProviderAdapter? _microsoftDataSQLite;
@@ -83,6 +84,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				typeMapper.RegisterTypeWrapper<SQLiteConnection>(connectionType);
 			}
+
 			typeMapper.FinalizeMappings();
 
 			Action? clearAllPools = null;

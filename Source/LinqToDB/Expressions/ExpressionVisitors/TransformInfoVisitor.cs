@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
-namespace LinqToDB.Expressions
-{
-	using Extensions;
+using LinqToDB.Extensions;
 
+namespace LinqToDB.Expressions.ExpressionVisitors
+{
 	readonly struct TransformInfoVisitor<TContext>
 	{
 		private readonly TContext?                                  _context;
@@ -363,7 +362,7 @@ namespace LinqToDB.Expressions
 				var e    = func(item);
 
 				if (e != item)
-					(list ??= new(source))[i] = e;
+					(list ??= [.. source])[i] = e;
 			}
 
 			return list?.AsReadOnly() ?? source;
@@ -380,7 +379,7 @@ namespace LinqToDB.Expressions
 				var e    = (T)Transform(item)!;
 
 				if (e != item)
-					(list ??= new(source))[i] = e;
+					(list ??= [.. source])[i] = e;
 			}
 
 			return list?.AsReadOnly() ?? source;

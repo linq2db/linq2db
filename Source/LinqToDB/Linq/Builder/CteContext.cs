@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace LinqToDB.Linq.Builder
-{
-	using Common;
+using LinqToDB.Common;
 
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
 
-	using SqlQuery;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.Linq.Builder
+{
 	internal class CteContext : BuildContextBase
 	{
 		public Expression CteExpression { get; set;  }
@@ -167,7 +167,6 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-
 			SqlField? recursiveField = null;
 
 			if (field == null)
@@ -177,7 +176,6 @@ namespace LinqToDB.Linq.Builder
 					recursiveField = (SqlField)recursivePlaceholder.Sql;
 				}
 			}
-
 
 			if (field == null)
 			{
@@ -225,7 +223,7 @@ namespace LinqToDB.Linq.Builder
 
 		class CteProxy : BuildProxyBase<CteContext>
 		{
-			public CteProxy(CteContext ownerContext, Expression currentPath, Expression innerExpression) 
+			public CteProxy(CteContext ownerContext, Expression? currentPath, Expression innerExpression) 
 				: base(ownerContext, ownerContext.CteInnerQueryContext!, currentPath, innerExpression)
 			{
 				if (ownerContext.CteInnerQueryContext == null)
@@ -254,7 +252,7 @@ namespace LinqToDB.Linq.Builder
 				return field;
 			}
 
-			public override BuildProxyBase<CteContext> CreateProxy(CteContext ownerContext, IBuildContext buildContext, Expression currentPath, Expression innerExpression)
+			public override BuildProxyBase<CteContext> CreateProxy(CteContext ownerContext, IBuildContext buildContext, Expression? currentPath, Expression innerExpression)
 			{
 				return new CteProxy(ownerContext, currentPath, innerExpression);
 			}

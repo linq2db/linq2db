@@ -3,14 +3,14 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Linq.Builder;
+using LinqToDB.SqlQuery;
+
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
-	using Expressions;
-	using Linq.Builder;
-	using SqlQuery;
-
 	partial class Sql
 	{
 		/// <summary>

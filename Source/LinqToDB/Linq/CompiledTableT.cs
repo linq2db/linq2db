@@ -2,12 +2,12 @@
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
+using LinqToDB.Common.Internal.Cache;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Linq.Internal;
+
 namespace LinqToDB.Linq
 {
-	using Builder;
-	using Internal;
-	using Common.Internal.Cache;
-
 	sealed class CompiledTable<T>
 		where T : notnull
 	{

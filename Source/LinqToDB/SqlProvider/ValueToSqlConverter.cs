@@ -4,14 +4,14 @@ using System.Data.SqlTypes;
 using System.Globalization;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
+using ConverterType = System.Action<System.Text.StringBuilder, LinqToDB.Common.DbDataType, LinqToDB.DataOptions, object>;
+
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-	
-	using ConverterType = Action<StringBuilder, LinqToDB.Common.DbDataType, DataOptions,object>;
-
 	public class ValueToSqlConverter
 	{
 		public ValueToSqlConverter()

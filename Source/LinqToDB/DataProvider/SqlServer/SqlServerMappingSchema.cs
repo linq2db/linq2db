@@ -3,22 +3,20 @@ using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using System.Linq;
-
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Mapping;
-	using Metadata;
-	using SqlQuery;
-
 	sealed class SqlServerMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
@@ -260,6 +258,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetValueToSqlConverter(typeof(Binary), (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
+			// in SQL Server DECIMAL=DECIMAL(18,0)
+			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 18, 10));
 
 			if (SystemDataSqlServerAttributeReader.SystemDataSqlClientProvider != null)
 				AddMetadataReader(SystemDataSqlServerAttributeReader.SystemDataSqlClientProvider);

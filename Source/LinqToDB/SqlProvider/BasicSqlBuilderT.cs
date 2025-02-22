@@ -1,11 +1,9 @@
-﻿using System;
+﻿using LinqToDB.Common;
+using LinqToDB.DataProvider;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using DataProvider;
-	using Mapping;
-
 	public abstract class BasicSqlBuilder<T> : BasicSqlBuilder
 	where T : DataProviderOptions<T>, IOptionSet, new()
 	{
