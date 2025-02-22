@@ -11,7 +11,7 @@ using System;
 #pragma warning disable 1573, 1591
 #nullable enable
 
-namespace Cli.Interceptors.SQLite
+namespace Cli.NewCliFeatures.SQLite
 {
 	[Table("LinqDataTypes")]
 	public class LinqDataType

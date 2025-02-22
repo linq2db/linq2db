@@ -635,7 +635,7 @@ If you don't specify some property, CLI will use default value for current optio
 					"add-static-init-context",
 					null,
 					false,
-					"generate StaticInitDataContext partial method on data context for custom context setup",
+					"generate StaticInitDataContext partial method on data context for custom context setup. Called from generated context's static constructor after all other code and forces static constructor generation.",
 					null,
 					null,
 					null,

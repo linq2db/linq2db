@@ -257,7 +257,7 @@ namespace LinqToDB.Scaffold
 		public bool GenerateInitDataContextMethod { get; set; } = true;
 
 		/// <summary>
-		/// Enables generation of StaticInitDataContext partial method on data context class.
+		/// Enables generation of StaticInitDataContext partial method on data context class. Method will be called from static constructor as a last init step and will force generation of static constructor.
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
 		/// <item>In T4 compability mode: <c>false</c></item>
