@@ -35,23 +35,23 @@ namespace LinqToDB.Linq.Builder
 			Single,
 			SingleOrDefault,
 			AssociationRecord,
-			AssociationRecordOrDefault,
+			AssociationOptionalRecord,
 		}
 
 		static MethodKind GetMethodKind(string methodName)
 		{
 			return methodName switch
 			{
-				"First"                      => MethodKind.First,
-				"FirstAsync"                 => MethodKind.First,
-				"FirstOrDefault"             => MethodKind.FirstOrDefault,
-				"FirstOrDefaultAsync"        => MethodKind.FirstOrDefault,
-				"Single"                     => MethodKind.Single,
-				"SingleAsync"                => MethodKind.Single,
-				"SingleOrDefault"            => MethodKind.SingleOrDefault,
-				"SingleOrDefaultAsync"       => MethodKind.SingleOrDefault,
-				"AssociationRecord"          => MethodKind.AssociationRecord,
-				"AssociationRecordOrDefault" => MethodKind.AssociationRecordOrDefault,
+				nameof(Queryable.First)                                => MethodKind.First,
+				nameof(AsyncEnumerableExtensions.FirstAsync)           => MethodKind.First,
+				nameof(Queryable.FirstOrDefault)                       => MethodKind.FirstOrDefault,
+				nameof(AsyncEnumerableExtensions.FirstOrDefaultAsync)  => MethodKind.FirstOrDefault,
+				nameof(Queryable.Single)                               => MethodKind.Single,
+				nameof(AsyncEnumerableExtensions.SingleAsync)          => MethodKind.Single,
+				nameof(Queryable.SingleOrDefault)                      => MethodKind.SingleOrDefault,
+				nameof(AsyncEnumerableExtensions.SingleOrDefaultAsync) => MethodKind.SingleOrDefault,
+				nameof(LinqExtensions.AssociationRecord)               => MethodKind.AssociationRecord,
+				nameof(LinqExtensions.AssociationOptionalRecord)       => MethodKind.AssociationOptionalRecord,
 				_ => throw new ArgumentOutOfRangeException(nameof(methodName), methodName, "Not supported method.")
 			};
 		}
@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 
 				case MethodKind.FirstOrDefault:
 				case MethodKind.SingleOrDefault:
-				case MethodKind.AssociationRecordOrDefault:
+				case MethodKind.AssociationOptionalRecord:
 				{
 					cardinality |= SourceCardinality.Zero;
 					break;
