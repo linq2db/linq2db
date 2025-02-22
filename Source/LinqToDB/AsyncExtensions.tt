@@ -8,11 +8,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Async;
+using LinqToDB.Internal.Linq;
+
 namespace LinqToDB
 {
-	using Async;
-	using Linq;
-
 	public static partial class AsyncExtensions
 	{
 <#
