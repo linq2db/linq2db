@@ -6,25 +6,24 @@
 // ---------------------------------------------------------------------------------------------------
 
 using LinqToDB.Mapping;
-using System.Collections.Generic;
 
 #pragma warning disable 1573, 1591
 #nullable enable
 
-namespace Cli.Interceptors.SQLite
+namespace Cli.NewCliFeatures.SQLite
 {
-	[Table("PrimaryKeyTable")]
-	public class PrimaryKeyTable
+	[Table("Doctor")]
+	public class Doctor
 	{
-		[Column("ID"  , IsPrimaryKey = true )] public long   Id   { get; internal set; } // integer
-		[Column("Name", CanBeNull    = false)] public string Name { get; internal set; } = null!; // nvarchar(50)
+		[Column("PersonID", IsPrimaryKey = true )] public long   PersonId { get; internal set; } // integer
+		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; internal set; } = null!; // nvarchar(50)
 
 		#region Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0 backreference
+		/// FK_Doctor_0_0
 		/// </summary>
-		[Association(ThisKey = nameof(Id), OtherKey = nameof(ForeignKeyTable.PrimaryKeyTableId))]
-		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
+		public Person FkDoctor00 { get; set; } = null!;
 		#endregion
 	}
 }

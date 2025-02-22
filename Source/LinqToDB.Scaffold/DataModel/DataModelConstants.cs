@@ -24,6 +24,10 @@ namespace LinqToDB.DataModel
 		/// Data context init partial method name.
 		/// </summary>
 		public const string CONTEXT_INIT_METHOD                          = "InitDataContext";
+		/// <summary>
+		/// Data context static init partial method name.
+		/// </summary>
+		public const string CONTEXT_STATIC_INIT_METHOD                   = "StaticInitDataContext";
 
 		/// <summary>
 		/// Name of region in data context with properties and other code for additional schemas.

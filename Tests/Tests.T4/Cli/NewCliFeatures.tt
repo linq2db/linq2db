@@ -4,17 +4,20 @@
 <#@ include file="CLI.ttinclude"                                               once="true"        #>
 <#
 	var interceptorsPath = Path.Combine(solutionsPath, "Tests", "Tests.T4", "Cli", "scaffold.tt");
-	var targetDir        = Path.Combine(solutionsPath, "Tests", "Tests.T4", "Cli", "Interceptors");
+	var targetDir        = Path.Combine(solutionsPath, "Tests", "Tests.T4", "Cli", "NewCliFeatures");
 	var mode             = "default";
 
+	// use this template to test new CLI features and fixes/changes
+	// for conflicting options just add another RunCliTool call with own set of options
 
 	var options = new string[]
 	{
 		"--context-modifier internal",
+		"--add-static-init-context true",
 		$"--customize {interceptorsPath}"
 	};
 
 	var extraOptions = string.Join(" ", options);
 
-	RunCliTool("SQLite"         , null                 , "Cli.Interceptors.SQLite"             , Path.Combine(targetDir, "SQLite")             , mode, connectionString: sqliteCN, extraOptions: extraOptions);
+	RunCliTool("SQLite"         , null                 , "Cli.NewCliFeatures.SQLite"             , Path.Combine(targetDir, "SQLite")             , mode, connectionString: sqliteCN, extraOptions: extraOptions);
 #>
