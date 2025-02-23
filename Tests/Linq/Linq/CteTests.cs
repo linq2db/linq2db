@@ -7,7 +7,6 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 
@@ -164,18 +163,6 @@ namespace Tests.Linq
 
 				AreSame(expected, result);
 			}
-		}
-
-		static IQueryable<TSource> RemoveCte<TSource>(IQueryable<TSource> source)
-		{
-			var newExpr = source.Expression.Transform<object?>(null, static (_, e) =>
-			{
-				if (e is MethodCallExpression methodCall && methodCall.Method.Name == "AsCte")
-					return methodCall.Arguments[0];
-				return e;
-			});
-
-			return source.Provider.CreateQuery<TSource>(newExpr);
 		}
 
 		[Test]

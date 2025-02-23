@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Linq;
 using LinqToDB.Linq;
 
 using NUnit.Framework;
@@ -169,7 +168,7 @@ namespace Tests.UserTests
 						for (var i = 0; i < TOTAL_QUERIES_PER_RUN / threadCount; i++)
 						{
 							if (mode == CacheMode.ClearCache)
-								Query<LinqDataTypes2>.ClearCache();
+								db.GetTable<LinqDataTypes2>().ClearCache();
 
 							if (mode == CacheMode.NoCacheScope && (rnd.Next() % 2 == 0))
 								using (NoLinqCache.Scope())

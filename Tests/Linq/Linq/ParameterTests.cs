@@ -8,7 +8,6 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -328,9 +327,7 @@ namespace Tests.Linq
 		public void TestQueryableCallWithParameters([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// baselines could be affected by cache
-			Query.ClearCaches();
-
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseDisableQueryCache(true));
 			db.Parent.Where(p => GetChildrenFiltered(db, c => c.ChildID != 5).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
 		}
 
@@ -338,9 +335,7 @@ namespace Tests.Linq
 		public void TestQueryableCallWithParametersWorkaround([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// baselines could be affected by cache
-			Query.ClearCaches();
-
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseDisableQueryCache(true));
 			db.Parent.Where(p => GetChildrenFiltered(db, ChildFilter).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
 		}
 
@@ -673,7 +668,7 @@ namespace Tests.Linq
 					String3 = str3,
 				});
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -706,7 +701,7 @@ namespace Tests.Linq
 					String3 = str3,
 				});
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 				sql = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -760,7 +755,7 @@ namespace Tests.Linq
 					String3 = "str",
 				});
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@Id");
@@ -784,7 +779,7 @@ namespace Tests.Linq
 					String3 = "str3",
 				});
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 				sql = db.LastQuery!;
 
 				sql.Should().Contain("@Id");
@@ -837,7 +832,7 @@ namespace Tests.Linq
 					.Value(_ => _.String3, "str")
 					.Insert();
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@Id");
@@ -860,7 +855,7 @@ namespace Tests.Linq
 					.Value(_ => _.String3, "str3")
 					.Insert();
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 				sql = db.LastQuery!;
 
 				sql.Should().Contain("@Id");
@@ -922,7 +917,7 @@ namespace Tests.Linq
 					.Value(_ => _.String3, () => str3)
 					.Insert();
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -954,7 +949,7 @@ namespace Tests.Linq
 					.Value(_ => _.String3, () => str3)
 					.Insert();
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 
 				sql = db.LastQuery!;
 
@@ -1018,7 +1013,7 @@ namespace Tests.Linq
 						String3 = str3,
 					});
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -1051,7 +1046,7 @@ namespace Tests.Linq
 						String3 = str3,
 					});
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 				sql = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -1105,7 +1100,7 @@ namespace Tests.Linq
 					String3 = "str",
 				});
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@Id");
@@ -1129,7 +1124,7 @@ namespace Tests.Linq
 					String3 = "str3",
 				});
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 				sql = db.LastQuery!;
 
 				sql.Should().Contain("@Id");
@@ -1182,7 +1177,7 @@ namespace Tests.Linq
 					.Set(_ => _.String3, "str")
 					.Update();
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -1205,7 +1200,7 @@ namespace Tests.Linq
 					.Set(_ => _.String3, "str3")
 					.Update();
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 				sql = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -1266,7 +1261,7 @@ namespace Tests.Linq
 					.Set(_ => _.String3, () => str3)
 					.Update();
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -1297,7 +1292,7 @@ namespace Tests.Linq
 					.Set(_ => _.String3, () => str3)
 					.Update();
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 
 				sql = db.LastQuery!;
 

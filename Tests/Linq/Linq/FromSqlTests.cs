@@ -249,7 +249,7 @@ namespace Tests.Linq
 				var query = db.FromSql<SampleClass>("SELECT * FROM\n{0}\nwhere {3} >= {1} and {3} < {2}",
 					GetName(table), new DataParameter("startId", startId, DataType.Int64), endId, GetColumn("id"));
 
-				var save = Query<SampleClass>.CacheMissCount;
+				var save = query.GetCacheMissCount();
 
 				var projection = query
 					.Where(c => c.Id > 10)
@@ -259,7 +259,7 @@ namespace Tests.Linq
 
 				if (iteration > 1)
 				{
-					Query<SampleClass>.CacheMissCount.Should().Be(save);
+					query.GetCacheMissCount().Should().Be(save);
 				}
 
 				var expected = table

@@ -2926,8 +2926,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestLowercaseIdentifiersQuotation([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseDisableQueryCache(true)))
 			{
+				// TODO: don't modify default options from tests + investigate wether it is expected behavior to react to options change after context created
 				var initial = OracleOptions.Default;
 
 				try
@@ -2936,8 +2937,6 @@ namespace Tests.DataProvider
 
 					_ = db.GetTable<TestIdentifiersTable1>().ToList();
 					_ = db.GetTable<TestIdentifiersTable2>().ToList();
-
-					Query.ClearCaches();
 
 					OracleOptions.Default = OracleOptions.Default with { DontEscapeLowercaseIdentifiers = false };
 
@@ -2949,7 +2948,6 @@ namespace Tests.DataProvider
 				finally
 				{
 					OracleOptions.Default = initial;
-					Query.ClearCaches();
 				}
 			}
 		}

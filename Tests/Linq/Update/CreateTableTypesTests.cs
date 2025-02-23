@@ -7,7 +7,6 @@ using JetBrains.Annotations;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -167,8 +166,6 @@ namespace Tests.xUpdate
 				Assert.Ignore("test case is not valid");
 			}
 
-			Query.ClearCaches();
-
 			var ms = new MappingSchema();
 			var entity = new FluentMappingBuilder(ms)
 				.Entity<CreateTableTypes>()
@@ -189,7 +186,7 @@ namespace Tests.xUpdate
 				});
 			ms.SetConverter<string, List<(uint, string)>?>(_ => JsonSerializer.Deserialize<List<(uint, string)>>(_, options));
 
-			using (var db    = GetDataContext(context, ms))
+			using (var db    = GetDataContext(context, o => o.UseMappingSchema(ms).UseDisableQueryCache(true)))
 			using (var table = db.CreateLocalTable<CreateTableTypes>())
 			{
 				var defaultValue = new CreateTableTypes { Id = 1 };

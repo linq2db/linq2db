@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
-using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -173,11 +172,11 @@ namespace Tests.Linq
 		public void TestSqlQueryDepended([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<ManyFields>())
+			using (var tb = db.CreateLocalTable<ManyFields>())
 			{
-				Query<ManyFields>.ClearCache();
+				tb.ClearCache();
 
-				var currentMiss = Query<ManyFields>.CacheMissCount;
+				var currentMiss = tb.GetCacheMissCount();
 
 				int i;
 				for (i = 1; i <= 5; i++)
@@ -189,9 +188,9 @@ namespace Tests.Linq
 					_ = test.ToSqlQuery();
 				}
 
-				Assert.That(Query<ManyFields>.CacheMissCount - currentMiss, Is.EqualTo(5));
+				Assert.That(tb.GetCacheMissCount() - currentMiss, Is.EqualTo(5));
 
-				currentMiss = Query<ManyFields>.CacheMissCount;
+				currentMiss = tb.GetCacheMissCount();
 
 				for (i = 1; i <= 5; i++)
 				{
@@ -202,7 +201,7 @@ namespace Tests.Linq
 					_ = test.ToSqlQuery();
 				}
 
-				Assert.That(Query<ManyFields>.CacheMissCount, Is.EqualTo(currentMiss));
+				Assert.That(tb.GetCacheMissCount(), Is.EqualTo(currentMiss));
 			}
 		}
 
@@ -216,8 +215,8 @@ namespace Tests.Linq
 
 			WeakReference<IDataContext> ExecuteQuery(string ctx)
 			{
-				Query<Person>.ClearCache();
 				using var db = GetDataContext(ctx);
+				db.Person.ClearCache();
 
 				_ = db.Person.FirstOrDefault();
 

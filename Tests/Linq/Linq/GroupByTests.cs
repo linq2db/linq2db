@@ -4,7 +4,6 @@ using System.Linq;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -2533,70 +2532,58 @@ namespace Tests.Linq
 		[Test]
 		public void Issue2306Test1([DataSources] string context)
 		{
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
-
-			Query.ClearCaches();
 		}
 
 		[Test]
 		public void Issue2306Test2([DataSources] string context)
 		{
-			Query.ClearCaches();
-
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
-
-			Query.ClearCaches();
 		}
 
 		[Test]
 		public void Issue2306Test3([DataSources] string context)
 		{
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
-
-			Query.ClearCaches();
 		}
 
 		[Test]

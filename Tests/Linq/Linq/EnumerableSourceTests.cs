@@ -5,7 +5,6 @@ using System.Linq;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -34,7 +33,7 @@ namespace Tests.Linq
 					if (i > 0)
 						doe += i;
 
-					var cacheMiss = Query<Person>.CacheMissCount;
+					var cacheMiss = db.Person.GetCacheMissCount();
 
 					var q =
 						from p in db.Person
@@ -44,7 +43,7 @@ namespace Tests.Linq
 					var result = q.ToList();
 
 					if (iteration > 1)
-						Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+						db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 					var expected =
 						from p in Person
@@ -63,7 +62,7 @@ namespace Tests.Linq
 			var doe = "Doe";
 			using (var db = GetDataContext(context))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = db.Person.GetCacheMissCount();
 
 				var q =
 					from p in db.Person
@@ -73,7 +72,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -91,7 +90,7 @@ namespace Tests.Linq
 			var doe = "Doe";
 			using (var db = GetDataContext(context))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = db.Person.GetCacheMissCount();
 
 				var q =
 					from p in db.Person
@@ -101,7 +100,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -125,7 +124,7 @@ namespace Tests.Linq
 					if (i > 0)
 						doe += i;
 
-					var cacheMiss = Query<Person>.CacheMissCount;
+					var cacheMiss = db.Person.GetCacheMissCount();
 
 					var q =
 						from p in db.Person
@@ -135,7 +134,7 @@ namespace Tests.Linq
 					var result = q.ToList();
 
 					if (iteration > 1)
-						Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+						db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 					var expected =
 						from p in Person
@@ -161,7 +160,7 @@ namespace Tests.Linq
 					if (i > 0)
 						arr[1] += i;
 
-					var cacheMiss = Query<Person>.CacheMissCount;
+					var cacheMiss = db.Person.GetCacheMissCount();
 
 					var q =
 						from p in db.Person
@@ -171,7 +170,7 @@ namespace Tests.Linq
 					var result = q.ToList();
 
 					if (iteration > 1)
-						Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+						db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 					var expected =
 						from p in Person
@@ -191,7 +190,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = db.Person.GetCacheMissCount();
 
 				var q =
 					from n in new[] { "Janet", "Doe", "John", doe }.AsQueryable(db)
@@ -202,7 +201,7 @@ namespace Tests.Linq
 				var sql    = q.ToSqlQuery().Sql;
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 				Assert.That(sql, Contains.Substring("JOIN"));
 
@@ -221,7 +220,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = db.Person.GetCacheMissCount();
 
 				var q =
 					from p in db.Person
@@ -231,7 +230,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -247,7 +246,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = db.Person.GetCacheMissCount();
 
 				var q =
 					from p in db.Person
@@ -257,7 +256,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -278,7 +277,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = db.Person.GetCacheMissCount();
 
 				var q =
 					from p in db.Person
@@ -292,7 +291,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -317,7 +316,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = db.Person.GetCacheMissCount();
 
 				var q =
 					from p in db.Person
@@ -331,7 +330,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -356,7 +355,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = db.Person.GetCacheMissCount();
 
 				var q =
 					from p in db.Person
@@ -370,7 +369,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -395,7 +394,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var cacheMiss = Query<Person>.CacheMissCount;
+			var cacheMiss = db.Person.GetCacheMissCount();
 
 			var q =
 				from p in db.Person
@@ -409,7 +408,7 @@ namespace Tests.Linq
 			var result = q.ToList();
 
 			if (iteration > 1)
-				Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+				db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 			var expected =
 				from p in Person
@@ -429,7 +428,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = db.Person.GetCacheMissCount();
 
 				var q =
 					from p in db.Person
@@ -440,7 +439,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -458,7 +457,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = db.Person.GetCacheMissCount();
 
 				var records   = new[] { new { ID = 1, Name = "Janet" }, new { ID = 1, Name = "Doe" }, };
 
@@ -470,7 +469,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -487,7 +486,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = db.Person.GetCacheMissCount();
 
 				var records = new Person[]
 				{
@@ -502,7 +501,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -526,7 +525,7 @@ namespace Tests.Linq
 					new() { ID = 2 + iteration, FirstName = "Doe" },
 				};
 
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = db.Person.GetCacheMissCount();
 
 				var q1 =
 					from p in db.Person
@@ -536,9 +535,9 @@ namespace Tests.Linq
 				var result1 = q1.ToList();
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
-				cacheMiss = Query<Person>.CacheMissCount;
+				cacheMiss = db.Person.GetCacheMissCount();
 
 				var records2 = new Person[]
 				{
@@ -553,7 +552,7 @@ namespace Tests.Linq
 
 				var result2 = q2.ToList();
 
-				Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+				db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 				result2.Count.Should().NotBe(result1.Count);
 			}
@@ -572,12 +571,12 @@ namespace Tests.Linq
 					new() { ID = 2 + iteration, FirstName = "Doe" },
 				};
 
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = db.Person.GetCacheMissCount();
 
 				var result = records.AsQueryable(db).ToArray();
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 
 			}
 		}
@@ -636,7 +635,7 @@ namespace Tests.Linq
 					return true;
 				}
 
-				if (obj.GetType() != this.GetType())
+				if (obj.GetType() != GetType())
 				{
 					return false;
 				}
@@ -659,7 +658,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<TableToInsert>())
 			{
-				var cacheMiss = Query<TableToInsert>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 
 				var records = new TableToInsert[]
 				{
@@ -681,7 +680,7 @@ namespace Tests.Linq
 					Assert.That(cnt, Is.EqualTo(0));
 
 				if (iteration > 1)
-					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
+					table.GetCacheMissCount().Should().Be(cacheMiss);
 			}
 		}
 
@@ -705,7 +704,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(records))
 			{
-				var cacheMiss = Query<TableToInsert>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 
 				var upadedValue = new TableToInsert[]
 				{
@@ -722,7 +721,7 @@ namespace Tests.Linq
 					.Update().Should().Be(2);
 
 				if (iteration > 1)
-					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
+					table.GetCacheMissCount().Should().Be(cacheMiss);
 
 				AreEqual(table, upadedValue);
 			}
@@ -742,7 +741,7 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(records);
 
-			var cacheMiss   = Query<TableToInsert>.CacheMissCount;
+			var cacheMiss   = table.GetCacheMissCount();
 			var deleteValue = new TableToInsert[]
 			{
 				new () { Id = 1 + iteration },
@@ -757,7 +756,7 @@ namespace Tests.Linq
 			queryToDelete.Delete().Should().Be(2);
 
 			if (iteration > 1)
-				Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 		}
 
 		[Test]
@@ -772,7 +771,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(records))
 			{
-				var cacheMiss = Query<TableToInsert>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 
 				var queryToSelect =
 					from r in records.AsQueryable(db).AsCte()
@@ -784,7 +783,7 @@ namespace Tests.Linq
 				AreEqual(table, result);
 
 				if (iteration > 1)
-					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
+					table.GetCacheMissCount().Should().Be(cacheMiss);
 			}
 		}
 
@@ -796,7 +795,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<TableToInsert>())
 			{
-				var cacheMiss = Query<TableToInsert>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 
 				var queryToSelect =
 					from t in table
@@ -806,7 +805,7 @@ namespace Tests.Linq
 				queryToSelect.ToArray().Should().HaveCount(0);
 
 				if (iteration > 1)
-					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
+					table.GetCacheMissCount().Should().Be(cacheMiss);
 			}
 		}
 
@@ -822,7 +821,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(records))
 			{
-				var cacheMiss = Query<TableToInsert>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 
 				var queryToSelect =
 					from t in table
@@ -834,7 +833,7 @@ namespace Tests.Linq
 				AreEqual(table, result);
 
 				if (iteration > 1)
-					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
+					table.GetCacheMissCount().Should().Be(cacheMiss);
 			}
 		}
 
@@ -846,7 +845,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<TableToInsert>())
 			{
-				var cacheMiss = Query<TableToInsert>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 
 				var queryToSelect =
 					from t in table
@@ -856,7 +855,7 @@ namespace Tests.Linq
 				queryToSelect.ToArray().Should().HaveCount(0);
 
 				if (iteration > 1)
-					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
+					table.GetCacheMissCount().Should().Be(cacheMiss);
 			}
 		}
 
@@ -876,7 +875,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = db.Person.GetCacheMissCount();
 
 				var queryToSelect =
 					from t in db.Person
@@ -886,7 +885,7 @@ namespace Tests.Linq
 				 queryToSelect.ToArray().Should().HaveCountGreaterThan(0);
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
 			}
 		}
 

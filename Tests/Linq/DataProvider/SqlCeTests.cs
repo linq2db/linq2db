@@ -12,7 +12,6 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlCe;
-using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -586,27 +585,15 @@ namespace Tests.DataProvider
 		[Test]
 		public void ParametersInlining([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] bool inline)
 		{
-			Query.ClearCaches();
-			var defaultValue = SqlCeOptions.Default.InlineFunctionParameters;
-			try
-			{
-				SqlCeOptions.Default = SqlCeOptions.Default with { InlineFunctionParameters = inline };
+			using var db = GetDataConnection(context, o => o.UseDisableQueryCache(true).UseSqlCe(o => o with { InlineFunctionParameters = inline }));
 
-				using (var db = GetDataConnection(context))
-				{
-					var minValue = SqlDateTime.MinValue.Value;
+			var minValue = SqlDateTime.MinValue.Value;
 
-					var values = db.GetTable<TestInline>()
-						.Where(_ => (_.DateTimeValue ?? minValue) <= TestData.DateTime)
-						.ToList();
+			var values = db.GetTable<TestInline>()
+				.Where(_ => (_.DateTimeValue ?? minValue) <= TestData.DateTime)
+				.ToList();
 
-					Assert.That(db.LastQuery!.Contains(", @"), Is.Not.EqualTo(inline));
-				}
-			}
-			finally
-			{
-				SqlCeOptions.Default = SqlCeOptions.Default with { InlineFunctionParameters = defaultValue };
-			}
+			Assert.That(db.LastQuery!.Contains(", @"), Is.Not.EqualTo(inline));
 		}
 
 		[Table(Name = "AllTypes")]

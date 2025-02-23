@@ -6,7 +6,6 @@ using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Internal.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
@@ -121,11 +120,9 @@ namespace Tests.DataProvider
 			throw new InvalidOperationException();
 		}
 
-		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => TableValue(null!));
-
 		private static ITable<SqlServerTestUtils.TVPRecord> TableValue(IDataContext ctx, DataParameter p)
 		{
-			return ctx.GetTable<SqlServerTestUtils.TVPRecord>(null, _methodInfo, p);
+			return ctx.TableFromExpression<SqlServerTestUtils.TVPRecord>(() => TableValue(p));
 		}
 
 		[Test]
