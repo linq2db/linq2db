@@ -22,6 +22,8 @@ namespace LinqToDB.DataProvider.Access
 		AccessMappingSchema() : base(ProviderName.Access)
 		{
 			SetDataType(typeof(DateTime),  DataType.DateTime);
+			// in Access DECIMAL=DECIMAL(18,0)
+			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 18, 10));
 
 			SetValueToSqlConverter(typeof(bool),     (sb,_,_,v) => sb.Append((bool)v));
 			SetValueToSqlConverter(typeof(Guid),     (sb,_,_,v) => sb.Append(CultureInfo.InvariantCulture, $"'{(Guid)v:B}'"));

@@ -176,10 +176,15 @@
 
 	<ItemGroup Label="Examples">
 		<PackageVersion Include="linq2db.t4models"                                      Version="6.0.0-preview.1"       />
-		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="9.0.1"                 />
 		<PackageVersion Include="Microsoft.Extensions.ObjectPool"                       Version="9.0.1"                 />
 		<PackageVersion Include="OpenTelemetry"                                         Version="1.11.1"                />
 		<PackageVersion Include="OpenTelemetry.Exporter.Console"                        Version="1.11.1"                />
+		<PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation"     Version="4.3.0"                 />
+	</ItemGroup>
+
+	<ItemGroup Label="Compat">
+		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="8.0.1"                 Condition="'$(TargetFramework)'=='net6.0'"/>
+		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="9.0.1"                 Condition="'$(TargetFramework)'!='net6.0'"/>
 	</ItemGroup>
 
 </Project>
