@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Async
+namespace LinqToDB.Internal.Async
 {
 	/// <summary>
 	/// This is internal API and is not intended for use by Linq To DB applications.

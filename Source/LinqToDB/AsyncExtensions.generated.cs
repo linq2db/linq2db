@@ -5,8 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Async;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Async;
 
 namespace LinqToDB
 {

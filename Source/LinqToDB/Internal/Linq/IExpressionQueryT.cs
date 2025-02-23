@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Async;
+using LinqToDB.Internal.Async;
 
 namespace LinqToDB.Internal.Linq
 {

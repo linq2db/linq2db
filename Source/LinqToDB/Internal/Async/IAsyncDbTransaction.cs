@@ -5,13 +5,12 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-namespace LinqToDB.Async
+namespace LinqToDB.Internal.Async
 {
 	/// <summary>
 	/// Wrapper over <see cref="DbTransaction"/> instance with asynchronous operations, missing from <see cref="DbTransaction"/>.
 	/// Includes only operations, used by Linq To DB.
 	/// </summary>
-	[PublicAPI]
 	public interface IAsyncDbTransaction : IDisposable, IAsyncDisposable
 	{
 		/// <summary>

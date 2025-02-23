@@ -10,12 +10,12 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 

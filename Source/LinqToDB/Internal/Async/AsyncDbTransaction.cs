@@ -10,13 +10,12 @@ using LinqToDB.Tools;
 
 using AsyncDisposableWrapper = LinqToDB.Tools.ActivityService.AsyncDisposableWrapper;
 
-namespace LinqToDB.Async
+namespace LinqToDB.Internal.Async
 {
 	/// <summary>
 	/// Basic <see cref="IAsyncDbTransaction"/> implementation with fallback to synchronous operations if corresponding functionality
 	/// missing from <see cref="DbTransaction"/>.
 	/// </summary>
-	[PublicAPI]
 	public class AsyncDbTransaction : IAsyncDbTransaction
 	{
 		protected internal AsyncDbTransaction(DbTransaction transaction)

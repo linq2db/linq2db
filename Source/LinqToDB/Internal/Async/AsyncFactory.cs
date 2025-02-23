@@ -17,12 +17,11 @@ using LinqToDB.Extensions;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Expressions;
 
-namespace LinqToDB.Async
+namespace LinqToDB.Internal.Async
 {
 	/// <summary>
 	/// Provides factory methods to create async wrappers for <see cref="DbConnection"/> and <see cref="DbTransaction"/> instances.
 	/// </summary>
-	[PublicAPI]
 	public static class AsyncFactory
 	{
 		private static readonly Type?[] _noTokenParams         = [null];

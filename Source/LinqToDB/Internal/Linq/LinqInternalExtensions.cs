@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Async;
+using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Linq.Builder;
 
 namespace LinqToDB.Internal.Linq
@@ -103,7 +103,7 @@ namespace LinqToDB.Internal.Linq
 		#region IQueryable Helpers
 		public static IQueryable<T> ProcessIQueryable<T>(this IQueryable<T> source)
 		{
-			return (IQueryable<T>)(LinqToDB.LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source);
+			return (IQueryable<T>)(LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source);
 		}
 
 		public static IQueryProviderAsync GetLinqToDBSource<T>(this IQueryable<T> source, [CallerMemberName] string? method = null)

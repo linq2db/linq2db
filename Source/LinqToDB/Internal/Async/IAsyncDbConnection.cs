@@ -8,7 +8,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Data.RetryPolicy;
 
-namespace LinqToDB.Async
+namespace LinqToDB.Internal.Async
 {
 	/// <summary>
 	/// Wrapper over <see cref="DbConnection"/> instance which contains all operations that could have custom implementation like:
@@ -17,7 +17,6 @@ namespace LinqToDB.Async
 	/// <item>asynchronous operations, missing from <see cref="DbConnection"/> but provided by data provider implementation.</item>.
 	/// </list>
 	/// </summary>
-	[PublicAPI]
 	public interface IAsyncDbConnection : IDisposable, IAsyncDisposable
 	{
 		/// <summary>
