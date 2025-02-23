@@ -363,7 +363,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			void Register(Expression expr)
 			{
-				if (!expr.Type.IsScalar() && CanBeEvaluatedOnClient(expr))
+				if (!MappingSchema.IsScalarType(expr.Type) && CanBeEvaluatedOnClient(expr))
 				{
 					var value = EvaluateExpression(expr);
 					ParametersContext.MarkAsValue(expr, value);

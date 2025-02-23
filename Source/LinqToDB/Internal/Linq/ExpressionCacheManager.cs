@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -388,9 +389,9 @@ namespace LinqToDB.Internal.Linq
 		/// <param name="nonComparable"></param>
 		/// <param name="newParameterized"></param>
 		/// <returns></returns>
-		Expression ReplaceParameterizedAndClosures(Expression expression, HashSet<Expression> nonComparable, Dictionary<Expression, ConstantPlaceholderExpression>? newParameterized)
+		Expression ReplaceParameterizedAndClosures(Expression expression, HashSet<Expression> nonComparable, Dictionary<Expression, ConstantPlaceholderExpression>? newParameterized, MappingSchema mappingSchema)
 		{
-			var result = expression.Transform((nonComparable, newParameterized), static (ctx, e) =>
+			var result = expression.Transform((nonComparable, newParameterized, mappingSchema), static (ctx, e) =>
 			{
 				if (ctx.newParameterized != null && ctx.newParameterized.TryGetValue(e, out var constantPlaceholder))
 				{
@@ -408,7 +409,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					var c = (ConstantExpression)e;
 
-					if (ExpressionCacheHelpers.ShouldRemoveConstantFromCache(c))
+					if (ExpressionCacheHelpers.ShouldRemoveConstantFromCache(c, ctx.mappingSchema))
 					{
 						var replacement = new ConstantPlaceholderExpression(e.Type);
 						ctx.newParameterized![e] = replacement;
@@ -524,7 +525,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					runtimeExpressions.AddExpression(da.ExpressionId, da.Used);
 
-					var replaced = ReplaceParameterizedAndClosures(da.Used, nonComparable, replacements);
+					var replaced = ReplaceParameterizedAndClosures(da.Used, nonComparable, replacements, dc.MappingSchema);
 
 					dynamicAccessors.Add(da with { Used = replaced });
 				}
@@ -599,7 +600,7 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
-			var mainExpression = ReplaceParameterizedAndClosures(MainExpression, nonComparable, replacements);
+			var mainExpression = ReplaceParameterizedAndClosures(MainExpression, nonComparable, replacements, dc.MappingSchema);
 			var compareInfo    = new QueryCacheCompareInfo(mainExpression, dynamicAccessors, comparisionFunctions);
 
 			return (compareInfo, parameterAccessors, parameterExpressions);
