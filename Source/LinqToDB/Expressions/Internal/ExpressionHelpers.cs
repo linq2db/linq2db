@@ -25,6 +25,7 @@ namespace LinqToDB.Expressions.Internal
 					{
 						yield return ne.Arguments[i];
 					}
+
 					break;
 				}
 
@@ -44,7 +45,6 @@ namespace LinqToDB.Expressions.Internal
 
 		public static Expression MakeCall<TParam1, TParam2, TParam3, TResult>(Expression<Func<TParam1, TParam2, TParam3, TResult>> func, Expression param1, Expression param2, Expression param3)
 			=> MakeCallInternal(func, param1, param2, param3);
-
 
 		static Expression MakeCallInternal(LambdaExpression lambda, params Expression[] parameters)
 		{

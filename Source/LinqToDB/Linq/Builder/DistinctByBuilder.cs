@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.Internal;
 using LinqToDB.Reflection;
@@ -16,7 +17,6 @@ namespace LinqToDB.Linq.Builder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
 			=> call.IsSameGenericMethod(Methods.Enumerable.DistinctBy, Methods.Queryable.DistinctBy);
-
 
 		static readonly MethodInfo _buildDistinctByViaRowNumberMethodInfo = MemberHelper.MethodOfGeneric(() => BuildDistinctByViaRowNumber<int>(null!, null!, null!, null!));
 
@@ -59,6 +59,7 @@ namespace LinqToDB.Linq.Builder
 
 			var innerQuery = query.Provider.CreateQuery<T>(WindowFunctionHelpers.ApplyOrderBy(query.Expression, orderByPart));
 
+#pragma warning disable RS0030
 			var outerApplyCall = ExpressionHelpers.MakeCall((IQueryable<TSelector> outer, IQueryable<T> inner, Expression<Func<T, TSelector>> sctor) =>
 					from o in outer
 					from i in inner
@@ -69,6 +70,7 @@ namespace LinqToDB.Linq.Builder
 				innerQuery.Expression,
 				Expression.Quote(selector)
 			);
+#pragma warning restore RS0030
 
 			// Exposing Invoke call
 			outerApplyCall = Internals.ExposeQueryExpression(builder.DataContext, outerApplyCall);
@@ -105,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 
 				var buildMethod = _buildDistinctByViaRowNumberMethodInfo.MakeGenericMethod(sequence.ElementType);
 
-				var expression = (Expression)buildMethod.Invoke(null, [builder, sequence, partitionPart, orderByPart])!;
+				var expression = (Expression)buildMethod.InvokeExt(null, [builder, sequence, partitionPart, orderByPart])!;
 
 				expression = WindowFunctionHelpers.ApplyOrderBy(expression, orderByPart);
 
@@ -120,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 
 				var buildMethod = _buildDistinctByViaOuterApplyMethodInfo.MakeGenericMethod(elementType, selector.Body.Type);
 
-				var expression = (Expression)buildMethod.Invoke(null, [builder, nonOrderedPart, orderByPart, selector])!;
+				var expression = (Expression)buildMethod.InvokeExt(null, [builder, nonOrderedPart, orderByPart, selector])!;
 
 				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, expression));
 				return buildResult;

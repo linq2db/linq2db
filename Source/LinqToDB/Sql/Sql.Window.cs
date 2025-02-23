@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Expressions.Internal;
-using LinqToDB.Linq;
 
 namespace LinqToDB
 {
@@ -20,7 +19,6 @@ namespace LinqToDB
 		{
 			TFiltered Filter(bool filter);
 		}
-
 
 		public interface IOrderByPart<out TThenPart>
 			where TThenPart : class
@@ -116,7 +114,6 @@ namespace LinqToDB
 		public interface IROrderByPartOThenByPartFinal : IOrderByPart<IThenByPartFinal>
 		{
 		}
-
 
 		public interface IArgumentPart<TWithArgument>
 		where TWithArgument : class

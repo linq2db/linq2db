@@ -90,6 +90,7 @@ namespace LinqToDB.Expressions.Internal
 							supported = false;
 							break;
 					}
+
 					if (!supported)
 						break;
 

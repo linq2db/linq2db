@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
 
 	public class SqlWindowFunction : SqlExpressionBase
 	{
@@ -269,6 +270,7 @@ namespace LinqToDB.SqlQuery
 					writer.Append(", ");
 				writer.AppendElement(Arguments[i]);
 			}
+
 			writer.Append(')');
 
 			if (WithinGroup != null && WithinGroup.Count > 0)
@@ -280,6 +282,7 @@ namespace LinqToDB.SqlQuery
 						writer.Append(", ");
 					writer.AppendElement(WithinGroup[i]);
 				}
+
 				writer.Append(')');
 			}
 
@@ -354,6 +357,7 @@ namespace LinqToDB.SqlQuery
 					.Append(' ');
 
 			}
+
 			writer.AppendElement(Expression);
 			return writer;
 		}

@@ -208,6 +208,7 @@ namespace LinqToDB.Linq.Translation
 
 				orderItems.Add(new SqlWindowOrderItem(placeholder.Sql, orderItem.isDescending, orderItem.nulls));
 			}
+
 			return true;
 		}
 
@@ -222,8 +223,10 @@ namespace LinqToDB.Linq.Translation
 					error = SqlErrorExpression.EnsureError(translated, errorType);
 					return false;
 				}
+
 				partitionByItems.Add(placeholder.Sql);
 			}
+
 			return true;
 		}
 
@@ -306,6 +309,7 @@ namespace LinqToDB.Linq.Translation
 						return contextTyped;
 					}
 				}
+
 				return e;
 			});
 
