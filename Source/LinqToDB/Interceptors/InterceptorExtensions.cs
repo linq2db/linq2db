@@ -2,7 +2,7 @@
 using System.Data.Common;
 
 using LinqToDB.Data;
-using LinqToDB.Interceptors.Internal;
+using LinqToDB.Internal.Interceptors;
 
 namespace LinqToDB.Interceptors
 {

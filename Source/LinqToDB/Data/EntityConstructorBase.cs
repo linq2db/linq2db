@@ -7,7 +7,7 @@ using System.Reflection;
 
 using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
-using LinqToDB.Interceptors.Internal;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;

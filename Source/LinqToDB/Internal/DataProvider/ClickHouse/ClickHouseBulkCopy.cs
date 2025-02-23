@@ -10,6 +10,7 @@ using LinqToDB.Data;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Tools;
 

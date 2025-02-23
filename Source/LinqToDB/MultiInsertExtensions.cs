@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Internal.Linq;
+
 using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
 
 namespace LinqToDB

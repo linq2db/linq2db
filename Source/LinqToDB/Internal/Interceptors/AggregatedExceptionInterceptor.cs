@@ -1,6 +1,8 @@
 ﻿using System;
 
-namespace LinqToDB.Interceptors.Internal
+using LinqToDB.Interceptors;
+
+namespace LinqToDB.Internal.Interceptors
 {
 	sealed class AggregatedExceptionInterceptor : AggregatedInterceptor<IExceptionInterceptor>, IExceptionInterceptor
 	{

@@ -3,13 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 
 using JetBrains.Annotations;
 
 using LinqToDB.Internal.Linq;
-using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Linq;
 
 namespace LinqToDB
@@ -760,17 +758,6 @@ namespace LinqToDB
 
 			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
 			return new LoadWithQueryable<TEntity, TProperty>(result);
-		}
-
-		[LinqTunnel]
-		[Pure]
-		internal static TSource LoadWithInternal<TSource>(
-			this TSource             source,
-			LoadWithInfo             loadWith,
-			MemberInfo[]?            loadWithPath)
-			where TSource : class
-		{
-			return source;
 		}
 	}
 }

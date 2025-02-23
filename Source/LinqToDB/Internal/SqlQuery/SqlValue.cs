@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.SqlQuery
 {

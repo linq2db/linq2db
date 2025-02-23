@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {

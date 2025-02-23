@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Threading;
 
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 

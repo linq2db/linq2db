@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {

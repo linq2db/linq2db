@@ -2,6 +2,7 @@
 
 using LinqToDB.Common;
 using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;

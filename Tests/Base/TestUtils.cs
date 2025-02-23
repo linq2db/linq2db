@@ -199,7 +199,7 @@ namespace Tests
 			where T : notnull
 		{
 			public TestTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
-				: base(db, tableName, databaseName, schemaName, tableOptions: tableOptions)
+				: base(db, [], tableName: tableName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions)
 			{
 			}
 

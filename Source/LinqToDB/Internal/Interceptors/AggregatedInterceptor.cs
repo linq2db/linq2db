@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Interceptors.Internal
+using LinqToDB.Interceptors;
+
+namespace LinqToDB.Internal.Interceptors
 {
 	abstract class AggregatedInterceptor<TInterceptor> : IInterceptor
 		where TInterceptor : IInterceptor

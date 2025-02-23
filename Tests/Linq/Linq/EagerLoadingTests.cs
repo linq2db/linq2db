@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.Internal;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;

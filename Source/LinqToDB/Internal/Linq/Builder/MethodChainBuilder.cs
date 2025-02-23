@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 
 namespace LinqToDB.Internal.Linq.Builder

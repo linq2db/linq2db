@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.Internal;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

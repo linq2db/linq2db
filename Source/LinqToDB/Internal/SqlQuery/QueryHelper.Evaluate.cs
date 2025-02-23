@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Globalization;
 
+using LinqToDB.Internal.Common;
+
 namespace LinqToDB.Internal.SqlQuery
 {
 	partial class QueryHelper

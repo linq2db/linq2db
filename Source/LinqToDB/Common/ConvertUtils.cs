@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Common
 {

@@ -1,6 +1,6 @@
 ﻿using LinqToDB.Internal.Expressions;
 
-namespace LinqToDB.Interceptors.Internal
+namespace LinqToDB.Internal.Interceptors
 {
 	public abstract class EntityBindingInterceptor : IEntityBindingInterceptor
 	{

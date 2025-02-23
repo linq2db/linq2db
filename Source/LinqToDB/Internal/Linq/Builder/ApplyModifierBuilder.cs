@@ -5,7 +5,7 @@ using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[BuildsMethodCall(nameof(LinqExtensions.ApplyModifierInternal))]
+	[BuildsMethodCall(nameof(LinqInternalExtensions.ApplyModifierInternal))]
 	sealed class ApplyModifierBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)

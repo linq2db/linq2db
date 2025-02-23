@@ -1,8 +1,9 @@
 ﻿using System.Threading.Tasks;
 
+using LinqToDB.Interceptors;
 using LinqToDB.Tools;
 
-namespace LinqToDB.Interceptors.Internal
+namespace LinqToDB.Internal.Interceptors
 {
 	sealed class AggregatedDataContextInterceptor : AggregatedInterceptor<IDataContextInterceptor>, IDataContextInterceptor
 	{

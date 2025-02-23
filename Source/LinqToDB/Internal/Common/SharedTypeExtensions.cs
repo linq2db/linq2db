@@ -12,10 +12,11 @@ using System.Runtime.CompilerServices;
 using System.Text;
 
 using LinqToDB.Common.Internal;
+using LinqToDB.Extensions;
 
 #pragma warning disable RS0030
 
-namespace LinqToDB
+namespace LinqToDB.Internal.Common
 {
 	[DebuggerStepThrough]
 	internal static class SharedTypeExtensions
@@ -39,15 +40,6 @@ namespace LinqToDB
 			{ typeof(ushort), "ushort" },
 			{ typeof(void), "void" }
 		};
-
-		public static Type UnwrapNullableType(this Type type)
-			=> Nullable.GetUnderlyingType(type) ?? type;
-
-		public static bool IsNullableValueType(this Type type)
-			=> type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
-
-		public static bool IsNullableType(this Type type)
-			=> !type.IsValueType || type.IsNullableValueType();
 
 		public static bool IsValidEntityType(this Type type)
 			=> type is { IsClass: true, IsArray: false }
@@ -81,21 +73,6 @@ namespace LinqToDB
 				|| type == typeof(decimal)
 				|| type == typeof(float)
 				|| type == typeof(double);
-		}
-
-		public static bool IsInteger(this Type type)
-		{
-			type = type.UnwrapNullableType();
-
-			return type == typeof(int)
-				|| type == typeof(long)
-				|| type == typeof(short)
-				|| type == typeof(byte)
-				|| type == typeof(uint)
-				|| type == typeof(ulong)
-				|| type == typeof(ushort)
-				|| type == typeof(sbyte)
-				|| type == typeof(char);
 		}
 
 		public static bool IsSignedInteger(this Type type)
@@ -247,7 +224,7 @@ namespace LinqToDB
 				type = typesToProcess.Dequeue();
 				baseTypes.Add(type);
 
-				if (type.IsNullableValueType())
+				if (type.IsNullable())
 				{
 					typesToProcess.Enqueue(Nullable.GetUnderlyingType(type)!);
 				}
@@ -369,50 +346,6 @@ namespace LinqToDB
 			this Type type,
 			string name)
 			=> type.GetMembersInHierarchy().Where(m => m.Name == name);
-
-		private static readonly Dictionary<Type, object> CommonTypeDictionary = new()
-		{
-	#pragma warning disable IDE0034 // Simplify 'default' expression - default causes default(object)
-			{ typeof(int), default(int) },
-			{ typeof(Guid), default(Guid) },
-#if NET6_0_OR_GREATER
-			{ typeof(DateOnly), default(DateOnly) },
-#endif
-			{ typeof(DateTime), default(DateTime) },
-			{ typeof(DateTimeOffset), default(DateTimeOffset) },
-#if NET6_0_OR_GREATER
-			{ typeof(TimeOnly), default(TimeOnly) },
-#endif
-			{ typeof(long), default(long) },
-			{ typeof(bool), default(bool) },
-			{ typeof(double), default(double) },
-			{ typeof(short), default(short) },
-			{ typeof(float), default(float) },
-			{ typeof(byte), default(byte) },
-			{ typeof(char), default(char) },
-			{ typeof(uint), default(uint) },
-			{ typeof(ushort), default(ushort) },
-			{ typeof(ulong), default(ulong) },
-			{ typeof(sbyte), default(sbyte) }
-	#pragma warning restore IDE0034 // Simplify 'default' expression
-		};
-
-		public static object? GetDefaultValue(
-			/*[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]*/
-			this Type type)
-		{
-			if (!type.IsValueType)
-			{
-				return null;
-			}
-
-			// A bit of perf code to avoid calling Activator.CreateInstance for common types and
-			// to avoid boxing on every call. This is about 50% faster than just calling CreateInstance
-			// for all value types.
-			return CommonTypeDictionary.TryGetValue(type, out var value)
-				? value
-				: ActivatorExt.CreateInstance(type);
-		}
 
 		/*[RequiresUnreferencedCode("Gets all types from the given assembly - unsafe for trimming")]*/
 		public static IEnumerable<TypeInfo> GetConstructibleTypes(this Assembly assembly)

@@ -1,4 +1,4 @@
-﻿namespace LinqToDB
+﻿namespace LinqToDB.Internal
 {
 	internal static class ErrorHelper
 	{
@@ -54,6 +54,5 @@
 		{
 			public const string Error_SkipInUpdate = "Feature not supported by database: Skip in UPDATE.";
 		}
-
 	}
 }

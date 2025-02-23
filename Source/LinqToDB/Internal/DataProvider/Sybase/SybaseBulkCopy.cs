@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Sybase

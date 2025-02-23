@@ -1,6 +1,7 @@
-﻿using LinqToDB.Tools;
+﻿using LinqToDB.Interceptors;
+using LinqToDB.Tools;
 
-namespace LinqToDB.Interceptors.Internal
+namespace LinqToDB.Internal.Interceptors
 {
 	sealed class AggregatedEntityServiceInterceptor : AggregatedInterceptor<IEntityServiceInterceptor>, IEntityServiceInterceptor
 	{

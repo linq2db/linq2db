@@ -16,8 +16,8 @@ using LinqToDB.Mapping;
 namespace LinqToDB.Internal.Linq.Builder
 {
 	[BuildsMethodCall(
-		nameof(LinqExtensions.Update), 
-		nameof(LinqExtensions.UpdateWithOutput), 
+		nameof(LinqExtensions.Update),
+		nameof(LinqExtensions.UpdateWithOutput),
 		nameof(LinqExtensions.UpdateWithOutputInto))]
 	sealed class UpdateBuilder : MethodCallBuilder
 	{

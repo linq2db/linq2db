@@ -167,5 +167,16 @@ namespace LinqToDB.Internal.SqlQuery
 				? call.Arguments
 				: throw new LinqToDBException("Calls to Sql.Row() are the only valid expressions of type SqlRow.");
 		}
+
+		internal static SqlTable Set(this SqlTable table, bool? set, TableOptions tableOptions)
+		{
+			if (set.HasValue)
+			{
+				if (set.Value) table.TableOptions |=  tableOptions;
+				else           table.TableOptions &= ~tableOptions;
+			}
+
+			return table;
+		}
 	}
 }

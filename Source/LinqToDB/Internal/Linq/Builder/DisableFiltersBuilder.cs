@@ -5,7 +5,7 @@ using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[BuildsMethodCall(nameof(LinqExtensions.DisableFilterInternal))]
+	[BuildsMethodCall(nameof(LinqInternalExtensions.DisableFilterInternal))]
 	sealed class DisableFiltersBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)

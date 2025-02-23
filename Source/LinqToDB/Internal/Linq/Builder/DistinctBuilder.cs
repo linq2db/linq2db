@@ -6,7 +6,7 @@ using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[BuildsMethodCall("Distinct", nameof(LinqExtensions.SelectDistinct))]
+	[BuildsMethodCall("Distinct", nameof(LinqInternalExtensions.SelectDistinct))]
 	sealed class DistinctBuilder : MethodCallBuilder
 	{
 		static readonly MethodInfo[] _supportedMethods = { Methods.Queryable.Distinct, Methods.Enumerable.Distinct, Methods.LinqToDB.SelectDistinct };

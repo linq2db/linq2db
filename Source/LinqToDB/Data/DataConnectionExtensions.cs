@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Data

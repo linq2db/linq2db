@@ -9,8 +9,10 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Linq;
+using LinqToDB.Reflection;
 
 namespace LinqToDB
 {
@@ -1579,6 +1581,570 @@ namespace LinqToDB
 				Expression.Quote(outputExpression));
 
 			return currentSource.ExecuteAsync<int>(expr, token);
+		}
+
+		#endregion
+
+		#region Update
+
+		/// <summary>
+		/// Executes update-from-source operation against target table.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="target">Target table.</param>
+		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
+		/// <returns>Number of updated records.</returns>
+		// TODO: Remove in v7
+		[Obsolete("Use overload with lambda argument for target parameter. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		public static int Update<TSource, TTarget>(
+							this IQueryable<TSource> source,
+							ITable<TTarget> target,
+			[InstantHandle] Expression<Func<TSource, TTarget>> setter)
+			where TTarget : notnull
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+			var currentSource = source.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Update.UpdateTarget.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+				currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter));
+
+			return currentSource.Execute<int>(expr);
+		}
+
+		/// <summary>
+		/// Executes update-from-source operation asynchronously against target table.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="target">Target table.</param>
+		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Number of updated records.</returns>
+		// TODO: Remove in v7
+		[Obsolete("Use overload with lambda argument for target parameter. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		public static Task<int> UpdateAsync<TSource, TTarget>(
+							this IQueryable<TSource> source,
+							ITable<TTarget> target,
+			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
+			CancellationToken token = default)
+			where TTarget : notnull
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+			var currentSource = source.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Update.UpdateTarget.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+				currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter));
+
+			return currentSource.ExecuteAsync<int>(expr, token);
+		}
+
+		/// <summary>
+		/// Executes update operation using source query as record filter.
+		/// </summary>
+		/// <typeparam name="T">Updated table record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
+		/// <returns>Number of updated records.</returns>
+		public static int Update<T>(this IQueryable<T> source, [InstantHandle] Expression<Func<T, T>> setter)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+			var currentSource = source.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Update.UpdateSetter.MakeGenericMethod(typeof(T)),
+				currentSource.Expression, Expression.Quote(setter));
+
+			return currentSource.Execute<int>(expr);
+		}
+
+		/// <summary>
+		/// Executes update operation asynchronously using source query as record filter.
+		/// </summary>
+		/// <typeparam name="T">Updated table record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Number of updated records.</returns>
+		public static Task<int> UpdateAsync<T>(
+					   this IQueryable<T> source,
+			[InstantHandle] Expression<Func<T, T>> setter,
+			CancellationToken token = default)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+			var currentSource = source.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Update.UpdateSetter.MakeGenericMethod(typeof(T)),
+				currentSource.Expression, Expression.Quote(setter));
+
+			return currentSource.ExecuteAsync<int>(expr, token);
+		}
+
+		/// <summary>
+		/// Executes update operation using source query as record filter with additional filter expression.
+		/// </summary>
+		/// <typeparam name="T">Updated table record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="predicate">Filter expression, to specify what records from source query should be updated.</param>
+		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
+		/// <returns>Number of updated records.</returns>
+		public static int Update<T>(
+							this IQueryable<T> source,
+			[InstantHandle] Expression<Func<T, bool>> predicate,
+			[InstantHandle] Expression<Func<T, T>> setter)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+			var currentSource = source.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Update.UpdatePredicateSetter.MakeGenericMethod(typeof(T)),
+				currentSource.Expression, Expression.Quote(predicate), Expression.Quote(setter));
+
+			return currentSource.Execute<int>(expr);
+		}
+
+		/// <summary>
+		/// Executes update operation asynchronously using source query as record filter with additional filter expression.
+		/// </summary>
+		/// <typeparam name="T">Updated table record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="predicate">Filter expression, to specify what records from source query should be updated.</param>
+		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Number of updated records.</returns>
+		public static Task<int> UpdateAsync<T>(
+					   this IQueryable<T> source,
+			[InstantHandle] Expression<Func<T, bool>> predicate,
+			[InstantHandle] Expression<Func<T, T>> setter,
+			CancellationToken token = default)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+			var currentSource = source.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Update.UpdatePredicateSetter.MakeGenericMethod(typeof(T)),
+				currentSource.Expression, Expression.Quote(predicate), Expression.Quote(setter));
+
+			return currentSource.ExecuteAsync<int>(expr, token);
+		}
+
+		/// <summary>
+		/// Executes update operation for already configured update query.
+		/// </summary>
+		/// <typeparam name="T">Updated table record type.</typeparam>
+		/// <param name="source">Update query.</param>
+		/// <returns>Number of updated records.</returns>
+		public static int Update<T>(this IUpdatable<T> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var query = ((Updatable<T>)source).Query;
+
+			var currentSource = query.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Update.UpdateUpdatable.MakeGenericMethod(typeof(T)),
+				currentSource.Expression);
+
+			return currentSource.Execute<int>(expr);
+		}
+
+		/// <summary>
+		/// Executes update operation asynchronously for already configured update query.
+		/// </summary>
+		/// <typeparam name="T">Updated table record type.</typeparam>
+		/// <param name="source">Update query.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Number of updated records.</returns>
+		public static Task<int> UpdateAsync<T>(this IUpdatable<T> source, CancellationToken token = default)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var q = ((Updatable<T>)source).Query;
+
+			var currentSource = q.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Update.UpdateUpdatable.MakeGenericMethod(typeof(T)),
+				currentSource.Expression);
+
+			return currentSource.ExecuteAsync<int>(expr, token);
+		}
+
+		/// <summary>
+		/// Executes update-from-source operation against target table.
+		/// Also see <seealso cref="Update{TSource, TTarget}(IQueryable{TSource}, ITable{TTarget}, Expression{Func{TSource, TTarget}})"/> method.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="target">Target table selection expression.</param>
+		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
+		/// <returns>Number of updated records.</returns>
+		public static int Update<TSource, TTarget>(
+							this IQueryable<TSource> source,
+			[InstantHandle] Expression<Func<TSource, TTarget>> target,
+			[InstantHandle] Expression<Func<TSource, TTarget>> setter)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+			var currentSource = source.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Update.UpdateTargetFuncSetter.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+				currentSource.Expression, Expression.Quote(target), Expression.Quote(setter));
+
+			return currentSource.Execute<int>(expr);
+		}
+
+		/// <summary>
+		/// Executes update-from-source operation asynchronously against target table.
+		/// Also see <seealso cref="UpdateAsync{TSource, TTarget}(IQueryable{TSource}, ITable{TTarget}, Expression{Func{TSource, TTarget}}, CancellationToken)"/> method.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="target">Target table selection expression.</param>
+		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Number of updated records.</returns>
+		public static Task<int> UpdateAsync<TSource, TTarget>(
+							this IQueryable<TSource> source,
+			[InstantHandle] Expression<Func<TSource, TTarget>> target,
+			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
+			CancellationToken token = default)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
+
+			var currentSource = source.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Update.UpdateTargetFuncSetter.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+				currentSource.Expression, Expression.Quote(target), Expression.Quote(setter));
+
+			return currentSource.ExecuteAsync<int>(expr, token);
+		}
+
+		internal sealed class Updatable<T> : IUpdatable<T>
+		{
+			public Updatable(IQueryable<T> query)
+			{
+				Query = query;
+			}
+
+			public IQueryable<T> Query;
+		}
+
+		/// <summary>
+		/// Casts <see cref="IQueryable{T}"/> query to <see cref="IUpdatable{T}"/> query.
+		/// </summary>
+		/// <typeparam name="T">Query record type.</typeparam>
+		/// <param name="source">Source <see cref="IQueryable{T}"/> query.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IUpdatable<T> AsUpdatable<T>(this IQueryable<T> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var currentSource = source.ProcessIQueryable();
+
+			var query = currentSource.Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					Methods.LinqToDB.Update.AsUpdatable.MakeGenericMethod(typeof(T)),
+					currentSource.Expression));
+
+			return new Updatable<T>(query);
+		}
+
+		/// <summary>
+		/// Adds update field expression to query.
+		/// </summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <typeparam name="TV">Updated field type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="extract">Updated field selector expression.</param>
+		/// <param name="update">Updated field setter expression. Uses updated record as parameter.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IUpdatable<T> Set<T, TV>(
+							this IQueryable<T> source,
+			[InstantHandle] Expression<Func<T, TV>> extract,
+			[InstantHandle] Expression<Func<T, TV>> update)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (extract == null) throw new ArgumentNullException(nameof(extract));
+			if (update == null) throw new ArgumentNullException(nameof(update));
+
+			var currentSource = source.ProcessIQueryable();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Update.SetQueryablePrev.MakeGenericMethod(typeof(T), typeof(TV)),
+				currentSource.Expression, Expression.Quote(extract), Expression.Quote(update));
+
+			var query = currentSource.Provider.CreateQuery<T>(expr);
+			return new Updatable<T>(query);
+		}
+
+		/// <summary>
+		/// Adds update field expression to query.
+		/// </summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <typeparam name="TV">Updated field type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="extract">Updated field selector expression.</param>
+		/// <param name="update">Updated field setter expression. Uses updated record as parameter.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IUpdatable<T> Set<T, TV>(
+							this IUpdatable<T> source,
+			[InstantHandle] Expression<Func<T, TV>> extract,
+			[InstantHandle] Expression<Func<T, TV>> update)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (extract == null) throw new ArgumentNullException(nameof(extract));
+			if (update == null) throw new ArgumentNullException(nameof(update));
+
+			var query = ((Updatable<T>)source).Query;
+
+			query = query.Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					Methods.LinqToDB.Update.SetUpdatablePrev.MakeGenericMethod(typeof(T), typeof(TV)),
+					query.Expression, Expression.Quote(extract), Expression.Quote(update)));
+
+			return new Updatable<T>(query);
+		}
+
+		/// <summary>
+		/// Adds update field expression to query.
+		/// </summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <typeparam name="TV">Updated field type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="extract">Updated field selector expression.</param>
+		/// <param name="update">Updated field setter expression.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IUpdatable<T> Set<T, TV>(
+							this IQueryable<T> source,
+			[InstantHandle] Expression<Func<T, TV>> extract,
+			[InstantHandle] Expression<Func<TV>> update)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (extract == null) throw new ArgumentNullException(nameof(extract));
+			if (update == null) throw new ArgumentNullException(nameof(update));
+
+			var query = source.Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					Methods.LinqToDB.Update.SetQueryableExpression.MakeGenericMethod(typeof(T), typeof(TV)),
+					source.Expression, Expression.Quote(extract), Expression.Quote(update)));
+
+			return new Updatable<T>(query);
+		}
+
+		/// <summary>
+		/// Adds update field expression to query.
+		/// </summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <typeparam name="TV">Updated field type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="extract">Updated field selector expression.</param>
+		/// <param name="update">Updated field setter expression.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IUpdatable<T> Set<T, TV>(
+							this IUpdatable<T> source,
+			[InstantHandle] Expression<Func<T, TV>> extract,
+			[InstantHandle] Expression<Func<TV>> update)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (extract == null) throw new ArgumentNullException(nameof(extract));
+			if (update == null) throw new ArgumentNullException(nameof(update));
+
+			var query = ((Updatable<T>)source).Query;
+
+			query = query.Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					Methods.LinqToDB.Update.SetUpdatableExpression.MakeGenericMethod(typeof(T), typeof(TV)),
+					query.Expression, Expression.Quote(extract), Expression.Quote(update)));
+
+			return new Updatable<T>(query);
+		}
+
+		/// <summary>
+		/// Adds update field expression to query.
+		/// </summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <typeparam name="TV">Updated field type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="extract">Updated field selector expression.</param>
+		/// <param name="value">Value, assigned to updated field.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IUpdatable<T> Set<T, TV>(
+							 this IQueryable<T> source,
+			[InstantHandle] Expression<Func<T, TV>> extract,
+			[SkipIfConstant] TV value)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (extract == null) throw new ArgumentNullException(nameof(extract));
+
+			var currentSource = source.ProcessIQueryable();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Update.SetQueryableValue.MakeGenericMethod(typeof(T), typeof(TV)),
+				currentSource.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV)));
+
+			var query = currentSource.Provider.CreateQuery<T>(expr);
+
+			return new Updatable<T>(query);
+		}
+
+		/// <summary>
+		/// Adds update field expression to query.
+		/// </summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <typeparam name="TV">Updated field type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="extract">Updated field selector expression.</param>
+		/// <param name="value">Value, assigned to updated field.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IUpdatable<T> Set<T, TV>(
+							 this IUpdatable<T> source,
+			[InstantHandle] Expression<Func<T, TV>> extract,
+			[SkipIfConstant] TV value)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (extract == null) throw new ArgumentNullException(nameof(extract));
+
+			var query = ((Updatable<T>)source).Query;
+
+			query = query.Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					Methods.LinqToDB.Update.SetUpdatableValue.MakeGenericMethod(typeof(T), typeof(TV)),
+					query.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV))));
+
+			return new Updatable<T>(query);
+		}
+
+		/// <summary>
+		/// Adds update field expression to query. It can be any expression with string interpolation.
+		/// </summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="setExpression">Custom update expression.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <example>
+		/// The following example shows how to append string value to appropriate field.
+		/// <code>
+		///		db.Users.Where(u => u.UserId == id)
+		///			.Set(u => $"{u.Name}" += {str}")
+		///			.Update();
+		/// </code>
+		/// </example>
+		[LinqTunnel]
+		[Pure]
+		public static IUpdatable<T> Set<T>(
+							this IQueryable<T> source,
+			[InstantHandle] Expression<Func<T, string>> setExpression)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (setExpression == null) throw new ArgumentNullException(nameof(setExpression));
+
+			var currentSource = source.ProcessIQueryable();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Update.SetQueryableSetCustom.MakeGenericMethod(typeof(T)),
+				currentSource.Expression, Expression.Quote(setExpression));
+
+			var query = currentSource.Provider.CreateQuery<T>(expr);
+			return new Updatable<T>(query);
+		}
+
+		/// <summary>
+		/// Adds update field expression to query. It can be any expression with string interpolation.
+		/// </summary>
+		/// <typeparam name="T">Updated record type.</typeparam>
+		/// <param name="source">Source query with records to update.</param>
+		/// <param name="setExpression">Custom update expression.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		/// <example>
+		/// The following example shows how to append string value to appropriate field.
+		/// <code>
+		///		db.Users.Where(u => u.UserId == id)
+		///			.AsUpdatable()
+		///			.Set(u => $"{u.Name}" += {str}")
+		///			.Update();
+		/// </code>
+		/// </example>
+		[LinqTunnel]
+		[Pure]
+		public static IUpdatable<T> Set<T>(
+							this IUpdatable<T> source,
+			[InstantHandle] Expression<Func<T, string>> setExpression)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (setExpression == null) throw new ArgumentNullException(nameof(setExpression));
+
+			var query = ((Updatable<T>)source).Query;
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Update.SetUpdatableSetCustom.MakeGenericMethod(typeof(T)),
+				query.Expression, Expression.Quote(setExpression));
+
+			query = query.Provider.CreateQuery<T>(expr);
+			return new Updatable<T>(query);
 		}
 
 		#endregion

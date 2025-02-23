@@ -9,6 +9,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlQuery;

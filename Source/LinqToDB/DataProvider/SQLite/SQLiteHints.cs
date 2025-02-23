@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.SQLite
 {

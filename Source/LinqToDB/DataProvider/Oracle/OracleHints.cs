@@ -9,6 +9,7 @@ using LinqToDB.Expressions;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.Oracle
 {

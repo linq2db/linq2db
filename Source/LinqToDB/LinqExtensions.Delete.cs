@@ -10,11 +10,14 @@ using JetBrains.Annotations;
 
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Reflection;
 
 namespace LinqToDB
 {
 	public static partial class LinqExtensions
 	{
+		#region DeleteWithOutput
+
 		/// <summary>
 		/// Deletes records from source query and returns deleted records.
 		/// </summary>
@@ -354,5 +357,102 @@ namespace LinqToDB
 
 			return currentSource.ExecuteAsync<int>(expr, token);
 		}
+
+		#endregion
+
+		#region Delete
+
+		/// <summary>
+		/// Executes delete operation, using source query as filter for records, that should be deleted.
+		/// </summary>
+		/// <typeparam name="T">Mapping class for delete operation target table.</typeparam>
+		/// <param name="source">Query that returns records to delete.</param>
+		/// <returns>Number of deleted records.</returns>
+		public static int Delete<T>(this IQueryable<T> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var currentSource = source.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Delete.DeleteQueryable.MakeGenericMethod(typeof(T)),
+				currentSource.Expression);
+
+			return currentSource.Execute<int>(expr);
+		}
+
+		/// <summary>
+		/// Executes delete operation asynchronously, using source query as filter for records, that should be deleted.
+		/// </summary>
+		/// <typeparam name="T">Mapping class for delete operation target table.</typeparam>
+		/// <param name="source">Query that returns records to delete.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Number of deleted records.</returns>
+		public static Task<int> DeleteAsync<T>(this IQueryable<T> source, CancellationToken token = default)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var currentSource = source.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Delete.DeleteQueryable.MakeGenericMethod(typeof(T)),
+				currentSource.Expression);
+
+			return currentSource.ExecuteAsync<int>(expr, token);
+		}
+
+		/// <summary>
+		/// Executes delete operation, using source query as initial filter for records, that should be deleted, and predicate expression as additional filter.
+		/// </summary>
+		/// <typeparam name="T">Mapping class for delete operation target table.</typeparam>
+		/// <param name="source">Query that returns records to delete.</param>
+		/// <param name="predicate">Filter expression, to specify what records from source should be deleted.</param>
+		/// <returns>Number of deleted records.</returns>
+		public static int Delete<T>(
+							this IQueryable<T> source,
+			[InstantHandle] Expression<Func<T, bool>> predicate)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+			var currentSource = source.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Delete.DeleteQueryablePredicate.MakeGenericMethod(typeof(T)),
+				currentSource.Expression, Expression.Quote(predicate));
+
+			return currentSource.Execute<int>(expr);
+		}
+
+		/// <summary>
+		/// Executes delete operation asynchronously, using source query as initial filter for records, that should be deleted, and predicate expression as additional filter.
+		/// </summary>
+		/// <typeparam name="T">Mapping class for delete operation target table.</typeparam>
+		/// <param name="source">Query that returns records to delete.</param>
+		/// <param name="predicate">Filter expression, to specify what records from source should be deleted.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Number of deleted records.</returns>
+		public static Task<int> DeleteAsync<T>(
+					   this IQueryable<T> source,
+			[InstantHandle] Expression<Func<T, bool>> predicate,
+			CancellationToken token = default)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+			var currentSource = source.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Delete.DeleteQueryablePredicate.MakeGenericMethod(typeof(T)),
+				currentSource.Expression, Expression.Quote(predicate));
+
+			return currentSource.ExecuteAsync<int>(expr, token);
+		}
+
+		#endregion
 	}
 }

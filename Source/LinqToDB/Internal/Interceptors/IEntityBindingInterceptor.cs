@@ -1,6 +1,7 @@
-﻿using LinqToDB.Internal.Expressions;
+﻿using LinqToDB.Interceptors;
+using LinqToDB.Internal.Expressions;
 
-namespace LinqToDB.Interceptors.Internal
+namespace LinqToDB.Internal.Interceptors
 {
 	/// <summary>
 	/// Internal API.

@@ -6,6 +6,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -221,7 +222,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							if (providerValueGetter.Type.IsNullable() && providerValueGetter.Type.ToNullableUnderlying() != memberType)
 							{
-								var toType = providerValueGetter.Type.IsNullableValueType() && memberType.IsValueType && !memberType.IsNullableValueType()
+								var toType = memberType.IsValueType && !memberType.IsNullable()
 									? memberType.MakeNullable()
 									: memberType;
 

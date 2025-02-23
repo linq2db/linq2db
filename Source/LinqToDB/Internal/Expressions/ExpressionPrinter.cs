@@ -15,6 +15,7 @@ using System.Runtime.CompilerServices;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Infrastructure;
+using LinqToDB.Internal.Common;
 
 #pragma warning disable CA1725
 

@@ -1,8 +1,9 @@
 ﻿using System.Data.Common;
 
+using LinqToDB.Interceptors;
 using LinqToDB.Tools;
 
-namespace LinqToDB.Interceptors.Internal
+namespace LinqToDB.Internal.Interceptors
 {
 	sealed class AggregatedUnwrapDataObjectInterceptor : AggregatedInterceptor<IUnwrapDataObjectInterceptor>, IUnwrapDataObjectInterceptor
 	{
