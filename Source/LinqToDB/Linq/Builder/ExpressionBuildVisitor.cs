@@ -5044,9 +5044,34 @@ namespace LinqToDB.Linq.Builder
 				return new SqlErrorExpression(basedOn, message, type ?? basedOn.Type);
 			}
 
-			public Expression? GetEnumerableContext(Expression expression)
+			public Expression? GetAggregationContext(Expression expression)
 			{
-				return Builder.BuildAggregationRootExpression(expression);
+				//TODO: review
+				var result = Builder.BuildAggregationRootExpression(expression);
+				if (result is ContextRefExpression)
+					return result;
+
+				var buildResult = Builder.TryBuildSequence(new BuildInfo(CurrentContext, expression, CurrentSelectQuery) { CreateSubQuery = true, IsAggregation = true });
+
+				if (buildResult.BuildContext is null)
+					return null;
+
+				result = Builder.BuildAggregationRootExpression(SequenceHelper.CreateRef(buildResult.BuildContext));
+				if (result is not ContextRefExpression)
+					return null;
+				return result;
+			}
+
+			public SelectQuery GetAggregationSelectQuery(Expression enumerableContext)
+			{
+				if (enumerableContext is ContextRefExpression contextRef)
+				{
+					if (contextRef.BuildContext is GroupByBuilder.GroupByContext groupByContext)
+						return groupByContext.SubQuery.SelectQuery;
+					return contextRef.BuildContext.SelectQuery;
+				}
+
+				throw new InvalidOperationException("Invalid enumerable context");
 			}
 
 			public bool CanBeEvaluatedOnClient(Expression expression)

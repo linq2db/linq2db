@@ -98,6 +98,12 @@ namespace LinqToDB.SqlProvider
 		/// </example>
 		public virtual bool WrapJoinCondition => false;
 
+		/// <summary>
+		/// True if provider requires OVER() clause to be present in window function WITHIN GROUP.
+		/// Currently only SQL Server
+		/// </summary>
+		protected virtual bool IsOverRequiredWithinGroup => false;
+
 		protected virtual bool CanSkipRootAliases(SqlStatement statement) => true;
 
 		#endregion
@@ -3175,7 +3181,6 @@ namespace LinqToDB.SqlProvider
 			BuildTypedExpression(castExpression.ToType, castExpression.Expression);
 		}
 
-
 		protected virtual void BuildSqlWindowFunction(SqlWindowFunction windowFunction)
 		{
 			StringBuilder.Append(windowFunction.FunctionName);
@@ -3201,6 +3206,7 @@ namespace LinqToDB.SqlProvider
 							default:
 								throw new InvalidOperationException($"Unexpected aggregate modifier: {argument.Modifier}");
 						}
+
 						StringBuilder.Append(' ');
 					}
 
@@ -3210,6 +3216,13 @@ namespace LinqToDB.SqlProvider
 
 			StringBuilder.Append(')');
 
+			if (windowFunction.WithinGroup?.Count > 0)
+			{
+				StringBuilder.Append(" WITHIN GROUP (");
+				BuildOrderBy(windowFunction.WithinGroup!);
+				StringBuilder.Append(')');
+			}
+
 			if (windowFunction.Filter != null)
 			{
 				StringBuilder.Append(" FILTER (WHERE ");
@@ -3217,7 +3230,10 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append(')');
 			}
 
-			if (windowFunction.PartitionBy?.Count > 0 || windowFunction.OrderBy?.Count > 0 || windowFunction.FrameClause != null)
+			if (windowFunction.PartitionBy?.Count > 0     || 
+			    windowFunction.OrderBy?.Count     > 0     ||
+			    windowFunction.FrameClause        != null || 
+			    (windowFunction.WithinGroup?.Count > 0 && IsOverRequiredWithinGroup))
 			{
 				StringBuilder.Append(" OVER (");
 				if (windowFunction.PartitionBy?.Count > 0)
@@ -3235,23 +3251,7 @@ namespace LinqToDB.SqlProvider
 				{
 					if (windowFunction.PartitionBy?.Count > 0)
 						StringBuilder.Append(' ');
-					StringBuilder.Append("ORDER BY ");
-					for (var i = 0; i < windowFunction.OrderBy.Count; i++)
-					{
-						if (i > 0)
-							StringBuilder.Append(", ");
-
-						var orderItem = windowFunction.OrderBy[i];
-						BuildExpression(orderItem.Expression);
-						if (orderItem.IsDescending)
-							StringBuilder.Append(" DESC");
-
-						if (orderItem.NullsPosition != Sql.NullsPosition.None)
-						{
-							StringBuilder.Append(" NULLS ");
-							StringBuilder.Append(orderItem.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");
-						}
-					}
+					BuildOrderBy(windowFunction.OrderBy!);
 				}
 
 				if (windowFunction.FrameClause != null)
@@ -3260,6 +3260,27 @@ namespace LinqToDB.SqlProvider
 				}
 
 				StringBuilder.Append(')');
+			}
+
+			void BuildOrderBy(List<SqlWindowOrderItem> orderBy)
+			{
+				StringBuilder.Append("ORDER BY ");
+				for (var i = 0; i < orderBy.Count; i++)
+				{
+					if (i > 0)
+						StringBuilder.Append(", ");
+
+					var orderItem = orderBy[i];
+					BuildExpression(orderItem.Expression);
+					if (orderItem.IsDescending)
+						StringBuilder.Append(" DESC");
+
+					if (orderItem.NullsPosition != Sql.NullsPosition.None)
+					{
+						StringBuilder.Append(" NULLS ");
+						StringBuilder.Append(orderItem.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");
+					}
+				}
 			}
 		}
 

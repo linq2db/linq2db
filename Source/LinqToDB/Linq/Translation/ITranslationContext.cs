@@ -20,21 +20,22 @@ namespace LinqToDB.Linq.Translation
 	{
 		Expression Translate(Expression expression, TranslationFlags translationFlags = TranslationFlags.Sql);
 
-		public MappingSchema MappingSchema { get; }
-		public DataOptions   DataOptions   { get; }
+		MappingSchema MappingSchema { get; }
+		DataOptions   DataOptions   { get; }
 
-		public ISqlExpressionFactory ExpressionFactory { get; }
+		ISqlExpressionFactory ExpressionFactory { get; }
 
-		public ColumnDescriptor? CurrentColumnDescriptor { get; }
-		public SelectQuery       CurrentSelectQuery      { get; }
-		public string?           CurrentAlias            { get; }
+		ColumnDescriptor? CurrentColumnDescriptor { get; }
+		SelectQuery       CurrentSelectQuery      { get; }
+		string?           CurrentAlias            { get; }
 
 		SqlPlaceholderExpression CreatePlaceholder(SelectQuery    selectQuery, ISqlExpression sqlExpression,  Expression basedOn);
 		SqlErrorExpression       CreateErrorExpression(Expression basedOn,     string?        message = null, Type?      type = null);
 
-		Expression? GetEnumerableContext(Expression expression);
+		Expression? GetAggregationContext(Expression     expression);
+		SelectQuery GetAggregationSelectQuery(Expression enumerableContext);
 
-		public bool CanBeEvaluatedOnClient(Expression expression);
+		bool CanBeEvaluatedOnClient(Expression expression);
 
 		bool    CanBeEvaluated(Expression     expression);
 		object? Evaluate(Expression           expression);
@@ -46,6 +47,6 @@ namespace LinqToDB.Linq.Translation
 		/// <param name="expression"></param>
 		void MarkAsNonParameter(Expression expression, object? currentValue);
 
-		public IDisposable UsingColumnDescriptor(ColumnDescriptor? columnDescriptor);
+		IDisposable UsingColumnDescriptor(ColumnDescriptor? columnDescriptor);
 	}
 }

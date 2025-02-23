@@ -13,42 +13,50 @@ namespace LinqToDB.SqlQuery
 			string                           functionName,
 			IEnumerable<SqlFunctionArgument> arguments,
 			bool[]                           argumentsNullability,
+			IEnumerable<SqlWindowOrderItem>? withinGroup = null,
 			IEnumerable<ISqlExpression>?     partitionBy = null,
 			IEnumerable<SqlWindowOrderItem>? orderBy     = null,
 			SqlFrameClause?                  frameClause = null,
-			SqlSearchCondition?              filter      = null)
+			SqlSearchCondition?              filter      = null,
+			bool                             isAggregate = false)
 		{
 			Type                 = dbDataType;
 			FunctionName         = functionName;
 			ArgumentsNullability = argumentsNullability;
 			Arguments            = arguments.ToList();
+			WithinGroup          = withinGroup?.ToList();
 			PartitionBy          = partitionBy?.ToList();
 			OrderBy              = orderBy?.ToList();
 			FrameClause          = frameClause;
 			Filter               = filter;
+			IsAggregate          = isAggregate;
 		}
 
 		public DbDataType                Type                 { get; }
 		public string                    FunctionName         { get; }
 		public bool[]                    ArgumentsNullability { get; }
 		public List<SqlFunctionArgument> Arguments            { get; private set; }
+		public List<SqlWindowOrderItem>? WithinGroup          { get; private set; }
 		public List<ISqlExpression>?     PartitionBy          { get; private set; }
 		public List<SqlWindowOrderItem>? OrderBy              { get; private set; }
 		public SqlFrameClause?           FrameClause          { get; private set; }
 		public SqlSearchCondition?       Filter               { get; private set; }
+		public bool                      IsAggregate          { get; }
 
 		public void Modify(
 			List<SqlFunctionArgument> arguments,
+			List<SqlWindowOrderItem>? withinGroup,
 			List<ISqlExpression>?     partitionBy,
 			List<SqlWindowOrderItem>? orderBy,
 			SqlFrameClause?           frameClause,
 			SqlSearchCondition?       filter     )
 		{
-			Arguments    = arguments;
-			PartitionBy  = partitionBy;
-			OrderBy      = orderBy;
-			FrameClause  = frameClause;
-			Filter       = filter;
+			Arguments   = arguments;
+			WithinGroup = withinGroup;
+			PartitionBy = partitionBy;
+			OrderBy     = orderBy;
+			FrameClause = frameClause;
+			Filter      = filter;
 		}
 
 		public SqlWindowFunction WithType(DbDataType dbDataType)
@@ -58,10 +66,12 @@ namespace LinqToDB.SqlQuery
 				FunctionName,
 				Arguments,
 				ArgumentsNullability,
+				WithinGroup,
 				PartitionBy,
 				OrderBy,
 				FrameClause,
-				Filter);
+				Filter,
+				IsAggregate);
 		}
 
 		public SqlWindowFunction WithFunctionName(string functionName)
@@ -71,10 +81,12 @@ namespace LinqToDB.SqlQuery
 				functionName,
 				Arguments,
 				ArgumentsNullability,
+				WithinGroup,
 				PartitionBy,
 				OrderBy,
 				FrameClause,
-				Filter);
+				Filter,
+				IsAggregate);
 		}
 
 		public SqlWindowFunction WithArguments(IEnumerable<SqlFunctionArgument> arguments, bool[] argumentsNullability)
@@ -84,10 +96,12 @@ namespace LinqToDB.SqlQuery
 				FunctionName,
 				arguments,
 				argumentsNullability,
+				WithinGroup,
 				PartitionBy,
 				OrderBy,
 				FrameClause,
-				Filter);
+				Filter,
+				IsAggregate);
 		}
 
 		public SqlWindowFunction WithPartitionBy(IEnumerable<ISqlExpression>? partitionBy)
@@ -97,10 +111,12 @@ namespace LinqToDB.SqlQuery
 				FunctionName,
 				Arguments,
 				ArgumentsNullability,
+				WithinGroup,
 				partitionBy,
 				OrderBy,
 				FrameClause,
-				Filter);
+				Filter,
+				IsAggregate);
 		}
 
 		public SqlWindowFunction WithOrderBy(IEnumerable<SqlWindowOrderItem>? orderBy)
@@ -110,10 +126,12 @@ namespace LinqToDB.SqlQuery
 				FunctionName,
 				Arguments,
 				ArgumentsNullability,
+				WithinGroup,
 				PartitionBy,
 				orderBy,
 				FrameClause,
-				Filter);
+				Filter,
+				IsAggregate);
 		}
 
 		public SqlWindowFunction WithFrameClause(SqlFrameClause? frameClause)
@@ -123,10 +141,12 @@ namespace LinqToDB.SqlQuery
 				FunctionName,
 				Arguments,
 				ArgumentsNullability,
+				WithinGroup,
 				PartitionBy,
 				OrderBy,
 				frameClause,
-				Filter);
+				Filter,
+				IsAggregate);
 		}
 
 		public SqlWindowFunction WithFilter(SqlSearchCondition? filter)
@@ -136,10 +156,27 @@ namespace LinqToDB.SqlQuery
 				FunctionName,
 				Arguments,
 				ArgumentsNullability,
+				WithinGroup,
 				PartitionBy,
 				OrderBy,
 				FrameClause,
-				filter);
+				filter,
+				IsAggregate);
+		}
+
+		public SqlWindowFunction WithWithinGroup(IEnumerable<SqlWindowOrderItem>? withinGroup)
+		{
+			return new SqlWindowFunction(
+				Type,
+				FunctionName,
+				Arguments,
+				ArgumentsNullability,
+				withinGroup,
+				PartitionBy,
+				OrderBy,
+				FrameClause,
+				Filter,
+				IsAggregate);
 		}
 
 		static bool CheckNulls(object? expr1, object? expr2)
@@ -233,6 +270,18 @@ namespace LinqToDB.SqlQuery
 				writer.AppendElement(Arguments[i]);
 			}
 			writer.Append(')');
+
+			if (WithinGroup != null && WithinGroup.Count > 0)
+			{
+				writer.Append(" WITHIN GROUP (ORDER BY ");
+				for (var i = 0; i < WithinGroup.Count; i++)
+				{
+					if (i > 0)
+						writer.Append(", ");
+					writer.AppendElement(WithinGroup[i]);
+				}
+				writer.Append(')');
+			}
 
 			if (Filter != null)
 			{
@@ -423,7 +472,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 	}
-
 
 	public class SqlFrameClause : QueryElement
 	{

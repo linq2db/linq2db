@@ -210,6 +210,7 @@ namespace LinqToDB.SqlQuery
 				case VisitMode.ReadOnly:
 				{
 					VisitElements(element.Arguments, VisitMode.ReadOnly);
+					VisitElements(element.WithinGroup, VisitMode.ReadOnly);
 					VisitElements(element.PartitionBy, VisitMode.ReadOnly);
 					VisitElements(element.OrderBy, VisitMode.ReadOnly);
 					Visit(element.FrameClause);
@@ -220,6 +221,7 @@ namespace LinqToDB.SqlQuery
 				{
 					element.Modify(
 						VisitElements(element.Arguments, VisitMode.Modify),
+						VisitElements(element.WithinGroup, VisitMode.Modify),
 						VisitElements(element.PartitionBy, VisitMode.Modify),
 						VisitElements(element.OrderBy, VisitMode.Modify),
 						(SqlFrameClause?)Visit(element.FrameClause),
@@ -229,15 +231,17 @@ namespace LinqToDB.SqlQuery
 				case VisitMode.Transform:
 				{
 					var arguments   = VisitElements(element.Arguments, VisitMode.Transform);
+					var withinGroup = VisitElements(element.WithinGroup, VisitMode.Transform);
 					var partitionBy = VisitElements(element.PartitionBy, VisitMode.Transform);
 					var orderBy     = VisitElements(element.OrderBy, VisitMode.Transform);
 					var frameClause = (SqlFrameClause?)Visit(element.FrameClause);
 					var filter      = (SqlSearchCondition?)Visit(element.Filter);
 
-					if (ShouldReplace(element) ||
-						!ReferenceEquals(element.Arguments, arguments) ||
+					if (ShouldReplace(element)                             ||
+						!ReferenceEquals(element.Arguments, arguments)     ||
+						!ReferenceEquals(element.WithinGroup, withinGroup) ||
 						!ReferenceEquals(element.PartitionBy, partitionBy) ||
-						!ReferenceEquals(element.OrderBy, orderBy) ||
+						!ReferenceEquals(element.OrderBy, orderBy)         ||
 						!ReferenceEquals(element.FrameClause, frameClause) ||
 						!ReferenceEquals(element.Filter, filter))
 					{
@@ -246,6 +250,7 @@ namespace LinqToDB.SqlQuery
 							element.FunctionName,
 							arguments,
 							element.ArgumentsNullability,
+							withinGroup,
 							partitionBy,
 							orderBy,
 							frameClause,

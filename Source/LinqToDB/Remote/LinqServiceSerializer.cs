@@ -1721,6 +1721,8 @@ namespace LinqToDB.Remote
 						Append(elem.FunctionName);
 						Append(elem.Arguments);
 						Append(elem.ArgumentsNullability);
+						Append(elem.IsAggregate);
+						Append(elem.WithinGroup);
 						Append(elem.Filter);
 						Append(elem.OrderBy);
 						Append(elem.PartitionBy);
@@ -1753,7 +1755,6 @@ namespace LinqToDB.Remote
 						Append(elem.End);
 						break;
 					}
-
 
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
@@ -2862,11 +2863,14 @@ namespace LinqToDB.Remote
 						var name                 = ReadString()!;
 						var arguments            = ReadArray<SqlFunctionArgument>()!;
 						var argumentsNullability = ReadBoolArray()!;
+						var isAggregate          = ReadBool();
+						var withinGroup          = ReadArray<SqlWindowOrderItem>()!;
 						var filter               = Read<SqlSearchCondition>();
 						var orderBy              = ReadArray<SqlWindowOrderItem>()!;
 						var partitionBy          = ReadArray<ISqlExpression>()!;
 
-						obj = new SqlWindowFunction(functionType, name, arguments, argumentsNullability, orderBy: orderBy, partitionBy:partitionBy, filter:filter);
+						obj = new SqlWindowFunction(functionType, name, arguments, argumentsNullability, withinGroup : withinGroup, orderBy : orderBy, partitionBy : partitionBy, filter : filter,
+							isAggregate : isAggregate);
 
 						break;
 					}
@@ -2902,7 +2906,6 @@ namespace LinqToDB.Remote
 
 						break;
 					}
-
 
 					default:
 						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");

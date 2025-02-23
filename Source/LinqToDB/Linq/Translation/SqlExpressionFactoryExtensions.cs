@@ -51,13 +51,21 @@ namespace LinqToDB.Linq.Translation
 		public static ISqlExpression WindowFunction(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, 
 			SqlFunctionArgument[]                                              arguments,
 			bool[]                                                             argumentsNullability,
+			IEnumerable<SqlWindowOrderItem>?                                   withinGroup = null,
 			IEnumerable<ISqlExpression>?                                       partitionBy = null,
 			IEnumerable<SqlWindowOrderItem>?                                   orderBy     = null,
 			SqlFrameClause?                                                    frameClause = null,
-			SqlSearchCondition?                                                filter      = null
-			)
+			SqlSearchCondition?                                                filter      = null,
+			bool                                                               isAggregate = false
+		)
 		{
-			return new SqlWindowFunction(dataType, functionName, arguments, argumentsNullability, partitionBy, orderBy, frameClause, filter);
+			return new SqlWindowFunction(dataType, functionName, arguments, argumentsNullability, 
+				withinGroup : withinGroup, 
+				partitionBy : partitionBy, 
+				orderBy : orderBy, 
+				frameClause : frameClause,
+				filter : filter,
+				isAggregate : isAggregate);
 		}
 
 		public static ISqlPredicate ExprPredicate(this ISqlExpressionFactory factory, ISqlExpression expression)

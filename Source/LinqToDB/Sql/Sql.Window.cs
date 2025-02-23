@@ -1,6 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
+
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Linq;
 
 namespace LinqToDB
 {
@@ -24,7 +30,6 @@ namespace LinqToDB
 			TThenPart OrderByDesc(object? orderBy);
 			TThenPart OrderByDesc(object? orderBy, Sql.NullsPosition nulls);
 		}
-
 
 		public interface IOnlyOrderByPart
 		{
@@ -192,7 +197,6 @@ namespace LinqToDB
 		{
 		}
 
-
 		// public static object DefineWindow(this Sql.IWindowFunction window, Func<IWindowDefinition, object> func)
 		// 	=> throw new ServerSideOnlyException(nameof(RowNumber))
 
@@ -284,21 +288,79 @@ namespace LinqToDB
 
 		#region Percenile Cont
 
+#pragma warning disable RS0030
+
 		public static TValue PercentileCont<TElement, TValue>(
-			this IEnumerable<TElement>                                 source, 
+			this IEnumerable<TElement>                                 source,
 			double                                                     argument, 
 			Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>> func
 			) => throw new ServerSideOnlyException(nameof(PercentileCont));
 
+		public static TValue PercentileCont<TElement, TValue>(
+			this IQueryable<TElement> source,
+			double                                                                 argument,
+			Expression<Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>>> func
+		)
+		{
+			var currentSource   = source.ProcessIQueryable();
+			var queryExpression = WindowFunctionHelpers.BuildAggregateExecuteExpression<TElement, TValue>(source, q => q.PercentileCont(argument, func.Compile()));
+
+			return currentSource.Provider.Execute<TValue>(queryExpression);
+		}
+
+		public static Task<TValue> PercentileContAsync<TElement, TValue>(
+			this IQueryable<TElement> source,
+			double                                                                 argument,
+			Expression<Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>>> func,
+			CancellationToken cancellationToken = default
+		)
+		{
+			var currentSource   = source.GetLinqToDBSource();
+			var queryExpression = WindowFunctionHelpers.BuildAggregateExecuteExpression<TElement, TValue>(source, q => q.PercentileCont(argument, func.Compile()));
+
+			return currentSource.ExecuteAsync<TValue>(queryExpression, cancellationToken);
+		}
+
+#pragma warning restore RS0030
+
 		#endregion
 
 		#region Percenile Disc
+
+#pragma warning disable RS0030
 
 		public static TValue PercentileDisc<TElement, TValue>(
 			this IEnumerable<TElement>                                     source,
 			double                                                         argument,
 			Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>> func
 		) => throw new ServerSideOnlyException(nameof(PercentileDisc));
+
+		public static TValue PercentileDisc<TElement, TValue>(
+			this IQueryable<TElement>                                                  source,
+			double                                                                     argument,
+			Expression<Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>>> func
+		)
+		{
+			var currentSource   = source.ProcessIQueryable();
+			var queryExpression = WindowFunctionHelpers.BuildAggregateExecuteExpression<TElement, TValue>(source, q => q.PercentileDisc(argument, func.Compile()));
+
+			return currentSource.Provider.Execute<TValue>(queryExpression);
+		}
+
+		public static Task<TValue> PercentileDiscAsync<TElement, TValue>(
+			this IQueryable<TElement>                                                  source,
+			double                                                                     argument,
+			Expression<Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>>> func,
+			CancellationToken cancellationToken = default
+		)
+		{
+			var currentSource   = source.GetLinqToDBSource();
+			var queryExpression = WindowFunctionHelpers.BuildAggregateExecuteExpression<TElement, TValue>(source, q => q.PercentileDisc(argument, func.Compile()));
+
+			return currentSource.ExecuteAsync<TValue>(queryExpression, cancellationToken);
+		}
+
+#pragma warning restore RS0030
 
 		#endregion
 
@@ -307,18 +369,13 @@ namespace LinqToDB
 		public static int Rank(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Rank));
 
-		public static TValue RankWithinGroup<TKey, TElement, TValue>(
-			this IGrouping<TKey, TElement>                                   group,
-			Func<TElement, IOPartitionROrderFinal, IDefinedFunction<TValue>> func
-		) => throw new ServerSideOnlyException(nameof(RankWithinGroup));
-
-
 		#endregion
 	}
 
 	partial class Sql
 	{
-		public static void Test()
+		// Will be removed after completion of the task
+		static void Test()
 		{
 			var query =
 				from t in new[] { new { Id = 1, Name = "John" } }

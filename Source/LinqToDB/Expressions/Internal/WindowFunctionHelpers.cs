@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Expressions.Internal
@@ -126,6 +127,35 @@ namespace LinqToDB.Expressions.Internal
 			}
 
 			return queryExpr;
+		}
+
+		public static Expression BuildAggregateExecuteExpression<TSource, TResult>(IQueryable<TSource> source, Expression<Func<IEnumerable<TSource>, TResult>> aggregate)
+		{
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
+
+			var executeExpression = Expression.Call(typeof(LinqExtensions), nameof(LinqExtensions.AggregateExecute), [typeof(TSource), typeof(TResult)], source.Expression, aggregate);
+
+			return executeExpression;
+		}
+
+		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall)
+		{
+			if (methodCall == null) throw new ArgumentNullException(nameof(methodCall));
+
+			var elementType = TypeHelper.GetEnumerableElementType(methodCall.Arguments[0].Type);
+			var sourceParam = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "source");
+			var resultType  = methodCall.Type;
+
+			var aggregationBody = Expression.Call(methodCall.Method.DeclaringType!, methodCall.Method.Name, [elementType, resultType],
+				[sourceParam, ..methodCall.Arguments.Skip(1).Select(a => a.Unwrap())]
+			);
+
+			var aggregationLambda = Expression.Lambda(aggregationBody, sourceParam);
+
+			var executeExpression = Expression.Call(typeof(LinqExtensions), nameof(LinqExtensions.AggregateExecute), [elementType, resultType], methodCall.Arguments[0], aggregationLambda);
+
+			return executeExpression;
 		}
 
 		static MethodInfo? FindMethodInfoInType(Type type, string methodName, int paramCount)
