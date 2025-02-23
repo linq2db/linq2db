@@ -83,7 +83,9 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public async Task MergeTestAsync([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllPostgreSQL16Minus)] string context)
+		public async Task MergeTestAsync([DataSources(
+			ProviderName.SqlServer2005, ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllPostgreSQL16Minus)]
+			string context)
 		{
 			await using var db  = GetDataContext(context);
 
