@@ -161,10 +161,12 @@ namespace LinqToDB.Linq.Builder
 				canBeWeak = true;
 			}
 
+			var isSubqueryExpression = buildInfo.IsSubqueryExpression && methodKind is not MethodKind.AssociationRecord;
+
 			var firstSingleContext = new FirstSingleContext(buildInfo.Parent, sequence, methodKind, 
 				isSubQuery: buildInfo.IsSubQuery, 
 				isAssociation: buildInfo.IsAssociation,
-				isSubqueryExpression: buildInfo.IsSubqueryExpression,
+				isSubqueryExpression: isSubqueryExpression,
 				canBeWeak: canBeWeak, cardinality);
 			
 			return BuildSequenceResult.FromContext(firstSingleContext);
