@@ -23,15 +23,16 @@ using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.EntityFrameworkCore.Storage;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
-using LinqToDB.SqlQuery;
 
 using EfExpressionPrinter = Microsoft.EntityFrameworkCore.Query.ExpressionPrinter;
 using EfSqlExpression = Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression;
+
+using LinqToDB.SqlQuery;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
 
 namespace LinqToDB.EntityFrameworkCore
 {

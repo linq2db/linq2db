@@ -8,11 +8,12 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.DataProvider.SqlServer;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Reflection
 {
@@ -367,7 +368,7 @@ namespace LinqToDB.Reflection
 
 			internal static class Exceptions
 			{
-				public static readonly MethodInfo DefaultInheritanceMappingException = MemberHelper.MethodOf(() => Linq.Exceptions.DefaultInheritanceMappingException(null!, null!));
+				public static readonly MethodInfo DefaultInheritanceMappingException = MemberHelper.MethodOf(() => Internal.Linq.Exceptions.DefaultInheritanceMappingException(null!, null!));
 			}
 
 			internal static class Sql

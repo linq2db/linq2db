@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
 
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 

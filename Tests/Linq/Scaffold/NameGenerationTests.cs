@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold.Internal;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 

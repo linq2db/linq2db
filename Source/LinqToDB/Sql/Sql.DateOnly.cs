@@ -3,7 +3,7 @@ using System;
 using System.Globalization;
 
 using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 using PN = LinqToDB.ProviderName;
 

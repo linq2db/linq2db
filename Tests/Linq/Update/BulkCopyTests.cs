@@ -7,9 +7,9 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.Informix;
-using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.DataProvider.Informix;
+using LinqToDB.Internal.DataProvider.Oracle;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

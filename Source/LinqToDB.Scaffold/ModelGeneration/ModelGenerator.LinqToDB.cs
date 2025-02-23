@@ -4,8 +4,8 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 
 #pragma warning disable CA1861
 #pragma warning disable RS0030

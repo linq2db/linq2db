@@ -5,6 +5,8 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Tools
 {
 	[PublicAPI]

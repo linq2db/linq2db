@@ -2,11 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Metadata;
 using LinqToDB.SqlQuery;
 

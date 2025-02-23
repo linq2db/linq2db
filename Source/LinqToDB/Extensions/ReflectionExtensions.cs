@@ -14,6 +14,7 @@ using System.Xml;
 using JetBrains.Annotations;
 
 using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Extensions
@@ -342,7 +343,7 @@ namespace LinqToDB.Extensions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsNullable(this Type type)
 		{
-			return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+			return type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
 		}
 
 		/// <summary>

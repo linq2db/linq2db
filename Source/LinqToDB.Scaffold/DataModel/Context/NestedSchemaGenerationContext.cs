@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.CodeModel;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Metadata;
 using LinqToDB.Scaffold;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataModel
 {

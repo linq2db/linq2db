@@ -4,6 +4,8 @@
 using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.DataProvider.MySql
 {
 	public static partial class MySqlHints

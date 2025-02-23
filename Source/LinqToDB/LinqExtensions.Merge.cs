@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Linq;
 using LinqToDB.Reflection;
 

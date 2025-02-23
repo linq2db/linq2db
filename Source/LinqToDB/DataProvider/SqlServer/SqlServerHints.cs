@@ -7,9 +7,11 @@ using System.Text;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.DataProvider.SqlServer;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.SqlServer
 {

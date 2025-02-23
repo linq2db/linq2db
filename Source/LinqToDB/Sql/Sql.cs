@@ -9,8 +9,10 @@ using JetBrains.Annotations;
 
 using LinqToDB.Common;
 using LinqToDB.Expressions;
-using LinqToDB.Expressions.ExpressionVisitors;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 
 using PN = LinqToDB.ProviderName;

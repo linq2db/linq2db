@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Internal;
 using LinqToDB.Data;
 
 using NUnit.Framework;

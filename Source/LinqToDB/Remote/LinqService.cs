@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq;
-using LinqToDB.Linq.Translation;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Remote

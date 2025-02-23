@@ -8,13 +8,13 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Async;
 using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.EntityFrameworkCore.Internal;
-using LinqToDB.Expressions;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
@@ -49,7 +49,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			InitializeMapping();
 
-			var instantiator = MemberHelper.MethodOf(() => Linq.Internals.CreateExpressionQueryInstance<int>(null!, null!))
+			var instantiator = MemberHelper.MethodOf(() => Internals.CreateExpressionQueryInstance<int>(null!, null!))
 				.GetGenericMethodDefinition();
 
 			LinqExtensions.ProcessSourceQueryable = queryable =>

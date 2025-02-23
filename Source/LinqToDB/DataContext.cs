@@ -8,13 +8,14 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Infrastructure;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.Tools;
 
 namespace LinqToDB

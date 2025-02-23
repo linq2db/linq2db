@@ -1,5 +1,7 @@
 ﻿using System;
 
+using LinqToDB.Internal.Common;
+
 namespace LinqToDB.Infrastructure
 {
 	/// <summary>

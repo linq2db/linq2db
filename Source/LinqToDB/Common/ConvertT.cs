@@ -4,8 +4,8 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
 
 namespace LinqToDB.Common
 {
