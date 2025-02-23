@@ -354,8 +354,8 @@ namespace LinqToDB.SqlQuery
 					.WithSystemType(result.SystemType)
 					.WithDbType(result.DbType ?? fromSchema.DbType)
 					.WithLength(result.Length ?? fromSchema.Length)
-					.WithLength(result.Precision ?? fromSchema.Precision)
-					.WithLength(result.Scale ?? fromSchema.Scale);
+					.WithPrecision(result.Precision ?? fromSchema.Precision)
+					.WithScale(result.Scale ?? fromSchema.Scale);
 			}
 
 			return result;
