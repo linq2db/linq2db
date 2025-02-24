@@ -2456,17 +2456,17 @@ namespace LinqToDB.SqlQuery
 						    join.JoinType == JoinType.Left       ||
 						    join.JoinType == JoinType.CrossApply)
 						{
-							bool? isSingeRecord = null;
+							bool? isSingleRecord = null;
 
 							if (join.JoinType == JoinType.CrossApply)
 							{
 								if ((join.Cardinality & SourceCardinality.One) != 0)
 								{
 									if (join.IsSubqueryExpression)
-										isSingeRecord = true;
+										isSingleRecord = true;
 								}
 
-								if (_applySelect is null && isSingeRecord is null)
+								if (_applySelect is null && isSingleRecord is null)
 								{
 									continue;
 								}
@@ -2485,7 +2485,7 @@ namespace LinqToDB.SqlQuery
 									}
 								}
 
-								if (!(isSingeRecord == true || IsLimitedToOneRecord(sq, joinQuery, evaluationContext)))
+								if (!(isSingleRecord == true || IsLimitedToOneRecord(sq, joinQuery, evaluationContext)))
 									continue;
 
 								// do not move to subquery expression if update table in the query.
