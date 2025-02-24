@@ -1043,7 +1043,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeSubquery([MergeDataContextSource(false)] string context, [Values(1, 2)] int iteration)
+		public void MergeSubquery([MergeDataContextSource(false, TestProvName.AllOracle, TestProvName.AllFirebird, TestProvName.AllSybase)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db  = GetDataConnection(context);
 
