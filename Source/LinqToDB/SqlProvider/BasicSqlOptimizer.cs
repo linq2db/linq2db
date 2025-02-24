@@ -409,7 +409,6 @@ namespace LinqToDB.SqlProvider
 					item.Expression = QueryHelper.SimplifyColumnExpression(item.Expression);
 				});
 
-
 				CorrectSetters(insertOrUpdateStatement.Insert.Items, insertOrUpdateStatement.SelectQuery);
 				CorrectSetters(insertOrUpdateStatement.Update.Items, insertOrUpdateStatement.SelectQuery);
 			}
