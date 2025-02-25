@@ -3209,6 +3209,10 @@ namespace LinqToDB.Linq.Builder
 			if (node.Method.Name == "Equals" && node.Object != null && node.Arguments.Count == 1)
 				return ConvertCompareExpression(ExpressionType.Equal, node.Object, node.Arguments[0]);
 
+			var saveFlags = _buildFlags;
+			_buildFlags |= BuildFlags.ForKeys;
+			_buildFlags &= ~BuildFlags.ForMemberRoot;
+
 			if (node.Method.DeclaringType == typeof(string))
 			{
 				switch (node.Method.Name)
@@ -3260,6 +3264,8 @@ namespace LinqToDB.Linq.Builder
 
 				predicate = ConvertInPredicate(expr);
 			}
+
+			_buildFlags = saveFlags;
 
 			if (predicate != null)
 			{
