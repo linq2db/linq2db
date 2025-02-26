@@ -482,7 +482,6 @@ namespace Tests.Linq
 			using var t2 = db.CreateLocalTable(Level2.Data);
 			using var t3 = db.CreateLocalTable(Level3.Data);
 
-
 			t1.Select(c => c.Lvl2.Lvl3).Where(p => p.Id == 21).Distinct().Select(p => p.Value).Single();
 		}
 	}
