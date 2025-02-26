@@ -431,5 +431,59 @@ namespace Tests.Linq
 				Assert.That(res[4].F2, Is.EqualTo("2"));
 			});
 		}
+
+
+		sealed class Level1
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Level2.FK2))]
+			public Level2 Lvl2 { get; set; } = null!;
+
+			public static readonly Level1[] Data =
+			[
+				new Level1() { Id = 1 }
+			];
+		}
+
+		sealed class Level2
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int FK2 { get; set; }
+			public int FK3 { get; set; }
+
+			[Association(ThisKey = nameof(FK3), OtherKey = nameof(Level3.Id))]
+			public Level3 Lvl3 { get; set; } = null!;
+
+			public static readonly Level2[] Data =
+			[
+				new Level2() { Id = 11, FK2 = 1, FK3 = 21 },
+				new Level2() { Id = 12, FK2 = 1, FK3 = 21 }
+			];
+		}
+
+		sealed class Level3
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int Value { get; set; }
+
+			public static readonly Level3[] Data =
+			[
+				new Level3() { Id = 21 },
+				new Level3() { Id = 22 }
+			];
+		}
+
+		[Test]
+		public void DistinctSelectsUnusedColumn([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Level1.Data);
+			using var t2 = db.CreateLocalTable(Level2.Data);
+			using var t3 = db.CreateLocalTable(Level3.Data);
+
+
+			t1.Select(c => c.Lvl2.Lvl3).Where(p => p.Id == 21).Distinct().Select(p => p.Value).Single();
+		}
 	}
 }
