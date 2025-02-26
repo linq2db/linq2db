@@ -135,7 +135,7 @@ jobs:
       command: custom
       custom: script
       workingDirectory: '$(Build.SourcesDirectory)/NuGet'
-      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v7.nuspec /buildPath:../.build/nuspecs /version:$(ef8PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
+      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v8.nuspec /buildPath:../.build/nuspecs /version:$(ef8PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
 
   - task: DotNetCoreCLI@2
     displayName: Update nuspecs (EF9)
@@ -143,7 +143,7 @@ jobs:
       command: custom
       custom: script
       workingDirectory: '$(Build.SourcesDirectory)/NuGet'
-      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v8.nuspec /buildPath:../.build/nuspecs /version:$(ef9PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
+      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v9.nuspec /buildPath:../.build/nuspecs /version:$(ef9PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
 
   - task: CmdLine@2
     inputs:
