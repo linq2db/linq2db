@@ -131,7 +131,6 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Used internally to pass entity descriptor into Expression Tree.
-		/// Consider to rewrite such functionality in V7
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="tableDescriptor"></param>
