@@ -454,6 +454,9 @@ namespace Tests.Linq
 			[Association(ThisKey = nameof(FK3), OtherKey = nameof(Level3.Id))]
 			public Level3 Lvl3 { get; set; } = null!;
 
+			[Association(ThisKey = nameof(FK3), OtherKey = nameof(Level3AllNull.Id))]
+			public Level3AllNull Lvl3AllNull { get; set; } = null!;
+
 			public static readonly Level2[] Data =
 			[
 				new Level2() { Id = 11, FK2 = 1, FK3 = 21 },
@@ -473,6 +476,18 @@ namespace Tests.Linq
 			];
 		}
 
+		sealed class Level3AllNull
+		{
+			public int? Id { get; set; }
+			public int? Value { get; set; }
+
+			public static readonly Level3AllNull[] Data =
+			[
+				new Level3AllNull() { Id = 21 },
+				new Level3AllNull() { Id = 22 }
+			];
+		}
+
 		[Test]
 		public void DistinctSelectsUnusedColumn([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -482,6 +497,17 @@ namespace Tests.Linq
 			using var t3 = db.CreateLocalTable(Level3.Data);
 
 			t1.Select(c => c.Lvl2.Lvl3).Where(p => p.Id == 21).Distinct().Select(p => p.Value).Single();
+		}
+
+		[Test]
+		public void DistinctSelectsUnusedColumn_Nullable([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Level1.Data);
+			using var t2 = db.CreateLocalTable(Level2.Data);
+			using var t3 = db.CreateLocalTable(Level3AllNull.Data);
+
+			t1.Select(c => c.Lvl2.Lvl3AllNull).Where(p => p.Id == 21).Distinct().Select(p => p.Value).Single();
 		}
 	}
 }
