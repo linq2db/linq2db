@@ -5020,6 +5020,11 @@ namespace LinqToDB.Linq.Builder
 					result = BuildPurpose.Sql;
 				}
 
+				if (translationFlags.HasFlag(TranslationFlags.Expand))
+				{
+					result = BuildPurpose.Expand;
+				}
+
 				return result;
 			}
 
@@ -5044,6 +5049,36 @@ namespace LinqToDB.Linq.Builder
 			public SqlErrorExpression CreateErrorExpression(Expression basedOn, string? message = null, Type? type = null)
 			{
 				return new SqlErrorExpression(basedOn, message, type ?? basedOn.Type);
+			}
+
+			public Expression? GetAggregationContext(Expression expression)
+			{
+				//TODO: review
+				var result = Builder.BuildAggregationRootExpression(expression);
+				if (result is ContextRefExpression)
+					return result;
+
+				var buildResult = Builder.TryBuildSequence(new BuildInfo(CurrentContext, expression, CurrentSelectQuery) { CreateSubQuery = true, IsAggregation = true });
+
+				if (buildResult.BuildContext is null)
+					return null;
+
+				result = Builder.BuildAggregationRootExpression(SequenceHelper.CreateRef(buildResult.BuildContext));
+				if (result is not ContextRefExpression)
+					return null;
+				return result;
+			}
+
+			public SelectQuery GetAggregationSelectQuery(Expression enumerableContext)
+			{
+				if (enumerableContext is ContextRefExpression contextRef)
+				{
+					if (contextRef.BuildContext is GroupByBuilder.GroupByContext groupByContext)
+						return groupByContext.SubQuery.SelectQuery;
+					return contextRef.BuildContext.SelectQuery;
+				}
+
+				throw new InvalidOperationException("Invalid enumerable context");
 			}
 
 			public bool CanBeEvaluatedOnClient(Expression expression)
