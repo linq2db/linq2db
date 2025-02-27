@@ -858,7 +858,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return new TempTable<T>(db, tempTableDescriptor, items, options, tableName, databaseName, schemaName, serverName, tableOptions);
 		}
@@ -922,7 +922,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return new TempTable<T>(db, tempTableDescriptor, items, options, tableName, databaseName, schemaName, serverName, tableOptions);
 		}
@@ -987,7 +987,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return new TempTable<T>(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
 		}
@@ -1052,7 +1052,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return new TempTable<T>(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
 		}
@@ -1145,7 +1145,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return TempTable<T>.CreateAsync(db, tempTableDescriptor, tableName, items, options, databaseName, schemaName, serverName, tableOptions, cancellationToken);
 		}
@@ -1213,7 +1213,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return TempTable<T>.CreateAsync(db, tempTableDescriptor, tableName, items, options, databaseName, schemaName, serverName, tableOptions, cancellationToken);
 		}
@@ -1282,7 +1282,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return TempTable<T>.CreateAsync(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
 		}
@@ -1351,7 +1351,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return TempTable<T>.CreateAsync(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
 		}
@@ -1419,7 +1419,7 @@ namespace LinqToDB
 			{
 				EntityDescriptor? tempTableDescriptor = null;
 				if (setTable != null)
-					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext.MappingSchema, eq.DataContext.Options, setTable);
+					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext, setTable);
 
 				return new TempTable<T>(eq.DataContext, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
 			}
@@ -1491,7 +1491,7 @@ namespace LinqToDB
 			{
 				EntityDescriptor? tempTableDescriptor = null;
 				if (setTable != null)
-					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext.MappingSchema, eq.DataContext.Options, setTable);
+					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext, setTable);
 
 				return TempTable<T>.CreateAsync(eq.DataContext, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
 			}
@@ -1499,13 +1499,17 @@ namespace LinqToDB
 			throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
 		}
 
-		private static EntityDescriptor GetTempTableDescriptor<T>(MappingSchema contextSchema, DataOptions options, Action<EntityMappingBuilder<T>> setTable)
+		private static EntityDescriptor GetTempTableDescriptor<T>(IDataContext dataContext, Action<EntityMappingBuilder<T>> setTable)
 		{
-			var ms = new MappingSchema(contextSchema);
+			var ms      = new MappingSchema(dataContext.MappingSchema);
 			var builder = new FluentMappingBuilder(ms);
+
 			setTable(builder.Entity<T>());
 			builder.Build();
-			return ms.GetEntityDescriptor(typeof(T), options.ConnectionOptions.OnEntityDescriptorCreated);
+
+			dataContext.AddMappingSchema(ms);
+
+			return ms.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 		}
 
 		#endregion

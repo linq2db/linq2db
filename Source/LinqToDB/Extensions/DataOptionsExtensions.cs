@@ -778,6 +778,22 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Defines additional mapping schema to use with DataOptions.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseAdditionalMappingSchema(this DataOptions options, MappingSchema mappingSchema)
+		{
+			return options.WithOptions<ConnectionOptions>(o =>
+			{
+				var ms = o.MappingSchema == null
+					? mappingSchema
+					: MappingSchema.CombineSchemas(o.MappingSchema, mappingSchema);
+
+				return o with { MappingSchema = ms };
+			});
+		}
+
+		/// <summary>
 		/// Defines connection factory to use with DataOptions.
 		/// </summary>
 		[Pure]
