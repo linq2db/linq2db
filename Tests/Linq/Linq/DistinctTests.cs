@@ -432,7 +432,6 @@ namespace Tests.Linq
 			});
 		}
 
-
 		sealed class Level1
 		{
 			[PrimaryKey] public int Id { get; set; }
