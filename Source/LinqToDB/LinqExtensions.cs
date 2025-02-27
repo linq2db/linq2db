@@ -136,6 +136,7 @@ namespace LinqToDB
 		/// <typeparam name="T"></typeparam>
 		/// <param name="tableDescriptor"></param>
 		/// <returns></returns>
+		// TODO: Consider to rewrite such functionality in V7
 		[LinqTunnel]
 		[Pure]
 		internal static ITable<T> UseTableDescriptor<T>(this ITable<T> table, [SqlQueryDependent] EntityDescriptor tableDescriptor)
