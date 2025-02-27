@@ -2016,10 +2016,6 @@ namespace LinqToDB.SqlProvider
 			// ReSharper disable once NotAccessedVariable
 			var sqlText = startFrom.DebugText;
 
-			if (startFrom is SqlInsertOrUpdateStatement)
-			{
-
-			}
 			if (startFrom is SqlSelectStatement statementBefore)
 			{
 
