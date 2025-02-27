@@ -17,7 +17,7 @@ namespace LinqToDB.Linq
 				if (valueType == typeof(EntityDescriptor))
 					return false;
 
-				if (!mappingSchema.IsScalarType(node.Value.GetType()))
+				if (!mappingSchema.IsScalarType(valueType))
 				{
 					if (node.Value is Array or FormattableString)
 						return false;
