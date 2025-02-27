@@ -50,7 +50,7 @@ namespace LinqToDB.Linq
 		/// </summary>
 		/// <returns>Query SQL text with parameters.</returns>
 		IReadOnlyList<QuerySql> GetSqlText();
-		
+
 		IQueryExpressions Expressions      { get; }
 		IDataContext      DataContext      { get; }
 		object?[]?        Parameters       { get; }
