@@ -50,6 +50,12 @@ jobs:
       targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Extensions/Release'
 
   - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.Compat files
+    inputs:
+      artifactName: '$(artifact_linq2db_compat_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Compat/Release'
+
+  - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB.Remote.Wcf files
     inputs:
       artifactName: '$(artifact_linq2db_remote_wcf_binaries)'

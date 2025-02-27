@@ -11,6 +11,7 @@ variables:
   artifact_nugets: 'nugets'
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
+  artifact_linq2db_compat_binaries: 'linq2db_compat_binaries'
   artifact_linq2db_extensions_binaries: 'linq2db_extensions_binaries'
   artifact_linq2db_remote_wcf_binaries: 'linq2db_remote_wcf_binaries'
   artifact_linq2db_remote_grpc_binaries: 'linq2db_remote_grpc_binaries'
