@@ -1742,11 +1742,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (innerExpression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
 			{
-				var notNullConditions = node.NotNullExpressions
-					.Concat(defaultIfEmptyExpression.NotNullExpressions)
-					.Distinct(ExpressionEqualityComparer.Instance)
-					.ToList();
-				var newNode = node.Update(defaultIfEmptyExpression.InnerExpression, notNullConditions.AsReadOnly());
+				var newNode = node.Update(defaultIfEmptyExpression.InnerExpression, defaultIfEmptyExpression.NotNullExpressions);
 				return Visit(newNode);
 			}
 
