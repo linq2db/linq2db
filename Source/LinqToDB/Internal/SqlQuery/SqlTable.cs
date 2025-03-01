@@ -67,42 +67,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 				if (field.Type.DataType == DataType.Undefined)
 				{
-					var dataType = entityDescriptor.MappingSchema.GetDataType(field.Type.SystemType);
-
-					if (dataType.Type.DataType == DataType.Undefined)
-					{
-						dataType = entityDescriptor.MappingSchema.GetUnderlyingDataType(field.Type.SystemType, out var canBeNull);
-
-						if (canBeNull)
-							field.CanBeNull = true;
-					}
-
-					field.Type = field.Type.WithDataType(dataType.Type.DataType);
-
-					// try to get type from converter
-					if (field.Type.DataType == DataType.Undefined)
-					{
-						try
-						{
-							var converter = entityDescriptor.MappingSchema.GetConverter(
-								field.Type,
-								new DbDataType(typeof(DataParameter)),
-								true,
-								ConversionType.ToDatabase);
-
-							var parameter = converter?.ConvertValueToParameter(DefaultValue.GetValue(field.Type.SystemType, entityDescriptor.MappingSchema));
-							if (parameter != null)
-								field.Type = field.Type.WithDataType(parameter.DataType);
-						}
-						catch
-						{
-							// converter cannot handle default value?
-						}
-					}
-
-					if (field.Type.Length    == null) field.Type = field.Type.WithLength   (dataType.Type.Length);
-					if (field.Type.Precision == null) field.Type = field.Type.WithPrecision(dataType.Type.Precision);
-					if (field.Type.Scale     == null) field.Type = field.Type.WithScale    (dataType.Type.Scale);
+					field.Type = SuggestType(field.Type, entityDescriptor.MappingSchema, out var canBeNull);
+					if (canBeNull is not null)
+						field.CanBeNull = canBeNull.Value;
 				}
 			}
 
@@ -299,6 +266,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 			field.Table = this;
 
+			ResetKeys();
+
 			if (field.Name == "*")
 				_all = field;
 			else
@@ -342,11 +311,60 @@ namespace LinqToDB.Internal.SqlQuery
 			return _keyFields;
 		}
 
+		public void ResetKeys()
+		{
+			_keyFields = null;
+		}
+
 		#endregion
 
 		internal static SqlTable Create<T>(IDataContext dataContext)
 		{
 			return new SqlTable(dataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated));
+		}
+
+		internal static DbDataType SuggestType(DbDataType fieldType, MappingSchema mappingSchema, out bool? canBeNull)
+		{
+			var dataType = mappingSchema.GetDataType(fieldType.SystemType);
+
+			canBeNull = null;
+
+			if (dataType.Type.DataType == DataType.Undefined)
+			{
+				dataType = mappingSchema.GetUnderlyingDataType(fieldType.SystemType, out var underlyingCanBeNull);
+
+				if (underlyingCanBeNull)
+					canBeNull = true;
+			}
+
+			fieldType = fieldType.WithDataType(dataType.Type.DataType);
+
+			// try to get type from converter
+			if (fieldType.DataType == DataType.Undefined)
+			{
+				try
+				{
+					var converter = mappingSchema.GetConverter(
+						fieldType,
+						new DbDataType(typeof(DataParameter)),
+						true,
+						ConversionType.ToDatabase);
+
+					var parameter = converter?.ConvertValueToParameter(DefaultValue.GetValue(fieldType.SystemType, mappingSchema));
+					if (parameter != null)
+						fieldType = fieldType.WithDataType(parameter.DataType);
+				}
+				catch
+				{
+					// converter cannot handle default value?
+				}
+			}
+
+			if (fieldType.Length    == null) fieldType = fieldType.WithLength(dataType.Type.Length);
+			if (fieldType.Precision == null) fieldType = fieldType.WithPrecision(dataType.Type.Precision);
+			if (fieldType.Scale     == null) fieldType = fieldType.WithScale(dataType.Type.Scale);
+
+			return fieldType;
 		}
 
 	}

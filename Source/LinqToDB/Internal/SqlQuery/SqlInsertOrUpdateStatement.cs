@@ -31,7 +31,10 @@
 			writer
 				.AppendLine("/* insert or update */")
 				.AppendElement(Insert)
-				.AppendElement(Update);
+				.AppendElement(Update)
+				.AppendLine("--- query ---")
+				.AppendElement(SelectQuery);
+
 			return writer;
 		}
 

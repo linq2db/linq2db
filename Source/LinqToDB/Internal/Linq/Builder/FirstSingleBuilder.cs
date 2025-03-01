@@ -9,9 +9,18 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[BuildsMethodCall("First", "FirstOrDefault", "Single", "SingleOrDefault")]
-	[BuildsMethodCall("FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync", 
-		CanBuildName = nameof(CanBuildAsyncMethod))]
+	[BuildsMethodCall(
+		nameof(Queryable.First), 
+		nameof(Queryable.FirstOrDefault), 
+		nameof(Queryable.Single), 
+		nameof(Queryable.SingleOrDefault), 
+		nameof(LinqExtensions.AssociationRecord), 
+		nameof(LinqExtensions.AssociationOptionalRecord))]
+	[BuildsMethodCall(
+		nameof(AsyncEnumerableExtensions.FirstAsync), 
+		nameof(AsyncEnumerableExtensions.FirstOrDefaultAsync), 
+		nameof(AsyncEnumerableExtensions.SingleAsync), 
+		nameof(AsyncEnumerableExtensions.SingleOrDefaultAsync), CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
@@ -26,20 +35,24 @@ namespace LinqToDB.Internal.Linq.Builder
 			FirstOrDefault,
 			Single,
 			SingleOrDefault,
+			AssociationRecord,
+			AssociationOptionalRecord,
 		}
 
 		static MethodKind GetMethodKind(string methodName)
 		{
 			return methodName switch
 			{
-				"First"                => MethodKind.First,
-				"FirstAsync"           => MethodKind.First,
-				"FirstOrDefault"       => MethodKind.FirstOrDefault,
-				"FirstOrDefaultAsync"  => MethodKind.FirstOrDefault,
-				"Single"               => MethodKind.Single,
-				"SingleAsync"          => MethodKind.Single,
-				"SingleOrDefault"      => MethodKind.SingleOrDefault,
-				"SingleOrDefaultAsync" => MethodKind.SingleOrDefault,
+				nameof(Queryable.First)                                => MethodKind.First,
+				nameof(AsyncEnumerableExtensions.FirstAsync)           => MethodKind.First,
+				nameof(Queryable.FirstOrDefault)                       => MethodKind.FirstOrDefault,
+				nameof(AsyncEnumerableExtensions.FirstOrDefaultAsync)  => MethodKind.FirstOrDefault,
+				nameof(Queryable.Single)                               => MethodKind.Single,
+				nameof(AsyncEnumerableExtensions.SingleAsync)          => MethodKind.Single,
+				nameof(Queryable.SingleOrDefault)                      => MethodKind.SingleOrDefault,
+				nameof(AsyncEnumerableExtensions.SingleOrDefaultAsync) => MethodKind.SingleOrDefault,
+				nameof(LinqExtensions.AssociationRecord)               => MethodKind.AssociationRecord,
+				nameof(LinqExtensions.AssociationOptionalRecord)       => MethodKind.AssociationOptionalRecord,
 				_ => throw new ArgumentOutOfRangeException(nameof(methodName), methodName, "Not supported method.")
 			};
 		}
@@ -64,12 +77,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			switch (methodKind)
 			{
+				case MethodKind.AssociationRecord:
 				case MethodKind.First:
-				case MethodKind.Single: 
+				case MethodKind.Single:
 					break;
 
 				case MethodKind.FirstOrDefault:
 				case MethodKind.SingleOrDefault:
+				case MethodKind.AssociationOptionalRecord:
 				{
 					cardinality |= SourceCardinality.Zero;
 					break;
@@ -147,7 +162,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				canBeWeak = true;
 			}
 
-			var firstSingleContext = new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, canBeWeak, cardinality);
+			var isSubqueryExpression = buildInfo.IsSubqueryExpression && methodKind is not MethodKind.AssociationRecord;
+
+			var firstSingleContext = new FirstSingleContext(buildInfo.Parent, sequence, methodKind, 
+				isSubQuery: buildInfo.IsSubQuery, 
+				isAssociation: buildInfo.IsAssociation,
+				isSubqueryExpression: isSubqueryExpression,
+				canBeWeak: canBeWeak, cardinality);
 			
 			return BuildSequenceResult.FromContext(firstSingleContext);
 		}
@@ -155,22 +176,24 @@ namespace LinqToDB.Internal.Linq.Builder
 		public sealed class FirstSingleContext : SequenceContextBase
 		{
 			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodKind methodKind,
-				bool isSubQuery, bool isAssociation, bool canBeWeak, SourceCardinality cardinality)
+				bool isSubQuery, bool isAssociation, bool isSubqueryExpression, bool canBeWeak, SourceCardinality cardinality)
 				: base(parent, sequence, null)
 			{
-				_methodKind   = methodKind;
-				IsSubQuery    = isSubQuery;
-				IsAssociation = isAssociation;
-				CanBeWeak     = canBeWeak;
-				Cardinality   = cardinality;
+				_methodKind          = methodKind;
+				IsSubqueryExpression = isSubqueryExpression;
+				IsSubQuery           = isSubQuery;
+				IsAssociation        = isAssociation;
+				CanBeWeak            = canBeWeak;
+				Cardinality          = cardinality;
 			}
 
-			readonly MethodKind _methodKind;
+			readonly MethodKind       _methodKind;
 
-			public bool              IsSubQuery    { get; }
-			public bool              IsAssociation { get; }
-			public bool              CanBeWeak     { get; }
-			public SourceCardinality Cardinality   { get; set; }
+			public bool              IsSubQuery           { get; }
+			public bool              IsSubqueryExpression { get; }
+			public bool              IsAssociation        { get; }
+			public bool              CanBeWeak            { get; }
+			public SourceCardinality Cardinality          { get; set; }
 
 			public override bool IsOptional => (Cardinality & SourceCardinality.Zero) != 0 || Cardinality == SourceCardinality.Unknown;
 
@@ -252,8 +275,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					_isJoinCreated = true;
 
 					var join = CanBeWeak ? SelectQuery.OuterApply() : SelectQuery.CrossApply();
-					join.JoinedTable.IsWeak      = Cardinality.HasFlag(SourceCardinality.Zero);
-					join.JoinedTable.Cardinality = Cardinality;
+					join.JoinedTable.IsWeak               = Cardinality.HasFlag(SourceCardinality.Zero);
+					join.JoinedTable.Cardinality          = Cardinality;
+					join.JoinedTable.IsSubqueryExpression = IsSubqueryExpression;
 
 					Parent!.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				}
@@ -307,7 +331,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new FirstSingleContext(null, context.CloneContext(Sequence),
-					_methodKind, IsSubQuery, IsAssociation, CanBeWeak, Cardinality)
+					_methodKind, IsSubQuery, IsAssociation, IsSubqueryExpression, CanBeWeak, Cardinality)
 				{
 					_isJoinCreated = _isJoinCreated
 				};

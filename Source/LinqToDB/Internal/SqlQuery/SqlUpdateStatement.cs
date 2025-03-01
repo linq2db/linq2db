@@ -28,7 +28,7 @@
 				.AppendElement(With)
 				.AppendLine("UPDATE")
 				.AppendElement(Update)
-				.AppendLine()
+				.AppendLine("--- query ---")
 				.AppendElement(SelectQuery)
 				.AppendElement(Output);
 

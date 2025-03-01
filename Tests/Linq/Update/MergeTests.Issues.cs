@@ -1041,5 +1041,37 @@ namespace Tests.xUpdate
 
 			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(6));
 		}
+
+		[Test]
+		public void MergeSubquery([MergeDataContextSource(false, TestProvName.AllOracle, TestProvName.AllFirebird, TestProvName.AllSybase)] string context, [Values(1, 2)] int iteration)
+		{
+			using var db  = GetDataConnection(context);
+
+			db.BeginTransaction();
+
+			using var tmp = db.CreateTempTable(
+				"MergeTemp",
+				[new { ID = 1, Name = "John" }],
+				mb => mb
+					.Property(t => t.ID)
+						.IsPrimaryKey()
+					.Property(t => t.Name)
+						.HasLength(20));
+
+			var cacheMiss = tmp.GetCacheMissCount();
+
+			tmp.InsertOrUpdate(
+				() => new
+				{
+					ID   = (from t in tmp where t.Name == "John" select t.ID).Single(),
+					Name = "John II"
+				},
+				s => new { s.ID, s.Name });
+
+			if (iteration == 2)
+			{
+				Assert.That(tmp.GetCacheMissCount(), Is.EqualTo(cacheMiss));
+			}
+		}
 	}
 }

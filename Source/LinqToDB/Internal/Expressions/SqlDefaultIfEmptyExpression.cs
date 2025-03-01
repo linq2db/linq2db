@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public SqlDefaultIfEmptyExpression Update(Expression innerExpression, ReadOnlyCollection<Expression> notNullExpressions)
 		{
-			if (ReferenceEquals(InnerExpression, innerExpression) && 
+			if (ReferenceEquals(InnerExpression, innerExpression) &&
 			    (ReferenceEquals(NotNullExpressions, notNullExpressions) || NotNullExpressions.SequenceEqual(notNullExpressions, ExpressionEqualityComparer.Instance)))
 			{
 				return this;

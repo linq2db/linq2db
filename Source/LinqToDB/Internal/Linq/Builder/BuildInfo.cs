@@ -17,15 +17,15 @@ namespace LinqToDB.Internal.Linq.Builder
 		public BuildInfo(BuildInfo buildInfo, Expression expression)
 			: this(buildInfo.Parent, expression, buildInfo.SelectQuery)
 		{
-			SequenceInfo   = buildInfo;
-			CreateSubQuery = buildInfo.CreateSubQuery;
+			SequenceInfo         = buildInfo;
+			CreateSubQuery       = buildInfo.CreateSubQuery;
 		}
 
 		public BuildInfo(BuildInfo buildInfo, Expression expression, SelectQuery selectQuery)
 			: this(buildInfo.Parent, expression, selectQuery)
 		{
-			SequenceInfo   = buildInfo;
-			CreateSubQuery = buildInfo.CreateSubQuery;
+			SequenceInfo         = buildInfo;
+			CreateSubQuery       = buildInfo.CreateSubQuery;
 		}
 
 		public BuildInfo?     SequenceInfo             { get; set; }
@@ -80,5 +80,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			set => _isAggregation = value;
 		}
+
+		public bool IsSubqueryExpression { get; set; }
+
 	}
 }

@@ -3,7 +3,7 @@
 	<metadata>
 		<id>linq2db.Compat</id>
 		<title>LINQ to DB Compat</title>
-		<description>LINQ to DB Tools provides additional services for Linq To DB library.</description>
+		<description>LINQ to DB Compat provides .NET Framework compatibility functionality to leverage migration to .NET.</description>
 		<tags></tags>
 		<dependencies>
 			<group targetFramework="net462">
