@@ -5,7 +5,7 @@ using System.Globalization;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Internal.Conversion
 {
 	internal static class ConvertUtils
 	{

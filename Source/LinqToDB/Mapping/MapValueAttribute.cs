@@ -13,7 +13,7 @@ namespace LinqToDB.Mapping
 	/// enumeration field with <see cref="MapValueAttribute"/> with required value. If attribute with such value is not
 	/// found, you will receive <see cref="LinqToDBException"/> error. If you cannot specify all possible values using
 	/// <see cref="MapValueAttribute"/>, you can specify custom mapping using methods like
-	/// <see cref="MappingSchema.SetConvertExpression{TFrom, TTo}(System.Linq.Expressions.Expression{Func{TFrom, TTo}}, bool, Common.ConversionType)"/>.
+	/// <see cref="MappingSchema.SetConvertExpression{TFrom, TTo}(System.Linq.Expressions.Expression{Func{TFrom, TTo}}, bool, ConversionType)"/>.
 	/// </para>
 	/// <para>
 	/// Mapping from enumeration value performed when you save it to database or use in query. If your enum field has

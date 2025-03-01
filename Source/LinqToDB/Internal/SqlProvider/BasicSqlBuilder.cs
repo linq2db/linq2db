@@ -13,7 +13,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.DataProvider;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;

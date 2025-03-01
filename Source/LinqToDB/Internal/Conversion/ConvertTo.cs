@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Internal.Conversion
 {
 	/// <summary>
 	/// Value converter to <typeparamref name="TTo"/> type.

@@ -8,6 +8,7 @@ using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

@@ -7,6 +7,8 @@ using System.Text;
 using LinqToDB.Common;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;

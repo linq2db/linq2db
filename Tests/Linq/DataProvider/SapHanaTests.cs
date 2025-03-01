@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.DataProvider.SapHana;
 using LinqToDB.Mapping;

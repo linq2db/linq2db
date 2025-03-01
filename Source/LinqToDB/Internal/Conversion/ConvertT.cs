@@ -4,10 +4,12 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
+using LinqToDB.Mapping;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Internal.Conversion
 {
 	// moved to non-generic class to avoid instance-per-generic
 	internal sealed class ConvertReducer
@@ -21,12 +23,12 @@ namespace LinqToDB.Common
 		}
 	}
 
-/// <summary>
-/// Converters provider for value conversion from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> type.
-/// </summary>
-/// <typeparam name="TFrom">Source conversion type.</typeparam>
-/// <typeparam name="TTo">Target conversion type.</typeparam>
-[PublicAPI]
+	/// <summary>
+	/// Converters provider for value conversion from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> type.
+	/// </summary>
+	/// <typeparam name="TFrom">Source conversion type.</typeparam>
+	/// <typeparam name="TTo">Target conversion type.</typeparam>
+	[PublicAPI]
 	public static class Convert<TFrom,TTo>
 	{
 		static Convert()

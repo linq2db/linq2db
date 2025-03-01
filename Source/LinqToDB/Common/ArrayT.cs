@@ -1,6 +1,5 @@
 ﻿using System;
-
-using JetBrains.Annotations;
+using System.ComponentModel;
 
 namespace LinqToDB.Common
 {
@@ -8,7 +7,8 @@ namespace LinqToDB.Common
 	/// Empty array instance helper.
 	/// </summary>
 	/// <typeparam name="T">Array element type.</typeparam>
-	[PublicAPI]
+	// TODO: Remove in v7 (cleanup of random unused code)
+	[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 	public static class Array<T>
 	{
 		internal static T[] Append(T[] array, T newElement)

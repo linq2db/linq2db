@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Linq.Expressions;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Mapping
 {
 	public class ValueConverterFunc<TModel, TProvider> : IValueConverter
 	{

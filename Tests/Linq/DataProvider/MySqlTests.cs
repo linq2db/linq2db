@@ -15,6 +15,7 @@ using System.Xml.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.DataProvider.MySql;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;

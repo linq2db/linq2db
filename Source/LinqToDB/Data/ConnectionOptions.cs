@@ -2,6 +2,7 @@
 using System.Data.Common;
 
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.DataProvider;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;

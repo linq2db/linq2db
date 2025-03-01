@@ -8,7 +8,7 @@ using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Default value provider.

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 

@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Logging;
+using LinqToDB.Internal.Logging;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;

@@ -19,6 +19,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 

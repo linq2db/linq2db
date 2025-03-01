@@ -8,8 +8,8 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -470,14 +470,14 @@ namespace LinqToDB.CodeModel
 			public static class Common
 			{
 				/// <summary>
-				/// <see cref="global::LinqToDB.Common.Converter"/> type descriptor.
+				/// <see cref="Internal.Conversion.Converter"/> type descriptor.
 				/// </summary>
 				public static IType Converter { get; } = Parser.Parse(typeof(Converter));
 
 				/// <summary>
 				/// <see cref="Converter.ChangeTypeTo{T}(object?, MappingSchema?,ConversionType)"/> method reference.
 				/// </summary>
-				public static CodeIdentifier Converter_ChangeTypeTo { get; } = new CodeIdentifier(nameof(global::LinqToDB.Common.Converter.ChangeTypeTo), true);
+				public static CodeIdentifier Converter_ChangeTypeTo { get; } = new CodeIdentifier(nameof(Internal.Conversion.Converter.ChangeTypeTo), true);
 			}
 
 			public static class Configuration

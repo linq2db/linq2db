@@ -5,6 +5,7 @@ using System.Globalization;
 
 using LinqToDB.Common;
 using LinqToDB.Mapping;
+using LinqToDB.Internal.Conversion;
 
 using NUnit.Framework;
 

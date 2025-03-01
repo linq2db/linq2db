@@ -152,7 +152,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 				public MySqlDataProviderAdapter()
 				{
-					var assembly = LinqToDB.Common.Tools.TryLoadAssembly(MySqlDataAssemblyName, null);
+					var assembly = Internal.Common.Tools.TryLoadAssembly(MySqlDataAssemblyName, null);
 					if (assembly == null)
 						throw new InvalidOperationException($"Cannot load assembly {MySqlDataAssemblyName}");
 
@@ -307,7 +307,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 				public MySqlConnectorProviderAdapter()
 				{
-					var assembly = LinqToDB.Common.Tools.TryLoadAssembly(MySqlConnectorAssemblyName, null);
+					var assembly = Internal.Common.Tools.TryLoadAssembly(MySqlConnectorAssemblyName, null);
 					if (assembly == null)
 						throw new InvalidOperationException($"Cannot load assembly {MySqlConnectorAssemblyName}");
 

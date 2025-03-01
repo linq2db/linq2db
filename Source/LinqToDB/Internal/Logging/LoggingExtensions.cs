@@ -2,7 +2,7 @@
 
 using LinqToDB.Data;
 
-namespace LinqToDB.Common.Logging
+namespace LinqToDB.Internal.Logging
 {
 	public static class LoggingExtensions
 	{

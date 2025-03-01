@@ -13,6 +13,7 @@ using LinqToDB.Common;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;

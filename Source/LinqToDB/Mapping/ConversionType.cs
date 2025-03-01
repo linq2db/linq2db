@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Common
+﻿namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Defines conversion type such as to database / from database conversion direction.

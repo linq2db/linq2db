@@ -4,7 +4,7 @@ using System.Linq;
 
 using JetBrains.Annotations;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Internal.Common
 {
 	/// <summary>
 	/// This alogrithm is partially borrowed from CodeJam library.

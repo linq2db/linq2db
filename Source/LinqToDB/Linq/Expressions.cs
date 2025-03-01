@@ -9,7 +9,6 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;

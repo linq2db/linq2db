@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	///     Defines conversions from an object of one type in a model to an object of the same or

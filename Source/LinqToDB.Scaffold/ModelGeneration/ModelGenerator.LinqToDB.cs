@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
@@ -146,7 +147,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		protected void MakeMembersNamesUnique(IEnumerable<IClassMember> members, string defaultName, params string[] reservedNames)
 		{
-			Common.Utils.MakeUniqueNames(
+			Utils.MakeUniqueNames(
 				members,
 				reservedNames,
 				m => m is ITable t ? (t.Schema != null && (PrefixTableMappingForDefaultSchema || !t.IsDefaultSchema) && PrefixTableMappingWithSchema ? t.Schema + "_" : null) + t.Name : m is TypeBase tb ? tb.Name : ((MemberBase)m).Name,

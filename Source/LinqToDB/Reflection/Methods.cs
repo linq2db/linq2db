@@ -349,7 +349,7 @@ namespace LinqToDB.Reflection
 
 			public static class Tools
 			{
-				public static readonly MethodInfo CreateEmptyQuery  = MemberHelper.MethodOfGeneric(() => Common.Tools.CreateEmptyQuery<int>());
+				public static readonly MethodInfo CreateEmptyQuery  = MemberHelper.MethodOfGeneric(() => Internal.Common.Tools.CreateEmptyQuery<int>());
 			}
 
 			public static class ColumnReader

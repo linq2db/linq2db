@@ -69,7 +69,7 @@ namespace LinqToDB.Internal.DataProvider
 #if NETFRAMEWORK
 						var assembly = typeof(System.Data.Odbc.OdbcConnection).Assembly;
 #else
-						var assembly = LinqToDB.Common.Tools.TryLoadAssembly(AssemblyName, null);
+						var assembly = Internal.Common.Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 #endif

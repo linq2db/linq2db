@@ -457,7 +457,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 			var isNative = assemblyName == NativeAssemblyName;
 
-			var assembly = LinqToDB.Common.Tools.TryLoadAssembly(assemblyName, factoryName);
+			var assembly = Internal.Common.Tools.TryLoadAssembly(assemblyName, factoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
@@ -663,7 +663,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		static OracleProviderAdapter CreateDevartAdapter()
 		{
-			var assembly = LinqToDB.Common.Tools.TryLoadAssembly(DevartAssemblyName, DevartFactoryName);
+			var assembly = Internal.Common.Tools.TryLoadAssembly(DevartAssemblyName, DevartFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {DevartAssemblyName}");
 

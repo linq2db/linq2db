@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 					if (_instance == null)
 #pragma warning restore CA1508 // Avoid dead conditional code
 					{
-						var assembly = LinqToDB.Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
+						var assembly = Internal.Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 

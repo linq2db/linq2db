@@ -12,6 +12,7 @@ using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq.Builder.Visitors;

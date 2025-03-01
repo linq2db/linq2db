@@ -20,6 +20,7 @@ using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.SqlProvider;

@@ -7,12 +7,13 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
+using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Internal.Conversion
 {
 	public static class ConvertBuilder
 	{

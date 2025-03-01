@@ -198,7 +198,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateClientAdapter()
 		{
-			var assembly = LinqToDB.Common.Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
+			var assembly = Internal.Common.Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {ClientAssemblyName}");
 
@@ -267,7 +267,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateOctonicaAdapter()
 		{
-			var assembly = LinqToDB.Common.Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
+			var assembly = Internal.Common.Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {OctonicaAssemblyName}");
 

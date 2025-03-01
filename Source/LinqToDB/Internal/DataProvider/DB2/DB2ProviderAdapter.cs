@@ -32,12 +32,12 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		DB2ProviderAdapter()
 		{
 			var clientNamespace = ClientNamespace;
-			var assembly        = LinqToDB.Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
+			var assembly        = Internal.Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 
 #if !NETFRAMEWORK
 			if (assembly == null)
 			{
-				assembly = LinqToDB.Common.Tools.TryLoadAssembly(AssemblyNameOld, ProviderFactoryName);
+				assembly = Internal.Common.Tools.TryLoadAssembly(AssemblyNameOld, ProviderFactoryName);
 				if (assembly != null)
 					clientNamespace = ClientNamespaceOld;
 			}

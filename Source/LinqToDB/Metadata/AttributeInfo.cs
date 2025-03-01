@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
+using LinqToDB.Internal.Conversion;
 
 namespace LinqToDB.Metadata
 {

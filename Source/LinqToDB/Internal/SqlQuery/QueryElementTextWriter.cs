@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.SqlQuery
 {

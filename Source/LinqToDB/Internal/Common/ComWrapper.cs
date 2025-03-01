@@ -6,8 +6,6 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading;
 
-using LinqToDB.Common.Internal;
-
 namespace LinqToDB.Internal.Common
 {
 	// implementation based on code from https://github.com/dotnet/runtime/issues/12587

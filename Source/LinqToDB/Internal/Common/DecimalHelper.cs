@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Internal.Common
 {
 	// see: https://stackoverflow.com/a/33490834/10646316
 	internal static class DecimalHelper

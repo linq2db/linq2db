@@ -7,6 +7,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.SchemaProvider;
+using LinqToDB.Internal.Conversion;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {

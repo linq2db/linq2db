@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.DB2;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.DataProvider.DB2

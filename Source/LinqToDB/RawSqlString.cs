@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Common
+namespace LinqToDB
 {
 	/// <summary>
 	///     A string representing a raw SQL query. This type enables overload resolution between

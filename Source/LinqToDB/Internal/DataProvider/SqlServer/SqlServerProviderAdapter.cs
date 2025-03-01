@@ -186,7 +186,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			else
 #endif
 			{
-				assembly = LinqToDB.Common.Tools.TryLoadAssembly(assemblyName, factoryName);
+				assembly = Internal.Common.Tools.TryLoadAssembly(assemblyName, factoryName);
 			}
 
 			if (assembly == null)

@@ -12,7 +12,7 @@ using LinqToDB;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {

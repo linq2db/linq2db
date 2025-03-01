@@ -8,7 +8,7 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.EntityFrameworkCore.Internal;

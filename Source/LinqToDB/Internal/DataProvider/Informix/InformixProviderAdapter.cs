@@ -208,7 +208,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		private static InformixProviderAdapter CreateIfxAdapter()
 		{
-			var assembly = LinqToDB.Common.Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
+			var assembly = Internal.Common.Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {IfxAssemblyName}");
 

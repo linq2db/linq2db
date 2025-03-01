@@ -7,6 +7,7 @@ using System.Text;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

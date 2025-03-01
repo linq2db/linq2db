@@ -63,7 +63,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		private static SQLiteProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string prefix)
 		{
-			var assembly = LinqToDB.Common.Tools.TryLoadAssembly(assemblyName, null);
+			var assembly = Internal.Common.Tools.TryLoadAssembly(assemblyName, null);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 

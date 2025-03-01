@@ -6,6 +6,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Informix;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.DB2;
 
 namespace LinqToDB.Internal.DataProvider.Informix

@@ -8,7 +8,7 @@ using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
-using ConverterType = System.Action<System.Text.StringBuilder, LinqToDB.Common.DbDataType, LinqToDB.DataOptions, object>;
+using ConverterType = System.Action<System.Text.StringBuilder, LinqToDB.DbDataType, LinqToDB.DataOptions, object>;
 
 namespace LinqToDB.Internal.SqlProvider
 {

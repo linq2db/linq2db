@@ -13,7 +13,6 @@ using System.Xml;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Internal.Common;
 using LinqToDB.Reflection;
 

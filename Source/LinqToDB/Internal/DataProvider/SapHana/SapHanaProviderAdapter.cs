@@ -105,7 +105,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						if (_unmanagedProvider == null)
 #pragma warning restore CA1508 // Avoid dead conditional code
 						{
-							var assembly = LinqToDB.Common.Tools.TryLoadAssembly(UnmanagedAssemblyName, UnmanagedProviderFactoryName);
+							var assembly = Internal.Common.Tools.TryLoadAssembly(UnmanagedAssemblyName, UnmanagedProviderFactoryName);
 							if (assembly == null)
 								throw new InvalidOperationException($"Cannot load assembly {UnmanagedAssemblyName}");
 

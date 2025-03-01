@@ -8,6 +8,7 @@ using System.Reflection;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.Conversion;
 
 using NUnit.Framework;
 

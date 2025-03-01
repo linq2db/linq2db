@@ -6,6 +6,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.MySql;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse

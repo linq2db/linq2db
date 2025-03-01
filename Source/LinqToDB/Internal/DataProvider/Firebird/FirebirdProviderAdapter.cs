@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		FirebirdProviderAdapter()
 		{
-			var assembly = LinqToDB.Common.Tools.TryLoadAssembly(AssemblyName, null);
+			var assembly = Internal.Common.Tools.TryLoadAssembly(AssemblyName, null);
 
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");

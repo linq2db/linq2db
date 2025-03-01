@@ -360,7 +360,7 @@ namespace Tests.Linq
 
 				dataTable.AcceptChanges();
 
-				var param = new LinqToDB.Internal.SqlQuery.SqlParameter(new LinqToDB.Common.DbDataType(dataTable.GetType() ?? typeof(object), "IntTableType"), parameterName, dataTable);
+				var param = new LinqToDB.Internal.SqlQuery.SqlParameter(new DbDataType(dataTable.GetType() ?? typeof(object), "IntTableType"), parameterName, dataTable);
 
 				builder.AddParameter("values", param);
 			}

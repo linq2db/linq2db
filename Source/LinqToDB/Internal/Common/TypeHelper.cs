@@ -6,7 +6,7 @@ using System.Reflection;
 
 using LinqToDB.Extensions;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Internal.Common
 {
 	public static class TypeHelper
 	{

@@ -1,6 +1,7 @@
 ﻿using System;
 
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Data.RetryPolicy

@@ -12,6 +12,7 @@ using LinqToDB.Infrastructure;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;

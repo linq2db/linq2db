@@ -5,6 +5,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.DB2.Translation
 {

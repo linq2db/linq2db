@@ -1,4 +1,5 @@
 ﻿using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;

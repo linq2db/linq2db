@@ -11,7 +11,7 @@ using LinqToDB.Data;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Internal.Common
 {
 	/// <summary>
 	/// Various general-purpose helpers.

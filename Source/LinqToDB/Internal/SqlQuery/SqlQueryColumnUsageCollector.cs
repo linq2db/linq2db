@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery

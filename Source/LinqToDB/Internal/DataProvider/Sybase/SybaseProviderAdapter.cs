@@ -111,7 +111,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		private static SybaseProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string? dbFactoryName, bool supportsBulkCopy)
 		{
-			var assembly = LinqToDB.Common.Tools.TryLoadAssembly(assemblyName, dbFactoryName);
+			var assembly = Internal.Common.Tools.TryLoadAssembly(assemblyName, dbFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 

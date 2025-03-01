@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Metadata;
 using LinqToDB.SqlQuery;
 

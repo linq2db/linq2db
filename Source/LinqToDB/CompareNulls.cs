@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Common
+﻿namespace LinqToDB
 {
 	/// <summary>Defines how null values are compared in generated SQL queries.</summary>
 	public enum CompareNulls

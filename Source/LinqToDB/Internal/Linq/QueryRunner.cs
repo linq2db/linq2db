@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Logging;
+using LinqToDB.Internal.Logging;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;

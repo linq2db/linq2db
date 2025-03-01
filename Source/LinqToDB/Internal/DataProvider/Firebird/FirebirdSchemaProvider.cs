@@ -10,6 +10,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.SchemaProvider;
+using LinqToDB.Internal.Conversion;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {

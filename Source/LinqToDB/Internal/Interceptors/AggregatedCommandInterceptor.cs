@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Common;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Internal.Interceptors

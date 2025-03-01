@@ -6,6 +6,7 @@ using System.Text;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.MySql;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

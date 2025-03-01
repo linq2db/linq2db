@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Common
+﻿namespace LinqToDB.Configuration
 {
 	interface IApplicable<in T>
 	{

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace LinqToDB.Common.Internal
+namespace LinqToDB.Internal.Common
 {
 	/// <summary>
 	/// Internal APIs to call reflection-based invoke operations with automatic unwrap of

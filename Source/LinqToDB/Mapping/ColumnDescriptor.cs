@@ -8,6 +8,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 

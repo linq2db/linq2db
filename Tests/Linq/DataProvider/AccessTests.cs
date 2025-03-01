@@ -12,7 +12,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.Mapping;
-
+using LinqToDB.Internal.Conversion;
 using NUnit.Framework;
 
 using Tests.Model;

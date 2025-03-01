@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.Internal.DataProvider.DB2.Translation;
 using LinqToDB.Internal.Linq.Translation;

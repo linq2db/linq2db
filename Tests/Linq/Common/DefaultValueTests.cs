@@ -1,6 +1,7 @@
 ﻿using System;
 
 using LinqToDB.Common;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 

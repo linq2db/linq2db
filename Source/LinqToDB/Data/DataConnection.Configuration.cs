@@ -5,7 +5,6 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Configuration;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;

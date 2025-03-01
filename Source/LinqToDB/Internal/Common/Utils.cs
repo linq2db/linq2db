@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Internal.Common
 {
 	public static class Utils
 	{

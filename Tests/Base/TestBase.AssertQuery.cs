@@ -8,8 +8,10 @@ using System.Reflection;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools.Comparers;
 
@@ -325,7 +327,7 @@ namespace Tests
 
 			newExpr = ApplyNullCheck(newExpr);
 
-			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
+			var empty = LinqToDB.Internal.Common.Tools.CreateEmptyQuery<T>();
 			T[]? expected;
 
 			expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();

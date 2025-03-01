@@ -9,9 +9,8 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-
+using LinqToDB.Internal.Conversion;
 using NUnit.Framework;
-
 using Tests.Model;
 
 namespace Tests.Linq
@@ -685,7 +684,7 @@ namespace Tests.Linq
 
 			TestContext.Out.WriteLine($"Expected {expected} result {r}");
 
-			Assert.That(Math.Abs(LinqToDB.Common.Convert<TTo, decimal>.From(expected) - LinqToDB.Common.Convert<TTo, decimal>.From(r)), Is.LessThan(0.01m));
+			Assert.That(Math.Abs(Convert<TTo, decimal>.From(expected) - Convert<TTo, decimal>.From(r)), Is.LessThan(0.01m));
 		}
 
 		[ExpressionMethod(nameof(ServerConvertImp))]

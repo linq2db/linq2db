@@ -19,13 +19,13 @@ using System.Text;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;

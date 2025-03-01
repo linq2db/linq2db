@@ -1,6 +1,6 @@
 ﻿using LinqToDB.Internal.Common;
 
-namespace LinqToDB.Common
+namespace LinqToDB.Configuration
 {
 	/// <summary>
 	/// <para>
