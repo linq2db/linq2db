@@ -9,6 +9,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Internal.Options;
 using LinqToDB.Remote;
+using LinqToDB.Model;
 
 namespace LinqToDB.Data
 {

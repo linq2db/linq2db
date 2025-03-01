@@ -10,6 +10,7 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Concurrency

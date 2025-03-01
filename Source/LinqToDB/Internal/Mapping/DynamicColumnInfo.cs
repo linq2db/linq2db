@@ -5,7 +5,7 @@ using System.Reflection;
 
 using LinqToDB.Reflection;
 
-namespace LinqToDB.Mapping
+namespace LinqToDB.Internal.Mapping
 {
 	/// <inheritdoc />
 	/// <summary>

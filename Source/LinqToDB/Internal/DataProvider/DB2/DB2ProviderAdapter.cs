@@ -8,6 +8,7 @@ using LinqToDB.DataProvider;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.DB2

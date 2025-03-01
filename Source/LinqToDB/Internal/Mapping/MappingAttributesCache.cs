@@ -5,8 +5,9 @@ using System.Reflection;
 
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Mapping;
 
-namespace LinqToDB.Mapping
+namespace LinqToDB.Internal.Mapping
 {
 	internal sealed class MappingAttributesCache
 	{

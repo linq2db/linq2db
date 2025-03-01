@@ -18,6 +18,7 @@ using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 

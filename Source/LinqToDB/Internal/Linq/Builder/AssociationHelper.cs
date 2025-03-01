@@ -13,6 +13,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Interceptors;
+using LinqToDB.Model;
 
 namespace LinqToDB.Internal.Linq.Builder
 {

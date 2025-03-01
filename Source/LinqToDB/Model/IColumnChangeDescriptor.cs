@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Mapping
+﻿namespace LinqToDB.Model
 {
 	/// <summary>
 	/// Mapping entity column descriptor change interface.

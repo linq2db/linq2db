@@ -9,6 +9,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Model;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
@@ -107,11 +108,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		}
 
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternalAsync<T>(
-			ProviderConnections                                     providerConnections,
-			ITable<T>                                               table,
-			BulkCopyOptions                                         options,
-			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader,
-			CancellationToken                                       cancellationToken)
+			ProviderConnections                             providerConnections,
+			ITable<T>                                       table,
+			BulkCopyOptions                                 options,
+			Func<List<ColumnDescriptor>, BulkCopyReader<T>> createDataReader,
+			CancellationToken                               cancellationToken)
 			where T : notnull
 		{
 			var dataConnection = providerConnections.DataConnection;
@@ -186,10 +187,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		}
 
 		private BulkCopyRowsCopied ProviderSpecificCopyInternal<T>(
-			ProviderConnections                                     providerConnections,
-			ITable<T>                                               table,
-			BulkCopyOptions                                         options,
-			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader)
+			ProviderConnections                             providerConnections,
+			ITable<T>                                       table,
+			BulkCopyOptions                                 options,
+			Func<List<ColumnDescriptor>, BulkCopyReader<T>> createDataReader)
 			where T : notnull
 		{
 			var dataConnection = providerConnections.DataConnection;

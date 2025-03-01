@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 using LinqToDB.Internal.Common;
+using LinqToDB.Model;
 
 namespace LinqToDB.Mapping
 {
@@ -23,7 +24,7 @@ namespace LinqToDB.Mapping
 	/// records. To load data into association, you should explicitly specify it in your query using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> method.
 	/// </summary>
 	[PublicAPI]
-	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple=false)]
+	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple=true)]
 	public class AssociationAttribute : MappingAttribute
 	{
 		/// <summary>

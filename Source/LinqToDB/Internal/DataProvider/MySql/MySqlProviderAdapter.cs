@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.MySql;
 using LinqToDB.Internal.Expressions.Types;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

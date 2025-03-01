@@ -5,6 +5,7 @@ using System.Reflection;
 
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 
 namespace LinqToDB
 {

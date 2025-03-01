@@ -10,6 +10,7 @@ using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

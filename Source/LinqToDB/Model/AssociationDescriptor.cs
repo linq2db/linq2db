@@ -10,8 +10,10 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.Mapping;
+using LinqToDB.Mapping;
 
-namespace LinqToDB.Mapping
+namespace LinqToDB.Model
 {
 	/// <summary>
 	/// Stores association descriptor.

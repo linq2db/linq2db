@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Conversion;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 

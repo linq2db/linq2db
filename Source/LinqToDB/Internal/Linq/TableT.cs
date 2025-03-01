@@ -8,6 +8,7 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Linq

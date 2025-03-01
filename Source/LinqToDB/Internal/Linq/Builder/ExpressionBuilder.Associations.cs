@@ -11,6 +11,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Linq.Builder

@@ -9,6 +9,7 @@ using JetBrains.Annotations;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Linq;
 
 #if SUPPORTS_COMPOSITE_FORMAT
@@ -142,7 +143,7 @@ namespace LinqToDB.Common
 			set
 			{
 				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.
-				if (value) Mapping.Nullability.EnsureSupport();
+				if (value) Nullability.EnsureSupport();
 				_useNullableTypesMetadata = value;
 			}
 		}

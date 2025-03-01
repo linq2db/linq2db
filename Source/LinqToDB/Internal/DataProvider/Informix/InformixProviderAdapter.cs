@@ -10,6 +10,7 @@ using LinqToDB.Extensions;
 using LinqToDB.Internal.DataProvider.DB2;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Informix

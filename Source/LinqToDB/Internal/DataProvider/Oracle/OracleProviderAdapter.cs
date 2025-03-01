@@ -13,7 +13,9 @@ using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {

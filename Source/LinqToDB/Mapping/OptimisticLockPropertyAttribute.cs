@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using LinqToDB.Concurrency;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Mapping
@@ -13,7 +14,7 @@ namespace LinqToDB.Mapping
 	/// See <see cref="VersionBehavior"/> for supported strategies.
 	/// Used with <see cref="ConcurrencyExtensions" /> extensions.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
 	public class OptimisticLockPropertyAttribute : OptimisticLockPropertyBaseAttribute
 	{
 		private static readonly Expression _newGuidCall       = Expression.Call(null, Methods.System.Guid_NewGuid);

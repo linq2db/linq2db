@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Mapping
+﻿using LinqToDB.Mapping;
+
+namespace LinqToDB.Internal.Mapping
 {
 	sealed class LockedMappingSchemaInfo : MappingSchemaInfo
 	{

@@ -3,6 +3,7 @@
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 
 namespace LinqToDB.Internal.Linq.Builder
 {

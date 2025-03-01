@@ -5,6 +5,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 

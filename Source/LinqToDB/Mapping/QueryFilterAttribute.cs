@@ -9,7 +9,7 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Contains reference to filter function defined by <see cref="EntityMappingBuilder{T}.HasQueryFilter(Expression{Func{T, IDataContext, bool}})"/>
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true)]
 	public class QueryFilterAttribute : MappingAttribute
 	{
 		/// <summary>

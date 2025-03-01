@@ -12,8 +12,10 @@ using LinqToDB.Internal.Conversion;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Internal.Mapping;
 
-namespace LinqToDB.Mapping
+namespace LinqToDB.Model
 {
 	/// <summary>
 	/// Stores mapping entity column descriptor.

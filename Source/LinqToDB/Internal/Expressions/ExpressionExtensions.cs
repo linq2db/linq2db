@@ -11,6 +11,7 @@ using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 

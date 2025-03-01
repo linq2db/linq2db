@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Reflection;
 
-namespace LinqToDB.Mapping
+namespace LinqToDB.Internal.Mapping
 {
 	/// <summary>
 	/// Internal API.

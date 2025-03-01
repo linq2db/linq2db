@@ -8,6 +8,7 @@ using System.Reflection;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Metadata

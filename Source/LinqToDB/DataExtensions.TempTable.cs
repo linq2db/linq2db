@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using LinqToDB.Data;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 
 namespace LinqToDB
 {

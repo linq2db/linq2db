@@ -14,6 +14,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Internal.Async;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 
 namespace LinqToDB.Internal.DataProvider
 {

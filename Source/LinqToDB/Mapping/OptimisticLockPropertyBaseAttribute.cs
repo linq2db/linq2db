@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 
 using LinqToDB.Concurrency;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 
 namespace LinqToDB.Mapping
 {
@@ -10,7 +11,7 @@ namespace LinqToDB.Mapping
 	/// Defines optimistic lock column value generation strategy for update.
 	/// Used with <see cref="ConcurrencyExtensions" /> extensions.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
 	public abstract class OptimisticLockPropertyBaseAttribute : MappingAttribute
 	{
 		protected OptimisticLockPropertyBaseAttribute()

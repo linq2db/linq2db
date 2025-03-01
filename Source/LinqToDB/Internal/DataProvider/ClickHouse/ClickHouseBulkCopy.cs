@@ -12,6 +12,7 @@ using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Model;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
@@ -472,11 +473,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		#region Client
 
 		private async Task<BulkCopyRowsCopied> ProviderSpecificClientBulkCopyAsync<T>(
-			ProviderConnections                                     providerConnections,
-			ITable<T>                                               table,
-			DataOptions                                             options,
-			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader,
-			CancellationToken                                       cancellationToken)
+			ProviderConnections                             providerConnections,
+			ITable<T>                                       table,
+			DataOptions                                     options,
+			Func<List<ColumnDescriptor>, BulkCopyReader<T>> createDataReader,
+			CancellationToken                               cancellationToken)
 			where T : notnull
 		{
 			var dataConnection = providerConnections.DataConnection;

@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 
 using LinqToDB.Internal.Common;
+using LinqToDB.Mapping;
 
-namespace LinqToDB.Mapping
+namespace LinqToDB.Internal.Mapping
 {
 	/// <summary>
 	/// Locked mapping schema.

@@ -9,9 +9,10 @@ using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 
-namespace LinqToDB.Mapping
+namespace LinqToDB.Model
 {
 	/// <summary>
 	/// Stores mapping entity descriptor.
