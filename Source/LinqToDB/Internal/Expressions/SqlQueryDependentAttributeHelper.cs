@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Expressions
 {

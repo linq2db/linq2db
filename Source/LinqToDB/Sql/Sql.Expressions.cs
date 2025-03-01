@@ -5,8 +5,6 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common;
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;

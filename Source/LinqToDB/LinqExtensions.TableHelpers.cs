@@ -3,8 +3,8 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Expressions;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 
 namespace LinqToDB

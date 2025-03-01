@@ -6,9 +6,8 @@ using System.Linq.Expressions;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Expressions;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 

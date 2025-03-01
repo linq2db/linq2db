@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 
-using LinqToDB.Expressions;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Mapping;
 
 namespace LinqToDB
 {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.MySql
 {

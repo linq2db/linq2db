@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 using LinqToDB.Common;
 using LinqToDB.Internal.Expressions;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Used for controlling query caching of custom SQL Functions.

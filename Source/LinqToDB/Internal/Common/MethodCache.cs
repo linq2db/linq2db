@@ -1,9 +1,9 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
 
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Common
 {

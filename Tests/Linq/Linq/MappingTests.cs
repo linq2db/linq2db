@@ -11,7 +11,6 @@ using System.ServiceModel;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Mapping;
 

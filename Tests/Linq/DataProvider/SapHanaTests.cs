@@ -7,17 +7,14 @@ using System.Xml;
 using System.Xml.Linq;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SapHana;
 using LinqToDB.Internal.Conversion;
-using LinqToDB.Expressions;
-using LinqToDB.Internal.DataProvider.SapHana;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 using Tests.Model;
-using LinqToDB.DataProvider.SapHana;
 
 namespace Tests.DataProvider
 {

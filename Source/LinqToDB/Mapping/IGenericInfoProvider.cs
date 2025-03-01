@@ -2,7 +2,7 @@
 
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Generic conversions provider.

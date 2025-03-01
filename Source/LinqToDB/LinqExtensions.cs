@@ -8,12 +8,13 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Linq;
+using LinqToDB.Mapping;
 using LinqToDB.Reflection;
+
 using static LinqToDB.MultiInsertExtensions;
 
 namespace LinqToDB

@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Expressions;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Mapping;

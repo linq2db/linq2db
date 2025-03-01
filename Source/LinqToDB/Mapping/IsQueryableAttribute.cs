@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Used to define queryable members.
