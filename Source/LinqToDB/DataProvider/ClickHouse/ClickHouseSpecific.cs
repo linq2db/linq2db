@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 	{
 	}
 
-	sealed class ClickHouseSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IClickHouseSpecificTable<TSource>, ITable
+	sealed class ClickHouseSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IClickHouseSpecificTable<TSource>
 		where TSource : notnull
 	{
 		public ClickHouseSpecificTable(ITable<TSource> table) : base(table)
@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 	{
 	}
 
-	sealed class ClickHouseSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IClickHouseSpecificQueryable<TSource>, ITable
+	sealed class ClickHouseSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IClickHouseSpecificQueryable<TSource>
 	{
 		public ClickHouseSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{

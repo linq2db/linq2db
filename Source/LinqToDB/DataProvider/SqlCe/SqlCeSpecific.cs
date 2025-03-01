@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	{
 	}
 
-	sealed class SqlCeSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISqlCeSpecificTable<TSource>, ITable
+	sealed class SqlCeSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISqlCeSpecificTable<TSource>
 		where TSource : notnull
 	{
 		public SqlCeSpecificTable(ITable<TSource> table) : base(table)
@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	{
 	}
 
-	sealed class SqlCeSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, ISqlCeSpecificQueryable<TSource>, ITable
+	sealed class SqlCeSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, ISqlCeSpecificQueryable<TSource>
 	{
 		public SqlCeSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{

@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	{
 	}
 
-	sealed class PostgreSQLSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IPostgreSQLSpecificTable<TSource>, ITable
+	sealed class PostgreSQLSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IPostgreSQLSpecificTable<TSource>
 		where TSource : notnull
 	{
 		public PostgreSQLSpecificTable(ITable<TSource> table) : base(table)
@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	{
 	}
 
-	sealed class PostgreSQLSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IPostgreSQLSpecificQueryable<TSource>, ITable
+	sealed class PostgreSQLSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IPostgreSQLSpecificQueryable<TSource>
 	{
 		public PostgreSQLSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{

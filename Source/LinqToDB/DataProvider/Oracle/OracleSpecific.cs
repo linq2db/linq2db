@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 	}
 
-	sealed class OracleSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IOracleSpecificTable<TSource>, ITable
+	sealed class OracleSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IOracleSpecificTable<TSource>
 		where TSource : notnull
 	{
 		public OracleSpecificTable(ITable<TSource> table) : base(table)
@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 	}
 
-	sealed class OracleSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IOracleSpecificQueryable<TSource>, ITable
+	sealed class OracleSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IOracleSpecificQueryable<TSource>
 	{
 		public OracleSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{

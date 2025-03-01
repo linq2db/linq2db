@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.MySql
 	{
 	}
 
-	sealed class MySqlSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IMySqlSpecificTable<TSource>, ITable
+	sealed class MySqlSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IMySqlSpecificTable<TSource>
 		where TSource : notnull
 	{
 		public MySqlSpecificTable(ITable<TSource> table) : base(table)
@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.MySql
 	{
 	}
 
-	sealed class MySqlSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IMySqlSpecificQueryable<TSource>, ITable
+	sealed class MySqlSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IMySqlSpecificQueryable<TSource>
 	{
 		public MySqlSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{

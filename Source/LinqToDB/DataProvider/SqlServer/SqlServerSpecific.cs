@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 	}
 
-	sealed class SqlServerSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISqlServerSpecificTable<TSource>, ITable
+	sealed class SqlServerSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISqlServerSpecificTable<TSource>
 		where TSource : notnull
 	{
 		public SqlServerSpecificTable(ITable<TSource> table) : base(table)
@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 	}
 
-	sealed class SqlServerSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, ISqlServerSpecificQueryable<TSource>, ITable
+	sealed class SqlServerSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, ISqlServerSpecificQueryable<TSource>
 	{
 		public SqlServerSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{

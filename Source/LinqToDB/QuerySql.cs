@@ -2,7 +2,7 @@
 
 using LinqToDB.Data;
 
-namespace LinqToDB.Linq
+namespace LinqToDB
 {
 	/// <summary>
 	/// Command SQL, generated from linq query.

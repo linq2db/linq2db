@@ -3,7 +3,7 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Linq
+namespace LinqToDB.Internal.Linq
 {
 	public interface IDataReaderAsync : IDisposable, IAsyncDisposable
 	{

@@ -12,7 +12,7 @@ using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Linq
 {
-	sealed class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
+	sealed class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>
 		where T : notnull
 	{
 		public Table(IDataContext dataContext)

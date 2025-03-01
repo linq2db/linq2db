@@ -1,6 +1,6 @@
 ﻿using LinqToDB.Internal.SqlQuery;
 
-namespace LinqToDB.Linq
+namespace LinqToDB
 {
 	/// <summary>
 	/// SQL generation options for <see cref="LinqExtensions.ToSqlQuery{T}(System.Linq.IQueryable{T}, SqlGenerationOptions?)"/> group of APIs.
