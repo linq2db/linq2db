@@ -10,16 +10,16 @@ using LinqToDB.Internal.SqlQuery;
 namespace LinqToDB.Internal.Linq.Builder
 {
 	[BuildsMethodCall(
-		nameof(Queryable.First), 
-		nameof(Queryable.FirstOrDefault), 
-		nameof(Queryable.Single), 
-		nameof(Queryable.SingleOrDefault), 
-		nameof(LinqExtensions.AssociationRecord), 
-		nameof(LinqExtensions.AssociationOptionalRecord))]
+		nameof(Queryable.First),
+		nameof(Queryable.FirstOrDefault),
+		nameof(Queryable.Single),
+		nameof(Queryable.SingleOrDefault),
+		nameof(LinqInternalExtensions.AssociationRecord),
+		nameof(LinqInternalExtensions.AssociationOptionalRecord))]
 	[BuildsMethodCall(
-		nameof(AsyncEnumerableExtensions.FirstAsync), 
-		nameof(AsyncEnumerableExtensions.FirstOrDefaultAsync), 
-		nameof(AsyncEnumerableExtensions.SingleAsync), 
+		nameof(AsyncEnumerableExtensions.FirstAsync),
+		nameof(AsyncEnumerableExtensions.FirstOrDefaultAsync),
+		nameof(AsyncEnumerableExtensions.SingleAsync),
 		nameof(AsyncEnumerableExtensions.SingleOrDefaultAsync), CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
@@ -43,16 +43,16 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			return methodName switch
 			{
-				nameof(Queryable.First)                                => MethodKind.First,
-				nameof(AsyncEnumerableExtensions.FirstAsync)           => MethodKind.First,
-				nameof(Queryable.FirstOrDefault)                       => MethodKind.FirstOrDefault,
-				nameof(AsyncEnumerableExtensions.FirstOrDefaultAsync)  => MethodKind.FirstOrDefault,
-				nameof(Queryable.Single)                               => MethodKind.Single,
-				nameof(AsyncEnumerableExtensions.SingleAsync)          => MethodKind.Single,
-				nameof(Queryable.SingleOrDefault)                      => MethodKind.SingleOrDefault,
-				nameof(AsyncEnumerableExtensions.SingleOrDefaultAsync) => MethodKind.SingleOrDefault,
-				nameof(LinqExtensions.AssociationRecord)               => MethodKind.AssociationRecord,
-				nameof(LinqExtensions.AssociationOptionalRecord)       => MethodKind.AssociationOptionalRecord,
+				nameof(Queryable.First)                                  => MethodKind.First,
+				nameof(AsyncEnumerableExtensions.FirstAsync)             => MethodKind.First,
+				nameof(Queryable.FirstOrDefault)                         => MethodKind.FirstOrDefault,
+				nameof(AsyncEnumerableExtensions.FirstOrDefaultAsync)    => MethodKind.FirstOrDefault,
+				nameof(Queryable.Single)                                 => MethodKind.Single,
+				nameof(AsyncEnumerableExtensions.SingleAsync)            => MethodKind.Single,
+				nameof(Queryable.SingleOrDefault)                        => MethodKind.SingleOrDefault,
+				nameof(AsyncEnumerableExtensions.SingleOrDefaultAsync)   => MethodKind.SingleOrDefault,
+				nameof(LinqInternalExtensions.AssociationRecord)         => MethodKind.AssociationRecord,
+				nameof(LinqInternalExtensions.AssociationOptionalRecord) => MethodKind.AssociationOptionalRecord,
 				_ => throw new ArgumentOutOfRangeException(nameof(methodName), methodName, "Not supported method.")
 			};
 		}

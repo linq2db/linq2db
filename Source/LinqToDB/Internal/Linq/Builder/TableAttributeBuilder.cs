@@ -1,6 +1,8 @@
 ﻿using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -13,7 +15,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		nameof(LinqExtensions.SchemaName),
 		nameof(TableExtensions.IsTemporary),
 		nameof(TableExtensions.TableOptions),
-		nameof(LinqExtensions.UseTableDescriptor),
+		nameof(LinqInternalExtensions.UseTableDescriptor),
 		nameof(LinqExtensions.TableID)
 	)]
 	sealed class TableAttributeBuilder : MethodCallBuilder
@@ -31,14 +33,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			switch (methodCall.Method.Name)
 			{
-				case nameof(LinqExtensions.TableName)         : table.SqlTable.TableName    = table.SqlTable.TableName with { Name     = (string)value! }; break;
-				case nameof(LinqExtensions.ServerName)        : table.SqlTable.TableName    = table.SqlTable.TableName with { Server   = (string?)value }; break;
-				case nameof(LinqExtensions.DatabaseName)      : table.SqlTable.TableName    = table.SqlTable.TableName with { Database = (string?)value }; break;
-				case nameof(LinqExtensions.SchemaName)        : table.SqlTable.TableName    = table.SqlTable.TableName with { Schema   = (string?)value }; break;
-				case nameof(TableExtensions.TableOptions)     : table.SqlTable.TableOptions = (TableOptions)value!; break;
-				case nameof(LinqExtensions.TableID)           : table.SqlTable.ID           = (string?)     value;  break;
-				case nameof(TableExtensions.IsTemporary)      : table.SqlTable.Set((bool)value!, TableOptions.IsTemporary); break;
-				case nameof(LinqExtensions.UseTableDescriptor): MergeTableWithDescriptor(table.SqlTable, (EntityDescriptor)value!); break;
+				case nameof(LinqExtensions.TableName)                 : table.SqlTable.TableName    = table.SqlTable.TableName with { Name     = (string)value! }; break;
+				case nameof(LinqExtensions.ServerName)                : table.SqlTable.TableName    = table.SqlTable.TableName with { Server   = (string?)value }; break;
+				case nameof(LinqExtensions.DatabaseName)              : table.SqlTable.TableName    = table.SqlTable.TableName with { Database = (string?)value }; break;
+				case nameof(LinqExtensions.SchemaName)                : table.SqlTable.TableName    = table.SqlTable.TableName with { Schema   = (string?)value }; break;
+				case nameof(TableExtensions.TableOptions)             : table.SqlTable.TableOptions = (TableOptions)value!; break;
+				case nameof(LinqExtensions.TableID)                   : table.SqlTable.ID           = (string?)     value;  break;
+				case nameof(TableExtensions.IsTemporary)              : table.SqlTable.Set((bool)value!, TableOptions.IsTemporary); break;
+				case nameof(LinqInternalExtensions.UseTableDescriptor): MergeTableWithDescriptor(table.SqlTable, (EntityDescriptor)value!); break;
 			}
 
 			return BuildSequenceResult.FromContext(sequence);
