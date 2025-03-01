@@ -13,6 +13,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Reflection;
 
 using static System.Linq.Expressions.Expression;
+using LinqToDB.Internal.Extensions;
 
 // ReSharper disable TailRecursiveCall
 

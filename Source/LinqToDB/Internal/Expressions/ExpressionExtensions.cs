@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 

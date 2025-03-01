@@ -6,6 +6,7 @@ using System.Text;
 
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
 using ConverterType = System.Action<System.Text.StringBuilder, LinqToDB.DbDataType, LinqToDB.DataOptions, object>;

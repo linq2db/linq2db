@@ -12,6 +12,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Reflection;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Tools.Comparers
 {

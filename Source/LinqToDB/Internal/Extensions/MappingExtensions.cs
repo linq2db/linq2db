@@ -10,7 +10,7 @@ using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Extensions
+namespace LinqToDB.Internal.Extensions
 {
 	static class MappingExtensions
 	{
@@ -52,7 +52,7 @@ namespace LinqToDB.Extensions
 
 						return new SqlValue(
 							type,
-							Common.Configuration.UseEnumValueNameForStringColumns
+							LinqToDB.Common.Configuration.UseEnumValueNameForStringColumns
 								&& type == typeof(string)
 								&& mappingSchema.GetMapValues(underlyingType) == null
 								? string.Format(CultureInfo.InvariantCulture, "{0}", originalValue)
@@ -92,7 +92,7 @@ namespace LinqToDB.Extensions
 					{
 						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType)!;
 
-						value = Common.Configuration.UseEnumValueNameForStringColumns
+						value = LinqToDB.Common.Configuration.UseEnumValueNameForStringColumns
 							&& type                                       == typeof(string)
 							&& mappingSchema.GetMapValues(underlyingType) == null
 							? string.Format(CultureInfo.InvariantCulture, "{0}", value)

@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder

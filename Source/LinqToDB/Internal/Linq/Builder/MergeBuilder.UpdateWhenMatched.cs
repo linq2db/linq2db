@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 
 using static LinqToDB.Reflection.Methods.LinqToDB.Merge;

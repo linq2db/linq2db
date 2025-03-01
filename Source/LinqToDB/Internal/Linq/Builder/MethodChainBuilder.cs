@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.Linq.Builder
 {

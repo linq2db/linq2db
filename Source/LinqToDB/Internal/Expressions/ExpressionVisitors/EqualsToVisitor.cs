@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 {

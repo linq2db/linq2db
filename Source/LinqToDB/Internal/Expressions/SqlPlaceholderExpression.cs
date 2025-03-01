@@ -6,6 +6,7 @@ using System.Threading;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Expressions

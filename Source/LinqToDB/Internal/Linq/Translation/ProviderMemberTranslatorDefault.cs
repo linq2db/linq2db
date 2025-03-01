@@ -6,6 +6,7 @@ using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Translation

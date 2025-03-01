@@ -25,6 +25,7 @@ using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.Linq
 {

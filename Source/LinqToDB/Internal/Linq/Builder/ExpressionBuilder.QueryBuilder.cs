@@ -10,6 +10,7 @@ using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Reflection;
 

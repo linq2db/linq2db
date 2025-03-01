@@ -11,6 +11,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Mapping
 {

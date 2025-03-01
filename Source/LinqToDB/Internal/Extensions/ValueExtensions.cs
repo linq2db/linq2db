@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Extensions
+namespace LinqToDB.Internal.Extensions
 {
 	/// <summary>
 	/// Contains data manipulation helpers (e.g. for use in query parameters).

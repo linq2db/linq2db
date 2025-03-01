@@ -9,6 +9,7 @@ using System.Threading;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

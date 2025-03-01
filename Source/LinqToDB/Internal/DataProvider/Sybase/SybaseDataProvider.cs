@@ -14,6 +14,7 @@ using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Sybase;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.DataProvider.Sybase.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;

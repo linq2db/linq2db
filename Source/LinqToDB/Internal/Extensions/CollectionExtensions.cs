@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Extensions
+namespace LinqToDB.Internal.Extensions
 {
 	static class CollectionExtensions
 	{

@@ -12,6 +12,7 @@ using LinqToDB;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder

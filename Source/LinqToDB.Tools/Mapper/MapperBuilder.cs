@@ -7,7 +7,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Extensions;
-
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
 using LinqToDB.Reflection;

@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Reflection
 {

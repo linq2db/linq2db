@@ -4,6 +4,7 @@ using System.Globalization;
 
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.Conversion
 {

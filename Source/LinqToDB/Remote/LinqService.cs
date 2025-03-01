@@ -17,6 +17,7 @@ using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Remote
 {

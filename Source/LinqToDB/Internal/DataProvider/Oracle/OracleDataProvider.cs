@@ -12,6 +12,7 @@ using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.DataProvider.Oracle.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;

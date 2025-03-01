@@ -2,6 +2,7 @@
 using System.Reflection;
 
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.Linq
 {

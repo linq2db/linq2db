@@ -7,6 +7,7 @@ using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 

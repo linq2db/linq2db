@@ -7,6 +7,7 @@ using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
 using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 

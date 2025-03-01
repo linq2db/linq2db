@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;

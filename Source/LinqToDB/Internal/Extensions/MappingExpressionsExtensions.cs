@@ -4,7 +4,7 @@ using System.Reflection;
 
 using LinqToDB.Internal.Common;
 
-namespace LinqToDB.Extensions
+namespace LinqToDB.Internal.Extensions
 {
 	static class MappingExpressionsExtensions
 	{

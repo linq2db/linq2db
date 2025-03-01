@@ -7,6 +7,7 @@ using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Internal.Conversion;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Metadata
 {
