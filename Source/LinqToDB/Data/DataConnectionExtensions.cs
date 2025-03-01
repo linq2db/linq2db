@@ -16,7 +16,7 @@ namespace LinqToDB.Data
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
 	[PublicAPI]
-	public static partial class DataConnectionExtensions
+	public static class DataConnectionExtensions
 	{
 		#region SetCommand
 

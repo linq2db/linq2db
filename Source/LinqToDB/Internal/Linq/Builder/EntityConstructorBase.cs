@@ -16,7 +16,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
 
-namespace LinqToDB.Data
+namespace LinqToDB.Internal.Linq.Builder
 {
 	internal abstract class EntityConstructorBase
 	{

@@ -8,11 +8,9 @@ using System.Reflection;
 using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Linq;
-using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Data
+namespace LinqToDB.Internal.Linq.Builder
 {
 	sealed class RecordReaderBuilder
 	{
@@ -115,7 +113,7 @@ namespace LinqToDB.Data
 			
 			var lambda = Expression.Lambda<Func<DbDataReader,T>>(generator.ResultExpression, DataReaderParam);
 
-			if (Common.Configuration.OptimizeForSequentialAccess)
+			if (LinqToDB.Common.Configuration.OptimizeForSequentialAccess)
 				lambda = (Expression<Func<DbDataReader, T>>)SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(lambda, Reader.FieldCount, reduce: true);
 
 			return lambda.CompileExpression();

@@ -7,7 +7,7 @@ using LinqToDB.Data;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 
-using static LinqToDB.Data.EntityConstructorBase;
+using static LinqToDB.Internal.Linq.Builder.EntityConstructorBase;
 
 namespace LinqToDB.Internal.Linq.Builder
 {

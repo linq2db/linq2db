@@ -13,7 +13,8 @@ namespace LinqToDB.Data
 	/// <summary>
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
-	public static partial class DataConnectionExtensions
+	[Obsolete("Legacy Merge API obsoleted and not recommended for use. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/LegacyMergeExtensions.cs.")]
+	public static class LegacyMergeExtensions
 	{
 		private static bool MergeWithUpdate<T>(ITable<T> table)
 			where T : class
@@ -43,7 +44,6 @@ namespace LinqToDB.Data
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this DataConnection      dataConnection,
 			IQueryable<T>            source,
@@ -77,7 +77,6 @@ namespace LinqToDB.Data
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this DataConnection      dataConnection,
 			Expression<Func<T,bool>> predicate,
@@ -111,7 +110,6 @@ namespace LinqToDB.Data
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this DataConnection dataConnection,
 			bool                delete,
@@ -142,7 +140,6 @@ namespace LinqToDB.Data
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this DataConnection dataConnection,
 			IEnumerable<T>      source,
@@ -175,7 +172,6 @@ namespace LinqToDB.Data
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this ITable<T>           table,
 			IQueryable<T>            source,
@@ -231,7 +227,6 @@ namespace LinqToDB.Data
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this ITable<T>           table,
 			Expression<Func<T,bool>> predicate,
@@ -291,7 +286,6 @@ namespace LinqToDB.Data
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this ITable<T> table,
 			bool           delete,
@@ -347,7 +341,6 @@ namespace LinqToDB.Data
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <returns>Returns number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static int Merge<T>(
 			this ITable<T> table,
 			IEnumerable<T> source,
@@ -406,7 +399,6 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this DataConnection      dataConnection,
 			IQueryable<T>            source,
@@ -441,7 +433,6 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this DataConnection      dataConnection,
 			Expression<Func<T,bool>> predicate,
@@ -476,7 +467,6 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this DataConnection dataConnection,
 			bool                delete,
@@ -508,7 +498,6 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this DataConnection dataConnection,
 			IEnumerable<T>      source,
@@ -542,7 +531,6 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>           table,
 			IQueryable<T>            source,
@@ -599,7 +587,6 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>           table,
 			Expression<Func<T,bool>> predicate,
@@ -660,7 +647,6 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>    table,
 			bool              delete,
@@ -717,7 +703,6 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of affected target records.</returns>
 		// don't remove without consent from @IT
-		[Obsolete("Legacy Merge API obsoleted and will be removed in future versions. See migration guide https://linq2db.github.io/articles/sql/merge/Merge-API-Migration.html or direct translation of old API to new one in code of this method https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/Data/DataConnectionExtensions.LegacyMerge.cs.")]
 		public static Task<int> MergeAsync<T>(
 			this ITable<T>    table,
 			IEnumerable<T>    source,
