@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace LinqToDB.Infrastructure
+namespace LinqToDB.Internal.Infrastructure
 {
 	[DebuggerDisplay("Generator({_current})")]
 	public class UniqueIdGenerator<T> : IUniqueIdGenerator<T>

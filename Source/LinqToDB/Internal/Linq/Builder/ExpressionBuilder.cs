@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 
 using LinqToDB.Common;
 using LinqToDB.Extensions;
-using LinqToDB.Infrastructure;
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.DataProvider;

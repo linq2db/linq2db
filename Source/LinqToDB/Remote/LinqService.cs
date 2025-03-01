@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
-using LinqToDB.Infrastructure;
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;

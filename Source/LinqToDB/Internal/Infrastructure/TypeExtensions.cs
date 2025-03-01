@@ -2,7 +2,7 @@
 
 using LinqToDB.Internal.Common;
 
-namespace LinqToDB.Infrastructure
+namespace LinqToDB.Internal.Infrastructure
 {
 	/// <summary>
 	///     <para>

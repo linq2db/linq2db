@@ -10,7 +10,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
-using LinqToDB.Infrastructure;
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;

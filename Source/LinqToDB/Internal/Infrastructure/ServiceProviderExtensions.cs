@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Infrastructure
+namespace LinqToDB.Internal.Infrastructure
 {
 	public static class ServiceProviderExtensions
 	{
