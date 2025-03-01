@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 	}
 
-	public static partial class MySqlTools
+	public static class MySqlSpecificExtensions
 	{
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]

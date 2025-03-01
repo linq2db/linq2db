@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 	}
 
-	public static partial class SqlServerTools
+	public static class SqlCeSpecificExtensions
 	{
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]

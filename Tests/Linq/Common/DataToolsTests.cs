@@ -2,6 +2,7 @@
 using System.Text;
 
 using LinqToDB.DataProvider;
+using LinqToDB.Internal.DataProvider;
 
 using NUnit.Framework;
 

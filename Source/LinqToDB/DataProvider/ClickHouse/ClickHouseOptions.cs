@@ -2,6 +2,7 @@
 using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Options;
 
 namespace LinqToDB.DataProvider.ClickHouse

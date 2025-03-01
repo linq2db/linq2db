@@ -17,6 +17,7 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 
 using Tests.Model;
+using LinqToDB.DataProvider.SapHana;
 
 namespace Tests.DataProvider
 {

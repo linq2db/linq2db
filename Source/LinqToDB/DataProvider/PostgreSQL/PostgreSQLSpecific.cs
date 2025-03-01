@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 	}
 
-	public static partial class PostgreSQLTools
+	public static class PostgreSQLSpecificExtensions
 	{
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]

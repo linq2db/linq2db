@@ -5,7 +5,7 @@ using LinqToDB.Internal.DataProvider.ClickHouse;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	public static partial class ClickHouseTools
+	public static class ClickHouseTools
 	{
 		internal static ClickHouseProviderDetector ProviderDetector = new();
 

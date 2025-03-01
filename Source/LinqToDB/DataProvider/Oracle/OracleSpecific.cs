@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 	}
 
-	public static partial class OracleTools
+	public static class OracleSpecificExtensions
 	{
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]

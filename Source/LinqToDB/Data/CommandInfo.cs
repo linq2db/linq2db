@@ -32,6 +32,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.DataProvider;
 
 namespace LinqToDB.Data
 {

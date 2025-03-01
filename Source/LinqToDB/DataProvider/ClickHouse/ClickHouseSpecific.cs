@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 	}
 
-	public static partial class ClickHouseTools
+	public static class ClickHouseSpecificExtensions
 	{
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]

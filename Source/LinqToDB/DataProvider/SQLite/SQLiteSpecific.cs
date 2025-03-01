@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.SQLite
 		}
 	}
 
-	public static partial class SQLiteTools
+	public static class SQLiteSpecificExtensions
 	{
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]

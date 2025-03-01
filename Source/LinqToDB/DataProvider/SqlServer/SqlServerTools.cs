@@ -11,7 +11,7 @@ using LinqToDB.Internal.DataProvider.SqlServer;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	[PublicAPI]
-	public static partial class SqlServerTools
+	public static class SqlServerTools
 	{
 		#region Init
 
