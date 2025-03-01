@@ -5,7 +5,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 
-namespace LinqToDB.Concurrency
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Implements built-in optimistic lock value generation strategies for updates.

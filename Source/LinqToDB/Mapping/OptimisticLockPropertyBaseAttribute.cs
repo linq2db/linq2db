@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Concurrency
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Defines optimistic lock column value generation strategy for update.

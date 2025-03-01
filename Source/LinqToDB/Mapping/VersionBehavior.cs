@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Concurrency
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Defines optimistic lock column value generation strategy on record update.
