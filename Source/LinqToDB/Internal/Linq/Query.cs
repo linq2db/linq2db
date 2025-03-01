@@ -18,6 +18,7 @@ using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
+using LinqToDB.Internal.Interceptors;
 
 // ReSharper disable StaticMemberInGenericType
 

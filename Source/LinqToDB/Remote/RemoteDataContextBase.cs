@@ -24,6 +24,7 @@ using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
+using LinqToDB.Internal.Interceptors;
 
 namespace LinqToDB.Remote
 {

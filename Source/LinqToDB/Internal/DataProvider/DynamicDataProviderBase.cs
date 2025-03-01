@@ -8,6 +8,7 @@ using LinqToDB.DataProvider;
 using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 

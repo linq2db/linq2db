@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Interceptors
+﻿using LinqToDB.Interceptors;
+
+namespace LinqToDB.Internal.Interceptors
 {
 	public interface IInterceptable
 	{

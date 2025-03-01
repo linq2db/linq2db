@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Data.Common;
 
-namespace LinqToDB.Interceptors
+using LinqToDB.Interceptors;
+
+namespace LinqToDB.Internal.Interceptors
 {
 	internal sealed class OneTimeCommandInterceptor : CommandInterceptor
 	{

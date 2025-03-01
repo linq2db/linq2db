@@ -18,6 +18,7 @@ using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Interceptors;
 
 namespace LinqToDB.Remote
 {

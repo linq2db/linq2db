@@ -34,6 +34,7 @@ using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Interceptors;
 
 namespace LinqToDB.Data
 {
