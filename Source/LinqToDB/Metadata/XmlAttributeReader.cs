@@ -9,6 +9,8 @@ using System.Xml.Linq;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Internal.Conversion;
+using System.Linq.Expressions;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Metadata
 {
@@ -280,5 +282,83 @@ namespace LinqToDB.Metadata
 		public MemberInfo[] GetDynamicColumns(Type type) => [];
 
 		public string GetObjectID() => _objectId;
+
+		#region Models
+		sealed class AttributeInfo
+		{
+			public AttributeInfo(Type type, Dictionary<string, object?> values)
+			{
+				Type = type;
+				Values = values;
+			}
+
+			public Type                       Type;
+			public Dictionary<string,object?> Values;
+
+			Func<MappingAttribute>? _func;
+
+			public MappingAttribute MakeAttribute()
+			{
+				if (_func == null)
+				{
+					var ctors = Type.GetConstructors();
+					var ctor  = ctors.FirstOrDefault(c => c.GetParameters().Length == 0);
+
+					if (ctor != null)
+					{
+						var expr = Expression.Lambda<Func<MappingAttribute>>(
+						Expression.Convert(
+							Expression.MemberInit(
+								Expression.New(ctor),
+								Values.Select(k =>
+								{
+									var member = Type.GetPublicMemberEx(k.Key)[0];
+									var mtype  = member.GetMemberType();
+
+									return Expression.Bind(
+										member,
+										Expression.Constant(Converter.ChangeType(k.Value, mtype), mtype));
+								})),
+							typeof(MappingAttribute)));
+
+						_func = expr.CompileExpression();
+					}
+					else
+					{
+						throw new NotImplementedException();
+					}
+				}
+
+				return _func();
+			}
+		}
+
+		sealed class MetaMemberInfo
+		{
+			public MetaMemberInfo(string name, params AttributeInfo[] attributes)
+			{
+				Name = name;
+				Attributes = attributes;
+			}
+
+			public string          Name;
+			public AttributeInfo[] Attributes;
+		}
+
+		sealed class MetaTypeInfo
+		{
+			public MetaTypeInfo(string name, Dictionary<string, MetaMemberInfo> members, params AttributeInfo[] attributes)
+			{
+				Name = name;
+				Members = members;
+				Attributes = attributes;
+			}
+
+			public string                            Name;
+			public Dictionary<string,MetaMemberInfo> Members;
+			public AttributeInfo[]                   Attributes;
+		}
+
+		#endregion
 	}
 }

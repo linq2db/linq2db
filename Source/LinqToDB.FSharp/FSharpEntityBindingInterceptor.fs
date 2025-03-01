@@ -8,10 +8,11 @@ open System.Linq
 open System.Linq.Expressions
 open System.Reflection
 
-open LinqToDB.Expressions
+open LinqToDB.Mapping
 open LinqToDB.Extensions
 open LinqToDB.Internal.Interceptors
 open LinqToDB.Internal.Expressions
+open LinqToDB.Internal.Extensions
 open LinqToDB.Reflection
 
 /// Provides Linq To DB interceptor with F# support implementation.
