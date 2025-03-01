@@ -10,6 +10,7 @@ using LinqToDB.DataProvider.MySql;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.Options;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 

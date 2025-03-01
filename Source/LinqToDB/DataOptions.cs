@@ -8,6 +8,7 @@ using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Options;
 using LinqToDB.Remote;
 
 namespace LinqToDB

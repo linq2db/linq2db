@@ -9,7 +9,7 @@ using LinqToDB.Tools;
 
 namespace LinqToDB.Data.RetryPolicy
 {
-	sealed class RetryingDbCommand : DbCommand, IProxy<DbCommand>
+	sealed class RetryingDbCommand : DbCommand
 	{
 		readonly DataConnection _dataConnection;
 		readonly DbCommand      _command;

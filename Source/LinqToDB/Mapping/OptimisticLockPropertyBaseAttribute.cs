@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Concurrency;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Mapping

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using LinqToDB.Common;
 using LinqToDB.Configuration;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Options;
 
 namespace LinqToDB.Data
 {

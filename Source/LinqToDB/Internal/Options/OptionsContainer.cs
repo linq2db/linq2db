@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
-namespace LinqToDB.Configuration
+namespace LinqToDB.Internal.Options
 {
 	/// <summary>
 	/// Base class for options.

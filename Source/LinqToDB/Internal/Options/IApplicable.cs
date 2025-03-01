@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Configuration
+﻿namespace LinqToDB.Internal.Options
 {
 	interface IApplicable<in T>
 	{

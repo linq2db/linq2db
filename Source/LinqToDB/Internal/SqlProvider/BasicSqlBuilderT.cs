@@ -2,6 +2,7 @@
 using LinqToDB.Configuration;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
+using LinqToDB.Internal.Options;
 using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Internal.SqlProvider

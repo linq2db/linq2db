@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using LinqToDB.Common;
 using LinqToDB.Configuration;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Options;
 using LinqToDB.Internal.DataProvider;
 
 namespace LinqToDB.Data

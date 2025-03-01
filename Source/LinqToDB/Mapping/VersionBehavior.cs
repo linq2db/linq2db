@@ -1,5 +1,7 @@
 ﻿using System;
 
+using LinqToDB.Concurrency;
+
 namespace LinqToDB.Mapping
 {
 	/// <summary>

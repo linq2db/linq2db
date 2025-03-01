@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.Configuration
+namespace LinqToDB.Internal.Options
 {
 	/// <summary>
 	/// <para>
