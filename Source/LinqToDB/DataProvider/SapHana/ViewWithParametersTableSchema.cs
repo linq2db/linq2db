@@ -2,7 +2,7 @@
 
 using LinqToDB.SchemaProvider;
 
-namespace LinqToDB.Internal.DataProvider.SapHana
+namespace LinqToDB.DataProvider.SapHana
 {
 	public class ViewWithParametersTableSchema : TableSchema
 	{
