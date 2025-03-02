@@ -2,6 +2,7 @@
 using System.Reflection;
 
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -10,9 +11,9 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class PassThroughBuilder : MethodCallBuilder
 	{
 		static readonly MethodInfo[] _supportedMethods = [
-			Methods.Queryable.AsQueryable, 
-			Methods.LinqToDB.AsQueryable, 
-			Methods.LinqToDB.SqlExt.Alias 
+			Methods.Queryable.AsQueryable,
+			Methods.LinqToDB.AsQueryable,
+			Methods.LinqToDB.SqlExt.Alias
 		];
 
 		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)

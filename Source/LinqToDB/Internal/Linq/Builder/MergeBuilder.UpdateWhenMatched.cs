@@ -8,7 +8,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 
-using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+using static LinqToDB.Internal.Reflection.Methods.LinqToDB.Merge;
 
 namespace LinqToDB.Internal.Linq.Builder
 {

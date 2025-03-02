@@ -15,6 +15,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Internal.Interceptors;
+using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB.Internal.Expressions
 {

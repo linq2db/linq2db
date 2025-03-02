@@ -16,7 +16,7 @@ using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 
-namespace LinqToDB.Reflection
+namespace LinqToDB.Internal.Reflection
 {
 	/// <summary>
 	/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.

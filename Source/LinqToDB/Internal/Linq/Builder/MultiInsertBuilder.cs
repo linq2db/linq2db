@@ -7,7 +7,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
-using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
+using Methods = LinqToDB.Internal.Reflection.Methods.LinqToDB.MultiInsert;
 
 namespace LinqToDB.Internal.Linq.Builder
 {

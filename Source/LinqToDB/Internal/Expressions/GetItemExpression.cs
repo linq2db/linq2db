@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 

@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace LinqToDB.Reflection
+namespace LinqToDB.Internal.Mapping
 {
 	public abstract class VirtualPropertyInfoBase : PropertyInfo
 	{

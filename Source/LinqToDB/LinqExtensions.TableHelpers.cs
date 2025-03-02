@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 

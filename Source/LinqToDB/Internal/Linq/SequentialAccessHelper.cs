@@ -13,6 +13,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Linq

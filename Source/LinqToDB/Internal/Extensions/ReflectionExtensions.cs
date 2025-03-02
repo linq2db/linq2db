@@ -15,6 +15,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Extensions

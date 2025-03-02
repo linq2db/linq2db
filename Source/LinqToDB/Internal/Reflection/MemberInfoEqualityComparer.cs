@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 
-namespace LinqToDB.Reflection
+using LinqToDB.Internal.Mapping;
+
+namespace LinqToDB.Internal.Reflection
 {
 	public class MemberInfoEqualityComparer : IEqualityComparer<MemberInfo>
 	{

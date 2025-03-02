@@ -182,7 +182,7 @@ namespace Tests.Linq
 			var newExpression = Expression.New(typeof(RankHolder<T>).GetConstructor(Type.EmptyTypes)!);
 
 			var selectLambda = Expression.Lambda(Expression.MemberInit(newExpression, bindings), entityParam);
-			var selectQuery  = TypeHelper.MakeMethodCall(LinqToDB.Reflection.Methods.Queryable.Select, withoutOrder, Expression.Quote(selectLambda));
+			var selectQuery  = TypeHelper.MakeMethodCall(LinqToDB.Internal.Reflection.Methods.Queryable.Select, withoutOrder, Expression.Quote(selectLambda));
 
 			// Done! query is ready
 			//

@@ -2,7 +2,7 @@
 
 using LinqToDB.Internal.Expressions;
 
-using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+using static LinqToDB.Internal.Reflection.Methods.LinqToDB.Merge;
 
 namespace LinqToDB.Internal.Linq.Builder
 {

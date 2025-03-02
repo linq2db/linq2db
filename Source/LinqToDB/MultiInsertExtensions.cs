@@ -8,7 +8,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Internal.Linq;
 
-using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
+using Methods = LinqToDB.Internal.Reflection.Methods.LinqToDB.MultiInsert;
 
 namespace LinqToDB
 {
