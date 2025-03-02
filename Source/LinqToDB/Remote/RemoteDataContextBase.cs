@@ -25,6 +25,7 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Internal.Interceptors;
+using LinqToDB.Internal.Remote;
 
 namespace LinqToDB.Remote
 {
@@ -226,12 +227,12 @@ namespace LinqToDB.Remote
 			set
 			{
 				_mappingSchema = value;
-				_serializationMappingSchema = MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, MappingSchema);
+				_serializationMappingSchema = MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, MappingSchema);
 			}
 		}
 
 		private  MappingSchema? _serializationMappingSchema;
-		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, MappingSchema);
+		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, MappingSchema);
 
 		public  bool InlineParameters { get; set; }
 		public  bool CloseAfterUse    { get; set; }

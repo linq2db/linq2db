@@ -19,6 +19,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Interceptors;
+using LinqToDB.Internal.Remote;
 
 namespace LinqToDB.Remote
 {
@@ -36,15 +37,15 @@ namespace LinqToDB.Remote
 			{
 				_mappingSchema = value;
 				_serializationMappingSchema = value != null
-					? MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, value)
-					: Remote.SerializationMappingSchema.Instance;
+					? MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, value)
+					: Internal.Remote.SerializationMappingSchema.Instance;
 			}
 		}
 
 		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??=
 			_mappingSchema != null
-				? MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, _mappingSchema)
-				: Remote.SerializationMappingSchema.Instance;
+				? MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, _mappingSchema)
+				: Internal.Remote.SerializationMappingSchema.Instance;
 
 		public static Func<string, Type?> TypeResolver = _ => null;
 

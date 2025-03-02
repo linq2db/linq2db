@@ -5,13 +5,13 @@ using System.Globalization;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Remote
+namespace LinqToDB.Internal.Remote
 {
 	/// <summary>
 	/// Mapping schema, that defines remote context values de-/serialization converters.
 	/// Contains mappings between basic data types and <see cref="string"/>.
 	/// </summary>
-	internal sealed class SerializationMappingSchema : LockedMappingSchema
+	sealed class SerializationMappingSchema : LockedMappingSchema
 	{
 		public static readonly SerializationMappingSchema Instance = new();
 

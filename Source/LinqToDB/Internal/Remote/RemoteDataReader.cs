@@ -5,8 +5,9 @@ using System.Data;
 using System.Data.Common;
 
 using LinqToDB.Mapping;
+using LinqToDB.Remote;
 
-namespace LinqToDB.Remote
+namespace LinqToDB.Internal.Remote
 {
 	sealed class RemoteDataReader : DbDataReader
 	{

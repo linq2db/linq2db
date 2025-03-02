@@ -9,7 +9,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Remote
+namespace LinqToDB.Internal.Remote
 {
 	/// <summary>
 	/// Implements conversions support between raw values and string to support de-/serialization of remote data context
@@ -40,7 +40,7 @@ namespace LinqToDB.Remote
 				static (o, ms) =>
 				{
 					var from            = o.Key.from;
-					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+					o.SlidingExpiration = LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration;
 
 					Type? enumType = null;
 
@@ -91,7 +91,7 @@ namespace LinqToDB.Remote
 				static (o, ms) =>
 				{
 					var to = o.Key.to;
-					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+					o.SlidingExpiration = LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration;
 
 					Type? enumType = null;
 

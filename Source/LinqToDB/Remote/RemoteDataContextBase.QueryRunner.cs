@@ -18,6 +18,7 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal;
+using LinqToDB.Internal.Remote;
 
 namespace LinqToDB.Remote
 {
