@@ -10,8 +10,8 @@ using System.Text;
 using System.Xml;
 
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.SqlQuery;

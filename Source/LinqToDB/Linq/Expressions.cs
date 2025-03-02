@@ -10,10 +10,9 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;

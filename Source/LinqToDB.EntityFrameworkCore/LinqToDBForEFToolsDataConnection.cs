@@ -6,8 +6,8 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using LinqToDB.Interceptors;
-using LinqToDB.Internal.Expressions;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;

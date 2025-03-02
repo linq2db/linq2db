@@ -2,7 +2,7 @@
 
 using LinqToDB.Internal.SqlQuery;
 
-namespace LinqToDB.Internal.Linq.Translation
+namespace LinqToDB.Linq.Translation
 {
 	public interface ISqlExpressionFactory
 	{

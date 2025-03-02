@@ -1,6 +1,6 @@
 ﻿using LinqToDB.Internal.SqlQuery;
 
-namespace LinqToDB.Internal.SqlProvider
+namespace LinqToDB.SqlQuery
 {
 	sealed class NoneExtensionBuilder : ISqlExtensionBuilder
 	{

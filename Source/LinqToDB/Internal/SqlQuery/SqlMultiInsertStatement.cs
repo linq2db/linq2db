@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Internal.SqlQuery
 {
 	public class SqlMultiInsertStatement : SqlStatement

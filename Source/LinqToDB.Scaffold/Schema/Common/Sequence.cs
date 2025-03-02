@@ -1,4 +1,4 @@
-﻿using LinqToDB.Internal.SqlQuery;
+﻿using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Schema
 {

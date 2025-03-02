@@ -9,8 +9,8 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.Internal.DataProvider.Informix.Translation;
 using LinqToDB.Internal.Linq;
-using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 

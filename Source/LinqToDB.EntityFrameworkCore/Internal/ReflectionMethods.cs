@@ -5,7 +5,7 @@ using System.Reflection;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Internal.Expressions;
+using LinqToDB.Expressions;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;

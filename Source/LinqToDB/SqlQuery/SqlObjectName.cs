@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Internal.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	/// <summary>
 	/// Represents full name of database object (e.g. table, view, function or procedure) split into components.

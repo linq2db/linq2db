@@ -1,6 +1,5 @@
 ﻿using System;
 
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Mapping
@@ -320,9 +319,6 @@ namespace LinqToDB.Mapping
 		/// Specifies the order of the field in table creation.
 		/// Positive values first (ascending), then unspecified (arbitrary), then negative values (ascending).
 		/// </summary>
-		/// <remarks>
-		/// Ordering performed in <see cref="SqlTable"/> constructor.
-		/// </remarks>
 		public int Order
 		{
 			get => _order ?? int.MaxValue;

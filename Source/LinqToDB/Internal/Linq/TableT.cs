@@ -5,8 +5,8 @@ using System.Reflection;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Model;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.Linq
 {

@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;

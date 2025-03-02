@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-using LinqToDB.Internal.Expressions;
+using LinqToDB.Expressions;
 using LinqToDB.Model;
 
 namespace LinqToDB

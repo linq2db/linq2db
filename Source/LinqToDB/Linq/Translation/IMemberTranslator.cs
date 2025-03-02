@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace LinqToDB.Internal.Linq.Translation
+namespace LinqToDB.Linq.Translation
 {
 	public interface IMemberTranslator
 	{

@@ -6,6 +6,7 @@ using System.Reflection;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using Methods = LinqToDB.Internal.Reflection.Methods.LinqToDB.MultiInsert;
 

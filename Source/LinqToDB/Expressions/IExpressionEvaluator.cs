@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace LinqToDB.Internal.Expressions
+namespace LinqToDB.Expressions
 {
 	public interface IExpressionEvaluator
 	{

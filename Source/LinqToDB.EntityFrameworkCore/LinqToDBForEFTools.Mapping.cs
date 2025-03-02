@@ -3,7 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Internal.Expressions;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Extensions;
 
 using Microsoft.EntityFrameworkCore;

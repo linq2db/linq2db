@@ -11,6 +11,7 @@ using System.Threading;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;

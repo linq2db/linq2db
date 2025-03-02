@@ -12,8 +12,8 @@ using System.Threading.Tasks;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Internal.DataProvider.PostgreSQL.Translation;
-using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Internal.Expressions;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.Async

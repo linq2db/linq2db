@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Internal.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	/// <summary>
 	/// Oracle's INSERT ALL/FIRST query type.

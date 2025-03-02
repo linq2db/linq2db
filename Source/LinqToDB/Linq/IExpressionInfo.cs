@@ -2,7 +2,7 @@
 
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Internal.Linq
+namespace LinqToDB.Linq
 {
 	public interface IExpressionInfo
 	{

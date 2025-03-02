@@ -8,7 +8,6 @@ using JetBrains.Annotations;
 
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
-using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Linq;
 
@@ -94,8 +93,7 @@ namespace LinqToDB.Common
 
 		/// <summary>
 		/// Determines the length after which logging of binary data in SQL will be truncated.
-		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
-		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>.
 		/// </summary>
 		/// <remarks>
 		/// This value defaults to 100.
@@ -106,8 +104,7 @@ namespace LinqToDB.Common
 
 		/// <summary>
 		/// Determines the length after which logging of string data in SQL will be truncated.
-		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
-		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>.
 		/// </summary>
 		/// <remarks>
 		/// This value defaults to 200.
@@ -118,8 +115,7 @@ namespace LinqToDB.Common
 
 		/// <summary>
 		/// Determines number of items after which logging of collection data in SQL will be truncated.
-		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
-		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>.
 		/// </summary>
 		/// <remarks>
 		/// This value defaults to 8 elements.

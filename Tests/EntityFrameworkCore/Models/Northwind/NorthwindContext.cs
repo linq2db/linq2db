@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-using LinqToDB.Internal.Expressions;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Extensions;
 
 using Microsoft.EntityFrameworkCore;

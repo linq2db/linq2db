@@ -7,6 +7,7 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Linq;
@@ -282,14 +283,14 @@ namespace LinqToDB
 		[Extension("", BuilderType = typeof(ConvertBuilder))]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
-			return ConvertTo<TTo>.From(from);
+			return Common.ConvertTo<TTo>.From(from);
 		}
 
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.CONVERT_FORMAT, 0, 3, 1, 2, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert<TTo, TFrom>(TTo to, TFrom from, int format)
 		{
-			return ConvertTo<TTo>.From(from);
+			return Common.ConvertTo<TTo>.From(from);
 		}
 
 		class ConvertBuilderSimple : IExtensionCallBuilder
@@ -309,7 +310,7 @@ namespace LinqToDB
 		[Extension("", BuilderType = typeof(ConvertBuilderSimple))]
 		public static TTo Convert<TTo,TFrom>(TFrom obj)
 		{
-			return ConvertTo<TTo>.From(obj);
+			return Common.ConvertTo<TTo>.From(obj);
 		}
 
 		class ConvertBuilderInner : IExtensionCallBuilder
@@ -331,7 +332,7 @@ namespace LinqToDB
 			[Extension("", BuilderType = typeof(ConvertBuilderInner))]
 			public static TTo From<TFrom>(TFrom obj)
 			{
-				return ConvertTo<TTo>.From(obj);
+				return Common.ConvertTo<TTo>.From(obj);
 			}
 		}
 

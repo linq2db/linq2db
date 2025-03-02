@@ -6,7 +6,7 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Internal.Expressions;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Mapping

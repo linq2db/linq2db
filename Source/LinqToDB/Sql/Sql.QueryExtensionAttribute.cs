@@ -64,7 +64,7 @@ namespace LinqToDB
 
 			public QueryExtensionScope Scope                { get; }
 			/// <summary>
-			/// Instance of <see cref="ISqlExtensionBuilder"/>.
+			/// Type implementing <see cref="ISqlExtensionBuilder"/>.
 			/// </summary>
 			public Type?               ExtensionBuilderType { get; set; }
 			public string[]?           ExtensionArguments   { get; set; }

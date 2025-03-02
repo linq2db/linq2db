@@ -7,9 +7,9 @@ using System.Reflection;
 
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Model
 {

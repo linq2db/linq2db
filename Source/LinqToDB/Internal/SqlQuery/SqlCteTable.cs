@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Internal.SqlQuery
 {
 	public class SqlCteTable : SqlTable

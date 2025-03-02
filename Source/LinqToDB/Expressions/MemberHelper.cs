@@ -4,11 +4,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Reflection;
 
-namespace LinqToDB.Internal.Expressions
+namespace LinqToDB.Expressions
 {
 	public static class MemberHelper
 	{

@@ -3,8 +3,8 @@
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.Options;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Remote;
 
 namespace LinqToDB

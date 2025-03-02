@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Linq.Translation;
+
 namespace LinqToDB.Internal.Linq.Translation
 {
 	public sealed class CombinedMemberTranslator : IMemberTranslator

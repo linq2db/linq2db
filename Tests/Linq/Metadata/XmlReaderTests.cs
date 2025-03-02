@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text;
 
-using LinqToDB.Internal.Expressions;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 

@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
@@ -235,7 +236,7 @@ namespace LinqToDB
 				return str;
 			}
 
-			public static readonly SqlExpression UnknownExpression = new ("!!!");
+			static readonly SqlExpression UnknownExpression = new ("!!!");
 
 			public static void PrepareParameterValues<TContext>(
 				TContext                                                              context,

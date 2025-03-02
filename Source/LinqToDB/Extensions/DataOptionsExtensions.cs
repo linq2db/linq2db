@@ -13,9 +13,8 @@ using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
 using LinqToDB.Interceptors;
-using LinqToDB.Internal.DataProvider;
-using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Linq;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.Model;
 
@@ -1499,9 +1498,9 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Gets or sets whether to Always use Parameters for MultipleRowsCopy. Default is false.
-		/// If True, provider's override for <see cref="BasicBulkCopy.MaxParameters"/> will be used to determine the maximum number of rows per insert,
-		/// Unless overridden by <see cref="BulkCopyOptions.MaxParametersForBatch"/>.
+		/// Gets or sets whether to always use Parameters for MultipleRowsCopy. Default is false.
+		/// If True, provider-specific parameter limit per batch will be used to determine the maximum number of rows per insert,
+		/// Unless overridden by <see cref="WithMaxParametersForBatch"/>.
 		/// </summary>
 		[Pure]
 		public static BulkCopyOptions WithUseParameters(this BulkCopyOptions options, bool useParameters)
@@ -1510,7 +1509,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// If set, will override the Maximum parameters per batch statement from <see cref="BasicBulkCopy.MaxParameters"/>.
+		/// If set, will set the maximum parameters per batch statement. Also see <see cref="WithUseParameters"/>.
 		/// </summary>
 		[Pure]
 		public static BulkCopyOptions WithMaxParametersForBatch(this BulkCopyOptions options, int? maxParametersForBatch)
@@ -1728,9 +1727,9 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Gets or sets whether to Always use Parameters for MultipleRowsCopy. Default is false.
-		/// If True, provider's override for <see cref="BasicBulkCopy.MaxParameters"/> will be used to determine the maximum number of rows per insert,
-		/// Unless overridden by <see cref="BulkCopyOptions.MaxParametersForBatch"/>.
+		/// Gets or sets whether to always use Parameters for MultipleRowsCopy. Default is false.
+		/// If True, provider-specific parameter limit per batch will be used to determine the maximum number of rows per insert,
+		/// Unless overridden by <see cref="UseBulkCopyMaxParametersForBatch"/>.
 		/// </summary>
 		[Pure]
 		public static DataOptions UseBulkCopyUseParameters(this DataOptions options, bool useParameters)
@@ -1739,7 +1738,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// If set, will override the Maximum parameters per batch statement from <see cref="BasicBulkCopy.MaxParameters"/>.
+		/// If set, will set the maximum parameters per batch statement. Also see <see cref="UseBulkCopyUseParameters"/>.
 		/// </summary>
 		[Pure]
 		public static DataOptions UseBulkCopyMaxParametersForBatch(this DataOptions options, int? maxParametersForBatch)

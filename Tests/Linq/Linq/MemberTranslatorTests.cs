@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 
 using LinqToDB;
 using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Linq.Translation;
 
 using NUnit.Framework;
 

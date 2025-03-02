@@ -15,6 +15,7 @@ using LinqToDB.Data;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Model;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider
 {

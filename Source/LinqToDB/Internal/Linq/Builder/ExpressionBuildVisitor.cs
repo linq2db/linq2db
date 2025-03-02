@@ -19,6 +19,7 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.Model;
 using LinqToDB.SqlQuery;

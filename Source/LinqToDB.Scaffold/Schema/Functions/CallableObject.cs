@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Linq;
 
-using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Schema
 {

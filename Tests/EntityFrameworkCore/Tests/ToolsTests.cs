@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 
 using LinqToDB.EntityFrameworkCore.Tests.Models.Northwind;
-using LinqToDB.Internal.Expressions;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 using Microsoft.EntityFrameworkCore;

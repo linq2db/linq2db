@@ -6,7 +6,7 @@ using System.Text;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlProvider;
-using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 
 #pragma warning disable CA1861
 #pragma warning disable RS0030

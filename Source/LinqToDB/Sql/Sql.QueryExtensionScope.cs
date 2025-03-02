@@ -1,4 +1,4 @@
-﻿using LinqToDB.Internal.SqlProvider;
+﻿using LinqToDB.SqlQuery;
 
 namespace LinqToDB
 {

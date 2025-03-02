@@ -10,8 +10,8 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Internal.DataProvider.Oracle.Translation;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 
