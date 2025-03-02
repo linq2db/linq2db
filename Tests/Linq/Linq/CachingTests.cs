@@ -377,7 +377,7 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 			ms.SetConverter<IntArrayClass, DataParameter>(v => v.CreateParameter());
-			ms.AddScalarType(typeof(IntArrayClass), new SqlDataType(IntArrayClass.Type));
+			ms.AddScalarType(typeof(IntArrayClass), new DbDataType(IntArrayClass.Type));
 
 			using var db = GetDataConnection(context, ms);
 
@@ -415,7 +415,7 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 			ms.SetConverter<IntArrayStruct, DataParameter>(v => v.CreateParameter());
-			ms.SetDataType(typeof(IntArrayStruct), new SqlDataType(IntArrayStruct.Type));
+			ms.SetDataType(typeof(IntArrayStruct), new DbDataType(IntArrayStruct.Type));
 
 			using var db = GetDataConnection(context, ms);
 
