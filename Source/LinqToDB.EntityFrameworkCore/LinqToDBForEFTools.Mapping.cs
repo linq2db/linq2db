@@ -5,6 +5,7 @@ using System.Reflection;
 
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 
 using Microsoft.EntityFrameworkCore;
 

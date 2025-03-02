@@ -4,30 +4,19 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Internal.Conversion
+namespace LinqToDB.Common
 {
-	// moved to non-generic class to avoid instance-per-generic
-	internal sealed class ConvertReducer
-	{
-		internal static readonly TransformVisitor<object?> ReducerVisitor = TransformVisitor<object?>.Create(Reducer);
-		private static Expression Reducer(Expression e)
-		{
-			return e is DefaultValueExpression
-				? e.Reduce()
-				: e;
-		}
-	}
 
 	/// <summary>
 	/// Converters provider for value conversion from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> type.
 	/// </summary>
 	/// <typeparam name="TFrom">Source conversion type.</typeparam>
 	/// <typeparam name="TTo">Target conversion type.</typeparam>
+	[PublicAPI]
 	public static class Convert<TFrom,TTo>
 	{
 		static Convert()

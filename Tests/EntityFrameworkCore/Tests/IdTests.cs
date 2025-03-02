@@ -4,8 +4,8 @@ using System.Linq;
 
 using FluentAssertions;
 
-using LinqToDB.Common.Logging;
 using LinqToDB.EntityFrameworkCore.Tests.Models.Shared;
+using LinqToDB.Internal.Logging;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;

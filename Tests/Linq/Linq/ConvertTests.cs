@@ -9,7 +9,7 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using LinqToDB.Internal.Conversion;
+using LinqToDB.Common;
 using NUnit.Framework;
 using Tests.Model;
 

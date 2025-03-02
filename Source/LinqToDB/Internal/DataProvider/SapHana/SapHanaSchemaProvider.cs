@@ -11,6 +11,7 @@ using LinqToDB.SchemaProvider;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Mapping;
 using LinqToDB.Internal.SchemaProvider;
+using LinqToDB.DataProvider.SapHana;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {

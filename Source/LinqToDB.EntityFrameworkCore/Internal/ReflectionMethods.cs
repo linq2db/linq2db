@@ -51,7 +51,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 		public static readonly MethodInfo      ToLinqToDBTable          = MemberHelper.MethodOfGeneric<DbSet<object>>(q => q.ToLinqToDBTable());
 
 #if !EF31
-		public static readonly MethodInfo AsSqlServerTable    = MemberHelper.MethodOfGeneric<ITable<object>>(q => SqlServerTools.AsSqlServer(q));
+		public static readonly MethodInfo AsSqlServerTable    = MemberHelper.MethodOfGeneric<ITable<object>>(q => SqlServerSpecificExtensions.AsSqlServer(q));
 		public static readonly MethodInfo TemporalAsOfTable   = MemberHelper.MethodOfGeneric<ISqlServerSpecificTable<object>>(t => SqlServerHints.TemporalTableAsOf(t, default));
 		public static readonly MethodInfo TemporalFromTo      = MemberHelper.MethodOfGeneric<ISqlServerSpecificTable<object>>(t => SqlServerHints.TemporalTableFromTo(t, default, default));
 		public static readonly MethodInfo TemporalBetween     = MemberHelper.MethodOfGeneric<ISqlServerSpecificTable<object>>(t => SqlServerHints.TemporalTableBetween(t, default, default));

@@ -9,16 +9,17 @@ using System.Xml;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Internal.Conversion
+namespace LinqToDB.Common
 {
 	/// <summary>
 	/// Type conversion manager.
 	/// </summary>
+	[PublicAPI]
 	public static class Converter
 	{
 		static readonly ConcurrentDictionary<(Type from, Type to), LambdaExpression> _expressions = new ();
