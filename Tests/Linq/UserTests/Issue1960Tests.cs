@@ -4,6 +4,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

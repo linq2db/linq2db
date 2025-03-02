@@ -6,7 +6,7 @@ using System.Linq;
 
 using LinqToDB.Internal.SqlQuery;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.Internal.DataProvider
 {
 	public static class ReservedWords
 	{

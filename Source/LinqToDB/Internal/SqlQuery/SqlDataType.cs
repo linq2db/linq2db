@@ -15,7 +15,7 @@ using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Model;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.Internal.SqlQuery
 {
 	public class SqlDataType : ISqlExpression, IEquatable<SqlDataType>
 	{
@@ -407,7 +407,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public int  Precedence => SqlQuery.Precedence.Primary;
+		public int  Precedence => LinqToDB.SqlQuery.Precedence.Primary;
 		public Type SystemType => Type.SystemType;
 
 		#endregion

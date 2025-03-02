@@ -13,6 +13,7 @@ using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
+using LinqToDB.Internal.DataProvider;
 
 namespace LinqToDB.DataProvider.Oracle
 {

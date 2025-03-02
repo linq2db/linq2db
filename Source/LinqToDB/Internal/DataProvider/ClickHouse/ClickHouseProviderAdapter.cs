@@ -13,6 +13,7 @@ using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.DataProvider.MySql;
 using LinqToDB.Internal.DataProvider.MySql;
 using LinqToDB.Internal.Expressions.Types;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

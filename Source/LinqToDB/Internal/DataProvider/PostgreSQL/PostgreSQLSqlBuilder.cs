@@ -10,6 +10,7 @@ using System.Text;
 using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.DataProvider.PostgreSQL;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Options;

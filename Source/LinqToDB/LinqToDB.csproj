@@ -29,10 +29,7 @@
 
 		<ProjectReference Include="../CodeGenerators/CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetTargetFramework="TargetFramework=netstandard2.0" />
 
-		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
-		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
-		<EmbeddedResource Include="SqlQuery\ReservedWordsFirebird.txt" />
-		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
+		<EmbeddedResource Include="Resources\*.txt" />
 
 		<None Update="DataProvider\ClickHouse\ClickHouseHints.tt">
 			<LastGenOutput>ClickHouseHints.generated.cs</LastGenOutput>

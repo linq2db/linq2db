@@ -14,6 +14,7 @@ using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.SchemaProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SchemaProvider;
 using LinqToDB.SqlQuery;
 

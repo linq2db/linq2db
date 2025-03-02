@@ -7,6 +7,7 @@ using LinqToDB.Common;
 using LinqToDB.DataProvider;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
