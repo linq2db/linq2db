@@ -1,6 +1,6 @@
 ﻿using System.Data.Common;
 
-namespace LinqToDB.Tools
+namespace LinqToDB.Metrics
 {
 	/// <summary>
 	/// Activity Tag ID.

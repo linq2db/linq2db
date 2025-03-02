@@ -21,6 +21,7 @@ using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Internal.Linq.Builder
 {

@@ -26,6 +26,7 @@ using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Remote;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Remote
 {

@@ -20,6 +20,7 @@ using LinqToDB.Tools;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Remote;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Remote
 {

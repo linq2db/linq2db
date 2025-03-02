@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Tools
+namespace LinqToDB
 {
 	[PublicAPI]
 	public static class SqlExtensions

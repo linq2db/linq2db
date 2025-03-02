@@ -21,6 +21,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Internal.Interceptors;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {

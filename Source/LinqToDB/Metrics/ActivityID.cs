@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Tools
+﻿namespace LinqToDB.Metrics
 {
 	/// <summary>
 	/// Activity Service event ID.

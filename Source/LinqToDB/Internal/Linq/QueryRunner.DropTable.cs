@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Metrics;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Internal.Linq

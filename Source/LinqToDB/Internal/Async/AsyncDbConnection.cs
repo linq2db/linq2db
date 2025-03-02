@@ -8,9 +8,10 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 using LinqToDB.Data;
+using LinqToDB.Metrics;
 using LinqToDB.Tools;
 
-using AsyncDisposableWrapper = LinqToDB.Tools.ActivityService.AsyncDisposableWrapper;
+using AsyncDisposableWrapper = LinqToDB.Metrics.ActivityService.AsyncDisposableWrapper;
 
 namespace LinqToDB.Internal.Async
 {

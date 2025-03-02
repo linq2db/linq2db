@@ -10,6 +10,7 @@ using LinqToDB.Interceptors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Mapping;
+using LinqToDB.Metrics;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Internal.DataProvider

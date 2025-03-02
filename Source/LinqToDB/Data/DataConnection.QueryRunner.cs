@@ -19,6 +19,7 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.Tools;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {

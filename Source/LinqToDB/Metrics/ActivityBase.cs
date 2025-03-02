@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Data;
 
-namespace LinqToDB.Tools
+namespace LinqToDB.Metrics
 {
 	/// <summary>
 	/// Provides a basic implementation of the <see cref="IActivity"/> interface.

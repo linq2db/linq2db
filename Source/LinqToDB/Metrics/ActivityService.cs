@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Data;
 
-namespace LinqToDB.Tools
+namespace LinqToDB.Metrics
 {
 	/// <summary>
 	/// Provides API to register factory methods that return an Activity object or <c>null</c> for provided <see cref="ActivityID"/> event.

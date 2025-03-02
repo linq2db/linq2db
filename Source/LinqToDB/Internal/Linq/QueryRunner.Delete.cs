@@ -10,6 +10,7 @@ using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Tools;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Internal.Linq
 {

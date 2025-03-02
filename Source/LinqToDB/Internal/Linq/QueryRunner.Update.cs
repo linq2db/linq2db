@@ -13,6 +13,7 @@ using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Model;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Internal.Linq
 {

@@ -17,6 +17,7 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
+using LinqToDB.Metrics;
 
 namespace LinqToDB
 {

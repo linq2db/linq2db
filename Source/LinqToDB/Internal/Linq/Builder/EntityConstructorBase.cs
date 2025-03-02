@@ -17,6 +17,7 @@ using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Model;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Internal.Linq.Builder
 {

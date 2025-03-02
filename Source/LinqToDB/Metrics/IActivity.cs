@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Data;
 
-namespace LinqToDB.Tools
+namespace LinqToDB.Metrics
 {
 	/// <summary>
 	/// Represents a user-defined operation with context to be used for Activity Service events.
