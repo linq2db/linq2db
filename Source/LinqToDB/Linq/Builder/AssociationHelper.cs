@@ -336,7 +336,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var body = definedQueryMethod.Body.Unwrap();
 				body = Expression.Call(
-					(shouldAddDefaultIfEmpty ? Methods.Queryable.SingleOrDefault : Methods.Queryable.Single)
+					(shouldAddDefaultIfEmpty ? Methods.LinqToDB.AssociationOptionalRecord : Methods.LinqToDB.AssociationRecord)
 					.MakeGenericMethod(objectType), body);
 
 				definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);

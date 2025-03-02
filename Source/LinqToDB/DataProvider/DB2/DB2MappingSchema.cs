@@ -61,6 +61,8 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			SetDataType(typeof(string), new DbDataType(typeof(string), DataType.NVarChar, null, 255));
 			SetDataType(typeof(byte), new DbDataType(typeof(byte), DataType.Int16));
+			// in DB2 DECIMAL has 0 scale by default
+			SetDataType(typeof(decimal), new DbDataType(typeof(decimal), DataType.Decimal, null, null, 18, 10));
 
 			SetValueToSqlConverter(typeof(Guid),     (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertBinaryToSql  (sb, ((Guid)v).ToByteArray()));
 			SetValueToSqlConverter(typeof(string),   (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertStringToSql  (sb, (string)v));

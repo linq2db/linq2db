@@ -26,6 +26,8 @@ namespace LinqToDB.DataProvider.Sybase
 			SetValueToSqlConverter(typeof(Binary)  , (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new DbDataType(typeof(string), DataType.NVarChar, null, 255));
+			// in ASE DECIMAL=DECIMAL(18,0)
+			SetDataType(typeof(decimal), new DbDataType(typeof(decimal), DataType.Decimal, null, null, 18, 10));
 
 			SetDefaultValue(typeof(DateTime), new DateTime(1753, 1, 1));
 		}

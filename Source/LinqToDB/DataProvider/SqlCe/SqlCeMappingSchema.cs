@@ -38,6 +38,8 @@ namespace LinqToDB.DataProvider.SqlCe
 			AddScalarType(typeof(SqlXml),       SqlXml.     Null, true, DataType.Xml);
 
 			SetDataType(typeof(string), new DbDataType(typeof(string), DataType.NVarChar, null, 255));
+			// in SQLCE DECIMAL=DECIMAL(18,0)
+			SetDataType(typeof(decimal), new DbDataType(typeof(decimal), DataType.Decimal, null, null, 18, 10));
 
 			SetValueToSqlConverter(typeof(string), (StringBuilder sb, DbDataType _,  DataOptions _, object v) => ConvertStringToSql(sb, (string)v));
 			SetValueToSqlConverter(typeof(char),   (StringBuilder sb, DbDataType _,  DataOptions _, object v) => ConvertCharToSql  (sb, (char)v));

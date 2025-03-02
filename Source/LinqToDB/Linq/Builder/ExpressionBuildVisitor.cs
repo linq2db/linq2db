@@ -1742,11 +1742,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (innerExpression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
 			{
-				var notNullConditions = node.NotNullExpressions
-					.Concat(defaultIfEmptyExpression.NotNullExpressions)
-					.Distinct(ExpressionEqualityComparer.Instance)
-					.ToList();
-				var newNode = node.Update(defaultIfEmptyExpression.InnerExpression, notNullConditions.AsReadOnly());
+				var newNode = node.Update(defaultIfEmptyExpression.InnerExpression, defaultIfEmptyExpression.NotNullExpressions);
 				return Visit(newNode);
 			}
 
@@ -2491,6 +2487,11 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
+				if (calculatedContext.SelectQuery != ctx.SelectQuery)
+				{
+					ctx = new ScopeContext(ctx, calculatedContext);
+				}
+
 				subqueryExpression = new ContextRefExpression(node.Type, ctx, alias : _alias);
 
 				if (_buildFlags.HasFlag(BuildFlags.ForExpanding))
@@ -3204,6 +3205,10 @@ namespace LinqToDB.Linq.Builder
 			if (node.Method.Name == "Equals" && node.Object != null && node.Arguments.Count == 1)
 				return ConvertCompareExpression(ExpressionType.Equal, node.Object, node.Arguments[0]);
 
+			var saveFlags = _buildFlags;
+			_buildFlags |= BuildFlags.ForKeys;
+			_buildFlags &= ~BuildFlags.ForMemberRoot;
+
 			if (node.Method.DeclaringType == typeof(string))
 			{
 				switch (node.Method.Name)
@@ -3255,6 +3260,8 @@ namespace LinqToDB.Linq.Builder
 
 				predicate = ConvertInPredicate(expr);
 			}
+
+			_buildFlags = saveFlags;
 
 			if (predicate != null)
 			{
@@ -3512,6 +3519,11 @@ namespace LinqToDB.Linq.Builder
 					return Expression.OrElse(
 						Expression.AndAlso(conditionalExpression.Test, trueCondition),
 						Expression.AndAlso(Expression.Not(conditionalExpression.Test), falseCondition));
+				}
+
+				if (current is ContextRefExpression { BuildContext: IBuildProxy proxy })
+				{
+					return CollectNullCompareExpressionExpression(proxy.InnerExpression);
 				}
 
 				return null;
@@ -3801,7 +3813,7 @@ namespace LinqToDB.Linq.Builder
 						rightExpr = Builder.ParseGenericConstructor(rightExpr, ProjectFlags.SQL | ProjectFlags.Keys, columnDescriptor, true);
 
 						if (SequenceHelper.UnwrapDefaultIfEmpty(leftExpr) is SqlGenericConstructorExpression leftGenericConstructor &&
-							SequenceHelper.UnwrapDefaultIfEmpty(rightExpr) is SqlGenericConstructorExpression rightGenericConstructor)
+						    SequenceHelper.UnwrapDefaultIfEmpty(rightExpr) is SqlGenericConstructorExpression rightGenericConstructor)
 						{
 							return GenerateConstructorComparison(leftGenericConstructor, rightGenericConstructor);
 						}
@@ -4856,6 +4868,7 @@ namespace LinqToDB.Linq.Builder
 			var info = new BuildInfo(BuildContext, expr, new SelectQuery())
 			{
 				CreateSubQuery = true,
+				IsSubqueryExpression = true
 			};
 
 			if (_buildFlags.HasFlag(BuildFlags.ForceOuter))

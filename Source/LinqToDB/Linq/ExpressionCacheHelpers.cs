@@ -1,17 +1,23 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Extensions;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq
 {
 	static class ExpressionCacheHelpers
 	{
-		public static bool ShouldRemoveConstantFromCache(ConstantExpression node)
+		public static bool ShouldRemoveConstantFromCache(ConstantExpression node, MappingSchema mappingSchema)
 		{
-			if (!node.Type.IsScalar() && node.Value != null)
+			if (!mappingSchema.IsScalarType(node.Type) && node.Value != null)
 			{
-				if (!node.Value.GetType().IsScalar())
+				var valueType = node.Value.GetType();
+
+				// Handling UseTableDescriptor case.
+				if (valueType == typeof(EntityDescriptor))
+					return false;
+
+				if (!mappingSchema.IsScalarType(valueType))
 				{
 					if (node.Value is Array or FormattableString)
 						return false;
