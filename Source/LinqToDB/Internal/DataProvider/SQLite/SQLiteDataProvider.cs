@@ -7,9 +7,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.DataProvider.SQLite.Translation;
 using LinqToDB.Internal.Linq.Translation;

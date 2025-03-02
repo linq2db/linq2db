@@ -24,7 +24,6 @@ using LinqToDB.Interceptors;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.DataProvider.Oracle;
 using LinqToDB.Internal.Linq;
-using LinqToDB.Internal.Conversion;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;

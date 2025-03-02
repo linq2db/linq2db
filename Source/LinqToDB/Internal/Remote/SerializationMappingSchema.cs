@@ -3,7 +3,6 @@ using System.Data.Linq;
 using System.Globalization;
 
 using LinqToDB.Internal.Mapping;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Remote
 {

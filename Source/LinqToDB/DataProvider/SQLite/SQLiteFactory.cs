@@ -3,8 +3,6 @@
 using JetBrains.Annotations;
 
 using LinqToDB.Configuration;
-using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.DataProvider.SQLite;
 

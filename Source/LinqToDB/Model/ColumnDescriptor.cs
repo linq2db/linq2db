@@ -6,14 +6,12 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Conversion;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
+using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
-using LinqToDB.Internal.Extensions;
-using LinqToDB.Mapping;
-using LinqToDB.Internal.Mapping;
 
 namespace LinqToDB.Model
 {

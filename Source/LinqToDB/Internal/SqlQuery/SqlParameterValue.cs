@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics;
 
-using LinqToDB.Common;
-
 namespace LinqToDB.Internal.SqlQuery
 {
 	[DebuggerDisplay("{ProviderValue}, {DbDataType}")]

@@ -6,7 +6,6 @@ using System.Text;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 

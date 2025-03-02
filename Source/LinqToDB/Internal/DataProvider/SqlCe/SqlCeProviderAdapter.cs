@@ -3,9 +3,7 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SqlTypes;
 using System.Linq.Expressions;
-using System.Threading;
 
-using LinqToDB.DataProvider;
 using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Internal.DataProvider.SqlCe

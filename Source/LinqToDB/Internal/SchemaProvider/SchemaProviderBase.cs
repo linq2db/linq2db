@@ -8,7 +8,6 @@ using System.Text;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.Conversion;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 

@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;

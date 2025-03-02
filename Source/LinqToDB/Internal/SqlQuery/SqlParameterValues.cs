@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-using LinqToDB.Common;
-
 namespace LinqToDB.Internal.SqlQuery
 {
 	public class SqlParameterValues : IReadOnlyParameterValues

@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Metrics;
-using LinqToDB.Tools;
 
 namespace LinqToDB.Data
 {

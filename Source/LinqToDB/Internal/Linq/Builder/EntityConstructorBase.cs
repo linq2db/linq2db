@@ -5,19 +5,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
-using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Linq;
-using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.Reflection;
-using LinqToDB.Tools;
-using LinqToDB.Internal.Extensions;
-using LinqToDB.Model;
 using LinqToDB.Metrics;
+using LinqToDB.Model;
+using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Linq.Builder
 {

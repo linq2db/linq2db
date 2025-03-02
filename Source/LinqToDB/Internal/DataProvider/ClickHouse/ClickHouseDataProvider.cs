@@ -11,9 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.Internal.DataProvider.ClickHouse.Translation;
 using LinqToDB.Internal.Linq.Translation;

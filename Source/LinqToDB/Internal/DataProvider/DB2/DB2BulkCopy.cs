@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.Internal.Common;

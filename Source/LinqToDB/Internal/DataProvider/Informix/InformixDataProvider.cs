@@ -5,9 +5,7 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.Internal.DataProvider.Informix.Translation;
 using LinqToDB.Internal.Linq;

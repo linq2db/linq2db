@@ -3,8 +3,6 @@
 using JetBrains.Annotations;
 
 using LinqToDB.Configuration;
-using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.SqlCe;
 
 namespace LinqToDB.DataProvider.SqlCe
 {

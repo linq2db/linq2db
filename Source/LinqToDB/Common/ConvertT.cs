@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 using LinqToDB.Internal.Conversion;
-using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Common

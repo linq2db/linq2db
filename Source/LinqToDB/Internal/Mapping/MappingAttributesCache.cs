@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 

@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 
-using LinqToDB.DataProvider;
-
 namespace LinqToDB.Configuration
 {
 	/// <summary>

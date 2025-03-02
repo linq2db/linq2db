@@ -4,8 +4,6 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
-using JetBrains.Annotations;
-
 using LinqToDB.Data.RetryPolicy;
 
 namespace LinqToDB.Internal.Async

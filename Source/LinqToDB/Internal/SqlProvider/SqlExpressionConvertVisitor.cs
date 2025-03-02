@@ -5,13 +5,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using LinqToDB.Common;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
-using LinqToDB.Internal.Conversion;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
-using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.SqlProvider
 {

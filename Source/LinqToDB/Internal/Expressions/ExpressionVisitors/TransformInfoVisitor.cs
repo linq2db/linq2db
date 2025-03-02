@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.Expressions.ExpressionVisitors

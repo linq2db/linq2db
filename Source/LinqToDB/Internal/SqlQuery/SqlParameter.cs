@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-using LinqToDB.Common;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.Internal.SqlQuery
 {
 	public class SqlParameter : SqlExpressionBase

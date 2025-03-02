@@ -6,11 +6,8 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
-using LinqToDB.Extensions;
 using LinqToDB.Internal.DataProvider.Oracle.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq.Translation;

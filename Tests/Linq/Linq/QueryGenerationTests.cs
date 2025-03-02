@@ -6,7 +6,6 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

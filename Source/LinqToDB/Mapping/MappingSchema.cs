@@ -16,7 +16,6 @@ using JetBrains.Annotations;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Conversion;
@@ -28,7 +27,6 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Metadata;
 using LinqToDB.Model;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Mapping
 {

@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Data.Common;
 
-using LinqToDB.Common;
-using LinqToDB.Configuration;
 using LinqToDB.DataProvider;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
-using LinqToDB.Mapping;
 using LinqToDB.Internal.Options;
-using LinqToDB.Remote;
+using LinqToDB.Mapping;
 using LinqToDB.Model;
+using LinqToDB.Remote;
 
 namespace LinqToDB.Data
 {

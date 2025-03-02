@@ -1,10 +1,8 @@
-﻿using LinqToDB.Common;
-using LinqToDB.DataProvider;
+﻿using LinqToDB.DataProvider;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {

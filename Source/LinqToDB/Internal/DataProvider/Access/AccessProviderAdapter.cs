@@ -2,7 +2,6 @@
 using System.Data;
 using System.Data.Common;
 
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
 
 using OdbcType = LinqToDB.Internal.DataProvider.OdbcProviderAdapter.OdbcType;

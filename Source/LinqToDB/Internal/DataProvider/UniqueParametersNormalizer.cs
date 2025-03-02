@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using LinqToDB.DataProvider;
-
 namespace LinqToDB.Internal.DataProvider
 {
 	/// <summary>

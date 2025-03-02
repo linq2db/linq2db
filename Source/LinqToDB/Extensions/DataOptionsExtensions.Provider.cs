@@ -15,8 +15,6 @@ using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.DataProvider.Sybase;
-using LinqToDB.Internal.DataProvider.SQLite;
-using LinqToDB.Internal.DataProvider.SqlServer;
 
 // ReSharper disable once CheckNamespace
 namespace LinqToDB

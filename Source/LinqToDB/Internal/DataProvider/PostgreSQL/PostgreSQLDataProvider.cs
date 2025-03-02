@@ -9,9 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Internal.DataProvider.PostgreSQL.Translation;
 using LinqToDB.Internal.Linq.Translation;

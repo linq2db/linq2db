@@ -4,7 +4,6 @@
 using System.Text;
 #endif
 
-using LinqToDB.Common;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.Internal.SqlProvider;

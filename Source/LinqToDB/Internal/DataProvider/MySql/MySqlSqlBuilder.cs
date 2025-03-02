@@ -4,16 +4,13 @@ using System.Data.Common;
 using System.Globalization;
 using System.Text;
 
-using LinqToDB.Common;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.MySql;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Internal.Options;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
-using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {

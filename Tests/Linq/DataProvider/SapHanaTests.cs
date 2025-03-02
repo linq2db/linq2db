@@ -7,9 +7,9 @@ using System.Xml;
 using System.Xml.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SapHana;
-using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

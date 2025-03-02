@@ -12,20 +12,18 @@ using JetBrains.Annotations;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
-using LinqToDB.Extensions;
-using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.Remote;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
-using LinqToDB.Internal.Interceptors;
-using LinqToDB.Internal.Remote;
 using LinqToDB.Metrics;
 
 namespace LinqToDB.Remote

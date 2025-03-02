@@ -1,8 +1,5 @@
 ﻿using System;
 
-using LinqToDB.Common;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.Internal.SqlQuery
 {
 

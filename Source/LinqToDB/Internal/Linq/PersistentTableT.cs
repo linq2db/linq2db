@@ -6,8 +6,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Linq;
-
 namespace LinqToDB.Internal.Linq
 {
 	sealed class PersistentTable<T> : ITable<T>

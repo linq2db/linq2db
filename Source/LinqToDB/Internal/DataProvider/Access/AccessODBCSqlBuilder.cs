@@ -2,7 +2,6 @@
 using System.Data.Common;
 using System.Text;
 
-using LinqToDB.Common;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.Internal.SqlProvider;

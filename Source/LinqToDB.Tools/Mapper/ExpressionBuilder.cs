@@ -8,12 +8,11 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Internal.Common;
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Reflection;
 
 using static System.Linq.Expressions.Expression;
-using LinqToDB.Internal.Extensions;
 
 // ReSharper disable TailRecursiveCall
 

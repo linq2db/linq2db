@@ -10,13 +10,11 @@ using JetBrains.Annotations;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
-using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 using LinqToDB.Metrics;
 
 namespace LinqToDB

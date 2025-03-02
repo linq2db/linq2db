@@ -5,9 +5,7 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.Internal.DataProvider.Access.Translation;
 using LinqToDB.Internal.Linq.Translation;

@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SapHana;
 using LinqToDB.Internal.Expressions.Types;
 

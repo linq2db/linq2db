@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Internal.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.Expressions.Types

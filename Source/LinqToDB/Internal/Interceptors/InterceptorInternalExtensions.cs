@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Data.Common;
 
-using LinqToDB.Data;
 using LinqToDB.Interceptors;
-using LinqToDB.Internal.Interceptors;
 
 namespace LinqToDB.Internal.Interceptors
 {

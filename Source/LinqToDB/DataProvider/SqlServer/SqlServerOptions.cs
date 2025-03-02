@@ -1,9 +1,6 @@
 ﻿using System.Collections.Generic;
 
-using LinqToDB.Common;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Options;

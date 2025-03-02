@@ -3,8 +3,6 @@
 using JetBrains.Annotations;
 
 using LinqToDB.Configuration;
-using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.Informix;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.DataProvider.DB2;
 using LinqToDB.Internal.DataProvider.Informix;

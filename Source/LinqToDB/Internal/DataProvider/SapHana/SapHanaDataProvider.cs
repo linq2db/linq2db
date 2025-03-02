@@ -8,11 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SapHana;
-using LinqToDB.Extensions;
 using LinqToDB.Internal.DataProvider.SapHana.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq.Translation;

@@ -3,10 +3,8 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 {

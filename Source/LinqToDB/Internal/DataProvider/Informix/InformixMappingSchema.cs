@@ -2,12 +2,9 @@
 using System.Globalization;
 using System.Text;
 
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {

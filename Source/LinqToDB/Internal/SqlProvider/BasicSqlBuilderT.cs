@@ -1,10 +1,8 @@
-﻿using LinqToDB.Common;
-using LinqToDB.Configuration;
-using LinqToDB.DataProvider;
-using LinqToDB.Mapping;
-using LinqToDB.Internal.Options;
-using LinqToDB.SqlProvider;
+﻿using LinqToDB.DataProvider;
 using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Options;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Internal.SqlProvider
 {

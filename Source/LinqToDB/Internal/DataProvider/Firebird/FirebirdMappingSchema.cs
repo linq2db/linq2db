@@ -4,14 +4,12 @@ using System.Globalization;
 using System.Numerics;
 using System.Text;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {

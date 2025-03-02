@@ -4,12 +4,10 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
-using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Cache;
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Tools;
 using LinqToDB.Metrics;
 
 namespace LinqToDB.Internal.Linq

@@ -13,14 +13,13 @@ using JetBrains.Annotations;
 using LinqToDB.Common;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
-using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Mapping;
-using LinqToDB.Tools;
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Interceptors;
+using LinqToDB.Mapping;
 using LinqToDB.Metrics;
 
 namespace LinqToDB.Data

@@ -6,9 +6,7 @@ using System.Linq.Expressions;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
 

@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-using LinqToDB.Internal.Conversion;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;

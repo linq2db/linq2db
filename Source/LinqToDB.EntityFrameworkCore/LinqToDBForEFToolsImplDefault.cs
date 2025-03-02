@@ -10,7 +10,6 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
-using LinqToDB.Internal.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
@@ -22,10 +21,11 @@ using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Internal;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
-using LinqToDB.SqlQuery;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -35,8 +35,6 @@ using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.EntityFrameworkCore
 {

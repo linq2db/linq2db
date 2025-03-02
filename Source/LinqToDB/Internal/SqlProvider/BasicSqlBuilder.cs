@@ -12,19 +12,17 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-using LinqToDB.Common;
 using LinqToDB.DataProvider;
-using LinqToDB.Extensions;
-using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using LinqToDB.Model;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.SqlProvider
 {

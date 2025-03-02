@@ -6,7 +6,6 @@ using System.Reflection;
 using LinqToDB.Common;
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.Metrics;
-using LinqToDB.Tools;
 using LinqToDB.Tools.Activity;
 
 using NUnit.Framework;

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Internal.Common;

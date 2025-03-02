@@ -16,7 +16,6 @@ using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Model;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB
 {

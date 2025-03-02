@@ -2,12 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using LinqToDB.Common;
-using LinqToDB.DataProvider;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider
 {

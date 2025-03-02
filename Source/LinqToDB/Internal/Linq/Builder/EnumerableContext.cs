@@ -7,7 +7,6 @@ using System.Reflection;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
@@ -15,7 +14,6 @@ using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Model;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Linq.Builder
 {

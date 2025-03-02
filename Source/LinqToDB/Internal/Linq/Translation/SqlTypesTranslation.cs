@@ -2,9 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Common;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Translation
 {

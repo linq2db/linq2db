@@ -6,7 +6,6 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Internal.Cache;
 using LinqToDB.Metrics;
-using LinqToDB.Tools;
 
 namespace LinqToDB.Internal.DataProvider
 {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 
 using FluentAssertions;
 
@@ -9,7 +8,6 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Internal;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
 

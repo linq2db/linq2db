@@ -4,11 +4,9 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
-using LinqToDB.Common;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.DataProvider.Firebird;
-using LinqToDB.Internal.Options;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;

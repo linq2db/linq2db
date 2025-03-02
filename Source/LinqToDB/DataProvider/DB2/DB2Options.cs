@@ -1,11 +1,8 @@
 ﻿using System.Collections.Generic;
 
-using LinqToDB.Common;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
-using LinqToDB.Internal.DataProvider.DB2;
 using LinqToDB.Internal.Options;
 
 namespace LinqToDB.DataProvider.DB2

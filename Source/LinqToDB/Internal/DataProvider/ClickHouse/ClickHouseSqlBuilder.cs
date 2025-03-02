@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.Internal.Common;

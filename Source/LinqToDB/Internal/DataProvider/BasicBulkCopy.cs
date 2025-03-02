@@ -12,7 +12,6 @@ using System.Text;
 #endif
 
 using LinqToDB.Data;
-using LinqToDB.Mapping;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Model;

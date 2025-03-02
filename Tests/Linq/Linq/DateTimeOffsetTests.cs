@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 
 using LinqToDB;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
 

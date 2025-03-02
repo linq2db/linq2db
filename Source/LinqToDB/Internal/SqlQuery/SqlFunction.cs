@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 
-using LinqToDB.Common;
-
 namespace LinqToDB.Internal.SqlQuery
 {
 	public class SqlFunction : SqlExpressionBase

@@ -12,7 +12,6 @@ using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Metrics;
-using LinqToDB.Tools;
 
 namespace LinqToDB.Data
 {

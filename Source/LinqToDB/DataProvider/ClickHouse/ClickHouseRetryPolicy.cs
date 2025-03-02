@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 
 using LinqToDB.Data.RetryPolicy;
-using LinqToDB.Internal.DataProvider.ClickHouse;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {

@@ -4,7 +4,6 @@ using System.Data.Common;
 using System.Globalization;
 using System.Text;
 
-using LinqToDB.Common;
 using LinqToDB.Internal.DataProvider.Sybase;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
-using LinqToDB.Mapping;
 using LinqToDB.Model;
 
 namespace LinqToDB.Internal.DataProvider.Firebird

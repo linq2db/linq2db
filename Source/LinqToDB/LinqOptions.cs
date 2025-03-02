@@ -2,8 +2,6 @@
 using System.ComponentModel;
 using System.Linq.Expressions;
 
-using LinqToDB.Common;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Options;

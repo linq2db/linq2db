@@ -3,8 +3,6 @@
 using JetBrains.Annotations;
 
 using LinqToDB.Configuration;
-using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.SapHana;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.DataProvider.SapHana;
 

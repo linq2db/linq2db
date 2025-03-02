@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using LinqToDB.Common;
-
 namespace LinqToDB.Internal.SqlQuery
 {
 	public abstract class SqlPredicate : QueryElement, ISqlPredicate

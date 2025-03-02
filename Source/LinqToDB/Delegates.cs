@@ -1,5 +1,4 @@
-﻿using LinqToDB.Mapping;
-using LinqToDB.Model;
+﻿using LinqToDB.Model;
 
 namespace LinqToDB
 {

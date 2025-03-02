@@ -1,7 +1,5 @@
 ﻿using System;
 
-using LinqToDB.Common;
-
 namespace LinqToDB.Internal.SqlQuery
 {
 	public static class PredicateExtensions

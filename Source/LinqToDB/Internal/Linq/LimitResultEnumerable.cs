@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Linq;
 
 namespace LinqToDB.Internal.Linq
 {

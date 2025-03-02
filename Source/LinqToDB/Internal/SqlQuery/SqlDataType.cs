@@ -7,12 +7,8 @@ using System.Linq;
 using System.Numerics;
 
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Mapping;
 using LinqToDB.Model;
 
 namespace LinqToDB.Internal.SqlQuery

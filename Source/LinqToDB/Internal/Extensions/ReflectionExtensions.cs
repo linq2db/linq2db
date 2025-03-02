@@ -3,20 +3,16 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data.Linq;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Xml;
 
 using JetBrains.Annotations;
 
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Reflection;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Extensions
 {

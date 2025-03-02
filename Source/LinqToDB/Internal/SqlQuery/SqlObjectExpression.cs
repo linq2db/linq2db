@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 

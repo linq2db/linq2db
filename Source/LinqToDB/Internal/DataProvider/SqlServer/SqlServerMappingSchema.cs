@@ -9,17 +9,13 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 
-using LinqToDB.Common;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {

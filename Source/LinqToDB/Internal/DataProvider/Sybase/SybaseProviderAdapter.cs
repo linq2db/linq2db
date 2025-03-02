@@ -3,7 +3,6 @@ using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Sybase;
 using LinqToDB.Internal.Expressions.Types;
 

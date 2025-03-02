@@ -12,7 +12,6 @@ using System.Text;
 #endif
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Internal.Common;

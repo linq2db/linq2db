@@ -24,7 +24,6 @@ using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
-using LinqToDB.Tools;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Async;

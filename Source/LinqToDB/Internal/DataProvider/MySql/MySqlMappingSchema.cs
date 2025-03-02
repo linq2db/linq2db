@@ -3,14 +3,11 @@ using System.Collections;
 using System.Data.Linq;
 using System.Text;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.MySql;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {

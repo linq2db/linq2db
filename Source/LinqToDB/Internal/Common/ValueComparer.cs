@@ -5,8 +5,6 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Internal.Common;
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 

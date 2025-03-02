@@ -5,9 +5,7 @@ using System.Data.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Internal.DataProvider.Firebird.Translation;
 using LinqToDB.Internal.Linq.Translation;

@@ -4,11 +4,9 @@ using System.Threading.Tasks;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Mapping;
 using LinqToDB.Metrics;
 using LinqToDB.Model;
 using LinqToDB.SqlQuery;
-using LinqToDB.Tools;
 
 namespace LinqToDB.Internal.Linq
 {

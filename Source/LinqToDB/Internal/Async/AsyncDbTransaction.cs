@@ -3,11 +3,8 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
-using JetBrains.Annotations;
-
 using LinqToDB.Data;
 using LinqToDB.Metrics;
-using LinqToDB.Tools;
 
 using AsyncDisposableWrapper = LinqToDB.Metrics.ActivityService.AsyncDisposableWrapper;
 

@@ -8,9 +8,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.Internal.DataProvider.SqlCe.Translation;
 using LinqToDB.Internal.Linq.Translation;

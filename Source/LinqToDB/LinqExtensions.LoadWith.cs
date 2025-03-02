@@ -8,7 +8,6 @@ using System.Threading;
 using JetBrains.Annotations;
 
 using LinqToDB.Internal.Linq;
-using LinqToDB.Linq;
 
 namespace LinqToDB
 {

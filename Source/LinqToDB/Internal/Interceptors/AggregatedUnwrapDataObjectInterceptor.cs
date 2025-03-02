@@ -2,7 +2,6 @@
 
 using LinqToDB.Interceptors;
 using LinqToDB.Metrics;
-using LinqToDB.Tools;
 
 namespace LinqToDB.Internal.Interceptors
 {

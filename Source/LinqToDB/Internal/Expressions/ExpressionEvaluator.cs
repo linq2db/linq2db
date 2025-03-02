@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Internal.Common;
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.Expressions

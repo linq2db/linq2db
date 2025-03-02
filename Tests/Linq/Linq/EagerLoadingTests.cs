@@ -10,7 +10,6 @@ using LinqToDB;
 using LinqToDB.Internal;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;

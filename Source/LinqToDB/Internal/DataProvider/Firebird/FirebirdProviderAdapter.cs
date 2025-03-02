@@ -2,12 +2,10 @@
 using System.Data;
 using System.Data.Common;
 
-using LinqToDB.DataProvider;
 using LinqToDB.Internal.Expressions.Types;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {

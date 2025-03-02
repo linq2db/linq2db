@@ -4,10 +4,8 @@ using System.Linq;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Mapping
 {

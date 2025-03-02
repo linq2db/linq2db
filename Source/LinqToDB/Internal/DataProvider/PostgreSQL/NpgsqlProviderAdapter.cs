@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;
 using LinqToDB.Mapping;

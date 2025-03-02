@@ -8,11 +8,11 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
-using LinqToDB.Internal.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Reflection;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Reflection;
 
 namespace LinqToDB.Tools.Comparers
 {

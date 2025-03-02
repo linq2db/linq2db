@@ -1,6 +1,5 @@
 ﻿using System.Text;
 
-using LinqToDB.Common;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SapHana;
 using LinqToDB.Internal.SqlProvider;

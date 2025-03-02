@@ -8,8 +8,6 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 
-using LinqToDB.Common;
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;

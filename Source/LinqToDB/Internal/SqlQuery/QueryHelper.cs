@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-using LinqToDB.Common;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;

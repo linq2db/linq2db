@@ -9,7 +9,6 @@ using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.Mapping
 {

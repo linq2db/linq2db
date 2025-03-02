@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
-using LinqToDB.DataProvider;
-
 namespace LinqToDB.Internal.DataProvider
 {
 	public class IdentifierServiceSimple : IdentifierServiceBase

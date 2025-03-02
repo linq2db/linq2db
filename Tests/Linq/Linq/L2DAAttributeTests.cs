@@ -1,6 +1,5 @@
 ﻿using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Internal.Conversion;
 using LinqToDB.Metadata;
 
 using NUnit.Framework;

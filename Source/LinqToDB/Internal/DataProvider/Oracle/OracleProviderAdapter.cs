@@ -9,7 +9,6 @@ using System.Xml;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;

@@ -1,6 +1,4 @@
-﻿using LinqToDB.SqlQuery;
-
-namespace LinqToDB.Internal.DataProvider.Oracle
+﻿namespace LinqToDB.Internal.DataProvider.Oracle
 {
 	public class Oracle122ParametersNormalizer : UniqueParametersNormalizer
 	{

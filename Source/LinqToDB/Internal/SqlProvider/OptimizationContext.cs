@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-using LinqToDB.Common;
-using LinqToDB.DataProvider;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;

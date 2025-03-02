@@ -8,7 +8,6 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
-using LinqToDB.Mapping;
 using LinqToDB.Model;
 
 namespace LinqToDB.Internal.DataProvider.Sybase

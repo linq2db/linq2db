@@ -11,7 +11,6 @@ using System.ServiceModel;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Internal.Conversion;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

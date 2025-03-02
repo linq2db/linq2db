@@ -4,14 +4,11 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Data.RetryPolicy;
-using LinqToDB.DataProvider;
-using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
-using LinqToDB.Tools;
 
 namespace LinqToDB.Internal.DataProvider
 {

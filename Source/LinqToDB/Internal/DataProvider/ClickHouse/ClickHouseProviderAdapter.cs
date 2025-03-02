@@ -8,14 +8,12 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Common;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.DataProvider.MySql;
 using LinqToDB.Internal.DataProvider.MySql;
 using LinqToDB.Internal.Expressions.Types;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {

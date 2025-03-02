@@ -14,7 +14,6 @@ using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.Reflection;
 
 using static LinqToDB.MultiInsertExtensions;
 

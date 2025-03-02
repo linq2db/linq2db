@@ -8,11 +8,8 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Extensions;
 using LinqToDB.Internal.DataProvider.SqlServer.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq.Translation;
