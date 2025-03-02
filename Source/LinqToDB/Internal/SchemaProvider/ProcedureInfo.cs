@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.SchemaProvider
+﻿namespace LinqToDB.Internal.SchemaProvider
 {
 	/// <summary>
 	/// Database procedure or function description.

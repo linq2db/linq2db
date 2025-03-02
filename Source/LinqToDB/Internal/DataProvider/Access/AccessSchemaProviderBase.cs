@@ -2,6 +2,7 @@
 using System.IO;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.SchemaProvider;
 using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Access

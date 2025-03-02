@@ -16,6 +16,7 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
@@ -140,7 +141,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => _sqlOptimizer;
 
-		public override SchemaProvider.ISchemaProvider GetSchemaProvider() => new OracleSchemaProvider(this);
+		public override ISchemaProvider GetSchemaProvider() => new OracleSchemaProvider(this);
 
 		public override DbCommand InitCommand(DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{

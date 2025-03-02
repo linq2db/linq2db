@@ -12,6 +12,7 @@ using LinqToDB.Internal.DataProvider.MySql.Translation;
 using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {
@@ -89,7 +90,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			return new MySqlMemberTranslator();
 		}
 
-		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new MySqlSchemaProvider(this);
 		}

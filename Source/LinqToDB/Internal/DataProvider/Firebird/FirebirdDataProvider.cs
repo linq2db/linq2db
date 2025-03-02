@@ -13,6 +13,7 @@ using LinqToDB.Internal.DataProvider.Firebird.Translation;
 using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
@@ -111,7 +112,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			return _sqlOptimizer;
 		}
 
-		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new FirebirdSchemaProvider(this);
 		}

@@ -11,6 +11,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Internal.Conversion;
+using LinqToDB.Internal.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace LinqToDB.SchemaProvider
+namespace LinqToDB.Internal.SchemaProvider
 {
 	[DebuggerDisplay("TableID = {TableID}, PrimaryKeyName = {PrimaryKeyName}, ColumnName = {ColumnName}, Ordinal = {Ordinal}")]
 	public class PrimaryKeyInfo

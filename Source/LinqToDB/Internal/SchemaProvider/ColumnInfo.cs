@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace LinqToDB.SchemaProvider
+namespace LinqToDB.Internal.SchemaProvider
 {
 	[DebuggerDisplay("TableID = {TableID}, Name = {Name}, DataType = {DataType}, Length = {Length}, Precision = {Precision}, Scale = {Scale}")]
 	public class ColumnInfo

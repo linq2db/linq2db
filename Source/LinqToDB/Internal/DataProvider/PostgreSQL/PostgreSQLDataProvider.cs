@@ -17,6 +17,7 @@ using LinqToDB.Internal.DataProvider.PostgreSQL.Translation;
 using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL
 {
@@ -227,7 +228,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => _sqlOptimizer;
 
-		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new PostgreSQLSchemaProvider(this);
 		}

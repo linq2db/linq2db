@@ -14,6 +14,7 @@ using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {
@@ -105,7 +106,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return _sqlOptimizer;
 		}
 
-		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new InformixSchemaProvider(this);
 		}

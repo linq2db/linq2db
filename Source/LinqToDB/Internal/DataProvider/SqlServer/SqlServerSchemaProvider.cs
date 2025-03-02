@@ -7,6 +7,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal.SchemaProvider;
 using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer

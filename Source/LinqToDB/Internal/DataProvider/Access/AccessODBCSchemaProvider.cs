@@ -9,6 +9,7 @@ using LinqToDB.Common;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Data;
 using LinqToDB.SchemaProvider;
+using LinqToDB.Internal.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {

@@ -10,8 +10,9 @@ using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
 
-namespace LinqToDB.SchemaProvider
+namespace LinqToDB.Internal.SchemaProvider
 {
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{

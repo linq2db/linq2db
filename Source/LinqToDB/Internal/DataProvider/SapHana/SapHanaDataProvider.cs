@@ -18,6 +18,7 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
@@ -55,7 +56,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			return new SapHanaMemberTranslator();
 		}
 
-		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
+		public override ISchemaProvider GetSchemaProvider()
 		{
 			return Provider == SapHanaProvider.Unmanaged ? new SapHanaSchemaProvider() : new SapHanaOdbcSchemaProvider();
 		}

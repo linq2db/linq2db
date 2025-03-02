@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace LinqToDB.SchemaProvider
+namespace LinqToDB.Internal.SchemaProvider
 {
 	/// <summary>
 	/// Database data type descriptor.
