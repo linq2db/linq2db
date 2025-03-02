@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			SetDataType(typeof(DateTime),  DataType.DateTime);
 			// in Access DECIMAL=DECIMAL(18,0)
-			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 18, 10));
+			SetDataType(typeof(decimal), new DbDataType(typeof(decimal), DataType.Decimal, null, null, 18, 10));
 
 			SetValueToSqlConverter(typeof(bool),     (StringBuilder sb, DbDataType _, DataOptions _, object v) => sb.Append((bool)v));
 			SetValueToSqlConverter(typeof(Guid),     (StringBuilder sb, DbDataType _, DataOptions _, object v) => sb.Append(CultureInfo.InvariantCulture, $"'{(Guid)v:B}'"));
