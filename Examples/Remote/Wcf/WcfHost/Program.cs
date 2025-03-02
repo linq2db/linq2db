@@ -2,11 +2,11 @@
 using System.ServiceModel;
 using System.ServiceModel.Description;
 
+using LinqToDB.Remote;
+using LinqToDB.Remote.Wcf;
+
 namespace Host
 {
-	using LinqToDB.Remote;
-	using LinqToDB.Remote.Wcf;
-
 	sealed class Program
 	{
 		static void Main(string[] args)
