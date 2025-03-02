@@ -15,9 +15,6 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Expressions
 {
-	/// <summary>
-	/// Internal API.
-	/// </summary>
 	static class InternalExtensions
 	{
 		#region IsConstant

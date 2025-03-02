@@ -12,9 +12,6 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.Extensions
 {
-	/// <summary>
-	/// Internal API over <see cref="ITable{T}"/> instance.
-	/// </summary>
 	public static class TableExtensions
 	{
 		public static IDataProvider GetDataProvider<T>(this ITable<T> table)
@@ -67,7 +64,7 @@ namespace LinqToDB.Internal.Extensions
 		}
 
 				/// <summary>
-		/// Internal API to support table creation using custom entity descriptor <paramref name="tableDescriptor"/>.
+		/// Support for table creation using custom entity descriptor <paramref name="tableDescriptor"/>.
 		/// Creates new table in database for mapping class <typeparamref name="T"/>.
 		/// Information about table name, columns names and types is taken from mapping class.
 		/// </summary>
@@ -116,7 +113,7 @@ namespace LinqToDB.Internal.Extensions
 		}
 
 				/// <summary>
-		/// Internal API to support table creation using custom entity descriptor <paramref name="tableDescriptor"/>.
+		/// Support for table creation using custom entity descriptor <paramref name="tableDescriptor"/>.
 		/// Asynchronously creates new table in database for mapping class <typeparamref name="T"/>.
 		/// Information about table name, columns names and types is taken from mapping class.
 		/// </summary>

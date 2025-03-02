@@ -28,7 +28,6 @@ namespace LinqToDB.Internal.Conversion
 	/// </summary>
 	/// <typeparam name="TFrom">Source conversion type.</typeparam>
 	/// <typeparam name="TTo">Target conversion type.</typeparam>
-	[PublicAPI]
 	public static class Convert<TFrom,TTo>
 	{
 		static Convert()

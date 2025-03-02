@@ -3,9 +3,6 @@ using LinqToDB.Internal.Expressions;
 
 namespace LinqToDB.Internal.Interceptors
 {
-	/// <summary>
-	/// Internal API.
-	/// </summary>
 	public interface IEntityBindingInterceptor : IInterceptor
 	{
 		/// <summary>

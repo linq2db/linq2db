@@ -3,9 +3,6 @@ using System.Reflection;
 
 namespace LinqToDB.Internal.Mapping
 {
-	/// <summary>
-	/// Internal API.
-	/// </summary>
 	public static class Nullability
 	{
 		private static Lazy<bool> _isSupported = new(() => 

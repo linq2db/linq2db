@@ -20,7 +20,6 @@ using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Extensions
 {
-	[PublicAPI]
 	public static class ReflectionExtensions
 	{
 		#region Type extensions
@@ -323,7 +322,7 @@ namespace LinqToDB.Internal.Extensions
 #pragma warning restore RS0030 // Do not use banned APIs
 			}
 			// PNSE: corert
-			// NSE: NativeAOUT
+			// NSE: NativeAOT
 			catch (Exception ex) when (ex is NotSupportedException or PlatformNotSupportedException)
 			{
 				return new InterfaceMapping()

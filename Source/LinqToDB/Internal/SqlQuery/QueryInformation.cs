@@ -3,10 +3,6 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	/// <summary>
-	/// This is internal API and is not intended for use by Linq To DB applications.
-	/// It may change or be removed without further notice.
-	/// </summary>
 	public class QueryInformation
 	{
 		public SelectQuery RootQuery { get; }
@@ -14,10 +10,6 @@ namespace LinqToDB.Internal.SqlQuery
 		private Dictionary<SelectQuery, HierarchyInfo>?     _parents;
 		private Dictionary<SelectQuery, List<SelectQuery>>? _tree;
 
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
 		public QueryInformation(SelectQuery rootQuery)
 		{
 			RootQuery = rootQuery ?? throw new ArgumentNullException(nameof(rootQuery));

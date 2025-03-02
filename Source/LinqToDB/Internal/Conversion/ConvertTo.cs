@@ -6,7 +6,6 @@ namespace LinqToDB.Internal.Conversion
 	/// Value converter to <typeparamref name="TTo"/> type.
 	/// </summary>
 	/// <typeparam name="TTo">Target conversion type.</typeparam>
-	[PublicAPI]
 	public static class ConvertTo<TTo>
 	{
 		/// <summary>

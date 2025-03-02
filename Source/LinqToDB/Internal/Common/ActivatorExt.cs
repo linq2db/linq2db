@@ -4,7 +4,7 @@ using System.Reflection;
 namespace LinqToDB.Internal.Common
 {
 	/// <summary>
-	/// Internal APIs to call reflection-based invoke operations with automatic unwrap of
+	/// APIs to call reflection-based invoke operations with automatic unwrap of
 	/// <see cref="TargetInvocationException"/> on error.
 	/// </summary>
 	public static class ActivatorExt

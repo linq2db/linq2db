@@ -12,9 +12,6 @@ using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.Expressions
 {
-	/// <summary>
-	/// Internal API.
-	/// </summary>
 	public static class ExpressionEvaluator
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
