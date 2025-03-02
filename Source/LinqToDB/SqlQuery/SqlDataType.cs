@@ -92,20 +92,7 @@ namespace LinqToDB.SqlQuery
 
 		public static readonly SqlDataType Undefined = new (DataType.Undefined, typeof(object), (int?)null, (int?)null, null, null);
 
-		public bool IsCharDataType
-		{
-			get
-			{
-				switch (Type.DataType)
-				{
-					case DataType.Char     :
-					case DataType.NChar    :
-					case DataType.VarChar  :
-					case DataType.NVarChar : return true;
-					default                : return false;
-				}
-			}
-		}
+		public bool IsCharDataType => Type.DataType.IsCharDataType();
 
 		#endregion
 

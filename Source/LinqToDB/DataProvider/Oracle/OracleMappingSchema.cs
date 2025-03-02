@@ -63,25 +63,25 @@ namespace LinqToDB.DataProvider.Oracle
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
 			SetDataType(typeof(Guid),   DataType.Guid);
-			SetDataType(typeof(string),  new SqlDataType(DataType.VarChar, typeof(string), 255));
-			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 28, 10));
+			SetDataType(typeof(string),  new DbDataType(typeof(string), DataType.VarChar, null, 255));
+			SetDataType(typeof(decimal), new DbDataType(typeof(decimal), DataType.Decimal, null, null, 28, 10));
 
 			SetConvertExpression<decimal,TimeSpan>(v => new TimeSpan((long)v));
 
-			SetValueToSqlConverter(typeof(Guid),           (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Guid)   v).ToByteArray()));
-			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).UtcDateTime));
-			SetValueToSqlConverter(typeof(string)        , (sb, _,_,v) => ConvertStringToSql  (sb,     (string)v));
-			SetValueToSqlConverter(typeof(char)          , (sb, _,_,v) => ConvertCharToSql    (sb,     (char)v));
-			SetValueToSqlConverter(typeof(byte[]),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid),           (StringBuilder sb, DbDataType _, DataOptions _, object v)  => ConvertBinaryToSql  (sb,     ((Guid)   v).ToByteArray()));
+			SetValueToSqlConverter(typeof(DateTime),       (sb, dt, _, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, _, v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).UtcDateTime));
+			SetValueToSqlConverter(typeof(string)        , (StringBuilder sb, DbDataType _, DataOptions _, object v)  => ConvertStringToSql  (sb,     (string)v));
+			SetValueToSqlConverter(typeof(char)          , (StringBuilder sb, DbDataType _, DataOptions _, object v)  => ConvertCharToSql    (sb,     (char)v));
+			SetValueToSqlConverter(typeof(byte[]),         (StringBuilder sb, DbDataType _, DataOptions _, object v)  => ConvertBinaryToSql  (sb,     (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),         (StringBuilder sb, DbDataType _, DataOptions _, object v)  => ConvertBinaryToSql  (sb,     ((Binary)v).ToArray()));
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly),       (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly),       (StringBuilder sb, DbDataType _, DataOptions _, object v)  => ConvertDateOnlyToSql(sb, (DateOnly)v));
 #endif
 
 			// adds floating point special values support
-			SetValueToSqlConverter(typeof(float), (sb,_,_,v) =>
+			SetValueToSqlConverter(typeof(float), (StringBuilder sb, DbDataType _,  DataOptions _, object v) =>
 			{
 				var f = (float)v;
 				if (float.IsNaN(f))
@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider.Oracle
 				else
 					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
 			});
-			SetValueToSqlConverter(typeof(double), (sb,_,_,v) =>
+			SetValueToSqlConverter(typeof(double), (StringBuilder sb, DbDataType _,  DataOptions _, object v) =>
 			{
 				var d = (double)v;
 				if (double.IsNaN(d))
@@ -153,20 +153,20 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.TryGetConvertExpression(from, to);
 		}
 
-		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
+		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DbDataType dataType, DateTime value)
 		{
 #if SUPPORTS_COMPOSITE_FORMAT
 			CompositeFormat format;
 #else
 			string format;
 #endif
-			switch (dataType.Type.DataType)
+			switch (dataType.DataType)
 			{
 				case DataType.Date:
 					format = DATE_FORMAT;
 					break;
 				case DataType.DateTime2:
-					switch (dataType.Type.Precision)
+					switch (dataType.Precision)
 					{
 						case 0   : format = TIMESTAMP0_FORMAT; break;
 						case 1   : format = TIMESTAMP1_FORMAT; break;
@@ -183,7 +183,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.DateTimeOffset:
 					// just use UTC literal
 					value = value.ToUniversalTime();
-					switch (dataType.Type.Precision)
+					switch (dataType.Precision)
 					{
 						case 0   : format = TIMESTAMPTZ0_FORMAT; break;
 						case 1   : format = TIMESTAMPTZ1_FORMAT; break;
@@ -207,7 +207,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 #if NET6_0_OR_GREATER
-		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dataType, DateOnly value)
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
 		{
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
 		}

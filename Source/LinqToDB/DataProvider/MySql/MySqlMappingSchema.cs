@@ -14,13 +14,13 @@ namespace LinqToDB.DataProvider.MySql
 	{
 		MySqlMappingSchema() : base(ProviderName.MySql)
 		{
-			SetValueToSqlConverter(typeof(string), (sb,_,_,v) => ConvertStringToSql(sb, (string)v));
-			SetValueToSqlConverter(typeof(char),   (sb,_,_,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb,_,_,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb,_,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string), (StringBuilder sb, DbDataType _,  DataOptions _, object v) => ConvertStringToSql(sb, (string)v));
+			SetValueToSqlConverter(typeof(char),   (StringBuilder sb, DbDataType _,  DataOptions _, object v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (StringBuilder sb, DbDataType _,  DataOptions _, object v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (StringBuilder sb, DbDataType _,  DataOptions _, object v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
-			SetDataType(typeof(string),  new SqlDataType(DataType.NVarChar, typeof(string)));
-			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 29, 10));
+			SetDataType(typeof(string),  new DbDataType(typeof(string), DataType.NVarChar));
+			SetDataType(typeof(decimal), new DbDataType(typeof(decimal), DataType.Decimal, null, null, 29, 10));
 
 			// both providers doesn't support BitArray directly and map bit fields to ulong by default
 			SetConvertExpression<BitArray?, DataParameter>(ba => new DataParameter(null, ba == null ? null : GetBits(ba), DataType.UInt64), false);

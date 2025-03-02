@@ -13,12 +13,12 @@ namespace LinqToDB.DataProvider.SapHana
 	{
 		SapHanaMappingSchema() : base(ProviderName.SapHana)
 		{
-			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+			SetDataType(typeof(string), new DbDataType(typeof(string), DataType.NVarChar, null, 255));
 
-			SetValueToSqlConverter(typeof(string), (sb,_,_,v) => ConvertStringToSql(sb, (string)v));
-			SetValueToSqlConverter(typeof(char)  , (sb,_,_,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb,_,_,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb,_,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string), (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertStringToSql(sb, (string)v));
+			SetValueToSqlConverter(typeof(char)  , (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
