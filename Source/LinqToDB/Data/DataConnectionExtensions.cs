@@ -2412,9 +2412,9 @@ namespace LinqToDB.Data
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
-			var dataConnection = table.GetDataConnection(options.BulkCopyType != BulkCopyType.RowByRow);
+			DataConnection? dataConnection = null;
 
-			if (dataConnection == null)
+			if (options.BulkCopyType == BulkCopyType.RowByRow && !table.TryGetDataConnection(out dataConnection))
 			{
 				return new RowByRowBulkCopy().BulkCopy(
 					BulkCopyType.RowByRow,
@@ -2422,6 +2422,8 @@ namespace LinqToDB.Data
 					table.DataContext.Options.WithOptions(options),
 					source);
 			}
+
+			dataConnection ??= table.GetDataConnection();
 
 			return table.GetDataProvider().BulkCopy(
 				dataConnection.Options.WithOptions(options),
