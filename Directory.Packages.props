@@ -116,7 +116,6 @@
 
 		<PackageVersion Include="System.Net.Http.Json"                                  Version="9.0.2" />
 		<PackageVersion Include="Microsoft.Extensions.Http"                             Version="9.0.1"  />
-		<PackageVersion Include="Microsoft.AspNetCore.SignalR"                          Version="1.2.0" />
 		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Core"                     Version="1.2.0" />
 	</ItemGroup>
 

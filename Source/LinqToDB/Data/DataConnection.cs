@@ -467,6 +467,10 @@ namespace LinqToDB.Data
 		/// Retry policy for current connection.
 		/// </summary>
 		public IRetryPolicy? RetryPolicy         { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value to specify additional connection info to be used in tracing.
+		/// </summary>
 		public string?       Tag                 { get; set; }
 
 		private bool? _isMarsEnabled;

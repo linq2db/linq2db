@@ -8,27 +8,27 @@
 		<dependencies>
 			<group targetFramework="net462">
 				<dependency id="linq2db"                             version="6.0.0" />
-				<dependency id="Microsoft.AspNetCore.SignalR"        version="1.2.0" />
+				<dependency id="Microsoft.AspNetCore.SignalR.Core"   version="1.2.0" />
 				<dependency id="Microsoft.AspNetCore.SignalR.Client" version="9.0.2" />
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"                             version="6.0.0" />
-				<dependency id="Microsoft.AspNetCore.SignalR"        version="1.2.0" />
+				<dependency id="Microsoft.AspNetCore.SignalR.Core"   version="1.2.0" />
 				<dependency id="Microsoft.AspNetCore.SignalR.Client" version="9.0.2"  />
 			</group>
 			<group targetFramework="net6.0">
 				<dependency id="linq2db"                             version="6.0.0"  />
-				<dependency id="Microsoft.AspNetCore.SignalR"        version="1.2.0"  />
+				<dependency id="Microsoft.AspNetCore.SignalR.Core"   version="1.2.0" />
 				<dependency id="Microsoft.AspNetCore.SignalR.Client" version="6.0.36" />
 			</group>
 			<group targetFramework="net8.0">
 				<dependency id="linq2db"                             version="6.0.0" />
-				<dependency id="Microsoft.AspNetCore.SignalR"        version="1.2.0" />
+				<dependency id="Microsoft.AspNetCore.SignalR.Core"   version="1.2.0" />
 				<dependency id="Microsoft.AspNetCore.SignalR.Client" version="9.0.2" />
 			</group>
 			<group targetFramework="net9.0">
 				<dependency id="linq2db"                             version="6.0.0" />
-				<dependency id="Microsoft.AspNetCore.SignalR"        version="1.2.0" />
+				<dependency id="Microsoft.AspNetCore.SignalR.Core"   version="1.2.0" />
 				<dependency id="Microsoft.AspNetCore.SignalR.Client" version="9.0.2" />
 			</group>
 		</dependencies>
