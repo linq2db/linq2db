@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq
@@ -12,7 +11,13 @@ namespace LinqToDB.Linq
 		{
 			if (!mappingSchema.IsScalarType(node.Type) && node.Value != null)
 			{
-				if (!mappingSchema.IsScalarType(node.Value.GetType()))
+				var valueType = node.Value.GetType();
+
+				// Handling UseTableDescriptor case.
+				if (valueType == typeof(EntityDescriptor))
+					return false;
+
+				if (!mappingSchema.IsScalarType(valueType))
 				{
 					if (node.Value is Array or FormattableString)
 						return false;

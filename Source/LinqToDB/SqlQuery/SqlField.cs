@@ -150,5 +150,22 @@ namespace LinqToDB.SqlQuery
 			field.Type = dataType;
 			return field;
 		}
+
+		public void Assign(SqlField source)
+		{
+			Type             = source.Type;
+			Alias            = source.Alias;
+			Name             = source.Name;
+			PhysicalName     = source.PhysicalName;
+			CanBeNull        = source.CanBeNull;
+			IsPrimaryKey     = source.IsPrimaryKey;
+			PrimaryKeyOrder  = source.PrimaryKeyOrder;
+			IsIdentity       = source.IsIdentity;
+			IsInsertable     = source.IsInsertable;
+			IsUpdatable      = source.IsUpdatable;
+			CreateFormat     = source.CreateFormat;
+			CreateOrder      = source.CreateOrder;
+			IsDynamic        = source.IsDynamic;
+		}
 	}
 }
