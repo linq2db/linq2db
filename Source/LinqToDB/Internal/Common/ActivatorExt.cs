@@ -242,7 +242,7 @@ namespace LinqToDB.Internal.Common
 				if (result is T target) return target;
 				if (result is null) return (T)result!;
 
-				throw new LinqToDBException($"Returned value expected to be assignable to '{typeof(T).FullName}' but had '{result?.GetType().FullName}' type.");
+				throw new LinqToDBException($"Returned value expected to be assignable to '{typeof(T).FullName}' but had '{result.GetType().FullName}' type.");
 			}
 			catch (TargetInvocationException tex) when (tex.InnerException != null)
 			{

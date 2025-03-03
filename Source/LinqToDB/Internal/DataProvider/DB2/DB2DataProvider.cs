@@ -15,8 +15,10 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
+#pragma warning disable MA0048 // File name must match type name
 	sealed class DB2LUWDataProvider : DB2DataProvider { public DB2LUWDataProvider() : base(ProviderName.DB2LUW, DB2Version.LUW) {} }
 	sealed class DB2zOSDataProvider : DB2DataProvider { public DB2zOSDataProvider() : base(ProviderName.DB2zOS, DB2Version.zOS) {} }
+#pragma warning restore MA0048 // File name must match type name
 
 	public abstract class DB2DataProvider : DynamicDataProviderBase<DB2ProviderAdapter>
 	{

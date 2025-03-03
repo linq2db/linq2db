@@ -14,12 +14,6 @@ using LinqToDB.Tools.Mapper;
 
 namespace LinqToDB.Tools.EntityServices
 {
-	interface IEntityMap
-	{
-		void        MapEntity(EntityCreatedEventArgs args);
-		IEnumerable GetEntities();
-	}
-
 	public class EntityMap<T> : IEntityMap
 		where T : class
 	{

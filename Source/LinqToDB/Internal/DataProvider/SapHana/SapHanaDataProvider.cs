@@ -19,8 +19,10 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
+#pragma warning disable MA0048 // File name must match type name
 	sealed class SapHanaNativeDataProvider : SapHanaDataProvider { public SapHanaNativeDataProvider() : base(ProviderName.SapHanaNative, SapHanaProvider.Unmanaged) { } }
 	sealed class SapHanaOdbcDataProvider   : SapHanaDataProvider { public SapHanaOdbcDataProvider  () : base(ProviderName.SapHanaOdbc  , SapHanaProvider.ODBC     ) { } }
+#pragma warning restore MA0048 // File name must match type name
 
 	public abstract class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{

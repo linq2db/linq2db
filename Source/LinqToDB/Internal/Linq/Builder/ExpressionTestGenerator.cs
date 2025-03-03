@@ -988,7 +988,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			finally
 			{
-				sw?.Dispose();
+				sw.Dispose();
 			}
 
 			return fileName;

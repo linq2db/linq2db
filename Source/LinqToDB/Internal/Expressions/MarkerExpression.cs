@@ -3,15 +3,10 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Internal.Expressions
 {
-	public enum MarkerType
-	{
-		PreferClientSide,
-	}
-
 	public class MarkerExpression : Expression
 	{
 		public MarkerType MarkerType   { get; }
-		public Expression      InnerExpression { get; }
+		public Expression InnerExpression { get; }
 
 		public MarkerExpression(Expression innerExpression, MarkerType markerType)
 		{

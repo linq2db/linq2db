@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 
@@ -620,15 +619,6 @@ FROM
 					ProviderSpecificType = GetProviderSpecificType(columnType),
 				}
 			).ToList();
-		}
-	}
-
-	static class DB2Extensions
-	{
-		public static string? ToString(this DbDataReader reader, int i)
-		{
-			var value = Converter.ChangeTypeTo<string?>(reader[i]);
-			return value?.TrimEnd();
 		}
 	}
 }

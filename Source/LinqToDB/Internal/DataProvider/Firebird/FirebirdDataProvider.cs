@@ -15,10 +15,12 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
+#pragma warning disable MA0048 // File name must match type name
 	sealed class FirebirdDataProvider25 : FirebirdDataProvider { public FirebirdDataProvider25() : base(ProviderName.Firebird25, FirebirdVersion.v25) { } }
 	sealed class FirebirdDataProvider3  : FirebirdDataProvider { public FirebirdDataProvider3()  : base(ProviderName.Firebird3,  FirebirdVersion.v3 ) { } }
 	sealed class FirebirdDataProvider4  : FirebirdDataProvider { public FirebirdDataProvider4()  : base(ProviderName.Firebird4,  FirebirdVersion.v4 ) { } }
 	sealed class FirebirdDataProvider5  : FirebirdDataProvider { public FirebirdDataProvider5()  : base(ProviderName.Firebird5,  FirebirdVersion.v5 ) { } }
+#pragma warning restore MA0048 // File name must match type name
 
 	public abstract class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
 	{

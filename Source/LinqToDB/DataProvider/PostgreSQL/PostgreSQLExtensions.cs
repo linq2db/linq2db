@@ -10,10 +10,6 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	public interface IPostgreSQLExtensions
-	{
-	}
-
 	public static class PostgreSQLExtensions
 	{
 		public static IPostgreSQLExtensions? PostgreSQL(this Sql.ISqlExtension? ext) => null;

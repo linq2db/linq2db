@@ -18,10 +18,12 @@ using OleDbType = LinqToDB.Internal.DataProvider.OleDbProviderAdapter.OleDbType;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
+#pragma warning disable MA0048 // File name must match type name
 	sealed class AccessJetOleDbDataProvider() : AccessDataProvider(ProviderName.AccessJetOleDb, AccessVersion.Jet, AccessProvider.OleDb);
 	sealed class AccessAceOleDbDataProvider() : AccessDataProvider(ProviderName.AccessAceOleDb, AccessVersion.Ace, AccessProvider.OleDb);
 	sealed class AccessJetODBCDataProvider()  : AccessDataProvider(ProviderName.AccessJetOdbc , AccessVersion.Jet, AccessProvider.ODBC );
 	sealed class AccessAceODBCDataProvider()  : AccessDataProvider(ProviderName.AccessAceOdbc , AccessVersion.Ace, AccessProvider.ODBC );
+#pragma warning restore MA0048 // File name must match type name
 
 	public abstract class AccessDataProvider : DynamicDataProviderBase<AccessProviderAdapter>
 	{

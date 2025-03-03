@@ -16,8 +16,10 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {
+#pragma warning disable MA0048 // File name must match type name
 	sealed class InformixDataProviderInformix : InformixDataProvider { public InformixDataProviderInformix() : base(ProviderName.Informix,    InformixProvider.Informix) {} }
 	sealed class InformixDataProviderDB2      : InformixDataProvider { public InformixDataProviderDB2()      : base(ProviderName.InformixDB2, InformixProvider.DB2     ) {} }
+#pragma warning restore MA0048 // File name must match type name
 
 	public abstract class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{

@@ -197,7 +197,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					SqlTable? insertedTable = null;
 
-					if (insertedTable == null && insertContext.Into != null)
+					if (insertContext.Into != null)
 					{
 						insertedTable = SequenceHelper.GetTableContext(insertContext.Into)?.SqlTable;
 					}

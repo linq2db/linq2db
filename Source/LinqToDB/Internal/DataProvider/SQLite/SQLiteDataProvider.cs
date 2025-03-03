@@ -17,8 +17,10 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.SQLite
 {
+#pragma warning disable MA0048 // File name must match type name
 	sealed class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic, SQLiteProvider.System   ) {} }
 	sealed class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS,      SQLiteProvider.Microsoft) {} }
+#pragma warning restore MA0048 // File name must match type name
 
 	/*
 	 * For now we don't have SQLite versioning as SQLite engine usually provided by ADO.NET provider as nuget dependency

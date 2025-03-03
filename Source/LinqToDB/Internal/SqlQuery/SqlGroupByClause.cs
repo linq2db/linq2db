@@ -3,14 +3,6 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public enum GroupingType
-	{
-		Default,
-		GroupBySets,
-		Rollup,
-		Cube
-	}
-
 	public class SqlGroupByClause : ClauseBase, IQueryElement
 	{
 		internal SqlGroupByClause(SelectQuery selectQuery) : base(selectQuery)

@@ -45,8 +45,6 @@ namespace LinqToDB.EntityFrameworkCore
 	[PublicAPI]
 	public class LinqToDBForEFToolsImplDefault : ILinqToDBForEFTools
 	{
-		private static readonly char[] _nameSeparator = ['.'];
-
 		sealed class ProviderKey
 		{
 			public ProviderKey(string? providerName, string? connectionString)
@@ -293,7 +291,7 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <returns>Linq To DB SQL Server provider instance.</returns>
 		protected virtual IDataProvider CreateSqlServerProvider(SqlServerVersion version, string? connectionString)
 		{
-			return DataProvider.SqlServer.SqlServerTools.GetDataProvider(version, SqlServerProvider.MicrosoftDataSqlClient, connectionString);
+			return SqlServerTools.GetDataProvider(version, SqlServerProvider.MicrosoftDataSqlClient, connectionString);
 		}
 
 		/// <summary>

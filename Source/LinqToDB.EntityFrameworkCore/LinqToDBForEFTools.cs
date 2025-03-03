@@ -403,8 +403,6 @@ namespace LinqToDB.EntityFrameworkCore
 			return dc;
 		}
 
-		static readonly ConcurrentDictionary<Type, Func<DbConnection, string>> _connectionStringExtractors = new();
-
 		/// <summary>
 		/// Extracts database connection information from EF Core provider data.
 		/// </summary>

@@ -9,10 +9,6 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	public interface ISQLiteExtensions
-	{
-	}
-
 	public static class SQLiteExtensions
 	{
 		public static ISQLiteExtensions? SQLite(this Sql.ISqlExtension? ext) => null;

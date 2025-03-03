@@ -4,10 +4,6 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	public interface IMySqlExtensions
-	{
-	}
-
 	public static class MySqlExtensions
 	{
 		public static IMySqlExtensions? MySql(this Sql.ISqlExtension? ext) => null;

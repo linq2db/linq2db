@@ -21,9 +21,11 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
+#pragma warning disable MA0048 // File name must match type name
 	sealed class ClickHouseOctonicaDataProvider : ClickHouseDataProvider { public ClickHouseOctonicaDataProvider() : base(ProviderName.ClickHouseOctonica, ClickHouseProvider.Octonica        ) { } }
 	sealed class ClickHouseClientDataProvider   : ClickHouseDataProvider { public ClickHouseClientDataProvider  () : base(ProviderName.ClickHouseClient  , ClickHouseProvider.ClickHouseClient) { } }
 	sealed class ClickHouseMySqlDataProvider    : ClickHouseDataProvider { public ClickHouseMySqlDataProvider   () : base(ProviderName.ClickHouseMySql   , ClickHouseProvider.MySqlConnector  ) { } }
+#pragma warning restore MA0048 // File name must match type name
 
 	public abstract class ClickHouseDataProvider : DynamicDataProviderBase<ClickHouseProviderAdapter>
 	{
