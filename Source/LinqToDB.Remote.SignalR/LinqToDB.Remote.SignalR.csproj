@@ -12,7 +12,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 
-		<PackageReference Include="Microsoft.AspNetCore.SignalR" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Core" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
 	</ItemGroup>
 </Project>
