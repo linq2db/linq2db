@@ -82,9 +82,6 @@ namespace LinqToDB.Remote.SignalR
 
 		string? ILinqService.RemoteClientTag { get; set; } = "Signal/R";
 
-		public async ValueTask DisposeAsync()
-		{
-			await Task.CompletedTask;
-		}
+		public ValueTask DisposeAsync() => default;
 	}
 }
