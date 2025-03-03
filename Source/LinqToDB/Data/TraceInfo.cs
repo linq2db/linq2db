@@ -130,10 +130,8 @@ namespace LinqToDB.Data
 							sb.Append(", ");
 					}
 
-#pragma warning disable RS0030 // Do not used banned APIs
 					if (DataConnection.Tag is not null)
 						sb.Append(DataConnection.Tag);
-#pragma warning restore RS0030 // Do not used banned APIs
 
 					if (IsAsync || DataConnection.Tag is not null)
 						sb.Append(')');

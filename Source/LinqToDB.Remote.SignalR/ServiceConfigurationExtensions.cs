@@ -119,12 +119,30 @@ namespace LinqToDB.Remote.SignalR
 			return serviceCollection.AddLinqToDBSignalRDataContext(baseAddress, "/hub/linq2db", getContext);
 		}
 
+		/// <summary>
+		/// / Initializes SignalR connection for <see cref="IDataContext"/> context.
+		/// </summary>
+		/// <param name="dataContext">The <see cref="IDataContext"/> to initialize.</param>
+		/// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
 		public static async Task InitSignalRAsync(this IDataContext dataContext)
 		{
 			if (dataContext is SignalRDataContext signalRDataContext)
 			{
 				await signalRDataContext.ConfigureAsync(default).ConfigureAwait(false);
 			}
+		}
+
+		/// <summary>
+		/// Initializes SignalR connection for <typeparamref name="T"/> context.
+		/// </summary>
+		/// <typeparam name="T">IDataContext type.</typeparam>
+		/// <param name="serviceProvider">The <see cref="IServiceProvider"/> to get services from.</param>
+		/// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+		public static async Task InitSignalRAsync<T>(this IServiceProvider serviceProvider)
+			where T : IDataContext
+		{
+			await serviceProvider.GetRequiredService<Container<HubConnection>>().Object.StartAsync().ConfigureAwait(false);
+			await serviceProvider.GetRequiredService<T>().InitSignalRAsync().ConfigureAwait(false);
 		}
 	}
 }

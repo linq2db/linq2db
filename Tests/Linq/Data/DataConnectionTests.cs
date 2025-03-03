@@ -380,7 +380,7 @@ namespace Tests.Data
 
 			var provider = collection.BuildServiceProvider();
 			var con      = provider.GetRequiredService<DbConnection4>()!;
-			var fcon     = provider.GetRequiredService<IDataContextFactory<DbConnection4>>()!;
+			_            = provider.GetRequiredService<IDataContextFactory<DbConnection4>>()!;
 
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}

@@ -189,6 +189,11 @@ namespace LinqToDB.Remote
 			return _configurationInfo;
 		}
 
+		/// <summary>
+		/// Preload configuration info asynchronously.
+		/// </summary>
+		/// <param name="cancellationToken">Cancellation token to cancel operation.</param>
+		/// <returns>Task which completes when configuration info is loaded.</returns>
 		public Task ConfigureAsync(CancellationToken cancellationToken)
 		{
 			// preload _configurationInfo asynchronously if needed

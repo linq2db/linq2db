@@ -467,7 +467,7 @@ namespace LinqToDB.Data
 		/// Retry policy for current connection.
 		/// </summary>
 		public IRetryPolicy? RetryPolicy         { get; set; }
-		public object?       Tag                 { get; set; }
+		public string?       Tag                 { get; set; }
 
 		private bool? _isMarsEnabled;
 		/// <summary>
@@ -659,7 +659,7 @@ namespace LinqToDB.Data
 		/// <seealso cref="TraceSwitch"/>
 		/// <remarks>Should only not use to write trace lines, only use <see cref="WriteTraceLineConnection"/>.</remarks>
 		/// </summary>
-		public static Action<string,string,TraceLevel> WriteTraceLine = (message, category, level) => Debug.WriteLine(message, category);
+		public static Action<string,string,TraceLevel> WriteTraceLine = (message, category, _) => Debug.WriteLine(message, category);
 
 		/// <summary>
 		/// Gets the delegate to write logging messages for this connection.

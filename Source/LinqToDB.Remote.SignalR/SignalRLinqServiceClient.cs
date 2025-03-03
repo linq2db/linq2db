@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace LinqToDB.Remote.SignalR
 {
-	public class Container<T>(T @object)
+	class Container<T>(T @object)
 	{
 		public T Object { get; } = @object;
 	}
