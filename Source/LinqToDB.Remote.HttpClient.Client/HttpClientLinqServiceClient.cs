@@ -75,11 +75,7 @@ namespace LinqToDB.Remote.HttpClient.Client
 
 			response.EnsureSuccessStatusCode();
 
-			return await response.Content.ReadFromJsonAsync<LinqServiceInfo>(
-//#if NET6_0_OR_GREATER
-				cancellationToken : cancellationToken
-//#endif
-				)
+			return await response.Content.ReadFromJsonAsync<LinqServiceInfo>(cancellationToken : cancellationToken)
 				?? throw new LinqToDBException("Return value is not allowed to be null");
 		}
 

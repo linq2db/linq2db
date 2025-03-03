@@ -8,11 +8,11 @@
 		<dependencies>
 			<group targetFramework="net6.0">
 				<dependency id="linq2db"                                            version="6.0.0" />
-				<dependency id="Microsoft.AspNetCore.Components.WebAssembly.Server" version="9.0.2" />
+				<dependency id="Microsoft.AspNetCore.Components.WebAssembly.Server" version="6.0.36" />
 			</group>
 			<group targetFramework="net8.0">
 				<dependency id="linq2db"                                            version="6.0.0" />
-				<dependency id="Microsoft.AspNetCore.Components.WebAssembly.Server" version="9.0.2" />
+				<dependency id="Microsoft.AspNetCore.Components.WebAssembly.Server" version="8.0.13" />
 			</group>
 			<group targetFramework="net9.0">
 				<dependency id="linq2db"                                            version="6.0.0" />
@@ -24,12 +24,6 @@
 	<files>
 		<file src="NuGet\README.Remote.HttpClient.Server.md"                                                      target="README.md"           />
 
-		<file src="bin\LinqToDB.Remote.HttpClient.Server\{0}\net462\linq2db.Remote.HttpClient.Server.pdb"         target="lib\net462\"         />
-		<file src="bin\LinqToDB.Remote.HttpClient.Server\{0}\net462\linq2db.Remote.HttpClient.Server.xml"         target="lib\net462\"         />
-		<file src="bin\LinqToDB.Remote.HttpClient.Server\{0}\net462\linq2db.Remote.HttpClient.Server.dll"         target="lib\net462\"         />
-		<file src="bin\LinqToDB.Remote.HttpClient.Server\{0}\netstandard2.0\linq2db.Remote.HttpClient.Server.pdb" target="lib\netstandard2.0\" />
-		<file src="bin\LinqToDB.Remote.HttpClient.Server\{0}\netstandard2.0\linq2db.Remote.HttpClient.Server.xml" target="lib\netstandard2.0\" />
-		<file src="bin\LinqToDB.Remote.HttpClient.Server\{0}\netstandard2.0\linq2db.Remote.HttpClient.Server.dll" target="lib\netstandard2.0\" />
 		<file src="bin\LinqToDB.Remote.HttpClient.Server\{0}\net6.0\linq2db.Remote.HttpClient.Server.pdb"         target="lib\net6.0\"         />
 		<file src="bin\LinqToDB.Remote.HttpClient.Server\{0}\net6.0\linq2db.Remote.HttpClient.Server.xml"         target="lib\net6.0\"         />
 		<file src="bin\LinqToDB.Remote.HttpClient.Server\{0}\net6.0\linq2db.Remote.HttpClient.Server.dll"         target="lib\net6.0\"         />

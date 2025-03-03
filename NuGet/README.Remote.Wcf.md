@@ -17,4 +17,4 @@ We provide
 [HttpClient.Server support](https://www.nuget.org/packages/linq2db.Remote.HttpClient.Server),
 and [WCF support](https://www.nuget.org/packages/linq2db.Remote.Wcf) (.NET Framework only currently).
 
-If you need Remote Context support over WCF in .NET Core or other type of transport (not WCF or gRPC), you can create [feature request](https://github.com/linq2db/linq2db/issues/new) or send PR with transport implementation.
+If you need Remote Context support over WCF in .NET Core or other type of transport, you can create [feature request](https://github.com/linq2db/linq2db/issues/new) or send PR with transport implementation.
