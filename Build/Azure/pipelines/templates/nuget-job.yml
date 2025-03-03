@@ -70,7 +70,7 @@ jobs:
   - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB.Remote.SignalR files
     inputs:
-      artifactName: '$(artifact_linq2db_remote_sinalr_binaries)'
+      artifactName: '$(artifact_linq2db_remote_signalr_binaries)'
       targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.SignalR/Release'
 
   - task: DownloadPipelineArtifact@2
