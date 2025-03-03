@@ -518,20 +518,14 @@ namespace LinqToDB.Data
 					return;
 				}
 
-				if (DefaultConfiguration == null)
-				{
-					DefaultConfiguration = options.ConfigurationString ?? "";
-				}
+				DefaultConfiguration ??= options.ConfigurationString ?? "";
 
 				var dataProvider = options.DataProviderFactory == null ? options.DataProvider : options.DataProviderFactory(options);
 
-				if (DefaultSettings == null)
-				{
-					DefaultSettings = new LinqToDBSettings(
-						options.ConfigurationString ?? DefaultConfiguration,
-						options.ProviderName        ?? dataProvider?.Name ?? DefaultDataProvider ?? string.Empty,
-						options.ConnectionString    ?? string.Empty);
-				}
+				DefaultSettings ??= new LinqToDBSettings(
+					options.ConfigurationString ?? DefaultConfiguration,
+					options.ProviderName        ?? dataProvider?.Name ?? DefaultDataProvider ?? string.Empty,
+					options.ConnectionString    ?? string.Empty);
 
 				var doSave = true;
 
