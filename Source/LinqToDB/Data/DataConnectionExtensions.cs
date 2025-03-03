@@ -2576,17 +2576,20 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var dataConnection = table.GetDataConnection(options.BulkCopyType != BulkCopyType.RowByRow);
+			DataConnection? dataConnection = null;
 
-			if (dataConnection == null)
+			if (options.BulkCopyType == BulkCopyType.RowByRow && !table.TryGetDataConnection(out dataConnection))
 			{
-				return new RowByRowBulkCopy().BulkCopyAsync(
-					BulkCopyType.RowByRow,
-					table,
-					table.DataContext.Options.WithOptions(options),
-					source,
-					cancellationToken);
+				return CallMetrics(() =>
+					new RowByRowBulkCopy().BulkCopyAsync(
+						BulkCopyType.RowByRow,
+						table,
+						table.DataContext.Options.WithOptions(options),
+						source,
+						cancellationToken));
 			}
+
+			dataConnection ??= table.GetDataConnection();
 
 			return CallMetrics(() =>
 				table.GetDataProvider().BulkCopyAsync(
