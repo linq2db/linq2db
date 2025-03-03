@@ -9,7 +9,6 @@ using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 // ReSharper disable InconsistentNaming

@@ -1,10 +1,8 @@
 ﻿using System.Text;
 
 using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.SapHana;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {

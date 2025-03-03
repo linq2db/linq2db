@@ -4,16 +4,15 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.DataProvider;
-using LinqToDB.Internal.DataProvider.Oracle;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.Oracle
+namespace LinqToDB.Internal.DataProvider.Oracle
 {
 	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder<OracleOptions>
 	{

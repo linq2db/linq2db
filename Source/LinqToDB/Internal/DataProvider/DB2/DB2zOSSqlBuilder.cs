@@ -8,7 +8,6 @@ using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {

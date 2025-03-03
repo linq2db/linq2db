@@ -3,7 +3,7 @@ using System.Linq;
 
 using LinqToDB.Internal.SqlQuery;
 
-namespace LinqToDB.DataProvider.DB2
+namespace LinqToDB.Internal.DataProvider.DB2
 {
 	abstract partial class DB2SqlBuilderBase
 	{

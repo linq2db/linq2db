@@ -7,17 +7,16 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Text;
 
+using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.DataProvider;
-using LinqToDB.Internal.DataProvider.PostgreSQL;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.PostgreSQL
+namespace LinqToDB.Internal.DataProvider.PostgreSQL
 {
 	public partial class PostgreSQLSqlBuilder : BasicSqlBuilder<PostgreSQLOptions>
 	{

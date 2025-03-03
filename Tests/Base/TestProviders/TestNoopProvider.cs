@@ -15,7 +15,6 @@ using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
-using LinqToDB.SqlProvider;
 
 namespace Tests
 {

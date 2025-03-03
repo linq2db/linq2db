@@ -1,6 +1,6 @@
 ﻿using LinqToDB.Internal.SqlQuery;
 
-namespace LinqToDB.DataProvider.Sybase
+namespace LinqToDB.Internal.DataProvider.Sybase
 {
 	partial class SybaseSqlBuilder
 	{

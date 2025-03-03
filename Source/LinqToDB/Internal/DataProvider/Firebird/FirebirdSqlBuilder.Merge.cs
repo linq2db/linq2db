@@ -6,7 +6,7 @@ using System.Text;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.Firebird
+namespace LinqToDB.Internal.DataProvider.Firebird
 {
 	public partial class FirebirdSqlBuilder
 	{

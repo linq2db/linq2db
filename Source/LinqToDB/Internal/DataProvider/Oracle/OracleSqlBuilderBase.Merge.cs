@@ -1,7 +1,7 @@
 ﻿using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.Oracle
+namespace LinqToDB.Internal.DataProvider.Oracle
 {
 	abstract partial class OracleSqlBuilderBase
 	{

@@ -5,16 +5,14 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.DataProvider;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.DataProvider;
-using LinqToDB.Internal.DataProvider.Informix;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.Informix
+namespace LinqToDB.Internal.DataProvider.Informix
 {
 	sealed partial class InformixSqlBuilder : BasicSqlBuilder
 	{

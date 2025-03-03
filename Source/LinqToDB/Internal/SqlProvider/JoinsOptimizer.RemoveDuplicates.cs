@@ -6,7 +6,7 @@ using System.Linq;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
 	sealed partial class JoinsOptimizer
 	{

@@ -4,14 +4,13 @@ using System.Data.Common;
 using System.Globalization;
 using System.Text;
 
-using LinqToDB.Internal.DataProvider.Sybase;
+using LinqToDB.DataProvider;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.Sybase
+namespace LinqToDB.Internal.DataProvider.Sybase
 {
 	sealed partial class SybaseSqlBuilder : BasicSqlBuilder
 	{

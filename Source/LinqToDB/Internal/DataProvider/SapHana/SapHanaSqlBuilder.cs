@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
+using LinqToDB.DataProvider;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.SapHana
+namespace LinqToDB.Internal.DataProvider.SapHana
 {
 	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{

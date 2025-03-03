@@ -8,6 +8,7 @@ using System.Threading;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Internal.DataProvider.Firebird;
 
 using NUnit.Framework;
 

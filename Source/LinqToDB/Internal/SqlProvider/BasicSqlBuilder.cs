@@ -13,18 +13,16 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using LinqToDB.DataProvider;
-using LinqToDB.Internal;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
-using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Model;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
 	public abstract partial class BasicSqlBuilder : ISqlBuilder
 	{
@@ -4053,8 +4051,8 @@ namespace LinqToDB.SqlProvider
 
 		private bool PrintParameterValue(StringBuilder sb, object? value)
 		{
-			var maxBinaryLogging = Common.Configuration.MaxBinaryParameterLengthLogging;
-			var maxStringLogging = Common.Configuration.MaxStringParameterLengthLogging;
+			var maxBinaryLogging = LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging;
+			var maxStringLogging = LinqToDB.Common.Configuration.MaxStringParameterLengthLogging;
 
 			if (value is byte[] bytes &&
 				maxBinaryLogging >= 0 &&
@@ -4116,7 +4114,7 @@ namespace LinqToDB.SqlProvider
 			}
 			else if (value is IEnumerable collection)
 			{
-				var limit   = Common.Configuration.MaxArrayParameterLengthLogging >= 0 ? Common.Configuration.MaxArrayParameterLengthLogging : int.MaxValue;
+				var limit   = LinqToDB.Common.Configuration.MaxArrayParameterLengthLogging >= 0 ? LinqToDB.Common.Configuration.MaxArrayParameterLengthLogging : int.MaxValue;
 				var trimmed = false;
 				var pos     = 0;
 

@@ -11,7 +11,6 @@ using NUnit.Framework;
 
 using LinqToDB.Expressions;
 
-
 #if NETFRAMEWORK
 using System.Net.Http;
 using System.Web.Http;

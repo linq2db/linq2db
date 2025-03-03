@@ -4,13 +4,12 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.DataProvider;
-using LinqToDB.Internal.DataProvider.Firebird;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 #region ReSharper disable
@@ -18,7 +17,7 @@ using LinqToDB.SqlQuery;
 // ReSharper disable SuggestUseVarKeywordEvident
 #endregion
 
-namespace LinqToDB.DataProvider.Firebird
+namespace LinqToDB.Internal.DataProvider.Firebird
 {
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder<FirebirdOptions>
 	{

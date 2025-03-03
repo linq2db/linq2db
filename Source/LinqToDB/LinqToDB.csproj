@@ -51,16 +51,16 @@
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 		</Compile>
-
-		<None Update="Sql\Sql.Row.tt">
-		  <LastGenOutput>Sql.Row.generated.cs</LastGenOutput>
-		  <Generator>TextTemplatingFileGenerator</Generator>
-		</None>
-		<Compile Update="Sql\Sql.Row.generated.cs">
+		<Compile Update="Sql.Row.generated.cs">
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>Sql.Row.tt</DependentUpon>
 		</Compile>
+
+		<None Update="Sql.Row.tt">
+		  <LastGenOutput>Sql.Row.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 
 		<None Update="DataProvider\PostgreSQL\PostgreSQLHints.tt">
 			<LastGenOutput>PostgreSQLHints.generated.cs</LastGenOutput>

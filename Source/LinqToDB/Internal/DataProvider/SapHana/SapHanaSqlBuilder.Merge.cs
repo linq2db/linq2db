@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿namespace LinqToDB.Internal.DataProvider.SapHana
 {
 	partial class SapHanaSqlBuilder
 	{

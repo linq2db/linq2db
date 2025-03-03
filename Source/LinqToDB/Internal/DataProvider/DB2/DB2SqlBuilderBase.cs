@@ -7,15 +7,15 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.DB2;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.DataProvider.DB2;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.DB2
+namespace LinqToDB.Internal.DataProvider.DB2
 {
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
 	{

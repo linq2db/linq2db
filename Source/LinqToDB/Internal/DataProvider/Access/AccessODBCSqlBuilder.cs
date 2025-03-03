@@ -7,7 +7,6 @@ using LinqToDB.DataProvider.Access;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {

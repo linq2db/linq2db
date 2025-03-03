@@ -1,10 +1,9 @@
-﻿using LinqToDB.Internal.DataProvider.SqlServer;
+﻿using LinqToDB.DataProvider;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
-namespace LinqToDB.DataProvider.SqlServer
+namespace LinqToDB.Internal.DataProvider.SqlServer
 {
 	sealed partial class SqlServer2008SqlBuilder : SqlServerSqlBuilder
 	{

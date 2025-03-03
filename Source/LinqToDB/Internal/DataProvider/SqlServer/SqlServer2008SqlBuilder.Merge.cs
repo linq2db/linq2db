@@ -1,7 +1,7 @@
 ﻿using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.SqlServer
+namespace LinqToDB.Internal.DataProvider.SqlServer
 {
 	partial class SqlServer2008SqlBuilder
 	{
