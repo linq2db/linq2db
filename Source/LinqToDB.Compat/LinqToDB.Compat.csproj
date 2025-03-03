@@ -10,6 +10,10 @@
 
 		<!-- Define COMPAT constant -->
 		<DefineConstants>$(DefineConstants);COMPAT</DefineConstants>
+
+		<Title>LINQ to DB Compat</Title>
+		<Description>LINQ to DB Compat provides .NET Framework compatibility functionality to leverage migration to .NET.</Description>
+		<Product>$(Title)</Product>
 	</PropertyGroup>
 
 	<ItemGroup>

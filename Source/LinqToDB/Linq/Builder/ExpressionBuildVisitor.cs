@@ -1742,11 +1742,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (innerExpression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
 			{
-				var notNullConditions = node.NotNullExpressions
-					.Concat(defaultIfEmptyExpression.NotNullExpressions)
-					.Distinct(ExpressionEqualityComparer.Instance)
-					.ToList();
-				var newNode = node.Update(defaultIfEmptyExpression.InnerExpression, notNullConditions.AsReadOnly());
+				var newNode = node.Update(defaultIfEmptyExpression.InnerExpression, defaultIfEmptyExpression.NotNullExpressions);
 				return Visit(newNode);
 			}
 
@@ -3209,6 +3205,10 @@ namespace LinqToDB.Linq.Builder
 			if (node.Method.Name == "Equals" && node.Object != null && node.Arguments.Count == 1)
 				return ConvertCompareExpression(ExpressionType.Equal, node.Object, node.Arguments[0]);
 
+			var saveFlags = _buildFlags;
+			_buildFlags |= BuildFlags.ForKeys;
+			_buildFlags &= ~BuildFlags.ForMemberRoot;
+
 			if (node.Method.DeclaringType == typeof(string))
 			{
 				switch (node.Method.Name)
@@ -3260,6 +3260,8 @@ namespace LinqToDB.Linq.Builder
 
 				predicate = ConvertInPredicate(expr);
 			}
+
+			_buildFlags = saveFlags;
 
 			if (predicate != null)
 			{
@@ -4866,6 +4868,7 @@ namespace LinqToDB.Linq.Builder
 			var info = new BuildInfo(BuildContext, expr, new SelectQuery())
 			{
 				CreateSubQuery = true,
+				IsSubqueryExpression = true
 			};
 
 			if (_buildFlags.HasFlag(BuildFlags.ForceOuter))
