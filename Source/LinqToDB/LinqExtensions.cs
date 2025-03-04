@@ -16,6 +16,7 @@ using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.SqlProvider;
 
@@ -125,6 +126,25 @@ namespace LinqToDB
 			where T : notnull
 		{
 			var result = ((ITableMutable<T>)table).ChangeSchemaName(name);
+			return result;
+		}
+
+		/// <summary>
+		/// Used internally to pass entity descriptor into Expression Tree.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="tableDescriptor"></param>
+		/// <returns></returns>
+		// TODO: Consider to rewrite such functionality in V7
+		[LinqTunnel]
+		[Pure]
+		internal static ITable<T> UseTableDescriptor<T>(this ITable<T> table, [SqlQueryDependent] EntityDescriptor tableDescriptor)
+			where T : class
+		{
+			if (table           == null) throw new ArgumentNullException(nameof(table));
+			if (tableDescriptor == null) throw new ArgumentNullException(nameof(tableDescriptor));
+
+			var result = ((ITableMutable<T>)table).ChangeTableDescriptor(tableDescriptor);
 			return result;
 		}
 
@@ -2713,6 +2733,20 @@ namespace LinqToDB
 		}
 
 		#endregion
+
+		#region Internal
+
+		internal static TSource AssociationRecord<TSource>(this IQueryable<TSource> source)
+		{
+			throw new LinqToDBException("This method is not intended to be called directly.");
+		}
+
+		internal static TSource? AssociationOptionalRecord<TSource>(this IQueryable<TSource> source)
+		{
+			throw new LinqToDBException("This method is not intended to be called directly.");
+		}
+
+		#endregion Internal
 
 		#region Drop
 

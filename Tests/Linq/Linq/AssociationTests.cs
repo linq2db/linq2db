@@ -1167,12 +1167,12 @@ namespace Tests.Linq
 				.Where(с => AssociationExtension.ContainsNullable(
 					db
 						.GetTable<ComplexParent>()
-						.Where(_ => _.ParentID == id.Value)
-						.SelectMany(_ => _.Children())
-						.Select(_ => _.Parent)
+						.Where(p => p.ParentID == id.Value)
+						.SelectMany(p => p.Children())
+						.Select(c => c.Parent)
 						// this fails without ConvertFlags.Key support
-						.Where(_ => _ != null)
-						.Select(_ => _!.ParentID),
+						.Where(c => c != null)
+						.Select(c => c!.ParentID),
 					id1))
 				.OrderBy(с => с.ChildID)
 				.Select(с => (int?)с.ChildID)
