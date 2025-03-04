@@ -1388,11 +1388,9 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (parentQuery.Select.HasModifier)
+			if (parentQuery is { IsLimited: true, OrderBy.IsEmpty: false })
 			{
-				if (!subQuery.GroupBy.IsEmpty)
-					return false;
-				if (subQuery.HasSetOperators)
+				if (!subQuery.IsSimple)
 					return false;
 			}
 
