@@ -1388,6 +1388,14 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
+			if (parentQuery.Select.HasModifier)
+			{
+				if (!subQuery.GroupBy.IsEmpty)
+					return false;
+				if (subQuery.HasSetOperators)
+					return false;
+			}
+
 			if (subQuery.From.Tables.Count > 1)
 			{
 				if (!_providerFlags.IsMultiTablesSupportsJoins)

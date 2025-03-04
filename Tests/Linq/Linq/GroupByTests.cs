@@ -3783,26 +3783,14 @@ namespace Tests.Linq
 				orderby g.Max descending
 				select g
 			)
-			.TagQuery("GroupBy")
 			.Take(2);
 
-			var list = grp.ToList();
+			var query = 
+				from t in db.Child
+				where t.ParentID.In(grp.Select(x => x.ParentID))
+				select t;
 
-			AreEqual(
-				(
-					from t in db.Child
-					where t.ParentID.In(list.Select(x => x.ParentID))
-					select t
-				)
-				.TagQuery("List")
-				,
-				(
-					from t in db.Child
-					where t.ParentID.In(grp.Select(x => x.ParentID))
-					select t
-				)
-				.TagQuery("Query")
-			);
+			AssertQuery(query);
 		}
 	}
 }
