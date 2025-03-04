@@ -172,11 +172,11 @@ namespace LinqToDB.Reflection
 			internal static readonly MethodInfo AssociationRecord         = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.AssociationRecord());
 			internal static readonly MethodInfo AssociationOptionalRecord = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.AssociationOptionalRecord());
 			internal static readonly MethodInfo SelectDistinct            = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.SelectDistinct());
-            internal static readonly MethodInfo AggregateExecute          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AggregateExecute(e => 1));
+			internal static readonly MethodInfo AggregateExecute          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AggregateExecute(e => 1));
 
-            #endregion
+			#endregion
 
-            public static class Table
+			public static class Table
 			{
 				public static readonly MethodInfo TableID      = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.TableID     (null!));
 				public static readonly MethodInfo TableName    = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.TableName   (null!));
