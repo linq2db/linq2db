@@ -191,11 +191,12 @@ namespace LinqToDB.Internal.Expressions
 			var type = method.Method.DeclaringType;
 
 			return
-				type == typeof(Queryable) ||
+				type == typeof(Queryable)                ||
 				enumerable && type == typeof(Enumerable) ||
-				type == typeof(LinqExtensions)  ||
-				type == typeof(DataExtensions)  ||
-				type == typeof(TableExtensions) ||
+				type == typeof(LinqExtensions)           ||
+				type == typeof(LinqInternalExtensions)   ||
+				type == typeof(DataExtensions)           ||
+				type == typeof(TableExtensions)          ||
 				MemberCache.GetMemberInfo(method.Method).IsQueryable;
 		}
 
