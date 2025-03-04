@@ -57,51 +57,49 @@ namespace Tests.Remote.ServerContainer
 			Func<string, MappingSchema?, DataConnection> connectionFactory)
 		{
 			_connectionFactory = connectionFactory;
-			var service = OpenHost(ms);
+			var service = OpenHost();
 
 			var url = GetServiceUrl(GetPort());
 
 			var dx = new TestGrpcDataContext(
 				url,
-				o => optionBuilder == null
-					? o.UseConfiguration(configuration)
-					: optionBuilder(o.UseConfiguration(configuration)))
+				o =>
+				{
+					var options = optionBuilder == null
+						? o.UseConfiguration(configuration)
+						: optionBuilder(o.UseConfiguration(configuration));
+
+					if (ms != null && options.ConnectionOptions.MappingSchema != null)
+						options.UseMappingSchema(MappingSchema.CombineSchemas(ms, options.ConnectionOptions.MappingSchema));
+
+					service.MappingSchema = options.ConnectionOptions.MappingSchema;
+
+					return options;
+				})
 			{ ConfigurationString = configuration };
 
 			Debug.WriteLine(((IDataContext) dx).ConfigurationID, "Provider ");
 
-			if (ms != null)
-				dx.MappingSchema = MappingSchema.CombineSchemas(ms, dx.MappingSchema);
-
 			return dx;
 		}
 
-		private TestGrpcLinqService OpenHost(MappingSchema? ms)
+		private TestGrpcLinqService OpenHost()
 		{
 			var port = GetPort();
 
 			if (_openHosts.TryGetValue(port, out var service))
-			{
-				service.MappingSchema = ms;
 				return service;
-			}
 
 			lock (_syncRoot)
 			{
 				if (_openHosts.TryGetValue(port, out service))
-				{
-					service.MappingSchema = ms;
 					return service;
-				}
 
 				service = new TestGrpcLinqService(
 					new TestLinqService((c, ms) => _connectionFactory(c, ms))
 					{
 						AllowUpdates = true
 					});
-
-				if (ms != null)
-					service.MappingSchema = ms;
 
 				Startup.GrpcLinqService = service;
 
