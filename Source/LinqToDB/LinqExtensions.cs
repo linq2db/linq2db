@@ -3977,7 +3977,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(AggregateExecute, source, aggregate), currentSource.Expression);
+				MethodHelper.GetMethodInfo(AggregateExecute, source, aggregate), currentSource.Expression, aggregate);
 
 			return currentSource.Provider.Execute<TResult>(expr);
 		}

@@ -34,8 +34,49 @@ namespace Tests.Linq
 					PercentileContDecimal          = g.PercentileCont(0.5, (e,               f) => f.OrderBy(e.DecimalValue)),
 					PercentileContQueryableDecimal = g.AsQueryable().PercentileCont(0.5, (e, f) => f.OrderBy(e.DecimalValue)),
 					PercentileContInt              = g.PercentileCont(0.5, (e,               f) => f.OrderByDesc(e.IntValue)),
-					PercentileContQueryableInt     = g.AsQueryable().PercentileCont(0.5, (e, f) => f.OrderByDesc(e.IntValue))
+					PercentileContQueryableInt     = g.AsQueryable().PercentileCont(0.5, (e, f) => f.OrderByDesc(e.IntValue)),
 				};
+
+			var sql = query.ToSqlQuery().Sql;
+
+			sql.Should().Contain("SELECT", Exactly.Once());
+			sql.Should().Contain("PERCENTILE_CONT", Exactly.Times(4));
+
+			Assert.DoesNotThrow(() =>
+			{
+				query.ToList();
+			});
+		}
+
+		[Test]
+		public void PercentileContGroupingProjection([IncludeDataSources(
+			true,
+			// native oracle provider crashes with AV
+			TestProvName.AllOracleManaged,
+			TestProvName.AllOracleDevart,
+			TestProvName.AllClickHouse,
+			TestProvName.AllPostgreSQL)] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				group t by t.CategoryId into g
+				select new
+				{
+					CategoryId                           = g.Key,
+					PercentileContQueryableIntProjection = g.AsQueryable().Select(x => new {x}).PercentileCont(0.5, (e, f) => f.OrderByDesc(e.x.IntValue)),
+					PercentileContInt                    = g.PercentileCont(0.5, (e,                                    f) => f.OrderByDesc(e.IntValue)),
+				};
+
+			var sql = query.ToSqlQuery().Sql;
+
+			// Will be translated with OUTER APPLY
+			sql.Should().Contain("SELECT", Exactly.Thrice());
+			sql.Should().Contain("PERCENTILE_CONT", Exactly.Twice());
 
 			Assert.DoesNotThrow(() =>
 			{

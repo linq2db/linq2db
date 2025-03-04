@@ -169,6 +169,8 @@ namespace LinqToDB.Reflection
 
 			public static readonly MethodInfo JoinTypePredicateSelector = MemberHelper.MethodOfGeneric((IQueryable<object> q1, IQueryable<object> q2, Expression<Func<object, object, bool>> p, Expression<Func<object, object, object>> r) => q1.Join(q2, default(SqlJoinType), p, r));
 
+			internal static readonly MethodInfo AggregateExecute = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AggregateExecute(e => 1));
+
 			public static class Table
 			{
 				public static readonly MethodInfo TableID      = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.TableID     (null!));

@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 				sequence            = buildResult.BuildContext;
 				placeholderSequence = sequence;
 
-				var aggregationExpr = builder.BuildAggregationRootExpression(SequenceHelper.CreateRef(sequence));
+				var aggregationExpr = builder.BuildTraverseExpression(SequenceHelper.CreateRef(sequence));
 
 				if (aggregationExpr is ContextRefExpression { BuildContext: GroupByBuilder.GroupByContext groupByContext })
 				{
@@ -69,7 +69,7 @@ namespace LinqToDB.Linq.Builder
 				return BuildSequenceResult.Error(methodCall);
 			}
 
-			var context = new AggregateExecuteContext(null, sequence, lambda.Body.Type)
+			var context = new AggregateExecuteContext(sequence, lambda.Body.Type)
 			{
 				Placeholder = placeholder,
 				OuterJoinParentQuery = isSimple ? null : buildInfo.Parent?.SelectQuery
@@ -78,7 +78,7 @@ namespace LinqToDB.Linq.Builder
 			return BuildSequenceResult.FromContext(context);
 		}
 
-		sealed class AggregateRootContext : PassThroughContext
+		public sealed class AggregateRootContext : PassThroughContext
 		{
 			public Expression SequenceExpression { get; }
 
@@ -94,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.IsAggregationRoot() || flags.IsRoot())
+				if (flags.IsAggregationRoot() || flags.IsRoot() || flags.IsTraverse())
 					return path;
 
 				return base.MakeExpression(path, flags);
@@ -123,13 +123,12 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		sealed class AggregateExecuteContext : SequenceContextBase
+		sealed class AggregateExecuteContext : PassThroughContext
 		{
 			public AggregateExecuteContext(
-				IBuildContext? parent,
 				IBuildContext sequence,
 				Type returnType)
-				: base(parent, sequence, null)
+				: base(sequence, sequence.SelectQuery)
 			{
 				_returnType = returnType;
 			}
@@ -167,10 +166,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (!SequenceHelper.IsSameContext(path, this))
-					return path;
-
-				if (flags.HasFlag(ProjectFlags.Root))
+				if (flags.IsRoot() || flags.IsTraverse() || flags.IsAggregationRoot())
 					return path;
 
 				if (OuterJoinParentQuery != null)
@@ -180,12 +176,18 @@ namespace LinqToDB.Linq.Builder
 
 				var result = (Expression)Placeholder;
 
+				// ite means that this context was created during aggregation function translation
+				if (Placeholder.Sql is SqlValue)
+				{
+					result = base.MakeExpression(path, flags);
+				}
+
 				return result;
 			}
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new AggregateExecuteContext(null, context.CloneContext(Sequence), ElementType)
+				return new AggregateExecuteContext(context.CloneContext(Context), ElementType)
 				{
 					Placeholder = context.CloneExpression(Placeholder),
 					OuterJoinParentQuery = context.CloneElement(OuterJoinParentQuery),

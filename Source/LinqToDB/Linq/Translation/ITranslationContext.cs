@@ -48,5 +48,6 @@ namespace LinqToDB.Linq.Translation
 		void MarkAsNonParameter(Expression expression, object? currentValue);
 
 		IDisposable UsingColumnDescriptor(ColumnDescriptor? columnDescriptor);
+		IDisposable UsingCurrentAggregationContext(Expression basedOn);
 	}
 }

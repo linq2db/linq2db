@@ -333,6 +333,8 @@ namespace LinqToDB.Linq.Translation
 			if (enumerableContext == null)
 				return translationContext.CreateErrorExpression(methodCall.Arguments[0], "Enumerable context is not discoverable.", methodCall.Type);
 
+			using var contextScope = translationContext.UsingCurrentAggregationContext(enumerableContext);
+
 			var argumentExpr = methodCall.Arguments[1];
 			if (!translationContext.TranslateToSqlExpression(argumentExpr, out var argumentSql))
 				return translationContext.CreateErrorExpression(argumentExpr, type : methodCall.Type);
