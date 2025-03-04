@@ -4,9 +4,10 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Expressions;
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlCe
 {

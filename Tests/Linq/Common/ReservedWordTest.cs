@@ -1,4 +1,4 @@
-﻿using LinqToDB.SqlQuery;
+﻿using LinqToDB.Internal.DataProvider;
 
 using NUnit.Framework;
 

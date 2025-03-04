@@ -1,5 +1,5 @@
 ﻿#if NETSTANDARD2_0
-
+#pragma warning disable MA0048 // File name must match type name
 #pragma warning disable IDE0130
 
 using System.Diagnostics.CodeAnalysis;

@@ -12,7 +12,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		 <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Condition="'$(RunApiAnalyzersDuringBuild)' == 'true'" /> 
+		<PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Condition="'$(RunApiAnalyzersDuringBuild)' == 'true'" /> 
 
 		<PackageReference Include="Microsoft.SourceLink.GitHub">
 			<PrivateAssets>all</PrivateAssets>
@@ -20,5 +20,7 @@
 		</PackageReference>
 
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)\BannedSymbols.txt" />
+		<AdditionalFiles Include="$(MSBuildThisFileDirectory)\CodeMetricsConfig.txt" />
+
 	</ItemGroup>
 </Project>

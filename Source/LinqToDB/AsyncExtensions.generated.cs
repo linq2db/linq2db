@@ -5,11 +5,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Async;
+
 namespace LinqToDB
 {
-	using Async;
-	using Linq;
-
 	public static partial class AsyncExtensions
 	{
 		#region FirstAsync<TSource>

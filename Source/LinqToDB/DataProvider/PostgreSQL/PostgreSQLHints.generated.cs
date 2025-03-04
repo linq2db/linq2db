@@ -4,6 +4,8 @@
 using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	public static partial class PostgreSQLHints

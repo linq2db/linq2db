@@ -4,8 +4,9 @@ using System.Linq;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
+using LinqToDB.Model;
 
 namespace LinqToDB.Tools
 {

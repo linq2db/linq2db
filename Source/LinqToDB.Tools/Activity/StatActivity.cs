@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Threading;
 
+using LinqToDB.Metrics;
+
 namespace LinqToDB.Tools.Activity
 {
 	sealed class StatActivity(string name, ActivityID activityID) : IStatActivity

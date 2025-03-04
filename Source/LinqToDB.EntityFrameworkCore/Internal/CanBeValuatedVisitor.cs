@@ -1,4 +1,4 @@
-﻿using LinqToDB.Linq.Builder.Visitors;
+﻿using LinqToDB.Internal.Linq.Builder.Visitors;
 
 namespace LinqToDB.EntityFrameworkCore.Internal
 {

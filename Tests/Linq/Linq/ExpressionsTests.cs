@@ -1118,7 +1118,7 @@ namespace Tests.Linq
 				var left  = GetQuery(db, 0);
 				var right = GetQuery(db, 2);
 
-				var cacheMiss = Query<Patient>.CacheMissCount;
+				var cacheMiss = db.Patient.GetCacheMissCount();
 
 				Assert.That(
 					db.Person.Where(_ =>
@@ -1128,7 +1128,7 @@ namespace Tests.Linq
 					.Any(), Is.False);
 
 				if (iteration > 1)
-					Query<Patient>.CacheMissCount.Should().Be(cacheMiss);
+					db.Patient.GetCacheMissCount().Should().Be(cacheMiss);
 			}
 		}
 

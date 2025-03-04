@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 
 using LinqToDB.Expressions;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 
 using Microsoft.EntityFrameworkCore;
 

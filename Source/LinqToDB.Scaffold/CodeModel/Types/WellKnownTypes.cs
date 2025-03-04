@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -467,19 +467,6 @@ namespace LinqToDB.CodeModel
 			/// <param name="tableType">Record type.</param>
 			/// <returns>Type descriptor.</returns>
 			public static IType ITable(IType tableType) => ITableT.WithTypeArguments(tableType);
-
-			public static class Expressions
-			{
-				/// <summary>
-				/// <see cref="global::LinqToDB.Expressions.MemberHelper"/> type descriptor.
-				/// </summary>
-				public static IType MemberHelper { get; } = Parser.Parse(typeof(MemberHelper));
-
-				/// <summary>
-				/// <see cref="MemberHelper.MethodOf(Expression{Action})"/> method reference.
-				/// </summary>
-				public static CodeIdentifier MemberHelper_MethodOf { get; } = new CodeIdentifier(nameof(global::LinqToDB.Expressions.MemberHelper.MethodOf), true);
-			}
 
 			public static class Common
 			{

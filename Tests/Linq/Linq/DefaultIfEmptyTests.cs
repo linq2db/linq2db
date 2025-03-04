@@ -3,6 +3,7 @@
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.Internal;
 
 using NUnit.Framework;
 

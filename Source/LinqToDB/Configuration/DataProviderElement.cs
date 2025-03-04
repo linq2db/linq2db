@@ -36,7 +36,7 @@ namespace LinqToDB.Configuration
 
 		/// <summary>
 		/// Gets a name of this data provider.
-		/// If not set, <see cref="DataProviderBase.Name"/> is used.
+		/// If not set, <see cref="IDataProvider.Name"/> is used.
 		/// </summary>
 		public string Name => (string)base[_propName];
 

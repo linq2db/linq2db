@@ -6,12 +6,13 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Expressions;
-using LinqToDB.Expressions.Internal;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
-using LinqToDB.Reflection;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Reflection;
+using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
 namespace Tests
@@ -326,7 +327,7 @@ namespace Tests
 
 			newExpr = ApplyNullCheck(newExpr);
 
-			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
+			var empty = LinqToDB.Internal.Common.Tools.CreateEmptyQuery<T>();
 			T[]? expected;
 
 			expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();

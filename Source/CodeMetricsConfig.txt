@@ -1,0 +1,10 @@
+# defaults: https://github.com/dotnet/roslyn-analyzers/blob/e52a3f1c0b45684ddaa041f26a980fa451ea9001/src/NetAnalyzers/Core/Microsoft.CodeQuality.Analyzers/Maintainability/CodeMetricsAnalyzer.cs#L259
+# default: 5
+CA1501: 10
+# default: 25
+CA1502: 10
+# default: 10
+CA1505: 10
+# default: 95(NamedType)/40
+CA1506(NamedType): 10
+CA1506: 10

@@ -4,8 +4,8 @@ using System.Collections.Generic;
 
 namespace LinqToDB;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.SqlQuery;
-using LinqToDB.Common.Internal;
 
 partial class Sql
 {
