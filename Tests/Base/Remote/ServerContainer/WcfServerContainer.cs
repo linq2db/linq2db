@@ -48,8 +48,11 @@ namespace Tests.Remote.ServerContainer
 						? o.UseConfiguration(configuration)
 						: optionBuilder(o.UseConfiguration(configuration));
 
-					if (ms != null && options.ConnectionOptions.MappingSchema != null)
-						options.UseMappingSchema(MappingSchema.CombineSchemas(ms, options.ConnectionOptions.MappingSchema));
+					if (ms != null)
+						options = options.UseMappingSchema(
+							options.ConnectionOptions.MappingSchema != null
+								? MappingSchema.CombineSchemas(ms, options.ConnectionOptions.MappingSchema)
+								: ms);
 
 					service.MappingSchema = options.ConnectionOptions.MappingSchema;
 
