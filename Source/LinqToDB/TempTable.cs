@@ -51,7 +51,7 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
-		internal TempTable(
+		public TempTable(
 			IDataContext db,
 			string?      tableName    = default,
 			string?      databaseName = default,
