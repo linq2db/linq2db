@@ -861,7 +861,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (subQuery.OrderBy.Items.Count > 0)
 			{
-				var filterItems = (mainQuery.Select.IsDistinct || !mainQuery.GroupBy.IsEmpty) && !mainQuery.IsLimited;
+				var filterItems = !mainQuery.IsLimited && (mainQuery.Select.IsDistinct || !mainQuery.GroupBy.IsEmpty);
 
 				foreach (var item in subQuery.OrderBy.Items)
 				{
