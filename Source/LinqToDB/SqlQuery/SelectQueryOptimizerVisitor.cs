@@ -861,7 +861,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (subQuery.OrderBy.Items.Count > 0)
 			{
-				var filterItems = mainQuery.Select.IsDistinct || !mainQuery.GroupBy.IsEmpty;
+				var filterItems = (mainQuery.Select.IsDistinct || !mainQuery.GroupBy.IsEmpty) && !mainQuery.IsLimited;
 
 				foreach (var item in subQuery.OrderBy.Items)
 				{
@@ -1386,12 +1386,6 @@ namespace LinqToDB.SqlQuery
 					// shortcut
 					return true;
 				}
-			}
-
-			if (parentQuery is { IsLimited: true, OrderBy.IsEmpty: false })
-			{
-				if (!subQuery.IsSimple)
-					return false;
 			}
 
 			if (subQuery.From.Tables.Count > 1)
