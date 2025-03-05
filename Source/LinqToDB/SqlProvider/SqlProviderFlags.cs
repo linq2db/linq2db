@@ -524,7 +524,7 @@ namespace LinqToDB.SqlProvider
 		/// <remarks>
 		/// Applied only to SqlCe provider.
 		/// </remarks>
-		[DataMember(Order = 61), DefaultValue(true)]
+		[DataMember(Order = 61)]
 		public bool IsOrderByAggregateFunctionSupported { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
