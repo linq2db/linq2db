@@ -1407,6 +1407,22 @@ namespace LinqToDB.SqlQuery
 					return false;
 			}
 
+			if (!parentQuery.OrderBy.IsEmpty && !_providerFlags.IsOrderByAggregateFunctionSupported)
+			{
+				if (parentQuery.OrderBy.Items.Select(o => o.Expression).Any(e =>
+				    {
+					    var test = e;
+					    if (e is SqlColumn column)
+						    test = column.Expression;
+
+					    return QueryHelper.ContainsAggregationFunction(test);
+				    }))
+				{
+					// not allowed to move to parent if it has aggregates
+					return false;
+				}
+			}
+
 			if (!parentQuery.GroupBy.IsEmpty)
 			{
 				if (!subQuery.GroupBy.IsEmpty)

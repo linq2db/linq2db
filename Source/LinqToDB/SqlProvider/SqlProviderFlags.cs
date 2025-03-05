@@ -517,6 +517,16 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 60)]
 		public bool IsDistinctFromSupported { get; set; }
 
+		/// <summary>
+		/// Provider supports Aggregate function in ORDER BY.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
+		/// </summary>
+		/// <remarks>
+		/// Applied only to SqlCe provider.
+		/// </remarks>
+		[DataMember(Order = 61), DefaultValue(true)]
+		public bool IsOrderByAggregateFunctionSupported { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -600,6 +610,7 @@ namespace LinqToDB.SqlProvider
 				^ SupportedCorrelatedSubqueriesLevel                   .GetHashCode()
 				^ IsDistinctFromSupported                              .GetHashCode()
 				^ DoesProviderTreatsEmptyStringAsNull                  .GetHashCode()
+				^ IsOrderByAggregateFunctionSupported                  .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -665,6 +676,7 @@ namespace LinqToDB.SqlProvider
 				&& SupportedCorrelatedSubqueriesLevel                    == other.SupportedCorrelatedSubqueriesLevel
 				&& IsDistinctFromSupported                               == other.IsDistinctFromSupported
 				&& DoesProviderTreatsEmptyStringAsNull                   == other.DoesProviderTreatsEmptyStringAsNull
+				&& IsOrderByAggregateFunctionSupported                   == other.IsOrderByAggregateFunctionSupported
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0

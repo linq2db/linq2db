@@ -3765,6 +3765,7 @@ namespace Tests.Linq
 				.LongCount();
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
 		public void Issue_FilterByOrderedGroupBy([DataSources] string context)
 		{
