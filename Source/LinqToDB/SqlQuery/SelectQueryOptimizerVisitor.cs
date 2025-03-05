@@ -1411,11 +1411,13 @@ namespace LinqToDB.SqlQuery
 			{
 				if (parentQuery.OrderBy.Items.Select(o => o.Expression).Any(e =>
 				    {
-					    var test = e;
-					    if (e is SqlColumn column)
-						    test = column.Expression;
+					    if (QueryHelper.UnwrapNullablity(e) is SqlColumn column)
+					    {
+							if (column.Parent == subQuery)
+								return QueryHelper.ContainsAggregationFunction(column.Expression);
+					    }
 
-					    return QueryHelper.ContainsAggregationFunction(test);
+					    return false;
 				    }))
 				{
 					// not allowed to move to parent if it has aggregates
