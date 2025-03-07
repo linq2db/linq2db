@@ -2289,5 +2289,34 @@ namespace Tests.Linq
 				});
 			}
 		}
+
+		enum EnumChar
+		{
+			[MapValue("A")] Value1 = 1,
+			[MapValue("B")] Value2 = 2,
+		}
+
+		[Table]
+		class EnumCharTable
+		{
+			[Column(DbType="char(1)", DataType=DataType.Char, Length=1), Nullable] public EnumChar? Value { get; set; }
+		}
+
+		[Test]
+		public void Test([DataSources(ProviderName.SQLite)] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tmp = db.CreateLocalTable<EnumCharTable>([new () { Value = EnumChar.Value1 }]);
+
+			object selectedValue = "A";
+
+			var count = db.GetTable<EnumCharTable>().Count(t => t.Value.Equals(selectedValue));
+
+			Assert.That(count, Is.EqualTo(1));
+
+			count = db.GetTable<EnumCharTable>().Count(t => selectedValue.Equals(t.Value));
+
+			Assert.That(count, Is.EqualTo(1));
+		}
 	}
 }
