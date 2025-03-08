@@ -1718,5 +1718,17 @@ namespace LinqToDB
 			return new ExpressionQueryImpl<TResult>(dataContext, expression.Body);
 		}
 
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseOptions<TSet>(this IDataContext dataContext, Func<TSet,TSet> optionSetter)
+			where TSet : class, IOptionSet, new()
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseLinqOptions(this IDataContext dataContext, Func<LinqOptions,LinqOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
 	}
 }

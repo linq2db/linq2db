@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
@@ -24,7 +25,9 @@ namespace LinqToDB
 		// If you add another parameter here, don't forget to update
 		// DataContextOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
-		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>, IApplicable<RemoteDataContextBase>
+		: IOptionSet,
+			IApplicable<DataConnection>, IApplicable<DataContext>, IApplicable<RemoteDataContextBase>,
+			IReapplicable<DataConnection>, IReapplicable<DataContext>, IReapplicable<RemoteDataContextBase>
 	{
 		public DataContextOptions() : this((int?)default)
 		{
@@ -58,6 +61,10 @@ namespace LinqToDB
 
 		public static readonly DataContextOptions Empty = new();
 
+		IOptionSet IOptionSet.Default => Empty;
+
+		#region IApplicable implementation
+
 		void IApplicable<DataConnection>.Apply(DataConnection obj)
 		{
 			DataConnection.ConfigurationApplier.Apply(obj, this);
@@ -73,6 +80,38 @@ namespace LinqToDB
 			RemoteDataContextBase.ConfigurationApplier.Apply(obj, this);
 		}
 
+		#endregion
+
+		#region IReapplicable implementation
+
+		Action? IReapplicable<DataConnection>.Apply(DataConnection obj, object? previousObject)
+		{
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID?)previousObject)?.ConfigurationID
+				? null
+				: DataConnection.ConfigurationApplier.Reapply(obj, this, (DataContextOptions?)previousObject);
+		}
+
+		Action? IReapplicable<DataContext>.Apply(DataContext obj, object? previousObject)
+		{
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID?)previousObject)?.ConfigurationID
+				? null
+				: DataContext.ConfigurationApplier.Reapply(obj, this, (DataContextOptions?)previousObject);
+		}
+
+		Action? IReapplicable<RemoteDataContextBase>.Apply(RemoteDataContextBase obj, object? previousObject)
+		{
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID?)previousObject)?.ConfigurationID
+				? null
+				: RemoteDataContextBase.ConfigurationApplier.Reapply(obj, this, (DataContextOptions?)previousObject);
+		}
+
+		#endregion
+
+		public override int GetHashCode()
+		{
+			return ((IConfigurationID)this).ConfigurationID;
+		}
+
 		#region IEquatable implementation
 
 		public bool Equals(DataContextOptions? other)
@@ -80,12 +119,7 @@ namespace LinqToDB
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
 
-			return ((IOptionSet)this).ConfigurationID == ((IOptionSet)other).ConfigurationID;
-		}
-
-		public override int GetHashCode()
-		{
-			return ((IOptionSet)this).ConfigurationID;
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)other).ConfigurationID;
 		}
 
 		#endregion

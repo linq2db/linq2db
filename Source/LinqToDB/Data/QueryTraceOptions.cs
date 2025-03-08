@@ -23,7 +23,7 @@ namespace LinqToDB.Data
 		// If you add another parameter here, don't forget to update
 		// QueryTraceOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
-		: IOptionSet, IApplicable<DataConnection>
+		: IOptionSet, IApplicable<DataConnection>, IReapplicable<DataConnection>
 	{
 		public QueryTraceOptions() : this((TraceLevel?)null)
 		{
@@ -57,9 +57,18 @@ namespace LinqToDB.Data
 
 		public static readonly QueryTraceOptions Empty = new();
 
+		IOptionSet IOptionSet.Default => Empty;
+
 		void IApplicable<DataConnection>.Apply(DataConnection obj)
 		{
 			DataConnection.ConfigurationApplier.Apply(obj, this);
+		}
+
+		Action? IReapplicable<DataConnection>.Apply(DataConnection obj, object? previousObject)
+		{
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID?)previousObject)?.ConfigurationID
+				? null
+				: DataConnection.ConfigurationApplier.Reapply(obj, this, (QueryTraceOptions?)previousObject);
 		}
 
 		#region IEquatable implementation
@@ -69,12 +78,12 @@ namespace LinqToDB.Data
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
 
-			return ((IOptionSet)this).ConfigurationID == ((IOptionSet)other).ConfigurationID;
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)other).ConfigurationID;
 		}
 
 		public override int GetHashCode()
 		{
-			return ((IOptionSet)this).ConfigurationID;
+			return ((IConfigurationID)this).ConfigurationID;
 		}
 
 		#endregion

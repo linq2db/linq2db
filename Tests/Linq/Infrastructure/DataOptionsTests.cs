@@ -442,8 +442,90 @@ namespace Tests.Infrastructure
 				.UseClickHouse(o => o)
 				.UseClickHouse(connectionString)
 				.UseClickHouse(connectionString, o => o)
-
 				;
+		}
+
+		[Test]
+		public void UseCommandTimeoutTest()
+		{
+			using var db = new TestDataConnection();
+
+			var commandTimeout = db.CommandTimeout;
+			var optionsID      = ((IConfigurationID)db.Options).ConfigurationID;
+			var dbID           = ((IConfigurationID)db).        ConfigurationID;
+
+			using (db.UseOptions<DataContextOptions>(o => o with { CommandTimeout = 45 }))
+			{
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.CommandTimeout,                              Is.EqualTo(45));
+					Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.Not.EqualTo(optionsID));
+					Assert.That(((IConfigurationID)db).ConfigurationID,         Is.Not.EqualTo(dbID));
+				});
+			}
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(db.CommandTimeout,                              Is.EqualTo(commandTimeout));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID,         Is.EqualTo(dbID));
+			});
+		}
+
+		[Test]
+		public void UseOptimizeJoinsTest()
+		{
+			using var db = new TestDataConnection();
+
+			var param     = db.Options.LinqOptions.OptimizeJoins;
+			var optionsID = ((IConfigurationID)db.Options).ConfigurationID;
+			var dbID      = ((IConfigurationID)db).        ConfigurationID;
+
+			using (db.UseOptions(o => o
+				.WithOptions<LinqOptions>    (co => co with { OptimizeJoins = false })
+				.WithOptions<BulkCopyOptions>(bo => bo with { BulkCopyType = BulkCopyType.RowByRow })))
+			{
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Options.LinqOptions.OptimizeJoins,           Is.Not.EqualTo(param));
+					Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.Not.EqualTo(optionsID));
+					Assert.That(((IConfigurationID)db).ConfigurationID,         Is.Not.EqualTo(dbID));
+				});
+			}
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(db.Options.LinqOptions.OptimizeJoins,           Is.EqualTo(param));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID,         Is.EqualTo(dbID));
+			});
+		}
+
+		[Test]
+		public void UseCompareNullsTest()
+		{
+			using var db = new TestDataConnection();
+
+			var param     = db.Options.LinqOptions.CompareNulls;
+			var optionsID = ((IConfigurationID)db.Options).ConfigurationID;
+			var dbID      = ((IConfigurationID)db).        ConfigurationID;
+
+			using (db.UseLinqOptions(o => o with { CompareNulls = param }))
+			{
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Options.LinqOptions.CompareNulls,            Is.EqualTo(param));
+					Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+					Assert.That(((IConfigurationID)db).ConfigurationID,         Is.EqualTo(dbID));
+				});
+			}
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(db.Options.LinqOptions.CompareNulls,            Is.EqualTo(param));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID,         Is.EqualTo(dbID));
+			});
 		}
 	}
 }

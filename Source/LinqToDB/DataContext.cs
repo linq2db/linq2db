@@ -658,6 +658,42 @@ namespace LinqToDB
 				}
 			}
 
+			// For ConnectionOptions we reapply only mapping schema and connection interceptor.
+			// Connection string, configuration, and data provider are not reapplyable.
+			//
+			public static Action Reapply(DataContext dataContext, ConnectionOptions options, ConnectionOptions? previousOptions)
+			{
+				if (previousOptions?.ConnectionInterceptor != null)
+					dataContext.RemoveInterceptor(previousOptions.ConnectionInterceptor);
+
+				if (options.ConnectionInterceptor != null)
+					dataContext.AddInterceptor(options.ConnectionInterceptor);
+
+				var mappingSchema = dataContext.MappingSchema;
+
+				dataContext.MappingSchema = dataContext.DataProvider.MappingSchema;
+
+				if (options.MappingSchema != null)
+				{
+					dataContext.MappingSchema = options.MappingSchema;
+				}
+				else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
+				{
+					dataContext.MappingSchema = new (dataContext.MappingSchema);
+				}
+
+				return () =>
+				{
+					if (options.ConnectionInterceptor != null)
+						dataContext.RemoveInterceptor(options.ConnectionInterceptor);
+
+					if (previousOptions?.ConnectionInterceptor != null)
+						dataContext.AddInterceptor(previousOptions.ConnectionInterceptor);
+
+					dataContext.MappingSchema = mappingSchema;
+				};
+			}
+
 			public static void Apply(DataContext dataContext, DataContextOptions options)
 			{
 				dataContext._commandTimeout = options.CommandTimeout;
@@ -666,11 +702,73 @@ namespace LinqToDB
 					foreach (var interceptor in options.Interceptors)
 						dataContext.AddInterceptor(interceptor, false);
 			}
+
+			public static Action Reapply(DataContext dataContext, DataContextOptions options, DataContextOptions? previousOptions)
+			{
+				var commandTimeout = dataContext._commandTimeout;
+
+				dataContext.CommandTimeout = options.CommandTimeout ?? -1;
+
+				if (previousOptions?.Interceptors != null)
+					foreach (var interceptor in previousOptions.Interceptors)
+						dataContext.RemoveInterceptor(interceptor);
+
+				if (options.Interceptors != null)
+					foreach (var interceptor in options.Interceptors)
+						dataContext.AddInterceptor(interceptor);
+
+				return () =>
+				{
+					dataContext.CommandTimeout = commandTimeout ?? -1;
+
+					if (options.Interceptors != null)
+						foreach (var interceptor in options.Interceptors)
+							dataContext.RemoveInterceptor(interceptor);
+
+					if (previousOptions?.Interceptors != null)
+						foreach (var interceptor in previousOptions.Interceptors)
+							dataContext.AddInterceptor(interceptor);
+				};
+			}
 		}
 
 		/// <summary>
 		/// Gets service provider, used for data connection instance.
 		/// </summary>
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance => ((IInfrastructure<IServiceProvider>)DataProvider).Instance;
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public IDisposable? UseOptions(Func<DataOptions,DataOptions> optionsSetter)
+		{
+			var prevOptions = Options;
+			var newOptions  = optionsSetter(Options) ?? throw new ArgumentNullException(nameof(optionsSetter));
+
+			if (((IConfigurationID)prevOptions).ConfigurationID == ((IConfigurationID)newOptions).ConfigurationID)
+				return null;
+
+			var configurationID = _configurationID;
+			var msID            = _msID;
+
+			Options          = newOptions;
+			_configurationID = null;
+			_msID            = 0;
+
+			var action = Options.Reapply(this, prevOptions);
+
+			action += () =>
+			{
+				Options          = prevOptions;
+
+#if DEBUG
+				_configurationID = null;
+				_msID            = 0;
+#else
+				_configurationID = configurationID;
+				_msID            = msID;
+#endif
+			};
+
+			return new DisposableAction(action);
+		}
 	}
 }

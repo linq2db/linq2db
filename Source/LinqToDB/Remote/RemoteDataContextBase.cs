@@ -119,7 +119,7 @@ namespace LinqToDB.Remote
 				ProviderTranslator = providerTranslator;
 			}
 
-			public Expression? Translate(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags) 
+			public Expression? Translate(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
 				=> ProviderTranslator.Translate(translationContext, memberExpression, translationFlags);
 		}
 
@@ -276,7 +276,7 @@ namespace LinqToDB.Remote
 		/// <summary>
 		/// Current DataContext LINQ options
 		/// </summary>
-		public DataOptions Options { get; }
+		public DataOptions Options { get; private set; }
 
 		SqlProviderFlags IDataContext.SqlProviderFlags      => GetConfigurationInfo().LinqServiceInfo.SqlProviderFlags;
 		TableOptions     IDataContext.SupportedTableOptions => GetConfigurationInfo().LinqServiceInfo.SupportedTableOptions;
@@ -538,12 +538,94 @@ namespace LinqToDB.Remote
 				}
 			}
 
+			// For ConnectionOptions we reapply only mapping schema.
+			// Connection string, configuration, and data provider are not reapplyable.
+			//
+			public static Action Reapply(RemoteDataContextBase dataContext, ConnectionOptions options, ConnectionOptions? previousOptions)
+			{
+				var mappingSchema              = dataContext._mappingSchema;
+				var serializationMappingSchema = dataContext._serializationMappingSchema;
+
+				dataContext._mappingSchema = null;
+
+				if (options.MappingSchema != null)
+				{
+					dataContext.MappingSchema = options.MappingSchema;
+				}
+				else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
+				{
+					dataContext.MappingSchema = new (dataContext.MappingSchema);
+				}
+
+				return () =>
+				{
+					dataContext._mappingSchema              = mappingSchema;
+					dataContext._serializationMappingSchema = serializationMappingSchema;
+				};
+			}
+
 			public static void Apply(RemoteDataContextBase dataContext, DataContextOptions options)
 			{
 				if (options.Interceptors != null)
 					foreach (var interceptor in options.Interceptors)
 						dataContext.AddInterceptor(interceptor);
 			}
+
+			public static Action Reapply(RemoteDataContextBase dataContext, DataContextOptions options, DataContextOptions? previousOptions)
+			{
+				if (previousOptions?.Interceptors != null)
+					foreach (var interceptor in previousOptions.Interceptors)
+						dataContext.RemoveInterceptor(interceptor);
+
+				if (options.Interceptors != null)
+					foreach (var interceptor in options.Interceptors)
+						dataContext.AddInterceptor(interceptor);
+
+				return () =>
+				{
+					if (options.Interceptors != null)
+						foreach (var interceptor in options.Interceptors)
+							dataContext.RemoveInterceptor(interceptor);
+
+					if (previousOptions?.Interceptors != null)
+						foreach (var interceptor in previousOptions.Interceptors)
+							dataContext.AddInterceptor(interceptor);
+				};
+			}
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public IDisposable? UseOptions(Func<DataOptions,DataOptions> optionsSetter)
+		{
+			var prevOptions = Options;
+			var newOptions  = optionsSetter(Options) ?? throw new ArgumentNullException(nameof(optionsSetter));
+
+			if (((IConfigurationID)prevOptions).ConfigurationID == ((IConfigurationID)newOptions).ConfigurationID)
+				return null;
+
+			var configurationID = _configurationID;
+			var msID            = _msID;
+
+			Options          = newOptions;
+			_configurationID = null;
+			_msID            = 0;
+
+			var action = Options.Reapply(this, prevOptions);
+
+			action += () =>
+			{
+				Options          = prevOptions;
+
+#if DEBUG
+				_configurationID = null;
+				_msID            = 0;
+#else
+				_configurationID = configurationID;
+				_msID            = msID;
+#endif
+			};
+
+			return new DisposableAction(action);
 		}
 	}
 }

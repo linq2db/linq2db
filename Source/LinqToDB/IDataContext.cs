@@ -126,5 +126,17 @@ namespace LinqToDB
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
 		string?                       ConfigurationString         { get; }
+
+		/// <summary>
+		/// Sets new options for current data context.
+		/// </summary>
+		/// <param name="optionsSetter">
+		/// Options setter function.
+		/// </param>
+		/// <returns>
+		/// Returns disposable object, which could be used to restore previous options.
+		/// </returns>
+		/// <exception cref="ArgumentNullException"></exception>
+		public IDisposable? UseOptions(Func<DataOptions,DataOptions> optionsSetter);
 	}
 }

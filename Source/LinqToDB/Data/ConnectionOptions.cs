@@ -59,14 +59,17 @@ namespace LinqToDB.Data
 		DbConnection?                                   DbConnection              = default,
 		DbTransaction?                                  DbTransaction             = default,
 		bool                                            DisposeConnection         = default,
-		Func<DataOptions, DbConnection>?                ConnectionFactory         = default,
+		Func<DataOptions,DbConnection>?                 ConnectionFactory         = default,
 		Func<ConnectionOptions, IDataProvider>?         DataProviderFactory       = default,
 		ConnectionOptionsConnectionInterceptor?         ConnectionInterceptor     = default,
 		Action<MappingSchema, IEntityChangeDescriptor>? OnEntityDescriptorCreated = default
+
 		// If you add another parameter here, don't forget to update
 		// ConnectionOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
-		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>, IApplicable<RemoteDataContextBase>
+		: IOptionSet,
+			IApplicable<DataConnection>, IApplicable<DataContext>, IApplicable<RemoteDataContextBase>,
+			IReapplicable<DataConnection>, IReapplicable<DataContext>, IReapplicable<RemoteDataContextBase>
 	{
 		public ConnectionOptions() : this((string?)null)
 		{
@@ -116,11 +119,17 @@ namespace LinqToDB.Data
 			}
 		}
 
+		static readonly ConnectionOptions _empty = new();
+
+		IOptionSet IOptionSet.Default => _empty;
+
 		internal IDataProvider? SavedDataProvider;
 		internal MappingSchema? SavedMappingSchema;
 		internal string?        SavedConnectionString;
 		internal string?        SavedConfigurationString;
 		internal bool           SavedEnableContextSchemaEdit;
+
+		#region IApplicable implementation
 
 		void IApplicable<DataConnection>.Apply(DataConnection obj)
 		{
@@ -137,6 +146,33 @@ namespace LinqToDB.Data
 			RemoteDataContextBase.ConfigurationApplier.Apply(obj, this);
 		}
 
+		#endregion
+
+		#region IReapplicable implementation
+
+		Action? IReapplicable<DataConnection>.Apply(DataConnection obj, object? previousObject)
+		{
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID?)previousObject)?.ConfigurationID
+				? null
+				: DataConnection.ConfigurationApplier.Reapply(obj, this, (ConnectionOptions?)previousObject);
+		}
+
+		Action? IReapplicable<DataContext>.Apply(DataContext obj, object? previousObject)
+		{
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID?)previousObject)?.ConfigurationID
+				? null
+				: DataContext.ConfigurationApplier.Reapply(obj, this, (ConnectionOptions?)previousObject);
+		}
+
+		Action? IReapplicable<RemoteDataContextBase>.Apply(RemoteDataContextBase obj, object? previousObject)
+		{
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID?)previousObject)?.ConfigurationID
+				? null
+				: RemoteDataContextBase.ConfigurationApplier.Reapply(obj, this, (ConnectionOptions?)previousObject);
+		}
+
+		#endregion
+
 		#region IEquatable implementation
 
 		public bool Equals(ConnectionOptions? other)
@@ -144,12 +180,12 @@ namespace LinqToDB.Data
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
 
-			return ((IOptionSet)this).ConfigurationID == ((IOptionSet)other).ConfigurationID;
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)other).ConfigurationID;
 		}
 
 		public override int GetHashCode()
 		{
-			return ((IOptionSet)this).ConfigurationID;
+			return ((IConfigurationID)this).ConfigurationID;
 		}
 
 		#endregion
