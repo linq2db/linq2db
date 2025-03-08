@@ -8,7 +8,6 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -328,9 +327,7 @@ namespace Tests.Linq
 		public void TestQueryableCallWithParameters([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// baselines could be affected by cache
-			Query.ClearCaches();
-
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseDisableQueryCache(true));
 			db.Parent.Where(p => GetChildrenFiltered(db, c => c.ChildID != 5).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
 		}
 
@@ -338,9 +335,7 @@ namespace Tests.Linq
 		public void TestQueryableCallWithParametersWorkaround([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// baselines could be affected by cache
-			Query.ClearCaches();
-
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseDisableQueryCache(true));
 			db.Parent.Where(p => GetChildrenFiltered(db, ChildFilter).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
 		}
 
