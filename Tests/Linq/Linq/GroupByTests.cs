@@ -3751,5 +3751,34 @@ namespace Tests.Linq
 				})
 				.LongCount();
 		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
+		[Test]
+		public void Issue_FilterByOrderedGroupBy([DataSources] string context)
+		{
+			using var db  = GetDataContext(context);
+
+			var grp =
+			(
+				from c in db.Child
+				group c by c.ParentID into g
+				select new
+				{
+					ParentID = g.Key,
+					Max      = g.Max(x => x.ChildID)
+				}
+				into g
+				orderby g.Max descending
+				select g
+			)
+			.Take(2);
+
+			var query = 
+				from t in db.Child
+				where t.ParentID.In(grp.Select(x => x.ParentID))
+				select t;
+
+			AssertQuery(query);
+		}
 	}
 }

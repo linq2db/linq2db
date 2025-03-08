@@ -71,6 +71,7 @@ namespace LinqToDB.Internal.DataProvider
 				RowConstructorSupport                = RowFeature.None,
 				IsWindowFunctionsSupported           = true,
 				IsDerivedTableOrderBySupported       = true,
+				IsOrderByAggregateFunctionSupported  = true,
 			};
 
 			SetField<DbDataReader, bool>    ((r,i) => r.GetBoolean (i));
