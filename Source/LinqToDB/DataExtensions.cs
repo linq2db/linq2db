@@ -1720,6 +1720,8 @@ namespace LinqToDB
 			return new ExpressionQueryImpl<TResult>(dataContext, expression.Body);
 		}
 
+		#region UseOptions
+
 		/// <inheritdoc cref="IDataContext.UseOptions"/>
 		public static IDisposable? UseOptions<TSet>(this IDataContext dataContext, Func<TSet,TSet> optionSetter)
 			where TSet : class, IOptionSet, new()
@@ -1768,5 +1770,7 @@ namespace LinqToDB
 		{
 			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
 		}
+
+		#endregion
 	}
 }
