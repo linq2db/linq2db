@@ -220,19 +220,28 @@ namespace LinqToDB.Remote
 			}
 		}
 
+		private MappingSchema? _providedMappingSchema;
 		private MappingSchema? _mappingSchema;
+		private MappingSchema? _serializationMappingSchema;
+
 		public  MappingSchema   MappingSchema
 		{
-			get => _mappingSchema ??= GetConfigurationInfo().MappingSchema;
+			get => _mappingSchema ??= _providedMappingSchema == null ? GetConfigurationInfo().MappingSchema : MappingSchema.CombineSchemas(_providedMappingSchema, GetConfigurationInfo().MappingSchema);
 			set
 			{
-				_mappingSchema = value;
-				_serializationMappingSchema = MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, MappingSchema);
+				// Because setter could be called from constructor, we cannot build composite schemas here to avoid server calls on half-initialized context
+				// Instead we reset schemas status and finish initialization in getters for MappingSchema and SerializationMappingSchema, when they are called
+				if (_providedMappingSchema != value)
+				{
+					_providedMappingSchema = value;
+					// reset schemas
+					_mappingSchema              = null;
+					_serializationMappingSchema = null;
+				}
 			}
 		}
 
-		private  MappingSchema? _serializationMappingSchema;
-		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, MappingSchema);
+		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, MappingSchema);
 
 		public  bool InlineParameters { get; set; }
 		public  bool CloseAfterUse    { get; set; }
@@ -532,6 +541,11 @@ namespace LinqToDB.Remote
 		{
 			public static void Apply(RemoteDataContextBase dataContext, ConnectionOptions options)
 			{
+				if (options.ConfigurationString != null)
+				{
+					dataContext.ConfigurationString = options.ConfigurationString;
+				}
+
 				if (options.MappingSchema != null)
 				{
 					dataContext.MappingSchema = options.MappingSchema;

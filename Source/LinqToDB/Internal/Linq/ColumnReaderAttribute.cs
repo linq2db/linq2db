@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.Linq
 {
-	[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Method)]
 	public class ColumnReaderAttribute : Attribute
 	{
 		public ColumnReaderAttribute(int indexParameterIndex)

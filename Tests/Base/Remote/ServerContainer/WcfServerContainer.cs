@@ -30,35 +30,13 @@ namespace Tests.Remote.ServerContainer
 
 		private Func<string, MappingSchema?, DataConnection> _connectionFactory = null!;
 
-		ITestDataContext IServerContainer.CreateContext(
-			MappingSchema? ms,
-			string configuration,
-			Func<DataOptions, DataOptions>? optionBuilder,
-			Func<string, MappingSchema?, DataConnection> connectionFactory)
+		ITestDataContext IServerContainer.CreateContext(Func<ITestLinqService,DataOptions, DataOptions> optionBuilder, Func<string, MappingSchema?, DataConnection> connectionFactory)
 		{
 			_connectionFactory = connectionFactory;
 
 			var service = OpenHost();
 
-			var dx = new TestWcfDataContext(
-				GetPort(),
-				o =>
-				{
-					var options = optionBuilder == null
-						? o.UseConfiguration(configuration)
-						: optionBuilder(o.UseConfiguration(configuration));
-
-					if (ms != null)
-						options = options.UseMappingSchema(
-							options.ConnectionOptions.MappingSchema != null
-								? MappingSchema.CombineSchemas(ms, options.ConnectionOptions.MappingSchema)
-								: ms);
-
-					service.MappingSchema = options.ConnectionOptions.MappingSchema;
-
-					return options;
-				})
-			{ ConfigurationString = configuration };
+			var dx = new TestWcfDataContext(GetPort(), o => optionBuilder(service, o));
 
 			Debug.WriteLine(((IDataContext)dx).ConfigurationID, "Provider ");
 
