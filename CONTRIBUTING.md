@@ -16,6 +16,7 @@ uid: contributing
 |.\Source\CodeGenerators| LINQ to DB internal source generators source code|
 |.\Source\LinqToDB| LINQ to DB source code|
 |.\Source\LinqToDB.CLI| LINQ to DB CLI scaffold tool source code|
+|.\Source\LinqToDB.Compat| LINQ to DB Compat library source code|
 |.\Source\LinqToDB.EntityFrameworkCore| LINQ to DB integration with Entity Framework Core source code|
 |.\Source\LinqToDB.Extensions| LINQ to DB Dependency Injection and Logging extensions library source code|
 |.\Source\LinqToDB.FSharp | F# support extension for Linq To DB|
@@ -107,14 +108,11 @@ public class Test: TestBase
         // TestBase.GetDataContext - creates new IDataContext
         // also supports creation of remote client and server
         // for remote contexts
-        using(var db = GetDataContext(context))
-        {
-            // Here is the most interesting
-            // this.Person - list of persons, corresponding Person table in database (derived from TestBase)
-            // db.Person - database table
-            // So test checks that LINQ to Objects query produces the same result as executed database query
-            AreEqual(this.Person.Where(_ => _.Name == "John"), db.Person.Where(_ => _.Name == "John"));
-        }
+        using var db = GetDataContext(context);
+
+        // AssertQuery method will execute query against both DB and memory-based collections
+        // and check that both return same results
+        AssertQuery(db.Person.Where(_ => _.Name == "John"));
     }
 
 }
