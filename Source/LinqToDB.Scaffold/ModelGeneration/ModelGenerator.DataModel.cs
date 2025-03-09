@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.SchemaProvider;
 
 #pragma warning disable IDE1005
@@ -320,9 +321,9 @@ namespace LinqToDB.Tools.ModelGeneration
 			return ToSingular(key.Name!);
 		}
 
-		public SqlProvider.ISqlBuilder? SqlBuilder;
-		bool                            _generateModelOnly;
-		bool                            _generateModelInterface;
+		public ISqlBuilder? SqlBuilder;
+		bool                _generateModelOnly;
+		bool                _generateModelInterface;
 
 		protected Dictionary<string,TR> ToDictionary<T,TR>(IEnumerable<T> source, Func<T,string> keyGetter, Func<T,TR> objGetter, Func<TR,int,string> getKeyName)
 		{

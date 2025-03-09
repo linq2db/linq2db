@@ -8,10 +8,12 @@ using System.Reflection;
 using Microsoft.SqlServer.Server;
 #endif
 
+using LinqToDB;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -32,8 +34,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			new SystemDataSqlServerAttributeReader(typeof(SqlMethodAttribute), typeof(SqlUserDefinedTypeAttribute))
 #else
 			TryCreate(
-			"Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient",
-			"Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient")
+				"Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient",
+				"Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient")
 #endif
 			;
 

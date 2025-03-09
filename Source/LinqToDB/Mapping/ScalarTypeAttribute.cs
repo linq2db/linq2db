@@ -8,7 +8,7 @@ namespace LinqToDB.Mapping
 	/// This attribute allows you to mark class or struct as scalar type or mark struct as non-scalar type.
 	/// Also see <seealso cref="Common.Configuration.IsStructIsScalarType"/>.
 	/// Note that if you marks some type as scalar, you will need to define custom mapping logic between object of
-	/// that type and data parameter using <seealso cref="MappingSchema.SetConvertExpression(Type, Type, System.Linq.Expressions.LambdaExpression, bool, Common.ConversionType)"/> methods.
+	/// that type and data parameter using <seealso cref="MappingSchema.SetConvertExpression(Type, Type, System.Linq.Expressions.LambdaExpression, bool, ConversionType)"/> methods.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
 	public class ScalarTypeAttribute : MappingAttribute

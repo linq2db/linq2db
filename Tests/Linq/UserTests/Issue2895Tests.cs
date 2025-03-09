@@ -4,6 +4,7 @@ using System.Linq;
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.Internal;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

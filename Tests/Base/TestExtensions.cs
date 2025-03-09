@@ -1,5 +1,4 @@
 ﻿using LinqToDB;
-using LinqToDB.Common;
 
 namespace Tests
 {

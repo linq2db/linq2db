@@ -10,7 +10,6 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
@@ -22,10 +21,11 @@ using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Internal;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
-using LinqToDB.SqlQuery;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -45,8 +45,6 @@ namespace LinqToDB.EntityFrameworkCore
 	[PublicAPI]
 	public class LinqToDBForEFToolsImplDefault : ILinqToDBForEFTools
 	{
-		private static readonly char[] _nameSeparator = ['.'];
-
 		sealed class ProviderKey
 		{
 			public ProviderKey(string? providerName, string? connectionString)
@@ -293,7 +291,7 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <returns>Linq To DB SQL Server provider instance.</returns>
 		protected virtual IDataProvider CreateSqlServerProvider(SqlServerVersion version, string? connectionString)
 		{
-			return DataProvider.SqlServer.SqlServerTools.GetDataProvider(version, SqlServerProvider.MicrosoftDataSqlClient, connectionString);
+			return SqlServerTools.GetDataProvider(version, SqlServerProvider.MicrosoftDataSqlClient, connectionString);
 		}
 
 		/// <summary>

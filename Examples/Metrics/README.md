@@ -39,7 +39,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
+using LinqToDB.Metrics;
 
 using OpenTelemetry;
 using OpenTelemetry.Resources;

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Tools.ModelGeneration
+﻿namespace LinqToDB.Tools.ModelGeneration
 {
 	/// <summary>
 	/// For internal use.
