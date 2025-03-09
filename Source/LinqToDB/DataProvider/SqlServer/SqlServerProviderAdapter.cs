@@ -250,16 +250,16 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (sqlJsonType != null)
 				{
 					var sb = Expression.Parameter(typeof(StringBuilder));
-					var dt = Expression.Parameter(typeof(SqlDataType));
+					var dt = Expression.Parameter(typeof(DbDataType));
 					var op = Expression.Parameter(typeof(DataOptions));
 					var v = Expression.Parameter(typeof(object));
 
-					var converter = Expression.Lambda<Action<StringBuilder,SqlDataType,DataOptions,object>>(
+					var converter = Expression.Lambda<Action<StringBuilder,DbDataType,DataOptions,object>>(
 						Expression.Call(
 							null,
 							Methods.SqlServer.ConvertStringToSql,
 							sb,
-							ExpressionHelper.Property(ExpressionHelper.Property(dt, nameof(SqlDataType.Type)), nameof(DbDataType.DataType)),
+							ExpressionHelper.Property(dt, nameof(DbDataType.DataType)),
 							ExpressionHelper.Property(Expression.Convert(v, sqlJsonType), "Value")
 							),
 						sb, dt, op, v)
@@ -273,14 +273,14 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (jsonDocumentType != null)
 					{
 						mappingSchema.SetScalarType(jsonDocumentType);
-						mappingSchema.SetDataType(jsonDocumentType, new SqlDataType(new DbDataType(jsonDocumentType, DataType.Json)));
+						mappingSchema.SetDataType(jsonDocumentType, new DbDataType(jsonDocumentType, DataType.Json));
 
-						var jsdocConverter = Expression.Lambda<Action<StringBuilder,SqlDataType,DataOptions,object>>(
+						var jsdocConverter = Expression.Lambda<Action<StringBuilder,DbDataType,DataOptions,object>>(
 						Expression.Call(
 							null,
 							Methods.SqlServer.ConvertStringToSql,
 							sb,
-							ExpressionHelper.Property(ExpressionHelper.Property(dt, nameof(SqlDataType.Type)), nameof(DbDataType.DataType)),
+							ExpressionHelper.Property(dt, nameof(DbDataType.DataType)),
 							Expression.Call(ExpressionHelper.Property(Expression.Convert(v, jsonDocumentType), "RootElement"), "GetRawText", null)
 							),
 						sb, dt, op, v)
@@ -338,7 +338,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					mappingSchema.SetScalarType(type);
 					mappingSchema.SetDefaultValue(type, getNullValue());
 					mappingSchema.SetCanBeNull(type, true);
-					mappingSchema.SetDataType(type, new SqlDataType(new DbDataType(type, dataType, dbType)));
+					mappingSchema.SetDataType(type, new DbDataType(type, dataType, dbType));
 				}
 
 				return type;

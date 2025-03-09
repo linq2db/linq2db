@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 #if NETFRAMEWORK
 using System.ServiceModel;
@@ -911,7 +912,7 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 			ms.SetDataType(typeof(Id<User>), DataType.Int32);
-			ms.SetValueToSqlConverter(typeof(Id<User>), (sb, dt, v) => sb.Append(((Id<User>)v).Value));
+			ms.SetValueToSqlConverter(typeof(Id<User>), (StringBuilder sb, DbDataType dt, object v) => sb.Append(((Id<User>)v).Value));
 
 			using var db = GetDataContext(context, ms);
 			using var tb = db.CreateLocalTable<User>();
@@ -980,7 +981,7 @@ namespace Tests.Linq
 			{
 				// just check call site and you will see it cannot work
 				mappingSchema.SetDataType(typeof(Id<T>), DataType.Int32);
-				mappingSchema.SetValueToSqlConverter(typeof(Id<T>), (sb, dt, o) => sb.Append(((Id<T>)o).Value));
+				mappingSchema.SetValueToSqlConverter(typeof(Id<T>), (StringBuilder sb, DbDataType dt, object o) => sb.Append(((Id<T>)o).Value));
 			}
 		}
 		#endregion

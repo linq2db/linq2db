@@ -857,17 +857,17 @@ namespace Tests.DataProvider
 				//
 				ms.SetValueToSqlConverter(
 					typeof(DateTime),
-					(stringBuilder, dataType, val) =>
+					(StringBuilder sb, DbDataType dt, object v) =>
 					{
-						var value = (DateTime)val;
-						Assert.That(dataType.Type.DataType, Is.Not.EqualTo(DataType.Undefined));
+						var value = (DateTime)v;
+						Assert.That(dt.DataType, Is.Not.EqualTo(DataType.Undefined));
 
 						var format =
-							dataType.Type.DataType == DataType.DateTime2 ?
+							dt.DataType == DataType.DateTime2 ?
 								"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
 								"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
 
-						stringBuilder.AppendFormat(format, value);
+						sb.AppendFormat(format, value);
 					});
 
 				db.AddMappingSchema(ms);
@@ -884,15 +884,15 @@ namespace Tests.DataProvider
 			var ms = new MappingSchema();
 			ms.SetValueToSqlConverter(
 				typeof(DateTime),
-				(stringBuilder,dataType,val) =>
+				(StringBuilder sb, DbDataType dt, object v) =>
 				{
-					var value  = (DateTime)val;
+					var value  = (DateTime)v;
 					var format =
-						dataType.Type.DataType == DataType.DateTime ?
+						dt.DataType == DataType.DateTime ?
 							"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
 							"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
 
-					stringBuilder.AppendFormat(format, value);
+					sb.AppendFormat(format, value);
 				});
 
 			using (var db = GetDataConnection(context, ms))
@@ -924,15 +924,15 @@ namespace Tests.DataProvider
 			var ms = new MappingSchema();
 			ms.SetValueToSqlConverter(
 				typeof(DateTime),
-				(stringBuilder, dataType, val) =>
+				(StringBuilder sb, DbDataType dt, object v) =>
 				{
-					var value = (DateTime)val;
+					var value = (DateTime)v;
 					var format =
-						dataType.Type.DataType == DataType.DateTime ?
+						dt.DataType == DataType.DateTime ?
 							"TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')" :
 							"TO_TIMESTAMP('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF7')";
 
-					stringBuilder.AppendFormat(format, value);
+					sb.AppendFormat(format, value);
 				});
 
 			using (var db = GetDataConnection(context, ms))
@@ -2691,7 +2691,7 @@ namespace Tests.DataProvider
 
 			// Converts object property value to SQL.
 			//
-			ms.SetValueToSqlConverter(typeof(MyDate), (sb,tp,v) =>
+			ms.SetValueToSqlConverter(typeof(MyDate), (StringBuilder sb, DbDataType _, object v) =>
 			{
 				if (!(v is MyDate value)) sb.Append("NULL");
 				else sb.Append($"DATE '{value.Year}-{value.Month}-{value.Day}'");
@@ -2699,7 +2699,7 @@ namespace Tests.DataProvider
 
 			// Converts object property value to SQL.
 			//
-			ms.SetValueToSqlConverter(typeof(OracleTimeStampTZ), (sb,tp,v) =>
+			ms.SetValueToSqlConverter(typeof(OracleTimeStampTZ), (StringBuilder sb, DbDataType _, object v) =>
 			{
 				var value = (OracleTimeStampTZ)v;
 				if (value.IsNull) sb.Append("NULL");
@@ -2777,7 +2777,7 @@ namespace Tests.DataProvider
 
 			// Converts object property value to SQL.
 			//
-			ms.SetValueToSqlConverter(typeof(MyDate), (sb,tp,v) =>
+			ms.SetValueToSqlConverter(typeof(MyDate), (StringBuilder sb, DbDataType _, object v) =>
 			{
 				if (!(v is MyDate value)) sb.Append("NULL");
 				else sb.Append($"DATE '{value.Year}-{value.Month}-{value.Day}'");
@@ -2785,7 +2785,7 @@ namespace Tests.DataProvider
 
 			// Converts object property value to SQL.
 			//
-			ms.SetValueToSqlConverter(typeof(DA.OracleTimeStamp), (sb,tp,v) =>
+			ms.SetValueToSqlConverter(typeof(DA.OracleTimeStamp), (StringBuilder sb, DbDataType _, object v) =>
 			{
 				var value = (DA.OracleTimeStamp)v;
 				if (value.IsNull) sb.Append("NULL");

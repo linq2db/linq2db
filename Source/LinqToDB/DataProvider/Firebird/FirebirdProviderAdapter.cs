@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.Common;
 
+using LinqToDB.Common;
 using LinqToDB.Expressions.Types;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -49,20 +50,20 @@ namespace LinqToDB.DataProvider.Firebird
 			if (FbDecFloatType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbDecFloat>(FbDecFloatType);
-				MappingSchema.SetDataType(FbDecFloatType, new SqlDataType(DataType.DecFloat, FbDecFloatType));
+				MappingSchema.SetDataType(FbDecFloatType, new DbDataType(FbDecFloatType, DataType.DecFloat));
 				// we don't register literal generation for decfloat as it looks like special values (inf, (s)nan are not supported in literals)
 			}
 
 			if (FbZonedDateTimeType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbZonedDateTime>(FbZonedDateTimeType);
-				MappingSchema.SetDataType(FbZonedDateTimeType, new SqlDataType(DataType.DateTimeOffset, FbZonedDateTimeType));
+				MappingSchema.SetDataType(FbZonedDateTimeType, new DbDataType(FbZonedDateTimeType, DataType.DateTimeOffset));
 			}
 
 			if (FbZonedTimeType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbZonedTime>(FbZonedTimeType);
-				MappingSchema.SetDataType(FbZonedTimeType, new SqlDataType(DataType.TimeTZ, FbZonedTimeType));
+				MappingSchema.SetDataType(FbZonedTimeType, new DbDataType(FbZonedTimeType, DataType.TimeTZ));
 			}
 
 			typeMapper.FinalizeMappings();

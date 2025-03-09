@@ -30,17 +30,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
-			SetValueToSqlConverter(typeof(bool),       (sb, _,_,v) => sb.Append((bool)v));
-			SetValueToSqlConverter(typeof(string),     (sb, _,_,v) => ConvertStringToSql(sb, (string)v));
-			SetValueToSqlConverter(typeof(char),       (sb, _,_,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),     (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),     (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(Guid),       (sb, _,_,v) => sb.AppendFormat(CultureInfo.InvariantCulture, "'{0:D}'::uuid", (Guid)v));
-			SetValueToSqlConverter(typeof(DateTime),   (sb,dt,_,v) => BuildDateTime(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(BigInteger), (sb, _,_,v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
+			SetValueToSqlConverter(typeof(bool),       (StringBuilder sb, DbDataType _,  DataOptions _, object v) => sb.Append((bool)v));
+			SetValueToSqlConverter(typeof(string),     (StringBuilder sb, DbDataType _,  DataOptions _, object v) => ConvertStringToSql(sb, (string)v));
+			SetValueToSqlConverter(typeof(char),       (StringBuilder sb, DbDataType _,  DataOptions _, object v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),     (StringBuilder sb, DbDataType _,  DataOptions _, object v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),     (StringBuilder sb, DbDataType _,  DataOptions _, object v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid),       (StringBuilder sb, DbDataType _,  DataOptions _, object v) => sb.AppendFormat(CultureInfo.InvariantCulture, "'{0:D}'::uuid", (Guid)v));
+			SetValueToSqlConverter(typeof(DateTime),   (sb, dt, _, v) => BuildDateTime(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(BigInteger), (StringBuilder sb, DbDataType _,  DataOptions _, object v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
 
 			// adds floating point special values support
-			SetValueToSqlConverter(typeof(float) , (sb,_,_,v) =>
+			SetValueToSqlConverter(typeof(float) , (StringBuilder sb, DbDataType _,  DataOptions _, object v) =>
 			{
 				var f = (float)v;
 				var quote = float.IsNaN(f) || float.IsInfinity(f);
@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
 				if (quote) sb.Append("'::float4");
 			});
-			SetValueToSqlConverter(typeof(double), (sb,_,_,v) =>
+			SetValueToSqlConverter(typeof(double), (StringBuilder sb, DbDataType _,  DataOptions _, object v) =>
 			{
 				var d = (double)v;
 				var quote = double.IsNaN(d) || double.IsInfinity(d);
@@ -61,7 +61,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			AddScalarType(typeof(TimeSpan),  DataType.Interval);
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDate(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (sb, dt, _, v) => BuildDate(sb, dt, (DateOnly)v));
 #endif
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)
@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetConvertExpression<uint   , DataParameter>(value => new DataParameter(null, (long )value, DataType.Int64));
 			SetConvertExpression<uint?  , DataParameter>(value => new DataParameter(null, (long?)value, DataType.Int64), addNullCheck: false);
 
-			var ulongType = new SqlDataType(DataType.Decimal, typeof(ulong), 20, 0);
+			var ulongType = new DbDataType(typeof(ulong), DataType.Decimal, null, null, 20, 0);
 			// set type for proper SQL type generation
 			AddScalarType(typeof(ulong ), ulongType);
 
@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetConvertExpression<ulong?, DataParameter>(value => new DataParameter(null, (decimal?)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/, addNullCheck: false);
 		}
 
-		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
+		static void BuildDateTime(StringBuilder stringBuilder, DbDataType dt, DateTime value)
 		{
 			string dbType;
 #if SUPPORTS_COMPOSITE_FORMAT
@@ -92,27 +92,27 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				if (value.Hour == 0 && value.Minute == 0 && value.Second == 0)
 				{
 					format = DATE_FORMAT;
-					dbType = dt.Type.DbType ?? "date";
+					dbType = dt.DbType ?? "date";
 				}
 				else
 				{
 					format = TIMESTAMP0_FORMAT;
-					dbType = dt.Type.DbType ?? "timestamp";
+					dbType = dt.DbType ?? "timestamp";
 				}
 			}
 			else
 			{
 				format = TIMESTAMP3_FORMAT;
-				dbType = dt.Type.DbType ?? "timestamp";
+				dbType = dt.DbType ?? "timestamp";
 			}
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
 		}
 
 #if NET6_0_OR_GREATER
-		static void BuildDate(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
+		static void BuildDate(StringBuilder stringBuilder, DbDataType dt, DateOnly value)
 		{
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value, dt.Type.DbType ?? "date");
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value, dt.DbType ?? "date");
 		}
 #endif
 
