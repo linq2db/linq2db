@@ -10,7 +10,7 @@ using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
 using Tests.Model;
-
+using Tests.Remote;
 using Tests.Remote.ServerContainer;
 
 namespace Tests
@@ -39,9 +39,7 @@ namespace Tests
 
 			var str = configuration.StripRemote();
 			return _serverContainer.CreateContext(
-				ms,
-				str,
-				opt => opt.UseFSharp(),
+				GetRemoteContextOptionsBuilder(ms, str, opt => opt.UseFSharp()),
 				(conf, ms) =>
 				{
 					var dc = new DataConnection(conf);
@@ -83,9 +81,7 @@ namespace Tests
 
 			var str = configuration.StripRemote();
 			return _serverContainer.CreateContext(
-				null,
-				str,
-				opt => dbOptionsBuilder(opt).UseFSharp(),
+				GetRemoteContextOptionsBuilder(null, str, opt => dbOptionsBuilder(opt).UseFSharp()),
 				(conf, ms) =>
 				{
 					var dc = new DataConnection(conf);
@@ -93,6 +89,26 @@ namespace Tests
 						dc.AddMappingSchema(ms);
 					return dc;
 				});
+		}
+
+		static Func<ITestLinqService, DataOptions, DataOptions> GetRemoteContextOptionsBuilder(MappingSchema? ms, string configuration, Func<DataOptions, DataOptions>? testOptionsBuilder)
+		{
+			return (service, o) =>
+			{
+				var options = testOptionsBuilder == null
+					? o.UseConfiguration(configuration)
+					: testOptionsBuilder(o.UseConfiguration(configuration));
+
+				if (ms != null)
+					options = options.UseMappingSchema(
+						options.ConnectionOptions.MappingSchema != null
+							? MappingSchema.CombineSchemas(ms, options.ConnectionOptions.MappingSchema)
+							: ms);
+
+				service.MappingSchema = options.ConnectionOptions.MappingSchema;
+
+				return options;
+			};
 		}
 
 		protected TestDataConnection GetDataConnection(string configuration, Func<DataOptions, DataOptions> dbOptionsBuilder)
