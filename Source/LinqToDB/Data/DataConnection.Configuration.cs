@@ -518,11 +518,19 @@ namespace LinqToDB.Data
 					return;
 				}
 
+				DefaultConfiguration ??= options.ConfigurationString ?? "";
+
 				var dataProvider = options.DataProviderFactory == null ? options.DataProvider : options.DataProviderFactory(options);
-				var doSave       = true;
+
+				DefaultSettings ??= new LinqToDBSettings(
+					options.ConfigurationString ?? DefaultConfiguration,
+					options.ProviderName        ?? dataProvider?.Name ?? DefaultDataProvider ?? string.Empty,
+					options.ConnectionString    ?? string.Empty);
+
+				var doSave = true;
 
 				switch (
-				          options.ConfigurationString,
+				          options.ConfigurationString ?? DefaultConfiguration ?? string.Empty,
 				                           options.ConnectionString,
 				                                                dataProvider,
 				                                                             options.ProviderName,
