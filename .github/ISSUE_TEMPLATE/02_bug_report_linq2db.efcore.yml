@@ -1,4 +1,4 @@
-name: Linq To DB for Entity Framework Core Bug Report
+name: "Bug Report: Linq To DB for Entity Framework Core"
 description: Linq To DB for Entity Framework Core bug report
 labels: ["status: needs-tests", "area: efcore"]
 type: Bug
@@ -85,7 +85,7 @@ body:
         Operating system type (Windows, Linux or macOS)
       placeholder: Windows
     validations:
-      required: true
+      required: false
   - type: textarea
     id: configuration
     attributes:

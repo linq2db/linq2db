@@ -1,4 +1,4 @@
-name: Linq To DB CLI Bug Report
+name: "Bug Report: CLI Tool"
 description: Linq To DB CLI scaffold tool bug report
 labels: ["status: needs-tests", "area: scaffold"]
 type: Bug
@@ -72,7 +72,7 @@ body:
         Operating system type (Windows, Linux or macOS)
       placeholder: Windows
     validations:
-      required: true
+      required: false
   - type: textarea
     id: configuration
     attributes:

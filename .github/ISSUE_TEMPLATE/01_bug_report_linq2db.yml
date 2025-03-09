@@ -1,4 +1,4 @@
-name: Linq To DB Bug Report
+name: "Bug Report: Linq To DB"
 description: Linq To DB bug report
 labels: ["status: needs-tests"]
 type: Bug
@@ -77,7 +77,7 @@ body:
         Operating system type (Windows, Linux or macOS)
       placeholder: Windows
     validations:
-      required: true
+      required: false
   - type: textarea
     id: configuration
     attributes:

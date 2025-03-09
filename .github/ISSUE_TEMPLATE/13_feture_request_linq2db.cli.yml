@@ -1,4 +1,4 @@
-name: New Linq To DB CLI Feature Request
+name: "New Feature Request: CLI Tool"
 description: Linq To DB CLI scaffold tool feature request
 labels: ["area: scaffold"]
 type: Feature

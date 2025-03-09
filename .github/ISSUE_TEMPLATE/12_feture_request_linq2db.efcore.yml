@@ -1,4 +1,4 @@
-name: New Linq To DB for Entity Framework Core Feature Request
+name: "New Feature Request: Linq To DB for Entity Framework Core"
 description: Linq To DB for Entity Framework Core feature request
 labels: ["area: efcore"]
 type: Feature
