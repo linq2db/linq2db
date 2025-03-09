@@ -241,7 +241,7 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, MappingSchema);
+		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, MappingSchema);
 
 		public  bool InlineParameters { get; set; }
 		public  bool CloseAfterUse    { get; set; }
