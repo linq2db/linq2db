@@ -1,4 +1,4 @@
-name: "Bug Report: T4 Templates"
+﻿name: "🪳 Bug Report: T4 Templates"
 description: Linq To DB T4 templates bug report
 labels: ["status: needs-tests", "area: T4"]
 type: Bug

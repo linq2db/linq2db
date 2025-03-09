@@ -1,4 +1,4 @@
-name: "Bug Report: CLI Tool"
+﻿name: "🪳 Bug Report: CLI Tool"
 description: Linq To DB CLI scaffold tool bug report
 labels: ["status: needs-tests", "area: scaffold"]
 type: Bug

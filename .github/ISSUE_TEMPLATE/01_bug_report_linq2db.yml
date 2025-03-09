@@ -1,4 +1,4 @@
-name: "Bug Report: Linq To DB"
+﻿name: "🪳 Bug Report: Linq To DB"
 description: Linq To DB bug report
 labels: ["status: needs-tests"]
 type: Bug

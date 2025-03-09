@@ -1,12 +1,12 @@
-blank_issues_enabled: true
+﻿blank_issues_enabled: true
 contact_links:
-  - name: Request support for new database
+  - name: 🗃️ Request support for new database
     url:  https://github.com/linq2db/linq2db/issues/1014
     about: Check existing topic for existing requests or add new request there
-  - name: Question, help request or general discussion
+  - name: ❔ Question, help request or general discussion
     url:  https://github.com/linq2db/linq2db/discussions/new/choose
     about: For general discussion or questions open new discussion.
-  - name: Join our Discord server
+  - name: 💬 Join our Discord server
     url:  https://discord.gg/PcV6pTXt4s
     about: You could also join our Discord server to ask questions here.
   - name: Issue or feature request for Linq To DB LINQPad driver
