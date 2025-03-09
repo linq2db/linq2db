@@ -1,4 +1,5 @@
-﻿blank_issues_enabled: true
+﻿
+blank_issues_enabled: true
 contact_links:
   - name: "🗃️ Request support for new database"
     url:  https://github.com/linq2db/linq2db/issues/1014
