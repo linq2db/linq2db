@@ -130,6 +130,9 @@ namespace LinqToDB
 		/// <summary>
 		/// Sets new options for current data context.
 		/// </summary>
+		/// <remarks>
+		/// For ConnectionOptions we reapply only mapping schema and connection interceptor. Connection string, configuration, data provider, etc. are not reapplyable.
+		/// </remarks>
 		/// <param name="optionsSetter">
 		/// Options setter function.
 		/// </param>

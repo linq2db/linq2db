@@ -658,40 +658,61 @@ namespace LinqToDB
 				}
 			}
 
-			// For ConnectionOptions we reapply only mapping schema and connection interceptor.
-			// Connection string, configuration, and data provider are not reapplyable.
-			//
-			public static Action Reapply(DataContext dataContext, ConnectionOptions options, ConnectionOptions? previousOptions)
+			public static Action? Reapply(DataContext dataContext, ConnectionOptions options, ConnectionOptions? previousOptions)
 			{
-				if (previousOptions?.ConnectionInterceptor != null)
-					dataContext.RemoveInterceptor(previousOptions.ConnectionInterceptor);
+				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
+				// Connection string, configuration, data provider, etc. are not reapplyable.
+				//
+				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException("Configuration string cannot be changed.");
+				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException("ConnectionString cannot be changed.");
+				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException("ProviderName cannot be changed.");
+				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException("DbConnection cannot be changed.");
+				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException("DbTransaction cannot be changed.");
+				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException("DisposeConnection cannot be changed.");
+				if (options.DataProvider              != previousOptions?.DataProvider)              throw new LinqToDBException("DataProvider cannot be changed.");
+				if (options.ConnectionFactory         != previousOptions?.ConnectionFactory)         throw new LinqToDBException("ConnectionFactory cannot be changed.");
+				if (options.DataProviderFactory       != previousOptions?.DataProviderFactory)       throw new LinqToDBException("DataProviderFactory cannot be changed.");
+				if (options.OnEntityDescriptorCreated != previousOptions?.OnEntityDescriptorCreated) throw new LinqToDBException("OnEntityDescriptorCreated cannot be changed.");
 
-				if (options.ConnectionInterceptor != null)
-					dataContext.AddInterceptor(options.ConnectionInterceptor);
+				Action? action = null;
 
-				var mappingSchema = dataContext.MappingSchema;
-
-				dataContext.MappingSchema = dataContext.DataProvider.MappingSchema;
-
-				if (options.MappingSchema != null)
+				if (!ReferenceEquals(options.ConnectionInterceptor, previousOptions?.ConnectionInterceptor))
 				{
-					dataContext.MappingSchema = options.MappingSchema;
-				}
-				else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
-				{
-					dataContext.MappingSchema = new (dataContext.MappingSchema);
-				}
-
-				return () =>
-				{
-					if (options.ConnectionInterceptor != null)
-						dataContext.RemoveInterceptor(options.ConnectionInterceptor);
-
 					if (previousOptions?.ConnectionInterceptor != null)
-						dataContext.AddInterceptor(previousOptions.ConnectionInterceptor);
+						dataContext.RemoveInterceptor(previousOptions.ConnectionInterceptor);
 
-					dataContext.MappingSchema = mappingSchema;
-				};
+					if (options.ConnectionInterceptor != null)
+						dataContext.AddInterceptor(options.ConnectionInterceptor);
+
+					action += () =>
+					{
+						if (options.ConnectionInterceptor != null)
+							dataContext.RemoveInterceptor(options.ConnectionInterceptor);
+
+						if (previousOptions?.ConnectionInterceptor != null)
+							dataContext.AddInterceptor(previousOptions.ConnectionInterceptor);
+					};
+				}
+
+				if (!ReferenceEquals(options.MappingSchema, previousOptions?.MappingSchema))
+				{
+					var mappingSchema = dataContext.MappingSchema;
+
+					dataContext.MappingSchema = dataContext.DataProvider.MappingSchema;
+
+					if (options.MappingSchema != null)
+					{
+						dataContext.MappingSchema = options.MappingSchema;
+					}
+					else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
+					{
+						dataContext.MappingSchema = new (dataContext.MappingSchema);
+					}
+
+					action += () => dataContext.MappingSchema = mappingSchema;
+				}
+
+				return action;
 			}
 
 			public static void Apply(DataContext dataContext, DataContextOptions options)
@@ -703,32 +724,42 @@ namespace LinqToDB
 						dataContext.AddInterceptor(interceptor, false);
 			}
 
-			public static Action Reapply(DataContext dataContext, DataContextOptions options, DataContextOptions? previousOptions)
+			public static Action? Reapply(DataContext dataContext, DataContextOptions options, DataContextOptions? previousOptions)
 			{
-				var commandTimeout = dataContext._commandTimeout;
+				Action? action = null;
 
-				dataContext.CommandTimeout = options.CommandTimeout ?? -1;
-
-				if (previousOptions?.Interceptors != null)
-					foreach (var interceptor in previousOptions.Interceptors)
-						dataContext.RemoveInterceptor(interceptor);
-
-				if (options.Interceptors != null)
-					foreach (var interceptor in options.Interceptors)
-						dataContext.AddInterceptor(interceptor);
-
-				return () =>
+				if (options.CommandTimeout != previousOptions?.CommandTimeout)
 				{
-					dataContext.CommandTimeout = commandTimeout ?? -1;
+					var commandTimeout = dataContext._commandTimeout;
+
+					dataContext.CommandTimeout = options.CommandTimeout ?? -1;
+
+					action += () => dataContext.CommandTimeout = commandTimeout ?? -1;
+				}
+
+				if (!ReferenceEquals(options.Interceptors, previousOptions?.Interceptors))
+				{
+					if (previousOptions?.Interceptors != null)
+						foreach (var interceptor in previousOptions.Interceptors)
+							dataContext.RemoveInterceptor(interceptor);
 
 					if (options.Interceptors != null)
 						foreach (var interceptor in options.Interceptors)
-							dataContext.RemoveInterceptor(interceptor);
-
-					if (previousOptions?.Interceptors != null)
-						foreach (var interceptor in previousOptions.Interceptors)
 							dataContext.AddInterceptor(interceptor);
-				};
+
+					action += () =>
+					{
+						if (options.Interceptors != null)
+							foreach (var interceptor in options.Interceptors)
+								dataContext.RemoveInterceptor(interceptor);
+
+						if (previousOptions?.Interceptors != null)
+							foreach (var interceptor in previousOptions.Interceptors)
+								dataContext.AddInterceptor(interceptor);
+					};
+				}
+
+				return action;
 			}
 		}
 

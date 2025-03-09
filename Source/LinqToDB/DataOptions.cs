@@ -125,16 +125,22 @@ namespace LinqToDB
 		{
 			Action? actions = null;
 
-			Add(((IReapplicable<DataConnection>)ConnectionOptions). Apply(dataConnection, previousOptions.ConnectionOptions));
-			Add(((IReapplicable<DataConnection>)RetryPolicyOptions).Apply(dataConnection, previousOptions.RetryPolicyOptions));
+			if (!ReferenceEquals(ConnectionOptions, previousOptions.ConnectionOptions))
+				Add(((IReapplicable<DataConnection>)ConnectionOptions). Apply(dataConnection, previousOptions.ConnectionOptions));
 
-			if (_dataContextOptions is IReapplicable<DataConnection> a)
+			if (!ReferenceEquals(RetryPolicyOptions, previousOptions.RetryPolicyOptions))
+				Add(((IReapplicable<DataConnection>)RetryPolicyOptions).Apply(dataConnection, previousOptions.RetryPolicyOptions));
+
+			if (!ReferenceEquals(_dataContextOptions, previousOptions._dataContextOptions))
 			{
-				Add(a.Apply(dataConnection, previousOptions._dataContextOptions));
-			}
-			else if (previousOptions._dataContextOptions is not null)
-			{
-				Add(((IReapplicable<DataConnection>)DataContextOptions.Empty).Apply(dataConnection, previousOptions._dataContextOptions));
+				if (_dataContextOptions is IReapplicable<DataConnection> a)
+				{
+					Add(a.Apply(dataConnection, previousOptions._dataContextOptions));
+				}
+				else if (previousOptions._dataContextOptions is not null)
+				{
+					Add(((IReapplicable<DataConnection>)DataContextOptions.Empty).Apply(dataConnection, previousOptions._dataContextOptions));
+				}
 			}
 
 			Add(base.Reapply(dataConnection, previousOptions));
@@ -162,15 +168,19 @@ namespace LinqToDB
 		{
 			Action? actions = null;
 
-			Add(((IReapplicable<DataContext>)ConnectionOptions). Apply(dataContext, previousOptions.ConnectionOptions));
+			if (!ReferenceEquals(ConnectionOptions, previousOptions.ConnectionOptions))
+				Add(((IReapplicable<DataContext>)ConnectionOptions). Apply(dataContext, previousOptions.ConnectionOptions));
 
-			if (_dataContextOptions is IReapplicable<DataContext> a)
+			if (!ReferenceEquals(_dataContextOptions, previousOptions._dataContextOptions))
 			{
-				Add(a.Apply(dataContext, previousOptions._dataContextOptions));
-			}
-			else if (previousOptions._dataContextOptions is not null)
-			{
-				Add(((IReapplicable<DataContext>)DataContextOptions.Empty).Apply(dataContext, previousOptions._dataContextOptions));
+				if (_dataContextOptions is IReapplicable<DataContext> a)
+				{
+					Add(a.Apply(dataContext, previousOptions._dataContextOptions));
+				}
+				else if (previousOptions._dataContextOptions is not null)
+				{
+					Add(((IReapplicable<DataContext>)DataContextOptions.Empty).Apply(dataContext, previousOptions._dataContextOptions));
+				}
 			}
 
 			Add(base.Reapply(dataContext, previousOptions));
@@ -198,15 +208,19 @@ namespace LinqToDB
 		{
 			Action? actions = null;
 
-			Add(((IReapplicable<RemoteDataContextBase>)ConnectionOptions). Apply(dataContext, previousOptions.ConnectionOptions));
+			if (!ReferenceEquals(ConnectionOptions, previousOptions.ConnectionOptions))
+				Add(((IReapplicable<RemoteDataContextBase>)ConnectionOptions). Apply(dataContext, previousOptions.ConnectionOptions));
 
-			if (_dataContextOptions is IReapplicable<RemoteDataContextBase> a)
+			if (!ReferenceEquals(_dataContextOptions, previousOptions._dataContextOptions))
 			{
-				Add(a.Apply(dataContext, previousOptions._dataContextOptions));
-			}
-			else if (previousOptions._dataContextOptions is not null)
-			{
-				Add(((IReapplicable<RemoteDataContextBase>)DataContextOptions.Empty).Apply(dataContext, previousOptions._dataContextOptions));
+				if (_dataContextOptions is IReapplicable<RemoteDataContextBase> a)
+				{
+					Add(a.Apply(dataContext, previousOptions._dataContextOptions));
+				}
+				else if (previousOptions._dataContextOptions is not null)
+				{
+					Add(((IReapplicable<RemoteDataContextBase>)DataContextOptions.Empty).Apply(dataContext, previousOptions._dataContextOptions));
+				}
 			}
 
 			Add(base.Reapply(dataContext, previousOptions));
