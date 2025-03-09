@@ -4,7 +4,7 @@ labels: ["area: scaffold"]
 type: Feature
 body:
   - type: textarea
-    id: background
+    id: details
     attributes:
       label: Description
       description: |
@@ -14,7 +14,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: background
+    id: design
     attributes:
       label: New API/option designs
       description: If you want to add new interceptor API or CLI option, provide their designs.

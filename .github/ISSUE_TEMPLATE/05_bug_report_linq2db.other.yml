@@ -1,4 +1,4 @@
-name: Bug Report
+name: Other Bug Report
 description: Linq To DB generic bug report
 labels: ["status: needs-tests"]
 type: Bug
