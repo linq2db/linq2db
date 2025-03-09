@@ -5016,6 +5016,11 @@ namespace LinqToDB.Linq.Builder
 					result = BuildPurpose.Sql;
 				}
 
+				if (translationFlags.HasFlag(TranslationFlags.Expand))
+				{
+					result = BuildPurpose.Expand;
+				}
+
 				return result;
 			}
 
@@ -5040,6 +5045,50 @@ namespace LinqToDB.Linq.Builder
 			public SqlErrorExpression CreateErrorExpression(Expression basedOn, string? message = null, Type? type = null)
 			{
 				return new SqlErrorExpression(basedOn, message, type ?? basedOn.Type);
+			}
+
+			public Expression? GetAggregationContext(Expression expression)
+			{
+				var result = Builder.BuildTraverseExpression(expression);
+				if (result is ContextRefExpression contextRef)
+				{
+					if (contextRef.BuildContext is AggregateExecuteBuilder.AggregateRootContext)
+						return result;
+					if (contextRef.BuildContext is GroupByBuilder.GroupByContext groupByContext)
+						return SequenceHelper.CreateRef(groupByContext.SubQuery);
+				}
+
+				var elementType = TypeHelper.GetEnumerableElementType(expression.Type);
+				var param       = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "source");
+				var emptyLambda = Expression.Lambda(Expression.Constant(1, typeof(int)), param);
+				var queryable   = expression;
+
+				if (!typeof(IQueryable<>).IsSameOrParentOf(queryable.Type))
+				{
+					queryable = Expression.Call(typeof(Queryable), nameof(Queryable.AsQueryable), [elementType], queryable);
+				}
+
+				var executorCall = Expression.Call(typeof(LinqExtensions), nameof(LinqExtensions.AggregateExecute), [elementType, typeof(int)], queryable, emptyLambda);
+
+				var buildResult = Builder.TryBuildSequence(new BuildInfo(CurrentContext, executorCall, CurrentSelectQuery) { CreateSubQuery = true, IsAggregation = true });
+				if (buildResult.BuildContext is not null)
+				{
+					return SequenceHelper.CreateRef(buildResult.BuildContext).WithType(expression.Type);
+				}
+
+				return null;
+			}
+
+			public SelectQuery GetAggregationSelectQuery(Expression enumerableContext)
+			{
+				if (enumerableContext is ContextRefExpression contextRef)
+				{
+					if (contextRef.BuildContext is GroupByBuilder.GroupByContext groupByContext)
+						return groupByContext.SubQuery.SelectQuery;
+					return contextRef.BuildContext.SelectQuery;
+				}
+
+				throw new InvalidOperationException("Invalid enumerable context");
 			}
 
 			public bool CanBeEvaluatedOnClient(Expression expression)
@@ -5072,6 +5121,36 @@ namespace LinqToDB.Linq.Builder
 			{
 				return Visitor.UsingColumnDescriptor(columnDescriptor);
 			}
+
+			public IDisposable UsingCurrentAggregationContext(Expression basedOn)
+			{
+				if (basedOn is not ContextRefExpression contextRef)
+					throw new InvalidOperationException("Invalid context reference");
+
+				return new CurrentContextScope(this, contextRef.BuildContext);
+			}
+
+			class CurrentContextScope : IDisposable
+			{
+				readonly IBuildContext?     _oldContext;
+				readonly IDisposable        _disposable;
+				readonly TranslationContext _translationContext;
+
+				public CurrentContextScope(TranslationContext translationContext, IBuildContext newContext)
+				{
+					_translationContext               = translationContext;
+					_oldContext                       = translationContext.CurrentContext;
+					_disposable                       = translationContext.Visitor.UsingBuildContext(newContext);
+					translationContext.CurrentContext = newContext;
+				}
+
+				public void Dispose()
+				{
+					_translationContext.CurrentContext = _oldContext;
+					_disposable.Dispose();
+				}
+			}
+
 		}
 
 		static ObjectPool<TranslationContext> _translationContexts = new(() => new TranslationContext(), c => c.Cleanup(), 100);

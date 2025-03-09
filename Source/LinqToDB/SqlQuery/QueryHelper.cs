@@ -1271,6 +1271,7 @@ namespace LinqToDB.SqlQuery
 			return expr switch
 			{
 				SqlFunction func         => func.IsAggregate,
+				SqlWindowFunction func   => func.IsAggregate,
 				SqlExpression expression => (expression.Flags & SqlFlags.IsAggregate) != 0,
 				_                        => false,
 			};
@@ -1375,6 +1376,9 @@ namespace LinqToDB.SqlQuery
 		{
 			if (expr is SqlExpression expression)
 				return (expression.Flags & SqlFlags.IsWindowFunction) != 0;
+
+			if (expr is SqlWindowFunction)
+				return true;
 
 			return false;
 		}

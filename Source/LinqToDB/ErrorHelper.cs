@@ -18,7 +18,8 @@
 		public const string Error_SqlRow_in_Update               = "Provider does not support SqlRow on the left-hand side of an UPDATE SET.";
 		public const string Error_SqlRow_in_Update_Value         = "Provider does not support SqlRow literal on the right-hand side of an UPDATE SET.";
 		public const string Error_RowNumber                      = "Provider does not support ROW_NUMBER function.";
-		public const string Error_OrderByRequiredForIndexing     = "For retrieving index of row, specify OrderBy part";
+		public const string Error_OrderByRequiredForIndexing     = "For retrieving index of row, specify OrderBy part.";
+		public const string Error_DistinctByRequiresOrderBy      = "DistinctBy requires at least one ordering key.";
 
 		public const string Error_WindowFunctionsInSearchCondition = "Window functions cannot be used in search condition.";
 
