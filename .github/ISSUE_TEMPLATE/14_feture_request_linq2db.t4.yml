@@ -1,0 +1,31 @@
+name: New Linq To DB T4 Feature Request
+description: Linq To DB T4 template feature request
+labels: ["area: T4"]
+type: Feature
+body:
+  - type: textarea
+    id: background
+    attributes:
+      label: Description
+      description: |
+        * Add background details on what kind of problem you want to solve with new feature
+        * Propose feature designs
+      placeholder: Description
+    validations:
+      required: true
+  - type: textarea
+    id: background
+    attributes:
+      label: New API/option designs
+      description: If you want to add new T4 API or option, provide their designs.
+      placeholder: |
+        ```cs
+        // new API surface
+        ```
+
+        // new option
+        ```cs
+        bool MyNewT4Option { get; set; } = true;
+        ```
+    validations:
+      required: false

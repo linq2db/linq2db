@@ -1,0 +1,83 @@
+name: Linq To DB T4 Bug Report
+description: Linq To DB T4 templates bug report
+labels: ["status: needs-tests", "area: T4"]
+type: Bug
+body:
+  - type: textarea
+    id: background
+    attributes:
+      label: Description
+      description: Describe your issue.
+      placeholder: Description
+    validations:
+      required: true
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Reproduction Steps
+      description: |
+        Include minimal steps to reproduce the problem. E.g.:
+        * used T4 template code
+        * database schema script fragment causing issues during template execution
+      placeholder: Minimal Reproduction
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error details
+      description: |
+        If you observe error, provide full error message including exception stack if any.
+      placeholder: Expected behavior
+    validations:
+      required: false
+  - type: textarea
+    id: regression
+    attributes:
+      label: Regression?
+      description: |
+        If it worked in previous Linq To DB T4 templates releases, provide latest release version where it worked before.
+      placeholder: Regression?
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: Linq To DB T4 template with version
+      description: |
+        Linq To DB T4 template nuget with version
+      placeholder: e.g. linq2db.Firebird 5.4.1
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: IDE
+      description: |
+        IDE to execute templates with version
+      placeholder: e.g. Visual Studio 2022 17.3.2
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Database
+      description: |
+        Database including version
+      placeholder: SQL Server 2022
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: Operating system
+      description: |
+        Operating system type (Windows, Linux or macOS)
+      placeholder: Windows
+    validations:
+      required: true
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Configuration
+      description: |
+        Additional environment details
+      placeholder: Configuration
+    validations:
+      required: false

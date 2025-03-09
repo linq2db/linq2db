@@ -1,0 +1,97 @@
+name: Linq To DB for Entity Framework Core Bug Report
+description: Linq To DB for Entity Framework Core bug report
+labels: ["status: needs-tests", "area: efcore"]
+type: Bug
+body:
+  - type: textarea
+    id: background
+    attributes:
+      label: Description
+      description: Describe your issue.
+      placeholder: Description
+    validations:
+      required: true
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Reproduction Steps
+      description: |
+        Include minimal steps to reproduce the problem. Test code snippet with all required dependencies is most welcome.
+      placeholder: Minimal Reproduction
+    validations:
+      required: true
+  - type: textarea
+    id: exception
+    attributes:
+      label: Exception details
+      description: |
+        If you observe exception, provide full exception stack (you can ommit top of stack with frames into your application).
+      placeholder: Exception with stack
+    validations:
+      required: false
+  - type: textarea
+    id: regression
+    attributes:
+      label: Regression?
+      description: |
+        If it worked in previous Linq To DB for Entity Framework Core releases, provide latest release version where it worked before.
+      placeholder: Regression?
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: Linq To DB for Entity Framework Core version
+      description: |
+        [linq2db.EntityFrameworkCore](https://www.nuget.org/packages/linq2db.EntityFrameworkCore) nuget version
+      placeholder: e.g. 9.0.0
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Entity Framework Core version
+      description: |
+        Entity Framework Core version
+      placeholder: e.g. 9.0.2
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: .NET version
+      description: |
+        .NET or .NET Framework version
+      placeholder: e.g. 9.0.2
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Database
+      description: |
+        Database including version
+      placeholder: SQL Server 2022
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: Entity Framework database provider
+      description: |
+        Database provider including version and, for native providers, architecture
+      placeholder: Microsoft.EntityFrameworkCore.SqlServer 9.0.2
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: Operating system
+      description: |
+        Operating system type (Windows, Linux or macOS)
+      placeholder: Windows
+    validations:
+      required: true
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Configuration
+      description: |
+        Additional environment details
+      placeholder: Configuration
+    validations:
+      required: false

@@ -1,0 +1,33 @@
+name: New Linq To DB CLI Feature Request
+description: Linq To DB CLI scaffold tool feature request
+labels: ["area: scaffold"]
+type: Feature
+body:
+  - type: textarea
+    id: background
+    attributes:
+      label: Description
+      description: |
+        * Add background details on what kind of problem you want to solve with new feature
+        * Propose feature designs
+      placeholder: Description
+    validations:
+      required: true
+  - type: textarea
+    id: background
+    attributes:
+      label: New API/option designs
+      description: If you want to add new interceptor API or CLI option, provide their designs.
+      placeholder: |
+        ```cs
+        // new interceptor API surface
+        ```
+
+        // new option
+        ```json
+        "schema": {
+          "new_option": "type:boolean"
+        }
+        ```
+    validations:
+      required: false

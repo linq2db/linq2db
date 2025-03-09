@@ -1,0 +1,26 @@
+name: New Feature Request
+description: Linq To DB generic feature request
+labels: []
+type: Feature
+body:
+  - type: textarea
+    id: background
+    attributes:
+      label: Description
+      description: |
+        * Add background details on what kind of problem you want to solve with new feature
+        * Propose feature designs
+      placeholder: Description
+    validations:
+      required: true
+  - type: textarea
+    id: background
+    attributes:
+      label: New API
+      description: If you want to add new API, provide new API designs.
+      placeholder: |
+        ```cs
+        // new feature API
+        ```
+    validations:
+      required: false
