@@ -172,6 +172,8 @@ namespace LinqToDB.Data
 
 		public static readonly BulkCopyOptions Empty = new();
 
+		IOptionSet IOptionSet.Default => Empty;
+
 		int? _configurationID;
 		int IConfigurationID.ConfigurationID
 		{

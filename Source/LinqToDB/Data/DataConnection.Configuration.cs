@@ -10,6 +10,8 @@ using LinqToDB.Common.Internal;
 using LinqToDB.Configuration;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
+using LinqToDB.Interceptors;
+using LinqToDB.Interceptors.Internal;
 
 namespace LinqToDB.Data
 {
@@ -649,9 +651,75 @@ namespace LinqToDB.Data
 				}
 			}
 
+			public static Action? Reapply(DataConnection dataConnection, ConnectionOptions options, ConnectionOptions? previousOptions)
+			{
+				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
+				// Connection string, configuration, data provider, etc. are not reapplyable.
+				//
+				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException("Configuration string cannot be changed.");
+				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException("ConnectionString cannot be changed.");
+				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException("ProviderName cannot be changed.");
+				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException("DbConnection cannot be changed.");
+				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException("DbTransaction cannot be changed.");
+				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException("DisposeConnection cannot be changed.");
+				if (options.DataProvider              != previousOptions?.DataProvider)              throw new LinqToDBException("DataProvider cannot be changed.");
+				if (options.ConnectionFactory         != previousOptions?.ConnectionFactory)         throw new LinqToDBException("ConnectionFactory cannot be changed.");
+				if (options.DataProviderFactory       != previousOptions?.DataProviderFactory)       throw new LinqToDBException("DataProviderFactory cannot be changed.");
+				if (options.OnEntityDescriptorCreated != previousOptions?.OnEntityDescriptorCreated) throw new LinqToDBException("OnEntityDescriptorCreated cannot be changed.");
+
+				Action? action = null;
+
+				if (!ReferenceEquals(options.ConnectionInterceptor, previousOptions?.ConnectionInterceptor))
+				{
+					if (previousOptions?.ConnectionInterceptor != null)
+						dataConnection.RemoveInterceptor(previousOptions.ConnectionInterceptor);
+
+					if (options.ConnectionInterceptor != null)
+						dataConnection.AddInterceptor(options.ConnectionInterceptor);
+
+					action += () =>
+					{
+						if (options.ConnectionInterceptor != null)
+							dataConnection.RemoveInterceptor(options.ConnectionInterceptor);
+
+						if (previousOptions?.ConnectionInterceptor != null)
+							dataConnection.AddInterceptor(previousOptions.ConnectionInterceptor);
+					};
+				}
+
+				if (!ReferenceEquals(options.MappingSchema, previousOptions?.MappingSchema))
+				{
+					var mappingSchema = dataConnection.MappingSchema;
+
+					dataConnection.MappingSchema = dataConnection.DataProvider.MappingSchema;
+
+					if (options.MappingSchema != null)
+					{
+						dataConnection.AddMappingSchema(options.MappingSchema);
+					}
+					else if (dataConnection.Options.LinqOptions.EnableContextSchemaEdit)
+					{
+						dataConnection.MappingSchema = new (dataConnection.MappingSchema);
+					}
+
+					action += () => dataConnection.MappingSchema = mappingSchema;
+				}
+
+				return action;
+			}
+
 			public static void Apply(DataConnection dataConnection, RetryPolicyOptions options)
 			{
 				dataConnection.RetryPolicy = options.RetryPolicy ?? options.Factory?.Invoke(dataConnection);
+			}
+
+			public static Action? Reapply(DataConnection dataConnection, RetryPolicyOptions options, RetryPolicyOptions? previousOptions)
+			{
+				var retryPolicy = dataConnection.RetryPolicy;
+
+				Apply(dataConnection, options);
+
+				return () => dataConnection.RetryPolicy = retryPolicy;
 			}
 
 			public static void Apply(DataConnection dataConnection, DataContextOptions options)
@@ -663,11 +731,67 @@ namespace LinqToDB.Data
 						dataConnection.AddInterceptor(interceptor);
 			}
 
+			public static Action? Reapply(DataConnection dataConnection, DataContextOptions options, DataContextOptions? previousOptions)
+			{
+				Action? action = null;
+
+				if (options.CommandTimeout != previousOptions?.CommandTimeout)
+				{
+					var commandTimeout = dataConnection._commandTimeout;
+
+					dataConnection.CommandTimeout = options.CommandTimeout ?? -1;
+
+					action += () => dataConnection.CommandTimeout = commandTimeout ?? -1;
+				}
+
+				if (!ReferenceEquals(options.Interceptors, previousOptions?.Interceptors))
+				{
+					if (previousOptions?.Interceptors != null)
+						foreach (var interceptor in previousOptions.Interceptors)
+							dataConnection.RemoveInterceptor(interceptor);
+
+					if (options.Interceptors != null)
+						foreach (var interceptor in options.Interceptors)
+							dataConnection.AddInterceptor(interceptor);
+
+					action += () =>
+					{
+						if (options.Interceptors != null)
+							foreach (var interceptor in options.Interceptors)
+								dataConnection.RemoveInterceptor(interceptor);
+
+						if (previousOptions?.Interceptors != null)
+							foreach (var interceptor in previousOptions.Interceptors)
+								dataConnection.AddInterceptor(interceptor);
+					};
+				}
+
+				return action;
+			}
+
 			public static void Apply(DataConnection dataConnection, QueryTraceOptions options)
 			{
-				if (options.OnTrace    != null) dataConnection.OnTraceConnection        = options.OnTrace;
-				if (options.TraceLevel != null) dataConnection.TraceSwitchConnection    = new("DataConnection", "DataConnection trace switch") {Level = options.TraceLevel.Value};
-				if (options.WriteTrace != null) dataConnection.WriteTraceLineConnection = options.WriteTrace;
+				dataConnection.OnTraceConnection        = options.OnTrace    ?? DefaultOnTraceConnection;
+				dataConnection.WriteTraceLineConnection = options.WriteTrace ?? WriteTraceLine;
+				dataConnection._traceSwitchConnection   = options.TraceLevel != null
+					? new ("DataConnection", "DataConnection trace switch") { Level = options.TraceLevel.Value }
+					: null;
+			}
+
+			public static Action Reapply(DataConnection dataConnection, QueryTraceOptions options, QueryTraceOptions? previousOptions)
+			{
+				var onTraceConnection        = dataConnection.OnTraceConnection;
+				var writeTraceLineConnection = dataConnection.WriteTraceLineConnection;
+				var traceSwitchConnection    = dataConnection._traceSwitchConnection;
+
+				Apply(dataConnection, options);
+
+				return () =>
+				{
+					dataConnection.OnTraceConnection        = onTraceConnection;
+					dataConnection.WriteTraceLineConnection = writeTraceLineConnection;
+					dataConnection._traceSwitchConnection   = traceSwitchConnection;
+				};
 			}
 		}
 	}

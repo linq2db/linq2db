@@ -119,7 +119,7 @@ namespace LinqToDB.Interceptors
 				case AggregatedInterceptor<T> ae:
 					ae.Remove(interceptor);
 					break;
-				case T e when ReferenceEquals(e, interceptor):
+				case { } e when ReferenceEquals(e, interceptor):
 					typedInterceptable.Interceptor = default;
 					break;
 				default:

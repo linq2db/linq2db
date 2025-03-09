@@ -73,6 +73,8 @@ namespace LinqToDB
 			}
 		}
 
+		IOptionSet IOptionSet.Default => (SqlOptions)Common.Configuration.Sql.Options;
+
 		#region IEquatable implementation
 
 		public bool Equals(SqlOptions? other)
