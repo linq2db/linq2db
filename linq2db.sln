@@ -99,7 +99,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{ED41F9D3-8E93-4D80-A45F-21A90428253F}"
 	ProjectSection(SolutionItems) = preProject
 		.github\CODEOWNERS = .github\CODEOWNERS
-		.github\ISSUE_TEMPLATE.md = .github\ISSUE_TEMPLATE.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure", "Azure", "{51E64464-E257-4984-A4D5-BF9FF8B7DF1D}"
@@ -427,6 +426,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Redist", "Redist", "{5C6DF9
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Compat", "Source\LinqToDB.Compat\LinqToDB.Compat.csproj", "{CC51D26C-A57D-4572-A5B9-4D115F47EA76}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ISSUE_TEMPLATE", "ISSUE_TEMPLATE", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		.github\ISSUE_TEMPLATE\01_bug_report_linq2db.yml = .github\ISSUE_TEMPLATE\01_bug_report_linq2db.yml
+		.github\ISSUE_TEMPLATE\02_bug_report_linq2db.efcore.yml = .github\ISSUE_TEMPLATE\02_bug_report_linq2db.efcore.yml
+		.github\ISSUE_TEMPLATE\03_bug_report_linq2db.cli.yml = .github\ISSUE_TEMPLATE\03_bug_report_linq2db.cli.yml
+		.github\ISSUE_TEMPLATE\04_bug_report_linq2db.t4.yml = .github\ISSUE_TEMPLATE\04_bug_report_linq2db.t4.yml
+		.github\ISSUE_TEMPLATE\05_bug_report_linq2db.other.yml = .github\ISSUE_TEMPLATE\05_bug_report_linq2db.other.yml
+		.github\ISSUE_TEMPLATE\11_feture_request_linq2db.yml = .github\ISSUE_TEMPLATE\11_feture_request_linq2db.yml
+		.github\ISSUE_TEMPLATE\12_feture_request_linq2db.efcore.yml = .github\ISSUE_TEMPLATE\12_feture_request_linq2db.efcore.yml
+		.github\ISSUE_TEMPLATE\13_feture_request_linq2db.cli.yml = .github\ISSUE_TEMPLATE\13_feture_request_linq2db.cli.yml
+		.github\ISSUE_TEMPLATE\14_feture_request_linq2db.t4.yml = .github\ISSUE_TEMPLATE\14_feture_request_linq2db.t4.yml
+		.github\ISSUE_TEMPLATE\15_feture_request_linq2db.other.yml = .github\ISSUE_TEMPLATE\15_feture_request_linq2db.other.yml
+		.github\ISSUE_TEMPLATE\config.yml = .github\ISSUE_TEMPLATE\config.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Azure|Any CPU = Azure|Any CPU
@@ -616,6 +630,7 @@ Global
 		{F56E060D-9A5B-4685-B834-7BD2E33B7559} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{5C6DF933-23D8-4AC5-AE70-D460DBF40485} = {885042E3-18EA-4927-B1CF-5E0E3DBD1C00}
 		{CC51D26C-A57D-4572-A5B9-4D115F47EA76} = {AF93451E-198C-4A94-8EB4-C330D886E102}
+		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {ED41F9D3-8E93-4D80-A45F-21A90428253F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}

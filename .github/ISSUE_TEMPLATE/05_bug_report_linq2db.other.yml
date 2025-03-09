@@ -1,0 +1,55 @@
+﻿name: "🪳 Bug Report: Other"
+description: Linq To DB generic bug report
+labels: ["status: needs-tests"]
+type: Bug
+body:
+  - type: textarea
+    id: background
+    attributes:
+      label: Description
+      description: Describe your issue.
+      placeholder: Description
+    validations:
+      required: true
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Reproduction Steps
+      description: |
+        Include minimal steps to reproduce the problem. Test code snippet with all required dependencies is most welcome.
+      placeholder: Minimal Reproduction
+    validations:
+      required: false
+  - type: textarea
+    id: exception
+    attributes:
+      label: Exception details
+      description: |
+        If you observe exception, provide full exception stack (you can ommit top of stack with frames into your application).
+      placeholder: Exception with stack
+    validations:
+      required: false
+  - type: textarea
+    id: regression
+    attributes:
+      label: Regression?
+      description: |
+        If it worked in previous Linq To DB releases, provide latest release version where it worked before.
+      placeholder: Regression?
+    validations:
+      required: false
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Configuration
+      description: |
+        Important environment details:
+        * used libraries with versions
+        * used runtime with version
+        * used database with version
+        * IDE with version
+        * operating system type and architecture
+        * other important details
+      placeholder: Configuration
+    validations:
+      required: false
