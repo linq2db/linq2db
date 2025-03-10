@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB.Common;
 using LinqToDB.Linq.Translation;
@@ -21,6 +23,11 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
 		}
 
 		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
@@ -62,7 +69,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 						result = factory.Mod(factory.Cast(factory.Multiply(doubleDbType, result, 1000), intDbType), 1000);
 
 						return result;
-					}	
+					}
 					default:
 						return null;
 				}
@@ -193,6 +200,34 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 				var resultExpression = factory.Function(factory.GetDbDataType(typeof(TimeSpan)), StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(TimeFormat), dateExpression);
 
 				return resultExpression;
+			}
+		}
+
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+			public override ISqlExpression TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingSymbol)
+			{
+				/*
+				 * SELECT value || SUBSTR(
+				 *				REPLACE(HEX(ZEROBLOB(padding)), '0', paddingSymbol), 
+				 *				1,
+				 *				padding - LENGTH(value));
+				*/
+
+				var factory = translationContext.ExpressionFactory;
+
+				var valueTypeString = factory.GetDbDataType(value);
+
+				var valueInt = new DbDataType(typeof(int), DataType.Int32);
+				var valuePadding = factory.EnsureType(padding, valueInt);
+
+				var valueZeroBlob = factory.Function(valueTypeString, "ZEROBLOB", valuePadding);
+				var valueHex = factory.Function(valueTypeString, "HEX", valueZeroBlob);
+				var paddingString = factory.Function(valueTypeString, "REPLACE", valueHex, factory.Value(valueTypeString, "0"), paddingSymbol);
+				var valueSymbolsToAdd = factory.Sub(valueInt, valuePadding, TranslateLength(translationContext, methodCall, translationFlags, value));
+				var fillingString = factory.Function(valueTypeString, "SUBSTR", paddingString, factory.Value(valueInt, 1), valueSymbolsToAdd);
+				
+				return factory.Concat(fillingString, value);
 			}
 		}
 	}
