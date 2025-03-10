@@ -448,6 +448,8 @@ namespace Tests.Infrastructure
 		[Test]
 		public void UseCommandTimeoutTest()
 		{
+			LinqToDB.Common.Tools.ClearAllCaches();
+
 			using var db = new TestDataConnection();
 
 			var commandTimeout = db.CommandTimeout;
@@ -475,6 +477,8 @@ namespace Tests.Infrastructure
 		[Test]
 		public void UseOptimizeJoinsTest()
 		{
+			LinqToDB.Common.Tools.ClearAllCaches();
+
 			using var db = new TestDataConnection();
 
 			var param     = db.Options.LinqOptions.OptimizeJoins;
@@ -504,6 +508,8 @@ namespace Tests.Infrastructure
 		[Test]
 		public void UseCompareNullsTest()
 		{
+			LinqToDB.Common.Tools.ClearAllCaches();
+
 			using var db = new TestDataConnection();
 
 			var options   = db.Options;
