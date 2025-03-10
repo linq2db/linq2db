@@ -1194,7 +1194,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4799")]
 		public void String_PadLeft_Translation([DataSources] string context)
 		{
@@ -1212,7 +1211,6 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4799")]
 		public void String_PadLeft_TranslationExpressionArguments([DataSources] string context)
 		{
