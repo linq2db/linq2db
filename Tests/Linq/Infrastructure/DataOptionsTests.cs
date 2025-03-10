@@ -442,8 +442,112 @@ namespace Tests.Infrastructure
 				.UseClickHouse(o => o)
 				.UseClickHouse(connectionString)
 				.UseClickHouse(connectionString, o => o)
-
 				;
+		}
+
+		[Test]
+		public void UseCommandTimeoutTest()
+		{
+			LinqToDB.Common.Tools.ClearAllCaches();
+
+			using var db = new TestDataConnection();
+
+			var commandTimeout = db.CommandTimeout;
+			var optionsID      = ((IConfigurationID)db.Options).ConfigurationID;
+			var dbID           = ((IConfigurationID)db).        ConfigurationID;
+
+			using (db.UseOptions<DataContextOptions>(o => o with { CommandTimeout = 45 }))
+			{
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.CommandTimeout,                              Is.EqualTo(45));
+					Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.Not.EqualTo(optionsID));
+					Assert.That(((IConfigurationID)db).ConfigurationID,         Is.Not.EqualTo(dbID));
+				});
+			}
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(db.CommandTimeout,                              Is.EqualTo(commandTimeout));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID,         Is.EqualTo(dbID));
+			});
+		}
+
+		[Test]
+		public void UseOptimizeJoinsTest()
+		{
+			LinqToDB.Common.Tools.ClearAllCaches();
+
+			using var db = new TestDataConnection();
+
+			var param     = db.Options.LinqOptions.OptimizeJoins;
+			var optionsID = ((IConfigurationID)db.Options).ConfigurationID;
+			var dbID      = ((IConfigurationID)db).        ConfigurationID;
+
+			using (db.UseOptions(o => o
+				.WithOptions<LinqOptions>    (co => co with { OptimizeJoins = false })
+				.WithOptions<BulkCopyOptions>(bo => bo with { BulkCopyType = BulkCopyType.RowByRow })))
+			{
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Options.LinqOptions.OptimizeJoins,           Is.Not.EqualTo(param));
+					Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.Not.EqualTo(optionsID));
+					Assert.That(((IConfigurationID)db).ConfigurationID,         Is.Not.EqualTo(dbID));
+				});
+			}
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(db.Options.LinqOptions.OptimizeJoins,           Is.EqualTo(param));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID,         Is.EqualTo(dbID));
+			});
+		}
+
+		[Test]
+		public void UseCompareNullsTest()
+		{
+			LinqToDB.Common.Tools.ClearAllCaches();
+
+			using var db = new TestDataConnection();
+
+			var options   = db.Options;
+			var param     = db.Options.LinqOptions.CompareNulls;
+			var optionsID = ((IConfigurationID)db.Options).ConfigurationID;
+			var dbID      = ((IConfigurationID)db).        ConfigurationID;
+
+			using (db.UseLinqOptions(o => o with { CompareNulls = param }))
+			{
+				AssertState();
+			}
+
+			AssertState();
+
+			void AssertState()
+			{
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Options.BulkCopyOptions,                     Is.SameAs(options.BulkCopyOptions));
+					Assert.That(db.Options.ConnectionOptions,                   Is.SameAs(options.ConnectionOptions));
+					Assert.That(db.Options.DataContextOptions,                  Is.SameAs(options.DataContextOptions));
+					Assert.That(db.Options.RetryPolicyOptions,                  Is.SameAs(options.RetryPolicyOptions));
+					Assert.That(db.Options.SqlOptions,                          Is.SameAs(options.SqlOptions));
+					Assert.That(db.Options.LinqOptions,                         Is.Not.SameAs(options.LinqOptions));
+
+					var list1 = db.Options.OptionSets.ToList();
+					var list2 = options.OptionSets.ToList();
+
+					Assert.That(list1, Has.Count.EqualTo(list2.Count));
+
+					for (var i = 0; i < list1.Count; i++)
+						Assert.That(list1[i].ConfigurationID, Is.EqualTo(list2[i].ConfigurationID), $"{list1[i].GetType()} is not equal to {list2[i].GetType()}");
+
+					Assert.That(db.Options.LinqOptions.CompareNulls,            Is.EqualTo(param));
+					Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+					Assert.That(((IConfigurationID)db).ConfigurationID,         Is.EqualTo(dbID));
+				});
+			}
 		}
 	}
 }
