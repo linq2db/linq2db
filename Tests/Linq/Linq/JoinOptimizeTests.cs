@@ -674,6 +674,23 @@ namespace Tests.Linq
 			public Issue4790ClientWithKey KeyedClient { get; set; }
 		}
 
+		class Issue4790Position : IIssue4790Position
+		{
+			public int Id { get; set; }
+			public int? IdBill { get; set; }
+
+			[Association(ThisKey = nameof(IdBill), OtherKey = nameof(Issue4790Bill.Id), CanBeNull = false)]
+			public Issue4790Bill Bill { get; set; } = null!;
+		}
+
+		interface IIssue4790Position
+		{
+			int Id { get; set; }
+			int? IdBill { get; set; }
+
+			public Issue4790Bill Bill { get; set; }
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4790")]
 		public void Issue4790Test_Association_NoKey([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
@@ -770,6 +787,28 @@ namespace Tests.Linq
 					   on bill.IdClient equals client.Id
 					   where client.Name == clientName
 					   select bill;
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4790")]
+		public void Issue4790Test_Association_Nested([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue4790Client>();
+			using var t2 = db.CreateLocalTable<Issue4790Bill>();
+			using var t3 = db.CreateLocalTable<Issue4790Position>();
+
+			var query = from position in Filter(db.GetTable<Issue4790Position>(), "Abc") select new { position.Bill.Client.Name };
+
+			query.ToArray();
+
+			var sql = query.GetSelectQuery();
+			Assert.That(sql.GetTableSource().Joins, Has.Count.EqualTo(2));
+
+			static IQueryable<TPosition> Filter<TPosition>(IQueryable<TPosition> query, string clientName)
+				where TPosition : IIssue4790Position
+			{
+				return query.Where(p => p.Bill.Client.Name == clientName);
 			}
 		}
 		#endregion
