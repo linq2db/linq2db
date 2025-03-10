@@ -861,7 +861,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (subQuery.OrderBy.Items.Count > 0)
 			{
-				var filterItems = mainQuery.Select.IsDistinct || !mainQuery.GroupBy.IsEmpty;
+				var filterItems = !mainQuery.IsLimited && (mainQuery.Select.IsDistinct || !mainQuery.GroupBy.IsEmpty);
 
 				foreach (var item in subQuery.OrderBy.Items)
 				{
@@ -1405,6 +1405,24 @@ namespace LinqToDB.SqlQuery
 			{
 				if (tableSource.Joins.Count > 0 || parentQuery.From.Tables.Count > 1)
 					return false;
+			}
+
+			if (!parentQuery.OrderBy.IsEmpty && !_providerFlags.IsOrderByAggregateFunctionSupported)
+			{
+				if (parentQuery.OrderBy.Items.Select(o => o.Expression).Any(e =>
+				    {
+					    if (QueryHelper.UnwrapNullablity(e) is SqlColumn column)
+					    {
+							if (column.Parent == subQuery)
+								return QueryHelper.ContainsAggregationFunction(column.Expression);
+					    }
+
+					    return false;
+				    }))
+				{
+					// not allowed to move to parent if it has aggregates
+					return false;
+				}
 			}
 
 			if (!parentQuery.GroupBy.IsEmpty)

@@ -5,7 +5,7 @@ namespace LinqToDB.Linq.Internal
 	/// <summary>
 	/// Internal API.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Method)]
 	public class ColumnReaderAttribute : Attribute
 	{
 		public ColumnReaderAttribute(int indexParameterIndex)

@@ -8,7 +8,6 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -258,7 +257,6 @@ namespace Tests.Linq
 			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
 			db.Execute("CREATE TYPE IntTableType AS TABLE(Id INT)");
 
-			var currentMiss = Query<int>.CacheMissCount;
 			try
 			{
 				var persons = new List<int>() { 1, 2 };
@@ -267,9 +265,11 @@ namespace Tests.Linq
 							orderby p.ID
 							select p.ID;
 
+				var currentMiss = query.GetCacheMissCount();
+
 				var result =  query.ToList();
 				AreEqual(persons, result);
-				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(currentMiss + 1));
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1));
 
 				persons.AddRange(new int[] { 3, 4 });
 
@@ -277,7 +277,7 @@ namespace Tests.Linq
 
 				AreEqual(persons, result);
 				// cache miss
-				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(currentMiss + 2));
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 2));
 			}
 			finally
 			{
@@ -294,8 +294,6 @@ namespace Tests.Linq
 			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
 			db.Execute("CREATE TYPE IntTableType AS TABLE(Id INT)");
 
-			var currentMiss = Query<int>.CacheMissCount;
-
 			try
 			{
 				var persons = new List<int>() { 1, 2 };
@@ -304,10 +302,12 @@ namespace Tests.Linq
 							orderby p.ID
 							select p.ID;
 
+				var currentMiss = query.GetCacheMissCount();
+
 				var result =  query.ToList();
 
 				AreEqual(persons, result);
-				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(currentMiss + 1));
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1));
 
 				persons.AddRange(new int[] { 3, 4 });
 
@@ -320,7 +320,7 @@ namespace Tests.Linq
 
 				AreEqual(persons, result);
 				// cache miss
-				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(currentMiss + 2));
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 2));
 			}
 			finally
 			{
@@ -360,7 +360,7 @@ namespace Tests.Linq
 
 				dataTable.AcceptChanges();
 
-				var param = new LinqToDB.SqlQuery.SqlParameter(new LinqToDB.Common.DbDataType(dataTable.GetType() ?? typeof(object), "IntTableType"), parameterName, dataTable);
+				var param = new SqlParameter(new LinqToDB.Common.DbDataType(dataTable.GetType() ?? typeof(object), "IntTableType"), parameterName, dataTable);
 
 				builder.AddParameter("values", param);
 			}
@@ -384,7 +384,6 @@ namespace Tests.Linq
 			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
 			db.Execute("CREATE TYPE IntTableType AS TABLE(Id INT)");
 
-			var currentMiss = Query<int>.CacheMissCount;
 			try
 			{
 				var persons = new List<int>() { 1, 2 };
@@ -393,16 +392,18 @@ namespace Tests.Linq
 							orderby p.ID
 							select p.ID;
 
+				var currentMiss = query.GetCacheMissCount();
+
 				var result =  query.ToList();
 				AreEqual(persons, result);
-				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(currentMiss + 1));
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1));
 
 				persons.AddRange(new int[] { 3, 4 });
 
 				result = query.ToList();
 
 				AreEqual(persons, result);
-				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(currentMiss + 1));
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1));
 			}
 			finally
 			{
@@ -422,7 +423,6 @@ namespace Tests.Linq
 			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
 			db.Execute("CREATE TYPE IntTableType AS TABLE(Id INT)");
 
-			var currentMiss = Query<int>.CacheMissCount;
 			try
 			{
 				var persons = new List<int>() { 1, 2 };
@@ -431,16 +431,18 @@ namespace Tests.Linq
 							orderby p.ID
 							select p.ID;
 
+				var currentMiss = query.GetCacheMissCount();
+
 				var result =  query.ToList();
 				AreEqual(persons, result);
-				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(currentMiss + 1));
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1));
 
 				persons.AddRange(new int[] { 3, 4 });
 
 				result = query.ToList();
 
 				AreEqual(persons, result);
-				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(currentMiss + 1));
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1));
 			}
 			finally
 			{

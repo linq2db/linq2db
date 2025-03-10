@@ -1171,7 +1171,7 @@ namespace Tests.Linq
 				from c in db.Child
 				select new IntermediateChildResult { ParentId = c.ParentID, Child = includeChild ? c : null };
 
-			var cacheMissCount = Query<IntermediateChildResult>.CacheMissCount;
+			var cacheMissCount = query.GetCacheMissCount();
 
 			var result = query.ToArray().First();
 
@@ -1199,7 +1199,7 @@ namespace Tests.Linq
 
 			if (iteration > 1)
 			{
-				Query<IntermediateChildResult>.CacheMissCount.Should().Be(cacheMissCount);
+				query.GetCacheMissCount().Should().Be(cacheMissCount);
 			}
 		}
 
@@ -1956,13 +1956,13 @@ namespace Tests.Linq
 			p1.All(p => ReferenceEquals(p.Reference, reference)).Should().BeTrue();
 
 			reference = new Parent() { ParentID = 1002 };
-			var cacheMissCount = Query<Person>.CacheMissCount;
+			var cacheMissCount = db.Person.GetCacheMissCount();
 
 			var p2 = query.ToList();
 
 			p2.All(p => ReferenceEquals(p.Reference, reference)).Should().BeTrue();
 
-			Query<Person>.CacheMissCount.Should().Be(cacheMissCount);
+			db.Person.GetCacheMissCount().Should().Be(cacheMissCount);
 
 		}
 		
