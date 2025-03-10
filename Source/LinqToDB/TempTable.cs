@@ -567,8 +567,6 @@ namespace LinqToDB
 			return count.RowsCopied;
 		}
 
-		static readonly ConcurrentDictionary<Type,Expression<Func<T,T>>> _setterDic = new ();
-
 		/// <summary>
 		/// Insert data into table using records, returned by provided query.
 		/// </summary>
@@ -576,9 +574,7 @@ namespace LinqToDB
 		/// <returns>Number of records, inserted into table.</returns>
 		public long Insert(IQueryable<T> items)
 		{
-			var l = GenerateInsertSetter(items ?? throw new ArgumentNullException(nameof(items)));
-
-			var count = items.Insert(_table, l);
+			var count = items.Insert(_table, e => e);
 
 			TotalCopied += count;
 
@@ -593,57 +589,11 @@ namespace LinqToDB
 		/// <returns>Number of records, inserted into table.</returns>
 		public async Task<long> InsertAsync(IQueryable<T> items, CancellationToken cancellationToken = default)
 		{
-			var l = GenerateInsertSetter(items ?? throw new ArgumentNullException(nameof(items)));
-
-			var count = await items.InsertAsync(_table, l, cancellationToken).ConfigureAwait(false);
+			var count = await items.InsertAsync(_table, e => e, cancellationToken).ConfigureAwait(false);
 
 			TotalCopied += count;
 
 			return count;
-		}
-
-		private Expression<Func<T,T>> GenerateInsertSetter(IQueryable<T> items)
-		{
-			var type = typeof(T);
-			var ed   = _tableDescriptor ?? _table.DataContext.MappingSchema.GetEntityDescriptor(type, _table.DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var p    = Expression.Parameter(type, "t");
-
-			return _setterDic.GetOrAdd(type, t =>
-			{
-				if (t.IsAnonymous())
-				{
-					var nctor = (NewExpression?)items.Expression.Find(t, static (t, e) => e.NodeType == ExpressionType.New && e.Type == t);
-
-					MemberInfo[]    members;
-					ConstructorInfo ctor;
-
-					if (nctor == null)
-					{
-						ctor    = t.GetConstructors().Single();
-						members = t.GetPublicInstanceValueMembers();
-					}
-					else
-					{
-						ctor    = nctor.Constructor!;
-						members = nctor.Members!
-							.Select(m => m is MethodInfo info ? info.GetPropertyInfo()! : m)
-							.ToArray();
-					}
-
-					return Expression.Lambda<Func<T,T>>(
-						Expression.New(
-							ctor,
-							members.Select(m => ExpressionHelper.PropertyOrField(p, m.Name)),
-							members),
-						p);
-				}
-
-				return Expression.Lambda<Func<T,T>>(
-					Expression.MemberInit(
-						Expression.New(t),
-						ed.Columns.Select(c => Expression.Bind(c.MemberInfo, Expression.MakeMemberAccess(p, c.MemberInfo)))),
-					p);
-			});
 		}
 
 		#region ITable<T> implementation
