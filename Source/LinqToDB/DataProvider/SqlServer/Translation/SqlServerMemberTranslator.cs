@@ -170,6 +170,32 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 			}
 		}
 
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+			public override ISqlExpression TranslateLength(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(factory.GetDbDataType(value), "LEN", value);
+			}
+
+			public override ISqlExpression TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingSymbol)
+			{
+				/*
+				 * SELECT REPLICATE(paddingSymbol, padding - LEN(value)) + value
+				 */
+				var factory = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				var valueInt = new DbDataType(typeof(int), DataType.Int32);
+				var valuePadding = factory.EnsureType(padding, valueInt);
+
+				var symbolsToAdd = factory.Sub(valueInt, valuePadding, TranslateLength(translationContext, methodCall, translationFlags, value));
+				var stringToAdd = factory.Function(valueType, "REPLICATE", paddingSymbol, symbolsToAdd);
+				
+				return factory.Add(valueType, stringToAdd, value);
+			}
+		}
+
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();
@@ -183,6 +209,11 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 		protected override IMemberTranslator CreateMathMemberTranslator()
 		{
 			return new SqlServerMathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

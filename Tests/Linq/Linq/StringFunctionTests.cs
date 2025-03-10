@@ -1202,12 +1202,33 @@ namespace Tests.Linq
 
 			Assert.Multiple(() =>
 			{
-				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(0, '.'))), Is.EqualTo("test"));
-				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(3, '.'))), Is.EqualTo("test"));
-				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(4, '.'))), Is.EqualTo("test"));
-				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(5, '.'))), Is.EqualTo(".test"));
-				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(6, '.'))), Is.EqualTo("..test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(0, '.'))),  Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(3, '.'))),  Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(4, '.'))),  Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(5, '.'))),  Is.EqualTo(".test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(6, ' '))),  Is.EqualTo("  test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(6))),       Is.EqualTo("  test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(16, '.'))), Is.EqualTo("............test"));
 			});
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4799")]
+		public void String_PadLeft_TranslationExpressionArguments([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				select new
+				{
+					p.ID,
+					FirstName = p.FirstName.PadLeft(p.ID, '.')
+				} into s
+				where s.FirstName != ""
+				select s;
+
+			AssertQuery(query);
 		}
 
 		[ActiveIssue]
