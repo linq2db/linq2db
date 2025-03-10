@@ -15,11 +15,11 @@ namespace LinqToDB.Linq.Builder
 {
 	partial class ExpressionBuilder
 	{
-		public Expression AssociationToRealization(Expression asociationExpression)
+		public Expression AssociationToRealization(Expression associationExpression)
 		{
 			// TODO: in case of https://github.com/linq2db/linq2db/issues/4139 implemented, we probably will need
 			// to update this logic with additional tests for https://github.com/linq2db/linq2db/issues/4790
-			if (asociationExpression is MemberExpression
+			if (associationExpression is MemberExpression
 				{
 					Expression: ContextRefExpression
 					{
@@ -28,21 +28,21 @@ namespace LinqToDB.Linq.Builder
 					} contextRef,
 					Member: var member
 				}
-				&& contextRef.BuildContext.ElementType != contextRef.Type)
+				&& elementType != contextRef.Type)
 			{
-				var newMember = contextRef.BuildContext.ElementType.GetMemberEx(member);
+				var newMember = elementType.GetMemberEx(member);
 				if (newMember != null)
 				{
 					if (InternalExtensions.IsAssociation(newMember, MappingSchema))
 					{
 						return Expression.MakeMemberAccess(
-							contextRef.WithType(contextRef.BuildContext.ElementType),
+							contextRef.WithType(elementType),
 							newMember);
 					}
 				}
 			}
 
-			return asociationExpression;
+			return associationExpression;
 		}
 
 		bool IsAssociationInRealization(Expression? expression, MemberInfo member, [NotNullWhen(true)] out MemberInfo? associationMember)
