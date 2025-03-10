@@ -4,9 +4,9 @@ using System.Linq;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
 
 using NUnit.Framework;
 
@@ -2532,70 +2532,58 @@ namespace Tests.Linq
 		[Test]
 		public void Issue2306Test1([DataSources] string context)
 		{
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
-
-			Query.ClearCaches();
 		}
 
 		[Test]
 		public void Issue2306Test2([DataSources] string context)
 		{
-			Query.ClearCaches();
-
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
-
-			Query.ClearCaches();
 		}
 
 		[Test]
 		public void Issue2306Test3([DataSources] string context)
 		{
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
-
-			Query.ClearCaches();
 		}
 
 		[Test]
@@ -3761,6 +3749,35 @@ namespace Tests.Linq
 					label = "label"
 				})
 				.LongCount();
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
+		[Test]
+		public void Issue_FilterByOrderedGroupBy([DataSources] string context)
+		{
+			using var db  = GetDataContext(context);
+
+			var grp =
+			(
+				from c in db.Child
+				group c by c.ParentID into g
+				select new
+				{
+					ParentID = g.Key,
+					Max      = g.Max(x => x.ChildID)
+				}
+				into g
+				orderby g.Max descending
+				select g
+			)
+			.Take(2);
+
+			var query = 
+				from t in db.Child
+				where t.ParentID.In(grp.Select(x => x.ParentID))
+				select t;
+
+			AssertQuery(query);
 		}
 	}
 }

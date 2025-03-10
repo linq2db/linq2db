@@ -19,7 +19,6 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 
@@ -638,8 +637,7 @@ namespace Tests.DataProvider
 			[IncludeDataSources(TestProvName.AllFirebird)] string context,
 			[Values(FirebirdIdentifierQuoteMode.Auto, FirebirdIdentifierQuoteMode.Quote)] FirebirdIdentifierQuoteMode quoteMode)
 		{
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode })))
+			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode }).UseDisableQueryCache(true)))
 			{
 				try
 				{
@@ -669,7 +667,6 @@ namespace Tests.DataProvider
 				finally
 				{
 					db.GetTable<CamelCaseName>().Delete();
-					Query.ClearCaches();
 				}
 			}
 		}
@@ -780,8 +777,7 @@ namespace Tests.DataProvider
 			[IncludeDataSources(false, TestProvName.AllFirebird)] string context,
 			[Values] FirebirdIdentifierQuoteMode quoteMode)
 		{
-			Query.ClearCaches();
-			using (var db      = GetDataConnection(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode })))
+			using (var db      = GetDataConnection(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode }).UseDisableQueryCache(true)))
 			using (var cards   = db.CreateLocalTable<Card>())
 			using (var clients = db.CreateLocalTable<Client>())
 			{
@@ -798,8 +794,6 @@ namespace Tests.DataProvider
 					sql.Should().Contain("\"Client\" \"a_Owner\"");
 				}
 			}
-
-			Query.ClearCaches();
 		}
 		#endregion
 

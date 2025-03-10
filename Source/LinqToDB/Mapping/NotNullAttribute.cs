@@ -6,7 +6,7 @@ namespace LinqToDB.Mapping
 	/// Sets nullability flag for current column to <c>false</c>.
 	/// See <see cref="NullableAttribute"/> for more details.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
 	public class NotNullAttribute : NullableAttribute
 	{
 		/// <summary>
