@@ -638,5 +638,51 @@ namespace Tests.Linq
 				Assert.That(query.GetTableSource().Joins, Has.Count.EqualTo(1));
 			}
 		}
+
+		#region Isue 4790
+		class Issue4790Client
+		{
+			public int     Id   { get; set; }
+			public string? Name { get; set; }
+		}
+
+		class Issue4790Bill : IIssue4790Bill
+		{
+			public int  Id       { get; set; }
+			public int? IdClient { get; set; }
+
+			[Association(ThisKey = nameof(IdClient), OtherKey = nameof(Client.Id), CanBeNull = false)]
+			public Issue4790Client Client { get; set; } = null!;
+		}
+
+		interface IIssue4790Bill
+		{
+			int  Id       { get; set; }
+			int? IdClient { get; set; }
+
+			public Issue4790Client Client { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4790")]
+		public void Issue4790Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue4790Client>();
+			using var t2 = db.CreateLocalTable<Issue4790Bill>();
+
+			var query = from bill in Filter(db.GetTable<Issue4790Bill>(), "Abc") select new { bill.Client.Name };
+
+			query.ToArray();
+
+			var sql = query.GetSelectQuery();
+			Assert.That(sql.GetTableSource().Joins, Has.Count.EqualTo(1));
+
+			static IQueryable<TBill> Filter<TBill>(IQueryable<TBill> query, string clientName)
+				where TBill : IIssue4790Bill
+			{
+				return query.Where(b => b.Client.Name == clientName);
+			}
+		}
+		#endregion
 	}
 }
