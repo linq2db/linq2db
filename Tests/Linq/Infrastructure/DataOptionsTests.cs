@@ -534,6 +534,9 @@ namespace Tests.Infrastructure
 
 					Assert.That(list1, Has.Count.EqualTo(list2.Count));
 
+					for (var i = 0; i < list1.Count; i++)
+						Assert.That(list1[i].ConfigurationID, Is.EqualTo(list2[i].ConfigurationID), $"{list1[i].GetType()} is not equal to {list2[i].GetType()}");
+
 					Assert.That(db.Options.LinqOptions.CompareNulls,            Is.EqualTo(param));
 					Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
 					Assert.That(((IConfigurationID)db).ConfigurationID,         Is.EqualTo(dbID));
