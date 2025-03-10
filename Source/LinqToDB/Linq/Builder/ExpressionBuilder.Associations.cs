@@ -21,7 +21,11 @@ namespace LinqToDB.Linq.Builder
 			// to update this logic with additional tests for https://github.com/linq2db/linq2db/issues/4790
 			if (asociationExpression is MemberExpression
 				{
-					Expression: ContextRefExpression { Type.IsInterface: true } contextRef,
+					Expression: ContextRefExpression
+					{
+						Type.IsInterface: true,
+						BuildContext.ElementType: var elementType,
+					} contextRef,
 					Member: var member
 				}
 				&& contextRef.BuildContext.ElementType != contextRef.Type)
