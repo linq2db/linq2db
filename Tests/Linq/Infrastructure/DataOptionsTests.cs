@@ -529,6 +529,12 @@ namespace Tests.Infrastructure
 
 			Assert.Multiple(() =>
 			{
+				Assert.That(db.Options.BulkCopyOptions,                     Is.SameAs(options.BulkCopyOptions));
+				Assert.That(db.Options.ConnectionOptions,                   Is.SameAs(options.ConnectionOptions));
+				Assert.That(db.Options.DataContextOptions,                  Is.SameAs(options.DataContextOptions));
+				Assert.That(db.Options.RetryPolicyOptions,                  Is.SameAs(options.RetryPolicyOptions));
+				Assert.That(db.Options.SqlOptions,                          Is.SameAs(options.SqlOptions));
+				Assert.That(db.Options.LinqOptions,                         Is.Not.SameAs(options.LinqOptions));
 				Assert.That(db.Options.LinqOptions.CompareNulls,            Is.EqualTo(param));
 				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
 				Assert.That(((IConfigurationID)db).ConfigurationID,         Is.EqualTo(dbID));
