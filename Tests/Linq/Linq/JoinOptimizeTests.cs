@@ -766,7 +766,7 @@ namespace Tests.Linq
 				where TBill : IIssue4790Bill
 			{
 				return from bill in query
-					   join client in db.GetTable<Issue4790Client>()
+					   join client in db.GetTable<Issue4790ClientWithKey>()
 					   on bill.IdClient equals client.Id
 					   where client.Name == clientName
 					   select bill;
