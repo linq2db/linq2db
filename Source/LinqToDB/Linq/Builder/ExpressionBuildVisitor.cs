@@ -1589,8 +1589,8 @@ namespace LinqToDB.Linq.Builder
 			var key = new ExprCacheKey(
 				Builder.AssociationToRealization(expression),
 				associationRoot.BuildContext,
-				param1: null,
-				param2: null,
+				columnDescriptor: null,
+				selectQuery: null,
 				cacheFlags
 			);
 
