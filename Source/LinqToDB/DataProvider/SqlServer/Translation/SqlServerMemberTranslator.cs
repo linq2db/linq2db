@@ -33,6 +33,9 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 					Sql.DateParts.Minute => "minute",
 					Sql.DateParts.Second => "second",
 					Sql.DateParts.Millisecond => "millisecond",
+					Sql.DateParts.Microsecond => "microsecond",
+					Sql.DateParts.Tick => "microsecond",
+					Sql.DateParts.Nanosecond => "nanosecond",
 					_ => null
 				};
 			}
@@ -63,6 +66,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 				var factory = translationContext.ExpressionFactory;
 				var dateType = factory.GetDbDataType(dateTimeExpression);
 
+
 				var partStr = DatePartToStr(datepart);
 
 				if (partStr == null)
@@ -70,7 +74,15 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 					return null;
 				}
 
-				var resultExpression = factory.Function(dateType, "DateAdd", factory.NotNullFragment(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
+				var fragment = factory.NotNullFragment(factory.GetDbDataType(typeof(string)), partStr);
+
+				if (datepart == Sql.DateParts.Tick)
+				{
+					fragment = factory.Div(fragment, 10);
+				}
+
+				var resultExpression = factory.Function(dateType, "DateAdd", fragment, increment, dateTimeExpression);
+
 				return resultExpression;
 			}
 
