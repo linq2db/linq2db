@@ -205,7 +205,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 
 		public class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			public override ISqlExpression TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingSymbol)
+			public override ISqlExpression TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
 				/*
 				 * SELECT value || SUBSTR(
@@ -217,15 +217,13 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 				var factory = translationContext.ExpressionFactory;
 
 				var valueTypeString = factory.GetDbDataType(value);
+				var valueTypeInt = new DbDataType(typeof(int), DataType.Int32);
 
-				var valueInt = new DbDataType(typeof(int), DataType.Int32);
-				var valuePadding = factory.EnsureType(padding, valueInt);
-
-				var valueZeroBlob = factory.Function(valueTypeString, "ZEROBLOB", valuePadding);
+				var valueZeroBlob = factory.Function(valueTypeString, "ZEROBLOB", padding);
 				var valueHex = factory.Function(valueTypeString, "HEX", valueZeroBlob);
-				var paddingString = factory.Function(valueTypeString, "REPLACE", valueHex, factory.Value(valueTypeString, "0"), paddingSymbol);
-				var valueSymbolsToAdd = factory.Sub(valueInt, valuePadding, TranslateLength(translationContext, methodCall, translationFlags, value));
-				var fillingString = factory.Function(valueTypeString, "SUBSTR", paddingString, factory.Value(valueInt, 1), valueSymbolsToAdd);
+				var paddingString = factory.Function(valueTypeString, "REPLACE", valueHex, factory.Value(valueTypeString, "0"), paddingChar);
+				var valueSymbolsToAdd = factory.Sub(valueTypeInt, padding, TranslateLength(translationContext, methodCall, translationFlags, value));
+				var fillingString = factory.Function(valueTypeString, "SUBSTR", paddingString, factory.Value(valueTypeInt, 1), valueSymbolsToAdd);
 				
 				return factory.Concat(fillingString, value);
 			}

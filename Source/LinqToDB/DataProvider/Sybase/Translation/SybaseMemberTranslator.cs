@@ -179,6 +179,12 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 
 				return func?.WithName("Str_Replace");
 			}
+
+			public override ISqlExpression TranslateLength(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(factory.GetDbDataType(value), "LEN", value);
+			}
 		}
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()

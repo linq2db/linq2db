@@ -178,19 +178,17 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 				return factory.Function(factory.GetDbDataType(value), "LEN", value);
 			}
 
-			public override ISqlExpression TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingSymbol)
+			public override ISqlExpression TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
 				/*
 				 * SELECT REPLICATE(paddingSymbol, padding - LEN(value)) + value
 				 */
 				var factory = translationContext.ExpressionFactory;
 				var valueType = factory.GetDbDataType(value);
+				var valueTypeInt = new DbDataType(typeof(int), DataType.Int32);
 
-				var valueInt = new DbDataType(typeof(int), DataType.Int32);
-				var valuePadding = factory.EnsureType(padding, valueInt);
-
-				var symbolsToAdd = factory.Sub(valueInt, valuePadding, TranslateLength(translationContext, methodCall, translationFlags, value));
-				var stringToAdd = factory.Function(valueType, "REPLICATE", paddingSymbol, symbolsToAdd);
+				var symbolsToAdd = factory.Sub(valueTypeInt, padding, TranslateLength(translationContext, methodCall, translationFlags, value));
+				var stringToAdd = factory.Function(valueType, "REPLICATE", paddingChar, symbolsToAdd);
 				
 				return factory.Add(valueType, stringToAdd, value);
 			}

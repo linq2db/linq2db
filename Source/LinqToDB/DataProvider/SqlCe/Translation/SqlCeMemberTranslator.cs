@@ -215,6 +215,21 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 				var factory = translationContext.ExpressionFactory;
 				return factory.Function(factory.GetDbDataType(value), "LEN", value);
 			}
+
+			public override ISqlExpression TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
+			{
+				/*
+				 * SELECT REPLICATE(paddingSymbol, padding - LEN(value)) + value
+				 */
+				var factory = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+				var valueTypeInt = new DbDataType(typeof(int), DataType.Int32);
+
+				var symbolsToAdd = factory.Sub(valueTypeInt, padding, TranslateLength(translationContext, methodCall, translationFlags, value));
+				var stringToAdd = factory.Function(valueType, "REPLICATE", paddingChar, symbolsToAdd);
+
+				return factory.Add(valueType, stringToAdd, value);
+			}
 		}
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()

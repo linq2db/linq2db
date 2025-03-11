@@ -110,17 +110,21 @@ namespace LinqToDB.Linq.Translation
 			if (!translationContext.TranslateToSqlExpression(methodCall.Object, out var translatedField))
 				return translationContext.CreateErrorExpression(methodCall.Object, type: methodCall.Type);
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedPadding))
 				return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
 
-			ISqlExpression? translatedPaddingSymbol = null;
+			ISqlExpression? translatedPaddingChar = null;
 			if (methodCall.Arguments.Count > 1)
 			{
-				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out translatedPaddingSymbol))
+				using var d = translationContext.UsingTypeFromExpression(translatedField);
+
+				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out translatedPaddingChar))
 					return translationContext.CreateErrorExpression(methodCall.Arguments[1], type: methodCall.Type);
 			}
 
-			var resultSql = TranslatePadLeft(translationContext, methodCall, translationFlags, translatedField, translatedPadding, translatedPaddingSymbol);
+			var resultSql = TranslatePadLeft(translationContext, methodCall, translationFlags, translatedField, translatedPadding, translatedPaddingChar);
 
 			if (resultSql == null)
 				return null;
@@ -148,15 +152,14 @@ namespace LinqToDB.Linq.Translation
 			return factory.Function(factory.GetDbDataType(value), "LENGTH", value);
 		}
 
-		public virtual ISqlExpression TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingSymbol)
+		public virtual ISqlExpression TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 		{
 			var factory = translationContext.ExpressionFactory;
 			var valueType = factory.GetDbDataType(value);
-			var valuePadding = factory.EnsureType(padding,new Common.DbDataType(typeof(int), DataType.Int32));
-			return factory.Function(valueType, "LPAD", value, valuePadding, paddingSymbol);
+			return factory.Function(valueType, "LPAD", value, padding, paddingChar);
 		}
 
-		public virtual ISqlExpression TranslatePadLeft(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression? paddingSymbol)
+		public virtual ISqlExpression TranslatePadLeft(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression? paddingChar)
 		{
 			var factory = translationContext.ExpressionFactory;
 
@@ -168,13 +171,12 @@ namespace LinqToDB.Linq.Translation
 			 *		ELSE strValue END
 			 */
 
-			var valuePadding = factory.EnsureType(padding,new Common.DbDataType(typeof(int), DataType.Int32));
 			var valueLen = TranslateLength(translationContext, methodCall, translationFlags, value);
-			var valueLess = factory.Less(valueLen, valuePadding);
-			paddingSymbol = paddingSymbol ?? factory.Value(' ');
-			var trueValue = TranslateLPad(translationContext, methodCall, translationFlags, value, padding, paddingSymbol);
+			var valueLess = factory.Less(valueLen, padding);
+			paddingChar = paddingChar ?? factory.Value(valueType, ' ');
+			var trueValue = TranslateLPad(translationContext, methodCall, translationFlags, value, padding, paddingChar);
 
-			return translationContext.ExpressionFactory.Condition(valueLess, trueValue, value);
+			return factory.Condition(valueLess, trueValue, value);
 		}
 	}
 }
