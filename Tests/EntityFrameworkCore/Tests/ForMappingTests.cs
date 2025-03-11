@@ -82,7 +82,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			t.BulkCopy(items);
 
-			t.ToList().ShouldBeEquivalentTo(items);
+			t.ToList().OrderByDescending(r => r.Name).ToList().ShouldBeEquivalentTo(items);
 		}
 
 		// postgres: cannot create such identity table
@@ -102,7 +102,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			t.BulkCopy(items);
 
-			t.Count().ShouldBe(items.Count);
+			t.ToList().Count.ShouldBe(items.Count);
 		}
 
 		[Test]

@@ -3198,7 +3198,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Count().ShouldBe(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3227,7 +3227,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Count().ShouldBe(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3256,7 +3256,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Count().ShouldBe(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3285,7 +3285,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Count().ShouldBe(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3314,7 +3314,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Count().ShouldBe(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3343,7 +3343,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Count().ShouldBe(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]

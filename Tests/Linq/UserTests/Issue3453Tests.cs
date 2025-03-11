@@ -95,14 +95,14 @@ INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','
 			{
 				db.Insert(new Schedule { Unit = TimeUnit.Hour, Amount = 1 });
 
-				db.GetTable<Schedule>().Count().ShouldBe(4);
+				db.GetTable<Schedule>().ToList().Count().ShouldBe(4);
 
-				db.GetTable<Schedule>().Where(x => x.Unit         == unit).Count().ShouldBe(3);
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == unit).Count().ShouldBe(3);
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNullable).Count().ShouldBe(3);
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == TimeUnit.Day).Count().ShouldBe(3);
+				db.GetTable<Schedule>().Where(x => x.Unit         == unit).ToList().Count().ShouldBe(3);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == unit).ToList().Count().ShouldBe(3);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNullable).ToList().Count().ShouldBe(3);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == TimeUnit.Day).ToList().Count().ShouldBe(3);
 
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNull).Count().ShouldBe(1);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNull).ToList().Count().ShouldBe(1);
 
 				var alItems = db.GetTable<Schedule>().ToArray();
 
@@ -139,14 +139,14 @@ INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','
 			{
 				db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bcType }, data);
 
-				db.GetTable<Schedule>().Count().ShouldBe(4);
+				db.GetTable<Schedule>().ToList().Count().ShouldBe(4);
 
-				db.GetTable<Schedule>().Where(x => x.Unit         == unit).Count().ShouldBe(3);
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == unit).Count().ShouldBe(3);
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNullable).Count().ShouldBe(3);
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == TimeUnit.Day).Count().ShouldBe(3);
+				db.GetTable<Schedule>().Where(x => x.Unit         == unit).ToList().Count().ShouldBe(3);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == unit).ToList().Count().ShouldBe(3);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNullable).ToList().Count().ShouldBe(3);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == TimeUnit.Day).ToList().Count().ShouldBe(3);
 
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNull).Count().ShouldBe(1);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNull).ToList().Count().ShouldBe(1);
 
 				var alItems = db.GetTable<Schedule>().ToArray();
 
@@ -182,14 +182,14 @@ INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','
 			{
 				await db.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = bcType }, data);
 
-				db.GetTable<Schedule>().Count().ShouldBe(4);
+				db.GetTable<Schedule>().ToList().Count().ShouldBe(4);
 
-				db.GetTable<Schedule>().Where(x => x.Unit         == unit).Count().ShouldBe(3);
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == unit).Count().ShouldBe(3);
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNullable).Count().ShouldBe(3);
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == TimeUnit.Day).Count().ShouldBe(3);
+				db.GetTable<Schedule>().Where(x => x.Unit         == unit).ToList().Count().ShouldBe(3);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == unit).ToList().Count().ShouldBe(3);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNullable).ToList().Count().ShouldBe(3);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == TimeUnit.Day).ToList().Count().ShouldBe(3);
 
-				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNull).Count().ShouldBe(1);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNull).ToList().Count().ShouldBe(1);
 
 				var alItems = db.GetTable<Schedule>().ToArray();
 
