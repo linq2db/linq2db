@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -126,10 +126,10 @@ namespace Tests.Linq
 					.Select(x => x.Id)
 					.ToList();
 
-				result.Should().Equal(linqResult);
+				result.ShouldBeEquivalentTo(linqResult);
 			}
 
-			result.Should().Equal(withNullCompares ? withNulls : withoutNulls);
+			result.ShouldBeEquivalentTo(withNullCompares ? withNulls : withoutNulls);
 		}
 
 		[Test]
@@ -144,18 +144,18 @@ namespace Tests.Linq
 			
 			// == null always translates to IS NULL
 			var result = src.Where(x => x.A == null).Count();
-			result.Should().Be(2);
+			result.ShouldBe(2);
 			
 			// == default is the same as == null
 			result = src.Where(x => x.A == default).Count();
-			result.Should().Be(2);
+			result.ShouldBe(2);
 
 			// LikeClr should obviously match.
 			// LikeSqlExceptParameters sniffs parameters and should translate to IS NULL.
 			// LikeSql should translate straight to x.A = p, which should have no result.
 			int? p = null;
 			result = src.Where(x => x.A == p).Count();
-			result.Should().Be(option == CompareNulls.LikeSql ? 0 : 2);
+			result.ShouldBe(option == CompareNulls.LikeSql ? 0 : 2);
 		}
 
 		[Test]
@@ -172,12 +172,12 @@ namespace Tests.Linq
 			
 			// "" is the same as null in Oracle and == ""  should always translates to IS NULL
 			int result = src.Where(x => x.Text == "").Select(x => x.Id).FirstOrDefault();
-			result.Should().Be(2);
+			result.ShouldBe(2);
 
 			// LikeSql should translate straight to x.A = p, which should have no result.
 			var p = "";
 			result = src.Where(x => x.Text == p).Select(x => x.Id).FirstOrDefault();
-			result.Should().Be(option == CompareNulls.LikeSql ? 0 : 2);
+			result.ShouldBe(option == CompareNulls.LikeSql ? 0 : 2);
 		}
 
 		public class Src

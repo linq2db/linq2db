@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -33,7 +33,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().Contain(expected);
+				commandSql.ShouldContain(expected);
 			}
 		}
 
@@ -53,7 +53,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().Contain(expected);
+				commandSql.ShouldContain(expected);
 			}
 		}
 
@@ -73,9 +73,9 @@ namespace Tests.Linq
 				var commandSql = GetCurrentBaselines();
 
 				if (tag != null)
-					commandSql.Should().Contain(expected);
+					commandSql.ShouldContain(expected);
 				else
-					commandSql.Should().NotContain(expected);
+					commandSql.ShouldNotContain(expected);
 			}
 		}
 
@@ -95,7 +95,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().Contain(expected);
+				commandSql.ShouldContain(expected);
 			}
 		}
 
@@ -130,7 +130,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().Contain(expected);
+				commandSql.ShouldContain(expected);
 			}
 		}
 
@@ -153,7 +153,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().Contain(expected);
+				commandSql.ShouldContain(expected);
 			}
 		}
 
@@ -172,7 +172,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().NotContain(tag);
+				commandSql.ShouldNotContain(tag);
 			}
 		}
 
@@ -189,7 +189,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().Contain(expected);
+				commandSql.ShouldContain(expected);
 			}
 		}
 
@@ -211,7 +211,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().Contain(expected);
+				commandSql.ShouldContain(expected);
 			}
 		}
 
@@ -228,7 +228,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().Contain(expected);
+				commandSql.ShouldContain(expected);
 			}
 		}
 
@@ -245,7 +245,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().Contain(expected);
+				commandSql.ShouldContain(expected);
 			}
 		}
 
@@ -262,7 +262,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().Contain(expected);
+				commandSql.ShouldContain(expected);
 			}
 		}
 
@@ -279,7 +279,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().Contain(expected);
+				commandSql.ShouldContain(expected);
 			}
 		}
 
@@ -296,7 +296,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().Contain(expected);
+				commandSql.ShouldContain(expected);
 			}
 		}
 
@@ -313,7 +313,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().Contain(expected);
+				commandSql.ShouldContain(expected);
 			}
 		}
 

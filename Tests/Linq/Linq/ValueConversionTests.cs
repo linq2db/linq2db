@@ -4,7 +4,7 @@ using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -429,7 +429,7 @@ namespace Tests.Linq
 
 				var selectResult = query.ToArray();
 
-				selectResult.Should().HaveCount(10);
+				selectResult.Length.ShouldBe(10);
 			}
 		}
 
@@ -450,7 +450,7 @@ namespace Tests.Linq
 
 				var selectResult = query.Concat(query).ToArray();
 
-				selectResult.Should().HaveCount(20);
+				selectResult.Length.ShouldBe(20);
 			}
 		}
 
@@ -473,7 +473,7 @@ namespace Tests.Linq
 
 				var selectResult = query.Union(query).ToArray();
 
-				selectResult.Should().HaveCount(10);
+				selectResult.Length.ShouldBe(10);
 			}
 		}
 
@@ -730,14 +730,14 @@ namespace Tests.Linq
 
 				var record = rawTable.Single(e => e.Id == iteration);
 
-				record.Id.Should().Be(iteration);
-				record.Value1.Should().Be(JsonConvert.SerializeObject(new JArray()));
-				record.Value2.Should().Be(JsonConvert.SerializeObject(inserted));
-				record.Enum.Should().Be("Value1");
-				record.EnumWithNull.Should().BeNull();
-				record.EnumWithNullDeclarative.Should().BeNull();
-				record.BoolValue.Should().Be(boolValue ? 'Y' : 'N');
-				record.AnotherBoolValue.Should().Be(boolValue ? 'T' : 'F');
+				record.Id.ShouldBe(iteration);
+				record.Value1.ShouldBe(JsonConvert.SerializeObject(new JArray()));
+				record.Value2.ShouldBe(JsonConvert.SerializeObject(inserted));
+				record.Enum.ShouldBe("Value1");
+				record.EnumWithNull.ShouldBeNull();
+				record.EnumWithNullDeclarative.ShouldBeNull();
+				record.BoolValue.ShouldBe(boolValue ? 'Y' : 'N');
+				record.AnotherBoolValue.ShouldBe(boolValue ? 'T' : 'F');
 
 			}
 		}

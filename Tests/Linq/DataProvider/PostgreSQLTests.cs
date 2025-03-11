@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -2613,21 +2613,21 @@ $function$
 				.Where(t => t.TableName != null && t.TableName.StartsWith("multitenant_table"))
 				.ToArray();
 
-			tables.Should().HaveCount(1);
+			tables.Length.ShouldBe(1);
 
 			var multiTenantTable = tables[0];
 
-			multiTenantTable!.Columns.Should().HaveCount(5);
+			multiTenantTable!.Columns.Count.ShouldBe(5);
 
 			var tenantidColumn = multiTenantTable.Columns.Find(c => c.ColumnName == "tenantid");
-			tenantidColumn.Should().NotBeNull();
+			tenantidColumn.ShouldNotBeNull();
 
-			tenantidColumn!.IsPrimaryKey.Should().BeTrue();
+			tenantidColumn!.IsPrimaryKey.ShouldBeTrue();
 
 			var idColumn = multiTenantTable.Columns.Find(c => c.ColumnName == "id");
-			idColumn.Should().NotBeNull();
+			idColumn.ShouldNotBeNull();
 
-			idColumn!.IsPrimaryKey.Should().BeTrue();
+			idColumn!.IsPrimaryKey.ShouldBeTrue();
 		}
 
 		#region Issue 4556

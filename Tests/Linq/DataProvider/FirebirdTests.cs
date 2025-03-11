@@ -13,7 +13,7 @@ using System.Xml.Linq;
 
 using FirebirdSql.Data.Types;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -787,11 +787,11 @@ namespace Tests.DataProvider
 
 				if (quoteMode == FirebirdIdentifierQuoteMode.None)
 				{
-					sql.Should().Contain("Client a_Owner");
+					sql.ShouldContain("Client a_Owner");
 				}
 				else
 				{
-					sql.Should().Contain("\"Client\" \"a_Owner\"");
+					sql.ShouldContain("\"Client\" \"a_Owner\"");
 				}
 			}
 		}

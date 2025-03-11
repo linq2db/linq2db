@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text.Json;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -1641,7 +1641,7 @@ namespace Tests.Linq
 					})
 					.First();
 
-				sqlConverted.Should().Be(noSqlConverted);
+				sqlConverted.ShouldBeEquivalentTo(noSqlConverted);
 			}
 		}
 

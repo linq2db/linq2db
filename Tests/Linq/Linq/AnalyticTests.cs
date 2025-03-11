@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -536,7 +536,7 @@ namespace Tests.Linq
 				Assert.That(q.ToArray(), Is.Not.Empty);
 
 				if (iteration > 1)
-					q.GetCacheMissCount().Should().Be(save);
+					q.GetCacheMissCount().ShouldBe(save);
 			}
 		}
 
