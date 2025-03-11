@@ -548,10 +548,10 @@ namespace LinqToDB.Data
 
 						break;
 					}
-					case (_,               {},                  _,           _,               _,             _,              _) :
-					case (_,               _,                   null,        _,               {},            _,              _) :
-					case (_,               _,                   null,        _,               _,             {},             _) :
-					case (_,               _,                   null,        _,               _,             _,              {}) :
+					case (_,               not null,            _,           _,               _,             _,              _) :
+					case (_,               _,                   null,        _,               not null,      _,              _) :
+					case (_,               _,                   null,        _,               _,             not null,       _) :
+					case (_,               _,                   null,        _,               _,             _,              not null) :
 					{
 						throw new LinqToDBException("DataProvider was not specified");
 					}
@@ -621,6 +621,8 @@ namespace LinqToDB.Data
 					default :
 						throw new LinqToDBException("Invalid configuration. Configuration string is not provided.");
 				}
+
+				dataConnection.ConfigurationString ??= options.ConfigurationString ?? DefaultConfiguration;
 
 				if (options.MappingSchema != null)
 				{
