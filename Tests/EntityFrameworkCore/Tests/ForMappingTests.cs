@@ -82,7 +82,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			t.BulkCopy(items);
 
-			items.ShouldBeEquivalentTo(t);
+			t.ToList().ShouldBeEquivalentTo(items);
 		}
 
 		// postgres: cannot create such identity table

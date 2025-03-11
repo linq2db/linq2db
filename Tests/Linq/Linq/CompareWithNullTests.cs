@@ -116,7 +116,7 @@ namespace Tests.Linq
 				.OrderBy(x => x.Id)
 				.Select(x => x.Id)
 				.TagQuery(conditionStr)
-				.ToList();
+				.ToArray();
 
 			// CompareWithNullValues should behave exactly like C#
 			if (withNullCompares)
@@ -124,7 +124,7 @@ namespace Tests.Linq
 				var linqResult = Data
 					.Where(where.Compile())
 					.Select(x => x.Id)
-					.ToList();
+					.ToArray();
 
 				result.ShouldBeEquivalentTo(linqResult);
 			}
