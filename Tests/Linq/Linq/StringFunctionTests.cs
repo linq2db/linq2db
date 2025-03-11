@@ -787,7 +787,7 @@ namespace Tests.Linq
 						t.NVarCharColumn.StartsWith(str)
 					);
 
-				result.Count().ShouldBe(1);
+				result.ToList().Count.ShouldBe(1);
 			}
 		}
 

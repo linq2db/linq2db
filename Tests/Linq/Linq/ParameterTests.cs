@@ -588,7 +588,7 @@ namespace Tests.Linq
 
 				var cacheMiss = query.GetCacheMissCount();
 
-				query.Count().ShouldBe(1);
+				query.ToList().Count.ShouldBe(1);
 
 				if (iteration > 1)
 					query.GetCacheMissCount().ShouldBe(cacheMiss);
@@ -611,7 +611,7 @@ namespace Tests.Linq
 
 				var cacheMiss = query.GetCacheMissCount();
 
-				query.Count().ShouldBe(0);
+				query.ToList().Count.ShouldBe(0);
 
 				if (iteration > 1)
 					query.GetCacheMissCount().ShouldBe(cacheMiss);
