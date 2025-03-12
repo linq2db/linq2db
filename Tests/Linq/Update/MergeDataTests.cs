@@ -15,8 +15,7 @@ namespace Tests.xUpdate
 {
 	[TestFixture]
 	[Order(10000)]
-	[Obsolete("Tests for obsolete API. Will be removed with API under question.")]
-	public class OldMergeTests : TestBase
+	public class MergeDataTests : TestBase
 	{
 		[Test]
 		public void Merge(
@@ -36,7 +35,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataConnection(context))
 			{
-				db.Merge(db.Types2);
+				db.MergeData(db.Types2);
 			}
 		}
 
@@ -53,7 +52,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataConnection(context))
 			{
-				db.Merge(Array.Empty<Person>());
+				db.MergeData(Array.Empty<Person>());
 			}
 		}
 
@@ -78,7 +77,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataConnection(context))
 			{
-				db.Merge(true, db.Types2);
+				db.MergeData(true, db.Types2);
 			}
 		}
 
@@ -103,7 +102,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataConnection(context))
 			{
-				db.Merge(t => t.ID > 5, db.Types2.Where(t => t.ID > 5));
+				db.MergeData(t => t.ID > 5, db.Types2.Where(t => t.ID > 5));
 			}
 		}
 
@@ -128,7 +127,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataConnection(context))
 			{
-				db.Merge(db.Types2, t => t.ID > 5);
+				db.MergeData(db.Types2, t => t.ID > 5);
 			}
 		}
 
@@ -153,7 +152,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataConnection(context))
 			{
-				await db.MergeAsync(db.Types2, t => t.ID > 5);
+				await db.MergeDataAsync(db.Types2, t => t.ID > 5);
 			}
 		}
 
@@ -179,7 +178,7 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			{
 				var patient = db.Patient.First();
-				db.Merge(db.Person, t => t.Patient == patient);
+				db.MergeData(db.Person, t => t.Patient == patient);
 			}
 		}
 
@@ -205,9 +204,9 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			{
 				var patient = db.Patient.First().PersonID;
-				db.Merge(db.Person, t => t.Patient!.PersonID == patient);
+				db.MergeData(db.Person, t => t.Patient!.PersonID == patient);
 				patient++;
-				db.Merge(db.Person, t => t.Patient!.PersonID == patient);
+				db.MergeData(db.Person, t => t.Patient!.PersonID == patient);
 			}
 		}
 
@@ -232,7 +231,7 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataConnection(context))
 			{
-				db.Merge(db.Child, t => t.Parent!.ParentID == 2 && t.GrandChildren.Any(g => g.Child!.ChildID == 22));
+				db.MergeData(db.Child, t => t.Parent!.ParentID == 2 && t.GrandChildren.Any(g => g.Child!.ChildID == 22));
 			}
 		}
 
@@ -273,7 +272,7 @@ namespace Tests.xUpdate
 					ncharDataType = "\x0"
 				}));
 
-				db.Merge(db.GetTable<AllType>().Where(t => t.ID == id));
+				db.MergeData(db.GetTable<AllType>().Where(t => t.ID == id));
 			}
 		}
 
@@ -298,15 +297,15 @@ namespace Tests.xUpdate
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
-				db.Merge(new[]
-				{
+				db.MergeData(
+				[
 					new AllType
 					{
 						ID            = 10,
 						charDataType  = '\x0',
 						ncharDataType = "\x0"
 					}
-				});
+				]);
 			}
 		}
 	}

@@ -28,5 +28,7 @@
 		<Compile Include="..\LinqToDB\Configuration\DataProviderElement.cs"           Link="DataProviderElement.cs" />
 		<Compile Include="..\LinqToDB\Configuration\ElementBase.cs"                   Link="ElementBase.cs" />
 		<Compile Include="..\LinqToDB\Configuration\ElementCollectionBase.cs"         Link="ElementCollectionBase.cs" />
+
+		<Compile Remove="$(MSBuildThisFileDirectory)/../../Source/Shared/*.cs" />
 	</ItemGroup>
 </Project>

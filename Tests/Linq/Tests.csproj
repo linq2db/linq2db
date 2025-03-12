@@ -29,6 +29,8 @@
 		<!-- T4 support -->
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 
+		<ProjectReference Include="..\..\Source\LinqToDB.Compat\LinqToDB.Compat.csproj" />
+
 		<None    Update="Extensions\MySqlTests.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MySqlTests.generated.cs" />
 		<Compile Update="Extensions\MySqlTests.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="MySqlTests.tt" />
 

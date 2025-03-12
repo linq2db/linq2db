@@ -35,7 +35,6 @@ namespace LinqToDB.Linq.Builder
 					var setterLambda = setter.UnwrapLambda();
 
 					setterExpression = mergeContext.SourceContext.PrepareSourceBody(setterLambda);
-
 				}
 				else
 				{

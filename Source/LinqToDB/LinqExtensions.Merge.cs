@@ -457,6 +457,22 @@ namespace LinqToDB
 
 			return new MergeQuery<TTarget, TSource>(query);
 		}
+
+		[Pure, LinqTunnel]
+		public static IMergeable<TSource,TSource> WithKeepIdentity<TSource>(
+			this IMergeable<TSource,TSource> merge)
+		{
+			if (merge == null) throw new ArgumentNullException(nameof(merge));
+
+			var mergeQuery = ((MergeQuery<TSource,TSource>)merge).Query;
+			var query      = mergeQuery.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					WithKeepIdentityMethodInfo.MakeGenericMethod(typeof(TSource)),
+					mergeQuery.Expression));
+
+			return new MergeQuery<TSource, TSource>(query);
+		}
 		#endregion
 
 		#region Update
