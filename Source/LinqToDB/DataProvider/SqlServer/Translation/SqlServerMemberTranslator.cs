@@ -172,7 +172,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 
 		public class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			public override ISqlExpression TranslateLength(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			public override ISqlExpression TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
 			{
 				var factory = translationContext.ExpressionFactory;
 				return factory.Function(factory.GetDbDataType(value), "LEN", value);
@@ -187,7 +187,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 				var valueType = factory.GetDbDataType(value);
 				var valueTypeInt = new DbDataType(typeof(int), DataType.Int32);
 
-				var symbolsToAdd = factory.Sub(valueTypeInt, padding, TranslateLength(translationContext, methodCall, translationFlags, value));
+				var symbolsToAdd = factory.Sub(valueTypeInt, padding, TranslateLength(translationContext, translationFlags, value));
 				var stringToAdd = factory.Function(valueType, "REPLICATE", paddingChar, symbolsToAdd);
 				
 				return factory.Add(valueType, stringToAdd, value);

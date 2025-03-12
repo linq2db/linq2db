@@ -226,7 +226,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 
 		public class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			public override ISqlExpression TranslateLength(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			public override ISqlExpression TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
 			{
 				var factory = translationContext.ExpressionFactory;
 				return factory.Function(factory.GetDbDataType(value), "CHAR_LENGTH", value);

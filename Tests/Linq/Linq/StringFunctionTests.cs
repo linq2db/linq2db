@@ -294,6 +294,28 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LengthWhiteSpace([DataSources] string context, [Values("abc ", " ", " abc ")] string stringValue)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() =>
+				new 
+				{
+					Str = Sql.AsSql(stringValue),
+					Len = Sql.AsSql(stringValue.Length),
+					IsNullOrWhiteSpace = Sql.AsSql(string.IsNullOrWhiteSpace(stringValue)),
+				});
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Str, Is.EqualTo(stringValue));
+					Assert.That(result.Len, Is.EqualTo(stringValue.Length));
+					Assert.That(result.IsNullOrWhiteSpace, Is.EqualTo(string.IsNullOrWhiteSpace(stringValue)));
+				});
+			}
+		}
+
+		[Test]
 		public void ContainsConstant([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

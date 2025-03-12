@@ -16,6 +16,7 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => System.Data.Linq.SqlClient.SqlMethods.Like(null, null, '~'), TranslateLike);
 #endif
 			Registration.RegisterMethod(() => Sql.Replace("", "", ""), TranslateSqlReplace);
+			Registration.RegisterMember(() => "".Length, TranslateLength);
 
 			// ReSharper disable ReturnValueOfPureMethodIsNotUsed
 			Registration.RegisterMethod(() => "".Replace("", ""), TranslateStringReplace);
@@ -132,6 +133,24 @@ namespace LinqToDB.Linq.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, resultSql, methodCall);
 		}
 
+		Expression? TranslateLength(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+		{
+			if (memberExpression.Expression == null)
+				return null;
+
+			if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(memberExpression))
+				return null;
+
+			if (!translationContext.TranslateToSqlExpression(memberExpression.Expression, out var value))
+				return translationContext.CreateErrorExpression(memberExpression.Expression, type: memberExpression.Type);
+
+			var translated = TranslateLength(translationContext, translationFlags, value);
+			if (translated == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translated, memberExpression);
+		}
+
 		public virtual ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue, ISqlExpression newValue)
 		{
 			var factory = translationContext.ExpressionFactory;
@@ -146,20 +165,20 @@ namespace LinqToDB.Linq.Translation
 			return QueryHelper.ConvertFormatToConcatenation(format, arguments);
 		}
 
-		public virtual ISqlExpression TranslateLength(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+		public virtual ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
 		{
 			var factory = translationContext.ExpressionFactory;
 			return factory.Function(factory.GetDbDataType(value), "LENGTH", value);
 		}
 
-		public virtual ISqlExpression TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
+		public virtual ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 		{
 			var factory = translationContext.ExpressionFactory;
 			var valueType = factory.GetDbDataType(value);
 			return factory.Function(valueType, "LPAD", value, padding, paddingChar);
 		}
 
-		public virtual ISqlExpression TranslatePadLeft(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression? paddingChar)
+		public virtual ISqlExpression? TranslatePadLeft(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression? paddingChar)
 		{
 			var factory = translationContext.ExpressionFactory;
 
@@ -171,10 +190,17 @@ namespace LinqToDB.Linq.Translation
 			 *		ELSE strValue END
 			 */
 
-			var valueLen = TranslateLength(translationContext, methodCall, translationFlags, value);
+			var valueLen = TranslateLength(translationContext, translationFlags, value);
+
+			if (valueLen == null)
+				return null;
+
 			var valueLess = factory.Less(valueLen, padding);
-			paddingChar = paddingChar ?? factory.Value(valueType, ' ');
+			paddingChar ??= factory.Value(valueType, ' ');
 			var trueValue = TranslateLPad(translationContext, methodCall, translationFlags, value, padding, paddingChar);
+
+			if (trueValue == null)
+				return null;
 
 			return factory.Condition(valueLess, trueValue, value);
 		}

@@ -205,7 +205,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 
 		public class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			public override ISqlExpression TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
+			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
 				/*
 				 * SELECT value || SUBSTR(
@@ -222,7 +222,12 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 				var valueZeroBlob = factory.Function(valueTypeString, "ZEROBLOB", padding);
 				var valueHex = factory.Function(valueTypeString, "HEX", valueZeroBlob);
 				var paddingString = factory.Function(valueTypeString, "REPLACE", valueHex, factory.Value(valueTypeString, "0"), paddingChar);
-				var valueSymbolsToAdd = factory.Sub(valueTypeInt, padding, TranslateLength(translationContext, methodCall, translationFlags, value));
+
+				var lengthExpr = TranslateLength(translationContext, translationFlags, value);
+				if (lengthExpr == null)
+					return null;
+
+				var valueSymbolsToAdd = factory.Sub(valueTypeInt, padding, lengthExpr);
 				var fillingString = factory.Function(valueTypeString, "SUBSTR", paddingString, factory.Value(valueTypeInt, 1), valueSymbolsToAdd);
 				
 				return factory.Concat(fillingString, value);
