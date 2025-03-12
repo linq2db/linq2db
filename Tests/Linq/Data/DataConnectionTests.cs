@@ -38,8 +38,8 @@ namespace Tests.Data
 			{
 				Assert.Multiple(() =>
 				{
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
-					Assert.That(conn.ConfigurationString, Is.Null);
+					Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
+					Assert.That(conn.ConfigurationString, Is.EqualTo(dataProvider.Name));
 				});
 			}
 		}

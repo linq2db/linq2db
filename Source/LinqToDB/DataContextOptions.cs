@@ -11,7 +11,10 @@ using LinqToDB.Remote;
 namespace LinqToDB
 {
 	/// <param name="CommandTimeout">
-	/// The command timeout, or <c>null</c> if none has been set.
+	/// The command timeout in seconds, or <c>null</c> if none has been set.
+	/// Negative timeout value means that default timeout will be used.
+	/// 0 timeout value corresponds to infinite timeout.
+	/// By default, timeout is not set and default value for current provider used.
 	/// </param>
 	/// <param name="Interceptors">
 	/// Gets Interceptors to use with <see cref="DataConnection"/> instance.

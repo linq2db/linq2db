@@ -548,7 +548,31 @@ namespace LinqToDB.Data
 
 						break;
 					}
-					case (_,               not null,            _,           _,               _,             _,              _) :
+					case ({} configString, _,                   {} provider, _,               _,             _,              _) :
+					{
+						dataConnection.ConfigurationString = configString;
+
+						var ci = GetConfigurationInfo(configString);
+
+						dataConnection.DataProvider     = provider;
+						dataConnection.ConnectionString = ci.ConnectionString;
+						dataConnection.MappingSchema    = provider.MappingSchema;
+
+						break;
+					}
+					case ({} configString, {} connectionString, _,           _,               _,             _,              _) :
+					{
+						dataConnection.ConfigurationString = configString;
+
+						var ci = GetConfigurationInfo(configString);
+
+						dataConnection.DataProvider     = ci.DataProvider;
+						dataConnection.ConnectionString = connectionString;
+						dataConnection.MappingSchema    = ci.DataProvider.MappingSchema;
+
+						break;
+					}
+					case (_,               not null,            null,        _,               _,             _,              _) :
 					case (_,               _,                   null,        _,               not null,      _,              _) :
 					case (_,               _,                   null,        _,               _,             not null,       _) :
 					case (_,               _,                   null,        _,               _,             _,              not null) :
@@ -582,9 +606,9 @@ namespace LinqToDB.Data
 
 						break;
 					}
-					case (_,               _,                   {} provider, _,               _,             _,              {} factory) :
+					case (_,               _,                   {} provider, _,               _,             _,              {} connectionFactory) :
 					{
-						dataConnection._connectionFactory = factory;
+						dataConnection._connectionFactory = connectionFactory;
 
 						dataConnection.DataProvider  = provider;
 						dataConnection.MappingSchema = provider.MappingSchema;
@@ -622,7 +646,10 @@ namespace LinqToDB.Data
 						throw new LinqToDBException("Invalid configuration. Configuration string is not provided.");
 				}
 
-				dataConnection.ConfigurationString ??= options.ConfigurationString ?? DefaultConfiguration;
+				// If DataProvider and ConnectionString are set, we do not really need ConfigurationString.
+				// However, it can be useful for logging and debugging.
+				//
+				dataConnection.ConfigurationString ??= options.ConfigurationString ?? dataConnection.DataProvider.Name;
 
 				if (options.MappingSchema != null)
 				{
