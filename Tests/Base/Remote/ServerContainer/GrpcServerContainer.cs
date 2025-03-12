@@ -79,7 +79,8 @@ namespace Tests.Remote.ServerContainer
 				service = new TestGrpcLinqService(
 					new TestLinqService((c, ms) => _connectionFactory(c, ms))
 					{
-						AllowUpdates = true
+						AllowUpdates     = true,
+						RemoteClientTag = "Grpc",
 					});
 
 				Startup.GrpcLinqService = service;

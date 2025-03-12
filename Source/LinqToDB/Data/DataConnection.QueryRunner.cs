@@ -371,7 +371,7 @@ namespace LinqToDB.Data
 				{
 					InitFirstCommand(dataConnection, executionQuery);
 
-					return await dataConnection.ExecuteNonQueryAsync(cancellationToken)
+					return await dataConnection.ExecuteNonQueryDataAsync(cancellationToken)
 						.ConfigureAwait(false);
 				}
 
@@ -385,16 +385,17 @@ namespace LinqToDB.Data
 					{
 						try
 						{
-							await dataConnection.ExecuteNonQueryAsync(cancellationToken)
+							await dataConnection.ExecuteNonQueryDataAsync(cancellationToken)
 								.ConfigureAwait(false);
 						}
-						catch (Exception)
+						catch
 						{
+							// ignore
 						}
 					}
 					else
 					{
-						var n = await dataConnection.ExecuteNonQueryAsync(cancellationToken)
+						var n = await dataConnection.ExecuteNonQueryDataAsync(cancellationToken)
 							.ConfigureAwait(false);
 
 						if (i == 0)
@@ -427,8 +428,9 @@ namespace LinqToDB.Data
 						{
 							dataConnection.ExecuteNonQuery();
 						}
-						catch (Exception)
+						catch
 						{
+							// ignore
 						}
 					}
 					else
@@ -621,7 +623,7 @@ namespace LinqToDB.Data
 				dataConnection.CommitCommandInit();
 			}
 
-#region ExecuteReader
+			#region ExecuteReader
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			public static Task<DataReaderWrapper> ExecuteReaderAsync(
@@ -634,7 +636,7 @@ namespace LinqToDB.Data
 
 				InitFirstCommand(dataConnection, executionQuery);
 
-				return dataConnection.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken);
+				return dataConnection.ExecuteDataReaderAsync(CommandBehavior.Default, cancellationToken);
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
@@ -727,6 +729,7 @@ namespace LinqToDB.Data
 						}
 						catch
 						{
+							// ignore
 						}
 					}
 					else
