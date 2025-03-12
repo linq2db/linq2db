@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
@@ -448,9 +449,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void UseCommandTimeoutTest()
 		{
-			LinqToDB.Common.Tools.ClearAllCaches();
-
-			using var db = new TestDataConnection();
+			using var db = new TestDataConnection(o => o.UseCommandTimeout(30));
 
 			var commandTimeout = db.CommandTimeout;
 			var optionsID      = ((IConfigurationID)db.Options).ConfigurationID;
@@ -477,16 +476,14 @@ namespace Tests.Infrastructure
 		[Test]
 		public void UseOptimizeJoinsTest()
 		{
-			LinqToDB.Common.Tools.ClearAllCaches();
-
-			using var db = new TestDataConnection();
+			using var db = new TestDataConnection(o => o.UseOptimizeJoins(false));
 
 			var param     = db.Options.LinqOptions.OptimizeJoins;
 			var optionsID = ((IConfigurationID)db.Options).ConfigurationID;
 			var dbID      = ((IConfigurationID)db).        ConfigurationID;
 
 			using (db.UseOptions(o => o
-				.WithOptions<LinqOptions>    (co => co with { OptimizeJoins = false })
+				.WithOptions<LinqOptions>    (co => co with { OptimizeJoins = true })
 				.WithOptions<BulkCopyOptions>(bo => bo with { BulkCopyType = BulkCopyType.RowByRow })))
 			{
 				Assert.Multiple(() =>
@@ -508,11 +505,8 @@ namespace Tests.Infrastructure
 		[Test]
 		public void UseCompareNullsTest()
 		{
-			LinqToDB.Common.Tools.ClearAllCaches();
+			using var db = new TestDataConnection(o => o.UseCompareNulls(CompareNulls.LikeSqlExceptParameters));
 
-			using var db = new TestDataConnection();
-
-			var options   = db.Options;
 			var param     = db.Options.LinqOptions.CompareNulls;
 			var optionsID = ((IConfigurationID)db.Options).ConfigurationID;
 			var dbID      = ((IConfigurationID)db).        ConfigurationID;
@@ -528,26 +522,104 @@ namespace Tests.Infrastructure
 			{
 				Assert.Multiple(() =>
 				{
-					Assert.That(db.Options.BulkCopyOptions,                     Is.SameAs(options.BulkCopyOptions));
-					Assert.That(db.Options.ConnectionOptions,                   Is.SameAs(options.ConnectionOptions));
-					Assert.That(db.Options.DataContextOptions,                  Is.SameAs(options.DataContextOptions));
-					Assert.That(db.Options.RetryPolicyOptions,                  Is.SameAs(options.RetryPolicyOptions));
-					Assert.That(db.Options.SqlOptions,                          Is.SameAs(options.SqlOptions));
-					Assert.That(db.Options.LinqOptions,                         Is.Not.SameAs(options.LinqOptions));
-
-					var list1 = db.Options.OptionSets.ToList();
-					var list2 = options.OptionSets.ToList();
-
-					Assert.That(list1, Has.Count.EqualTo(list2.Count));
-
-					for (var i = 0; i < list1.Count; i++)
-						Assert.That(list1[i].ConfigurationID, Is.EqualTo(list2[i].ConfigurationID), $"{list1[i].GetType()} is not equal to {list2[i].GetType()}");
-
 					Assert.That(db.Options.LinqOptions.CompareNulls,            Is.EqualTo(param));
 					Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
 					Assert.That(((IConfigurationID)db).ConfigurationID,         Is.EqualTo(dbID));
 				});
 			}
+		}
+
+		[Test]
+		public void TryUseConfigurationStringTest()
+		{
+			using var db = new TestDataConnection();
+			Assert.Throws<LinqToDBException>(
+				() => { using (db.UseOptions(o => o.UseConfigurationString("new config"))) { } },
+				"ConfigurationString cannot be changed.");
+		}
+
+		[Test]
+		public void TryUseConnectionStringTest()
+		{
+			using var db = new TestDataConnection();
+			Assert.Throws<LinqToDBException>(
+				() => { using (db.UseOptions(o => o.UseConnectionString("new config"))) { } },
+				"ConnectionString cannot be changed.");
+		}
+
+		[Test]
+		public void TryUseProviderNameTest()
+		{
+			using var db = new TestDataConnection();
+			Assert.Throws<LinqToDBException>(
+				() => { using (db.UseOptions(o => o.UseProvider("new provider"))) { } },
+				"ProviderName cannot be changed.");
+		}
+
+		[Test]
+		public void TryWithDbConnectionTest()
+		{
+			using var db = new TestDataConnection();
+			Assert.Throws<LinqToDBException>(
+				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDbConnection(db.Connection)))) { } },
+				"DbConnection cannot be changed.");
+		}
+
+		[Test]
+		public void TryWithDbTransactionTest()
+		{
+			using var db = new TestDataConnection();
+
+			db.BeginTransaction();
+
+			Assert.Throws<LinqToDBException>(
+				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDbTransaction(db.Transaction!)))) { } },
+				"DbTransaction cannot be changed.");
+		}
+
+		[Test]
+		public void TryWithDisposeConnectionTest()
+		{
+			using var db = new TestDataConnection();
+			Assert.Throws<LinqToDBException>(
+				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDisposeConnection(true)))) { } },
+				"DisposeConnection cannot be changed.");
+		}
+
+		[Test]
+		public void TryUseDataProviderTest()
+		{
+			using var db = new TestDataConnection();
+			Assert.Throws<LinqToDBException>(
+				() => { using (db.UseOptions(o => o.UseSqlServer(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient))) { } },
+				"DataProvider cannot be changed.");
+		}
+
+		[Test]
+		public void TryUseDataProviderFactoryTest()
+		{
+			using var db = new TestDataConnection();
+			Assert.Throws<LinqToDBException>(
+				() => { using (db.UseOptions(o => o.UseSqlServer("connection string"))) { } },
+				"DataProviderFactory cannot be changed.");
+		}
+
+		[Test]
+		public void TryWithConnectionFactoryTest()
+		{
+			using var db = new TestDataConnection();
+			Assert.Throws<LinqToDBException>(
+				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithConnectionFactory(_ => db.Connection)))) { } },
+				"ConnectionFactory cannot be changed.");
+		}
+
+		[Test]
+		public void TryWithOnEntityDescriptorCreatedTest()
+		{
+			using var db = new TestDataConnection();
+			Assert.Throws<LinqToDBException>(
+				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithOnEntityDescriptorCreated((schema, descriptor) => { })))) { } },
+				"OnEntityDescriptorCreated cannot be changed.");
 		}
 	}
 }
