@@ -109,9 +109,6 @@
 		SqlWindowFunction,
 		SqlWindowOrderItem,
 		SqlFrameClause,
-		SqlFrameBoundaryOffset,
-		SqlFrameBoundaryCurrentRow,
-		SqlFrameBoundaryUnboundedFollowing,
-		SqlFrameBoundaryUnboundedPreceding,
+		SqlFrameBoundary,
 	}
 }

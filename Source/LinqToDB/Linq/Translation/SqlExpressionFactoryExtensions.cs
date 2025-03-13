@@ -62,9 +62,9 @@ namespace LinqToDB.Linq.Translation
 			return new SqlWindowFunction(dataType, functionName, arguments, argumentsNullability, 
 				withinGroup : withinGroup, 
 				partitionBy : partitionBy, 
-				orderBy : orderBy, 
-				frameClause : frameClause,
+				orderBy : orderBy,
 				filter : filter,
+				frameClause : frameClause, 
 				isAggregate : isAggregate);
 		}
 

@@ -134,10 +134,7 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.SqlFunctionArgument       => VisitSqlFunctionArgument       ((SqlFunctionArgument       )element),
 				QueryElementType.SqlWindowOrderItem        => VisitSqlWindowOrderItem        ((SqlWindowOrderItem        )element),
 				QueryElementType.SqlFrameClause            => VisitSqlFrameClause            ((SqlFrameClause            )element),
-				QueryElementType.SqlFrameBoundaryOffset             => VisitSqlFrameBoundaryOffset            ((SqlFrameBoundary.SqlOffset            )element),
-				QueryElementType.SqlFrameBoundaryCurrentRow         => VisitSqlFrameBoundaryCurrentRow        ((SqlFrameBoundary.SqlCurrentRow        )element),
-				QueryElementType.SqlFrameBoundaryUnboundedFollowing => VisitSqlFrameBoundaryUnboundedFollowing((SqlFrameBoundary.SqlUnboundedFollowing)element),
-				QueryElementType.SqlFrameBoundaryUnboundedPreceding => VisitSqlFrameBoundaryUnboundedPreceding((SqlFrameBoundary.SqlUnboundedPreceding)element),
+				QueryElementType.SqlFrameBoundary          => VisitSqlFrameBoundary          ((SqlFrameBoundary        )element),
 
 				_ => throw new InvalidOperationException()
 			};
@@ -224,8 +221,7 @@ namespace LinqToDB.SqlQuery
 						VisitElements(element.WithinGroup, VisitMode.Modify),
 						VisitElements(element.PartitionBy, VisitMode.Modify),
 						VisitElements(element.OrderBy, VisitMode.Modify),
-						(SqlFrameClause?)Visit(element.FrameClause),
-						(SqlSearchCondition?)Visit(element.Filter));
+						(SqlSearchCondition?)Visit(element.Filter), (SqlFrameClause?)Visit(element.FrameClause));
 					break;
 				}
 				case VisitMode.Transform:
@@ -253,8 +249,7 @@ namespace LinqToDB.SqlQuery
 							withinGroup,
 							partitionBy,
 							orderBy,
-							frameClause,
-							filter), element);
+							filter, frameClause), element);
 					}
 
 					break;
@@ -366,10 +361,7 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
-		/// <summary>
-		/// Visitor for <see cref="SqlFrameBoundary.SqlOffset"/>.
-		/// </summary>
-		protected virtual IQueryElement VisitSqlFrameBoundaryOffset(SqlFrameBoundary.SqlOffset element)
+		protected virtual IQueryElement VisitSqlFrameBoundary(SqlFrameBoundary element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -380,41 +372,22 @@ namespace LinqToDB.SqlQuery
 				}
 				case VisitMode.Modify:
 				{
-					element.Modify((ISqlExpression)Visit(element.Offset));
+					if (element.Offset != null)
+						element.Modify((ISqlExpression)Visit(element.Offset));
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					var offset = (ISqlExpression)Visit(element.Offset);
-
+					var offset = (ISqlExpression?)Visit(element.Offset);
 					if (ShouldReplace(element) || !ReferenceEquals(element.Offset, offset))
-					{
-						return NotifyReplaced(new SqlFrameBoundary.SqlOffset(offset, element.IsPreceding), element);
-					}
-
+						return NotifyReplaced(new SqlFrameBoundary(element.IsPreceding, element.BoundaryType, offset), element);
 					break;
 				}
 				default:
 					throw CreateInvalidVisitModeException();
 			}
-
 			return element;
 		}
-
-		/// <summary>
-		/// Visitor for <see cref="SqlFrameBoundary.SqlCurrentRow"/>.
-		/// </summary>
-		protected virtual IQueryElement VisitSqlFrameBoundaryCurrentRow(SqlFrameBoundary.SqlCurrentRow element) => element;
-
-		/// <summary>
-		/// Visitor for <see cref="SqlFrameBoundary.SqlUnboundedFollowing"/>.
-		/// </summary>
-		protected virtual IQueryElement VisitSqlFrameBoundaryUnboundedFollowing(SqlFrameBoundary.SqlUnboundedFollowing element) => element;
-
-		/// <summary>
-		/// Visitor for <see cref="SqlFrameBoundary.SqlUnboundedPreceding"/>.
-		/// </summary>
-		protected virtual IQueryElement VisitSqlFrameBoundaryUnboundedPreceding(SqlFrameBoundary.SqlUnboundedPreceding element) => element;
 
 		/// <summary>
 		/// Visitor for <see cref="SqlField"/> reference from query expressions.

@@ -86,8 +86,9 @@ namespace LinqToDB.Linq.Builder
 
 		// Caches
 		SnapshotDictionary<ExprCacheKey, Expression>?                _associations;
-		SnapshotDictionary<ExprCacheKey, Expression>                 _translationCache = new(ExprCacheKey.SqlCacheKeyComparer);
-		SnapshotDictionary<ColumnCacheKey, SqlPlaceholderExpression> _columnCache      = new(ColumnCacheKey.ColumnCacheKeyComparer);
+		SnapshotDictionary<ExprCacheKey, Expression>                 _translationCache             = new(ExprCacheKey.SqlCacheKeyComparer);
+		SnapshotDictionary<ExprCacheKey, Expression?>                _failSubqueryTranslationCache = new(ExprCacheKey.SqlCacheKeyComparer);
+		SnapshotDictionary<ColumnCacheKey, SqlPlaceholderExpression> _columnCache                  = new(ColumnCacheKey.ColumnCacheKeyComparer);
 
 		public ExpressionBuildVisitor(ExpressionBuilder builder)
 		{
@@ -647,6 +648,8 @@ namespace LinqToDB.Linq.Builder
 
 			var newNode = base.VisitLambda(node);
 
+			FoundRoot = null;
+
 			_columnDescriptor = saveDescriptor;
 			return newNode;
 		}
@@ -715,12 +718,11 @@ namespace LinqToDB.Linq.Builder
 
 		protected override Expression VisitListInit(ListInitExpression node)
 		{
-			FoundRoot = null;
-
 			var saveDisableNew = _disableNew;
 			_disableNew = node.NewExpression;
 
 			var newExpression = base.VisitListInit(node);
+			FoundRoot = null;
 
 			_disableNew = saveDisableNew;
 
@@ -729,9 +731,8 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 		{
-			FoundRoot = null;
-
 			var newNode = base.VisitSqlGenericConstructorExpression(node);
+			FoundRoot = null;
 
 			if (!IsSame(newNode, node))
 				return Visit(newNode);
@@ -882,7 +883,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (_buildPurpose is BuildPurpose.Expression or BuildPurpose.Traverse or BuildPurpose.Expand or BuildPurpose.Extract or BuildPurpose.SubQuery)
 			{
-				return base.VisitMethodCall(node);
+				var newNode = base.VisitMethodCall(node);
+				FoundRoot = null;
+				return newNode;
 			}
 
 			FoundRoot = null;
@@ -897,9 +900,9 @@ namespace LinqToDB.Linq.Builder
 					return Visit(translated);
 			}
 
+			var newNode = base.VisitNewArray(node);
 			FoundRoot = null;
-
-			return base.VisitNewArray(node);
+			return newNode;
 		}
 
 		protected override Expression VisitNew(NewExpression node)
@@ -1550,6 +1553,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				_alias = saveAlias;
 			}
+		}
+
+		protected override Expression VisitParameter(ParameterExpression node)
+		{
+			FoundRoot = null;
+			return base.VisitParameter(node);
 		}
 
 		static Expression UnwrapExpressionForAssociation(Expression expression)
@@ -2424,6 +2433,11 @@ namespace LinqToDB.Linq.Builder
 
 			var cacheKey = new ExprCacheKey(traversed, null, null, calculatedContext.SelectQuery, ProjectFlags.SQL | ProjectFlags.Subquery);
 
+			if (_failSubqueryTranslationCache.ContainsKey(cacheKey))
+			{
+				return false;
+			}
+
 			if (_translationCache.TryGetValue(cacheKey, out var alreadyTranslated))
 			{
 				subqueryExpression = alreadyTranslated;
@@ -2458,6 +2472,8 @@ namespace LinqToDB.Linq.Builder
 							return true;
 						}
 
+						_failSubqueryTranslationCache.Add(cacheKey, null);
+
 						return false;
 					}
 
@@ -2471,6 +2487,8 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
+				_failSubqueryTranslationCache.Add(cacheKey, null);
+
 				return false;
 			}
 
@@ -2483,6 +2501,8 @@ namespace LinqToDB.Linq.Builder
 			}
 			else if (isCollection)
 			{
+				_failSubqueryTranslationCache.Add(cacheKey, null);
+
 				return false;
 			}
 			else
@@ -2508,6 +2528,9 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					ctx.Detach();
+
+					_failSubqueryTranslationCache.Add(cacheKey, null);
+
 					return false;
 				}
 			}

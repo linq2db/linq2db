@@ -20,32 +20,96 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TransformPercentileCont);
 
 			RegisterSum();
+			RegisterAvg();
+			RegisterMin();
+			RegisterMax();
 		}
 
 		void RegisterSum()
 		{
-			Registration.RegisterMethod(() => Sql.Window.Sum(1,            f => f.OrderBy(1)), TranslateSum);
-			Registration.RegisterMethod(() => Sql.Window.Sum(1L,           f => f.OrderBy(1)), TranslateSum);
-			Registration.RegisterMethod(() => Sql.Window.Sum(1.0,          f => f.OrderBy(1)), TranslateSum);
-			Registration.RegisterMethod(() => Sql.Window.Sum(1f,           f => f.OrderBy(1)), TranslateSum);
-			Registration.RegisterMethod(() => Sql.Window.Sum(1M,           f => f.OrderBy(1)), TranslateSum);
-
-			Registration.RegisterMethod(() => Sql.Window.Sum((int?)1,      f => f.OrderBy(1)), TranslateSum);
-			Registration.RegisterMethod(() => Sql.Window.Sum((long?)1L,    f => f.OrderBy(1)), TranslateSum);
-			Registration.RegisterMethod(() => Sql.Window.Sum((double?)1.0, f => f.OrderBy(1)), TranslateSum);
-			Registration.RegisterMethod(() => Sql.Window.Sum((float?)1f,   f => f.OrderBy(1)), TranslateSum);
-			Registration.RegisterMethod(() => Sql.Window.Sum((decimal?)1M, f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((int)1,        f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((int?)1,       f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((long)1L,      f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((long?)1L,     f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((double)1.0,   f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((double?)1.0,  f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((decimal)1.0,  f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((decimal?)1.0, f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((float)1f,     f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((float?)1f,    f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((short)1,      f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((short?)1,     f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((byte)1,       f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((byte?)1,      f => f.OrderBy(1)), TranslateSum);
 		}
 
-		public record ArgumentInformation(Expression expr, Sql.AggregateModifier modifier);
-		public record OrderByInformation(Expression expr, bool isDescending, Sql.NullsPosition nulls);
+		void RegisterAvg()
+		{
+			Registration.RegisterMethod(() => Sql.Window.Average((int)1,        f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((int?)1,       f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((long)1L,      f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((long?)1L,     f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((double)1.0,   f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((double?)1.0,  f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((decimal)1.0,  f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((decimal?)1.0, f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((float)1f,     f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((float?)1f,    f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((short)1,      f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((short?)1,     f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((byte)1,       f => f.OrderBy(1)), TranslateAverage);
+			Registration.RegisterMethod(() => Sql.Window.Average((byte?)1,      f => f.OrderBy(1)), TranslateAverage);
+		}
+
+		void RegisterMin()
+		{
+			Registration.RegisterMethod(() => Sql.Window.Min((int)1,        f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((int?)1,       f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((long)1L,      f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((long?)1L,     f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((double)1.0,   f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((double?)1.0,  f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((decimal)1.0,  f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((decimal?)1.0, f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((float)1f,     f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((float?)1f,    f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((short)1,      f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((short?)1,     f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((byte)1,       f => f.OrderBy(1)), TranslateMin);
+			Registration.RegisterMethod(() => Sql.Window.Min((byte?)1,      f => f.OrderBy(1)), TranslateMin);
+		}
+
+		void RegisterMax()
+		{
+			Registration.RegisterMethod(() => Sql.Window.Max((int)1,        f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((int?)1,       f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((long)1L,      f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((long?)1L,     f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((double)1.0,   f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((double?)1.0,  f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((decimal)1.0,  f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((decimal?)1.0, f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((float)1f,     f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((float?)1f,    f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((short)1,      f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((short?)1,     f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((byte)1,       f => f.OrderBy(1)), TranslateMax);
+			Registration.RegisterMethod(() => Sql.Window.Max((byte?)1,      f => f.OrderBy(1)), TranslateMax);
+		}
+
+		public record ArgumentInformation(Expression Expr, Sql.AggregateModifier Modifier);
+		public record OrderByInformation(Expression Expr, bool IsDescending, Sql.NullsPosition Nulls);
+		public record FrameBoundary(bool IsPreceding, SqlFrameBoundary.FrameBoundaryType BoundaryType, Expression? Offset);
 
 		public class WindowFunctionInformation
 		{
-			public required ArgumentInformation[]?  Arguments   { get; set; }
-			public required Expression[]?         PartitionBy { get; set; }
-			public required OrderByInformation[]? OrderBy     { get; set; }
-			public required Expression?           Filter      { get; set; }
+			public required ArgumentInformation[]?        Arguments   { get; set; }
+			public required Expression[]?                 PartitionBy { get; set; }
+			public required OrderByInformation[]?         OrderBy     { get; set; }
+			public required Expression?                   Filter      { get; set; }
+			public required SqlFrameClause.FrameTypeKind? FrameType   { get; set; }
+			public required FrameBoundary?                Start       { get; set; }
+			public required FrameBoundary?                End         { get; set; }
 		}
 
 		protected static bool CollectWindowFunctionInformation(
@@ -64,6 +128,12 @@ namespace LinqToDB.Linq.Translation
 			List<OrderByInformation>?  orderByList     = null;
 			Expression?                filter          = null;
 
+#pragma warning disable CS0219 // Variable is assigned but its value is never used
+			SqlFrameClause.FrameTypeKind? frameType     = null;
+			FrameBoundary?             endBoundary   = null;
+			FrameBoundary?             startBoundary = null;
+#pragma warning restore CS0219 // Variable is assigned but its value is never used
+
 			if (functionArguments != null)
 			{
 				argumentsList ??= new();
@@ -73,122 +143,215 @@ namespace LinqToDB.Linq.Translation
 				}
 			}
 
-			while (buildBody is MethodCallExpression mc)
+			while (true)
 			{
-				switch (mc.Method.Name)
+				var current = buildBody;
+
+				if (buildBody is MethodCallExpression mc)
 				{
-					case nameof(WindowFunctionBuilder.IOrderByPart<object>.OrderBy):
-					case nameof(WindowFunctionBuilder.IOrderByPart<object>.OrderByDesc):
-					case nameof(WindowFunctionBuilder.IThenOrderPart<object>.ThenBy):
-					case nameof(WindowFunctionBuilder.IThenOrderPart<object>.ThenByDesc):
+					switch (mc.Method.Name)
 					{
-						var isDesc = mc.Method.Name == nameof(WindowFunctionBuilder.IOrderByPart<object>.OrderByDesc) ||
-						             mc.Method.Name == nameof(WindowFunctionBuilder.IThenOrderPart<object>.ThenByDesc);
-
-						orderByList ??= new();
-
-						var        nulls = Sql.NullsPosition.None;
-						Expression argument;
-						if (mc.Arguments.Count == 2)
+						case nameof(WindowFunctionBuilder.IOrderByPart<object>.OrderBy):
+						case nameof(WindowFunctionBuilder.IOrderByPart<object>.OrderByDesc):
+						case nameof(WindowFunctionBuilder.IThenOrderPart<object>.ThenBy):
+						case nameof(WindowFunctionBuilder.IThenOrderPart<object>.ThenByDesc):
 						{
-							argument = mc.Arguments[0];
-							nulls = (Sql.NullsPosition)mc.Arguments[1].EvaluateExpression()!;
-						}
-						else
-						{
-							argument = mc.Arguments[0];
-						}
+							var isDesc = mc.Method.Name == nameof(WindowFunctionBuilder.IOrderByPart<object>.OrderByDesc) ||
+									 mc.Method.Name == nameof(WindowFunctionBuilder.IThenOrderPart<object>.ThenByDesc);
 
-						orderByList.Insert(0, new (argument, isDesc, nulls));
+							orderByList ??= new();
 
-						buildBody = mc.Object!;
-						break;
-					}
-
-					case nameof(WindowFunctionBuilder.IPartitionPart<object>.PartitionBy):
-					{
-						partitionByList ??= new();
-
-						if (mc.Arguments[0].NodeType == ExpressionType.NewArrayInit)
-						{
-							foreach (var argument in ((NewArrayExpression)mc.Arguments[0]).Expressions)
+							var        nulls = Sql.NullsPosition.None;
+							Expression argument;
+							if (mc.Arguments.Count == 2)
 							{
-								partitionByList.Add(argument);
+								argument = mc.Arguments[0];
+								nulls = (Sql.NullsPosition)mc.Arguments[1].EvaluateExpression()!;
 							}
+							else
+							{
+								argument = mc.Arguments[0];
+							}
+
+							orderByList.Insert(0, new(argument, isDesc, nulls));
+
+							buildBody = mc.Object!;
+							break;
 						}
-						else
+
+						case nameof(WindowFunctionBuilder.IPartitionPart<object>.PartitionBy):
 						{
-							partitionByList.Add(mc.Arguments[0]);
+							partitionByList ??= new();
+
+							if (mc.Arguments[0].NodeType == ExpressionType.NewArrayInit)
+							{
+								foreach (var argument in ((NewArrayExpression)mc.Arguments[0]).Expressions)
+								{
+									partitionByList.Add(argument);
+								}
+							}
+							else
+							{
+								partitionByList.Add(mc.Arguments[0]);
+							}
+
+							buildBody = mc.Object!;
+							break;
 						}
 
-						buildBody = mc.Object!;
-						break;
-					}
+						case nameof(WindowFunctionBuilder.IArgumentPart<object>.Argument):
+						{
+							argumentsList ??= new();
+							var        modifier = Sql.AggregateModifier.None;
+							Expression argument;
+							if (mc.Arguments.Count == 2)
+							{
+								modifier = (Sql.AggregateModifier)mc.Arguments[0].EvaluateExpression()!;
+								argument = mc.Arguments[1];
+							}
+							else
+							{
+								argument = mc.Arguments[0];
+							}
 
-					case nameof(WindowFunctionBuilder.IArgumentPart<object>.Argument):
+							argumentsList.Add(new(argument, modifier));
+
+							buildBody = mc.Object!;
+							break;
+						}
+
+						case nameof(WindowFunctionBuilder.IFilterPart<object>.Filter):
+						{
+							filter = mc.Arguments[0];
+
+							buildBody = mc.Object!;
+							break;
+						}
+
+						case nameof(WindowFunctionBuilder.IUseWindow<object>.UseWindow):
+						{
+							buildBody = mc.Arguments[0];
+							var expanded = translationContext.Translate(buildBody, TranslationFlags.Expand);
+							if (expanded is MethodCallExpression { Method.Name: nameof(WindowFunctionBuilder.DefineWindow) } mce)
+							{
+								buildBody = mce.Arguments[1].UnwrapLambda().Body;
+							}
+							else
+							{
+								error = translationContext.CreateErrorExpression(buildBody, "Expected window definition", expressionType);
+								return false;
+							}
+
+							break;
+						}
+
+						case nameof(WindowFunctionBuilder.DefineWindow):
+						{
+							buildBody = mc.Arguments[1];
+							break;
+						}
+
+						case nameof(WindowFunctionBuilder.IBoundaryPart<int>.Value):
+						{
+							var boundary = new FrameBoundary(endBoundary != null, SqlFrameBoundary.FrameBoundaryType.Offset, mc.Arguments[0].UnwrapConvertToObject());
+							if (endBoundary == null)
+								endBoundary = boundary;
+							else
+								startBoundary = boundary;
+
+							buildBody = mc.Object ?? buildBody;
+							break;
+						}
+
+					}
+				}
+				else if (buildBody is MemberExpression me)
+				{
+					switch (me.Member.Name)
 					{
-						argumentsList ??= new();
-						var        modifier = Sql.AggregateModifier.None;
-						Expression argument;
-						if (mc.Arguments.Count == 2)
+						case nameof(WindowFunctionBuilder.IFramePartFunction.GroupsBetween):
+						case nameof(WindowFunctionBuilder.IFramePartFunction.RangeBetween):
+						case nameof(WindowFunctionBuilder.IFramePartFunction.RowsBetween):
 						{
-							modifier = (Sql.AggregateModifier)mc.Arguments[0].EvaluateExpression()!;
-							argument = mc.Arguments[1];
-						}
-						else
-						{
-							argument = mc.Arguments[0];
-						}
+							switch (me.Member.Name)
+							{
+								case nameof(WindowFunctionBuilder.IFramePartFunction.GroupsBetween):
+									frameType = SqlFrameClause.FrameTypeKind.Groups;
+									break;
+								case nameof(WindowFunctionBuilder.IFramePartFunction.RangeBetween):
+									frameType = SqlFrameClause.FrameTypeKind.Range;
+									break;
+								case nameof(WindowFunctionBuilder.IFramePartFunction.RowsBetween):
+									frameType = SqlFrameClause.FrameTypeKind.Rows;
+									break;
+								default:
+									error = translationContext.CreateErrorExpression(buildBody, $"Unexpected frame type {me.Member.Name}", expressionType);
+									return false;
+							}
 
-						argumentsList.Add(new (argument, modifier));
+							buildBody = me.Expression ?? buildBody;
 
-						buildBody = mc.Object!;
-						break;
-					}
-
-					case nameof(WindowFunctionBuilder.IFilterPart<object>.Filter):
-					{
-						filter = mc.Arguments[0];
-
-						buildBody = mc.Object!;
-						break;
-					}
-
-					case nameof(WindowFunctionBuilder.IUseWindow<object>.UseWindow):
-					{
-						buildBody = mc.Arguments[0];
-						var expanded = translationContext.Translate(buildBody, TranslationFlags.Expand);
-						if (expanded is MethodCallExpression { Method.Name: nameof(WindowFunctionBuilder.DefineWindow) } mce)
-						{
-							buildBody = mce.Arguments[1].UnwrapLambda().Body;
-						}
-						else
-						{
-							error = translationContext.CreateErrorExpression(buildBody, "Expected window definition", expressionType);
-							return false;
+							break;
 						}
 
-						break;
-					}
+						case nameof(WindowFunctionBuilder.IBoundaryPart<int>.CurrentRow):
+						{
+							var boundary = new FrameBoundary(endBoundary != null, SqlFrameBoundary.FrameBoundaryType.CurrentRow, null);
+							if (endBoundary == null)
+								endBoundary = boundary;
+							else
+								startBoundary = boundary;
 
-					case nameof(WindowFunctionBuilder.DefineWindow):
-					{
-						buildBody = mc.Arguments[1];
-						break;
-					}
+							buildBody = me.Expression ?? buildBody;
+							break;
+						}
 
+						case nameof(WindowFunctionBuilder.IBoundaryPart<int>.Unbounded):
+						{
+							var boundary = new FrameBoundary(endBoundary != null, SqlFrameBoundary.FrameBoundaryType.Unbounded, null);
+							if (endBoundary == null)
+								endBoundary = boundary;
+							else
+								startBoundary = boundary;
+
+							buildBody = me.Expression ?? buildBody;
+							break;
+						}
+
+						case nameof(WindowFunctionBuilder.IRangePrecedingPartFunction.And):
+						{
+							buildBody = me.Expression ?? buildBody;
+							break;	
+						}
+					}
 				}
 
-				if (buildBody == mc)
+				if (buildBody == current)
+				{
+					if (current is not ParameterExpression)
+					{
+						error = translationContext.CreateErrorExpression(buildBody, "Unexpected member.", expressionType);
+						return false;
+					}
 					break;
+				}
 			}
 
+			if (frameType != null && (startBoundary == null || endBoundary == null))
+			{
+				error = translationContext.CreateErrorExpression(buildBody, "Expected both start and end boundaries", expressionType);
+				return false;
+			}
+			
 			functionInfo = new WindowFunctionInformation
 			{
 				Arguments = argumentsList?.ToArray(),
 				PartitionBy = partitionByList?.ToArray(),
 				OrderBy = orderByList?.ToArray(),
-				Filter = filter
+				Filter = filter,
+				FrameType = frameType,
+				Start = startBoundary,
+				End = endBoundary
 			};
 
 			return true;
@@ -199,14 +362,14 @@ namespace LinqToDB.Linq.Translation
 			error = null;
 			foreach (var orderItem in orderBy)
 			{
-				var translated = translationContext.Translate(orderItem.expr);
+				var translated = translationContext.Translate(orderItem.Expr);
 				if (translated is not SqlPlaceholderExpression placeholder)
 				{
 					error = SqlErrorExpression.EnsureError(translated, errorType);
 					return false;
 				}
 
-				orderItems.Add(new SqlWindowOrderItem(placeholder.Sql, orderItem.isDescending, orderItem.nulls));
+				orderItems.Add(new SqlWindowOrderItem(placeholder.Sql, orderItem.IsDescending, orderItem.Nulls));
 			}
 
 			return true;
@@ -247,19 +410,20 @@ namespace LinqToDB.Linq.Translation
 				    out var error))
 				return error;
 
-			var arguments   = new List<SqlFunctionArgument>();
+			var                       arguments   = new List<SqlFunctionArgument>();
 			List<ISqlExpression>?     partitionBy = null;
 			List<SqlWindowOrderItem>? orderItems  = null;
 			SqlSearchCondition?       filter      = null;
+			SqlFrameClause?           frame       = null;
 
 			if (information.Arguments != null)
 			{
 				foreach (var argument in information.Arguments)
 				{
-					var translated = translationContext.Translate(argument.expr);
+					var translated = translationContext.Translate(argument.Expr);
 					if (translated is not SqlPlaceholderExpression placeholder)
 						return SqlErrorExpression.EnsureError(translated, methodCall.Type);
-					arguments.Add(new SqlFunctionArgument(placeholder.Sql, argument.modifier));
+					arguments.Add(new SqlFunctionArgument(placeholder.Sql, argument.Modifier));
 				}
 			}
 
@@ -285,13 +449,47 @@ namespace LinqToDB.Linq.Translation
 				filter = sc;
 			}
 
-			var function = translationContext.ExpressionFactory.WindowFunction(dbDataType, functionName, 
-				arguments.ToArray(), 
-				arguments.Select(a => true).ToArray(), 
-				partitionBy: partitionBy, 
-				orderBy: orderItems,
-				filter: filter
-				);
+			if (information.FrameType != null)
+			{
+				var frameType = information.FrameType.Value;
+				var start     = information.Start;
+				var end       = information.End;
+
+				if (start == null || end == null)
+					throw new InvalidOperationException("Expected both start and end boundaries");
+
+				ISqlExpression? startOffset = null;
+				ISqlExpression? endOffset   = null;
+
+				if (start.Offset != null)
+				{
+					var translated = translationContext.Translate(start.Offset);
+					if (translated is not SqlPlaceholderExpression placeholder)
+						return SqlErrorExpression.EnsureError(translated, methodCall.Type);
+					startOffset = placeholder.Sql;
+				}
+
+				if (end.Offset != null) 
+				{
+					var translated = translationContext.Translate(end.Offset);
+					if (translated is not SqlPlaceholderExpression placeholder)
+						return SqlErrorExpression.EnsureError(translated, methodCall.Type);
+					endOffset = placeholder.Sql;
+				}
+
+				var startBoundary = new SqlFrameBoundary(start.IsPreceding, start.BoundaryType, startOffset);
+				var endBoundary   = new SqlFrameBoundary(end.IsPreceding, end.BoundaryType, endOffset);
+				frame = new SqlFrameClause(frameType, startBoundary, endBoundary);
+			}
+
+			var function = translationContext.ExpressionFactory.WindowFunction(dbDataType, functionName,
+				arguments.ToArray(),
+				arguments.Select(a => true).ToArray(),
+				partitionBy : partitionBy,
+				orderBy : orderItems,
+				filter : filter,
+				frameClause : frame
+			);
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, function, methodCall);
 		}
@@ -392,6 +590,27 @@ namespace LinqToDB.Linq.Translation
 			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "SUM");
+		}
+
+		public virtual Expression? TranslateAverage(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "AVG");
+		}
+
+		public virtual Expression? TranslateMin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "MIN");
+		}
+
+		public virtual Expression? TranslateMax(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "MAX");
 		}
 	}
 }

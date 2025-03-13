@@ -72,9 +72,11 @@ namespace LinqToDB
 
 		public interface IFramePartFunction
 		{
+			/*
 			IBoundaryPart<IDefinedFunction> Rows   { get; }
 			IBoundaryPart<IDefinedFunction> Range  { get; }
 			IBoundaryPart<IDefinedFunction> Groups { get; }
+			*/
 
 			IBoundaryPart<IRangePrecedingPartFunction> RowsBetween   { get; }
 			IBoundaryPart<IRangePrecedingPartFunction> RangeBetween  { get; }
@@ -282,6 +284,98 @@ namespace LinqToDB
 			=> throw new ServerSideOnlyException(nameof(Average));
 
 		#endregion Average
+
+		#region Min
+
+		public static int Min(this Sql.IWindowFunction window, int argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Min));
+
+		public static int? Min(this Sql.IWindowFunction window, int? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Min));
+
+		public static long Min(this Sql.IWindowFunction window, long argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Min));
+
+		public static long? Min(this Sql.IWindowFunction window, long? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Min));
+
+		public static double Min(this Sql.IWindowFunction window, double argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Min));
+
+		public static double? Min(this Sql.IWindowFunction window, double? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Min));
+
+		public static decimal Min(this Sql.IWindowFunction window, decimal argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Min));
+
+		public static decimal? Min(this Sql.IWindowFunction window, decimal? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Min));
+
+		public static float Min(this Sql.IWindowFunction window, float argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Min));
+
+		public static float? Min(this Sql.IWindowFunction window, float? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Min));
+
+		public static short Min(this Sql.IWindowFunction window, short argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Min));
+
+		public static short? Min(this Sql.IWindowFunction window, short? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Min));
+
+		public static byte Min(this Sql.IWindowFunction window, byte argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Min));
+
+		public static byte? Min(this Sql.IWindowFunction window, byte? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Min));
+
+		#endregion Min
+
+		#region Max
+
+		public static int Max(this Sql.IWindowFunction window, int argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Max));
+
+		public static int? Max(this Sql.IWindowFunction window, int? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Max));
+
+		public static long Max(this Sql.IWindowFunction window, long argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Max));
+
+		public static long? Max(this Sql.IWindowFunction window, long? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Max));
+
+		public static double Max(this Sql.IWindowFunction window, double argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Max));
+
+		public static double? Max(this Sql.IWindowFunction window, double? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Max));
+
+		public static decimal Max(this Sql.IWindowFunction window, decimal argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Max));
+
+		public static decimal? Max(this Sql.IWindowFunction window, decimal? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Max));
+
+		public static float Max(this Sql.IWindowFunction window, float argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Max));
+
+		public static float? Max(this Sql.IWindowFunction window, float? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Max));
+
+		public static short Max(this Sql.IWindowFunction window, short argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Max));
+
+		public static short? Max(this Sql.IWindowFunction window, short? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Max));
+
+		public static byte Max(this Sql.IWindowFunction window, byte argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Max));
+
+		public static byte? Max(this Sql.IWindowFunction window, byte? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Max));
+
+		#endregion Max
 
 		#region Percenile Cont
 

@@ -3256,7 +3256,60 @@ namespace LinqToDB.SqlProvider
 
 				if (windowFunction.FrameClause != null)
 				{
-					throw new NotImplementedException("Frame clause is not supported");
+					var frame = windowFunction.FrameClause;
+
+					StringBuilder.Append(' ');
+
+					switch (frame.FrameType)
+					{
+						case SqlFrameClause.FrameTypeKind.Rows:
+							StringBuilder.Append("ROWS");
+							break;
+						case SqlFrameClause.FrameTypeKind.Groups:
+							StringBuilder.Append("GROUPS");
+							break;
+						case SqlFrameClause.FrameTypeKind.Range:
+							StringBuilder.Append("RANGE");
+							break;
+						default:
+							throw new InvalidOperationException($"Unexpected window frame type: {frame.FrameType}");
+					}
+
+					StringBuilder.Append(" BETWEEN ");
+
+					switch (frame.Start.BoundaryType)
+					{
+						case SqlFrameBoundary.FrameBoundaryType.Unbounded:
+							StringBuilder.Append("UNBOUNDED PRECEDING");
+							break;
+						case SqlFrameBoundary.FrameBoundaryType.CurrentRow:
+							StringBuilder.Append("CURRENT ROW");
+							break;
+						case SqlFrameBoundary.FrameBoundaryType.Offset:
+							BuildExpression(frame.Start.Offset!);
+							StringBuilder.Append(" PRECEDING");
+							break;
+						default:
+							throw new InvalidOperationException($"Unexpected window frame boundary type: {frame.Start.BoundaryType}");
+					}
+
+					StringBuilder.Append(" AND ");
+
+					switch (frame.End.BoundaryType)
+					{
+						case SqlFrameBoundary.FrameBoundaryType.Unbounded:
+							StringBuilder.Append("UNBOUNDED FOLLOWING");
+							break;
+						case SqlFrameBoundary.FrameBoundaryType.CurrentRow:
+							StringBuilder.Append("CURRENT ROW");
+							break;
+						case SqlFrameBoundary.FrameBoundaryType.Offset:
+							BuildExpression(frame.End.Offset!);
+							StringBuilder.Append(" FOLLOWING");
+							break;
+						default:
+							throw new InvalidOperationException($"Unexpected window frame boundary type: {frame.End.BoundaryType}");
+					}
 				}
 
 				StringBuilder.Append(')');

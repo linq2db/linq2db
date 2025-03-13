@@ -17,8 +17,8 @@ namespace LinqToDB.SqlQuery
 			IEnumerable<SqlWindowOrderItem>? withinGroup = null,
 			IEnumerable<ISqlExpression>?     partitionBy = null,
 			IEnumerable<SqlWindowOrderItem>? orderBy     = null,
-			SqlFrameClause?                  frameClause = null,
 			SqlSearchCondition?              filter      = null,
+			SqlFrameClause?                  frameClause = null,
 			bool                             isAggregate = false)
 		{
 			Type                 = dbDataType;
@@ -44,20 +44,19 @@ namespace LinqToDB.SqlQuery
 		public SqlSearchCondition?       Filter               { get; private set; }
 		public bool                      IsAggregate          { get; }
 
-		public void Modify(
-			List<SqlFunctionArgument> arguments,
-			List<SqlWindowOrderItem>? withinGroup,
-			List<ISqlExpression>?     partitionBy,
-			List<SqlWindowOrderItem>? orderBy,
-			SqlFrameClause?           frameClause,
-			SqlSearchCondition?       filter     )
+		public void Modify(List<SqlFunctionArgument> arguments,
+			List<SqlWindowOrderItem>?                withinGroup,
+			List<ISqlExpression>?                    partitionBy,
+			List<SqlWindowOrderItem>?                orderBy,
+			SqlSearchCondition?                      filter,
+			SqlFrameClause?                          frameClause)
 		{
 			Arguments   = arguments;
 			WithinGroup = withinGroup;
 			PartitionBy = partitionBy;
 			OrderBy     = orderBy;
-			FrameClause = frameClause;
 			Filter      = filter;
+			FrameClause = frameClause;
 		}
 
 		public SqlWindowFunction WithType(DbDataType dbDataType)
@@ -70,9 +69,8 @@ namespace LinqToDB.SqlQuery
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
-				FrameClause,
 				Filter,
-				IsAggregate);
+				FrameClause, IsAggregate);
 		}
 
 		public SqlWindowFunction WithFunctionName(string functionName)
@@ -85,9 +83,8 @@ namespace LinqToDB.SqlQuery
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
-				FrameClause,
 				Filter,
-				IsAggregate);
+				FrameClause, IsAggregate);
 		}
 
 		public SqlWindowFunction WithArguments(IEnumerable<SqlFunctionArgument> arguments, bool[] argumentsNullability)
@@ -100,9 +97,8 @@ namespace LinqToDB.SqlQuery
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
-				FrameClause,
 				Filter,
-				IsAggregate);
+				FrameClause, IsAggregate);
 		}
 
 		public SqlWindowFunction WithPartitionBy(IEnumerable<ISqlExpression>? partitionBy)
@@ -115,9 +111,8 @@ namespace LinqToDB.SqlQuery
 				WithinGroup,
 				partitionBy,
 				OrderBy,
-				FrameClause,
 				Filter,
-				IsAggregate);
+				FrameClause, IsAggregate);
 		}
 
 		public SqlWindowFunction WithOrderBy(IEnumerable<SqlWindowOrderItem>? orderBy)
@@ -130,9 +125,8 @@ namespace LinqToDB.SqlQuery
 				WithinGroup,
 				PartitionBy,
 				orderBy,
-				FrameClause,
 				Filter,
-				IsAggregate);
+				FrameClause, IsAggregate);
 		}
 
 		public SqlWindowFunction WithFrameClause(SqlFrameClause? frameClause)
@@ -145,9 +139,8 @@ namespace LinqToDB.SqlQuery
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
-				frameClause,
 				Filter,
-				IsAggregate);
+				frameClause, IsAggregate);
 		}
 
 		public SqlWindowFunction WithFilter(SqlSearchCondition? filter)
@@ -160,9 +153,8 @@ namespace LinqToDB.SqlQuery
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
-				FrameClause,
 				filter,
-				IsAggregate);
+				FrameClause, IsAggregate);
 		}
 
 		public SqlWindowFunction WithWithinGroup(IEnumerable<SqlWindowOrderItem>? withinGroup)
@@ -175,9 +167,8 @@ namespace LinqToDB.SqlQuery
 				withinGroup,
 				PartitionBy,
 				OrderBy,
-				FrameClause,
 				Filter,
-				IsAggregate);
+				FrameClause, IsAggregate);
 		}
 
 		static bool CheckNulls(object? expr1, object? expr2)
@@ -368,69 +359,52 @@ namespace LinqToDB.SqlQuery
 		}
 	}
 
-	public abstract class SqlFrameBoundary : QueryElement
+	public class SqlFrameBoundary : QueryElement
 	{
-		public static SqlFrameBoundary UnboundedPreceding { get; } = new SqlUnboundedPreceding();
-		public static SqlFrameBoundary UnboundedFollowing { get; } = new SqlUnboundedFollowing();
-		public static SqlFrameBoundary CurrentRow { get; } = new SqlCurrentRow();
-
-		public class SqlUnboundedPreceding : SqlFrameBoundary
+		public enum FrameBoundaryType
 		{
-			public override QueryElementType ElementType => QueryElementType.SqlFrameBoundaryUnboundedPreceding;
-
-			public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
-			{
-				writer.Append("UNBOUNDED PRECEDING");
-				return writer;
-			}
+			Unbounded,
+			CurrentRow,
+			Offset
 		}
 
-		public class SqlUnboundedFollowing : SqlFrameBoundary
+		public SqlFrameBoundary(bool isPreceding, FrameBoundaryType boundaryType, ISqlExpression? offset)
 		{
-			public override QueryElementType ElementType => QueryElementType.SqlFrameBoundaryUnboundedFollowing;
-
-			public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
-			{
-				writer.Append("UNBOUNDED FOLLOWING");
-				return writer;
-			}
+			IsPreceding  = isPreceding;
+			BoundaryType = boundaryType;
+			Offset       = offset;
 		}
 
-		public class SqlCurrentRow : SqlFrameBoundary
-		{
-			public override QueryElementType ElementType => QueryElementType.SqlFrameBoundaryCurrentRow;
+		public bool              IsPreceding  { get; }
+		public FrameBoundaryType BoundaryType { get; }
+		public ISqlExpression?   Offset       { get; private set; }
 
-			public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
+		public override QueryElementType ElementType => QueryElementType.SqlFrameBoundary;
+
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
+		{
+			switch (BoundaryType)
 			{
-				writer.Append("CURRENT ROW");
-				return writer;
+				case FrameBoundaryType.Unbounded:
+					writer.Append(IsPreceding ? "UNBOUNDED PRECEDING" : "UNBOUNDED FOLLOWING");
+					break;
+				case FrameBoundaryType.CurrentRow:
+					writer.Append("CURRENT ROW");
+					break;
+				case FrameBoundaryType.Offset:
+					writer.AppendElement(Offset);
+					writer.Append(IsPreceding ? " PRECEDING" : " FOLLOWING");
+					break;
 			}
+
+			return writer;
 		}
 
-		public class SqlOffset : SqlFrameBoundary
+		public void Modify(ISqlExpression offset)
 		{
-			public SqlOffset(ISqlExpression offset, bool isPreceding)
-			{
-				Offset      = offset;
-				IsPreceding = isPreceding;
-			}
-
-			public ISqlExpression Offset      { get; private set; }
-			public bool           IsPreceding { get; }
-
-			public override QueryElementType ElementType => QueryElementType.SqlFrameBoundaryOffset;
-
-			public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
-			{
-				Offset.ToString(writer);
-				writer.Append(IsPreceding ? " PRECEDING" : " FOLLOWING");
-				return writer;
-			}
-
-			public void Modify(ISqlExpression offset)
-			{
-				Offset = offset;
-			}
+			if (BoundaryType != FrameBoundaryType.Offset)
+				throw new InvalidOperationException("Cannot modify non-offset boundary");
+			Offset = offset;
 		}
 	}
 
@@ -480,14 +454,21 @@ namespace LinqToDB.SqlQuery
 
 	public class SqlFrameClause : QueryElement
 	{
-		public SqlFrameClause(string frameType, SqlFrameBoundary start, SqlFrameBoundary end)
+		public enum FrameTypeKind
+		{
+			Rows,
+			Range,
+			Groups
+		}
+
+		public SqlFrameClause(FrameTypeKind frameType, SqlFrameBoundary start, SqlFrameBoundary end)
 		{
 			FrameType = frameType;
 			Start     = start;
 			End       = end;
 		}
 
-		public string           FrameType { get; }
+		public FrameTypeKind    FrameType { get; }
 		public SqlFrameBoundary Start     { get; private set; }
 		public SqlFrameBoundary End       { get; private set; }
 
