@@ -532,7 +532,7 @@ namespace LinqToDB.Data
 				                                                                                             options.DbTransaction,
 				                                                                                                             options.ConnectionFactory)
 				{
-					case (_,               {} connectionString, {} provider, _,               _,             _,              _) :
+					case (_,               {} connectionString, {} provider, _,               null,          null,           null) :
 					{
 						dataConnection.DataProvider     = provider;
 						dataConnection.ConnectionString = connectionString;
@@ -540,7 +540,7 @@ namespace LinqToDB.Data
 
 						break;
 					}
-					case (_,               {} connectionString, _,           {} providerName, _,             _,              _) :
+					case (_,               {} connectionString, _,           {} providerName, null,          null,           null) :
 					{
 						dataConnection.DataProvider     = GetDataProviderEx(providerName, connectionString);
 						dataConnection.ConnectionString = connectionString;
@@ -572,43 +572,39 @@ namespace LinqToDB.Data
 
 						break;
 					}
-					case (_,               not null,            null,        _,               _,             _,              _) :
-					case (_,               _,                   null,        _,               not null,      _,              _) :
-					case (_,               _,                   null,        _,               _,             not null,       _) :
+					case (_,               not null,            null,        null,            _,             _,              _) :
+					case (_,               _,                   null,        null,            not null,      _,              _) :
+					case (_,               _,                   null,        null,            _,             not null,       _) :
 					case (_,               _,                   null,        _,               _,             _,              not null) :
 					{
 						throw new LinqToDBException("DataProvider was not specified");
 					}
 					case (_,               _,                   {} provider, _,               {} connection, _,              _) :
 					{
-						dataConnection._connection        = WrapConnection(connection);
-						dataConnection._disposeConnection = options.DisposeConnection;
-
-						dataConnection.DataProvider  = provider;
-						dataConnection.MappingSchema = provider.MappingSchema;
-
-						doSave = false;
-
+						SetConnection(provider, connection);
+						break;
+					}
+					case (_,               _,                   _,           {} providerName, {} connection, _,              _) :
+					{
+						var provider = GetDataProviderEx(providerName, connection.ConnectionString);
+						SetConnection(provider, connection);
 						break;
 					}
 					case (_,               _,                   {} provider, _,               _,             {} transaction, _) :
 					{
-						dataConnection._connection        = WrapConnection(transaction.Connection!);
-						dataConnection._closeTransaction  = false;
-						dataConnection._closeConnection   = false;
-						dataConnection._disposeConnection = false;
-
-						dataConnection.TransactionAsync = AsyncFactory.CreateAndSetDataContext(dataConnection, transaction);
-						dataConnection.DataProvider     = provider;
-						dataConnection.MappingSchema    = provider.MappingSchema;
-
-						doSave = false;
-
+						SetTransaction(provider, transaction);
+						break;
+					}
+					case (_,               _,                   _,           {} providerName, _,             {} transaction, _) :
+					{
+						var provider = GetDataProviderEx(providerName, transaction.Connection.ConnectionString);
+						SetTransaction(provider, transaction);
 						break;
 					}
 					case (_,               _,                   {} provider, _,               _,             _,              {} connectionFactory) :
 					{
 						dataConnection._connectionFactory = connectionFactory;
+						dataConnection._disposeConnection = options.DisposeConnection ?? true;
 
 						dataConnection.DataProvider  = provider;
 						dataConnection.MappingSchema = provider.MappingSchema;
@@ -678,6 +674,32 @@ namespace LinqToDB.Data
 						? asyncDbConnection
 						: AsyncFactory.CreateAndSetDataContext(dataConnection, connection);
 				}
+
+				void SetConnection(IDataProvider provider, DbConnection dbConnection)
+				{
+					dataConnection._connection        = WrapConnection(dbConnection);
+					dataConnection._disposeConnection = options.DisposeConnection ?? false;
+
+					dataConnection.DataProvider  = provider;
+					dataConnection.MappingSchema = provider.MappingSchema;
+
+					doSave = false;
+				}
+
+				void SetTransaction(IDataProvider provider, DbTransaction transaction)
+				{
+					dataConnection._connection        = WrapConnection(transaction.Connection!);
+					dataConnection._closeTransaction  = false;
+					dataConnection._closeConnection   = false;
+					dataConnection._disposeConnection = false;
+
+					dataConnection.TransactionAsync = AsyncFactory.CreateAndSetDataContext(dataConnection, transaction);
+					dataConnection.DataProvider     = provider;
+					dataConnection.MappingSchema    = provider.MappingSchema;
+
+					doSave = false;
+				}
+
 			}
 
 			public static Action? Reapply(DataConnection dataConnection, ConnectionOptions options, ConnectionOptions? previousOptions)

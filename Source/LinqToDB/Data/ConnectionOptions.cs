@@ -33,7 +33,8 @@ namespace LinqToDB.Data
 	/// </param>
 	/// <param name="DisposeConnection">
 	/// Gets <see cref="DbConnection"/> ownership status for <see cref="DataConnection"/> instance.
-	/// If <c>true</c>, <see cref="DataConnection"/> will dispose provided connection on own dispose.
+	/// If <c>true</c>, <see cref="DataConnection"/> will dispose provided/created connection on own dispose.
+	/// If <c>null</c>, <see cref="DataConnection"/> will dispose connection on own dispose only if it created by <see cref="DataConnection"/> instance.
 	/// </param>
 	/// <param name="ConnectionFactory">
 	/// Gets connection factory to use with <see cref="DataConnection"/> instance. Accepts current context <see cref="DataOptions" /> settings.
@@ -58,7 +59,7 @@ namespace LinqToDB.Data
 		MappingSchema?                                  MappingSchema             = default,
 		DbConnection?                                   DbConnection              = default,
 		DbTransaction?                                  DbTransaction             = default,
-		bool                                            DisposeConnection         = default,
+		bool?                                           DisposeConnection         = default,
 		Func<DataOptions,DbConnection>?                 ConnectionFactory         = default,
 		Func<ConnectionOptions, IDataProvider>?         DataProviderFactory       = default,
 		ConnectionOptionsConnectionInterceptor?         ConnectionInterceptor     = default,
