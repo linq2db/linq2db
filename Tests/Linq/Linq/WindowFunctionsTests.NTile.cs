@@ -1,17 +1,15 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	public partial class WindowFunctionsTests
+	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void RowNumberWithMultiplePartitions([IncludeDataSources(
+		public void NTileWithMultiplePartitions([IncludeDataSources(
 			true,
 			// native oracle provider crashes with AV
 			TestProvName.AllOracleManaged,
@@ -27,12 +25,12 @@ namespace Tests.Linq
 				.Select(x => new
 				{
 					Entity = x,
-					rn1    = Sql.Window.RowNumber(f => f.PartitionBy(x.CategoryId, x.Name).OrderBy(x.Timestamp)),
-					rn2    = Sql.Window.RowNumber(f => f.PartitionBy(x.CategoryId, x.Name).OrderBy(x.Value)),
-					rn3    = Sql.Window.RowNumber(f => f.PartitionBy(x.CategoryId, x.Name).OrderByDesc(x.Timestamp)),
-					rn4    = Sql.Window.RowNumber(f => f.PartitionBy(x.CategoryId, x.Name).OrderByDesc(x.Value)),
-					rn5    = Sql.Window.RowNumber(f => f.PartitionBy(x.CategoryId, x.Name).OrderBy(x.Timestamp).ThenBy(x.Value)),
-					rn6    = Sql.Window.RowNumber(f => f.PartitionBy(x.CategoryId, x.Name).OrderByDesc(x.Timestamp).ThenByDesc(x.Value))
+					nt1    = Sql.Window.NTile(4, f => f.PartitionBy(x.CategoryId, x.Name).OrderBy(x.Timestamp)),
+					nt2    = Sql.Window.NTile(4, f => f.PartitionBy(x.CategoryId, x.Name).OrderBy(x.Value)),
+					nt3    = Sql.Window.NTile(4, f => f.PartitionBy(x.CategoryId, x.Name).OrderByDesc(x.Timestamp)),
+					nt4    = Sql.Window.NTile(4, f => f.PartitionBy(x.CategoryId, x.Name).OrderByDesc(x.Value)),
+					nt5    = Sql.Window.NTile(4, f => f.PartitionBy(x.CategoryId, x.Name).OrderBy(x.Timestamp).ThenBy(x.Value)),
+					nt6    = Sql.Window.NTile(4, f => f.PartitionBy(x.CategoryId, x.Name).OrderByDesc(x.Timestamp).ThenByDesc(x.Value))
 				})
 				.OrderBy(x => x.Entity.Id);
 
@@ -43,7 +41,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RowNumberWithMultiplePartitionsWithDefineWindow([IncludeDataSources(
+		public void NTileWithMultiplePartitionsWithDefineWindow([IncludeDataSources(
 			true,
 			// native oracle provider crashes with AV
 			TestProvName.AllOracleManaged,
@@ -66,12 +64,12 @@ namespace Tests.Linq
 				select new
 				{
 					Entity = x,
-					rn1   = Sql.Window.RowNumber(f => f.UseWindow(wnd1)),
-					rn2   = Sql.Window.RowNumber(f => f.UseWindow(wnd2)),
-					rn3   = Sql.Window.RowNumber(f => f.UseWindow(wnd3)),
-					rn4   = Sql.Window.RowNumber(f => f.UseWindow(wnd4)),
-					rn5   = Sql.Window.RowNumber(f => f.UseWindow(wnd5)),
-					rn6   = Sql.Window.RowNumber(f => f.UseWindow(wnd6))
+					nt1   = Sql.Window.NTile(4, f => f.UseWindow(wnd1)),
+					nt2   = Sql.Window.NTile(4, f => f.UseWindow(wnd2)),
+					nt3   = Sql.Window.NTile(4, f => f.UseWindow(wnd3)),
+					nt4   = Sql.Window.NTile(4, f => f.UseWindow(wnd4)),
+					nt5   = Sql.Window.NTile(4, f => f.UseWindow(wnd5)),
+					nt6   = Sql.Window.NTile(4, f => f.UseWindow(wnd6))
 				}
 				into s
 				orderby s.Entity.Id
@@ -84,9 +82,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		//TODO: we can emulate it for other providers by suing additional order by with CASE:
-		//ROW_NUMBER() OVER(ODER BY WHEN x.Value IS NULL THEN 1 ELSE 0 END, x.Value)
-		public void RowNumberWithNulls([IncludeDataSources(
+		public void NTileWithNulls([IncludeDataSources(
 			true,
 			TestProvName.AllOracle12Plus)] string context)
 		{
@@ -97,8 +93,8 @@ namespace Tests.Linq
 				.Select(x => new
 				{
 					Entity = x,
-					rn7    = Sql.Window.RowNumber(f => f.PartitionBy(x.CategoryId).OrderBy(x.Timestamp, Sql.NullsPosition.First)),
-					rn8    = Sql.Window.RowNumber(f => f.PartitionBy(x.CategoryId).OrderByDesc(x.Timestamp, Sql.NullsPosition.Last))
+					nt7    = Sql.Window.NTile(4, f => f.PartitionBy(x.CategoryId).OrderBy(x.Timestamp, Sql.NullsPosition.First)),
+					nt8    = Sql.Window.NTile(4, f => f.PartitionBy(x.CategoryId).OrderByDesc(x.Timestamp, Sql.NullsPosition.Last))
 				})
 				.OrderBy(x => x.Entity.Id);
 
@@ -109,7 +105,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RowNumberWithoutPartition([IncludeDataSources(
+		public void NTileWithoutPartition([IncludeDataSources(
 			true,
 			// native oracle provider crashes with AV
 			TestProvName.AllOracleManaged,
@@ -125,12 +121,12 @@ namespace Tests.Linq
 				.Select(x => new
 				{
 					Entity = x,
-					rn1    = Sql.Window.RowNumber(f => f.OrderBy(x.Timestamp)),
-					rn2    = Sql.Window.RowNumber(f => f.OrderBy(x.Value)),
-					rn3    = Sql.Window.RowNumber(f => f.OrderByDesc(x.Timestamp)),
-					rn4    = Sql.Window.RowNumber(f => f.OrderByDesc(x.Value)),
-					rn5    = Sql.Window.RowNumber(f => f.OrderBy(x.Timestamp).ThenBy(x.Value)),
-					rn6    = Sql.Window.RowNumber(f => f.OrderByDesc(x.Timestamp).ThenByDesc(x.Value))
+					nt1    = Sql.Window.NTile(4, f => f.OrderBy(x.Timestamp)),
+					nt2    = Sql.Window.NTile(4, f => f.OrderBy(x.Value)),
+					nt3    = Sql.Window.NTile(4, f => f.OrderByDesc(x.Timestamp)),
+					nt4    = Sql.Window.NTile(4, f => f.OrderByDesc(x.Value)),
+					nt5    = Sql.Window.NTile(4, f => f.OrderBy(x.Timestamp).ThenBy(x.Value)),
+					nt6    = Sql.Window.NTile(4, f => f.OrderByDesc(x.Timestamp).ThenByDesc(x.Value))
 				})
 				.OrderBy(x => x.Entity.Id);
 
@@ -139,5 +135,6 @@ namespace Tests.Linq
 				_ = query.ToList();
 			});
 		}
+
 	}
 }

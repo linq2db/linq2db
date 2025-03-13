@@ -16,6 +16,11 @@ namespace LinqToDB.Linq.Translation
 		public WindowFunctionsMemberTranslator()
 		{
 			Registration.RegisterMethod(() => Sql.Window.RowNumber(f => f.OrderBy(1)), TranslateRowNumber);
+			Registration.RegisterMethod(() => Sql.Window.Rank(f => f.OrderBy(1)), TranslateRank);
+			Registration.RegisterMethod(() => Sql.Window.DenseRank(f => f.OrderBy(1)), TranslateDenseRank);
+			Registration.RegisterMethod(() => Sql.Window.PercentRank(f => f.OrderBy(1)), TranslatePercentRank);
+			Registration.RegisterMethod(() => Sql.Window.NTile(1, f => f.OrderBy(1)), TranslateNTile);
+
 			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont);
 			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TransformPercentileCont);
 
@@ -524,6 +529,38 @@ namespace LinqToDB.Linq.Translation
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "ROW_NUMBER");
+		}
+
+		public virtual Expression? TranslateRank(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var factory = translationContext.ExpressionFactory;
+			var dbDataType = factory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "RANK");
+		}
+
+		public virtual Expression? TranslateDenseRank(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var factory = translationContext.ExpressionFactory;
+			var dbDataType = factory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "DENSE_RANK");
+		}
+
+		public virtual Expression? TranslatePercentRank(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var factory = translationContext.ExpressionFactory;
+			var dbDataType = factory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "PERCENT_RANK");
+		}
+
+		public virtual Expression? TranslateNTile(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var factory = translationContext.ExpressionFactory;
+			var dbDataType = factory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "NTILE");
 		}
 
 		public virtual Expression? TranslatePercentileCont(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

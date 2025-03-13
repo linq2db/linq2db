@@ -141,7 +141,14 @@ namespace LinqToDB
 
 		#endregion
 
-		// ROW_NUMBER
+		#region Predefined chains
+
+		// ROW_NUMBER()
+		// RANK()
+		// DENSE_RANK()
+		// PERCENT_RANK()
+		// CUME_DIST()
+		// NTILE(n)
 		public interface IOPartitionROrderFinal : IUseWindow<IDefinedFunction>, IPartitionPart<IROrderByPartOThenByPartFinal>, IROrderByPartOThenByPartFinal
 		{
 		}
@@ -196,11 +203,32 @@ namespace LinqToDB
 		{
 		}
 
+		#endregion Predefined chains
+
 		// public static object DefineWindow(this Sql.IWindowFunction window, Func<IWindowDefinition, object> func)
 		// 	=> throw new ServerSideOnlyException(nameof(RowNumber))
 
+		#region Optional Partition, Mandatory Order, No Filter, No Frame
+
 		public static long RowNumber(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RowNumber));
+
+		public static int Rank(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Rank));
+
+		public static long DenseRank(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(DenseRank));
+
+		public static double PercentRank(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(PercentRank));
+
+		public static double CumeDist(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(CumeDist));
+
+		public static long NTile(this Sql.IWindowFunction window, int n, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(NTile));
+
+		#endregion
 
 		public static int Count(this Sql.IWindowFunction window, Func<IOArgumentOFilterOPartitionOOrderFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Count));
@@ -455,12 +483,6 @@ namespace LinqToDB
 
 		#endregion
 
-		#region Rank
-
-		public static int Rank(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Rank));
-
-		#endregion
 	}
 
 	partial class Sql

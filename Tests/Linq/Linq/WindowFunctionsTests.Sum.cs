@@ -45,7 +45,7 @@ namespace Tests.Linq
 
 			Assert.DoesNotThrow(() =>
 			{
-				query.ToList();
+				_ = query.ToList();
 			});
 		}
 
@@ -86,7 +86,7 @@ namespace Tests.Linq
 
 			Assert.DoesNotThrow(() =>
 			{
-				query.ToList();
+				_ = query.ToList();
 			});
 		}
 
