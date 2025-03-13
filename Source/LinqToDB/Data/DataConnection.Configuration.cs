@@ -548,7 +548,7 @@ namespace LinqToDB.Data
 
 						break;
 					}
-					case ({} configString, _,                   {} provider, _,               _,             _,              _) :
+					case ({} configString, _,                   {} provider, _,               null,          null,           null) :
 					{
 						dataConnection.ConfigurationString = configString;
 
@@ -560,7 +560,7 @@ namespace LinqToDB.Data
 
 						break;
 					}
-					case ({} configString, {} connectionString, _,           _,               _,             _,              _) :
+					case ({} configString, {} connectionString, _,           _,               null,          null,           null) :
 					{
 						dataConnection.ConfigurationString = configString;
 
