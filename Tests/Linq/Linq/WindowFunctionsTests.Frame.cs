@@ -44,7 +44,6 @@ namespace Tests.Linq
 			});
 		}
 
-
 		[Test]
 		public void FrameGroups([IncludeDataSources(
 			true,

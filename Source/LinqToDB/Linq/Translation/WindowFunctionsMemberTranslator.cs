@@ -333,6 +333,7 @@ namespace LinqToDB.Linq.Translation
 						error = translationContext.CreateErrorExpression(buildBody, "Unexpected member.", expressionType);
 						return false;
 					}
+
 					break;
 				}
 			}

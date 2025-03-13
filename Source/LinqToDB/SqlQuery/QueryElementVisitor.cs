@@ -386,6 +386,7 @@ namespace LinqToDB.SqlQuery
 				default:
 					throw CreateInvalidVisitModeException();
 			}
+
 			return element;
 		}
 
