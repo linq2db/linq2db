@@ -210,25 +210,34 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 
 		public class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			public override ISqlExpression TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
+			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.Function(factory.GetDbDataType(value), "LEN", value);
+				var valueTypeString = factory.GetDbDataType(typeof(string));
+				var valueTypeInt = factory.GetDbDataType(typeof(int));
+
+				var valueString = factory.Add(valueTypeString, value, factory.Value(valueTypeString, "."));
+				var valueLength = factory.Function(valueTypeInt, "LEN", valueString);
+				return factory.Sub(valueTypeInt, valueLength, factory.Value(valueTypeInt, 1));
 			}
 
-			public override ISqlExpression TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
+			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
 				/*
 				 * SELECT REPLICATE(paddingSymbol, padding - LEN(value)) + value
 				 */
 				var factory = translationContext.ExpressionFactory;
-				var valueType = factory.GetDbDataType(value);
-				var valueTypeInt = new DbDataType(typeof(int), DataType.Int32);
+				var valueTypeString = factory.GetDbDataType(typeof(string));
+				var valueTypeInt = factory.GetDbDataType(typeof(int));
 
-				var symbolsToAdd = factory.Sub(valueTypeInt, padding, TranslateLength(translationContext, translationFlags, value));
-				var stringToAdd = factory.Function(valueType, "REPLICATE", paddingChar, symbolsToAdd);
+				var lengthValue =  TranslateLength(translationContext, translationFlags, value);
+				if(lengthValue == null)
+					return null;
 
-				return factory.Add(valueType, stringToAdd, value);
+				var symbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
+				var stringToAdd = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
+
+				return factory.Add(valueTypeString, stringToAdd, value);
 			}
 		}
 

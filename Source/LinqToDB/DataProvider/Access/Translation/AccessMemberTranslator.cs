@@ -247,20 +247,24 @@ namespace LinqToDB.DataProvider.Access.Translation
 
 		public class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			public override ISqlExpression TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
+			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.Function(factory.GetDbDataType(value), "LEN", value);
+				return factory.Function(factory.GetDbDataType(typeof(int)), "LEN", value);
 			}
 
-			public override ISqlExpression TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
+			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
 				var factory = translationContext.ExpressionFactory;
 
 				var valueTypeString = factory.GetDbDataType(value);
-				var valueTypeInt = new DbDataType(typeof(int), DataType.Int32);
+				var valueTypeInt = factory.GetDbDataType(typeof(int));
 
-				var valueSymbolsToAdd = factory.Sub(valueTypeInt, padding, TranslateLength(translationContext, translationFlags, value));
+				var lengthValue = TranslateLength(translationContext, translationFlags, value);
+				if(lengthValue == null)
+					return null;
+
+				var valueSymbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
 				var fillingString = factory.Function(valueTypeString, "STRING", valueSymbolsToAdd, paddingChar);
 
 				return factory.Concat(fillingString, value);

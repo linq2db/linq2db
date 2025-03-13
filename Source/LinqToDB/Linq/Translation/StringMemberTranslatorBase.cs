@@ -168,21 +168,21 @@ namespace LinqToDB.Linq.Translation
 		public virtual ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
 		{
 			var factory = translationContext.ExpressionFactory;
-			return factory.Function(factory.GetDbDataType(value), "LENGTH", value);
+			return factory.Function(factory.GetDbDataType(typeof(int)), "LENGTH", value);
 		}
 
 		public virtual ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 		{
 			var factory = translationContext.ExpressionFactory;
-			var valueType = factory.GetDbDataType(value);
-			return factory.Function(valueType, "LPAD", value, padding, paddingChar);
+			var valueTypeString = factory.GetDbDataType(typeof(string)); ;
+			return factory.Function(valueTypeString, "LPAD", value, padding, paddingChar);
 		}
 
 		public virtual ISqlExpression? TranslatePadLeft(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression? paddingChar)
 		{
 			var factory = translationContext.ExpressionFactory;
 
-			var valueType = factory.GetDbDataType(value);
+			var valueType = factory.GetDbDataType(typeof(string));
 
 			/*
 			 * CASE WHEN LEN(strValue) < 2 

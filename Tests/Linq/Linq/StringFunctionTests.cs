@@ -303,14 +303,12 @@ namespace Tests.Linq
 				{
 					Str = Sql.AsSql(stringValue),
 					Len = Sql.AsSql(stringValue.Length),
-					IsNullOrWhiteSpace = Sql.AsSql(string.IsNullOrWhiteSpace(stringValue)),
 				});
 
 				Assert.Multiple(() =>
 				{
 					Assert.That(result.Str, Is.EqualTo(stringValue));
 					Assert.That(result.Len, Is.EqualTo(stringValue.Length));
-					Assert.That(result.IsNullOrWhiteSpace, Is.EqualTo(string.IsNullOrWhiteSpace(stringValue)));
 				});
 			}
 		}

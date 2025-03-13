@@ -513,7 +513,6 @@ namespace LinqToDB.Linq
 		{
 			#region string
 
-			{ M(() => "".Length               ), N(() => L<string,int>                     ((string obj)                              => Sql.Length(obj)!.Value)) },
 			{ M(() => "".Substring  (0)       ), N(() => L<string?,int,string?>            ((string? obj,int  p0)                     => Sql.Substring(obj, p0 + 1, obj!.Length - p0))) },
 			{ M(() => "".Substring  (0,0)     ), N(() => L<string?,int,int,string?>        ((string? obj,int  p0,int  p1)             => Sql.Substring(obj, p0 + 1, p1))) },
 			{ M(() => "".IndexOf    ("")      ), N(() => L<string,string,int>              ((string obj,string p0)                    => p0.Length == 0                    ? 0  : (Sql.CharIndex(p0, obj)!                      .Value) - 1)) },
