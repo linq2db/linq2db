@@ -19,6 +19,7 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.Rank(f => f.OrderBy(1)), TranslateRank);
 			Registration.RegisterMethod(() => Sql.Window.DenseRank(f => f.OrderBy(1)), TranslateDenseRank);
 			Registration.RegisterMethod(() => Sql.Window.PercentRank(f => f.OrderBy(1)), TranslatePercentRank);
+			Registration.RegisterMethod(() => Sql.Window.CumeDist(f => f.OrderBy(1)), TranslateCumeDist);
 			Registration.RegisterMethod(() => Sql.Window.NTile(1, f => f.OrderBy(1)), TranslateNTile);
 
 			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont);
@@ -553,6 +554,14 @@ namespace LinqToDB.Linq.Translation
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
 
 			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "PERCENT_RANK");
+		}
+
+		public virtual Expression? TranslateCumeDist(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var factory = translationContext.ExpressionFactory;
+			var dbDataType = factory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "CUME_DIST");
 		}
 
 		public virtual Expression? TranslateNTile(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
