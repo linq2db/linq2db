@@ -49,7 +49,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			InitializeMapping();
 
-			var instantiator = MemberHelper.MethodOf(() => Linq.Internals.CreateExpressionQueryInstance<int>(null!, null!))
+			var instantiator = MemberHelper.MethodOf(() => Internals.CreateExpressionQueryInstance<int>(null!, null!))
 				.GetGenericMethodDefinition();
 
 			LinqExtensions.ProcessSourceQueryable = queryable =>
@@ -214,16 +214,12 @@ namespace LinqToDB.EntityFrameworkCore
 		/// </summary>
 		/// <param name="model">EF Core data model.</param>
 		/// <param name="accessor">EF Core service provider.</param>
-		/// <param name="dataOptions">Linq To DB context options.</param>
 		/// <returns>Mapping schema for provided EF Core model.</returns>
-		public static MappingSchema GetMappingSchema(
-			IModel model,
-			IInfrastructure<IServiceProvider>? accessor,
-			DataOptions? dataOptions)
+		public static MappingSchema GetMappingSchema(IModel model, IInfrastructure<IServiceProvider>? accessor)
 		{
 			var converterSelector = accessor?.GetService<IValueConverterSelector>();
 
-			return Implementation.GetMappingSchema(model, GetMetadataReader(model, accessor), converterSelector, dataOptions);
+			return Implementation.GetMappingSchema(model, GetMetadataReader(model, accessor), converterSelector);
 		}
 
 		/// <summary>
@@ -255,7 +251,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			var info    = GetEFProviderInfo(context);
 			var options = context.GetLinqToDBOptions() ?? new DataOptions();
-			options     = AddMappingSchema(options, GetMappingSchema(context.Model, context, options));
+			options     = AddMappingSchema(options, GetMappingSchema(context.Model, context));
 
 			DataConnection? dc = null;
 
@@ -325,7 +321,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			var info    = GetEFProviderInfo(context);
 			var options = context.GetLinqToDBOptions() ?? new DataOptions();
-			options     = AddMappingSchema(options, GetMappingSchema(context.Model, context, options));
+			options     = AddMappingSchema(options, GetMappingSchema(context.Model, context));
 
 			DataConnection? dc = null;
 
@@ -390,7 +386,7 @@ namespace LinqToDB.EntityFrameworkCore
 			var options        = context.GetLinqToDBOptions() ?? new DataOptions();
 			var dataProvider   = GetDataProvider(options, info, connectionInfo);
 
-			options = AddMappingSchema(options, GetMappingSchema(context.Model, context, options))
+			options = AddMappingSchema(options, GetMappingSchema(context.Model, context))
 				.UseDataProvider(dataProvider)
 				.UseConnectionString(connectionInfo.ConnectionString!);
 
@@ -453,7 +449,7 @@ namespace LinqToDB.EntityFrameworkCore
 			var model          = GetModel(options);
 
 			if (model != null)
-				dataOptions = AddMappingSchema(dataOptions, GetMappingSchema(model, null, dataOptions));
+				dataOptions = AddMappingSchema(dataOptions, GetMappingSchema(model, null));
 
 			dataOptions = dataOptions.UseDataProvider(dataProvider);
 

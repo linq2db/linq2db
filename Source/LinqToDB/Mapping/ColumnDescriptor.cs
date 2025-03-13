@@ -48,9 +48,9 @@ namespace LinqToDB.Mapping
 			else
 				throw new LinqToDBException($"Column should be mapped to property of field. Was: {MemberInfo.GetType()}.");
 
-			var dataType = mappingSchema.GetDataType(MemberType);
-			if (dataType.Type.DataType == DataType.Undefined)
-				dataType = mappingSchema.GetUnderlyingDataType(MemberType, out var _);
+			var dataType = mappingSchema.GetDbDataType(MemberType);
+			if (dataType.DataType == DataType.Undefined)
+				dataType = mappingSchema.GetUnderlyingDbDataType(MemberType, out var _);
 
 			MemberName        = columnAttribute?.MemberName ?? MemberInfo.Name;
 			ColumnName        = columnAttribute?.Name       ?? MemberInfo.Name;
@@ -58,15 +58,15 @@ namespace LinqToDB.Mapping
 			PrimaryKeyOrder   = columnAttribute?.PrimaryKeyOrder   ?? 0;
 			IsDiscriminator   = columnAttribute?.IsDiscriminator   ?? false;
 			SkipOnEntityFetch = columnAttribute?.SkipOnEntityFetch ?? false;
-			DataType          = columnAttribute != null ? columnAttribute.DataType : dataType.Type.DataType;
-			DbType            = columnAttribute != null ? columnAttribute.DbType   : dataType.Type.DbType;
+			DataType          = columnAttribute != null ? columnAttribute.DataType : dataType.DataType;
+			DbType            = columnAttribute != null ? columnAttribute.DbType   : dataType.DbType;
 			CreateFormat      = columnAttribute?.CreateFormat;
 
-			if (columnAttribute == null || (columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.Type.DataType))
+			if (columnAttribute == null || (columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.DataType))
 			{
-				Length    = columnAttribute?.HasLength()    != true ? dataType.Type.Length    : columnAttribute.Length;
-				Precision = columnAttribute?.HasPrecision() != true ? dataType.Type.Precision : columnAttribute.Precision;
-				Scale     = columnAttribute?.HasScale()     != true ? dataType.Type.Scale     : columnAttribute.Scale;
+				Length    = columnAttribute?.HasLength()    != true ? dataType.Length    : columnAttribute.Length;
+				Precision = columnAttribute?.HasPrecision() != true ? dataType.Precision : columnAttribute.Precision;
+				Scale     = columnAttribute?.HasScale()     != true ? dataType.Scale     : columnAttribute.Scale;
 			}
 			else
 			{
@@ -478,14 +478,14 @@ namespace LinqToDB.Mapping
 				var enumType = mappingSchema.GetDefaultFromEnumType(systemType);
 
 				if (enumType != null)
-					dbDataType = mappingSchema.GetDataType(enumType).Type;
+					dbDataType = mappingSchema.GetDbDataType(enumType);
 
 				if (dbDataType.DataType == DataType.Undefined && systemType.IsNullable())
 				{
 					enumType = mappingSchema.GetDefaultFromEnumType(systemType.ToNullableUnderlying());
 
 					if (enumType != null)
-						dbDataType = mappingSchema.GetDataType(enumType).Type;
+						dbDataType = mappingSchema.GetDbDataType(enumType);
 				}
 
 				if (dbDataType.DataType == DataType.Undefined)
@@ -493,17 +493,17 @@ namespace LinqToDB.Mapping
 					enumType = mappingSchema.GetDefaultFromEnumType(typeof(Enum));
 
 					if (enumType != null)
-						dbDataType = mappingSchema.GetDataType(enumType).Type;
+						dbDataType = mappingSchema.GetDbDataType(enumType);
 				}
 
 				if (dbDataType.DataType == DataType.Undefined)
-					dbDataType = mappingSchema.GetUnderlyingDataType(systemType, out var canBeNull).Type;
+					dbDataType = mappingSchema.GetUnderlyingDbDataType(systemType, out var canBeNull);
 			}
 
 			if (dbDataType.DataType == DataType.Undefined)
-				dbDataType = mappingSchema.GetDataType(systemType).Type;
+				dbDataType = mappingSchema.GetDbDataType(systemType);
 			if (dbDataType.DataType == DataType.Undefined)
-				dbDataType = mappingSchema.GetUnderlyingDataType(systemType, out var _).Type;
+				dbDataType = mappingSchema.GetUnderlyingDbDataType(systemType, out var _);
 
 			return dbDataType.WithSystemType(systemType);
 		}

@@ -325,19 +325,19 @@ namespace LinqToDB.SqlQuery
 
 		internal static DbDataType SuggestType(DbDataType fieldType, MappingSchema mappingSchema, out bool? canBeNull)
 		{
-			var dataType = mappingSchema.GetDataType(fieldType.SystemType);
+			var dataType = mappingSchema.GetDbDataType(fieldType.SystemType);
 
 			canBeNull = null;
 
-			if (dataType.Type.DataType == DataType.Undefined)
+			if (dataType.DataType == DataType.Undefined)
 			{
-				dataType = mappingSchema.GetUnderlyingDataType(fieldType.SystemType, out var underlyingCanBeNull);
+				dataType = mappingSchema.GetUnderlyingDbDataType(fieldType.SystemType, out var underlyingCanBeNull);
 
 				if (underlyingCanBeNull)
 					canBeNull = true;
 			}
 
-			fieldType = fieldType.WithDataType(dataType.Type.DataType);
+			fieldType = fieldType.WithDataType(dataType.DataType);
 
 			// try to get type from converter
 			if (fieldType.DataType == DataType.Undefined)
@@ -360,9 +360,9 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (fieldType.Length    == null) fieldType = fieldType.WithLength(dataType.Type.Length);
-			if (fieldType.Precision == null) fieldType = fieldType.WithPrecision(dataType.Type.Precision);
-			if (fieldType.Scale     == null) fieldType = fieldType.WithScale(dataType.Type.Scale);
+			if (fieldType.Length    == null) fieldType = fieldType.WithLength(dataType.Length);
+			if (fieldType.Precision == null) fieldType = fieldType.WithPrecision(dataType.Precision);
+			if (fieldType.Scale     == null) fieldType = fieldType.WithScale(dataType.Scale);
 
 			return fieldType;
 		}

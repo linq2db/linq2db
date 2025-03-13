@@ -3,6 +3,7 @@ using System.Data.Linq;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -864,7 +865,7 @@ namespace Tests.DataProvider
 			);
 			ms.SetValueToSqlConverter(
 				typeof(DateTime),
-				(sb, dType, v) => sb.Append(((DateTime)v).Ticks.ToString(CultureInfo.InvariantCulture))
+				(StringBuilder sb, DbDataType dt, object v) => sb.Append(((DateTime)v).Ticks.ToString(CultureInfo.InvariantCulture))
 			);
 
 			using var db = GetDataContext(context, ms);
@@ -899,7 +900,7 @@ namespace Tests.DataProvider
 			);
 			ms.SetValueToSqlConverter(
 				typeof(DateTime),
-				(sb, dType, v) => sb.Append(((DateTime)v).Ticks.ToString(CultureInfo.InvariantCulture))
+				(StringBuilder sb, DbDataType dt, object v) => sb.Append(((DateTime)v).Ticks.ToString(CultureInfo.InvariantCulture))
 			);
 
 			using var db = GetDataContext(context, ms);

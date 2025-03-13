@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -37,16 +39,15 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			ms.SetDataType(typeof(decimal), new SqlDataType(DataType.Text, typeof(string)));
+			ms.SetDataType(typeof(decimal), new DbDataType(typeof(string), DataType.Text));
 			ms.SetConvertExpression((string s) => decimal.Parse(s, CultureInfo.InvariantCulture));
 			ms.SetConvertExpression((decimal d) => d.ToString(CultureInfo.InvariantCulture));
 
-			ms.SetDataType(typeof(DateTime), new SqlDataType(DataType.Int64, typeof(long)));
+			ms.SetDataType(typeof(DateTime), new DbDataType(typeof(long), DataType.Int64));
 			ms.SetConvertExpression((long l) => new DateTime(l, DateTimeKind.Utc));
 			ms.SetConvertExpression((DateTime t) => t.Ticks);
 			ms.SetConvertExpression((DateTime t) => t.Ticks.ToString(CultureInfo.InvariantCulture));
-			ms.SetValueToSqlConverter(typeof(DateTime),
-				(sb, dt, v) => sb.Append(((DateTime)v).Ticks.ToString(CultureInfo.InvariantCulture)));
+			ms.SetValueToSqlConverter(typeof(DateTime), (StringBuilder sb, DbDataType dt, object v) => sb.Append(((DateTime)v).Ticks.ToString(CultureInfo.InvariantCulture)));
 			ms.SetConvertExpression<DateTime, DataParameter>(dt => new DataParameter() { Value = dt.Ticks, DataType = DataType.Int64 });
 
 			using (var db = GetDataContext(context, ms))

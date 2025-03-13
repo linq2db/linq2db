@@ -115,7 +115,7 @@ namespace LinqToDB.DataProvider.Informix
 
 						if (IsTimeDataType(cast.ToType))
 						{
-							return new SqlCastExpression(new SqlExpression(cast.Expression.SystemType, "Extend({0}, Hour to Second)", Precedence.Primary, argument), new DbDataType(typeof(string), DataType.Char, null, 8), null, true);
+							return new SqlCastExpression(new SqlExpression(cast.Expression.SystemType, "Extend({0}, Hour to Second)", Precedence.Primary, argument), new DbDataType(typeof(string), DataType.Char, null, length: 8), null, true);
 						}
 
 						return new SqlFunction(cast.SystemType, "To_Date", argument);

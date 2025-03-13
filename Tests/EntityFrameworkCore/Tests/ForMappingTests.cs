@@ -201,7 +201,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using (var db = CreateContext(provider))
 			{
-				var ms = LinqToDBForEFTools.GetMappingSchema(db.Model, db, null);
+				var ms = LinqToDBForEFTools.GetMappingSchema(db.Model, db);
 				var ed = ms.GetEntityDescriptor(typeof(StringTypes));
 
 				ed.Columns.First(c => c.MemberName == nameof(StringTypes.AsciiString)).DataType.Should()
@@ -217,7 +217,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using (var db = CreateContext(provider))
 			{
-				var ms = LinqToDBForEFTools.GetMappingSchema(db.Model, db, null);
+				var ms = LinqToDBForEFTools.GetMappingSchema(db.Model, db);
 				var ed = ms.GetEntityDescriptor(typeof(TypesTable));
 
 				ed.Columns.First(c => c.MemberName == nameof(TypesTable.DateTime)).Length.Should().BeNull();
