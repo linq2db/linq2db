@@ -87,7 +87,6 @@ namespace LinqToDB.Linq.Builder
 		// Caches
 		SnapshotDictionary<ExprCacheKey, Expression>?                _associations;
 		SnapshotDictionary<ExprCacheKey, Expression>                 _translationCache             = new(ExprCacheKey.SqlCacheKeyComparer);
-		SnapshotDictionary<ExprCacheKey, Expression?>                _failSubqueryTranslationCache = new(ExprCacheKey.SqlCacheKeyComparer);
 		SnapshotDictionary<ColumnCacheKey, SqlPlaceholderExpression> _columnCache                  = new(ColumnCacheKey.ColumnCacheKeyComparer);
 
 		public ExpressionBuildVisitor(ExpressionBuilder builder)
@@ -2433,11 +2432,6 @@ namespace LinqToDB.Linq.Builder
 
 			var cacheKey = new ExprCacheKey(traversed, null, null, calculatedContext.SelectQuery, ProjectFlags.SQL | ProjectFlags.Subquery);
 
-			if (_failSubqueryTranslationCache.ContainsKey(cacheKey))
-			{
-				return false;
-			}
-
 			if (_translationCache.TryGetValue(cacheKey, out var alreadyTranslated))
 			{
 				subqueryExpression = alreadyTranslated;
@@ -2472,8 +2466,6 @@ namespace LinqToDB.Linq.Builder
 							return true;
 						}
 
-						_failSubqueryTranslationCache.Add(cacheKey, null);
-
 						return false;
 					}
 
@@ -2487,8 +2479,6 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				_failSubqueryTranslationCache.Add(cacheKey, null);
-
 				return false;
 			}
 
@@ -2501,8 +2491,6 @@ namespace LinqToDB.Linq.Builder
 			}
 			else if (isCollection)
 			{
-				_failSubqueryTranslationCache.Add(cacheKey, null);
-
 				return false;
 			}
 			else
@@ -2528,8 +2516,6 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					ctx.Detach();
-
-					_failSubqueryTranslationCache.Add(cacheKey, null);
 
 					return false;
 				}
