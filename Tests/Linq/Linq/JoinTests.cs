@@ -7,6 +7,8 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
@@ -496,7 +498,7 @@ namespace Tests.Linq
 
 				var list1 = q1.ToList();
 				var ch1   = list1[0].lj.ToList();
- 
+
 				var q2 =
 					from p in db.Parent
 						join c in db.Child on p.ParentID + n equals c.ParentID into lj
@@ -3479,5 +3481,56 @@ namespace Tests.Linq
 				.ToList();
 		}
 		#endregion
+
+		[Test]
+		public void NullableConditionalJoinTest([DataSources(false)] string context)
+		{
+			using var db   = GetDataContext(context);
+
+			var data1 = new []
+			{
+				new { ID = 1, Value = (string?)"Value1" },
+				new { ID = 2, Value = (string?)null     },
+			};
+
+			var data2 = new []
+			{
+				new { ID = 1, Value = "Value1" },
+				new { ID = 3, Value = "Value2" },
+			};
+
+			var data3 = new []
+			{
+				new { ID = 1, Value = (string?)"Value1" },
+				new { ID = 2, Value = (string?)null     },
+			};
+
+			using var temp1 = db.CreateTempTable("tmptbl1", data1, ed => ed.Property(p => p.Value).IsNullable());
+			using var temp2 = db.CreateTempTable("tmptbl2", data2, ed => ed.Property(p => p.Value).IsNotNull());
+			using var temp3 = db.CreateTempTable("tmptbl3", data3, ed => ed.Property(p => p.Value).IsNullable());
+
+			AreEqual(
+				from t2 in data1
+				join t3 in data2 on t2.ID equals t3.ID into gt3
+				from t3 in gt3.DefaultIfEmpty()
+				let Value = t3?.Value ?? t2.Value
+				join t4 in data3 on new { Value } equals new { t4.Value } into gt5
+				from t4 in gt5.DefaultIfEmpty()
+				select t4
+				,
+				from t2 in temp1
+				join t3 in temp2 on t2.ID equals t3.ID into gt3
+				from t3 in gt3.DefaultIfEmpty()
+				let Value = t3.Value ?? t2.Value
+				//let Value = Sql.AsNullable(t3.Value) ?? t2.Value
+				join t4 in temp3 on new { Value } equals new { t4.Value } into gt5
+				from t4 in gt5.DefaultIfEmpty()
+				select t4
+				,
+				printData : true);
+
+			if (db is DataConnection { DataProvider: FirebirdDataProvider})
+				FirebirdTools.ClearAllPools();
+		}
 	}
 }
