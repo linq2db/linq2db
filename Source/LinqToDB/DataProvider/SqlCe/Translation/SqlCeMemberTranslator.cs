@@ -213,7 +213,7 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
 			{
 				var factory = translationContext.ExpressionFactory;
-				var valueTypeString = factory.GetDbDataType(typeof(string));
+				var valueTypeString = factory.GetDbDataType(value);
 				var valueTypeInt = factory.GetDbDataType(typeof(int));
 
 				var valueString = factory.Add(valueTypeString, value, factory.Value(valueTypeString, "."));
@@ -227,7 +227,7 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 				 * SELECT REPLICATE(paddingSymbol, padding - LEN(value)) + value
 				 */
 				var factory = translationContext.ExpressionFactory;
-				var valueTypeString = factory.GetDbDataType(typeof(string));
+				var valueTypeString = factory.GetDbDataType(value);
 				var valueTypeInt = factory.GetDbDataType(typeof(int));
 
 				var lengthValue =  TranslateLength(translationContext, translationFlags, value);

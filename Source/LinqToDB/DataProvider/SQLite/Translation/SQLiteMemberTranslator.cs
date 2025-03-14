@@ -216,7 +216,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 
 				var factory = translationContext.ExpressionFactory;
 
-				var valueTypeString = factory.GetDbDataType(typeof(string));
+				var valueTypeString = factory.GetDbDataType(value);
 				var valueTypeInt = factory.GetDbDataType(typeof(int));
 
 				var valueZeroBlob = factory.Function(valueTypeString, "ZEROBLOB", padding);

@@ -174,7 +174,7 @@ namespace LinqToDB.Linq.Translation
 		public virtual ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 		{
 			var factory = translationContext.ExpressionFactory;
-			var valueTypeString = factory.GetDbDataType(typeof(string)); ;
+			var valueTypeString = factory.GetDbDataType(value); ;
 			return factory.Function(valueTypeString, "LPAD", value, padding, paddingChar);
 		}
 
@@ -182,7 +182,7 @@ namespace LinqToDB.Linq.Translation
 		{
 			var factory = translationContext.ExpressionFactory;
 
-			var valueType = factory.GetDbDataType(typeof(string));
+			var valueType = factory.GetDbDataType(value);
 
 			/*
 			 * CASE WHEN LEN(strValue) < 2 
