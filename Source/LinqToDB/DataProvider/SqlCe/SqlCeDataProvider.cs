@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 
 			SetCharField("NChar",    (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharField("NVarChar", (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("NVarChar", (r,i) => r.GetString(i));
 
 			ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), ProviderFieldType = typeof(SqlDecimal), DataReaderType = Adapter.DataReaderType }] = Adapter.GetDecimalExpression;
 
