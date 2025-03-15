@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net9.0</TargetFrameworks>
 		<DefineConstants>$([System.String]::Copy('$(DefineConstants)').Replace(';',','))</DefineConstants>
 	</PropertyGroup>
 
