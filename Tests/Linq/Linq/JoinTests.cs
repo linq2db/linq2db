@@ -3483,7 +3483,7 @@ namespace Tests.Linq
 		#endregion
 
 		[Test]
-		public void NullableConditionalJoinTest([DataSources(false)] string context)
+		public void NullableCoalesceJoinTest([DataSources(false)] string context)
 		{
 			using var db   = GetDataContext(context);
 
@@ -3509,25 +3509,16 @@ namespace Tests.Linq
 			using var temp2 = db.CreateTempTable("tmptbl2", data2, ed => ed.Property(p => p.Value).IsNotNull());
 			using var temp3 = db.CreateTempTable("tmptbl3", data3, ed => ed.Property(p => p.Value).IsNullable());
 
-			AreEqual(
-				from t2 in data1
-				join t3 in data2 on t2.ID equals t3.ID into gt3
-				from t3 in gt3.DefaultIfEmpty()
-				let Value = t3?.Value ?? t2.Value
-				join t4 in data3 on new { Value } equals new { t4.Value } into gt5
-				from t4 in gt5.DefaultIfEmpty()
-				select t4
-				,
+			var query =
 				from t2 in temp1
 				join t3 in temp2 on t2.ID equals t3.ID into gt3
 				from t3 in gt3.DefaultIfEmpty()
 				let Value = t3.Value ?? t2.Value
-				//let Value = Sql.AsNullable(t3.Value) ?? t2.Value
 				join t4 in temp3 on new { Value } equals new { t4.Value } into gt5
 				from t4 in gt5.DefaultIfEmpty()
-				select t4
-				,
-				printData : true);
+				select t4;
+
+			AssertQuery(query);
 
 			if (db is DataConnection { DataProvider: FirebirdDataProvider})
 				FirebirdTools.ClearAllPools();
