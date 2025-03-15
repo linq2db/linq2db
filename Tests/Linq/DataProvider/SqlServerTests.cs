@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -2088,17 +2088,17 @@ RETURNS TABLE
 AS
 	RETURN ( SELECT * FROM dbo.Person WHERE PersonID = @ID AND FirstName = @FirstName )
 ");
-					PersonTableFunction(db, null, person.ID, person.FirstName).First().Should().Be(person);
-					GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Times(2));
+					PersonTableFunction(db, null, person.ID, person.FirstName).First().ShouldBe(person);
+					GetCurrentBaselines().ShouldContain("DECLARE", Exactly.Times(2));
 
-					PersonTableFunctionTable(db, null, person.ID, person.FirstName).First().Should().Be(person);
-					GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Times(4));
+					PersonTableFunctionTable(db, null, person.ID, person.FirstName).First().ShouldBe(person);
+					GetCurrentBaselines().ShouldContain("DECLARE", Exactly.Times(4));
 
-					PersonTableFunction(db, null, person.ID, person.FirstName).First().Should().Be(person);
-					GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Times(6));
+					PersonTableFunction(db, null, person.ID, person.FirstName).First().ShouldBe(person);
+					GetCurrentBaselines().ShouldContain("DECLARE", Exactly.Times(6));
 
-					PersonTableFunctionTable(db, null, person.ID, person.FirstName).First().Should().Be(person);
-					GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Times(8));
+					PersonTableFunctionTable(db, null, person.ID, person.FirstName).First().ShouldBe(person);
+					GetCurrentBaselines().ShouldContain("DECLARE", Exactly.Times(8));
 
 					var query =
 						from p in db.Person
@@ -2108,10 +2108,10 @@ AS
 						from tet in PersonTableExpressionTable(db, null, person.ID, person.FirstName).InnerJoin(tet => tet.ID == p.ID)
 						select p;
 
-					query.First().Should().Be(person);;
+					query.First().ShouldBe(person);;
 
 					// last query should have only 2 parameters
-					GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Times(10));
+					GetCurrentBaselines().ShouldContain("DECLARE", Exactly.Times(10));
 				}
 				finally
 				{

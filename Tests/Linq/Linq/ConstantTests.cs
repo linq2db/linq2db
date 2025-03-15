@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB.Mapping;
 
@@ -86,7 +86,7 @@ namespace Tests.Linq
 				where e.GuidValue == ConstantsContainer.GuidReadonly && e.GuidNullableValue == ConstantsContainer.GuidReadonly
 				select e;
 
-			query.GetStatement().CollectParameters().Should().HaveCount(0);
+			query.GetStatement().CollectParameters().Length.ShouldBe(0);
 
 			AssertQuery(query);
 		}
@@ -102,7 +102,7 @@ namespace Tests.Linq
 				where e.GuidValue == ConstantsContainer.GuidNonReadonly && e.GuidNullableValue == ConstantsContainer.GuidNonReadonly
 				select e;
 
-			query.GetStatement().CollectParameters().Should().HaveCount(context.IsUseParameters() ? 1 : 0);
+			query.GetStatement().CollectParameters().Length.ShouldBe(context.IsUseParameters() ? 1 : 0);
 
 			AssertQuery(query);
 		}
@@ -118,7 +118,7 @@ namespace Tests.Linq
 				where e.StringValue + "1" == ConstantsContainer.StringReadOnly + "1"
 				select e;
 
-			query.GetStatement().CollectParameters().Should().HaveCount(0);
+			query.GetStatement().CollectParameters().Length.ShouldBe(0);
 
 			AssertQuery(query);
 		}
@@ -134,7 +134,7 @@ namespace Tests.Linq
 				where e.StringValue + "1" == ConstantsContainer.StringNonReadOnly + "1"
 				select e;
 
-			query.GetStatement().CollectParameters().Should().HaveCount(context.IsUseParameters() ? 1 : 0);
+			query.GetStatement().CollectParameters().Length.ShouldBe(context.IsUseParameters() ? 1 : 0);
 
 			AssertQuery(query);
 		}
@@ -149,7 +149,7 @@ namespace Tests.Linq
 				where e.Id == ConstantsContainer.InnerClassReadonly.Id && e.Id == ConstantsContainer.InnerClassReadonly.InitOnlyId
 				select e;
 
-			query.GetStatement().CollectParameters().Should().HaveCount(0);
+			query.GetStatement().CollectParameters().Length.ShouldBe(0);
 			AssertQuery(query);
 
 			var query2 =
@@ -161,7 +161,7 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			query2.GetCacheMissCount().Should().Be(cacheMissCount);
+			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
 #if NET6_0_OR_GREATER
@@ -175,7 +175,7 @@ namespace Tests.Linq
 				where e.Id == ConstantsContainer.InnerReadonlyStructure.Id && e.Id == ConstantsContainer.InnerReadonlyStructure.GetId(1)
 				select e;
 
-			query.GetStatement().CollectParameters().Should().HaveCount(0);
+			query.GetStatement().CollectParameters().Length.ShouldBe(0);
 			AssertQuery(query);
 
 			var query2 =
@@ -187,7 +187,7 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			query2.GetCacheMissCount().Should().Be(cacheMissCount);
+			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
 		[Test]
@@ -200,7 +200,7 @@ namespace Tests.Linq
 				where e.Id == ConstantsContainer.InnerNonReadonlyStructure.Id && e.Id == ConstantsContainer.InnerNonReadonlyStructure.GetId(1)
 				select e;
 
-			query.GetStatement().CollectParameters().Should().HaveCount(context.IsUseParameters() ? 2 : 0);
+			query.GetStatement().CollectParameters().Length.ShouldBe(context.IsUseParameters() ? 2 : 0);
 			AssertQuery(query);
 
 			var query2 =
@@ -212,7 +212,7 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			query2.GetCacheMissCount().Should().Be(cacheMissCount);
+			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 #endif
 
@@ -226,7 +226,7 @@ namespace Tests.Linq
 				where e.Id == ConstantsContainer.InnerClassNonReadonly.Id && e.Id == ConstantsContainer.InnerClassNonReadonly.InitOnlyId
 				select e;
 
-			query.GetStatement().CollectParameters().Should().HaveCount(context.IsUseParameters() ? 2 : 0);
+			query.GetStatement().CollectParameters().Length.ShouldBe(context.IsUseParameters() ? 2 : 0);
 			AssertQuery(query);
 
 			var query2 =
@@ -238,7 +238,7 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			query2.GetCacheMissCount().Should().Be(cacheMissCount);
+			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
 		[Test]
@@ -254,7 +254,7 @@ namespace Tests.Linq
 				where e.Id == innerClass.Id && e.Id == innerClass.InitOnlyId
 				select e;
 
-			query.GetStatement().CollectParameters().Should().HaveCount(context.IsUseParameters() ? 2 : 0);
+			query.GetStatement().CollectParameters().Length.ShouldBe(context.IsUseParameters() ? 2 : 0);
 			AssertQuery(query);
 
 			var query2 =
@@ -266,7 +266,7 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			query2.GetCacheMissCount().Should().Be(cacheMissCount);
+			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
 	}

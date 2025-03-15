@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -65,7 +65,7 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			query2.GetCacheMissCount().Should().Be(cacheMissCount);
+			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
 		[Test]
@@ -80,7 +80,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 
 			if (iteration > 0)
-				query.GetCacheMissCount().Should().Be(cacheMissCount);
+				query.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
 		[Test]

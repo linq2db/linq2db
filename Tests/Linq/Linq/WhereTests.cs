@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -1860,7 +1860,7 @@ namespace Tests.Linq
 
 				var str = query.ToSqlQuery().Sql;
 
-				str.Should().Contain("IS NOT NULL");
+				str.ShouldContain("IS NOT NULL");
 			}
 		}
 
@@ -1879,9 +1879,9 @@ namespace Tests.Linq
 				var result = query.ToArray();
 
 				if (filterValue == null)
-					result.Should().HaveCount(1);
+					result.Length.ShouldBe(1);
 				else
-					result.Should().HaveCount(0);
+					result.Length.ShouldBe(0);
 			}
 		}
 

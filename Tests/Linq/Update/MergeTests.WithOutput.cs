@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Async;
@@ -35,15 +35,15 @@ namespace Tests.xUpdate
 
 				var result = outputRows.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.a.Should().Be("INSERT");
-				record.deleted.Id.Should().Be(0);
+				record.a.ShouldBe("INSERT");
+				record.deleted.Id.ShouldBe(0);
 
-				record.inserted.Id.Should().Be(5);
-				record.inserted.Field1.Should().Be(10);
+				record.inserted.Id.ShouldBe(5);
+				record.inserted.Field1.ShouldBe(10);
 			}
 		}
 
@@ -65,14 +65,14 @@ namespace Tests.xUpdate
 
 				var result = outputRows.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.deleted.Id.Should().Be(0);
+				record.deleted.Id.ShouldBe(0);
 
-				record.inserted.Id.Should().Be(5);
-				record.inserted.Field1.Should().Be(10);
+				record.inserted.Id.ShouldBe(5);
+				record.inserted.Field1.ShouldBe(10);
 			}
 		}
 
@@ -97,11 +97,11 @@ namespace Tests.xUpdate
 				{
 					cnt++;
 
-					record.a.Should().Be("INSERT");
-					record.deleted.Id.Should().Be(0);
+					record.a.ShouldBe("INSERT");
+					record.deleted.Id.ShouldBe(0);
 
-					record.inserted.Id.Should().Be(5);
-					record.inserted.Field1.Should().Be(10);
+					record.inserted.Id.ShouldBe(5);
+					record.inserted.Field1.ShouldBe(10);
 				}
 
 				Assert.That(cnt, Is.EqualTo(1));
@@ -130,10 +130,10 @@ namespace Tests.xUpdate
 					Assert.That(hasRecord, Is.False);
 					hasRecord = true;
 
-					record.deleted.Id.Should().Be(0);
+					record.deleted.Id.ShouldBe(0);
 
-					record.inserted.Id.Should().Be(5);
-					record.inserted.Field1.Should().Be(10);
+					record.inserted.Id.ShouldBe(5);
+					record.inserted.Field1.ShouldBe(10);
 				}
 
 				Assert.That(hasRecord, Is.True);
@@ -158,13 +158,13 @@ namespace Tests.xUpdate
 
 				var result = outputRows.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.a.Should().Be("INSERT");
+				record.a.ShouldBe("INSERT");
 
-				record.Id.Should().Be(5);
+				record.Id.ShouldBe(5);
 			}
 		}
 
@@ -192,13 +192,13 @@ namespace Tests.xUpdate
 
 				var result = outputRows.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.a.Should().Be("INSERT");
+				record.a.ShouldBe("INSERT");
 
-				record.Id.Should().Be("5");
+				record.Id.ShouldBe("5");
 			}
 		}
 
@@ -225,11 +225,11 @@ namespace Tests.xUpdate
 
 				var result = outputRows.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Id.Should().Be("5");
+				record.Id.ShouldBe("5");
 			}
 		}
 
@@ -260,10 +260,10 @@ namespace Tests.xUpdate
 
 				var result = outputRows.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 				var record = result[0];
 
-				record.Field2.Should().Be(3);
+				record.Field2.ShouldBe(3);
 			}
 		}
 
@@ -285,11 +285,11 @@ namespace Tests.xUpdate
 
 				var result = outputRows.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Id.Should().Be(5);
+				record.Id.ShouldBe(5);
 			}
 		}
 
@@ -327,18 +327,18 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.   Should().Be("INSERT");
-				record.NewId.    Should().Be(5);
-				record.DeletedId.Should().BeNull();
-				record.SourceId. Should().Be(6);
+				record.Action.   ShouldBe("INSERT");
+				record.NewId.    ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
+				record.SourceId. ShouldBe(6);
 			}
 		}
 		
@@ -368,18 +368,18 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.   Should().Be("INSERT");
-				record.NewId.    Should().Be(5);
-				record.DeletedId.Should().BeNull();
-				record.SourceId. Should().Be(6);
+				record.Action.   ShouldBe("INSERT");
+				record.NewId.    ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
+				record.SourceId. ShouldBe(6);
 			}
 		}
 
@@ -409,18 +409,18 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.   Should().Be("Row Inserted");
-				record.NewId.    Should().Be(5);
-				record.DeletedId.Should().BeNull();
-				record.SourceId. Should().Be(6);
+				record.Action.   ShouldBe("Row Inserted");
+				record.NewId.    ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
+				record.SourceId. ShouldBe(6);
 			}
 		}
 
@@ -444,19 +444,19 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
+				record.Action.ShouldBe("INSERT");
 
-				record.NewId.Should().Be(5);
-				record.DeletedId.Should().BeNull();
+				record.NewId.ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
 			}
 		}
 		
@@ -483,19 +483,19 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
+				record.Action.ShouldBe("INSERT");
 
-				record.NewId.Should().Be(5);
-				record.DeletedId.Should().BeNull();
+				record.NewId.ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
 			}
 		}
 
@@ -518,19 +518,19 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
+				record.Action.ShouldBe("INSERT");
 
-				record.NewId.Should().Be(5);
-				record.DeletedId.Should().BeNull();
+				record.NewId.ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
 			}
 		}
 
@@ -554,19 +554,19 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = await temp.ToArrayAsync();
 
-				result.Should().HaveCount(1);
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
+				record.Action.ShouldBe("INSERT");
 
-				record.NewId.Should().Be(5);
-				record.DeletedId.Should().BeNull();
+				record.NewId.ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
 			}
 		}
 
@@ -593,19 +593,19 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = await temp.ToArrayAsync();
 
-				result.Should().HaveCount(1);
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
+				record.Action.ShouldBe("INSERT");
 
-				record.NewId.Should().Be(5);
-				record.DeletedId.Should().BeNull();
+				record.NewId.ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
 			}
 		}
 
@@ -638,18 +638,18 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
-				record.NewId.Should().Be(5);
-				record.DeletedId.Should().BeNull();
-				record.SourceId.Should().Be(6);
+				record.Action.ShouldBe("INSERT");
+				record.NewId.ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
+				record.SourceId.ShouldBe(6);
 			}
 		}
 
@@ -682,18 +682,18 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
-				record.NewId.Should().Be(5);
-				record.DeletedId.Should().BeNull();
-				record.SourceId.Should().Be(6);
+				record.Action.ShouldBe("INSERT");
+				record.NewId.ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
+				record.SourceId.ShouldBe(6);
 			}
 		}
 

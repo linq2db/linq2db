@@ -1,6 +1,6 @@
 ﻿using System;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
@@ -28,28 +28,28 @@ namespace Tests.Common
 		public void VirtualPropDerived()
 		{
 			var prop = MemberHelper.PropertyOf<DerivedEntity>(x => x.PropVirtual);
-			typeof(DerivedEntity).GetMemberEx(prop).Should().Be(prop);
+			typeof(DerivedEntity).GetMemberEx(prop).ShouldBe(prop);
 		}
 
 		[Test]
 		public void NonVirtualPropDerived()
 		{
 			var prop = MemberHelper.PropertyOf<DerivedEntity>(x => x.PropNonVirtual);
-			typeof(DerivedEntity).GetMemberEx(prop).Should().Be(prop);
+			typeof(DerivedEntity).GetMemberEx(prop).ShouldBe(prop);
 		}
 
 		[Test]
 		public void VirtualProp()
 		{
 			var prop = MemberHelper.PropertyOf<DerivedEntity>(x => x.PropVirtual);
-			typeof(BaseEntity).GetMemberEx(prop).Should().NotBe(prop);
+			typeof(BaseEntity).GetMemberEx(prop).ShouldNotBe(prop);
 		}
 
 		[Test]
 		public void NonVirtualProp()
 		{
 			var prop = MemberHelper.PropertyOf<DerivedEntity>(x => x.PropNonVirtual);
-			typeof(BaseEntity).GetMemberEx(prop).Should().NotBe(prop);
+			typeof(BaseEntity).GetMemberEx(prop).ShouldNotBe(prop);
 		}
 
 	}

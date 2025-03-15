@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -259,7 +259,7 @@ namespace Tests.Linq
 
 				if (iteration > 1)
 				{
-					query.GetCacheMissCount().Should().Be(save);
+					query.GetCacheMissCount().ShouldBe(save);
 				}
 
 				var expected = table
@@ -782,7 +782,7 @@ namespace Tests.Linq
 				Test(2, null);
 				Test(3, 3);
 
-				Query<Values<int?>>.CacheMissCount.Should().Be(saveCount);
+				Query<Values<int?>>.CacheMissCount.ShouldBe(saveCount);
 
 				void Test(int? value1, int? value2)
 				{

@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Data;
