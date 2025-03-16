@@ -2836,7 +2836,9 @@ namespace LinqToDB.Linq.Builder
 
 			var stack = new Stack<Expression>();
 
-			var clientItems  = new List<Expression>();
+			List<Expression>? clientItems = null;
+			List<Expression>? allItems    = null;
+
 			var items        = new List<Expression>();
 			var binary       = node;
 
@@ -2859,12 +2861,15 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						clientItems.Add(item);
+						(clientItems ??= []).Add(item);
+						allItems ??= [.. items];
 					}
+
+					allItems?.Add(item);
 				}
 			}
 
-			var predicates = new List<ISqlPredicate?>(items.Count + clientItems.Count > 0 ? 1 : 0);
+			var predicates = new List<ISqlPredicate?>(items.Count + clientItems?.Count > 0 ? 1 : 0);
 			var hasError   = false;
 
 			using var saveAlias = UsingAlias("cond");
@@ -2872,7 +2877,7 @@ namespace LinqToDB.Linq.Builder
 
 			var errorOffset = 0;
 
-			if (clientItems.Count != 0)
+			if (clientItems?.Count > 1)
 			{
 				var clientCondition = clientItems.Aggregate(node.NodeType == ExpressionType.AndAlso ? Expression.AndAlso : Expression.OrElse);
 
@@ -2890,11 +2895,11 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 				}
+			}
 
-				if (predicates.Count == 0)
-				{
-					items.InsertRange(0, clientItems);
-				}
+			if (predicates.Count == 0 && clientItems != null)
+			{
+				items = allItems!;
 			}
 
 			foreach (var predicateExpr in items)
