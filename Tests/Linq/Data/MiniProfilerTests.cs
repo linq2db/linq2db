@@ -74,7 +74,7 @@ namespace Tests.Data
 		{
 			public MiniProfilerDataContext(string configurationString)
 #pragma warning disable CA2000 // Dispose objects before losing scope
-				: base(GetDataProvider(), GetConnection(configurationString)) { }
+				: base(new DataOptions().UseConnection(GetDataProvider(), GetConnection(configurationString))) { }
 #pragma warning restore CA2000 // Dispose objects before losing scope
 
 			private static IDataProvider GetDataProvider()

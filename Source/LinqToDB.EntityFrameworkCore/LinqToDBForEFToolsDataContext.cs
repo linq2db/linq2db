@@ -31,7 +31,7 @@ namespace LinqToDB.EntityFrameworkCore
 			IDataProvider                                                         dataProvider,
 			string                                                                connectionString,
 			IModel                                                                model,
-			Func<Expression, IDataContext, DbContext?, IModel, bool, Expression>? transformFunc) : base(dataProvider, connectionString)
+			Func<Expression, IDataContext, DbContext?, IModel, bool, Expression>? transformFunc) : base(new DataOptions().UseConnectionString(dataProvider, connectionString))
 		{
 			_context       = context;
 			_model         = model;

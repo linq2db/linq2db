@@ -38,7 +38,7 @@ namespace Tests.UserTests
 				: base(configuration)
 			{
 			}
-			public MyDB(IDataProvider dataProvider, string connectionString) : base(dataProvider, connectionString)
+			public MyDB(IDataProvider dataProvider, string connectionString) : base(new DataOptions().UseConnectionString(dataProvider, connectionString))
 			{
 			}
 		}
