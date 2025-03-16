@@ -688,6 +688,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Defines configuration sting to use with DataOptions.
 		/// </summary>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Use UseConfiguration method instead"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Pure]
 		public static DataOptions UseConfigurationString(this DataOptions options, string? configurationString)
 		{
@@ -697,6 +699,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Defines configuration sting and MappingSchema to use with DataOptions.
 		/// </summary>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Use UseConfiguration method instead"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Pure]
 		public static DataOptions UseConfigurationString(this DataOptions options, string configurationString, MappingSchema mappingSchema)
 		{
@@ -717,7 +721,7 @@ namespace LinqToDB
 		/// Defines configuration sting and MappingSchema to use with DataOptions.
 		/// </summary>
 		[Pure]
-		public static DataOptions UseConfiguration(this DataOptions options, string configurationString, MappingSchema mappingSchema)
+		public static DataOptions UseConfiguration(this DataOptions options, string? configurationString, MappingSchema mappingSchema)
 		{
 			return options
 				.WithOptions<ConnectionOptions> (o => o with { ConfigurationString = configurationString, MappingSchema = mappingSchema });

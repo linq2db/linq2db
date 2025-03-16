@@ -462,7 +462,7 @@ namespace Tests.DataProvider
 			SqlCeTools.CreateDatabase ("TestDatabase");
 			Assert.That(File.Exists ("TestDatabase.sdf"), Is.True);
 
-			using (var db = new DataConnection(SqlCeTools.GetDataProvider(), "Data Source=TestDatabase.sdf"))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(SqlCeTools.GetDataProvider(), "Data Source=TestDatabase.sdf")))
 			{
 				db.CreateTable<CreateTableTest>();
 				db.DropTable  <CreateTableTest>();

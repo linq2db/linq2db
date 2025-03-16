@@ -15,7 +15,7 @@ namespace Tests.UserTests
 		public void TestOleDb([IncludeDataSources(ProviderName.AccessAceOleDb)] string context)
 		{
 			var cs = DataConnection.GetConnectionString(context);
-			using (var db = new DataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: cs), "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\issue_10_linqpad.accdb;"))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: cs), "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\issue_10_linqpad.accdb;")))
 			{
 				var schemaProvider = db.DataProvider.GetSchemaProvider();
 
@@ -35,7 +35,7 @@ namespace Tests.UserTests
 		public void TestOdbc([IncludeDataSources(ProviderName.AccessAceOdbc)] string context)
 		{
 			var cs = DataConnection.GetConnectionString(context);
-			using (var db = new DataConnection(AccessTools.GetDataProvider(provider: AccessProvider.ODBC, connectionString: cs), "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\issue_10_linqpad.accdb;"))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(AccessTools.GetDataProvider(provider: AccessProvider.ODBC, connectionString: cs), "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\issue_10_linqpad.accdb;")))
 			{
 				var schemaProvider = db.DataProvider.GetSchemaProvider();
 

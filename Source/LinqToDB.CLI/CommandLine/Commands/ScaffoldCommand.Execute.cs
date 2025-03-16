@@ -314,7 +314,7 @@ Provider could be downloaded from:
 							return null;
 						}
 
-						secondaryConnection = new DataConnection(secondaryDataProvider, additionalConnectionString);
+						secondaryConnection = new DataConnection(new DataOptions().UseConnectionString(secondaryDataProvider, additionalConnectionString));
 						// to simplify things for caller (no need to detect connection type)
 						// returned connection should be OLE DB and additional - ODBC
 						returnSecondary     = isSecondaryOleDb;
@@ -335,7 +335,7 @@ Provider could be downloaded from:
 				return null;
 			}
 
-			var dc = new DataConnection(dataProvider, connectionString);
+			var dc = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString));
 
 			if (secondaryConnection != null && returnSecondary)
 			{

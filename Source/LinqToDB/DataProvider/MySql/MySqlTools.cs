@@ -40,7 +40,8 @@ namespace LinqToDB.DataProvider.MySql
 			MySqlVersion  version  = MySqlVersion.AutoDetect,
 			MySqlProvider provider = MySqlProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version), connectionString);
+			return new DataConnection(new DataOptions()
+				.UseConnectionString(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version), connectionString));
 		}
 
 		public static DataConnection CreateDataConnection(
@@ -48,7 +49,8 @@ namespace LinqToDB.DataProvider.MySql
 			MySqlVersion  version  = MySqlVersion.AutoDetect,
 			MySqlProvider provider = MySqlProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, version), connection);
+			return new DataConnection(new DataOptions()
+				.UseConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, version), connection));
 		}
 
 		public static DataConnection CreateDataConnection(
@@ -56,7 +58,8 @@ namespace LinqToDB.DataProvider.MySql
 			MySqlVersion  version  = MySqlVersion.AutoDetect,
 			MySqlProvider provider = MySqlProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, version), transaction);
+			return new DataConnection(new DataOptions()
+				.UseTransaction(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, version), transaction));
 		}
 
 		#endregion

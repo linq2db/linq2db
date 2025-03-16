@@ -120,7 +120,7 @@ namespace Tests
 
 			Debug.WriteLine(configuration, "Provider ");
 
-			var options = new DataOptions().UseConfigurationString(configuration);
+			var options = new DataOptions().UseConfiguration(configuration);
 
 			if (configuration.IsAnyOf(TestProvName.AllSqlServerSequentialAccess))
 			{

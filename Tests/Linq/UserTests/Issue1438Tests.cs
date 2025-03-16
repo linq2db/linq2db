@@ -70,7 +70,7 @@ namespace Tests.UserTests
 				.Build();
 
 			using (var cn = new NpgsqlConnection(cs))
-			using (var db = new DataConnection(provider, cn))
+			using (var db = new DataConnection(new DataOptions().UseConnection(provider, cn)))
 			{
 				db.AddMappingSchema(ms);
 				using (var tbl = db.CreateLocalTable<Client>())

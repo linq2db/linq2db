@@ -34,7 +34,7 @@ namespace Tests.UserTests
 				  .HasColumn(x => x.Value)
 				  .Build();
 
-			using (var db = new DataConnection(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Auto })))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseFirebird(o => o with { IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Auto })))
 			{
 				db.AddMappingSchema(schema);
 				try

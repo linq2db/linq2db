@@ -455,7 +455,7 @@ namespace Tests.DataProvider
 			Assert.That(File.Exists(expectedName), Is.True);
 
 			var connectionString = $"Provider={providerName};Data Source={expectedName};Locale Identifier=1033;Persist Security Info=True";
-			using (var db = new DataConnection(AccessTools.GetDataProvider(version, AccessProvider.AutoDetect, connectionString), connectionString))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(AccessTools.GetDataProvider(version, AccessProvider.AutoDetect, connectionString), connectionString)))
 			{
 				db.CreateTable<SqlCeTests.CreateTableTest>();
 				db.DropTable<SqlCeTests.CreateTableTest>();

@@ -57,7 +57,7 @@ namespace Tests.Data
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
 			using (var db0 = (TestDataConnection)GetDataContext(context))
-			using (var db  = new DataContext(db0.DataProvider.Name, "BAD"))
+			using (var db  = new DataContext(new DataOptions().UseConnectionString(db0.DataProvider.Name, "BAD")))
 			{
 				db.OnTraceConnection = e =>
 				{
@@ -91,7 +91,7 @@ namespace Tests.Data
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
 			using (var db0 = (TestDataConnection)GetDataContext(context))
-			using (var db  = new DataContext(db0.DataProvider.Name, "BAD"))
+			using (var db  = new DataContext(new DataOptions().UseConnectionString(db0.DataProvider.Name, "BAD")))
 			{
 				db.OnTraceConnection = e =>
 				{

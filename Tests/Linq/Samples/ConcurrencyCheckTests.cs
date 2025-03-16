@@ -17,7 +17,7 @@ namespace Tests.Samples
 	{
 		sealed class InterceptDataConnection : DataConnection
 		{
-			public InterceptDataConnection(string providerName, string connectionString) : base(providerName, connectionString)
+			public InterceptDataConnection(string providerName, string connectionString) : base(new DataOptions().UseConnectionString(providerName, connectionString))
 			{
 			}
 

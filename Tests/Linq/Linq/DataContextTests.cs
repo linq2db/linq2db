@@ -75,7 +75,7 @@ namespace Tests.Linq
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
-				Assert.Throws<LinqToDBException>(() => new DataContext("BAD", db.ConnectionString!));
+				Assert.Throws<LinqToDBException>(() => new DataContext(new DataOptions().UseConnectionString("BAD", db.ConnectionString!)));
 			}
 
 		}
@@ -83,7 +83,7 @@ namespace Tests.Linq
 		public void ProviderConnectionStringConstructorTest2([DataSources(false)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
-			using (var db1 = new DataContext(db.DataProvider.Name, "BAD"))
+			using (var db1 = new DataContext(new DataOptions().UseConnectionString(db.DataProvider.Name, "BAD")))
 			{
 				Assert.That(
 					() => db1.GetTable<Child>().ToList(),
@@ -96,7 +96,7 @@ namespace Tests.Linq
 		public void ProviderConnectionStringConstructorTest3([DataSources(false)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
-			using (var db1 = new DataContext(db.DataProvider.Name, db.ConnectionString!))
+			using (var db1 = new DataContext(new DataOptions().UseConnectionString(db.DataProvider.Name, db.ConnectionString!)))
 			{
 				Assert.Multiple(() =>
 				{

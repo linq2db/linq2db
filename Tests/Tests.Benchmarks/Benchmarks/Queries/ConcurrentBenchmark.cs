@@ -60,7 +60,7 @@ namespace LinqToDB.Benchmarks.Queries
 
 			for (var i = 0; i < _threads.Length; i++)
 			{
-				_db[i]                   = new DataConnection(PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v95), _cn);
+				_db[i]                   = new DataConnection(new DataOptions().UseConnection(PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v95), _cn));
 				_threads[i]              = new Thread(ThreadWorker);
 				_threads[i].IsBackground = true; // we don't stop threads explicitly
 				_threads[i].Start(i);

@@ -539,7 +539,7 @@ namespace Tests.DataProvider
 			Assert.That(File.Exists ("TestDatabase.sqlite"), Is.True);
 
 			var provider = context.IsAnyOf(TestProvName.AllSQLiteClassic) ? SQLiteProvider.System : SQLiteProvider.Microsoft;
-			using (var db = new DataConnection(SQLiteTools.GetDataProvider(provider), "Data Source=TestDatabase.sqlite"))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(SQLiteTools.GetDataProvider(provider), "Data Source=TestDatabase.sqlite")))
 			{
 				db.CreateTable<CreateTableTest>();
 				db.DropTable  <CreateTableTest>();
@@ -672,7 +672,7 @@ namespace Tests.DataProvider
 			if (context.Contains("Classic") && columnType != "TEXT")
 				Assert.Inconclusive("System.Data.SQLite doesn't supports only ISO8601 dates as of v1.0.108");
 
-			using var db    = new DataConnection(context, ConfigureMapping(columnType));
+			using var db    = new DataConnection(new DataOptions().UseConfiguration(context, ConfigureMapping(columnType)));
 			using var table = db.CreateLocalTable<DateTimeTable>();
 
 			db.InlineParameters = inline;
@@ -721,7 +721,7 @@ namespace Tests.DataProvider
 			if (context.Contains("Classic") && columnType != "TEXT")
 				Assert.Inconclusive("System.Data.SQLite doesn't supports only ISO8601 dates as of v1.0.108");
 
-			using var db    = new DataConnection(context, ConfigureMapping(columnType));
+			using var db    = new DataConnection(new DataOptions().UseConfiguration(context, ConfigureMapping(columnType)));
 			using var table = db.CreateLocalTable<DateTimeTable>();
 
 			db.InlineParameters = inline;
