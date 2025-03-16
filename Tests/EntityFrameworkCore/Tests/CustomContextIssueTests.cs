@@ -229,6 +229,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		#region Issue 4783
 
+#if NET9_0_OR_GREATER
 		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4783")]
 		public async ValueTask Issue4783Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
@@ -309,6 +310,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Open,
 			Closed
 		}
+#endif
 
 		#endregion
 	}

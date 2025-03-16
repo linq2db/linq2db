@@ -6,6 +6,10 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 using Tests;
 
+#if NETFRAMEWORK
+using System.Linq;
+#endif
+
 namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	internal static class TestContextTracker
