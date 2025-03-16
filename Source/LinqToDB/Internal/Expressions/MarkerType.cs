@@ -2,6 +2,7 @@
 {
 	public enum MarkerType
 	{
+		None = 0,
 		PreferClientSide,
 	}
 }

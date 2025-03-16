@@ -22,9 +22,11 @@ namespace LinqToDB.Internal.Expressions
 
 		public static Expression PreferClientSide(Expression innerExpression)
 		{
-			if (innerExpression is SqlPlaceholderExpression)
-				return innerExpression;
-			return new MarkerExpression(innerExpression, MarkerType.PreferClientSide);
+			return innerExpression switch
+			{
+				SqlPlaceholderExpression => innerExpression,
+				_ => new MarkerExpression(innerExpression, MarkerType.PreferClientSide),
+			};
 		}
 
 		public MarkerExpression Update(Expression closureExpression)
@@ -36,9 +38,11 @@ namespace LinqToDB.Internal.Expressions
 
 		protected override Expression Accept(ExpressionVisitor visitor)
 		{
-			if (visitor is ExpressionVisitorBase baseVisitor)
-				return baseVisitor.VisitMarkerExpression(this);
-			return base.Accept(visitor);
+			return visitor switch
+			{
+				ExpressionVisitorBase baseVisitor => baseVisitor.VisitMarkerExpression(this),
+				_ => base.Accept(visitor),
+			};
 		}
 
 		public override string ToString()
