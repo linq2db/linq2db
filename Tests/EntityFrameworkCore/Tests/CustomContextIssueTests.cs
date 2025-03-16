@@ -1,10 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Threading.Tasks;
 
+using LinqToDB.DataProvider.PostgreSQL;
+using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
 using LinqToDB.Interceptors;
 
 using Microsoft.EntityFrameworkCore;
+
+using Npgsql;
 
 using NUnit.Framework;
 
@@ -221,5 +227,89 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 		#endregion
 
+		#region Issue 4783
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4783")]
+		public async ValueTask Issue4783Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
+		{
+			var connectionString = GetConnectionString(provider);
+
+			var optionsBuilder = new DbContextOptionsBuilder();
+
+			var dataSource = new NpgsqlDataSourceBuilder(connectionString)
+				.MapEnum<Issue4783DBStatus>()
+				.Build();
+
+			optionsBuilder = optionsBuilder.UseNpgsql(
+				dataSource,
+				o => o.UseNodaTime().MapEnum<Issue4783DBStatus>())
+				// TODO: remove and fix connection detection logic to use existing connection without extra connection
+				//.UseLinqToDB(builder => builder.AddCustomOptions(o => o.UsePostgreSQL(connectionString, PostgreSQLVersion.v15)))
+				;
+
+			using var ctx = new Issue4783Context(optionsBuilder.Options);
+
+			using (new DisableBaseline("create db"))
+			{
+				ctx.Database.EnsureDeleted();
+				ctx.Database.EnsureCreated();
+			}
+
+			var entities = new List<Issue4783RecordDb>()
+			{
+				new(0, "EF", Issue4783DBStatus.Open, Issue4783DBStatus.Open),
+				new(0, "EF", Issue4783DBStatus.Closed, Issue4783DBStatus.Closed),
+				new(0, "EF", Issue4783DBStatus.Closed, null)
+			};
+
+			ctx.Issue4783DBRecords.AddRange(entities);
+			await ctx.SaveChangesAsync();
+
+			await ctx.BulkCopyAsync(entities.Select(x => x with { Source = "linq2db" }));
+
+			using var db = ctx.CreateLinqToDBConnection();
+			var results = await db.GetTable<Issue4783RecordDbRaw>().OrderBy(r => r.Id).ToArrayAsync();
+
+			using (Assert.EnterMultipleScope())
+			{
+				for (var i = 0; i < results.Length; i++)
+				{
+					Assert.That(results[i].Status,         Is.EqualTo(entities[i % entities.Count].Status),         $"{results[i].Source}:({results[i].Id})");
+					Assert.That(results[i].NullableStatus, Is.EqualTo(entities[i % entities.Count].NullableStatus), $"{results[i].Source}:({results[i].Id})");
+				}
+			}
+		}
+
+		public sealed class Issue4783Context(DbContextOptions options) : DbContext(options)
+		{
+			public DbSet<Issue4783RecordDb> Issue4783DBRecords { get; set; } = null!;
+
+			protected override void OnModelCreating(ModelBuilder modelBuilder)
+			{
+				modelBuilder.Entity<Issue4783RecordDb>();
+			}
+		}
+
+		public record Issue4783RecordDb(
+			int Id,
+			string Source,
+			Issue4783DBStatus Status,
+				Issue4783DBStatus? NullableStatus);
+
+		[LinqToDB.Mapping.Table("Issue4783DBRecords", IsColumnAttributeRequired = false)]
+		public record Issue4783RecordDbRaw(
+			int Id,
+			string Source,
+			object Status,
+			object? NullableStatus);
+
+		public enum Issue4783DBStatus
+		{
+			Open,
+			Closed
+		}
+
+		#endregion
 	}
 }
