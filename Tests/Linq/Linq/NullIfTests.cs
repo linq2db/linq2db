@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 
@@ -33,28 +33,28 @@ namespace Tests.Linq
 			var src = tb.OrderBy(_ => _.Int);
 
 			var ints = src.Select(s => Sql.NullIf(s.Int, 2)).ToArray();
-			ints[0].Should().Be(null);
-			ints[1].Should().Be(3);
+			ints[0].ShouldBe(null);
+			ints[1].ShouldBe(3);
 
 			ints = src.Select(s => Sql.NullIf(s.Int, 4)).ToArray();
-			ints[0].Should().Be(2);
-			ints[1].Should().Be(3);
+			ints[0].ShouldBe(2);
+			ints[1].ShouldBe(3);
 
 			ints = src.Select(s => Sql.NullIf(s.Int, default(int?))).ToArray();
-			ints[0].Should().Be(2);
-			ints[1].Should().Be(3);
+			ints[0].ShouldBe(2);
+			ints[1].ShouldBe(3);
 
 			ints = src.Select(s => Sql.NullIf(s.NullableInt, 2)).ToArray();
-			ints[0].Should().Be(null);
-			ints[1].Should().Be(null);
+			ints[0].ShouldBe(null);
+			ints[1].ShouldBe(null);
 
 			ints = src.Select(s => Sql.NullIf(s.NullableInt, 4)).ToArray();
-			ints[0].Should().Be(2);
-			ints[1].Should().Be(null);
+			ints[0].ShouldBe(2);
+			ints[1].ShouldBe(null);
 
 			ints = src.Select(s => Sql.NullIf(s.NullableInt, default(int?))).ToArray();
-			ints[0].Should().Be(2);
-			ints[1].Should().Be(null);
+			ints[0].ShouldBe(2);
+			ints[1].ShouldBe(null);
 		}
 
 		[Test]
@@ -67,28 +67,28 @@ namespace Tests.Linq
 			var src = tb.OrderBy(_ => _.Int);
 
 			var strings = src.Select(s => Sql.NullIf(s.String, "abc")).ToArray();
-			strings[0].Should().Be(null);
-			strings[1].Should().Be("def");
+			strings[0].ShouldBe(null);
+			strings[1].ShouldBe("def");
 
 			strings = src.Select(s => Sql.NullIf(s.String, "xyz")).ToArray();
-			strings[0].Should().Be("abc");
-			strings[1].Should().Be("def");
+			strings[0].ShouldBe("abc");
+			strings[1].ShouldBe("def");
 
 			strings = src.Select(s => Sql.NullIf(s.String, null)).ToArray();
-			strings[0].Should().Be("abc");
-			strings[1].Should().Be("def");
+			strings[0].ShouldBe("abc");
+			strings[1].ShouldBe("def");
 
 			strings = src.Select(s => Sql.NullIf(s.NullableString, "abc")).ToArray();
-			strings[0].Should().Be(null);
-			strings[1].Should().Be(null);
+			strings[0].ShouldBe(null);
+			strings[1].ShouldBe(null);
 
 			strings = src.Select(s => Sql.NullIf(s.NullableString, "xyz")).ToArray();
-			strings[0].Should().Be("abc");
-			strings[1].Should().Be(null);
+			strings[0].ShouldBe("abc");
+			strings[1].ShouldBe(null);
 
 			strings = src.Select(s => Sql.NullIf(s.NullableString, null)).ToArray();
-			strings[0].Should().Be("abc");
-			strings[1].Should().Be(null);
+			strings[0].ShouldBe("abc");
+			strings[1].ShouldBe(null);
 		}		
 		
 		[Test]
@@ -101,28 +101,28 @@ namespace Tests.Linq
 			var src = tb.OrderBy(_ => _.Int);
 
 			var ints = src.Select(s => Sql.AsSql(Sql.NullIf(s.Int, 2))).ToArray();
-			ints[0].Should().Be(null);
-			ints[1].Should().Be(3);
+			ints[0].ShouldBe(null);
+			ints[1].ShouldBe(3);
 
 			ints = src.Select(s => Sql.AsSql(Sql.NullIf(s.Int, 4))).ToArray();
-			ints[0].Should().Be(2);
-			ints[1].Should().Be(3);
+			ints[0].ShouldBe(2);
+			ints[1].ShouldBe(3);
 
 			ints = src.Select(s => Sql.AsSql(Sql.NullIf(s.Int, default(int?)))).ToArray();
-			ints[0].Should().Be(2);
-			ints[1].Should().Be(3);
+			ints[0].ShouldBe(2);
+			ints[1].ShouldBe(3);
 
 			ints = src.Select(s => Sql.AsSql(Sql.NullIf(s.NullableInt, 2))).ToArray();
-			ints[0].Should().Be(null);
-			ints[1].Should().Be(null);
+			ints[0].ShouldBe(null);
+			ints[1].ShouldBe(null);
 
 			ints = src.Select(s => Sql.AsSql(Sql.NullIf(s.NullableInt, 4))).ToArray();
-			ints[0].Should().Be(2);
-			ints[1].Should().Be(null);
+			ints[0].ShouldBe(2);
+			ints[1].ShouldBe(null);
 
 			ints = src.Select(s => Sql.AsSql(Sql.NullIf(s.NullableInt, default(int?)))).ToArray();
-			ints[0].Should().Be(2);
-			ints[1].Should().Be(null);
+			ints[0].ShouldBe(2);
+			ints[1].ShouldBe(null);
 		}
 
 		[Test]
@@ -135,28 +135,28 @@ namespace Tests.Linq
 			var src = tb.OrderBy(_ => _.Int);
 
 			var strings = src.Select(s => Sql.AsSql(Sql.NullIf(s.String, "abc"))).ToArray();
-			strings[0].Should().Be(null);
-			strings[1].Should().Be("def");
+			strings[0].ShouldBe(null);
+			strings[1].ShouldBe("def");
 
 			strings = src.Select(s => Sql.AsSql(Sql.NullIf(s.String, "xyz"))).ToArray();
-			strings[0].Should().Be("abc");
-			strings[1].Should().Be("def");
+			strings[0].ShouldBe("abc");
+			strings[1].ShouldBe("def");
 
 			strings = src.Select(s => Sql.AsSql(Sql.NullIf(s.String, null))).ToArray();
-			strings[0].Should().Be("abc");
-			strings[1].Should().Be("def");
+			strings[0].ShouldBe("abc");
+			strings[1].ShouldBe("def");
 
 			strings = src.Select(s => Sql.AsSql(Sql.NullIf(s.NullableString, "abc"))).ToArray();
-			strings[0].Should().Be(null);
-			strings[1].Should().Be(null);
+			strings[0].ShouldBe(null);
+			strings[1].ShouldBe(null);
 
 			strings = src.Select(s => Sql.AsSql(Sql.NullIf(s.NullableString, "xyz"))).ToArray();
-			strings[0].Should().Be("abc");
-			strings[1].Should().Be(null);
+			strings[0].ShouldBe("abc");
+			strings[1].ShouldBe(null);
 
 			strings = src.Select(s => Sql.AsSql(Sql.NullIf(s.NullableString, null))).ToArray();
-			strings[0].Should().Be("abc");
-			strings[1].Should().Be(null);
+			strings[0].ShouldBe("abc");
+			strings[1].ShouldBe(null);
 		}
 
 		sealed class Src

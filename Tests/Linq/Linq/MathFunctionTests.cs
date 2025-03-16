@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 
@@ -362,7 +362,7 @@ namespace Tests.Linq
 					q);
 
 				if (iteration > 1)
-					q.GetCacheMissCount().Should().Be(cacheMissCount);
+					q.GetCacheMissCount().ShouldBe(cacheMissCount);
 			}
 		}
 

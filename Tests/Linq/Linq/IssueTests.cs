@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -64,7 +64,7 @@ namespace Tests.Linq
 				var current = db.Types2.First(r => r.ID == 1);
 
 				// If this test fails, Data for MathFunctionsTests will be corrupted.
-				current.Should().Be(saved);
+				current.ShouldBe(saved);
 			}
 		}
 

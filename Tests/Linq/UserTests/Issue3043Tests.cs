@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -108,7 +108,7 @@ namespace Tests.UserTests
 				})
 				.First();
 
-			data.CityInfo.Should().Be("City 100");
+			data.CityInfo.ShouldBe("City 100");
 		}
 	}
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -98,9 +98,10 @@ namespace Tests.UserTests
 						LocationId      = l.Id
 					};
 
-				sqlCondos.Invoking(q => q.ToList()).Should().NotThrow();
+				var act = () => sqlCondos.ToList();
+				act.ShouldNotThrow();
 
-				sqlCondos.ToSqlQuery().Sql.Should().Contain("COUNT(*)", AtLeast.Twice());
+				sqlCondos.ToSqlQuery().Sql.ShouldContain("COUNT(*)", AtLeast.Twice());
 			}
 		}
 	}

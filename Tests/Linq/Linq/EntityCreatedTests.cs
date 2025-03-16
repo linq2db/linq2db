@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Interceptors;
@@ -38,8 +38,8 @@ namespace Tests.Linq
 			{
 				if (CheckEntityIdentity && entity is Parent p)
 				{
-					eventData.TableOptions.Should().Be(TableOptions.NotSet);
-					eventData.TableName.Should().Be(nameof(Parent));
+					eventData.TableOptions.ShouldBe(TableOptions.NotSet);
+					eventData.TableName.ShouldBe(nameof(Parent));
 
 					if (Parents.TryGetValue(p.ParentID, out var pr))
 						return entity;
