@@ -466,20 +466,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			BuildTag(dropTable);
 
-			string command;
-			if (dropTable.Table.TableOptions.IsTemporaryOptionSet())
-			{
-				if (IsTemporaryTable(dropTable.Table.TableOptions))
-					command = "DROP TEMPORARY TABLE ";
-				else
-					throw new InvalidOperationException($"Incompatible table options '{dropTable.Table.TableOptions & TableOptions.IsTemporaryOptionSet}'");
-			}
-			else
-			{
-				command = "DROP TABLE ";
-			}
-
-			AppendIndent().Append(command);
+			AppendIndent().Append(IsTemporaryTable(dropTable.Table.TableOptions) ? "DROP TEMPORARY TABLE " : "DROP TABLE ");
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 				StringBuilder.Append("IF EXISTS ");
@@ -492,7 +479,9 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			if (tableOptions.IsTemporaryOptionSet())
 			{
-				switch (tableOptions & TableOptions.IsTemporaryOptionSet)
+				var tempOptions = tableOptions & TableOptions.IsTemporaryOptionSet;
+
+				switch (tempOptions)
 				{
 					case TableOptions.IsTemporary                                                                              :
 					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
@@ -502,6 +491,8 @@ namespace LinqToDB.DataProvider.MySql
 					case                            TableOptions.IsLocalTemporaryStructure                                     :
 					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
 						return true;
+					default:
+						throw new InvalidOperationException($"Incompatible table options '{tempOptions}'");
 				}
 			}
 
@@ -557,21 +548,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
-
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				if (IsTemporaryTable(table.TableOptions))
-					command = "CREATE TEMPORARY TABLE ";
-				else
-					throw new InvalidOperationException($"Incompatible table options '{table.TableOptions & TableOptions.IsTemporaryOptionSet}'");
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
-
-			StringBuilder.Append(command);
+			StringBuilder.Append(IsTemporaryTable(table.TableOptions) ? "CREATE TEMPORARY TABLE " : "CREATE TABLE ");
 
 			if (table.TableOptions.HasCreateIfNotExists())
 				StringBuilder.Append("IF NOT EXISTS ");
