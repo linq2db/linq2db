@@ -464,7 +464,48 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			BuildDropTableStatementIfExists(dropTable);
+			BuildTag(dropTable);
+
+			string command;
+			if (dropTable.Table.TableOptions.IsTemporaryOptionSet())
+			{
+				if (IsTemporaryTable(dropTable.Table.TableOptions))
+					command = "DROP TEMPORARY TABLE ";
+				else
+					throw new InvalidOperationException($"Incompatible table options '{dropTable.Table.TableOptions & TableOptions.IsTemporaryOptionSet}'");
+			}
+			else
+			{
+				command = "DROP TABLE ";
+			}
+
+			AppendIndent().Append(command);
+
+			if (dropTable.Table.TableOptions.HasDropIfExists())
+				StringBuilder.Append("IF EXISTS ");
+
+			BuildPhysicalTable(dropTable.Table!, null);
+			StringBuilder.AppendLine();
+		}
+
+		private static bool IsTemporaryTable(TableOptions tableOptions)
+		{
+			if (tableOptions.IsTemporaryOptionSet())
+			{
+				switch (tableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                              :
+					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					case                                                                     TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                     :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						return true;
+				}
+			}
+
+			return false;
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
@@ -520,20 +561,10 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (table.TableOptions.IsTemporaryOptionSet())
 			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                              :
-					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-					case                                                                     TableOptions.IsLocalTemporaryData :
-					case                            TableOptions.IsLocalTemporaryStructure                                     :
-					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						command = "CREATE TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
+				if (IsTemporaryTable(table.TableOptions))
+					command = "CREATE TEMPORARY TABLE ";
+				else
+					throw new InvalidOperationException($"Incompatible table options '{table.TableOptions & TableOptions.IsTemporaryOptionSet}'");
 			}
 			else
 			{
