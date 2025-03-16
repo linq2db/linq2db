@@ -2329,10 +2329,9 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-		public bool HandleValue(Expression node, [NotNullWhen(true)] out Expression? translated)
+		[MemberNotNullWhen(true, nameof(BuildContext))]
+		private bool CanTryHandleValue(Expression node)
 		{
-			translated = null;
-
 			if (_buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression))
 			{
 				return false;
@@ -2342,46 +2341,55 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!Builder.PreferServerSide(node, false))
 				{
-					ISqlExpression? sql = null;
-
 					var preferConvert = _buildPurpose is BuildPurpose.Sql || (_buildPurpose == BuildPurpose.Expression && _buildFlags.HasFlag(BuildFlags.ForSetProjection));
 
 					if (!preferConvert)
 					{
-						translated = null;
 						return false;
 					}
 
-					if (_columnDescriptor?.ValueConverter == null && Builder.CanBeConstant(node, MappingSchema) && Builder.CanBeEvaluatedOnClient(node) && !_buildFlags.HasFlag(BuildFlags.ForceParameter))
-					{
-						sql = Builder.BuildConstant(MappingSchema, node, _columnDescriptor);
-					}
+					return true;
+				}
+			}
 
-					var needParameter = sql == null;
-					if (!needParameter)
-					{
-						if (null != node.Find(1, (_, x) => ReferenceEquals(x, ExpressionBuilder.ParametersParam)))
-							needParameter = true;
-					}
+			return false;
+		}
 
-					if (needParameter)
-					{
-						var toTranslate = node;
-						if (_buildFlags.HasFlag(BuildFlags.ForKeys))
-							toTranslate = Builder.ParseGenericConstructor(node, ProjectFlags.SQL | ProjectFlags.Expression, _columnDescriptor);
+		public bool HandleValue(Expression node, [NotNullWhen(true)] out Expression? translated)
+		{
+			if (CanTryHandleValue(node))
+			{
+				ISqlExpression? sql = null;
 
-						if (toTranslate is not SqlGenericConstructorExpression)
-						{
-							sql = Builder.ParametersContext.BuildParameter(BuildContext, toTranslate, _columnDescriptor, forceNew : _buildFlags.HasFlag(BuildFlags.ForceParameter), alias : _alias);
-						}
-					}
+				if (_columnDescriptor?.ValueConverter == null && Builder.CanBeConstant(node, MappingSchema) && Builder.CanBeEvaluatedOnClient(node) && !_buildFlags.HasFlag(BuildFlags.ForceParameter))
+				{
+					sql = Builder.BuildConstant(MappingSchema, node, _columnDescriptor);
+				}
 
-					if (sql != null)
+				var needParameter = sql == null;
+				if (!needParameter)
+				{
+					if (null != node.Find(1, (_, x) => ReferenceEquals(x, ExpressionBuilder.ParametersParam)))
+						needParameter = true;
+				}
+
+				if (needParameter)
+				{
+					var toTranslate = node;
+					if (_buildFlags.HasFlag(BuildFlags.ForKeys))
+						toTranslate = Builder.ParseGenericConstructor(node, ProjectFlags.SQL | ProjectFlags.Expression, _columnDescriptor);
+
+					if (toTranslate is not SqlGenericConstructorExpression)
 					{
-						var path = new SqlPathExpression([SequenceHelper.CreateRef(BuildContext), node], node.Type);
-						translated = CreatePlaceholder(sql, path).WithAlias(_alias);
-						return true;
+						sql = Builder.ParametersContext.BuildParameter(BuildContext, toTranslate, _columnDescriptor, forceNew: _buildFlags.HasFlag(BuildFlags.ForceParameter), alias: _alias);
 					}
+				}
+
+				if (sql != null)
+				{
+					var path = new SqlPathExpression([SequenceHelper.CreateRef(BuildContext), node], node.Type);
+					translated = CreatePlaceholder(sql, path).WithAlias(_alias);
+					return true;
 				}
 			}
 
@@ -2828,8 +2836,9 @@ namespace LinqToDB.Linq.Builder
 
 			var stack = new Stack<Expression>();
 
-			var items  = new List<Expression>();
-			var binary = node;
+			var clientItems  = new List<Expression>();
+			var items        = new List<Expression>();
+			var binary       = node;
 
 			stack.Push(binary.Right);
 			stack.Push(binary.Left);
@@ -2843,53 +2852,53 @@ namespace LinqToDB.Linq.Builder
 					stack.Push(binary.Left);
 				}
 				else
-					items.Add(item);
+				{
+					if (!CanTryHandleValue(item))
+					{
+						items.Add(item);
+					}
+					else
+					{
+						clientItems.Add(item);
+					}
+				}
 			}
 
-			var predicates = new List<ISqlPredicate?>(items.Count);
+			var predicates = new List<ISqlPredicate?>(items.Count + clientItems.Count > 0 ? 1 : 0);
 			var hasError   = false;
 
 			using var saveAlias = UsingAlias("cond");
 			using var saveColumnDescriptor = UsingColumnDescriptor(null);
 
-			for (var i = 0; i < items.Count; i++)
+			var errorOffset = 0;
+
+			if (clientItems.Count != 0)
 			{
-				var remaining = items.Count - i;
+				var clientCondition = clientItems.Aggregate(node.NodeType == ExpressionType.AndAlso ? Expression.AndAlso : Expression.OrElse);
 
-				var translatedToValue = false;
-				while (remaining > 1)
+				if (HandleValue(clientCondition, out var translatedValue))
 				{
-					var subNode = items.Slice(i, remaining).Aggregate(node.NodeType == ExpressionType.AndAlso ? Expression.AndAlso : Expression.OrElse);
+					translatedValue = Visit(translatedValue);
 
-					if (HandleValue(subNode, out var translatedValue))
+					if (translatedValue is SqlPlaceholderExpression valuePlaceholder)
 					{
-						translatedValue = Visit(translatedValue);
-
-						if (translatedValue is SqlPlaceholderExpression valuePlaceholder)
+						var valuePredicateSql = ConvertExpressionToPredicate(valuePlaceholder.Sql);
+						if (valuePredicateSql != null)
 						{
-							var valuePredicateSql = ConvertExpressionToPredicate(valuePlaceholder.Sql);
-							if (valuePredicateSql != null)
-							{
-								predicates.Add(valuePredicateSql);
-								i += remaining - 1;
-								translatedToValue = true;
-								break;
-							}
+							predicates.Add(valuePredicateSql);
+							errorOffset = 1;
 						}
 					}
-					else
-					{
-						remaining--;
-					}
 				}
 
-				if (translatedToValue)
+				if (predicates.Count == 0)
 				{
-					continue;
+					items.InsertRange(0, clientItems);
 				}
+			}
 
-				var predicateExpr = items[i];
-
+			foreach (var predicateExpr in items)
+			{
 				var            translatedPredicate = Visit(predicateExpr);
 				ISqlPredicate? predicateSql        = null;
 
@@ -2920,10 +2929,10 @@ namespace LinqToDB.Linq.Builder
 			if (hasError)
 			{
 				// replace translated nodes
-				for (var index = 0; index < predicates.Count; index++)
+				for (var index = errorOffset; index < predicates.Count; index++)
 				{
 					var predicateSql = predicates[index];
-					var itemNode     = items[index];
+					var itemNode     = items[index - errorOffset];
 					if (predicateSql is not null)
 					{
 						if (predicateSql is not ISqlExpression sqlExpr)

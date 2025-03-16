@@ -358,7 +358,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4317")]
-		public void Issue4317Test1([DataSources] string context, [Values(1, 2, 3)] int testCase)
+		public void Issue4317Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int testCase)
 		{
 			using var db = GetDataContext(context);
 
@@ -376,7 +376,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4317")]
-		public void Issue4317Test2([DataSources] string context, [Values(1, 2, 3)] int testCase)
+		public void Issue4317Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int testCase)
 		{
 			using var db = GetDataContext(context);
 
@@ -394,7 +394,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4317")]
-		public void Issue4317Test3([DataSources] string context, [Values(1, 2, 3)] int testCase)
+		public void Issue4317Test3([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int testCase)
 		{
 			using var db = GetDataContext(context);
 
@@ -407,6 +407,24 @@ namespace Tests.Linq
 			};
 
 			var res = db.Person.Where(p => ids == null || ids.Contains(p.ID)).Count();
+
+			Assert.That(res, Is.EqualTo(expected));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4317")]
+		public void Issue4317Test4([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int testCase)
+		{
+			using var db = GetDataContext(context);
+
+			var (ids, expected) = testCase switch
+			{
+				1 => (null, 4),
+				2 => (Array.Empty<int?>(), 4),
+				3 => (new int?[] { 1, 2 }, 2),
+				_ => throw new InvalidOperationException()
+			};
+
+			var res = db.Person.Where(p => ids == null || ids.Contains(p.ID) || !ids.Any()).Count();
 
 			Assert.That(res, Is.EqualTo(expected));
 		}
