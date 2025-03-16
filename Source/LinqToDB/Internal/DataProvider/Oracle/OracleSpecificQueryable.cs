@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 
-using LinqToDB.Internal.DataProvider;
+using LinqToDB.DataProvider.Oracle;
 
-namespace LinqToDB.DataProvider.Oracle
+namespace LinqToDB.Internal.DataProvider.Oracle
 {
 	sealed class OracleSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IOracleSpecificQueryable<TSource>
 	{

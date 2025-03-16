@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 
-using LinqToDB.Internal.DataProvider;
+using LinqToDB.DataProvider.ClickHouse;
 
-namespace LinqToDB.DataProvider.ClickHouse
+namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
 	sealed class ClickHouseSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IClickHouseSpecificQueryable<TSource>
 	{

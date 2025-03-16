@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.Oracle;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;

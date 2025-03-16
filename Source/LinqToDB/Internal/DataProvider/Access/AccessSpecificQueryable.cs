@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 
-using LinqToDB.Internal.DataProvider;
+using LinqToDB.DataProvider.Access;
 
-namespace LinqToDB.DataProvider.Access
+namespace LinqToDB.Internal.DataProvider.Access
 {
 	sealed class AccessSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IAccessSpecificQueryable<TSource>
 	{

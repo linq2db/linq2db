@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Internal.DataProvider.MySql;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;

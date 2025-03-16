@@ -2,6 +2,7 @@
 
 using JetBrains.Annotations;
 
+using LinqToDB.Internal.DataProvider.SQLite;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;

@@ -4,21 +4,15 @@ using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.Access;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Access
 {
-	public static class AccessSpecificExtensions
+	public static partial class AccessSpecificExtensions
 	{
-		sealed class AccessSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IAccessSpecificTable<TSource>
-			where TSource : notnull
-		{
-			public AccessSpecificTable(ITable<TSource> table) : base(table)
-			{
-			}
-		}
 
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]

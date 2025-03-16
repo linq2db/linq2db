@@ -5,6 +5,7 @@ using System.Text;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Internal.DataProvider.PostgreSQL;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;

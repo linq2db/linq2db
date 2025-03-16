@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 
-using LinqToDB.Internal.DataProvider;
+using LinqToDB.DataProvider.PostgreSQL;
 
-namespace LinqToDB.DataProvider.PostgreSQL
+namespace LinqToDB.Internal.DataProvider.PostgreSQL
 {
 	sealed class PostgreSQLSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IPostgreSQLSpecificQueryable<TSource>
 	{

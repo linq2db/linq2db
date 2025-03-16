@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 
-using LinqToDB.Internal.DataProvider;
+using LinqToDB.DataProvider.SqlCe;
 
-namespace LinqToDB.DataProvider.SqlCe
+namespace LinqToDB.Internal.DataProvider.SqlCe
 {
 	sealed class SqlCeSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, ISqlCeSpecificQueryable<TSource>
 	{

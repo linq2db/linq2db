@@ -1,6 +1,6 @@
-﻿using LinqToDB.Internal.DataProvider;
+﻿using LinqToDB.DataProvider.SqlCe;
 
-namespace LinqToDB.DataProvider.SqlCe
+namespace LinqToDB.Internal.DataProvider.SqlCe
 {
 	sealed class SqlCeSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISqlCeSpecificTable<TSource>
 		where TSource : notnull

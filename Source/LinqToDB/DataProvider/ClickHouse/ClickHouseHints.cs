@@ -5,6 +5,7 @@ using System.Text;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Internal.DataProvider.ClickHouse;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;

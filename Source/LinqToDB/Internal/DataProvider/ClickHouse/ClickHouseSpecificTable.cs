@@ -1,6 +1,6 @@
-﻿using LinqToDB.Internal.DataProvider;
+﻿using LinqToDB.DataProvider.ClickHouse;
 
-namespace LinqToDB.DataProvider.ClickHouse
+namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
 	sealed class ClickHouseSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IClickHouseSpecificTable<TSource>
 		where TSource : notnull

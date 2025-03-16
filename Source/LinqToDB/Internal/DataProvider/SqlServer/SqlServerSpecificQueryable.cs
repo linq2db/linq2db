@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 
-using LinqToDB.Internal.DataProvider;
+using LinqToDB.DataProvider.SqlServer;
 
-namespace LinqToDB.DataProvider.SqlServer
+namespace LinqToDB.Internal.DataProvider.SqlServer
 {
 	sealed class SqlServerSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, ISqlServerSpecificQueryable<TSource>
 	{
