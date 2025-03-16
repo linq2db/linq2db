@@ -2854,12 +2854,12 @@ namespace LinqToDB.Linq.Builder
 
 			for (var i = 0; i < items.Count; i++)
 			{
-				var j = items.Count - i;
+				var remaining = items.Count - i;
 
 				var translatedToValue = false;
-				while (j > 2)
+				while (remaining > 1)
 				{
-					var subNode = items.Slice(i, j - 1).Aggregate(node.NodeType == ExpressionType.AndAlso ? Expression.AndAlso : Expression.OrElse);
+					var subNode = items.Slice(i, remaining).Aggregate(node.NodeType == ExpressionType.AndAlso ? Expression.AndAlso : Expression.OrElse);
 
 					if (HandleValue(subNode, out var translatedValue))
 					{
@@ -2871,7 +2871,7 @@ namespace LinqToDB.Linq.Builder
 							if (valuePredicateSql != null)
 							{
 								predicates.Add(valuePredicateSql);
-								i += j - 2;
+								i += remaining - 1;
 								translatedToValue = true;
 								break;
 							}
@@ -2879,7 +2879,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						j--;
+						remaining--;
 					}
 				}
 
