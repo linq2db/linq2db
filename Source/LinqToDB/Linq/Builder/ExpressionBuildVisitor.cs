@@ -2852,8 +2852,44 @@ namespace LinqToDB.Linq.Builder
 			using var saveAlias = UsingAlias("cond");
 			using var saveColumnDescriptor = UsingColumnDescriptor(null);
 
-			foreach (var predicateExpr in items)
+			for (var i = 0; i < items.Count; i++)
 			{
+				var j = items.Count - i;
+
+				var translatedToValue = false;
+				while (j > 2)
+				{
+					var subNode = items.Slice(i, j - 1).Aggregate(node.NodeType == ExpressionType.AndAlso ? Expression.AndAlso : Expression.OrElse);
+
+					if (HandleValue(subNode, out var translatedValue))
+					{
+						translatedValue = Visit(translatedValue);
+
+						if (translatedValue is SqlPlaceholderExpression valuePlaceholder)
+						{
+							var valuePredicateSql = ConvertExpressionToPredicate(valuePlaceholder.Sql);
+							if (valuePredicateSql != null)
+							{
+								predicates.Add(valuePredicateSql);
+								i += j - 2;
+								translatedToValue = true;
+								break;
+							}
+						}
+					}
+					else
+					{
+						j--;
+					}
+				}
+
+				if (translatedToValue)
+				{
+					continue;
+				}
+
+				var predicateExpr = items[i];
+
 				var            translatedPredicate = Visit(predicateExpr);
 				ISqlPredicate? predicateSql        = null;
 
