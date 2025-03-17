@@ -2,6 +2,7 @@
 {
 	public enum MergeOperationType
 	{
+		None = 0,
 		Insert,
 		Update,
 		Delete,
