@@ -387,41 +387,41 @@ namespace LinqToDB
 					{
 						ctx.WriteableValue = (true, ctx.WriteableValue.error);
 
-						var argIdx = int.Parse(v, NumberFormatInfo.InvariantInfo);
-						var idx    = argIdx;
+						var idxInExpr   = int.Parse(v, NumberFormatInfo.InvariantInfo);
+						var idxInMethod = idxInExpr;
 
 						if (ctx.StaticValue.argIndices != null)
 						{
-							if (idx < 0 || idx >= ctx.StaticValue.argIndices.Length)
-								throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong ArgIndices mapping. Index '{idx}' do not fit in range."));
+							if (idxInMethod < 0 || idxInMethod >= ctx.StaticValue.argIndices.Length)
+								throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong ArgIndices mapping. Index '{idxInMethod}' do not fit in range."));
 
-							idx = ctx.StaticValue.argIndices[idx];
+							idxInMethod = ctx.StaticValue.argIndices[idxInMethod];
 						}
 
-						if (idx < 0)
-							throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{idx}' do not fit in range."));
+						if (idxInMethod < 0)
+							throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{idxInMethod}' do not fit in range."));
 
-						while (idx >= ctx.StaticValue.parms.Count)
+						while (idxInExpr >= ctx.StaticValue.parms.Count)
 						{
 							ctx.StaticValue.parms.Add(null);
 						}
 
-						if (ctx.StaticValue.parms[idx] == null)
+						if (ctx.StaticValue.parms[idxInExpr] == null)
 						{
 							ISqlExpression? paramExpr = null;
-							if (argIdx >= ctx.StaticValue.knownExpressions.Count)
+							if (idxInExpr >= ctx.StaticValue.knownExpressions.Count)
 							{
-								var typeIndex = argIdx - ctx.StaticValue.knownExpressions.Count;
+								var typeIndex = idxInExpr - ctx.StaticValue.knownExpressions.Count;
 								if (ctx.StaticValue.genericTypes == null || typeIndex >= ctx.StaticValue.genericTypes.Count || typeIndex < 0)
 								{
-									throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{argIdx}' do not fit in parameters range."));
+									throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{idxInExpr}' do not fit in parameters range."));
 								}
 
 								paramExpr = ctx.StaticValue.genericTypes[typeIndex];
 							}
 							else
 							{
-								var (expression, parameter) = ctx.StaticValue.knownExpressions[argIdx];
+								var (expression, parameter) = ctx.StaticValue.knownExpressions[idxInMethod];
 								if (expression != null)
 								{
 									var converted = ctx.StaticValue.converter(ctx.StaticValue.context, expression, null, ctx.StaticValue.forceInlineParameters || parameter?.DoNotParameterize == true);
@@ -437,7 +437,7 @@ namespace LinqToDB
 								}
 							}
 
-							ctx.StaticValue.parms[idx] = paramExpr;
+							ctx.StaticValue.parms[idxInExpr] = paramExpr;
 						}
 
 						return v;

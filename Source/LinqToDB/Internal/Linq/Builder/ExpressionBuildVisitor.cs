@@ -1553,7 +1553,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			_associations ??= new (ExprCacheKey.SqlCacheKeyComparer);
 
 			var cacheFlags = ProjectFlags.Root;
-			var key        = new ExprCacheKey(expression, associationRoot.BuildContext, null, null, cacheFlags);
+
+			var key = new ExprCacheKey(
+				Builder.AssociationToRealization(expression),
+				associationRoot.BuildContext,
+				columnDescriptor: null,
+				selectQuery: null,
+				cacheFlags
+			);
 
 			if (_associations.TryGetValue(key, out var associationExpression))
 			{

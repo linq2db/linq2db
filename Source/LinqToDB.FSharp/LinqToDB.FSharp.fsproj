@@ -8,6 +8,7 @@
 
 		<WarningLevel>5</WarningLevel>
 		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net9.0</TargetFrameworks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 
 		<Title>Linq to DB F#</Title>
