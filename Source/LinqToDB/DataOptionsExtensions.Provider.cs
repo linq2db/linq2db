@@ -101,7 +101,7 @@ namespace LinqToDB
 			     SqlServerProvider                         provider     = SqlServerProvider.AutoDetect,
 			     Func<SqlServerOptions, SqlServerOptions>? optionSetter = null)
 		{
-			options = DataProvider.SqlServer.SqlServerTools.ProviderDetector.CreateOptions(options, dialect, provider);
+			options = SqlServerTools.ProviderDetector.CreateOptions(options, dialect, provider);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 

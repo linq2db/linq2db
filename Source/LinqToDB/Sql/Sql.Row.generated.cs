@@ -2,10 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace LinqToDB;
-
 using LinqToDB.Internal.Common;
 using LinqToDB.SqlQuery;
+
+namespace LinqToDB;
 
 partial class Sql
 {

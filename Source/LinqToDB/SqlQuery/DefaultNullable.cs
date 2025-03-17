@@ -2,12 +2,12 @@
 {
 	// TODO: review: why we even expose this to public API?
 	/// <summary>
-	/// Specify how <c>[NOT] NULL</c> should be emited for table columns in CREATE TABLE statement.
+	/// Specify how <c>[NOT] NULL</c> should be emitted for table columns in CREATE TABLE statement.
 	/// </summary>
 	public enum DefaultNullable
 	{
 		/// <summary>
-		/// No defaults awailable, both <c>NULL</c> and <c>NOT NULL</c> should be generated always.
+		/// No defaults available, both <c>NULL</c> and <c>NOT NULL</c> should be generated always.
 		/// </summary>
 		None,
 		/// <summary>
