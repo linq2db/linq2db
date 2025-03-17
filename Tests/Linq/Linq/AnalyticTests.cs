@@ -7,6 +7,7 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal;
 using LinqToDB.Mapping;
 
 using Newtonsoft.Json.Linq;

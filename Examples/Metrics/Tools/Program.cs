@@ -7,7 +7,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
+using LinqToDB.Metrics;
 using LinqToDB.Tools.Activity;
 
 #pragma warning disable CA1812

@@ -1,4 +1,5 @@
 ﻿#if NETFRAMEWORK || NETSTANDARD2_0
+#pragma warning disable MA0048 // File name must match type name
 
 namespace System
 {

@@ -1,5 +1,6 @@
 ﻿namespace LinqToDB.SqlQuery
 {
+	// TODO: precedence requires total refactoring, as it db-specific
 	public sealed class Precedence
 	{
 		public const int Primary            = 100; // (x) x.y f(x) a[x] x++ x-- new typeof sizeof checked unchecked

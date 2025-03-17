@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 
-using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 
 using PN = LinqToDB.ProviderName;
 

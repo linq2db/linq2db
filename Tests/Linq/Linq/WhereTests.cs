@@ -9,7 +9,6 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;

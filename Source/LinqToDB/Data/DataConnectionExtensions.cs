@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Tools;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {
@@ -15,7 +16,7 @@ namespace LinqToDB.Data
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
 	[PublicAPI]
-	public static partial class DataConnectionExtensions
+	public static class DataConnectionExtensions
 	{
 		#region SetCommand
 

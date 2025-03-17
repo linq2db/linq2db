@@ -5,10 +5,11 @@ using System.Linq;
 using System.Reflection;
 
 using LinqToDB;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using LinqToDB.Expressions;
 
 #if NETFRAMEWORK
 using System.Net.Http;

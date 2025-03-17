@@ -5,10 +5,9 @@ using System.Linq.Expressions;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Linq;
-using LinqToDB.Tools;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 

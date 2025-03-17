@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB.Metrics;
+
 namespace LinqToDB.Tools.Activity
 {
 	/// <summary>

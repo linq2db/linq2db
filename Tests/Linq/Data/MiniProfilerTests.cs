@@ -20,9 +20,6 @@ using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.DataProvider.MySql;
-using LinqToDB.DataProvider.Oracle;
-using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.DataProvider.SapHana;
 using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
@@ -53,6 +50,16 @@ using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
 using MySqlDataMySqlConnection = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
 
 using LinqToDB.Data.RetryPolicy;
+using LinqToDB.Internal.DataProvider.ClickHouse;
+using LinqToDB.Internal.DataProvider.DB2;
+using LinqToDB.Internal.DataProvider.Firebird;
+using LinqToDB.Internal.DataProvider.Informix;
+using LinqToDB.Internal.DataProvider.MySql;
+using LinqToDB.Internal.DataProvider.Oracle;
+using LinqToDB.Internal.DataProvider.PostgreSQL;
+using LinqToDB.Internal.DataProvider.SqlServer;
+using LinqToDB.Internal.DataProvider.SapHana;
+using LinqToDB.Internal.DataProvider.SqlCe;
 
 namespace Tests.Data
 {
