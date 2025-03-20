@@ -231,23 +231,23 @@ namespace LinqToDB.Linq
 
 			_parameterEntries ??= new();
 
-			foreach (var pair in _parameterEntries.Values)
+			foreach (var (param, entry) in _parameterEntries.Values)
 			{
-				if (ExpressionEqualityComparer.Instance.Equals(pair.param, paramExpr)
-					&& pair.entry.DbDataType.Equals(paramEntry.DbDataType)
-					&& ExpressionEqualityComparer.Instance.Equals(pair.entry.ClientValueGetter, paramEntry.ClientValueGetter)
-				    && ExpressionEqualityComparer.Instance.Equals(pair.entry.ClientToProviderConverter, paramEntry.ClientToProviderConverter)
-				    && ExpressionEqualityComparer.Instance.Equals(pair.entry.ItemAccessor, paramEntry.ItemAccessor)
-				    && ExpressionEqualityComparer.Instance.Equals(pair.entry.DbDataTypeAccessor, paramEntry.DbDataTypeAccessor))
+				if (ExpressionEqualityComparer.Instance.Equals(param, paramExpr)
+					&& entry.DbDataType.Equals(paramEntry.DbDataType)
+					&& ExpressionEqualityComparer.Instance.Equals(entry.ClientValueGetter, paramEntry.ClientValueGetter)
+				    && ExpressionEqualityComparer.Instance.Equals(entry.ClientToProviderConverter, paramEntry.ClientToProviderConverter)
+				    && ExpressionEqualityComparer.Instance.Equals(entry.ItemAccessor, paramEntry.ItemAccessor)
+				    && ExpressionEqualityComparer.Instance.Equals(entry.DbDataTypeAccessor, paramEntry.DbDataTypeAccessor))
 				{
 					// found duplicate, we have to register value comparison
 
-					finalParameterId = pair.entry.ParameterId;
+					finalParameterId = entry.ParameterId;
 
 					// register for duplicates only non the same parameter expressions
-					if (!ReferenceEquals(pair.param, paramExpr))
+					if (!ReferenceEquals(param, paramExpr))
 					{
-						RegisterDuplicateCheck(pair.entry.ParameterId, pair.entry.ClientValueGetter, paramEntry.ClientValueGetter);
+						RegisterDuplicateCheck(entry.ParameterId, entry.ClientValueGetter, paramEntry.ClientValueGetter);
 					}
 
 					return;
@@ -260,19 +260,19 @@ namespace LinqToDB.Linq
 				var paramName = SuggestParameterName(paramExpr);
 				if (paramName != null)
 				{
-					foreach (var pair in _parameterEntries.Values)
+					foreach (var (param, entry) in _parameterEntries.Values)
 					{
-						if (CanBeDuplicate(paramEntry, paramExpr, paramName, pair.param, pair.entry, SuggestParameterName(pair.param)))
+						if (CanBeDuplicate(paramEntry, paramExpr, paramName, param, entry, SuggestParameterName(param)))
 						{
-							EnsureEvaluated(pair.entry, pair.param);
+							EnsureEvaluated(entry, param);
 							EnsureEvaluated(paramEntry, paramExpr);
 
-							if (Equals(pair.entry.EvaluatedValue, paramEntry.EvaluatedValue))
+							if (Equals(entry.EvaluatedValue, paramEntry.EvaluatedValue))
 							{
 								// found duplicate, we have to register value comparison
 
-								finalParameterId = pair.entry.ParameterId;
-								RegisterDuplicateCheck(pair.entry.ParameterId, pair.entry.ClientValueGetter, paramEntry.ClientValueGetter);
+								finalParameterId = entry.ParameterId;
+								RegisterDuplicateCheck(entry.ParameterId, entry.ClientValueGetter, paramEntry.ClientValueGetter);
 
 								return;
 							}

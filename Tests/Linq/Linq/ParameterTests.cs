@@ -595,7 +595,7 @@ namespace Tests.Linq
 
 				var parameters = new List<SqlParameter>();
 				QueryHelper.CollectParameters(query.GetSelectQuery(), parameters);
-				parameters.Distinct().Should().HaveCount(1);
+				parameters.Distinct().Should().HaveCount(2);
 			}
 
 			{
