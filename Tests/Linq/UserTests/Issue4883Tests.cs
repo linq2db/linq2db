@@ -2,19 +2,20 @@
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Data;
 
 using NUnit.Framework;
 
 namespace Tests.UserTests;
 
 [TestFixture]
-public class Issue4883Tests : TestBase
+public class Issue4883Tests
 {
 	[Test]
 	public async Task TestDataConnection()
 	{
 		var dbConn = new TestDbConnection();
-		var db     = GetDataConnection(new DataOptions().UseConnection(
+		var db     = new DataConnection(new DataOptions().UseConnection(
 			new TestNoopProvider(), dbConn));
 
 		_ = await db.GetTable<TestEntity>().SingleOrDefaultAsync();
@@ -26,7 +27,7 @@ public class Issue4883Tests : TestBase
 	public async Task TestDataContext()
 	{
 		var dbConn = new TestDbConnection();
-		var db     = GetDataContext("", dbOptions => dbOptions.UseConnection(
+		var db     = new DataContext(new DataOptions().UseConnection(
 			new TestNoopProvider(), dbConn));
 
 		_ = await db.GetTable<TestEntity>().SingleOrDefaultAsync();
