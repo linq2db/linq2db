@@ -13,11 +13,11 @@ public class Issue4883Tests : TestBase
 	[Test]
 	public async Task TestDataConnection()
 	{
-		var dbConn = new MockDbConnection();
+		var dbConn = new TestDbConnection();
 		var db     = GetDataConnection(new DataOptions().UseConnection(
 			new TestNoopProvider(), dbConn));
 
-		var _ = await db.GetTable<TestEntity>().SingleOrDefaultAsync();
+		_ = await db.GetTable<TestEntity>().SingleOrDefaultAsync();
 		
 		Assert.That(dbConn.OpenedAsync, Is.True);
 	}
@@ -25,25 +25,22 @@ public class Issue4883Tests : TestBase
 	[Test]
 	public async Task TestDataContext()
 	{
-		var dbConn = new MockDbConnection();
+		var dbConn = new TestDbConnection();
 		var db     = GetDataContext("", dbOptions => dbOptions.UseConnection(
 			new TestNoopProvider(), dbConn));
 
-		var _ = await db.GetTable<TestEntity>().SingleOrDefaultAsync();
+		_ = await db.GetTable<TestEntity>().SingleOrDefaultAsync();
 		
 		Assert.That(dbConn.OpenedAsync, Is.True);
 	}
 
-	private class TestEntity
-	{
-		
-	}
+	class TestEntity;
 
-	private class MockDbConnection() : TestNoopConnection(string.Empty)
+	class TestDbConnection() : TestNoopConnection(string.Empty)
 	{
 		public bool OpenedAsync { get; private set; }
 
-		public override    void          Open()
+		public override void Open()
 		{
 			OpenedAsync = false;
 			base.Open();
