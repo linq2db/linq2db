@@ -6,52 +6,53 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
-namespace Tests.UserTests;
-
-[TestFixture]
-public class Issue4883Tests
+namespace Tests.UserTests
 {
-	[Test]
-	public async Task TestDataConnection()
+	[TestFixture]
+	public class Issue4883Tests
 	{
-		var dbConn = new TestDbConnection();
-		var db     = new DataConnection(new DataOptions().UseConnection(
-			new TestNoopProvider(), dbConn));
-
-		_ = await db.GetTable<TestEntity>().SingleOrDefaultAsync();
-		
-		Assert.That(dbConn.OpenedAsync, Is.True);
-	}
-	
-	[Test]
-	public async Task TestDataContext()
-	{
-		var dbConn = new TestDbConnection();
-		var db     = new DataContext(new DataOptions().UseConnection(
-			new TestNoopProvider(), dbConn));
-
-		_ = await db.GetTable<TestEntity>().SingleOrDefaultAsync();
-		
-		Assert.That(dbConn.OpenedAsync, Is.True);
-	}
-
-	class TestEntity;
-
-	class TestDbConnection() : TestNoopConnection(string.Empty)
-	{
-		public bool OpenedAsync { get; private set; }
-
-		public override void Open()
+		[Test]
+		public async Task TestDataConnection()
 		{
-			OpenedAsync = false;
-			base.Open();
+			var dbConn = new TestDbConnection();
+			var db     = new DataConnection(new DataOptions().UseConnection(
+				new TestNoopProvider(), dbConn));
+
+			_ = await db.GetTable<TestEntity>().SingleOrDefaultAsync();
+		
+			Assert.That(dbConn.OpenedAsync, Is.True);
+		}
+	
+		[Test]
+		public async Task TestDataContext()
+		{
+			var dbConn = new TestDbConnection();
+			var db     = new DataContext(new DataOptions().UseConnection(
+				new TestNoopProvider(), dbConn));
+
+			_ = await db.GetTable<TestEntity>().SingleOrDefaultAsync();
+		
+			Assert.That(dbConn.OpenedAsync, Is.True);
 		}
 
-		public override Task OpenAsync(CancellationToken cancellationToken)
+		class TestEntity;
+
+		class TestDbConnection() : TestNoopConnection(string.Empty)
 		{
-			OpenedAsync = true;
-			base.Open();
-			return Task.CompletedTask;
+			public bool OpenedAsync { get; private set; }
+
+			public override void Open()
+			{
+				OpenedAsync = false;
+				base.Open();
+			}
+
+			public override Task OpenAsync(CancellationToken cancellationToken)
+			{
+				OpenedAsync = true;
+				base.Open();
+				return Task.CompletedTask;
+			}
 		}
 	}
 }
