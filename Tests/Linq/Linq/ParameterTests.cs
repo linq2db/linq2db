@@ -1933,7 +1933,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_BadDedupOfParameters([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void DedupOfParameters([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable([new IssueDedup()]);
@@ -1945,6 +1945,8 @@ namespace Tests.Linq
 
 			void Test(Wrap<bool> f1, Wrap<bool> f2, Wrap<bool> f3, Wrap<bool> f4, Wrap<bool> f5)
 			{
+				var cacheMissCount = tb.GetCacheMissCount();
+
 				tb
 					.Set(r => r.Value1, r => f1.Value)
 					.Set(r => r.Value2, r => f2.Value)
@@ -1952,6 +1954,11 @@ namespace Tests.Linq
 					.Set(r => r.Value4, r => f4.Value)
 					.Set(r => r.Value5, r => f5.Value)
 					.Update();
+
+				if (iteration > 1)
+				{
+					Assert.That(tb.GetCacheMissCount(), Is.EqualTo(cacheMissCount));
+				}
 
 				var record = tb.Single();
 
