@@ -257,12 +257,12 @@ namespace LinqToDB.Linq
 			// find duplicates by name and value
 			if (evaluator != null)
 			{
-				var paramName = SuggestParameterName(paramExpr);
+				var paramName = BuildParameterPath(paramExpr);
 				if (paramName != null)
 				{
 					foreach (var (param, entry) in _parameterEntries.Values)
 					{
-						if (CanBeDuplicate(paramEntry, paramExpr, paramName, param, entry, SuggestParameterName(param)))
+						if (CanBeDuplicate(paramEntry, paramExpr, paramName, param, entry, BuildParameterPath(param)))
 						{
 							EnsureEvaluated(entry, param);
 							EnsureEvaluated(paramEntry, paramExpr);
@@ -296,12 +296,28 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		public static string? SuggestParameterName(Expression? expression)
+		public static string? SuggestParameterDisplayName(Expression? expression)
+		{
+			if (expression is MemberExpression member)
+			{
+				var result = member.Member.Name;
+				if (member.Member.IsNullableValueMember())
+					result = SuggestParameterDisplayName(member.Expression) ?? result;
+				return result;
+			}
+
+			if (expression is UnaryExpression unary)
+				return SuggestParameterDisplayName(unary.Operand);
+
+			return null;
+		}
+
+		static string? BuildParameterPath(Expression? expression)
 		{
 			if (expression is MemberExpression member)
 			{
 				if (member.Member.IsNullableValueMember())
-					return SuggestParameterName(member.Expression);
+					return BuildParameterPath(member.Expression);
 
 				var result = member.Member.Name;
 
@@ -319,7 +335,7 @@ namespace LinqToDB.Linq
 			}
 
 			if (expression is UnaryExpression unary)
-				return SuggestParameterName(unary.Operand);
+				return BuildParameterPath(unary.Operand);
 
 			return null;
 		}
