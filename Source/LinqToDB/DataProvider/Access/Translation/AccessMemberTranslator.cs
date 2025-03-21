@@ -258,14 +258,14 @@ namespace LinqToDB.DataProvider.Access.Translation
 				var factory = translationContext.ExpressionFactory;
 
 				var valueTypeString = factory.GetDbDataType(value);
-				var valueTypeInt = factory.GetDbDataType(typeof(int));
+				var valueTypeInt    = factory.GetDbDataType(typeof(int));
 
 				var lengthValue = TranslateLength(translationContext, translationFlags, value);
-				if(lengthValue == null)
+				if (lengthValue == null)
 					return null;
 
 				var valueSymbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
-				var fillingString = factory.Function(valueTypeString, "STRING", valueSymbolsToAdd, paddingChar);
+				var fillingString     = factory.Function(valueTypeString, "STRING", valueSymbolsToAdd, paddingChar);
 
 				return factory.Concat(fillingString, value);
 			}

@@ -212,9 +212,9 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 		{
 			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
 			{
-				var factory = translationContext.ExpressionFactory;
+				var factory         = translationContext.ExpressionFactory;
 				var valueTypeString = factory.GetDbDataType(value);
-				var valueTypeInt = factory.GetDbDataType(typeof(int));
+				var valueTypeInt    = factory.GetDbDataType(typeof(int));
 
 				var valueString = factory.Add(valueTypeString, value, factory.Value(valueTypeString, "."));
 				var valueLength = factory.Function(valueTypeInt, "LEN", valueString);
@@ -226,16 +226,16 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 				/*
 				 * SELECT REPLICATE(paddingSymbol, padding - LEN(value)) + value
 				 */
-				var factory = translationContext.ExpressionFactory;
+				var factory         = translationContext.ExpressionFactory;
 				var valueTypeString = factory.GetDbDataType(value);
-				var valueTypeInt = factory.GetDbDataType(typeof(int));
+				var valueTypeInt    = factory.GetDbDataType(typeof(int));
 
-				var lengthValue =  TranslateLength(translationContext, translationFlags, value);
+				var lengthValue = TranslateLength(translationContext, translationFlags, value);
 				if(lengthValue == null)
 					return null;
 
 				var symbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
-				var stringToAdd = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
+				var stringToAdd  = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
 
 				return factory.Add(valueTypeString, stringToAdd, value);
 			}

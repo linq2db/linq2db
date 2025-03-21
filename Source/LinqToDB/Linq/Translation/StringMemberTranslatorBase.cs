@@ -142,7 +142,12 @@ namespace LinqToDB.Linq.Translation
 				return null;
 
 			if (!translationContext.TranslateToSqlExpression(memberExpression.Expression, out var value))
-				return translationContext.CreateErrorExpression(memberExpression.Expression, type: memberExpression.Type);
+			{
+				if (translationFlags.HasFlag(TranslationFlags.Expression))
+					return null;
+
+				return translationContext.CreateErrorExpression(memberExpression.Expression, type : memberExpression.Type);
+			}
 
 			var translated = TranslateLength(translationContext, translationFlags, value);
 			if (translated == null)

@@ -217,10 +217,10 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 				var factory = translationContext.ExpressionFactory;
 
 				var valueTypeString = factory.GetDbDataType(value);
-				var valueTypeInt = factory.GetDbDataType(typeof(int));
+				var valueTypeInt    = factory.GetDbDataType(typeof(int));
 
 				var valueZeroBlob = factory.Function(valueTypeString, "ZEROBLOB", padding);
-				var valueHex = factory.Function(valueTypeString, "HEX", valueZeroBlob);
+				var valueHex      = factory.Function(valueTypeString, "HEX", valueZeroBlob);
 				var paddingString = factory.Function(valueTypeString, "REPLACE", valueHex, factory.Value(valueTypeString, "0"), paddingChar);
 
 				var lengthExpr = TranslateLength(translationContext, translationFlags, value);
@@ -228,7 +228,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 					return null;
 
 				var valueSymbolsToAdd = factory.Sub(valueTypeInt, padding, lengthExpr);
-				var fillingString = factory.Function(valueTypeString, "SUBSTR", paddingString, factory.Value(valueTypeInt, 1), valueSymbolsToAdd);
+				var fillingString     = factory.Function(valueTypeString, "SUBSTR", paddingString, factory.Value(valueTypeInt, 1), valueSymbolsToAdd);
 				
 				return factory.Concat(fillingString, value);
 			}
