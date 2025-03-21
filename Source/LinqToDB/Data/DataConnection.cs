@@ -811,7 +811,7 @@ namespace LinqToDB.Data
 		/// Gets or sets command execution timeout in seconds.
 		/// Negative timeout value means that default timeout will be used.
 		/// 0 timeout value corresponds to infinite timeout.
-		/// By default timeout is not set and default value for current provider used.
+		/// By default, timeout is not set and default value for current provider used.
 		/// </summary>
 		public  int   CommandTimeout
 		{
@@ -820,13 +820,16 @@ namespace LinqToDB.Data
 			{
 				if (value < 0)
 				{
-					// to reset to default timeout we dispose command because as command has no reset timeout API
-					_commandTimeout = null;
-					// TODO: that's not good - user is not aware that he can trigger blocking operation
-					// we should postpone disposal till command used (or redesign CommandTimeout to methods)
-					DisposeCommand();
+					if (_commandTimeout is not null)
+					{
+						// to reset to default timeout we dispose command because as command has no reset timeout API
+						_commandTimeout = null;
+						// TODO: that's not good - user is not aware that he can trigger blocking operation
+						// we should postpone disposal till command used (or redesign CommandTimeout to methods)
+						DisposeCommand();
+					}
 				}
-				else
+				else if (_commandTimeout != value)
 				{
 					_commandTimeout = value;
 					if (_command != null)
@@ -1539,5 +1542,39 @@ namespace LinqToDB.Data
 		}
 
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance => ((IInfrastructure<IServiceProvider>)DataProvider).Instance;
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public IDisposable? UseOptions(Func<DataOptions,DataOptions> optionsSetter)
+		{
+			var prevOptions = Options;
+			var newOptions  = optionsSetter(Options) ?? throw new ArgumentNullException(nameof(optionsSetter));
+
+			if (((IConfigurationID)prevOptions).ConfigurationID == ((IConfigurationID)newOptions).ConfigurationID)
+				return null;
+
+			var configurationID = _configurationID;
+			var msID            = _msID;
+
+			Options          = newOptions;
+			_configurationID = null;
+			_msID            = 0;
+
+			var action = Options.Reapply(this, prevOptions);
+
+			action += () =>
+			{
+				Options          = prevOptions;
+
+#if DEBUG
+				_configurationID = null;
+				_msID            = 0;
+#else
+				_configurationID = configurationID;
+				_msID            = msID;
+#endif
+			};
+
+			return new DisposableAction(action);
+		}
 	}
 }
