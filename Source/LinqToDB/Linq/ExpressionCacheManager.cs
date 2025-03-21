@@ -298,27 +298,36 @@ namespace LinqToDB.Linq
 
 		public static string? SuggestParameterDisplayName(Expression? expression)
 		{
-			if (expression is MemberExpression member)
+			return expression switch
 			{
-				var result = member.Member.Name;
-				if (member.Member.IsNullableValueMember())
-					result = SuggestParameterDisplayName(member.Expression) ?? result;
-				return result;
-			}
+				MemberExpression member when member.Member.IsNullableValueMember() =>
+					SuggestParameterDisplayName(member.Expression) ?? member.Member.Name,
 
-			if (expression is UnaryExpression unary)
-				return SuggestParameterDisplayName(unary.Operand);
+				MemberExpression { Member.Name: var name } => name,
 
-			return null;
+				UnaryExpression { Operand: var operand } =>
+					SuggestParameterDisplayName(operand),
+
+				_ => null,
+			};
 		}
 
 		static string? BuildParameterPath(Expression? expression)
 		{
-			if (expression is MemberExpression member)
+			return expression switch
 			{
-				if (member.Member.IsNullableValueMember())
-					return BuildParameterPath(member.Expression);
+				MemberExpression member when member.Member.IsNullableValueMember() =>
+					BuildParameterPath(member.Expression),
 
+				MemberExpression member => BuildParameterPathCore(member),
+
+				UnaryExpression unary => BuildParameterPath(unary.Operand),
+
+				_ => null,
+			};
+
+			static string? BuildParameterPathCore(MemberExpression member)
+			{
 				var result = member.Member.Name;
 
 				var next = member.Expression;
@@ -333,11 +342,6 @@ namespace LinqToDB.Linq
 
 				return result;
 			}
-
-			if (expression is UnaryExpression unary)
-				return BuildParameterPath(unary.Operand);
-
-			return null;
 		}
 
 		public static Expression CorrectAccessorExpression(Expression accessorExpression, IDataContext dataContext)
