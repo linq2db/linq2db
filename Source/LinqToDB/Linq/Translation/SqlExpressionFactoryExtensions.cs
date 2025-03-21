@@ -113,7 +113,7 @@ namespace LinqToDB.Linq.Translation
 
 		public static ISqlExpression Sub(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
-			return new SqlBinaryExpression(dbDataType, x, "-", y, Precedence.Additive);
+			return new SqlBinaryExpression(dbDataType, x, "-", y, Precedence.Subtraction);
 		}
 
 		public static ISqlExpression Add(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
