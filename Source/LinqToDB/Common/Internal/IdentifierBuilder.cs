@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 
 using LinqToDB.Expressions;
+using LinqToDB.Extensions;
 using LinqToDB.Linq;
 
 namespace LinqToDB.Common.Internal
@@ -190,11 +191,52 @@ namespace LinqToDB.Common.Internal
 				int  i             => GetIntID(i),
 				null               => string.Empty,
 				string str         => str,
-				IEnumerable col    => $"[{string.Join(",", col.Cast<object?>().Select(GetObjectID))}]",
+				IEnumerable col    => GetIEnumerableID(col),
 				Expression ex      => GetObjectID(ex).ToString(NumberFormatInfo.InvariantInfo),
 				TimeSpan ts        => ts.Ticks.ToString(NumberFormatInfo.InvariantInfo),
 				_                  => GetOrAddObject(obj)
 			};
+
+			static string GetIEnumerableID(IEnumerable col)
+			{
+				var type = col.GetType().GetListItemType();
+
+				using var sb = Pools.StringBuilder.Allocate();
+
+				sb.Value
+					.Append('[')
+					.Append(GetObjectID(type))
+					.Append('.')
+					;
+
+				var len = sb.Value.Length;
+
+				foreach (var item in col)
+				{
+					if (item != null)
+					{
+						var t = item.GetType();
+
+						if (t != type)
+						{
+							sb.Value
+								.Append(GetObjectID(t))
+								.Append(':');
+						}
+
+						sb.Value
+							.Append(GetObjectID(item))
+							.Append(',');
+					}
+				}
+
+				if (sb.Value.Length > len)
+					sb.Value.Length--;
+
+				sb.Value.Append(']');
+
+				return sb.Value.ToString();
+			}
 
 			static string GetOrAddObject(object o)
 			{

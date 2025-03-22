@@ -42,8 +42,10 @@ namespace Tests.Infrastructure
 			[() => Method1(), () => Method2(), false],
 
 			// collections
-			[new object[] { true, 1, "3" }, new object[] { true, 1, "3"   },   true],
+			[new object[] { true, 1, "3" }, new object[] { true, 1, "3"   }, true],
 			[new object[] { true, 1, "3" }, new object[] { true, 1, false }, false],
+			[new object[] { true, 1, "2" }, new object[] { true, 1, false }, false],
+			[new object[] { true, 1, "2" }, new object[] { true, 1, 2 },     false],
 
 			// Type
 			[typeof(string), typeof(string), true],
