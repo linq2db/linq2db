@@ -1085,8 +1085,10 @@ namespace Tests.Data
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 #if NETFRAMEWORK
 			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, DbProviderFactories.GetFactory("Sap.Data.Hana").GetType().Assembly.GetType("Sap.Data.Hana.HanaConnection")!))
+#elif NET6_0 || NET7_0
+			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, "Sap.Data.Hana.HanaConnection, Sap.Data.Hana.Net.v6.0"))
 #else
-			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, "Sap.Data.Hana.HanaConnection, Sap.Data.Hana.Core.v2.1"))
+			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, "Sap.Data.Hana.HanaConnection, Sap.Data.Hana.Net.v8.0"))
 #endif
 			{
 				var trace = string.Empty;

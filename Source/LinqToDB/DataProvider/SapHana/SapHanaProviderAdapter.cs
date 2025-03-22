@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,9 +20,13 @@ namespace LinqToDB.DataProvider.SapHana
 		private static SapHanaProviderAdapter? _odbcProvider;
 
 #if NETFRAMEWORK
-		public  const string UnmanagedAssemblyName        = "Sap.Data.Hana.v4.5";
+		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.v4.5"];
+#elif NET6_0 || NET7_0
+		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Net.v6.0", "Sap.Data.Hana.Core.v2.1"];
+#elif NET8_0_OR_GREATER
+		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Net.v8.0", "Sap.Data.Hana.Net.v6.0", "Sap.Data.Hana.Core.v2.1"];
 #else
-		public  const string UnmanagedAssemblyName        = "Sap.Data.Hana.Core.v2.1";
+		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Core.v2.1"];
 #endif
 
 		public  const string UnmanagedClientNamespace     = "Sap.Data.Hana";
@@ -103,9 +109,17 @@ namespace LinqToDB.DataProvider.SapHana
 						if (_unmanagedProvider == null)
 #pragma warning restore CA1508 // Avoid dead conditional code
 						{
-							var assembly = Common.Tools.TryLoadAssembly(UnmanagedAssemblyName, UnmanagedProviderFactoryName);
+							Assembly? assembly = null;
+							foreach (var assemblyName in UnmanagedAssemblyNames)
+							{
+								assembly = Common.Tools.TryLoadAssembly(assemblyName, UnmanagedProviderFactoryName);
+
+								if (assembly != null)
+									break;
+							}
+
 							if (assembly == null)
-								throw new InvalidOperationException($"Cannot load assembly {UnmanagedAssemblyName}");
+								throw new InvalidOperationException($"Cannot load assembly by name(s) {string.Join(", ", UnmanagedAssemblyNames)}");
 
 							var connectionType  = assembly.GetType($"{UnmanagedClientNamespace}.HanaConnection" , true)!;
 							var dataReaderType  = assembly.GetType($"{UnmanagedClientNamespace}.HanaDataReader" , true)!;

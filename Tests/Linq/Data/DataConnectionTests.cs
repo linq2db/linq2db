@@ -1040,7 +1040,7 @@ namespace Tests.Data
 		// Informix : IBM.Data.Informix
 		// ORACLE   : Oracle.DataAccess
 		// ORACLE   : Oracle.ManagedDataAccess(.Core)
-		// SAP HANA : Sap.Data.Hana.v4.5/Sap.Data.Hana.Core.v2.1
+		// SAP HANA : Sap.Data.Hana.*
 		// SAP HANA : System.Data.Odbc
 		// SQLCE    : System.Data.SqlServerCe
 		// SQLITE   : System.Data.Sqlite
@@ -1183,7 +1183,7 @@ namespace Tests.Data
 		// Informix : IBM.Data.Informix
 		// ORACLE   : Oracle.DataAccess
 		// ORACLE   : Oracle.ManagedDataAccess(.Core)
-		// SAP HANA : Sap.Data.Hana.v4.5/Sap.Data.Hana.Core.v2.1
+		// SAP HANA : Sap.Data.Hana.*
 		// SAP HANA : System.Data.Odbc
 		// SQLCE    : System.Data.SqlServerCe
 		// SQLITE   : System.Data.Sqlite
