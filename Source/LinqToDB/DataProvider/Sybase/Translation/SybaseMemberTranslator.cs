@@ -182,8 +182,14 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 
 			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
 			{
-				var factory = translationContext.ExpressionFactory;
-				return factory.Function(factory.GetDbDataType(typeof(int)), "LEN", value);
+				var factory         = translationContext.ExpressionFactory;
+				var valueStringType = factory.GetDbDataType(typeof(string));
+				var valueIntType    = factory.GetDbDataType(typeof(int));
+
+				var condition   = factory.Equal(factory.Value(valueStringType, string.Empty), value);
+				var valueLength = factory.Function(valueIntType, "CHAR_LENGTH", value);
+
+				return factory.Condition(condition, factory.Value(valueIntType, 0), valueLength);
 			}
 		}
 
