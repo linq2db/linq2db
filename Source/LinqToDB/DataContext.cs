@@ -125,7 +125,7 @@ namespace LinqToDB
 					_configurationID = idBuilder
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
 						// GetDataConnection :-/
-						.Add(ConfigurationString ?? ConnectionString ?? GetDataConnection().Connection.ConnectionString)
+						.Add(ConfigurationString ?? ConnectionString ?? GetDataConnection().EnsureConnection(connect: false).ConnectionString)
 						.Add(Options)
 						.Add(GetType())
 						.CreateID();

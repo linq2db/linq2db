@@ -488,7 +488,7 @@ namespace LinqToDB.Data
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
-						.Add(ConfigurationString ?? ConnectionString ?? Connection.ConnectionString)
+						.Add(ConfigurationString ?? ConnectionString ?? EnsureConnection(connect: false).ConnectionString)
 						.Add(Options)
 						.Add(GetType())
 						.CreateID();
