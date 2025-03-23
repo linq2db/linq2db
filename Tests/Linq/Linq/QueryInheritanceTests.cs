@@ -43,8 +43,7 @@ namespace Tests.Linq
 					isAlreadyOptimizedAndConverted : false,
 					parametersNormalizerFactory : connection.DataProvider.GetQueryParameterNormalizer
 				),
-				aliases: new AliasesContext()
-			);
+				aliases : new AliasesContext(), nullabilityContext : null);
 
 			return connection.Query<T>(sb.ToString());
 		}

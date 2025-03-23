@@ -112,6 +112,18 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
+		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		{
+			var saveNullabilityContext = _nullabilityContext;
+			_nullabilityContext = _nullabilityContext.WithJoinSource(element.Table.Source);
+
+			var newElement = base.VisitSqlJoinedTable(element);
+
+			_nullabilityContext = saveNullabilityContext;
+
+			return newElement;
+		}
+
 		protected override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
 		{
 			var newElement = base.VisitIsTruePredicate(predicate);
@@ -521,8 +533,13 @@ namespace LinqToDB.SqlProvider
 		{
 			var saveInsideNot = _isInsideNot;
 			_isInsideNot = false;
+			
+			var saveNullabilityContext = _nullabilityContext;
+			_nullabilityContext = _nullabilityContext.WithQuery(selectQuery);
 
 			var result = base.VisitSqlQuery(selectQuery);
+
+			_nullabilityContext = saveNullabilityContext;
 
 			_isInsideNot = saveInsideNot;
 

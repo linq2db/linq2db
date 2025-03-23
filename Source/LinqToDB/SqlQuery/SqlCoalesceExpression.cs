@@ -51,10 +51,7 @@ namespace LinqToDB.SqlQuery
 
 		public override bool CanBeNullable(NullabilityContext nullability)
 		{
-			if (Expressions.Length == 0)
-				return false;
-
-			return Expressions[^1].CanBeNullable(nullability);
+			return Expressions.All(e => e.CanBeNullable(nullability));
 		}
 
 		public void Modify(params ISqlExpression[] expressions)

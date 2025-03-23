@@ -161,10 +161,11 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildSql
 
-		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, AliasesContext aliases, int startIndent = 0)
+		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, AliasesContext aliases, NullabilityContext? nullabilityContext,
+			int startIndent = 0)
 		{
 			AliasesContext = aliases;
-			BuildSql(commandNumber, statement, sb, optimizationContext, startIndent, !DataOptions.SqlOptions.GenerateFinalAliases && CanSkipRootAliases(statement));
+			BuildSql(commandNumber, statement, sb, optimizationContext, startIndent, !DataOptions.SqlOptions.GenerateFinalAliases && CanSkipRootAliases(statement), nullabilityContext: nullabilityContext);
 		}
 
 		protected virtual void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -181,7 +182,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
+		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias, NullabilityContext? nullabilityContext)
 		{
 			Statement           = statement;
 			StringBuilder       = sb;
@@ -191,7 +192,9 @@ namespace LinqToDB.SqlProvider
 
 			if (commandNumber == 0)
 			{
-				NullabilityContext = NullabilityContext.GetContext(statement.SelectQuery);
+				NullabilityContext = nullabilityContext ?? NullabilityContext.GetContext(statement.SelectQuery);
+				if (statement.SelectQuery != null)
+					NullabilityContext = NullabilityContext.WithQuery(statement.SelectQuery);
 
 				BuildSql();
 
@@ -206,8 +209,8 @@ namespace LinqToDB.SqlProvider
 						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
 						sqlBuilder.BuildSql(commandNumber,
 							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
-							optimizationContext, indent,
-							skipAlias);
+							optimizationContext, indent, 
+							skipAlias, NullabilityContext);
 						MergeSqlBuilderData(sqlBuilder);
 					}
 				}
@@ -265,7 +268,7 @@ namespace LinqToDB.SqlProvider
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0,
-				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, skipAlias);
+				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, skipAlias, NullabilityContext);
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
@@ -408,7 +411,7 @@ namespace LinqToDB.SqlProvider
 			{ ParentStatement = deleteStatement, With = deleteStatement.GetWithClause() };
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, OptimizationContext, AliasesContext, Indent);
+			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, OptimizationContext, AliasesContext, NullabilityContext, Indent);
 			MergeSqlBuilderData(sqlBuilder);
 
 			--Indent;
@@ -465,7 +468,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, SkipAlias);
+			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, SkipAlias, NullabilityContext);
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
@@ -2084,7 +2087,14 @@ namespace LinqToDB.SqlProvider
 			if (buildOn)
 			{
 				if (!condition.IsTrue())
+				{
+					var saveNullability = NullabilityContext;
+					NullabilityContext = NullabilityContext.WithJoinSource(join.Table.Source).WithQuery(selectQuery);
+
 					BuildSearchCondition(Precedence.Unknown, condition, wrapCondition : false);
+
+					NullabilityContext = saveNullability;
+				}
 				else
 					StringBuilder.Append("1=1");
 			}

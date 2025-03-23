@@ -3483,7 +3483,7 @@ namespace Tests.Linq
 		#endregion
 
 		[Test]
-		public void NullableCoalesceJoinTest([DataSources(false)] string context)
+		public void NullableCoalesceJoinTest([DataSources(false, [TestProvName.AllAccess, TestProvName.AllClickHouse])] string context)
 		{
 			using var db   = GetDataContext(context);
 
