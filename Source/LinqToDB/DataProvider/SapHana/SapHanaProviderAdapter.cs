@@ -14,6 +14,8 @@ using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
+using static LinqToDB.DataProvider.OdbcProviderAdapter;
+
 namespace LinqToDB.DataProvider.SapHana
 {
 	// TODO: add HanaDecimal support
@@ -48,6 +50,7 @@ namespace LinqToDB.DataProvider.SapHana
 			Func<string, DbConnection> connectionFactory,
 
 			Action<DbParameter, HanaDbType> dbTypeSetter,
+			Func<DbParameter, HanaDbType> dbTypeGetter,
 
 			Func<DbConnection, HanaBulkCopyOptions, DbTransaction?, HanaBulkCopy> bulkCopyCreator,
 			Func<int, string, HanaBulkCopyColumnMapping>                          bulkCopyColumnMappingCreator,
@@ -68,6 +71,7 @@ namespace LinqToDB.DataProvider.SapHana
 			_connectionFactory = connectionFactory;
 
 			SetDbType = dbTypeSetter;
+			GetDbType = dbTypeGetter;
 
 			CreateBulkCopy              = bulkCopyCreator;
 			CreateBulkCopyColumnMapping = bulkCopyColumnMappingCreator;
@@ -89,6 +93,9 @@ namespace LinqToDB.DataProvider.SapHana
 			CommandType        = odbcProviderAdapter.CommandType;
 			TransactionType    = odbcProviderAdapter.TransactionType;
 			_connectionFactory = odbcProviderAdapter.CreateConnection;
+
+			SetOdbcDbType = odbcProviderAdapter.SetDbType;
+			GetOdbcDbType = odbcProviderAdapter.GetDbType;
 		}
 
 		#region IDynamicProviderAdapter
@@ -114,6 +121,10 @@ namespace LinqToDB.DataProvider.SapHana
 		public Type? HanaDecimalType { get; }
 
 		public Action<DbParameter, HanaDbType>? SetDbType { get; }
+		public Func<DbParameter, HanaDbType>?   GetDbType { get; }
+
+		public Action<DbParameter, OdbcType>? SetOdbcDbType   { get; }
+		public Func<DbParameter, OdbcType>?   GetOdbcDbType   { get; }
 
 		internal Func<DbConnection, HanaBulkCopyOptions, DbTransaction?, HanaBulkCopy>? CreateBulkCopy              { get; }
 		public   Func<int, string, HanaBulkCopyColumnMapping>?                          CreateBulkCopyColumnMapping { get; }
@@ -208,7 +219,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 							var connectionFactory = typeMapper.BuildTypedFactory<string, HanaConnection, DbConnection>((string connectionString) => new HanaConnection(connectionString));
 
-							var typeSetter = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType).BuildSetter<DbParameter>();
+							var typeProperty = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType);
 
 							_unmanagedProvider = new SapHanaProviderAdapter(
 								connectionType,
@@ -217,7 +228,8 @@ namespace LinqToDB.DataProvider.SapHana
 								commandType,
 								transactionType,
 								connectionFactory,
-								typeSetter,
+								typeProperty.BuildSetter<DbParameter>(),
+								typeProperty.BuildGetter<DbParameter>(),
 								typeMapper.BuildWrappedFactory((DbConnection connection, HanaBulkCopyOptions options, DbTransaction? transaction) => new HanaBulkCopy((HanaConnection)(object)connection, options, (HanaTransaction?)(object?)transaction)),
 								typeMapper.BuildWrappedFactory((int source, string destination) => new HanaBulkCopyColumnMapping(source, destination)),
 

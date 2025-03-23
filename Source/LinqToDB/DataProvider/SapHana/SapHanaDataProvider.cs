@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.SapHana
 			if (Adapter.GetTimeSpanMethod       != null) SetProviderField(typeof(TimeSpan)        , typeof(TimeSpan)      , Adapter.GetTimeSpanMethod      , dataReaderType: Adapter.DataReaderType);
 		}
 
-		private SapHanaProvider Provider { get; }
+		internal SapHanaProvider Provider { get; }
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{

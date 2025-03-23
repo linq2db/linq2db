@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Globalization;
 using System.Text;
 
@@ -279,5 +280,22 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
+
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
+		{
+			if (DataProvider is SapHanaDataProvider provider)
+			{
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
+				if (param != null)
+				{
+					if (provider.Provider == SapHanaProvider.ODBC)
+						return provider.Adapter.GetOdbcDbType!(param).ToString();
+					else
+						return provider.Adapter.GetDbType!(param).ToString();
+				}
+			}
+
+			return base.GetProviderTypeName(dataContext, parameter);
+		}
 	}
 }
