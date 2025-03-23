@@ -116,7 +116,7 @@ namespace LinqToDB.Linq.Builder
 
 			expr = SimplifyConversion(expr);
 
-			var suggested     = ExpressionCacheManager.SuggestParameterName(expr);
+			var suggested     = ExpressionCacheManager.SuggestParameterDisplayName(expr);
 			var parameterName = suggested ?? alias;
 
 			if (parameterName == null && columnDescriptor != null)
