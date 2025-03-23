@@ -21,9 +21,9 @@ namespace Tests
 {
 	partial class TestBase
 	{
-		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false)
+		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false, bool printData = false)
 		{
-			AreEqual(t => t, expected, result, EqualityComparer<T>.Default, allowEmpty);
+			AreEqual(t => t, expected, result, EqualityComparer<T>.Default, allowEmpty, printData : printData);
 		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, Func<IEnumerable<T>, IEnumerable<T>> sort)
@@ -41,9 +41,9 @@ namespace Tests
 			AreEqual(t => t, expected, result, ComparerBuilder.GetEqualityComparer<T>(memberPredicate));
 		}
 
-		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false)
+		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false, bool printData = false)
 		{
-			AreEqual(t => t, expected, result, comparer, allowEmpty);
+			AreEqual(t => t, expected, result, comparer, allowEmpty, printData : printData);
 		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, Func<IEnumerable<T>, IEnumerable<T>> sort)
@@ -56,9 +56,9 @@ namespace Tests
 			AreEqual(fixSelector, expected, result, EqualityComparer<T>.Default);
 		}
 
-		protected void AreEqual<T>(Func<T, T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false)
+		protected void AreEqual<T>(Func<T, T> fixSelector, IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false, bool printData = false)
 		{
-			AreEqual(fixSelector, expected, result, comparer, null, allowEmpty);
+			AreEqual(fixSelector, expected, result, comparer, null, allowEmpty, printData : printData);
 		}
 
 		protected void AreEqual<T>(
@@ -67,7 +67,8 @@ namespace Tests
 			IEnumerable<T> result,
 			IEqualityComparer<T> comparer,
 			Func<IEnumerable<T>, IEnumerable<T>>? sort,
-			bool allowEmpty = false)
+			bool allowEmpty = false,
+			bool printData  = false)
 		{
 			var resultList   = result.  Select(fixSelector).ToList();
 			var lastQuery    = LastQuery;
@@ -77,6 +78,12 @@ namespace Tests
 			{
 				resultList = sort(resultList).ToList();
 				expectedList = sort(expectedList).ToList();
+			}
+
+			if (printData)
+			{
+				Console.WriteLine(expectedList.ToDiagnosticString("Expected"));
+				Console.WriteLine(resultList.  ToDiagnosticString("Result"));
 			}
 
 			if (!allowEmpty)
