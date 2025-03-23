@@ -44,6 +44,8 @@ namespace Cli.Fluent.SapHana
 						.HasAttribute(new ColumnAttribute("smallintDataType"))
 					.Member(e => e.DecimalDataType)
 						.HasAttribute(new ColumnAttribute("decimalDataType"))
+					.Member(e => e.DecFloatDataType)
+						.HasAttribute(new ColumnAttribute("decFloatDataType"))
 					.Member(e => e.SmalldecimalDataType)
 						.HasAttribute(new ColumnAttribute("smalldecimalDataType"))
 					.Member(e => e.IntDataType)

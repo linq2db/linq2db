@@ -1083,13 +1083,9 @@ namespace Tests.Data
 		public async Task TestSapHanaNative([IncludeDataSources(ProviderName.SapHanaNative)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-#if NETFRAMEWORK
-			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, DbProviderFactories.GetFactory("Sap.Data.Hana").GetType().Assembly.GetType("Sap.Data.Hana.HanaConnection")!))
-#elif NET6_0 || NET7_0
-			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, "Sap.Data.Hana.HanaConnection, Sap.Data.Hana.Net.v6.0"))
-#else
-			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, "Sap.Data.Hana.HanaConnection, Sap.Data.Hana.Net.v8.0"))
-#endif
+
+			var connectionType = ((SapHanaDataProvider)SapHanaTools.GetDataProvider(SapHanaProvider.Unmanaged)).Adapter.ConnectionType;
+			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, connectionType))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>

@@ -110,6 +110,17 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.Guid:
 					StringBuilder.Append("Char (36)");
 					return;
+				case DataType.SmallDecFloat:
+					StringBuilder.Append("SMALLDECIMAL");
+					return;
+				case DataType.DecFloat:
+					StringBuilder.Append("DECIMAL");
+					return;
+				case DataType.Array | DataType.Single:
+					StringBuilder.Append("REAL_VECTOR");
+					if (type.Length != null)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
+					return;
 				case DataType.NVarChar:
 				case DataType.VarChar:
 				case DataType.VarBinary:
