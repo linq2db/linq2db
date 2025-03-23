@@ -1098,21 +1098,21 @@ namespace Tests.Data
 				Assert.Multiple(() =>
 				{
 					Assert.That(db.Execute<byte[]>("SELECT cast(:p as blob) from dummy", new DataParameter("p", binaryValue, DataType.Image)), Is.EqualTo(binaryValue));
-					Assert.That(trace, Does.Contain("DECLARE @p Binary("));
+					Assert.That(trace, Does.Contain("DECLARE @p Blob("));
 					Assert.That(db.Execute<byte[]>("SELECT cast(:p as varbinary) from dummy", new DataParameter("p", binaryValue, DataType.Binary)), Is.EqualTo(binaryValue));
 				});
-				Assert.That(trace, Does.Contain("DECLARE @p Binary("));
+				Assert.That(trace, Does.Contain("DECLARE @p VarBinary("));
 				var textValue = "test";
 				Assert.Multiple(() =>
 				{
 					Assert.That(db.Execute<string>("SELECT cast(:p as text) from dummy", new DataParameter("p", textValue, DataType.Text)), Is.EqualTo(textValue));
-					Assert.That(trace, Does.Contain("DECLARE @p NVarChar("));
+					Assert.That(trace, Does.Contain("DECLARE @p Text("));
 				});
 				var ntextValue = "тест";
 				Assert.Multiple(() =>
 				{
 					Assert.That(db.Execute<string>("SELECT cast(:p as nclob) from dummy", new DataParameter("p", ntextValue, DataType.NText)), Is.EqualTo(ntextValue));
-					Assert.That(trace, Does.Contain("DECLARE @p  -- Xml"));
+					Assert.That(trace, Does.Contain("DECLARE @p NClob"));
 				});
 
 				// bulk copy without and with transaction
