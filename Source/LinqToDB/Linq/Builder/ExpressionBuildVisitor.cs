@@ -1077,6 +1077,14 @@ namespace LinqToDB.Linq.Builder
 			return base.VisitChangeTypeExpression(node);
 		}
 
+		protected override Expression VisitInvocation(InvocationExpression node)
+		{
+			if (IsSqlOrExpression() && HandleValue(node, out var translated))
+				return Visit(translated);
+
+			return base.VisitInvocation(node);
+		}
+
 		public bool HandleExtension(IBuildContext context, Expression expr, [NotNullWhen(true)] out Sql.ExpressionAttribute? attribute, [NotNullWhen(true)] out Expression? translated)
 		{
 			// Handling ExpressionAttribute
