@@ -111,7 +111,7 @@ namespace LinqToDB.Data
 					using var sbv    = Pools.StringBuilder.Allocate();
 					var sb           = sbv.Value;
 
-					sb.Append("--  ").Append(DataConnection.ConfigurationString);
+					sb.Append("-- ").Append(DataConnection.ConfigurationString);
 
 					if (DataConnection.ConfigurationString != DataConnection.DataProvider.Name)
 						sb.Append(' ').Append(DataConnection.DataProvider.Name);
