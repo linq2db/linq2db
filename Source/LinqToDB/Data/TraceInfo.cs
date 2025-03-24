@@ -111,7 +111,7 @@ namespace LinqToDB.Data
 					using var sbv    = Pools.StringBuilder.Allocate();
 					var sb           = sbv.Value;
 
-					sb.Append("-- ").Append(DataConnection.ConfigurationString);
+					sb.Append("--  ").Append(DataConnection.ConfigurationString);
 
 					if (DataConnection.ConfigurationString != DataConnection.DataProvider.Name)
 						sb.Append(' ').Append(DataConnection.DataProvider.Name);
@@ -128,7 +128,7 @@ namespace LinqToDB.Data
 
 					sb.AppendLine(Command.CommandText);
 
-					while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
+					while (sb[^1] is '\n' or '\r')
 						sb.Length--;
 
 					sb.AppendLine();
