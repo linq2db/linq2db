@@ -92,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 
 						var sqlExpr = builder.BuildSqlExpression(sequence, sourceRef);
 
-						UpdateBuilder.ParseSetter(builder, targetRef, sqlExpr, insertContext.SetExpressions);
+						UpdateBuilder.ParseSetter(builder, targetRef, sourceRef, sqlExpr, insertContext.SetExpressions);
 					}
 				}
 				else if (methodCall.Arguments.Count > 1                  &&
@@ -118,8 +118,9 @@ namespace LinqToDB.Linq.Builder
 
 					var targetType = genericArguments[1];
 					var contextRef = new ContextRefExpression(targetType, into);
+					var sourceRef  = SequenceHelper.CreateRef(sequence);
 
-					UpdateBuilder.ParseSetter(builder, contextRef, setterExpr, insertContext.SetExpressions);
+					UpdateBuilder.ParseSetter(builder, contextRef, sourceRef, setterExpr, insertContext.SetExpressions);
 				}
 				else if (typeof(ITable<>).IsSameOrParentOf(argument.Type))
 				{
@@ -181,6 +182,7 @@ namespace LinqToDB.Linq.Builder
 
 					UpdateBuilder.ParseSetter(builder,
 						intoContextRef,
+						sourceRef,
 						redirectedExpression,
 						insertContext.SetExpressions);
 				}
@@ -214,13 +216,14 @@ namespace LinqToDB.Linq.Builder
 						var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
 						var destinationRef = new ContextRefExpression(outputExpression.Body.Type, destination);
+						var sourceRef      = SequenceHelper.CreateRef(sequence);
 
 						var outputExpr   = SequenceHelper.PrepareBody(outputExpression, outputAnchor);
 
 						insertStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
 
 						var outputSetters = new List<UpdateBuilder.SetExpressionEnvelope>();
-						UpdateBuilder.ParseSetter(builder, destinationRef, outputExpr, outputSetters);
+						UpdateBuilder.ParseSetter(builder, destinationRef, sourceRef, outputExpr, outputSetters);
 
 						UpdateBuilder.InitializeSetExpressions(builder, outputAnchor, outputAnchor,
 							outputSetters, insertStatement.Output.OutputItems, false);
@@ -294,7 +297,8 @@ namespace LinqToDB.Linq.Builder
 							? new SelectContext(Parent, OutputExpression, false, OutputContext)
 							: new AnchorContext(Parent, new SelectContext(Parent, OutputExpression, false, OutputContext), SqlAnchor.AnchorKindEnum.Inserted);
 
-						var outputRef     = new ContextRefExpression(path.Type, selectContext);
+						var outputRef = new ContextRefExpression(path.Type, selectContext);
+						var sourceRef = SequenceHelper.CreateRef(QuerySequence);
 
 						var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 
@@ -304,7 +308,7 @@ namespace LinqToDB.Linq.Builder
 						if (sqlExpr is SqlPlaceholderExpression)
 							outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr, false));
 						else
-							UpdateBuilder.ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
+							UpdateBuilder.ParseSetter(Builder, outputRef, sourceRef, sqlExpr, outputExpressions);
 
 						var setItems = new List<SqlSetExpression>();
 						UpdateBuilder.InitializeSetExpressions(Builder, selectContext, selectContext, outputExpressions, setItems, false);
@@ -479,6 +483,7 @@ namespace LinqToDB.Linq.Builder
 
 				var tableType  = methodCall.Method.GetGenericArguments()[1];
 				var contextRef = new ContextRefExpression(tableType, insertContext.Into);
+				var sourceRef  = SequenceHelper.CreateRef(sequence);
 
 				var extractExp = SequenceHelper.PrepareBody(extract, insertContext.Into);
 				var updateExpr = update;
@@ -490,7 +495,7 @@ namespace LinqToDB.Linq.Builder
 					forceParameters = false;
 				}
 
-				UpdateBuilder.ParseSet(contextRef, extractExp, updateExpr, insertContext.SetExpressions, forceParameters);
+				UpdateBuilder.ParseSet(contextRef, sourceRef, extractExp, updateExpr, insertContext.SetExpressions, forceParameters);
 				insertContext.LastBuildInfo = buildInfo;
 
 				return BuildSequenceResult.FromContext(insertContext);
