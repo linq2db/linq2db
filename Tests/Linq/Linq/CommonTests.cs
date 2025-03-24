@@ -181,7 +181,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PreferServerFunc2([DataSources] string context)
+		public void PreferServerFunc2([DataSources(TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

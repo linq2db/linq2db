@@ -221,26 +221,6 @@ namespace LinqToDB.DataProvider.Oracle.Translation
 			}
 		}
 
-		public class StringMemberTranslator : StringMemberTranslatorBase
-		{
-			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
-			{
-				var factory      = translationContext.ExpressionFactory;
-				var valueTypeInt = factory.GetDbDataType(typeof(int));
-
-				var valueLength = base.TranslateLength(translationContext, translationFlags, value);
-				if (valueLength == null)
-					return null;
-
-				return factory.Function(valueTypeInt, "NVL", valueLength, factory.Value(valueTypeInt, 0));
-			}
-		}
-
-		protected override IMemberTranslator CreateStringMemberTranslator()
-		{
-			return new StringMemberTranslator();
-		}
-
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();
