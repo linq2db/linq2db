@@ -3781,7 +3781,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InsertFirstFromGroup([DataSources(false, TestProvName.AllFirebird)] string context)
+		public void InsertFirstFromGroup([DataSources(false, TestProvName.AllFirebird, TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 
