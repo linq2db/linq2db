@@ -341,5 +341,9 @@ namespace LinqToDB.DataProvider.Informix.Translation
 			return new DateFunctionsTranslator();
 		}
 
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
 	}
 }
