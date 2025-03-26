@@ -122,7 +122,8 @@ namespace SapHanaDataContext
 		[Column(),                       PrimaryKey, Identity] public int       ID                   { get; set; } // INTEGER
 		[Column("bigintDataType"),       Nullable            ] public long?     BigintDataType       { get; set; } // BIGINT
 		[Column("smallintDataType"),     Nullable            ] public short?    SmallintDataType     { get; set; } // SMALLINT
-		[Column("decimalDataType"),      Nullable            ] public decimal?  DecimalDataType      { get; set; } // DECIMAL(34, 0)
+		[Column("decimalDataType"),      Nullable            ] public decimal?  DecimalDataType      { get; set; } // DECIMAL(38, 10)
+		[Column("decFloatDataType"),     Nullable            ] public decimal?  DecFloatDataType     { get; set; } // DECIMAL
 		[Column("smalldecimalDataType"), Nullable            ] public decimal?  SmalldecimalDataType { get; set; } // SMALLDECIMAL
 		[Column("intDataType"),          Nullable            ] public int?      IntDataType          { get; set; } // INTEGER
 		[Column("tinyintDataType"),      Nullable            ] public byte?     TinyintDataType      { get; set; } // TINYINT

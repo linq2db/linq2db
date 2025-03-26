@@ -162,6 +162,17 @@ namespace LinqToDB.CommandLine
 			return StatusCodes.SUCCESS;
 		}
 
+		private const string SapHanaDefaultPath = "sap\\hdbclient\\dotnetcore";
+
+		private static readonly IEnumerable<string> SapHanaProbePathes =
+		[
+#if NET8_0_OR_GREATER
+			@"v8.0\Sap.Data.Hana.Net.v8.0.dll",
+#endif
+			@"v6.0\Sap.Data.Hana.Net.v6.0.dll",
+			@"v2.1\Sap.Data.Hana.Core.v2.1.dll"
+		];
+
 		private DataConnection? GetConnection(string provider, string? providerLocation, string connectionString, string? additionalConnectionString, out DataConnection? secondaryConnection)
 		{
 			secondaryConnection = null;
@@ -235,20 +246,42 @@ Possible reasons:
 
 					if (!isOdbc)
 					{
-						var assemblyPath = providerLocation ?? Path.Combine(Environment.GetEnvironmentVariable(IntPtr.Size == 4 ? "ProgramFiles(x86)" : "ProgramFiles")!, @"sap\hdbclient\dotnetcore\v2.1\Sap.Data.Hana.Core.v2.1.dll");
-						if (!File.Exists(assemblyPath))
+						var found = false;
+						var installPath = Environment.GetEnvironmentVariable("HDBDOTNETCORE");
+						var defaultPath = Path.Combine(Environment.GetEnvironmentVariable(IntPtr.Size == 4 ? "ProgramFiles(x86)" : "ProgramFiles")!, SapHanaDefaultPath);
+
+						var clientRoots = installPath== null ? new string[] { defaultPath } : [installPath, defaultPath];
+
+						foreach (var clientRoot in clientRoots)
+						{
+							foreach (var assemblyProbePath in SapHanaProbePathes)
+							{
+								var assemblyPath = providerLocation ?? Path.Combine(clientRoot, assemblyProbePath);
+								if (File.Exists(assemblyPath))
+								{
+									var assembly = Assembly.LoadFrom(assemblyPath);
+									DbProviderFactories.RegisterFactory("Sap.Data.Hana", assembly.GetType("Sap.Data.Hana.HanaFactory")!);
+									found = true;
+									break;
+								}
+							}
+
+							if (found)
+							{
+								break;
+							}
+						}
+
+						if (!found)
 						{
 							Console.Error.WriteLine(@$"Cannot locate SAP HANA native client installation.
-Probed location: {assemblyPath}.
+Probed locations: {string.Join(", ", clientRoots)}.
 Possible reasons:
 1. HDB client not installed => install HDB client for .net core
 2. HDB architecture doesn't match process architecture => add '--architecture x86' or '--architecture x64' scaffold option
-3. HDB client installed at custom location => specify path to Sap.Data.Hana.Core.v2.1.dll using '--provider-location <path_to_assembly>' option");
+3. HDB client installed at custom location => specify path to Sap.Data.Hana.Net.v8.0.dll, Sap.Data.Hana.Net.v6.0.dll or Sap.Data.Hana.Core.v2.1.dll using '--provider-location <path_to_assembly>' option");
 							return null;
 						}
-
-						var assembly = Assembly.LoadFrom(assemblyPath);
-						DbProviderFactories.RegisterFactory("Sap.Data.Hana", assembly.GetType("Sap.Data.Hana.HanaFactory")!);
 					}
 
 					break;
