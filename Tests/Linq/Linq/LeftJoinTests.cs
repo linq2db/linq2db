@@ -55,6 +55,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = "Cannot use the collection from a GroupJoin as an expression.")]
 		public void LeftJoinGroupTest([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
