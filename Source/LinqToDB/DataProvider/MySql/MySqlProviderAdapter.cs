@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
 using LinqToDB.Expressions.Types;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -186,8 +187,8 @@ namespace LinqToDB.DataProvider.MySql
 					mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(decimal), toDecimalConverter);
 					mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(double), toDoubleConverter);
 					mappingSchema.SetValueToSqlConverter(mySqlDecimalType,
-						typeMapper.BuildAction<StringBuilder,SqlDataType,DataOptions,object>(
-							typeMapper.MapActionLambda((StringBuilder sb, SqlDataType type, DataOptions options, object value) => AppendAction(sb, ((MySqlDecimal)value).ToString()))));
+						typeMapper.BuildAction<StringBuilder, DbDataType, DataOptions,object>(
+							typeMapper.MapActionLambda((StringBuilder sb, DbDataType type, DataOptions options, object value) => AppendAction(sb, ((MySqlDecimal)value).ToString()))));
 
 					mappingSchema.SetDataType(mySqlDateTimeType, DataType.DateTime2);
 					mappingSchema.SetConvertExpression(mySqlDateTimeType, typeof(DateTime), dateTimeConverter);
@@ -378,8 +379,8 @@ namespace LinqToDB.DataProvider.MySql
 						mappingSchema.SetDataType(mySqlDecimalType, DataType.Decimal);
 						mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(decimal), toDecimalConverter);
 						mappingSchema.SetValueToSqlConverter(mySqlDecimalType,
-							typeMapper.BuildAction<StringBuilder,SqlDataType,DataOptions,object>(
-								typeMapper.MapActionLambda((StringBuilder sb, SqlDataType type, DataOptions options, object value) => AppendAction(sb, ((MySqlDecimal)value).ToString()))));
+							typeMapper.BuildAction<StringBuilder, DbDataType, DataOptions,object>(
+								typeMapper.MapActionLambda((StringBuilder sb, DbDataType type, DataOptions options, object value) => AppendAction(sb, ((MySqlDecimal)value).ToString()))));
 
 						mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(double) , toDoubleConverter);
 					}

@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -15,7 +16,7 @@ namespace Tests.UserTests
 		public void Test()
 		{
 			var schema = new MappingSchema();
-			schema.SetDataType(typeof (decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 19, 4));
+			schema.SetDataType(typeof (decimal), new DbDataType(typeof(decimal), DataType.Decimal, null, null, 19, 4));
 
 			var table = new SqlTable(schema.GetEntityDescriptor(typeof(Foo)));
 

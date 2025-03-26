@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -1825,7 +1826,7 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 				ms.SetValueToSqlConverter(typeof(Issue1622Enum),
-					(sb, dt, v) =>
+					(StringBuilder sb, DbDataType dt, object v) =>
 					{
 						sb.Append('\'').Append(((Issue1622Enum)v).ToString()).Append("_suffix'");
 					});

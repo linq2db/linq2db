@@ -26,22 +26,22 @@ namespace LinqToDB.DataProvider.SQLite
 
 			SetValueToSqlConverter(typeof(Guid),     (sb, dt,_,v) => ConvertGuidToSql    (sb, dt, (Guid)v));
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
-			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string),   (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertStringToSql  (sb, (string)v));
+			SetValueToSqlConverter(typeof(char),     (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),   (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertBinaryToSql  (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),   (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (StringBuilder sb, DbDataType _,  DataOptions _, object v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 #endif
 
-			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+			SetDataType(typeof(string), new DbDataType(typeof(string), DataType.NVarChar, null, 255));
 		}
 
-		static void ConvertGuidToSql(StringBuilder stringBuilder, SqlDataType dt, Guid value)
+		static void ConvertGuidToSql(StringBuilder stringBuilder, DbDataType dt, Guid value)
 		{
 			// keep in sync with provider's SetParameter method
-			switch (dt.Type.DataType, dt.Type.DbType)
+			switch (dt.DataType, dt.DbType)
 			{
 				case (DataType.NChar, _) or (DataType.NVarChar, _) or (DataType.NText, _)
 					or (DataType.Char, _) or (DataType.VarChar, _) or (DataType.Text, _)
@@ -65,14 +65,14 @@ namespace LinqToDB.DataProvider.SQLite
 				.Append('\'');
 		}
 
-		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
+		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DbDataType dataType, DateTime value)
 		{
 #if SUPPORTS_COMPOSITE_FORMAT
 			CompositeFormat format;
 #else
 			string format;
 #endif
-			if (dataType.Type.DataType == DataType.Date)
+			if (dataType.DataType == DataType.Date)
 				format = DATE_FORMAT;
 			else
 				format = DATETIME_FORMAT;

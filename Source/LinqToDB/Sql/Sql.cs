@@ -1082,9 +1082,9 @@ namespace LinqToDB
 					{
 						var len = arg.SystemType == null || arg.SystemType == typeof(object) ?
 							100 :
-							SqlDataType.GetMaxDisplaySize(dataContext.MappingSchema.GetDataType(arg.SystemType).Type.DataType);
+							SqlDataType.GetMaxDisplaySize(dataContext.MappingSchema.GetDbDataType(arg.SystemType).DataType);
 
-						arr[i] = PseudoFunctions.MakeCast(arg, new DbDataType(typeof(string), DataType.VarChar, null, len));
+						arr[i] = PseudoFunctions.MakeCast(arg, new DbDataType(typeof(string), DataType.VarChar, null, length: len));
 					}
 				}
 

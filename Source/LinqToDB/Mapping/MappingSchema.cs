@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.Linq;
 using System.Diagnostics;
 using System.Globalization;
@@ -9,7 +10,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -184,6 +184,8 @@ namespace LinqToDB.Mapping
 		/// - value SQL type descriptor;
 		/// - value.
 		/// </param>
+		// TODO: Remove in v7
+		[Obsolete("Use overload with DbDataType used instead of SqlDataType. This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder, SqlDataType, object> converter)
 		{
 			ValueToSqlConverter.SetConverter(type, (sb, dt, _, v) => converter(sb, new SqlDataType(dt), v));
@@ -199,9 +201,41 @@ namespace LinqToDB.Mapping
 		/// - value SQL type descriptor;
 		/// - value.
 		/// </param>
+		// TODO: Remove in v7
+		[Obsolete("Use overload with DbDataType used instead of SqlDataType. This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,DataOptions,object> converter)
 		{
 			ValueToSqlConverter.SetConverter(type, (sb, t, options, value) => converter(sb, new SqlDataType(t), options, value));
+			return this;
+		}
+
+		/// <summary>
+		/// Sets value to SQL converter action for specific value type.
+		/// </summary>
+		/// <param name="type">Value type.</param>
+		/// <param name="converter">Converter action. Action accepts three parameters:
+		/// - SQL string builder to write generated value SQL to;
+		/// - value SQL type descriptor;
+		/// - value.
+		/// </param>
+		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder, DbDataType, object> converter)
+		{
+			ValueToSqlConverter.SetConverter(type, (sb, dt, _, v) => converter(sb, dt, v));
+			return this;
+		}
+
+		/// <summary>
+		/// Sets value to SQL converter action for specific value type.
+		/// </summary>
+		/// <param name="type">Value type.</param>
+		/// <param name="converter">Converter action. Action accepts three parameters:
+		/// - SQL string builder to write generated value SQL to;
+		/// - value SQL type descriptor;
+		/// - value.
+		/// </param>
+		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder, DbDataType, DataOptions, object> converter)
+		{
+			ValueToSqlConverter.SetConverter(type, converter);
 			return this;
 		}
 
@@ -1382,7 +1416,7 @@ namespace LinqToDB.Mapping
 		{
 			public DefaultMappingSchema() : base(new DefaultMappingSchemaInfo())
 			{
-				AddScalarType(typeof(char),            new SqlDataType(DataType.NChar, typeof(char),  1, null, null, null));
+				AddScalarType(typeof(char),            new DbDataType(typeof(char), DataType.NChar, null, 1));
 				AddScalarType(typeof(string),          DataType.NVarChar);
 				AddScalarType(typeof(decimal),         DataType.Decimal);
 				AddScalarType(typeof(DateTime),        DataType.DateTime2);
@@ -1542,7 +1576,21 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="type">Type to configure.</param>
 		/// <param name="dataType">Database data type.</param>
+		// TODO: Remove in v7
+		[Obsolete("Use overload with DbDataType used instead of SqlDataType. This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public void AddScalarType(Type type, SqlDataType dataType)
+		{
+			SetScalarType(type);
+
+			SetDataType(type, dataType);
+		}
+
+		/// <summary>
+		/// Configure provided type mapping to scalar database type.
+		/// </summary>
+		/// <param name="type">Type to configure.</param>
+		/// <param name="dataType">Database data type.</param>
+		public void AddScalarType(Type type, DbDataType dataType)
 		{
 			SetScalarType(type);
 
@@ -1558,13 +1606,15 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="type">Mapped type.</param>
 		/// <returns>Database type information.</returns>
+		// TODO: Remove in v7
+		[Obsolete("Use GetDbDataType instead. This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public SqlDataType GetDataType(Type type)
 		{
 			foreach (var info in Schemas)
 			{
 				var o = info.GetDataType(type);
 				if (o.HasValue)
-					return o.Value;
+					return new(o.Value);
 			}
 
 			return SqlDataType.Undefined;
@@ -1577,7 +1627,14 @@ namespace LinqToDB.Mapping
 		/// <returns>Database type information.</returns>
 		public DbDataType GetDbDataType(Type type)
 		{
-			return GetDataType(type).Type;
+			foreach (var info in Schemas)
+			{
+				var o = info.GetDataType(type);
+				if (o.HasValue)
+					return o.Value;
+			}
+
+			return DbDataType.Undefined;
 		}
 
 		/// <summary>
@@ -1599,7 +1656,23 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="type">Mapped type.</param>
 		/// <param name="dataType">Database data type.</param>
+		// TODO: Remove in v7
+		[Obsolete("Use overload with DbDataType used instead of SqlDataType. This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public void SetDataType(Type type, SqlDataType dataType)
+		{
+			lock (_syncRoot)
+			{
+				Schemas[0].SetDataType(type, dataType.Type);
+				ResetID();
+			}
+		}
+
+		/// <summary>
+		/// Associate specified type with database data type.
+		/// </summary>
+		/// <param name="type">Mapped type.</param>
+		/// <param name="dataType">Database data type.</param>
+		public void SetDataType(Type type, DbDataType dataType)
 		{
 			lock (_syncRoot)
 			{
@@ -1615,6 +1688,8 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">Returns <c>true</c>, if <paramref name="type"/> type is enum with mapping to <c>null</c> value.
 		/// Initial parameter value, passed to this method is not used.</param>
 		/// <returns>Scalar database type information.</returns>
+		// TODO: Remove in v7
+		[Obsolete("Use GetUnderlyingDbDataType instead. This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public SqlDataType GetUnderlyingDataType(Type type, out bool canBeNull)
 		{
 			canBeNull   = false;
@@ -1686,6 +1761,86 @@ namespace LinqToDB.Mapping
 				return GetDataType(underlyingType);
 
 			return SqlDataType.Undefined;
+		}
+
+		/// <summary>
+		/// Returns scalar database type mapping information for provided type.
+		/// </summary>
+		/// <param name="type">Mapped type.</param>
+		/// <param name="canBeNull">Returns <c>true</c>, if <paramref name="type"/> type is enum with mapping to <c>null</c> value.
+		/// Initial parameter value, passed to this method is not used.</param>
+		/// <returns>Scalar database type information.</returns>
+		public DbDataType GetUnderlyingDbDataType(Type type, out bool canBeNull)
+		{
+			canBeNull = false;
+			int? length = null;
+
+			var underlyingType = type.ToNullableUnderlying();
+
+			if (underlyingType.IsEnum)
+			{
+				var attrs = new List<MapValueAttribute>();
+
+				foreach (var f in underlyingType.GetFields())
+					if ((f.Attributes & EnumField) == EnumField)
+						attrs.AddRange(GetAttributes<MapValueAttribute>(underlyingType, f));
+
+				if (attrs.Count == 0)
+				{
+					underlyingType = Enum.GetUnderlyingType(underlyingType);
+				}
+				else
+				{
+					var   minLen    = 0;
+					Type? valueType = null;
+
+					foreach (var attr in attrs.OrderBy(static a => a.IsDefault ? 0 : 1))
+					{
+						if (attr.Value == null)
+						{
+							canBeNull = true;
+						}
+						else
+						{
+							if (valueType == null)
+								valueType = attr.Value.GetType();
+
+							if (attr.Value is string strVal)
+							{
+								var len = strVal.Length;
+
+								if (length == null)
+								{
+									length = minLen = len;
+								}
+								else
+								{
+									if (minLen > len) minLen = len;
+									if (length < len) length = len;
+								}
+							}
+						}
+					}
+
+					if (valueType == null)
+						return GetDbDataType(type);
+
+					var dt = GetDbDataType(valueType);
+
+					if (dt.DataType == DataType.NVarChar && minLen == length)
+						return new DbDataType(valueType, DataType.NChar, null, length.Value);
+
+					if (length.HasValue && dt.DataType.IsCharDataType())
+						return new DbDataType(valueType, dt.DataType, null, length.Value);
+
+					return dt;
+				}
+			}
+
+			if (underlyingType != type)
+				return GetDbDataType(underlyingType);
+
+			return DbDataType.Undefined;
 		}
 
 		#endregion

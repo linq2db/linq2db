@@ -2,8 +2,8 @@
 using System.Globalization;
 using System.Text;
 
+using LinqToDB.Common;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Informix
 {
@@ -29,18 +29,18 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-			SetValueToSqlConverter(typeof(bool), (sb,_,_,v) => sb.Append('\'').Append((bool)v ? 't' : 'f').Append("'::BOOLEAN"));
+			SetValueToSqlConverter(typeof(bool), (StringBuilder sb, DbDataType _,  DataOptions _, object v) => sb.Append('\'').Append((bool)v ? 't' : 'f').Append("'::BOOLEAN"));
 
-			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
-			SetDataType(typeof(byte),   new SqlDataType(DataType.Int16,    typeof(byte)));
+			SetDataType(typeof(string), new DbDataType(typeof(string), DataType.NVarChar, null, 255));
+			SetDataType(typeof(byte),   new DbDataType(typeof(byte),   DataType.Int16));
 
-			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
-			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,o,v) => ConvertDateTimeToSql(sb, dt, o, (DateTime)v));
-			SetValueToSqlConverter(typeof(TimeSpan), (sb, _,_,v) => BuildIntervalLiteral(sb, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(string),   (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertStringToSql  (sb, (string)v));
+			SetValueToSqlConverter(typeof(char),     (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(DateTime), (StringBuilder sb, DbDataType _, DataOptions o, object v) => ConvertDateTimeToSql(sb, o, (DateTime)v));
+			SetValueToSqlConverter(typeof(TimeSpan), (StringBuilder sb, DbDataType _, DataOptions _, object v) => BuildIntervalLiteral(sb, (TimeSpan)v));
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (StringBuilder sb, DbDataType _, DataOptions _, object v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 #endif
 		}
 
@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DataOptions options, DateTime value)
+		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DataOptions options, DateTime value)
 		{
 			// datetime literal using TO_DATE function used because it works with all kinds of datetime ranges
 			// without generation of range-specific literals
@@ -117,7 +117,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 #if NET6_0_OR_GREATER
-		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dataType, DateOnly value)
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
 		{
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
 		}

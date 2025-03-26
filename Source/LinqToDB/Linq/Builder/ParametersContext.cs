@@ -333,8 +333,8 @@ namespace LinqToDB.Linq.Builder
 			if (testedType == typeof(object))
 				return false;
 
-			var dataType = mappingSchema.GetDataType(testedType);
-			if (dataType.Type.DataType != DataType.Undefined)
+			var dataType = mappingSchema.GetDbDataType(testedType);
+			if (dataType.DataType != DataType.Undefined)
 				return true;
 
 			var notNullable = testedType.ToNullableUnderlying();

@@ -1046,7 +1046,7 @@ namespace LinqToDB.Linq.Builder
 			if (hasDefaultPart)
 				defaultExpression = ps[^1];
 
-			var caseExpression = new SqlCaseExpression(MappingSchema.GetDataType(node.Type).Type, cases, defaultExpression);
+			var caseExpression = new SqlCaseExpression(MappingSchema.GetDbDataType(node.Type), cases, defaultExpression);
 
 			return CreatePlaceholder(caseExpression, node);
 		}
@@ -2153,12 +2153,12 @@ namespace LinqToDB.Linq.Builder
 								return Visit(placeholder.WithType(node.Type));
 
 							var t = node.Operand.Type;
-							var s = MappingSchema.GetDataType(t);
+							var s = MappingSchema.GetDbDataType(t);
 
-							if (placeholder.Sql.SystemType != null && s.Type.SystemType == typeof(object))
+							if (placeholder.Sql.SystemType != null && s.SystemType == typeof(object))
 							{
 								t = placeholder.Sql.SystemType;
-								s = MappingSchema.GetDataType(t);
+								s = MappingSchema.GetDbDataType(t);
 							}
 
 							if (node.Type == t                                                     ||
@@ -2168,7 +2168,7 @@ namespace LinqToDB.Linq.Builder
 								return Visit(placeholder.WithType(node.Type));
 							}
 
-							return Visit(CreatePlaceholder(PseudoFunctions.MakeCast(placeholder.Sql, MappingSchema.GetDbDataType(node.Type), s), node));
+							return Visit(CreatePlaceholder(PseudoFunctions.MakeCast(placeholder.Sql, MappingSchema.GetDbDataType(node.Type), new SqlDataType(s)), node));
 						}
 					}
 
