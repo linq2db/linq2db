@@ -170,6 +170,44 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 			}
 		}
 
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory         = translationContext.ExpressionFactory;
+				var valueTypeString = factory.GetDbDataType(value);
+				var valueTypeInt    = factory.GetDbDataType(typeof(int));
+
+				/*
+				 * LEN(value + ".") - 1
+				 */
+
+				var valueString = factory.Add(valueTypeString, value, factory.Value(valueTypeString, "."));
+				var valueLength = factory.Function(valueTypeInt, "LEN", valueString);
+
+				return factory.Sub(valueTypeInt, valueLength, factory.Value(valueTypeInt, 1));
+			}
+
+			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
+			{
+				/*
+				 * REPLICATE(paddingSymbol, padding - LEN(value)) + value
+				 */
+				var factory         = translationContext.ExpressionFactory;
+				var valueTypeString = factory.GetDbDataType(value);
+				var valueTypeInt    = factory.GetDbDataType(typeof(int));
+				
+				var lengthValue = TranslateLength(translationContext, translationFlags, value);
+				if (lengthValue == null)
+					return null;
+
+				var symbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
+				var stringToAdd  = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
+				
+				return factory.Add(valueTypeString, stringToAdd, value);
+			}
+		}
+
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();
@@ -183,6 +221,11 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 		protected override IMemberTranslator CreateMathMemberTranslator()
 		{
 			return new SqlServerMathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

@@ -245,6 +245,32 @@ namespace LinqToDB.DataProvider.Access.Translation
 
 		}
 
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(factory.GetDbDataType(typeof(int)), "LEN", value);
+			}
+
+			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var valueTypeString = factory.GetDbDataType(value);
+				var valueTypeInt    = factory.GetDbDataType(typeof(int));
+
+				var lengthValue = TranslateLength(translationContext, translationFlags, value);
+				if (lengthValue == null)
+					return null;
+
+				var valueSymbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
+				var fillingString     = factory.Function(valueTypeString, "STRING", valueSymbolsToAdd, paddingChar);
+
+				return factory.Concat(fillingString, value);
+			}
+		}
+
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();
@@ -258,6 +284,11 @@ namespace LinqToDB.DataProvider.Access.Translation
 		protected override IMemberTranslator CreateMathMemberTranslator()
 		{
 			return new MathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
 		}
 	}
 }
