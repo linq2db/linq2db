@@ -111,7 +111,7 @@ namespace Tests.Linq
 
 		sealed class MyDataContext : DataConnection
 		{
-			public MyDataContext(string configuration, MappingSchema mappingSchema) : base(configuration, mappingSchema)
+			public MyDataContext(string configuration, MappingSchema mappingSchema) : base(new DataOptions().UseConfiguration(configuration, mappingSchema))
 			{
 
 			}

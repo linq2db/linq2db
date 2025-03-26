@@ -2117,7 +2117,7 @@ namespace Tests.DataProvider
 
 			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<DbDataReader, int, decimal>>)((r,i) => GetDecimal(r, i));
 
-			using (var db = new DataConnection(provider, DataConnection.GetConnectionString(context)))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(provider, DataConnection.GetConnectionString(context))))
 			{
 				var list = db.GetTable<DecimalOverflow>().ToList();
 			}
@@ -4032,7 +4032,7 @@ CREATE TABLE ""TABLE_A""(
 			if ((copyType == BulkCopyType.ProviderSpecific || copyType == BulkCopyType.Default) && !keepIdentity)
 				Assert.Inconclusive($"{nameof(BulkCopyType.ProviderSpecific)} doesn't support {nameof(BulkCopyOptions.KeepIdentity)} = false mode");
 
-			using (var db    = new DataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = multipeRowsMode })))
+			using (var db    = new DataConnection(new DataOptions().UseConfiguration(context).UseOracle(o => o with { AlternativeBulkCopy = multipeRowsMode })))
 			using (var table = db.CreateLocalTable<NativeIdentity>())
 			{
 				var ms = new MappingSchema();
