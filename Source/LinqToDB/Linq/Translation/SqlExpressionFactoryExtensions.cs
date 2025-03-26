@@ -251,6 +251,11 @@ namespace LinqToDB.Linq.Translation
 			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.LessOrEqual, expr2, factory.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
 		}
 
+		public static ISqlPredicate IsNull(this ISqlExpressionFactory factory, ISqlExpression expr, bool isNot = false)
+		{
+			return new SqlPredicate.IsNull(expr, isNot);
+		}
+
 		#endregion
 	}
 }

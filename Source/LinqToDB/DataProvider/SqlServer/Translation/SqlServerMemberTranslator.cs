@@ -184,6 +184,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 
 				var valueString = factory.Add(valueTypeString, value, factory.Value(valueTypeString, "."));
 				var valueLength = factory.Function(valueTypeInt, "LEN", valueString);
+
 				return factory.Sub(valueTypeInt, valueLength, factory.Value(valueTypeInt, 1));
 			}
 
@@ -197,8 +198,8 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 				var valueTypeInt    = factory.GetDbDataType(typeof(int));
 				
 				var lengthValue = TranslateLength(translationContext, translationFlags, value);
-				if(lengthValue == null)
-					return null;	
+				if (lengthValue == null)
+					return null;
 
 				var symbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
 				var stringToAdd  = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);

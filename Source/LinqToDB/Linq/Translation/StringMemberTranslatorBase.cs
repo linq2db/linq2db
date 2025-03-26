@@ -179,7 +179,7 @@ namespace LinqToDB.Linq.Translation
 		public virtual ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 		{
 			var factory = translationContext.ExpressionFactory;
-			var valueTypeString = factory.GetDbDataType(value); ;
+			var valueTypeString = factory.GetDbDataType(value);
 			return factory.Function(valueTypeString, "LPAD", value, padding, paddingChar);
 		}
 
@@ -190,24 +190,26 @@ namespace LinqToDB.Linq.Translation
 			var valueType = factory.GetDbDataType(value);
 
 			/*
-			 * CASE WHEN LEN(strValue) < 2 
-			 *		THEN LPad(strValue, 2) 
-			 *		ELSE strValue END
+			 * CASE WHEN strValue IS NULL OR LEN(strValue) >= 2 
+			 *		THEN strValue
+			 *		ELSE LPad(strValue, 2) END
 			 */
 
 			var valueLen = TranslateLength(translationContext, translationFlags, value);
-
 			if (valueLen == null)
 				return null;
 
-			var valueLess = factory.Less(valueLen, padding);
 			paddingChar ??= factory.Value(valueType, ' ');
-			var trueValue = TranslateLPad(translationContext, methodCall, translationFlags, value, padding, paddingChar);
 
-			if (trueValue == null)
+			var passingExpr = TranslateLPad(translationContext, methodCall, translationFlags, value, padding, paddingChar);
+			if (passingExpr == null)
 				return null;
 
-			return factory.Condition(valueLess, trueValue, value);
+			var condition = factory.SearchCondition(true)
+				.Add(factory.IsNull(valueLen))
+				.Add(factory.GreaterOrEqual(valueLen, padding));
+
+			return factory.Condition(condition, value, passingExpr);
 		}
 	}
 }
