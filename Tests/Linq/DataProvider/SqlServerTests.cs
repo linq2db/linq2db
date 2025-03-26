@@ -4,7 +4,6 @@ using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
 using System.Data.SqlTypes;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -30,10 +29,10 @@ using Microsoft.SqlServer.Types;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class SqlServerTests : DataProviderTestBase
 	{
@@ -1472,7 +1471,7 @@ namespace Tests.DataProvider
 
 			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<DbDataReader, int, decimal>>)((r, i) => GetDecimal(r, i));
 
-			using (var db = new DataConnection(provider, DataConnection.GetConnectionString(context)))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(provider, DataConnection.GetConnectionString(context))))
 			{
 				var list = db.GetTable<DecimalOverflow>().ToList();
 			}

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -36,7 +38,7 @@ namespace Tests.UserTests
 				: base(configuration)
 			{
 			}
-			public MyDB(IDataProvider dataProvider, string connectionString) : base(dataProvider, connectionString)
+			public MyDB(IDataProvider dataProvider, string connectionString) : base(new DataOptions().UseConnectionString(dataProvider, connectionString))
 			{
 			}
 		}

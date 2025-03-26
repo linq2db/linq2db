@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Linq;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -16,12 +15,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using System.Runtime.Serialization;
-
-	using Model;
-
 	[TestFixture]
 	public class AccessTests : DataProviderTestBase
 	{
@@ -458,7 +455,7 @@ namespace Tests.DataProvider
 			Assert.That(File.Exists(expectedName), Is.True);
 
 			var connectionString = $"Provider={providerName};Data Source={expectedName};Locale Identifier=1033;Persist Security Info=True";
-			using (var db = new DataConnection(AccessTools.GetDataProvider(version, AccessProvider.AutoDetect, connectionString), connectionString))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(AccessTools.GetDataProvider(version, AccessProvider.AutoDetect, connectionString), connectionString)))
 			{
 				db.CreateTable<SqlCeTests.CreateTableTest>();
 				db.DropTable<SqlCeTests.CreateTableTest>();

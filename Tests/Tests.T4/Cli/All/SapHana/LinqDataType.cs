@@ -22,11 +22,11 @@ namespace Cli.All.SapHana
 		[Column("DateTimeValue" , DataType = DataType.Timestamp, DbType = "TIMESTAMP"      , Length = 27  , Precision = 27  , Scale = 7)] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
 		[Column("DateTimeValue2", DataType = DataType.Timestamp, DbType = "TIMESTAMP"      , Length = 27  , Precision = 27  , Scale = 7)] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
 		[Column("BoolValue"     , DataType = DataType.Byte     , DbType = "TINYINT"        , Length = 3   , Precision = 3   , Scale = 0)] public byte?     BoolValue      { get; set; } // TINYINT
-		[Column("GuidValue"     , DataType = DataType.VarChar  , DbType = "VARCHAR(36)"    , Length = 36  , Precision = 36  , Scale = 0)] public string?   GuidValue      { get; set; } // VARCHAR(36)
-		[Column("BinaryValue"   , DataType = DataType.VarBinary, DbType = "VARBINARY(5000)", Length = 5000, Precision = 5000, Scale = 0)] public byte[]?   BinaryValue    { get; set; } // VARBINARY(5000)
+		[Column("GuidValue"     , DataType = DataType.VarChar  , DbType = "VARCHAR(36)"    , Length = 36  , Precision = 36             )] public string?   GuidValue      { get; set; } // VARCHAR(36)
+		[Column("BinaryValue"   , DataType = DataType.VarBinary, DbType = "VARBINARY(5000)", Length = 5000, Precision = 5000           )] public byte[]?   BinaryValue    { get; set; } // VARBINARY(5000)
 		[Column("SmallIntValue" , DataType = DataType.Int16    , DbType = "SMALLINT"       , Length = 5   , Precision = 5   , Scale = 0)] public short?    SmallIntValue  { get; set; } // SMALLINT
 		[Column("IntValue"      , DataType = DataType.Int32    , DbType = "INTEGER"        , Length = 10  , Precision = 10  , Scale = 0)] public int?      IntValue       { get; set; } // INTEGER
 		[Column("BigIntValue"   , DataType = DataType.Int64    , DbType = "BIGINT"         , Length = 19  , Precision = 19  , Scale = 0)] public long?     BigIntValue    { get; set; } // BIGINT
-		[Column("StringValue"   , DataType = DataType.NVarChar , DbType = "NVARCHAR(50)"   , Length = 50  , Precision = 50  , Scale = 0)] public string?   StringValue    { get; set; } // NVARCHAR(50)
+		[Column("StringValue"   , DataType = DataType.NVarChar , DbType = "NVARCHAR(50)"   , Length = 50  , Precision = 50             )] public string?   StringValue    { get; set; } // NVARCHAR(50)
 	}
 }

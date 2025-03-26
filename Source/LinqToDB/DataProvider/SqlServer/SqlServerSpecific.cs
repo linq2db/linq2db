@@ -3,12 +3,12 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
-
 	public interface ISqlServerSpecificTable<out TSource> : ITable<TSource>
 		where TSource : notnull
 	{

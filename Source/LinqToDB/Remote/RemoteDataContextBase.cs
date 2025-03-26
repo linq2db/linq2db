@@ -1,31 +1,30 @@
 ﻿using System;
-using System.Data.Common;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Common.Internal.Cache;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Interceptors;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Remote
 {
-	using Common;
-	using Common.Internal;
-	using Common.Internal.Cache;
-	using DataProvider;
-	using Expressions;
-	using Extensions;
-	using Infrastructure;
-	using Interceptors;
-	using Linq.Translation;
-	using Tools;
-
-	using Data;
-
-	using Mapping;
-	using SqlProvider;
-
 	[PublicAPI]
 	public abstract partial class RemoteDataContextBase : IDataContext,
 		IInfrastructure<IServiceProvider>
@@ -45,7 +44,7 @@ namespace LinqToDB.Remote
 		}
 
 		SimpleServiceProvider? _serviceProvider;
-		readonly object        _guard = new();
+		readonly Lock          _guard = new();
 
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance
 		{
@@ -217,18 +216,27 @@ namespace LinqToDB.Remote
 			}
 		}
 
+		private MappingSchema? _providedMappingSchema;
 		private MappingSchema? _mappingSchema;
-		public  MappingSchema   MappingSchema
+		private MappingSchema? _serializationMappingSchema;
+
+		public MappingSchema   MappingSchema
 		{
-			get => _mappingSchema ??= GetConfigurationInfo().MappingSchema;
+			get => _mappingSchema ??= _providedMappingSchema == null ? GetConfigurationInfo().MappingSchema : MappingSchema.CombineSchemas(_providedMappingSchema, GetConfigurationInfo().MappingSchema);
 			set
 			{
-				_mappingSchema = value;
-				_serializationMappingSchema = MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, MappingSchema);
+				// Because setter could be called from constructor, we cannot build composite schemas here to avoid server calls on half-initialized context
+				// Instead we reset schemas status and finish initialization in getters for MappingSchema and SerializationMappingSchema, when they are called
+				if (_providedMappingSchema != value)
+				{
+					_providedMappingSchema = value;
+					// reset schemas
+					_mappingSchema              = null;
+					_serializationMappingSchema = null;
+				}
 			}
 		}
 
-		private  MappingSchema? _serializationMappingSchema;
 		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, MappingSchema);
 
 		public  bool InlineParameters { get; set; }
@@ -529,6 +537,11 @@ namespace LinqToDB.Remote
 		{
 			public static void Apply(RemoteDataContextBase dataContext, ConnectionOptions options)
 			{
+				if (options.ConfigurationString != null)
+				{
+					dataContext.ConfigurationString = options.ConfigurationString;
+				}
+
 				if (options.MappingSchema != null)
 				{
 					dataContext.MappingSchema = options.MappingSchema;

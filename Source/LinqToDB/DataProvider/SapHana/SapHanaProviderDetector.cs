@@ -2,11 +2,11 @@
 using System.Data.Common;
 using System.IO;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Common;
-	using Data;
-
 	sealed class SapHanaProviderDetector : ProviderDetectorBase<SapHanaProvider, SapHanaProviderDetector.Dialect>
 	{
 		internal enum Dialect { }
@@ -36,6 +36,9 @@ namespace LinqToDB.DataProvider.SapHana
 				case "Sap.Data.Hana.v4.5"                  :
 				case "Sap.Data.Hana.Core"                  :
 				case "Sap.Data.Hana.Core.v2.1"             :
+				case "Sap.Data.Hana.Net"                   :
+				case "Sap.Data.Hana.Net.v6.0"              :
+				case "Sap.Data.Hana.Net.v8.0"              :
 				case ProviderName.SapHanaNative            : return _hanaDataProvider.Value;
 				case ProviderName.SapHanaOdbc              : return _hanaOdbcDataProvider.Value;
 				case ""                                    :
@@ -70,9 +73,13 @@ namespace LinqToDB.DataProvider.SapHana
 			var fileName = typeof(SapHanaProviderDetector).Assembly.GetFileName();
 			var dirName  = Path.GetDirectoryName(fileName);
 
-			return File.Exists(Path.Combine(dirName ?? ".", SapHanaProviderAdapter.UnmanagedAssemblyName + ".dll"))
-				? SapHanaProvider.Unmanaged
-				: SapHanaProvider.ODBC;
+			foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
+			{
+				if (File.Exists(Path.Combine(dirName ?? ".", $"{assemblyName}.dll")))
+					return SapHanaProvider.Unmanaged;
+			}
+
+			return SapHanaProvider.ODBC;
 		}
 
 		public override Dialect? DetectServerVersion(DbConnection connection)

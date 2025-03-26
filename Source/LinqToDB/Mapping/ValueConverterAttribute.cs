@@ -1,12 +1,12 @@
 ﻿using System;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Common.Internal;
-	using Reflection;
-
-	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, Inherited = true)]
+	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, Inherited = true, AllowMultiple = true)]
 	public class ValueConverterAttribute : MappingAttribute
 	{
 		/// <summary>

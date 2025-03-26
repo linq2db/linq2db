@@ -2,14 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
+
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using Reflection;
-	using LinqToDB.Expressions;
-
 	[BuildsExpression(ExpressionType.Constant, ExpressionType.Call, ExpressionType.MemberAccess, ExpressionType.NewArrayInit)]
 	sealed class EnumerableBuilder : ISequenceBuilder
 	{
@@ -46,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 			var collectionType = typeof(IEnumerable<>).GetGenericType(buildInfo.Expression.Type) ??
 			                     throw new InvalidOperationException();
 
-			var enumerableContext = new EnumerableContext(builder, buildInfo, buildInfo.SelectQuery, collectionType.GetGenericArguments()[0]);
+			var enumerableContext = new EnumerableContext(builder.GetTranslationModifier(), builder, buildInfo, buildInfo.SelectQuery, collectionType.GetGenericArguments()[0]);
 
 			return BuildSequenceResult.FromContext(enumerableContext);
 		}

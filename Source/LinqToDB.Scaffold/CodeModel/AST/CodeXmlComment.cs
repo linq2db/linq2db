@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using LinqToDB.Common;
 
 namespace LinqToDB.CodeModel
 {
@@ -13,7 +12,7 @@ namespace LinqToDB.CodeModel
 		internal CodeXmlComment(string? summary, IEnumerable<ParameterComment>? parameters)
 		{
 			Summary     = summary;
-			_parameters = new (parameters ?? []);
+			_parameters = [.. parameters ?? []];
 		}
 
 		public CodeXmlComment()

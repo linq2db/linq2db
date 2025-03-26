@@ -1,9 +1,9 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
-
 	internal sealed class BuildInfo
 	{
 		public BuildInfo(IBuildContext? parent, Expression expression, SelectQuery selectQuery)
@@ -17,15 +17,15 @@ namespace LinqToDB.Linq.Builder
 		public BuildInfo(BuildInfo buildInfo, Expression expression)
 			: this(buildInfo.Parent, expression, buildInfo.SelectQuery)
 		{
-			SequenceInfo   = buildInfo;
-			CreateSubQuery = buildInfo.CreateSubQuery;
+			SequenceInfo         = buildInfo;
+			CreateSubQuery       = buildInfo.CreateSubQuery;
 		}
 
 		public BuildInfo(BuildInfo buildInfo, Expression expression, SelectQuery selectQuery)
 			: this(buildInfo.Parent, expression, selectQuery)
 		{
-			SequenceInfo   = buildInfo;
-			CreateSubQuery = buildInfo.CreateSubQuery;
+			SequenceInfo         = buildInfo;
+			CreateSubQuery       = buildInfo.CreateSubQuery;
 		}
 
 		public BuildInfo?     SequenceInfo             { get; set; }
@@ -81,22 +81,7 @@ namespace LinqToDB.Linq.Builder
 			set => _isAggregation = value;
 		}
 
-		bool? _inlineParameters;
-		public bool? InlineParameters
-		{
-			get
-			{
-				if (SequenceInfo == null)
-					return _inlineParameters;
-				return SequenceInfo.InlineParameters ?? _inlineParameters;
-			}
+		public bool IsSubqueryExpression { get; set; }
 
-			set
-			{
-				_inlineParameters = value;
-				if (SequenceInfo != null)
-					SequenceInfo.InlineParameters = value;
-			}
-		}
 	}
 }

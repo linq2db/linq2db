@@ -4,10 +4,11 @@ using System.Data.Common;
 using System.IO;
 using System.Security;
 
+using LinqToDB.Compatibility;
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Data;
-
 	/// <summary>
 	/// Contains Access provider management tools.
 	/// </summary>
@@ -33,17 +34,20 @@ namespace LinqToDB.DataProvider.Access
 
 		public static DataConnection CreateDataConnection(string connectionString, AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version), connectionString);
+			return new DataConnection(new DataOptions()
+				.UseConnectionString(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version), connectionString));
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, version), connection);
+			return new DataConnection(new DataOptions()
+				.UseConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, version), connection));
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction, AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, version), transaction);
+			return new DataConnection(new DataOptions()
+				.UseTransaction(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, version), transaction));
 		}
 
 		#endregion

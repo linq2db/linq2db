@@ -4,10 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Data;
-
 	// !table.TableOptions.HasIsTemporary() check:
 	// native bulk copy produce following error for insert into temp table:
 	// AseException : Incorrect syntax near ','.
@@ -110,10 +111,10 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		private BulkCopyRowsCopied ProviderSpecificCopyInternal<T>(
-			ProviderConnections                                     providerConnections,
-			ITable<T>                                               table,
-			BulkCopyOptions                                         options,
-			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader)
+			ProviderConnections                             providerConnections,
+			ITable<T>                                       table,
+			BulkCopyOptions                                 options,
+			Func<List<ColumnDescriptor>, BulkCopyReader<T>> createDataReader)
 			where T : notnull
 		{
 			var dataConnection = providerConnections.DataConnection;

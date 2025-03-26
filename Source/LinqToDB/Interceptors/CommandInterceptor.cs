@@ -1,13 +1,12 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.Interceptors
 {
-	using Common;
-
 	public abstract class CommandInterceptor : ICommandInterceptor
 	{
 		public virtual DbCommand                  CommandInitialized      (CommandEventData eventData, DbCommand command) => command;

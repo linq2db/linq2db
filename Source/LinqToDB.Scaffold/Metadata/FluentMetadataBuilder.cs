@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+
 using LinqToDB.CodeModel;
-using LinqToDB.Common;
 using LinqToDB.DataModel;
 using LinqToDB.Mapping;
 
@@ -464,12 +463,27 @@ namespace LinqToDB.Metadata
 					continue;
 
 				// builder.Entity<T>()
-				var expression = context.AST.Call(
-					_builderVar.Reference,
-					WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_Entity,
-					entityBuilderType,
-					new IType[] { entityType },
-					false).Wrap(1);
+				var expression = context.AST
+					.Call(
+						_builderVar.Reference,
+						WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_Entity,
+						entityBuilderType,
+						new IType[] { entityType },
+						false)
+					.Wrap(1);
+
+				foreach (var entityDiscriminator in context.Options.FluentEntityTypeHelpers ?? [])
+				{
+					expression = context.AST
+						.Call(
+							expression,
+							new CodeIdentifier(entityDiscriminator, true),
+							entityBuilderType,
+							new IType[] { entityType },
+							false,
+							[context.AST.Default(entityType.WithNullability(true), false)])
+						.Wrap(1);
+				}
 
 				// builder.Entity<T>().HasAttribute(new TableAttribute("table") { ... })
 				if (isStatement)

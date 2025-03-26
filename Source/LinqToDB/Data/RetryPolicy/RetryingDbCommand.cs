@@ -4,12 +4,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Data.RetryPolicy
 {
-	using Configuration;
-	using Tools;
-
-	sealed class RetryingDbCommand : DbCommand, IProxy<DbCommand>
+	sealed class RetryingDbCommand : DbCommand
 	{
 		readonly DataConnection _dataConnection;
 		readonly DbCommand      _command;

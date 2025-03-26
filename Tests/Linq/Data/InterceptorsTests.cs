@@ -14,10 +14,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Data
 {
-	using Model;
-
 	[TestFixture]
 	public class InterceptorsTests : TestBase
 	{
@@ -92,7 +92,7 @@ namespace Tests.Data
 			var interceptor2 = new TestCommandInterceptor();
 
 			var builder = new DataOptions()
-				.UseConfigurationString(context)
+				.UseConfiguration(context)
 				.UseInterceptor(interceptor1)
 				.UseInterceptor(interceptor2);
 
@@ -153,7 +153,7 @@ namespace Tests.Data
 			var interceptor2 = new TestCommandInterceptor();
 
 			var builder = new DataOptions()
-				.UseConfigurationString(context)
+				.UseConfiguration(context)
 				.UseInterceptor(interceptor1)
 				.UseInterceptor(interceptor2);
 

@@ -6,13 +6,11 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Reflection;
-
 	/// <summary>
 	/// Fluent mapping entity builder.
 	/// </summary>

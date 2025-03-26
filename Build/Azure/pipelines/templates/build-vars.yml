@@ -11,6 +11,7 @@ variables:
   artifact_nugets: 'nugets'
   artifact_linq2db_binaries: 'linq2db_binaries'
   artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
+  artifact_linq2db_compat_binaries: 'linq2db_compat_binaries'
   artifact_linq2db_extensions_binaries: 'linq2db_extensions_binaries'
   artifact_linq2db_remote_wcf_binaries: 'linq2db_remote_wcf_binaries'
   artifact_linq2db_remote_grpc_binaries: 'linq2db_remote_grpc_binaries'
@@ -28,11 +29,11 @@ variables:
   ef8AssemblyVersion: 8.2.0
   ef9AssemblyVersion: 9.1.0
   ${{ if eq(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 6.0.0-preview.3
-    ef3PackageVersion: 3.28.0-preview.3
-    ef6PackageVersion: 6.18.0-preview.3
-    ef8PackageVersion: 8.2.0-preview.3
-    ef9PackageVersion: 9.1.0-preview.3
+    packageVersion: 6.0.0-preview.4
+    ef3PackageVersion: 3.28.0-preview.4
+    ef6PackageVersion: 6.18.0-preview.4
+    ef8PackageVersion: 8.2.0-preview.4
+    ef9PackageVersion: 9.1.0-preview.4
   ${{ if ne(variables['Build.SourceBranchName'], 'release') }}:
     packageVersion: 6.0.0
     ef3PackageVersion: 3.28.0

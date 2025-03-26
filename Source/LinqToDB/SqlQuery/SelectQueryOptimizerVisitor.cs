@@ -5,16 +5,16 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.DataProvider;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery.Visitors;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-	using DataProvider;
-	using Extensions;
-	using Linq.Builder;
-	using Mapping;
-	using SqlProvider;
-	using Visitors;
-
 	public class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
 		SqlProviderFlags  _providerFlags     = default!;
@@ -28,13 +28,14 @@ namespace LinqToDB.SqlQuery
 		int               _version;
 		bool              _removeWeakJoins;
 
-		SelectQuery?    _parentSelect;
-		SqlSetOperator? _currentSetOperator;
-		SelectQuery?    _applySelect;
-		SelectQuery?    _inSubquery;
-		bool            _isInRecursiveCte;
-		bool            _isInsideNot;
-		SelectQuery?    _updateQuery;
+		SelectQuery?     _parentSelect;
+		SqlSetOperator?  _currentSetOperator;
+		SelectQuery?     _applySelect;
+		SelectQuery?     _inSubquery;
+		bool             _isInRecursiveCte;
+		bool             _isInsideNot;
+		SelectQuery?     _updateQuery;
+		ISqlTableSource? _updateTable;
 
 		readonly SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
 		readonly SqlQueryColumnUsageCollector   _columnUsageCollector        = new();
@@ -78,6 +79,7 @@ namespace LinqToDB.SqlQuery
 			_applySelect       = default!;
 			_inSubquery        = default!;
 			_updateQuery       = default!;
+			_updateTable       = default!;
 
 			// OUTER APPLY Queries usually may have wrong nesting in WHERE clause.
 			// Making it consistent in LINQ Translator is bad for performance and it is hard to implement task.
@@ -139,6 +141,7 @@ namespace LinqToDB.SqlQuery
 			_version           = default;
 			_isInRecursiveCte  = false;
 			_updateQuery       = default;
+			_updateTable       = default;
 
 			_columnNestingCorrector.Cleanup();
 			_columnUsageCollector.Cleanup();
@@ -346,8 +349,10 @@ namespace LinqToDB.SqlQuery
 		protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
 		{
 			_updateQuery = element.SelectQuery;
+			_updateTable = element.Update.Table as ISqlTableSource ?? element.Update.TableSource;
 			var result = base.VisitSqlUpdateStatement(element);
 			_updateQuery = null;
+			_updateTable = null;
 			return result;
 		}
 
@@ -494,6 +499,7 @@ namespace LinqToDB.SqlQuery
 							{
 
 							}
+
 							if (index < op.SelectQuery.Select.Columns.Count)
 								op.SelectQuery.Select.Columns.RemoveAt(index);
 						}
@@ -855,7 +861,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (subQuery.OrderBy.Items.Count > 0)
 			{
-				var filterItems = mainQuery.Select.IsDistinct || !mainQuery.GroupBy.IsEmpty;
+				var filterItems = !mainQuery.IsLimited && (mainQuery.Select.IsDistinct || !mainQuery.GroupBy.IsEmpty);
 
 				foreach (var item in subQuery.OrderBy.Items)
 				{
@@ -907,9 +913,6 @@ namespace LinqToDB.SqlQuery
 			var accessible = QueryHelper.EnumerateAccessibleSources(joinTable.Table).ToList();
 
 			var optimized = false;
-
-			if (!joinTable.CanConvertApply)
-				return optimized;
 
 			if (!QueryHelper.IsDependsOnOuterSources(joinSource.Source))
 			{
@@ -1018,6 +1021,7 @@ namespace LinqToDB.SqlQuery
 							{
 								throw new InvalidOperationException("OrderBy not specified for limited recordset.");
 							}
+
 							orderByItems.Add(new SqlOrderByItem(sql.Select.Columns[0].Expression, false, false));
 						}
 					}
@@ -1344,6 +1348,7 @@ namespace LinqToDB.SqlQuery
 				{
 					tableSource.UniqueKeys.AddRange(subQueryTableSource.UniqueKeys);
 				}
+
 				if (subQuery.HasUniqueKeys)
 				{
 					tableSource.UniqueKeys.AddRange(subQuery.UniqueKeys);
@@ -1400,6 +1405,24 @@ namespace LinqToDB.SqlQuery
 			{
 				if (tableSource.Joins.Count > 0 || parentQuery.From.Tables.Count > 1)
 					return false;
+			}
+
+			if (!parentQuery.OrderBy.IsEmpty && !_providerFlags.IsOrderByAggregateFunctionSupported)
+			{
+				if (parentQuery.OrderBy.Items.Select(o => o.Expression).Any(e =>
+				    {
+					    if (QueryHelper.UnwrapNullablity(e) is SqlColumn column)
+					    {
+							if (column.Parent == subQuery)
+								return QueryHelper.ContainsAggregationFunction(column.Expression);
+					    }
+
+					    return false;
+				    }))
+				{
+					// not allowed to move to parent if it has aggregates
+					return false;
+				}
 			}
 
 			if (!parentQuery.GroupBy.IsEmpty)
@@ -2226,8 +2249,10 @@ namespace LinqToDB.SqlQuery
 								{
 									table.Joins.Insert(joinIndex + ij + 1, join.Table.Joins[ij]);
 								}
+
 								join.Table.Joins.Clear();
 							}
+
 							isModified = true;
 						}
 						else 
@@ -2449,9 +2474,17 @@ namespace LinqToDB.SqlQuery
 						    join.JoinType == JoinType.Left       ||
 						    join.JoinType == JoinType.CrossApply)
 						{
+							bool? isSingleRecord = null;
+
 							if (join.JoinType == JoinType.CrossApply)
 							{
-								if (_applySelect == null)
+								if ((join.Cardinality & SourceCardinality.One) != 0)
+								{
+									if (join.IsSubqueryExpression)
+										isSingleRecord = true;
+								}
+
+								if (_applySelect is null && isSingleRecord is null)
 								{
 									continue;
 								}
@@ -2470,7 +2503,11 @@ namespace LinqToDB.SqlQuery
 									}
 								}
 
-								if (!IsLimitedToOneRecord(sq, joinQuery, evaluationContext))
+								if (!(isSingleRecord == true || IsLimitedToOneRecord(sq, joinQuery, evaluationContext)))
+									continue;
+
+								// do not move to subquery expression if update table in the query.
+								if (_updateTable != null && joinQuery.HasElement(_updateTable))
 									continue;
 
 								var isNoTableQuery = joinQuery.From.Tables.Count == 0;
@@ -2957,6 +2994,12 @@ namespace LinqToDB.SqlQuery
 						// in theory it could be lifted for providers with Fake column, but we don't have this
 						// information here currently (it's in SqlBuilder)
 						|| element.From.Tables.Count == 0
+						// we can replace
+						// SELECT xxx GROUP BY ...
+						// with
+						// SELECT * GROUP BY ...
+						// only if we know that all columns in source are in group-by, which is not worth of extra logic
+						|| !element.GroupBy.IsEmpty
 					))
 				{
 					element.AddNew(new SqlValue(1), alias: cte != null ? "c1" : null);

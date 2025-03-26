@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Mapping;
-	using SqlQuery;
-
 	sealed class SingleExpressionContext : BuildContextBase
 	{
-		public SingleExpressionContext(ExpressionBuilder builder, ISqlExpression sqlExpression, SelectQuery selectQuery)
-			: base(builder, sqlExpression.SystemType ?? typeof(object), selectQuery)
+		public SingleExpressionContext(TranslationModifier translationModifier, ExpressionBuilder builder, ISqlExpression sqlExpression, SelectQuery selectQuery)
+			: base(translationModifier, builder, sqlExpression.SystemType ?? typeof(object), selectQuery)
 		{
 			SqlExpression = sqlExpression;
 		}
@@ -30,7 +30,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			return new SingleExpressionContext(Builder, context.CloneElement(SqlExpression), context.CloneElement(SelectQuery));
+			return new SingleExpressionContext(TranslationModifier, Builder, context.CloneElement(SqlExpression), context.CloneElement(SelectQuery));
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)

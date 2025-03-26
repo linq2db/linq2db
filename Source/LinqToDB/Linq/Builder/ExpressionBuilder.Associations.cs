@@ -5,17 +5,46 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-
 	partial class ExpressionBuilder
 	{
+		public Expression AssociationToRealization(Expression associationExpression)
+		{
+			// TODO: in case of https://github.com/linq2db/linq2db/issues/4139 implemented, we probably will need
+			// to update this logic with additional tests for https://github.com/linq2db/linq2db/issues/4790
+			if (associationExpression is MemberExpression
+				{
+					Expression: ContextRefExpression
+					{
+						Type.IsInterface: true,
+						BuildContext.ElementType: var elementType,
+					} contextRef,
+					Member: var member
+				}
+				&& elementType != contextRef.Type)
+			{
+				var newMember = elementType.GetMemberEx(member);
+				if (newMember != null)
+				{
+					if (InternalExtensions.IsAssociation(newMember, MappingSchema))
+					{
+						return Expression.MakeMemberAccess(
+							contextRef.WithType(elementType),
+							newMember);
+					}
+				}
+			}
+
+			return associationExpression;
+		}
+
 		bool IsAssociationInRealization(Expression? expression, MemberInfo member, [NotNullWhen(true)] out MemberInfo? associationMember)
 		{
 			if (InternalExtensions.IsAssociation(member, MappingSchema))

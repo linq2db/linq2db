@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.Configuration;
+
 namespace LinqToDB.DataProvider
 {
-	using Configuration;
-
 	public abstract class DataProviderFactoryBase : IDataProviderFactory
 	{
 		protected const string VERSION       = "version";

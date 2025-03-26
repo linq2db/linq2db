@@ -2,22 +2,15 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-
-using Microsoft.SqlServer.Server;
 
 using NUnit.Framework;
 
 using Tests.Model;
-
-using SqlDataRecordMS = Microsoft.Data.SqlClient.Server.SqlDataRecord;
-using SqlMetaDataMS = Microsoft.Data.SqlClient.Server.SqlMetaData;
 
 namespace Tests.DataProvider
 {
@@ -126,11 +119,9 @@ namespace Tests.DataProvider
 			throw new InvalidOperationException();
 		}
 
-		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => TableValue(null!));
-
 		private static ITable<SqlServerTestUtils.TVPRecord> TableValue(IDataContext ctx, DataParameter p)
 		{
-			return ctx.GetTable<SqlServerTestUtils.TVPRecord>(null, _methodInfo, p);
+			return ctx.TableFromExpression<SqlServerTestUtils.TVPRecord>(() => TableValue(p));
 		}
 
 		[Test]

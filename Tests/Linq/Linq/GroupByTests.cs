@@ -1,21 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class GroupByTests : TestBase
 	{
@@ -878,7 +876,7 @@ namespace Tests.Linq
 					DistinctWithFilter       = g.Select(x => x.DataValue).Distinct().Count(x => x % 2 == 0),
 					FilterDistinct           = g.Select(x => x.DataValue).Where(x => x      % 2 == 0).Distinct().Count(),
 					FilterDistinctWithFilter = g.Select(x => x.DataValue).Where(x => x      % 2 == 0).Distinct().Count(x => x % 2 == 0),
-					
+
 					SubFilter           = filtered.Count(),
 					SubFilterDistinct   = filteredDistinct.Count(),
 					SubNoFilterDistinct = nonfilteredDistinct.Count(),
@@ -896,7 +894,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
-			var query = 
+			var query =
 				from t in table
 				group t by new { t.GroupId }  into g
 				select new
@@ -941,7 +939,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void MaxInGroup([DataSources] string context)
@@ -969,7 +966,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void AverageInGroup([DataSources] string context)
@@ -979,7 +975,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
-			var query = 
+			var query =
 				from t in table
 				where t.DataValue != null
 				group t by t.GroupId into g
@@ -997,7 +993,6 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 
 		[Test]
 		public void SelectMax([DataSources] string context)
@@ -1401,7 +1396,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var query = 
+			var query =
 				from p in db.Parent
 				group p by p.Children.Average(c => c.ParentID) > 3
 				into g
@@ -2537,69 +2532,58 @@ namespace Tests.Linq
 		[Test]
 		public void Issue2306Test1([DataSources] string context)
 		{
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
-
-			Query.ClearCaches();
 		}
 
 		[Test]
 		public void Issue2306Test2([DataSources] string context)
 		{
-			Query.ClearCaches();
-
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
-
-			Query.ClearCaches();
 		}
 
 		[Test]
 		public void Issue2306Test3([DataSources] string context)
 		{
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
-			Query.ClearCaches();
 		}
 
 		[Test]
@@ -3045,7 +3029,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		public void GroupByInOuterApply([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -3056,7 +3039,7 @@ namespace Tests.Linq
 				let cItems = p.Children.GroupBy(c => c.ParentID, (key, grouped) => new { Id = key, Count = grouped.Count() })
 				select new
 				{
-					p.ParentID, 
+					p.ParentID,
 					First = cItems.OrderBy(x => x.Count).ThenBy(x => x.Id).FirstOrDefault()
 				};
 
@@ -3732,20 +3715,84 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			db.GetTable<Person>()
-				.GroupBy(_ => new
+				.GroupBy(r => new
 				{
-					key = _.ID,
-					sort = _.ID,
+					key = r.ID,
+					sort = r.ID,
 				})
-				.Select(_ => new
+				.Select(r => new
 				{
-					Key = _.Key.key,
-					Sort = _.Key.sort,
+					Key = r.Key.key,
+					Sort = r.Key.sort,
 					label = "label"
 				})
-				.OrderBy(_ => _.Sort)
+				.OrderBy(r => r.Sort)
 				.Take(100)
 				.ToList();
+		}
+
+		[Test]
+		public void Issue_UnusedColumnsElimination([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.GetTable<Person>()
+				.GroupBy(r => new
+				{
+					key = r.ID,
+					sort = r.ID,
+				})
+				.Select(r => new
+				{
+					Key = r.Key.key,
+					Sort = r.Key.sort,
+					label = "label"
+				})
+				.LongCount();
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
+		[Test]
+		public void Issue_FilterByOrderedGroupBy([DataSources] string context)
+		{
+			using var db  = GetDataContext(context);
+
+			var grp =
+			(
+				from c in db.Child
+				group c by c.ParentID into g
+				select new
+				{
+					ParentID = g.Key,
+					Max      = g.Max(x => x.ChildID)
+				}
+				into g
+				orderby g.Max descending
+				select g
+			)
+			.Take(2);
+
+			var query =
+				from t in db.Child
+				where t.ParentID.In(grp.Select(x => x.ParentID))
+				select t;
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void InsertFirstFromGroup([DataSources(false, TestProvName.AllFirebird, TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var t1 = db.CreateLocalTable("temp_table_1", [new { ID = 1, Value = ""}]);
+			using var t2 = db.CreateTempTable("temp_table_2",
+				from c in t1
+				group c by c.ID into gr
+				select new
+				{
+					gr.First().Value,
+				});
 		}
 	}
 }

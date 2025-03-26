@@ -54,6 +54,13 @@ dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_null_propagation = true:suggestion
 dotnet_style_explicit_tuple_names = true:suggestion
 
+# Namespaces
+dotnet_style_namespace_match_folder = false
+
+# New-line preferences
+dotnet_style_allow_multiple_blank_lines_experimental = false:warning
+dotnet_style_allow_statement_immediately_after_block_experimental = false:warning
+
 # CSharp code style settings:
 [*.cs]
 # Newline settings
@@ -374,7 +381,6 @@ dotnet_diagnostic.IDE0059.severity = none # IDE0059: Remove unnecessary value as
 dotnet_diagnostic.IDE0060.severity = none # IDE0060: Remove unused parameter
 dotnet_diagnostic.IDE0061.severity = none # IDE0061: Use expression body for local functions
 dotnet_diagnostic.IDE0062.severity = none # IDE0062: Make local function static
-dotnet_diagnostic.IDE0065.severity = none # IDE0065: Misplaced using directive
 dotnet_diagnostic.IDE0066.severity = none # IDE0066: Convert switch statement to expression
 dotnet_diagnostic.IDE0070.severity = none # IDE0070: Use 'System.HashCode.Combine'
 dotnet_diagnostic.IDE0072.severity = none # IDE0072: Add missing cases
@@ -388,7 +394,6 @@ dotnet_diagnostic.IDE0083.severity = none # IDE0083: Use pattern matching (not o
 dotnet_diagnostic.IDE0090.severity = none # IDE0090: new expression can be simplified
 dotnet_diagnostic.IDE0100.severity = none # IDE0100: remove redundant equality
 dotnet_diagnostic.IDE0120.severity = none # IDE0120: Simplify LINQ expression
-dotnet_diagnostic.IDE0130.severity = none # IDE0130: Namespace does not match folder structure
 dotnet_diagnostic.IDE0150.severity = none # IDE0150: null check can be clarified
 dotnet_diagnostic.IDE0210.severity = none # IDE0210: convert to lol-level statements
 dotnet_diagnostic.IDE0220.severity = none # IDE0220: add explicit cast to MS implicity typed collections foreach
@@ -399,7 +404,7 @@ dotnet_diagnostic.IDE0290.severity = none # IDE0290: Use primary constructor
 dotnet_diagnostic.IDE0300.severity = none # IDE0300: Collection initialization can be simplified
 dotnet_diagnostic.IDE0301.severity = none # IDE0301: Collection initialization can be simplified
 dotnet_diagnostic.IDE0305.severity = none # IDE0305: Collection initialization can be simplified
-dotnet_diagnostic.IDE0330.severity = none # IDE0330: Use Lock class (TODO: needs polyfill)
+dotnet_diagnostic.IDE0330.severity = none # IDE0330: Use `System.Threading.Lock`
 dotnet_diagnostic.IDE1006.severity = none # IDE1006: Naming rule violation
 
 dotnet_diagnostic.CS1998.severity = error # CS1998: Async method lacks 'await' operators and will run synchronously

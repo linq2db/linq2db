@@ -13,12 +13,11 @@ using System.Xml;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Extensions
 {
-	using Common;
-	using Common.Internal;
-	using Reflection;
-
 	[PublicAPI]
 	public static class ReflectionExtensions
 	{
@@ -713,32 +712,6 @@ namespace LinqToDB.Extensions
 			});
 		}
 
-		/// <summary>
-		/// Gets a value indicating whether a type can be used as a db primitive.
-		/// </summary>
-		/// <param name="type">A <see cref="Type"/> instance. </param>
-		/// <param name="checkArrayElementType">True if needed to check element type for arrays</param>
-		/// <returns> True, if the type parameter is a primitive type; otherwise, False.</returns>
-		/// <remarks><see cref="System.String"/>. <see cref="Stream"/>.
-		/// <see cref="XmlReader"/>. <see cref="XmlDocument"/>. are specially handled by the library
-		/// and, therefore, can be treated as scalar types.</remarks>
-		public static bool IsScalar(this Type type, bool checkArrayElementType = true)
-		{
-			if (type == typeof(byte[]))
-				return true;
-
-			while (checkArrayElementType && type.IsArray)
-				type = type.GetElementType()!;
-
-			return type.IsValueType
-				|| type == typeof(string)
-				|| type == typeof(Binary)
-				|| type == typeof(Stream)
-				|| type == typeof(XmlReader)
-				|| type == typeof(XmlDocument)
-				;
-		}
-
 		///<summary>
 		/// Returns an array of Type objects that represent the type arguments
 		/// of a generic type or the type parameters of a generic type definition.
@@ -1081,6 +1054,7 @@ namespace LinqToDB.Extensions
 						if (p.GetMethod?.GetBaseDefinition() == baseDefinition)
 							return p;
 				}
+
 				if (property.SetMethod != null)
 				{
 					var baseDefinition = property.SetMethod.GetBaseDefinition();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
@@ -7,21 +8,22 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Async;
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data.RetryPolicy;
+using LinqToDB.DataProvider;
+using LinqToDB.Expressions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Data
 {
-	using Async;
-	using Common.Internal;
-	using Common;
-	using DataProvider;
-	using Expressions;
-	using Infrastructure;
-	using Interceptors;
-	using Mapping;
-	using RetryPolicy;
-	using Tools;
-
 	/// <summary>
 	/// Implements persistent database connection abstraction over different database engines.
 	/// Could be initialized using connection string name or connection string,
@@ -42,6 +44,8 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property.
 		/// </summary>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions()...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(Func<DataOptions,DataOptions> optionsSetter) : this(optionsSetter(DefaultDataOptions))
 		{
 		}
@@ -63,6 +67,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
 		/// In case of <c>null</c>, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConfiguration(configurationString)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(string? configurationString, Func<DataOptions,DataOptions> optionsSetter)
 			: this(optionsSetter(configurationString == null
 				? DefaultDataOptions
@@ -74,6 +80,8 @@ namespace LinqToDB.Data
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property and provided mapping schema.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseMappingSchema(mappingSchema))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(MappingSchema mappingSchema) : this(DefaultDataOptions.UseMappingSchema(mappingSchema))
 		{
 		}
@@ -82,6 +90,8 @@ namespace LinqToDB.Data
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property and provided mapping schema.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseMappingSchema(mappingSchema)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(MappingSchema mappingSchema, Func<DataOptions,DataOptions> optionsSetter)
 			: this(optionsSetter(DefaultDataOptions.UseMappingSchema(mappingSchema)))
 		{
@@ -93,8 +103,10 @@ namespace LinqToDB.Data
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
 		/// In case of null, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConfiguration(configurationString, mappingSchema))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(string? configurationString, MappingSchema mappingSchema)
-			: this(DefaultDataOptions.UseConfigurationString(configurationString).UseMappingSchema(mappingSchema))
+			: this(DefaultDataOptions.UseConfiguration(configurationString, mappingSchema))
 		{
 		}
 
@@ -104,8 +116,10 @@ namespace LinqToDB.Data
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
 		/// In case of null, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConfiguration(configurationString, mappingSchema)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(string? configurationString, MappingSchema mappingSchema, Func<DataOptions,DataOptions> optionsSetter)
-			: this(optionsSetter(DefaultDataOptions.UseConfigurationString(configurationString).UseMappingSchema(mappingSchema)))
+			: this(optionsSetter(DefaultDataOptions.UseConfiguration(configurationString, mappingSchema)))
 		{
 		}
 
@@ -115,6 +129,8 @@ namespace LinqToDB.Data
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			string        providerName,
 			string        connectionString,
@@ -129,6 +145,8 @@ namespace LinqToDB.Data
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			string                        providerName,
 			string                        connectionString,
@@ -143,6 +161,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			string providerName,
 			string connectionString)
@@ -155,6 +175,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			string                        providerName,
 			string                        connectionString,
@@ -169,6 +191,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString).UseMappingSchema(mappingSchema))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider dataProvider,
 			string        connectionString,
@@ -183,6 +207,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString).UseMappingSchema(mappingSchema)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider                 dataProvider,
 			string                        connectionString,
@@ -197,6 +223,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider dataProvider,
 			string        connectionString)
@@ -209,6 +237,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider                 dataProvider,
 			string                        connectionString,
@@ -223,6 +253,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider                   dataProvider,
 			Func<DataOptions, DbConnection> connectionFactory,
@@ -237,6 +269,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider                   dataProvider,
 			Func<DataOptions, DbConnection> connectionFactory,
@@ -251,6 +285,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionFactory">Database connection factory method.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnectionFactory(dataProvider, connectionFactory))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider                   dataProvider,
 			Func<DataOptions, DbConnection> connectionFactory)
@@ -263,6 +299,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionFactory">Database connection factory method.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnectionFactory(dataProvider, connectionFactory)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider                   dataProvider,
 			Func<DataOptions, DbConnection> connectionFactory,
@@ -277,6 +315,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connection">Existing database connection to use.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnection(dataProvider, connection).UseMappingSchema(mappingSchema))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider dataProvider,
 			DbConnection  connection,
@@ -291,6 +331,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connection">Existing database connection to use.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnection(dataProvider, connection).UseMappingSchema(mappingSchema)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider                 dataProvider,
 			DbConnection                  connection,
@@ -308,6 +350,8 @@ namespace LinqToDB.Data
 		/// <remarks>
 		/// <paramref name="connection"/> would not be disposed.
 		/// </remarks>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnection(dataProvider, connection))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider dataProvider,
 			DbConnection  connection)
@@ -323,9 +367,11 @@ namespace LinqToDB.Data
 		/// <remarks>
 		/// <paramref name="connection"/> would not be disposed.
 		/// </remarks>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnection(dataProvider, connection)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
-			IDataProvider dataProvider,
-			DbConnection  connection,
+			IDataProvider                 dataProvider,
+			DbConnection                  connection,
 			Func<DataOptions,DataOptions> optionsSetter)
 			: this(dataProvider, connection, false, optionsSetter)
 		{
@@ -337,6 +383,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connection">Existing database connection to use.</param>
 		/// <param name="disposeConnection">If true <paramref name="connection"/> would be disposed on DataConnection disposing.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnection(dataProvider, connection, disposeConnection))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider dataProvider,
 			DbConnection  connection,
@@ -351,6 +399,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connection">Existing database connection to use.</param>
 		/// <param name="disposeConnection">If true <paramref name="connection"/> would be disposed on DataConnection disposing.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnection(dataProvider, connection, disposeConnection)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider                 dataProvider,
 			DbConnection                  connection,
@@ -366,6 +416,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="transaction">Existing database transaction to use.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseTransaction(dataProvider, transaction).UseMappingSchema(mappingSchema))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider dataProvider,
 			DbTransaction transaction,
@@ -380,6 +432,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="transaction">Existing database transaction to use.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseTransaction(dataProvider, transaction).UseMappingSchema(mappingSchema)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider                 dataProvider,
 			DbTransaction                 transaction,
@@ -394,6 +448,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="transaction">Existing database transaction to use.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseTransaction(dataProvider, transaction))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider dataProvider,
 			DbTransaction transaction)
@@ -406,6 +462,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="transaction">Existing database transaction to use.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseTransaction(dataProvider, transaction)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
 			IDataProvider                 dataProvider,
 			DbTransaction                 transaction,
@@ -427,7 +485,6 @@ namespace LinqToDB.Data
 
 			DataProvider!.InitContext(this);
 		}
-
 #pragma warning restore CS8618
 
 		#endregion
@@ -1151,7 +1208,6 @@ namespace LinqToDB.Data
 					using (ActivityService.Start(ActivityID.CommandExecuteReader)?.AddQueryInfo(this, _command!.Connection, _command))
 						reader = _command!.ExecuteReader(commandBehavior);
 				}
-
 
 				var wrapper = new DataReaderWrapper(this, reader, _command!);
 				_command = null;

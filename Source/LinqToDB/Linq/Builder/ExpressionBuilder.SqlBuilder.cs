@@ -7,18 +7,19 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using DataProvider;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-
 	internal partial class ExpressionBuilder
 	{
 		#region LinqOptions shortcuts
@@ -347,6 +348,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return false;
 			}
+
 			return _optimizationContext.IsImmutable(expr, mappingSchema);
 		}
 
@@ -611,6 +613,7 @@ namespace LinqToDB.Linq.Builder
 						notEqual = true;
 						break;
 					}
+
 					discriminators.Add(im1.Code);
 				}
 			}
@@ -699,7 +702,7 @@ namespace LinqToDB.Linq.Builder
 		Expression MakeIsPredicateExpression(IBuildContext context, TypeBinaryExpression expression)
 		{
 			var typeOperand = expression.TypeOperand;
-			var table       = new TableBuilder.TableContext(this, context.MappingSchema, new BuildInfo((IBuildContext?)null, ExpressionInstances.UntypedNull, new SelectQuery()), typeOperand);
+			var table       = new TableBuilder.TableContext(context.TranslationModifier, this, context.MappingSchema, new BuildInfo((IBuildContext?)null, ExpressionInstances.UntypedNull, new SelectQuery()), typeOperand);
 
 			if (typeOperand == table.ObjectType)
 			{
@@ -876,6 +879,7 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 					}
+
 					break;
 			}
 
@@ -1091,30 +1095,70 @@ namespace LinqToDB.Linq.Builder
 
 		#region Query Filter
 
-		Stack<Type[]>? _disabledFilters;
+		TranslationModifier?        _globalModifier;
+		Stack<TranslationModifier>? _translationModifiers;
+		Stack<Expression>?          _disableFiltersForExpression;
+
+		public void PushTranslationModifier(TranslationModifier modifier, bool isTemporary)
+		{
+			_translationModifiers ??= new Stack<TranslationModifier>();
+
+			if (!isTemporary && _translationModifiers.Count == 0)
+				_globalModifier = modifier;
+
+			_translationModifiers.Push(modifier);
+		}
+
+		public void PopTranslationModifier()
+		{
+			if (_translationModifiers == null)
+				throw new InvalidOperationException();
+			_ = _translationModifiers.Pop();
+		}
+
+		public TranslationModifier GetTranslationModifier()
+		{
+			if (_translationModifiers is { Count: > 0 })
+				return _translationModifiers.Peek();
+			return _globalModifier ?? TranslationModifier.Default;
+		}
 
 		public void PushDisabledQueryFilters(Type[] disabledFilters)
 		{
-			_disabledFilters ??= new Stack<Type[]>();
-			_disabledFilters.Push(disabledFilters);
+			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilters(disabledFilters), true);
 		}
 
 		public bool IsFilterDisabled(Type entityType)
 		{
-			if (_disabledFilters == null || _disabledFilters.Count == 0)
-				return false;
-			var filter = _disabledFilters.Peek();
-			if (filter.Length == 0)
-				return true;
-			return Array.IndexOf(filter, entityType) >= 0;
+			return GetTranslationModifier().IsFilterDisabled(entityType);
 		}
 
 		public void PopDisabledFilter()
 		{
-			if (_disabledFilters == null)
+			if (_translationModifiers == null)
 				throw new InvalidOperationException();
 
-			_ = _disabledFilters.Pop();
+			_ = _translationModifiers.Pop();
+		}
+
+		public void PushDisableFiltersForExpression(Expression expression)
+		{
+			_disableFiltersForExpression ??= new Stack<Expression>();
+			_disableFiltersForExpression.Push(expression);
+		}
+
+		public void PopDisableFiltersForExpression()
+		{
+			if (_disableFiltersForExpression == null)
+				throw new InvalidOperationException();
+			_ = _disableFiltersForExpression.Pop();
+		}
+
+		public bool IsFilterDisabledForExpression(Expression expression)
+		{
+			if (_disableFiltersForExpression == null)
+				return false;
+			return _disableFiltersForExpression.Contains(expression);
 		}
 
 		#endregion
@@ -1287,7 +1331,7 @@ namespace LinqToDB.Linq.Builder
 							for (int i = 0; i < genericConstructor.Assignments.Count; i++)
 							{
 								var assignment = genericConstructor.Assignments[i];
-								if (MemberInfoEqualityComparer.Default.Equals(assignment.MemberInfo, member))
+								if (IsEqualMembers(assignment.MemberInfo, member))
 								{
 									bodyExpresion = assignment.Expression;
 									break;
@@ -1299,7 +1343,7 @@ namespace LinqToDB.Linq.Builder
 								for (int i = 0; i < genericConstructor.Parameters.Count; i++)
 								{
 									var parameter = genericConstructor.Parameters[i];
-									if (MemberInfoEqualityComparer.Default.Equals(parameter.MemberInfo, member))
+									if (parameter.MemberInfo != null && IsEqualMembers(parameter.MemberInfo, member))
 									{
 										bodyExpresion = parameter.Expression;
 										break;
@@ -1316,7 +1360,7 @@ namespace LinqToDB.Linq.Builder
 									if (assignment.MemberInfo.ReflectedType != member.ReflectedType && assignment.MemberInfo.Name == member.Name)
 									{
 										var mi = assignment.MemberInfo.ReflectedType!.GetMemberEx(member);
-										if (mi != null && mi.GetMemberType() == member.GetMemberType() && MemberInfoEqualityComparer.Default.Equals(assignment.MemberInfo, mi))
+										if (mi != null && IsEqualMembers(assignment.MemberInfo, mi))
 										{
 											if (member.ReflectedType?.IsInterface == true && assignment.MemberInfo.ReflectedType?.IsClass == true && member is PropertyInfo propInfo && assignment.MemberInfo is PropertyInfo classPropinfo)
 											{
@@ -1411,7 +1455,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var memberLocal = ne.Members[i];
 
-							if (MemberInfoEqualityComparer.Default.Equals(memberLocal, member))
+							if (IsEqualMembers(memberLocal, member))
 							{
 								var projected = Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i], strict);
 
@@ -1434,8 +1478,7 @@ namespace LinqToDB.Linq.Builder
 							var parameter     = parameters[i];
 							var memberByParam = SqlGenericConstructorExpression.FindMember(ne.Constructor.DeclaringType!, parameter);
 
-							if (memberByParam != null &&
-								MemberInfoEqualityComparer.Default.Equals(memberByParam, member))
+							if (memberByParam != null && member != null && IsEqualMembers(memberByParam, member))
 							{
 								return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i], strict);
 							}
@@ -1476,7 +1519,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var memberLocal = ne.Members[i];
 
-							if (MemberInfoEqualityComparer.Default.Equals(memberLocal, member))
+							if (IsEqualMembers(memberLocal, member))
 							{
 								return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i], strict);
 							}
@@ -1500,7 +1543,7 @@ namespace LinqToDB.Linq.Builder
 								case MemberBindingType.Assignment:
 								{
 									var assignment = (MemberAssignment)binding;
-									if (MemberInfoEqualityComparer.Default.Equals(assignment.Member, memberInType))
+									if (IsEqualMembers(assignment.Member, memberInType))
 									{
 										return Project(context, path, nextPath, nextIndex - 1, flags,
 											assignment.Expression, strict);
@@ -1511,7 +1554,7 @@ namespace LinqToDB.Linq.Builder
 								case MemberBindingType.MemberBinding:
 								{
 									var memberMemberBinding = (MemberMemberBinding)binding;
-									if (MemberInfoEqualityComparer.Default.Equals(memberMemberBinding.Member, memberInType))
+									if (IsEqualMembers(memberMemberBinding.Member, memberInType))
 									{
 										return Project(context, path, nextPath, nextIndex - 1, flags,
 											new SqlGenericConstructorExpression(
@@ -1536,8 +1579,7 @@ namespace LinqToDB.Linq.Builder
 								var parameter     = parameters[i];
 								var memberByParam = SqlGenericConstructorExpression.FindMember(ne.Constructor.DeclaringType!, parameter);
 
-								if (memberByParam != null &&
-									MemberInfoEqualityComparer.Default.Equals(memberByParam, member))
+								if (memberByParam != null && IsEqualMembers(memberByParam, member))
 								{
 									return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i], strict);
 								}
@@ -1660,8 +1702,7 @@ namespace LinqToDB.Linq.Builder
 							var parameter     = parameters[i];
 							var memberByParam = SqlGenericConstructorExpression.FindMember(mc.Method.ReturnType, parameter);
 
-							if (memberByParam != null &&
-								MemberInfoEqualityComparer.Default.Equals(memberByParam, member))
+							if (memberByParam != null && member != null && IsEqualMembers(memberByParam, member))
 							{
 								return Project(context, path, nextPath, nextIndex - 1, flags, mc.Arguments[i], strict);
 							}
@@ -1715,6 +1756,23 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return CreateSqlError(next ?? path!);
+		}
+
+		static bool IsEqualMembers(MemberInfo member1, MemberInfo member2)
+		{
+			if (MemberInfoEqualityComparer.Default.Equals(member1, member2))
+				return true;
+
+			if (member1.GetMemberType() != member2.GetMemberType())
+				return false;
+
+			if (member1.DeclaringType == null || member2.DeclaringType == null)
+				return false;
+
+			if (member1.Name != member2.Name)
+				return false;
+
+			return member1.EqualsTo(member2);
 		}
 
 		public Expression ParseGenericConstructor(Expression createExpression, ProjectFlags flags, ColumnDescriptor? columnDescriptor, bool force = false)

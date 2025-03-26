@@ -12,7 +12,6 @@ using System.Numerics;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
@@ -75,7 +74,7 @@ namespace Tests.Data
 		{
 			public MiniProfilerDataContext(string configurationString)
 #pragma warning disable CA2000 // Dispose objects before losing scope
-				: base(GetDataProvider(), GetConnection(configurationString)) { }
+				: base(new DataOptions().UseConnection(GetDataProvider(), GetConnection(configurationString))) { }
 #pragma warning restore CA2000 // Dispose objects before losing scope
 
 			private static IDataProvider GetDataProvider()
@@ -1084,11 +1083,9 @@ namespace Tests.Data
 		public async Task TestSapHanaNative([IncludeDataSources(ProviderName.SapHanaNative)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-#if NETFRAMEWORK
-			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, DbProviderFactories.GetFactory("Sap.Data.Hana").GetType().Assembly.GetType("Sap.Data.Hana.HanaConnection")!))
-#else
-			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, "Sap.Data.Hana.HanaConnection, Sap.Data.Hana.Core.v2.1"))
-#endif
+
+			var connectionType = ((SapHanaDataProvider)SapHanaTools.GetDataProvider(SapHanaProvider.Unmanaged)).Adapter.ConnectionType;
+			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, connectionType))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1101,21 +1098,21 @@ namespace Tests.Data
 				Assert.Multiple(() =>
 				{
 					Assert.That(db.Execute<byte[]>("SELECT cast(:p as blob) from dummy", new DataParameter("p", binaryValue, DataType.Image)), Is.EqualTo(binaryValue));
-					Assert.That(trace, Does.Contain("DECLARE @p Binary("));
+					Assert.That(trace, Does.Contain("DECLARE @p Blob("));
 					Assert.That(db.Execute<byte[]>("SELECT cast(:p as varbinary) from dummy", new DataParameter("p", binaryValue, DataType.Binary)), Is.EqualTo(binaryValue));
 				});
-				Assert.That(trace, Does.Contain("DECLARE @p Binary("));
+				Assert.That(trace, Does.Contain("DECLARE @p VarBinary("));
 				var textValue = "test";
 				Assert.Multiple(() =>
 				{
 					Assert.That(db.Execute<string>("SELECT cast(:p as text) from dummy", new DataParameter("p", textValue, DataType.Text)), Is.EqualTo(textValue));
-					Assert.That(trace, Does.Contain("DECLARE @p NVarChar("));
+					Assert.That(trace, Does.Contain("DECLARE @p Text("));
 				});
 				var ntextValue = "тест";
 				Assert.Multiple(() =>
 				{
 					Assert.That(db.Execute<string>("SELECT cast(:p as nclob) from dummy", new DataParameter("p", ntextValue, DataType.NText)), Is.EqualTo(ntextValue));
-					Assert.That(trace, Does.Contain("DECLARE @p  -- Xml"));
+					Assert.That(trace, Does.Contain("DECLARE @p NClob"));
 				});
 
 				// bulk copy without and with transaction
@@ -1300,6 +1297,7 @@ namespace Tests.Data
 				catch
 				{
 				}
+
 				Assert.That(trace, Does.Contain("DECLARE @p Clob("));
 
 				// provider-specific type classes

@@ -2,12 +2,12 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	[BuildsMethodCall("Select")]
 	sealed class SelectBuilder : MethodCallBuilder
 	{
@@ -60,13 +60,12 @@ namespace LinqToDB.Linq.Builder
 
 			SqlPlaceholderExpression? _rowNumberPlaceholder;
 
-			public CounterContext(IBuildContext sequence) : base(sequence.Builder, typeof(int), sequence.SelectQuery)
+			public CounterContext(IBuildContext sequence) : base(sequence.TranslationModifier, sequence.Builder, typeof(int), sequence.SelectQuery)
 			{
 				_sequence = sequence;
 			}
 
 			public override MappingSchema MappingSchema => Builder.MappingSchema;
-
 
 			static IBuildContext GetOrderSequence(IBuildContext context)
 			{
@@ -77,8 +76,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						break;
 					}
+
 					if (!prevSequence.SelectQuery.OrderBy.IsEmpty)
 						break;
+
 					if (prevSequence is SubQueryContext { IsSelectWrapper: true } subQuery)
 					{
 						prevSequence = subQuery.SubQuery;
@@ -90,6 +91,7 @@ namespace LinqToDB.Linq.Builder
 					else
 						break;
 				}
+
 				return prevSequence;
 			}
 

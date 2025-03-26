@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	internal sealed class CteTableContext: BuildContextBase, ITableContext
 	{
 		readonly Type          _objectType;
@@ -39,8 +39,8 @@ namespace LinqToDB.Linq.Builder
 		public LoadWithInfo  LoadWithRoot { get; set; } = new();
 		public MemberInfo[]? LoadWithPath { get; set; }
 
-		public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext)
-			: this(builder, parent, objectType, selectQuery)
+		public CteTableContext(TranslationModifier translationModifier, ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext)
+			: this(translationModifier, builder, parent, objectType, selectQuery)
 		{
 			_objectType = objectType;
 			Parent      = parent;
@@ -51,8 +51,8 @@ namespace LinqToDB.Linq.Builder
 			SelectQuery.From.Table(CteTable);
 		}
 
-		CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery)
-			: base(builder, objectType, selectQuery)
+		CteTableContext(TranslationModifier translationModifier, ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery)
+			: base(translationModifier, builder, objectType, selectQuery)
 		{
 			_objectType = objectType;
 			Parent      = parent;
@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 			if (expr == null)
 				return this;
 
-			var context = new CteTableContext(Builder, Parent, ObjectType, new SelectQuery(), CteContext);
+			var context = new CteTableContext(TranslationModifier, Builder, Parent, ObjectType, new SelectQuery(), CteContext);
 
 			return context;
 		}
@@ -117,7 +117,7 @@ namespace LinqToDB.Linq.Builder
 
 		class CteTableProxy : BuildProxyBase<CteTableContext>
 		{
-			public CteTableProxy(CteTableContext ownerContext, Expression currentPath, Expression innerExpression) : base(ownerContext, ownerContext.CteContext, currentPath, innerExpression)
+			public CteTableProxy(CteTableContext ownerContext, Expression? currentPath, Expression innerExpression) : base(ownerContext, ownerContext.CteContext, currentPath, innerExpression)
 			{
 			}
 
@@ -133,7 +133,7 @@ namespace LinqToDB.Linq.Builder
 				return placeholder;
 			}
 
-			public override BuildProxyBase<CteTableContext> CreateProxy(CteTableContext ownerContext, IBuildContext buildContext, Expression currentPath, Expression innerExpression)
+			public override BuildProxyBase<CteTableContext> CreateProxy(CteTableContext ownerContext, IBuildContext buildContext, Expression? currentPath, Expression innerExpression)
 			{
 				return new CteTableProxy(ownerContext, currentPath, innerExpression);
 			}
@@ -198,7 +198,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			var newContext = new CteTableContext(Builder, Parent, ObjectType, context.CloneElement(SelectQuery));
+			var newContext = new CteTableContext(TranslationModifier, Builder, Parent, ObjectType, context.CloneElement(SelectQuery));
 			context.RegisterCloned(this, newContext);
 			newContext.CteContext = context.CloneContext(CteContext);
 			return newContext;

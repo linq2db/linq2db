@@ -5,14 +5,14 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
+using LinqToDB.Async;
+using LinqToDB.Common.Internal;
+using LinqToDB.Configuration;
+using LinqToDB.Data.RetryPolicy;
+using LinqToDB.DataProvider;
+
 namespace LinqToDB.Data
 {
-	using Async;
-	using Common.Internal;
-	using Configuration;
-	using DataProvider;
-	using RetryPolicy;
-
 	public partial class DataConnection
 	{
 		static class Configuration
@@ -38,7 +38,7 @@ namespace LinqToDB.Data
 		static ILinqToDBSettings? _defaultSettings;
 
 		/// <summary>
-		/// Gets or sets default connection settings. By default contains settings from linq2db configuration section from configuration file (not supported by .Net Core).
+		/// Gets or sets default connection settings. By default, contains settings from linq2db configuration section from configuration file (not supported by .Net Core).
 		/// <seealso cref="ILinqToDBSettings"/>
 		/// </summary>
 		public static ILinqToDBSettings? DefaultSettings
@@ -488,7 +488,7 @@ namespace LinqToDB.Data
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
-						.Add(ConfigurationString ?? ConnectionString ?? Connection.ConnectionString)
+						.Add(ConfigurationString ?? ConnectionString ?? EnsureConnection(connect: false).ConnectionString)
 						.Add(Options)
 						.Add(GetType())
 						.CreateID();

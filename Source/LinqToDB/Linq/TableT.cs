@@ -1,20 +1,21 @@
-﻿using System.Linq.Expressions;
+﻿using System.Diagnostics;
+using System.Linq.Expressions;
 using System.Reflection;
+
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq
 {
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-
 	sealed class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
 		where T : notnull
 	{
 		public Table(IDataContext dataContext)
 		{
-			var expression = typeof(T).IsScalar()
+			var expression = dataContext.MappingSchema.IsScalarType(typeof(T)) && typeof(T) != typeof(object)
 				? null
 				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
 					SqlQueryRootExpression.Create(dataContext.MappingSchema, dataContext.GetType()));
@@ -25,14 +26,15 @@ namespace LinqToDB.Linq
 		internal Table(IDataContext dataContext, Table<T> basedOn)
 		{
 			Init(dataContext, basedOn.Expression);
-			_tableOptions = basedOn.TableOptions;
-			_tableID = basedOn.TableID;
-			_name = basedOn._name;
+			_tableOptions   = basedOn.TableOptions;
+			_tableID        = basedOn.TableID;
+			_name           = basedOn._name;
+			TableDescriptor = basedOn.TableDescriptor;
 		}
 
 		internal Table(IDataContext dataContext, EntityDescriptor? tableDescriptor)
 		{
-			var expression = typeof(T).IsScalar()
+			var expression = dataContext.MappingSchema.IsScalarType(typeof(T)) && typeof(T) != typeof(object)
 				? null
 				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
 					SqlQueryRootExpression.Create(dataContext.MappingSchema, dataContext.GetType()));
@@ -59,6 +61,8 @@ namespace LinqToDB.Linq
 					expression = ApplyDatabaseName(expression, tableDescriptor.Name.Database);
 				if (!string.IsNullOrEmpty(tableDescriptor.Name.Server))
 					expression = ApplyServerName(expression, tableDescriptor.Name.Server);
+
+				expression = ApplyTableDescriptor(expression, tableDescriptor);
 			}
 
 			Init(dataContext, expression);
@@ -69,6 +73,8 @@ namespace LinqToDB.Linq
 			_tableOptions = ed.TableOptions;
 		}
 
+		internal EntityDescriptor? TableDescriptor { get; set; }
+
 		// ReSharper disable StaticMemberInGenericType
 		static MethodInfo? _serverNameMethodInfo;
 		static MethodInfo? _databaseNameMethodInfo;
@@ -76,6 +82,7 @@ namespace LinqToDB.Linq
 		static MethodInfo? _tableNameMethodInfo;
 		static MethodInfo? _tableOptionsMethodInfo;
 		static MethodInfo? _tableIDMethodInfo;
+		static MethodInfo? _tableDescriptorMethodInfo;
 		// ReSharper restore StaticMemberInGenericType
 
 		static Expression ApplyTableOptions(Expression expression, TableOptions tableOptions)
@@ -123,6 +130,15 @@ namespace LinqToDB.Linq
 			return expression;
 		}
 
+		static Expression ApplyTableDescriptor(Expression expression, EntityDescriptor entityDescriptor)
+		{
+			expression = Expression.Call(
+				null,
+				_tableDescriptorMethodInfo ??= Methods.LinqToDB.Table.UseTableDescriptor.MakeGenericMethod(typeof(T)),
+				expression, Expression.Constant(entityDescriptor));
+			return expression;
+		}
+
 		static Expression ApplyTaleId(Expression expression, string? id)
 		{
 			expression = Expression.Call(
@@ -132,6 +148,7 @@ namespace LinqToDB.Linq
 			return expression;
 		}
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private SqlObjectName _name;
 
 		public  string?  ServerName
@@ -176,6 +193,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private TableOptions _tableOptions;
 		public  TableOptions  TableOptions
 		{
@@ -205,6 +223,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private string? _tableID;
 		public string?   TableID
 		{
@@ -260,17 +279,26 @@ namespace LinqToDB.Linq
 			};
 		}
 
+		public ITable<T> ChangeTableDescriptor(EntityDescriptor tableDescriptor)
+		{
+			return new Table<T>(DataContext, this)
+			{
+				TableDescriptor = tableDescriptor
+			};
+		}
+
 		public ITable<T> ChangeTableID(string? tableID)
 		{
-			return new Table<T>(DataContext)
+			return new Table<T>(DataContext, this)
 			{
-				SchemaName   = SchemaName,
-				ServerName   = ServerName,
-				DatabaseName = DatabaseName,
-				Expression   = Expression,
-				TableName    = TableName,
-				TableOptions = TableOptions,
-				TableID      = tableID,
+				SchemaName      = SchemaName,
+				ServerName      = ServerName,
+				DatabaseName    = DatabaseName,
+				Expression      = Expression,
+				TableName       = TableName,
+				TableOptions    = TableOptions,
+				TableDescriptor = TableDescriptor,
+				TableID         = tableID,
 			};
 		}
 

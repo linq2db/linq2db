@@ -11,16 +11,16 @@ using LinqToDB.DataProvider.Firebird;
 
 using NUnit.Framework;
 
-namespace Tests
-{
-	using Model;
-#if NETFRAMEWORK
-	using Model.Remote.Wcf;
+using Tests.Model;
 
+#if NETFRAMEWORK
+using Tests.Model.Remote.Wcf;
 #else
-	using Model.Remote.Grpc;
+using Tests.Model.Remote.Grpc;
 #endif
 
+namespace Tests
+{
 	public static class TestUtils
 	{
 		private static int _cnt;
@@ -299,7 +299,7 @@ namespace Tests
 				string when providerName.IsAnyOf(TestProvName.AllFirebird)     => "UNICODE_FSS",
 				string when providerName.IsAnyOf(TestProvName.AllMySql)        => "utf8_bin",
 				string when providerName.IsAnyOf(TestProvName.AllSqlServer)    => "Albanian_CI_AS",
-				_                                                              => "whatever"
+				_                                                              => "what-ever"
 			};
 		}
 

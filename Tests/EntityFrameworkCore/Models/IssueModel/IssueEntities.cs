@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-using NpgsqlTypes;
-
 namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 {
 	public class Parent
@@ -100,7 +98,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		{
 			Id = id;
 		}
-
 
 		public int Id { get; set; }
 		public DateTime? DateFrom { get; set; }
@@ -383,4 +380,34 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public int Id { get; set; }
 		public StatusEnum Value { get; set; }
 	}
+
+	#region Issue 4783
+	public record Issue4783Record(
+		int Id,
+		string Source,
+		Issue4783Status  StatusRaw,
+		Issue4783Status  StatusString,
+		Issue4783Status  StatusConverter,
+		Issue4783Status? NullableStatusRaw,
+		Issue4783Status? NullableStatusString,
+		Issue4783Status? NullableStatusConverter);
+
+	[LinqToDB.Mapping.Table("Issue4783Records", IsColumnAttributeRequired = false)]
+	public record Issue4783RecordRaw(
+		int Id,
+		string Source,
+		object StatusRaw,
+		object StatusString,
+		object StatusConverter,
+		object? NullableStatusRaw,
+		object? NullableStatusString,
+		object? NullableStatusConverter);
+
+	public enum Issue4783Status
+	{
+		Open,
+		Closed
+	}
+
+	#endregion
 }

@@ -2,22 +2,24 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Async;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
-	using Async;
-	using Data;
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Mapping;
-
 	// TODO: v6: obsolete methods with setTable parameter
 	// IT: ??? how to use anonymous types then?
 	/// <summary>
@@ -29,7 +31,10 @@ namespace LinqToDB
 	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable, IAsyncDisposable
 		where T : notnull
 	{
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		readonly ITable<T>         _table;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		readonly EntityDescriptor? _tableDescriptor;
 
 		/// <summary>
@@ -562,8 +567,6 @@ namespace LinqToDB
 			return count.RowsCopied;
 		}
 
-		static readonly ConcurrentDictionary<Type,Expression<Func<T,T>>> _setterDic = new ();
-
 		/// <summary>
 		/// Insert data into table using records, returned by provided query.
 		/// </summary>
@@ -571,9 +574,7 @@ namespace LinqToDB
 		/// <returns>Number of records, inserted into table.</returns>
 		public long Insert(IQueryable<T> items)
 		{
-			var l = GenerateInsertSetter(items ?? throw new ArgumentNullException(nameof(items)));
-
-			var count = items.Insert(_table, l);
+			var count = items.Insert(_table, e => e);
 
 			TotalCopied += count;
 
@@ -588,57 +589,11 @@ namespace LinqToDB
 		/// <returns>Number of records, inserted into table.</returns>
 		public async Task<long> InsertAsync(IQueryable<T> items, CancellationToken cancellationToken = default)
 		{
-			var l = GenerateInsertSetter(items ?? throw new ArgumentNullException(nameof(items)));
-
-			var count = await items.InsertAsync(_table, l, cancellationToken).ConfigureAwait(false);
+			var count = await items.InsertAsync(_table, e => e, cancellationToken).ConfigureAwait(false);
 
 			TotalCopied += count;
 
 			return count;
-		}
-
-		private Expression<Func<T,T>> GenerateInsertSetter(IQueryable<T> items)
-		{
-			var type = typeof(T);
-			var ed   = _tableDescriptor ?? _table.DataContext.MappingSchema.GetEntityDescriptor(type, _table.DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var p    = Expression.Parameter(type, "t");
-
-			return _setterDic.GetOrAdd(type, t =>
-			{
-				if (t.IsAnonymous())
-				{
-					var nctor = (NewExpression?)items.Expression.Find(t, static (t, e) => e.NodeType == ExpressionType.New && e.Type == t);
-
-					MemberInfo[]    members;
-					ConstructorInfo ctor;
-
-					if (nctor == null)
-					{
-						ctor    = t.GetConstructors().Single();
-						members = t.GetPublicInstanceValueMembers();
-					}
-					else
-					{
-						ctor    = nctor.Constructor!;
-						members = nctor.Members!
-							.Select(m => m is MethodInfo info ? info.GetPropertyInfo()! : m)
-							.ToArray();
-					}
-
-					return Expression.Lambda<Func<T,T>>(
-						Expression.New(
-							ctor,
-							members.Select(m => ExpressionHelper.PropertyOrField(p, m.Name)),
-							members),
-						p);
-				}
-
-				return Expression.Lambda<Func<T,T>>(
-					Expression.MemberInit(
-						Expression.New(t),
-						ed.Columns.Select(c => Expression.Bind(c.MemberInfo, Expression.MakeMemberAccess(p, c.MemberInfo)))),
-					p);
-			});
 		}
 
 		#region ITable<T> implementation
@@ -654,12 +609,13 @@ namespace LinqToDB
 
 		#region ITableMutable<T> implementation
 
-		ITable<T> ITableMutable<T>.ChangeServerName  (string? serverName)   => ((ITableMutable<T>)_table).ChangeServerName  (serverName);
-		ITable<T> ITableMutable<T>.ChangeDatabaseName(string? databaseName) => ((ITableMutable<T>)_table).ChangeDatabaseName(databaseName);
-		ITable<T> ITableMutable<T>.ChangeSchemaName  (string? schemaName)   => ((ITableMutable<T>)_table).ChangeSchemaName  (schemaName);
-		ITable<T> ITableMutable<T>.ChangeTableName   (string tableName)     => ((ITableMutable<T>)_table).ChangeTableName   (tableName);
-		ITable<T> ITableMutable<T>.ChangeTableOptions(TableOptions options) => ((ITableMutable<T>)_table).ChangeTableOptions(options);
-		ITable<T> ITableMutable<T>.ChangeTableID     (string? tableID)      => ((ITableMutable<T>)_table).ChangeTableID     (tableID);
+		ITable<T> ITableMutable<T>.ChangeServerName     (string?          serverName)      => ((ITableMutable<T>)_table).ChangeServerName     (serverName);
+		ITable<T> ITableMutable<T>.ChangeDatabaseName   (string?          databaseName)    => ((ITableMutable<T>)_table).ChangeDatabaseName   (databaseName);
+		ITable<T> ITableMutable<T>.ChangeSchemaName     (string?          schemaName)      => ((ITableMutable<T>)_table).ChangeSchemaName     (schemaName);
+		ITable<T> ITableMutable<T>.ChangeTableName      (string           tableName)       => ((ITableMutable<T>)_table).ChangeTableName      (tableName);
+		ITable<T> ITableMutable<T>.ChangeTableOptions   (TableOptions     options)         => ((ITableMutable<T>)_table).ChangeTableOptions   (options);
+		ITable<T> ITableMutable<T>.ChangeTableDescriptor(EntityDescriptor tableDescriptor) => ((ITableMutable<T>)_table).ChangeTableDescriptor(tableDescriptor);
+		ITable<T> ITableMutable<T>.ChangeTableID        (string?          tableID)         => ((ITableMutable<T>)_table).ChangeTableID        (tableID);
 
 		#endregion
 
@@ -699,12 +655,14 @@ namespace LinqToDB
 			return _table.ExecuteAsyncEnumerable<TResult>(expression, cancellationToken);
 		}
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		Expression IQueryProviderAsync.Expression => ((IQueryable)_table).Expression;
+
 		#endregion
 
 		#region IExpressionQuery<T>
 
-		Expression IExpressionQuery<T>.Expression => _table.Expression;
+		public Expression Expression => _table.Expression;
 
 		#endregion
 
@@ -716,15 +674,21 @@ namespace LinqToDB
 		public IDataContext DataContext => _table.DataContext;
 
 		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => _table.GetSqlQueries(options);
-		Expression              IExpressionQuery.Expression                                   => ((IExpressionQuery)_table).Expression;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		Expression IExpressionQuery.Expression => ((IExpressionQuery)_table).Expression;
 
 		#endregion
 
 		#region IQueryable
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		Expression IQueryable.Expression => ((IQueryable)_table).Expression;
 
-		Type           IQueryable.ElementType => _table.ElementType;
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		Type IQueryable.ElementType => _table.ElementType;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		IQueryProvider IQueryable.Provider    => _table.Provider;
 
 		#endregion

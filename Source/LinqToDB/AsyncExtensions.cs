@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Linq;
+
 namespace LinqToDB
 {
-	using Linq;
-
 	/// <summary>
 	/// Provides helper methods for asynchronous operations.
 	/// </summary>

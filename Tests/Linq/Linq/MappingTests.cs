@@ -16,10 +16,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class MappingTests : TestBase
 	{
@@ -1135,7 +1135,6 @@ namespace Tests.Linq
 			Assert.That(cnt, Is.EqualTo(mapNull ? 3 : 4));
 		}
 
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
 		public void StructMapping_Enumerable_IntList([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
 		{
@@ -1169,6 +1168,69 @@ namespace Tests.Linq
 			// not supported case
 			Assert.That(() => db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count(), Throws.TypeOf<InvalidCastException>());
 		}
+
+		#region issue 4798
+
+#pragma warning disable CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
+#pragma warning disable CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
+		struct TenderId
+#pragma warning restore CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
+#pragma warning restore CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
+		{
+			public Guid Value { get; set; }
+			public static TenderId From(Guid value) => new TenderId { Value = value };
+			public static TenderId? From(Guid? value) => value.HasValue ? new TenderId { Value = value.Value } : null;
+
+			public static bool operator ==(TenderId a, Guid b) => a.Value == b;
+			public static bool operator !=(TenderId a, Guid b) => !(a == b);
+
+			public static implicit operator string(TenderId tenderId) => tenderId.Value.ToString();
+			public static implicit operator Guid(TenderId tenderId) => tenderId.Value;
+
+			internal static MappingSchema LinqToDbMapping()
+			{
+				var ms = new MappingSchema();
+
+				ms.SetConverter<TenderId, Guid>(id => id.Value);
+				ms.SetConverter<TenderId, Guid?>(id => id.Value);
+				ms.SetConverter<TenderId?, Guid>(id => id?.Value ?? default);
+				ms.SetConverter<TenderId?, Guid?>(id => id?.Value);
+				ms.SetConverter<Guid, TenderId>(From);
+				ms.SetConverter<Guid, TenderId?>(g => From(g));
+				ms.SetConverter<Guid?, TenderId>(g => g == null ? default : From((Guid)g));
+				ms.SetConverter<Guid?, TenderId?>(From);
+
+				ms.SetConverter<TenderId, DataParameter>(id => new DataParameter { DataType = DataType.Guid, Value = id.Value });
+				ms.SetConverter<TenderId?, DataParameter>(id => new DataParameter { DataType = DataType.Guid, Value = id?.Value });
+
+				return ms;
+			}
+		}
+
+		[Table("tender")]
+		sealed class Tender
+		{
+			[Column("id")]
+			public TenderId Id { get; set; }
+
+			[Column("name")]
+			public string? Name { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4798")]
+		public void Issue4798Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, TenderId.LinqToDbMapping());
+			using var tb = db.CreateLocalTable<Tender>();
+
+			var tenderIdsGuid = new List<Guid> { TestData.Guid1, TestData.Guid2 };
+			db.GetTable<Tender>().Where(i => tenderIdsGuid.Contains(i.Id)).Any();
+
+			TenderId? tenderId = new TenderId { Value = TestData.Guid1 };
+			db.GetTable<Tender>().Where(i => tenderId != null && i.Id == tenderId).Any();
+		}
+
+		#endregion
 
 		#region Issue 4437
 

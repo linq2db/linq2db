@@ -1,22 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 
 using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	public class CteTests : TestBase
 	{
 		public static string[] CteSupportedProviders = new[]
@@ -166,18 +164,6 @@ namespace Tests.Linq
 			}
 		}
 
-		static IQueryable<TSource> RemoveCte<TSource>(IQueryable<TSource> source)
-		{
-			var newExpr = source.Expression.Transform<object?>(null, static (_, e) =>
-			{
-				if (e is MethodCallExpression methodCall && methodCall.Method.Name == "AsCte")
-					return methodCall.Arguments[0];
-				return e;
-			});
-
-			return source.Provider.CreateQuery<TSource>(newExpr);
-		}
-
 		[Test]
 		public void ProductAndCategoryNamesOverTenDollars([NorthwindDataContext] string context)
 		{
@@ -292,7 +278,6 @@ namespace Tests.Linq
 				AreEqual(expected, result);
 			}
 		}
-
 
 		[Test]
 		public void EmployeeSubordinatesReport([NorthwindDataContext] string context)
@@ -474,7 +459,6 @@ namespace Tests.Linq
 						Count = Sql.Ext.Count().ToValue()
 					};
 
-
 				var expected = Child
 					.Where(c => c.ParentID > 1)
 					.Select(child => new
@@ -482,7 +466,6 @@ namespace Tests.Linq
 						child.ParentID,
 						child.ChildID
 					}).Distinct().Count();
-
 
 				var actual = query.AsEnumerable().Select(c => c.Count).First();
 
@@ -990,7 +973,6 @@ namespace Tests.Linq
 				var query1_ = simpleQuery_.Union(cte1_);
 				var query2_ = cte1_.Union(simpleQuery_);
 
-
 				AreEqual(query1_, query1);
 				AreEqual(query2_, query2);
 			}
@@ -1099,7 +1081,6 @@ namespace Tests.Linq
 
 			}
 		}
-
 
 		class NestingA
 		{
@@ -1268,8 +1249,6 @@ namespace Tests.Linq
 			if (db is TestDataConnection cn)
 				cn.LastQuery!.Should().Contain("SELECT", Exactly.Times(4));
 		}
-
-
 
 		public record class  Issue3357RecordClass (int Id, string FirstName, string LastName);
 		public class Issue3357RecordLike

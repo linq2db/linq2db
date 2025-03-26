@@ -2,15 +2,15 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using Common.Internal;
-	using Interceptors;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-
 	[BuildsMethodCall("AsCte", "GetCte", "FromSql", "FromSqlScalar", CanBuildName = nameof(CanBuildKnownMethods))]
 	[BuildsMethodCall("GetTable", "TableFromExpression", CanBuildName = nameof(CanBuildTableMethods))]
 	[BuildsExpression(ExpressionType.Call, CanBuildName = nameof(CanBuildAttributedMethods))]
@@ -90,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 
 		static Expression ApplyQueryFilters(ExpressionBuilder builder, MappingSchema mappingSchema, Type entityType, Expression tableExpression)
 		{
-			if (builder.IsFilterDisabled(entityType))
+			if (builder.IsFilterDisabled(entityType) || builder.IsFilterDisabledForExpression(tableExpression))
 				return tableExpression;
 
 			var testEd = mappingSchema.GetEntityDescriptor(entityType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
@@ -110,7 +110,7 @@ namespace LinqToDB.Linq.Builder
 				var filterLambda = Expression.Lambda(testEd.QueryFilterLambda.Body.Replace(dcParam, dcExpr), testEd.QueryFilterLambda.Parameters[0]);
 
 				// to avoid recursion
-				filteredExpression = Expression.Call(Methods.LinqToDB.IgnoreFilters.MakeGenericMethod(entityType), tableExpression, ExpressionInstances.EmptyTypes);
+				filteredExpression = Expression.Call(Methods.LinqToDB.DisableFilterInternal.MakeGenericMethod(entityType), tableExpression);
 
 				filteredExpression = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(entityType), filteredExpression, Expression.Quote(filterLambda));
 				filteredExpression = ExpressionBuilder.ExposeExpression(filteredExpression, builder.DataContext, builder.OptimizationContext, builder.ParameterValues, optimizeConditions: true, compactBinary: true);
@@ -129,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 					var filterFunc       = ed.QueryFilterFunc;
 
 					// to avoid recursion
-					Expression sequenceExpr = Expression.Call(Methods.LinqToDB.IgnoreFilters.MakeGenericMethod(entityType), tableExpression, ExpressionInstances.EmptyTypes);
+					Expression sequenceExpr = Expression.Call(Methods.LinqToDB.DisableFilterInternal.MakeGenericMethod(entityType), tableExpression);
 
 					if (filterLambdaExpr != null)
 					{
@@ -188,7 +188,7 @@ namespace LinqToDB.Linq.Builder
 				return builder.TryBuildSequence(new BuildInfo(buildInfo, applied));
 			}
 
-			var tableContext = new TableContext(builder, mappingSchema, buildInfo, entityType);
+			var tableContext = new TableContext(builder.GetTranslationModifier(), builder, mappingSchema, buildInfo, entityType);
 			builder.TablesInScope?.Add(tableContext);
 			return BuildSequenceResult.FromContext(tableContext);
 		}
@@ -213,7 +213,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var mappingSchema = builder.MappingSchema;
 
-					return BuildSequenceResult.FromContext(new TableContext(builder, mappingSchema, buildInfo));
+					return BuildSequenceResult.FromContext(new TableContext(builder.GetTranslationModifier(), builder, mappingSchema, buildInfo));
 				}
 
 				case BuildContextType.TableFromExpression    :
@@ -224,7 +224,7 @@ namespace LinqToDB.Linq.Builder
 
 					var bodyMethod = mc.Arguments[1].UnwrapLambda().Body;
 
-					return BuildSequenceResult.FromContext(new TableContext(builder, mappingSchema, new BuildInfo(buildInfo, bodyMethod)));
+					return BuildSequenceResult.FromContext(new TableContext(builder.GetTranslationModifier(), builder, mappingSchema, new BuildInfo(buildInfo, bodyMethod)));
 				}
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
 				case BuildContextType.GetCteMethod           : return BuildRecursiveCteContextTable (builder, buildInfo);

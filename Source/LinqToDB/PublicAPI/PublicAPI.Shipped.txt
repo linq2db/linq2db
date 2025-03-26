@@ -313,6 +313,7 @@ const LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForShare = "FOR SHARE" ->
 const LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.ForUpdate = "FOR UPDATE" -> string!
 const LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.NoWait = "NOWAIT" -> string!
 const LinqToDB.DataProvider.PostgreSQL.PostgreSQLHints.SkipLocked = "SKIP LOCKED" -> string!
+const LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.UnmanagedClientNamespace = "Sap.Data.Hana" -> string!
 const LinqToDB.DataProvider.SqlCe.SqlCeHints.Table.HoldLock = "HoldLock" -> string!
 const LinqToDB.DataProvider.SqlCe.SqlCeHints.Table.Index = "Index" -> string!
 const LinqToDB.DataProvider.SqlCe.SqlCeHints.Table.NoLock = "NoLock" -> string!
@@ -387,9 +388,6 @@ const LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.NativeAssemblyName = "S
 const LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.NativeClientNamespace = "Sybase.Data.AseClient" -> string!
 const LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.NativeProviderFactoryName = "Sybase.Data.AseClient" -> string!
 const LinqToDB.Expressions.ChangeTypeExpression.ChangeTypeType = (System.Linq.Expressions.ExpressionType)1000 -> System.Linq.Expressions.ExpressionType
-const LinqToDB.LinqToDBConstants.Copyright = "© 2011-2025 linq2db.com" -> string!
-const LinqToDB.LinqToDBConstants.ProductDescription = "Linq to DB" -> string!
-const LinqToDB.LinqToDBConstants.ProductName = "Linq to DB" -> string!
 const LinqToDB.ProviderName.Access = "Access" -> string!
 const LinqToDB.ProviderName.AccessAceOdbc = "Access.Ace.Odbc" -> string!
 const LinqToDB.ProviderName.AccessAceOleDb = "Access.Ace.OleDb" -> string!
@@ -1688,6 +1686,7 @@ LinqToDB.DataProvider.DynamicDataProviderBase<TProviderMappings>
 LinqToDB.DataProvider.DynamicDataProviderBase<TProviderMappings>.Adapter.get -> TProviderMappings
 LinqToDB.DataProvider.DynamicDataProviderBase<TProviderMappings>.DynamicDataProviderBase(string! name, LinqToDB.Mapping.MappingSchema! mappingSchema, TProviderMappings providerMappings) -> void
 LinqToDB.DataProvider.DynamicDataProviderBase<TProviderMappings>.SetField(System.Type! fieldType, string! dataTypeName, string! methodName, bool throwException = true, System.Type? dataReaderType = null) -> bool
+LinqToDB.DataProvider.DynamicDataProviderBase<TProviderMappings>.SetGetFieldValueReader(System.Type! toType, System.Type! fieldType, System.Type? dataReaderType = null, string? typeName = null) -> bool
 LinqToDB.DataProvider.DynamicDataProviderBase<TProviderMappings>.SetProviderField(System.Type! fieldType, string! methodName, System.Type? dataReaderType = null) -> void
 LinqToDB.DataProvider.DynamicDataProviderBase<TProviderMappings>.SetProviderField(System.Type! toType, System.Type! fieldType, string! methodName, bool throwException = true, System.Type? dataReaderType = null, string? typeName = null) -> bool
 LinqToDB.DataProvider.DynamicDataProviderBase<TProviderMappings>.SetProviderField<TField>(string! methodName, System.Type? dataReaderType = null) -> void
@@ -2480,6 +2479,12 @@ LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.ConnectionType.get -> Syste
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.CreateBulkCopyColumnMapping.get -> System.Func<int, string!, LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopyColumnMapping!>?
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.DataReaderType.get -> System.Type!
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.GetDateTimeOffsetMethod.get -> string?
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.GetDbType.get -> System.Func<System.Data.Common.DbParameter!, LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType>?
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.GetHanaDecimalMethod.get -> string?
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.GetOdbcDbType.get -> System.Func<System.Data.Common.DbParameter!, LinqToDB.DataProvider.OdbcProviderAdapter.OdbcType>?
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.GetRealVectorMethod.get -> string?
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.GetTimeSpanMethod.get -> string?
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopyColumnMapping
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopyColumnMapping.HanaBulkCopyColumnMapping(int source, string! destination) -> void
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaBulkCopyColumnMapping.HanaBulkCopyColumnMapping(object! instance) -> void
@@ -2504,17 +2509,19 @@ LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.Integer = 9 -> L
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.NClob = 10 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.NVarChar = 11 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.Real = 12 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
-LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.SecondDate = 13 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
-LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.ShortText = 14 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
-LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.SmallDecimal = 15 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
-LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.SmallInt = 16 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
-LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.TableType = 23 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
-LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.Text = 17 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
-LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.Time = 18 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
-LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.TimeStamp = 19 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
-LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.TinyInt = 20 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
-LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.VarBinary = 21 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
-LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.VarChar = 22 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.RealVector = 13 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.SecondDate = 14 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.ShortText = 15 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.SmallDecimal = 16 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.SmallInt = 17 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.TableType = 24 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.Text = 18 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.Time = 19 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.TimeStamp = 20 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.TinyInt = 21 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.VarBinary = 22 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType.VarChar = 23 -> LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDecimalType.get -> System.Type?
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaRowsCopiedEventArgs
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaRowsCopiedEventArgs.Abort.get -> bool
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaRowsCopiedEventArgs.Abort.set -> void
@@ -2523,8 +2530,10 @@ LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaRowsCopiedEventArgs.Row
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaRowsCopiedEventHandler
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaTransaction
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaTransaction.HanaTransaction() -> void
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.MappingSchema.get -> LinqToDB.Mapping.MappingSchema?
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.ParameterType.get -> System.Type!
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.SetDbType.get -> System.Action<System.Data.Common.DbParameter!, LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.HanaDbType>?
+LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.SetOdbcDbType.get -> System.Action<System.Data.Common.DbParameter!, LinqToDB.DataProvider.OdbcProviderAdapter.OdbcType>?
 LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.TransactionType.get -> System.Type!
 LinqToDB.DataProvider.SapHana.SapHanaSqlExpressionConvertVisitor
 LinqToDB.DataProvider.SapHana.SapHanaSqlExpressionConvertVisitor.SapHanaSqlExpressionConvertVisitor(bool allowModify) -> void
@@ -2566,6 +2575,7 @@ LinqToDB.DataProvider.SqlCe.SqlCeProviderAdapter.CreateConnection(string! connec
 LinqToDB.DataProvider.SqlCe.SqlCeProviderAdapter.CreateSqlCeEngine.get -> System.Func<string!, LinqToDB.DataProvider.SqlCe.SqlCeProviderAdapter.SqlCeEngine!>!
 LinqToDB.DataProvider.SqlCe.SqlCeProviderAdapter.DataReaderType.get -> System.Type!
 LinqToDB.DataProvider.SqlCe.SqlCeProviderAdapter.GetDbType.get -> System.Func<System.Data.Common.DbParameter!, System.Data.SqlDbType>!
+LinqToDB.DataProvider.SqlCe.SqlCeProviderAdapter.GetDecimalExpression.get -> System.Linq.Expressions.LambdaExpression!
 LinqToDB.DataProvider.SqlCe.SqlCeProviderAdapter.ParameterType.get -> System.Type!
 LinqToDB.DataProvider.SqlCe.SqlCeProviderAdapter.SetDbType.get -> System.Action<System.Data.Common.DbParameter!, System.Data.SqlDbType>!
 LinqToDB.DataProvider.SqlCe.SqlCeProviderAdapter.SqlCeEngine
@@ -3092,11 +3102,15 @@ LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.CreateConnectionStringB
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.DataReaderType.get -> System.Type!
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.GetDateTimeOffsetReaderMethod.get -> string!
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.GetDbType.get -> System.Func<System.Data.Common.DbParameter!, System.Data.SqlDbType>!
+LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.GetSqlJsonReaderMethod.get -> string?
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.GetSqlXmlReaderMethod.get -> string!
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.GetTimeSpanReaderMethod.get -> string!
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.GetTypeName.get -> System.Func<System.Data.Common.DbParameter!, string!>!
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.GetUdtTypeName.get -> System.Func<System.Data.Common.DbParameter!, string!>!
+LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.JsonDbType.get -> System.Data.SqlDbType
+LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.MappingSchema.get -> LinqToDB.Mapping.MappingSchema?
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.ParameterType.get -> System.Type!
+LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.Provider.get -> LinqToDB.DataProvider.SqlServer.SqlServerProvider
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SetDbType.get -> System.Action<System.Data.Common.DbParameter!, System.Data.SqlDbType>!
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SetTypeName.get -> System.Action<System.Data.Common.DbParameter!, string!>!
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SetUdtTypeName.get -> System.Action<System.Data.Common.DbParameter!, string!>!
@@ -3122,6 +3136,7 @@ LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlConnectionStringBuil
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlConnectionStringBuilder.SqlConnectionStringBuilder(string! connectionString) -> void
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlDataRecordType.get -> System.Type!
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlExceptionType.get -> System.Type!
+LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlJsonType.get -> System.Type?
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlRowsCopiedEventArgs
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlRowsCopiedEventArgs.Abort.get -> bool
 LinqToDB.DataProvider.SqlServer.SqlServerProviderAdapter.SqlRowsCopiedEventArgs.Abort.set -> void
@@ -3153,6 +3168,12 @@ LinqToDB.DataProvider.SqlServer.SqlType
 LinqToDB.DataProvider.SqlServer.SqlType.SqlType(string! dataType) -> void
 LinqToDB.DataProvider.SqlServer.SqlType<T>
 LinqToDB.DataProvider.SqlServer.SqlType<T>.SqlType(string! dataType) -> void
+LinqToDB.DataProvider.SqlServer.SystemDataSqlServerAttributeReader
+LinqToDB.DataProvider.SqlServer.SystemDataSqlServerAttributeReader.GetAttributes(System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.DataProvider.SqlServer.SystemDataSqlServerAttributeReader.GetAttributes(System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
+LinqToDB.DataProvider.SqlServer.SystemDataSqlServerAttributeReader.GetDynamicColumns(System.Type! type) -> System.Reflection.MemberInfo![]!
+LinqToDB.DataProvider.SqlServer.SystemDataSqlServerAttributeReader.GetObjectID() -> string!
+LinqToDB.DataProvider.SqlServer.SystemDataSqlServerAttributeReader.SystemDataSqlServerAttributeReader(System.Type! sqlMethodAttribute, System.Type! sqlUserDefinedTypeAttribute) -> void
 LinqToDB.DataProvider.SqlServer.Translation.SqlServer2005MemberTranslator
 LinqToDB.DataProvider.SqlServer.Translation.SqlServer2005MemberTranslator.SqlServer2005MemberTranslator() -> void
 LinqToDB.DataProvider.SqlServer.Translation.SqlServer2012MemberTranslator
@@ -3281,6 +3302,7 @@ LinqToDB.DataProvider.WrapParametersVisitor.WrapFlags.None = 0 -> LinqToDB.DataP
 LinqToDB.DataProvider.WrapParametersVisitor.WrapParameters(LinqToDB.SqlQuery.IQueryElement! element, LinqToDB.DataProvider.WrapParametersVisitor.WrapFlags wrapFlags) -> LinqToDB.SqlQuery.IQueryElement!
 LinqToDB.DataProvider.WrapParametersVisitor.WrapParametersVisitor(LinqToDB.SqlQuery.VisitMode visitMode) -> void
 LinqToDB.DataType
+LinqToDB.DataType.Array = -2147483648 -> LinqToDB.DataType
 LinqToDB.DataType.BFile = 51 -> LinqToDB.DataType
 LinqToDB.DataType.Binary = 7 -> LinqToDB.DataType
 LinqToDB.DataType.BinaryJson = 43 -> LinqToDB.DataType
@@ -3298,10 +3320,10 @@ LinqToDB.DataType.DateTime64 = 33 -> LinqToDB.DataType
 LinqToDB.DataType.DateTimeOffset = 32 -> LinqToDB.DataType
 LinqToDB.DataType.DecFloat = 52 -> LinqToDB.DataType
 LinqToDB.DataType.Decimal = 23 -> LinqToDB.DataType
-LinqToDB.DataType.Decimal128 = 70 -> LinqToDB.DataType
-LinqToDB.DataType.Decimal256 = 71 -> LinqToDB.DataType
-LinqToDB.DataType.Decimal32 = 68 -> LinqToDB.DataType
-LinqToDB.DataType.Decimal64 = 69 -> LinqToDB.DataType
+LinqToDB.DataType.Decimal128 = 71 -> LinqToDB.DataType
+LinqToDB.DataType.Decimal256 = 72 -> LinqToDB.DataType
+LinqToDB.DataType.Decimal32 = 69 -> LinqToDB.DataType
+LinqToDB.DataType.Decimal64 = 70 -> LinqToDB.DataType
 LinqToDB.DataType.Dictionary = 40 -> LinqToDB.DataType
 LinqToDB.DataType.Double = 22 -> LinqToDB.DataType
 LinqToDB.DataType.Enum = 48 -> LinqToDB.DataType
@@ -3309,22 +3331,22 @@ LinqToDB.DataType.Enum16 = 50 -> LinqToDB.DataType
 LinqToDB.DataType.Enum8 = 49 -> LinqToDB.DataType
 LinqToDB.DataType.Guid = 12 -> LinqToDB.DataType
 LinqToDB.DataType.Image = 10 -> LinqToDB.DataType
-LinqToDB.DataType.Int128 = 54 -> LinqToDB.DataType
+LinqToDB.DataType.Int128 = 55 -> LinqToDB.DataType
 LinqToDB.DataType.Int16 = 14 -> LinqToDB.DataType
-LinqToDB.DataType.Int256 = 56 -> LinqToDB.DataType
+LinqToDB.DataType.Int256 = 57 -> LinqToDB.DataType
 LinqToDB.DataType.Int32 = 15 -> LinqToDB.DataType
 LinqToDB.DataType.Int64 = 16 -> LinqToDB.DataType
 LinqToDB.DataType.Interval = 47 -> LinqToDB.DataType
-LinqToDB.DataType.IntervalDay = 63 -> LinqToDB.DataType
-LinqToDB.DataType.IntervalHour = 62 -> LinqToDB.DataType
-LinqToDB.DataType.IntervalMinute = 61 -> LinqToDB.DataType
-LinqToDB.DataType.IntervalMonth = 65 -> LinqToDB.DataType
-LinqToDB.DataType.IntervalQuarter = 66 -> LinqToDB.DataType
-LinqToDB.DataType.IntervalSecond = 60 -> LinqToDB.DataType
-LinqToDB.DataType.IntervalWeek = 64 -> LinqToDB.DataType
-LinqToDB.DataType.IntervalYear = 67 -> LinqToDB.DataType
-LinqToDB.DataType.IPv4 = 58 -> LinqToDB.DataType
-LinqToDB.DataType.IPv6 = 59 -> LinqToDB.DataType
+LinqToDB.DataType.IntervalDay = 64 -> LinqToDB.DataType
+LinqToDB.DataType.IntervalHour = 63 -> LinqToDB.DataType
+LinqToDB.DataType.IntervalMinute = 62 -> LinqToDB.DataType
+LinqToDB.DataType.IntervalMonth = 66 -> LinqToDB.DataType
+LinqToDB.DataType.IntervalQuarter = 67 -> LinqToDB.DataType
+LinqToDB.DataType.IntervalSecond = 61 -> LinqToDB.DataType
+LinqToDB.DataType.IntervalWeek = 65 -> LinqToDB.DataType
+LinqToDB.DataType.IntervalYear = 68 -> LinqToDB.DataType
+LinqToDB.DataType.IPv4 = 59 -> LinqToDB.DataType
+LinqToDB.DataType.IPv6 = 60 -> LinqToDB.DataType
 LinqToDB.DataType.Json = 42 -> LinqToDB.DataType
 LinqToDB.DataType.Long = 45 -> LinqToDB.DataType
 LinqToDB.DataType.LongRaw = 46 -> LinqToDB.DataType
@@ -3335,16 +3357,17 @@ LinqToDB.DataType.NVarChar = 5 -> LinqToDB.DataType
 LinqToDB.DataType.SByte = 13 -> LinqToDB.DataType
 LinqToDB.DataType.Single = 21 -> LinqToDB.DataType
 LinqToDB.DataType.SmallDateTime = 31 -> LinqToDB.DataType
+LinqToDB.DataType.SmallDecFloat = 53 -> LinqToDB.DataType
 LinqToDB.DataType.SmallMoney = 25 -> LinqToDB.DataType
 LinqToDB.DataType.Structured = 44 -> LinqToDB.DataType
 LinqToDB.DataType.Text = 3 -> LinqToDB.DataType
 LinqToDB.DataType.Time = 28 -> LinqToDB.DataType
 LinqToDB.DataType.Timestamp = 34 -> LinqToDB.DataType
-LinqToDB.DataType.TimeTZ = 53 -> LinqToDB.DataType
+LinqToDB.DataType.TimeTZ = 54 -> LinqToDB.DataType
 LinqToDB.DataType.Udt = 38 -> LinqToDB.DataType
-LinqToDB.DataType.UInt128 = 55 -> LinqToDB.DataType
+LinqToDB.DataType.UInt128 = 56 -> LinqToDB.DataType
 LinqToDB.DataType.UInt16 = 18 -> LinqToDB.DataType
-LinqToDB.DataType.UInt256 = 57 -> LinqToDB.DataType
+LinqToDB.DataType.UInt256 = 58 -> LinqToDB.DataType
 LinqToDB.DataType.UInt32 = 19 -> LinqToDB.DataType
 LinqToDB.DataType.UInt64 = 20 -> LinqToDB.DataType
 LinqToDB.DataType.Undefined = 0 -> LinqToDB.DataType
@@ -3372,8 +3395,6 @@ LinqToDB.Expressions.ChangeTypeExpression.Update(System.Linq.Expressions.Express
 LinqToDB.Expressions.ConstantPlaceholderExpression
 LinqToDB.Expressions.ConstantPlaceholderExpression.ConstantPlaceholderExpression(System.Type! constantType) -> void
 LinqToDB.Expressions.ConstantPlaceholderExpression.ConstantType.get -> System.Type!
-LinqToDB.Expressions.CustomMapperAttribute
-LinqToDB.Expressions.CustomMapperAttribute.CustomMapperAttribute(System.Type! mapper) -> void
 LinqToDB.Expressions.DefaultValueExpression
 LinqToDB.Expressions.DefaultValueExpression.DefaultValueExpression(LinqToDB.Mapping.MappingSchema? mappingSchema, System.Type! type, bool isNull = false) -> void
 LinqToDB.Expressions.DefaultValueExpression.Equals(LinqToDB.Expressions.DefaultValueExpression! other) -> bool
@@ -3393,7 +3414,7 @@ LinqToDB.Expressions.ExpressionGenerator.Build() -> System.Linq.Expressions.Expr
 LinqToDB.Expressions.ExpressionGenerator.Condition(System.Linq.Expressions.Expression! test, System.Linq.Expressions.Expression! ifTrue, System.Linq.Expressions.Expression! ifFalse) -> System.Linq.Expressions.Expression!
 LinqToDB.Expressions.ExpressionGenerator.DeclareVariable(System.Type! type, string? name = null) -> System.Linq.Expressions.ParameterExpression!
 LinqToDB.Expressions.ExpressionGenerator.ExpressionGenerator() -> void
-LinqToDB.Expressions.ExpressionGenerator.ExpressionGenerator(LinqToDB.Expressions.TypeMapper! mapper) -> void
+LinqToDB.Expressions.ExpressionGenerator.ExpressionGenerator(LinqToDB.Expressions.Types.TypeMapper! mapper) -> void
 LinqToDB.Expressions.ExpressionGenerator.IfThen(System.Linq.Expressions.Expression! test, System.Linq.Expressions.Expression! ifTrue) -> System.Linq.Expressions.Expression!
 LinqToDB.Expressions.ExpressionGenerator.IfThenElse(System.Linq.Expressions.Expression! test, System.Linq.Expressions.Expression! ifTrue, System.Linq.Expressions.Expression! ifFalse) -> System.Linq.Expressions.Expression!
 LinqToDB.Expressions.ExpressionGenerator.MapAction(System.Linq.Expressions.Expression<System.Action!>! action) -> System.Linq.Expressions.Expression!
@@ -3418,9 +3439,6 @@ LinqToDB.Expressions.ExpressionPrinter
 LinqToDB.Expressions.ExpressionPrinter.ExpressionPrinter() -> void
 LinqToDB.Expressions.ExpressionVisitorBase
 LinqToDB.Expressions.ExpressionVisitorBase.ExpressionVisitorBase() -> void
-LinqToDB.Expressions.ICustomMapper
-LinqToDB.Expressions.ICustomMapper.CanMap(System.Linq.Expressions.Expression! expression) -> bool
-LinqToDB.Expressions.ICustomMapper.Map(System.Linq.Expressions.Expression! expression) -> System.Linq.Expressions.Expression!
 LinqToDB.Expressions.IExpressionEvaluator
 LinqToDB.Expressions.IExpressionEvaluator.CanBeEvaluated(System.Linq.Expressions.Expression! expression) -> bool
 LinqToDB.Expressions.IExpressionEvaluator.Evaluate(System.Linq.Expressions.Expression! expression) -> object?
@@ -3563,86 +3581,91 @@ LinqToDB.Expressions.TransformInfo.TransformInfo() -> void
 LinqToDB.Expressions.TransformInfo.TransformInfo(System.Linq.Expressions.Expression! expression) -> void
 LinqToDB.Expressions.TransformInfo.TransformInfo(System.Linq.Expressions.Expression! expression, bool stop) -> void
 LinqToDB.Expressions.TransformInfo.TransformInfo(System.Linq.Expressions.Expression! expression, bool stop, bool continue) -> void
-LinqToDB.Expressions.TypeMapper
-LinqToDB.Expressions.TypeMapper.BuildAction(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action!
-LinqToDB.Expressions.TypeMapper.BuildAction<T1, T2, T3, T4, T5>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2, T3, T4, T5>!
-LinqToDB.Expressions.TypeMapper.BuildAction<T1, T2, T3, T4>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2, T3, T4>!
-LinqToDB.Expressions.TypeMapper.BuildAction<T1, T2, T3>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2, T3>!
-LinqToDB.Expressions.TypeMapper.BuildAction<T1, T2>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2>!
-LinqToDB.Expressions.TypeMapper.BuildAction<T>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T>!
-LinqToDB.Expressions.TypeMapper.BuildFactory<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! newFunc) -> System.Func<T, object!>!
-LinqToDB.Expressions.TypeMapper.BuildFactory<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! newFunc) -> System.Func<T1, T2, T3, object!>!
-LinqToDB.Expressions.TypeMapper.BuildFactory<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! newFunc) -> System.Func<T1, T2, object!>!
-LinqToDB.Expressions.TypeMapper.BuildFactory<TR>(System.Linq.Expressions.Expression<System.Func<TR>!>! newFunc) -> System.Func<object!>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<T, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T, TR>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<T1, T2, T3, T4, T5, T6, T7, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, T5, T6, T7, TR>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<T1, T2, T3, T4, T5, T6, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, T5, T6, TR>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, T5, TR>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<T1, T2, T3, T4, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, TR>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<T1, T2, T3, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, TR>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<T1, T2, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, TR>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<TR>!
-LinqToDB.Expressions.TypeMapper.BuildTypedFactory<T, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! newFunc) -> System.Func<T, TRes>!
-LinqToDB.Expressions.TypeMapper.BuildTypedFactory<T1, T2, T3, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! newFunc) -> System.Func<T1, T2, T3, TRes>!
-LinqToDB.Expressions.TypeMapper.BuildTypedFactory<T1, T2, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! newFunc) -> System.Func<T1, T2, TRes>!
-LinqToDB.Expressions.TypeMapper.BuildTypedFactory<TR, TRes>(System.Linq.Expressions.Expression<System.Func<TR>!>! newFunc) -> System.Func<TRes>!
-LinqToDB.Expressions.TypeMapper.BuildWrappedFactory<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR!>!>! newFunc) -> System.Func<T, TR!>!
-LinqToDB.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, T3, T4, T5, T6, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, T6, TR!>!>! newFunc) -> System.Func<T1, T2, T3, T4, T5, T6, TR!>!
-LinqToDB.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, TR!>!>! newFunc) -> System.Func<T1, T2, T3, T4, T5, TR!>!
-LinqToDB.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, T3, T4, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, TR!>!>! newFunc) -> System.Func<T1, T2, T3, T4, TR!>!
-LinqToDB.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR!>!>! newFunc) -> System.Func<T1, T2, T3, TR!>!
-LinqToDB.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR!>!>! newFunc) -> System.Func<T1, T2, TR!>!
-LinqToDB.Expressions.TypeMapper.BuildWrappedFactory<TR>(System.Linq.Expressions.Expression<System.Func<TR!>!>! newFunc) -> System.Func<TR!>!
-LinqToDB.Expressions.TypeMapper.FinalizeMappings() -> void
-LinqToDB.Expressions.TypeMapper.MapAction(System.Linq.Expressions.Expression<System.Action!>! action) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapAction<T1, T2, T3, T4, T5>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4, T5>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4, System.Linq.Expressions.Expression! p5) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapAction<T1, T2, T3, T4>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapAction<T1, T2, T3>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapAction<T1, T2>(System.Linq.Expressions.Expression<System.Action<T1, T2>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapAction<T>(System.Linq.Expressions.Expression<System.Action<T>!>! action, System.Linq.Expressions.Expression! p) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapActionLambda(System.Linq.Expressions.Expression<System.Action!>! action) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapActionLambda<T1, T2, T3, T4, T5>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4, T5>!>! action) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapActionLambda<T1, T2, T3, T4>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4>!>! action) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapActionLambda<T1, T2, T3>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3>!>! action) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapActionLambda<T1, T2>(System.Linq.Expressions.Expression<System.Action<T1, T2>!>! action) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapActionLambda<T>(System.Linq.Expressions.Expression<System.Action<T>!>! action) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapExpression<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! func, System.Linq.Expressions.Expression! p) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapExpression<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4, System.Linq.Expressions.Expression! p5) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapExpression<T1, T2, T3, T4, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapExpression<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapExpression<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapExpression<TR>(System.Linq.Expressions.Expression<System.Func<TR>!>! func) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapLambda<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapLambda<T1, T2, T3, T4, T5, T6, T7, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, T6, T7, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapLambda<T1, T2, T3, T4, T5, T6, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, T6, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapLambda<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapLambda<T1, T2, T3, T4, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapLambda<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapLambda<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MemberBuilder<T, TV>
-LinqToDB.Expressions.TypeMapper.MemberBuilder<T, TV>.BuildGetter<TBase>() -> System.Func<TBase, TV>!
-LinqToDB.Expressions.TypeMapper.MemberBuilder<T, TV>.BuildSetter<TBase>() -> System.Action<TBase, TV>!
-LinqToDB.Expressions.TypeMapper.RegisterTypeWrapper(System.Type! wrapperType, System.Type! originalType) -> void
-LinqToDB.Expressions.TypeMapper.RegisterTypeWrapper<TWrapper>(System.Type! originalType) -> void
-LinqToDB.Expressions.TypeMapper.Type<T>() -> LinqToDB.Expressions.TypeMapper.TypeBuilder<T>!
-LinqToDB.Expressions.TypeMapper.TypeBuilder<T>
-LinqToDB.Expressions.TypeMapper.TypeBuilder<T>.Member<TV>(System.Linq.Expressions.Expression<System.Func<T, TV>!>! memberExpression) -> LinqToDB.Expressions.TypeMapper.MemberBuilder<T, TV>!
-LinqToDB.Expressions.TypeMapper.TypeMapper() -> void
-LinqToDB.Expressions.TypeMapper.Wrap<TR>(object? instance) -> TR?
-LinqToDB.Expressions.TypeMapper.WrapTask<TR>(System.Threading.Tasks.Task! instanceTask, System.Type! instanceType, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TR?>!
-LinqToDB.Expressions.TypeWrapper
-LinqToDB.Expressions.TypeWrapper.CompiledWrappers.get -> System.Delegate![]!
-LinqToDB.Expressions.TypeWrapper.instance_.get -> object!
-LinqToDB.Expressions.TypeWrapper.TypeWrapper() -> void
-LinqToDB.Expressions.TypeWrapper.TypeWrapper(object! instance, System.Delegate![]? wrappers) -> void
-LinqToDB.Expressions.TypeWrapperNameAttribute
-LinqToDB.Expressions.TypeWrapperNameAttribute.TypeWrapperNameAttribute(string! name) -> void
-LinqToDB.Expressions.ValueTaskToTaskMapper
-LinqToDB.Expressions.ValueTaskToTaskMapper.ValueTaskToTaskMapper() -> void
-LinqToDB.Expressions.WrapperAttribute
-LinqToDB.Expressions.WrapperAttribute.TypeName.get -> string?
-LinqToDB.Expressions.WrapperAttribute.WrapperAttribute() -> void
-LinqToDB.Expressions.WrapperAttribute.WrapperAttribute(string! typeName) -> void
+LinqToDB.Expressions.Types.CustomMapperAttribute
+LinqToDB.Expressions.Types.CustomMapperAttribute.CustomMapperAttribute(System.Type! mapper) -> void
+LinqToDB.Expressions.Types.ICustomMapper
+LinqToDB.Expressions.Types.ICustomMapper.CanMap(System.Linq.Expressions.Expression! expression) -> bool
+LinqToDB.Expressions.Types.ICustomMapper.Map(System.Linq.Expressions.Expression! expression) -> System.Linq.Expressions.Expression!
+LinqToDB.Expressions.Types.TypeMapper
+LinqToDB.Expressions.Types.TypeMapper.BuildAction(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action!
+LinqToDB.Expressions.Types.TypeMapper.BuildAction<T1, T2, T3, T4, T5>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2, T3, T4, T5>!
+LinqToDB.Expressions.Types.TypeMapper.BuildAction<T1, T2, T3, T4>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2, T3, T4>!
+LinqToDB.Expressions.Types.TypeMapper.BuildAction<T1, T2, T3>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2, T3>!
+LinqToDB.Expressions.Types.TypeMapper.BuildAction<T1, T2>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2>!
+LinqToDB.Expressions.Types.TypeMapper.BuildAction<T>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T>!
+LinqToDB.Expressions.Types.TypeMapper.BuildFactory<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! newFunc) -> System.Func<T, object!>!
+LinqToDB.Expressions.Types.TypeMapper.BuildFactory<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! newFunc) -> System.Func<T1, T2, T3, object!>!
+LinqToDB.Expressions.Types.TypeMapper.BuildFactory<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! newFunc) -> System.Func<T1, T2, object!>!
+LinqToDB.Expressions.Types.TypeMapper.BuildFactory<TR>(System.Linq.Expressions.Expression<System.Func<TR>!>! newFunc) -> System.Func<object!>!
+LinqToDB.Expressions.Types.TypeMapper.BuildFunc<T, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T, TR>!
+LinqToDB.Expressions.Types.TypeMapper.BuildFunc<T1, T2, T3, T4, T5, T6, T7, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, T5, T6, T7, TR>!
+LinqToDB.Expressions.Types.TypeMapper.BuildFunc<T1, T2, T3, T4, T5, T6, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, T5, T6, TR>!
+LinqToDB.Expressions.Types.TypeMapper.BuildFunc<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, T5, TR>!
+LinqToDB.Expressions.Types.TypeMapper.BuildFunc<T1, T2, T3, T4, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, TR>!
+LinqToDB.Expressions.Types.TypeMapper.BuildFunc<T1, T2, T3, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, TR>!
+LinqToDB.Expressions.Types.TypeMapper.BuildFunc<T1, T2, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, TR>!
+LinqToDB.Expressions.Types.TypeMapper.BuildFunc<TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<TR>!
+LinqToDB.Expressions.Types.TypeMapper.BuildTypedFactory<T, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! newFunc) -> System.Func<T, TRes>!
+LinqToDB.Expressions.Types.TypeMapper.BuildTypedFactory<T1, T2, T3, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! newFunc) -> System.Func<T1, T2, T3, TRes>!
+LinqToDB.Expressions.Types.TypeMapper.BuildTypedFactory<T1, T2, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! newFunc) -> System.Func<T1, T2, TRes>!
+LinqToDB.Expressions.Types.TypeMapper.BuildTypedFactory<TR, TRes>(System.Linq.Expressions.Expression<System.Func<TR>!>! newFunc) -> System.Func<TRes>!
+LinqToDB.Expressions.Types.TypeMapper.BuildWrappedFactory<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR!>!>! newFunc) -> System.Func<T, TR!>!
+LinqToDB.Expressions.Types.TypeMapper.BuildWrappedFactory<T1, T2, T3, T4, T5, T6, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, T6, TR!>!>! newFunc) -> System.Func<T1, T2, T3, T4, T5, T6, TR!>!
+LinqToDB.Expressions.Types.TypeMapper.BuildWrappedFactory<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, TR!>!>! newFunc) -> System.Func<T1, T2, T3, T4, T5, TR!>!
+LinqToDB.Expressions.Types.TypeMapper.BuildWrappedFactory<T1, T2, T3, T4, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, TR!>!>! newFunc) -> System.Func<T1, T2, T3, T4, TR!>!
+LinqToDB.Expressions.Types.TypeMapper.BuildWrappedFactory<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR!>!>! newFunc) -> System.Func<T1, T2, T3, TR!>!
+LinqToDB.Expressions.Types.TypeMapper.BuildWrappedFactory<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR!>!>! newFunc) -> System.Func<T1, T2, TR!>!
+LinqToDB.Expressions.Types.TypeMapper.BuildWrappedFactory<TR>(System.Linq.Expressions.Expression<System.Func<TR!>!>! newFunc) -> System.Func<TR!>!
+LinqToDB.Expressions.Types.TypeMapper.FinalizeMappings() -> void
+LinqToDB.Expressions.Types.TypeMapper.MapAction(System.Linq.Expressions.Expression<System.Action!>! action) -> System.Linq.Expressions.Expression!
+LinqToDB.Expressions.Types.TypeMapper.MapAction<T1, T2, T3, T4, T5>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4, T5>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4, System.Linq.Expressions.Expression! p5) -> System.Linq.Expressions.Expression!
+LinqToDB.Expressions.Types.TypeMapper.MapAction<T1, T2, T3, T4>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4) -> System.Linq.Expressions.Expression!
+LinqToDB.Expressions.Types.TypeMapper.MapAction<T1, T2, T3>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3) -> System.Linq.Expressions.Expression!
+LinqToDB.Expressions.Types.TypeMapper.MapAction<T1, T2>(System.Linq.Expressions.Expression<System.Action<T1, T2>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2) -> System.Linq.Expressions.Expression!
+LinqToDB.Expressions.Types.TypeMapper.MapAction<T>(System.Linq.Expressions.Expression<System.Action<T>!>! action, System.Linq.Expressions.Expression! p) -> System.Linq.Expressions.Expression!
+LinqToDB.Expressions.Types.TypeMapper.MapActionLambda(System.Linq.Expressions.Expression<System.Action!>! action) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Expressions.Types.TypeMapper.MapActionLambda<T1, T2, T3, T4, T5>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4, T5>!>! action) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Expressions.Types.TypeMapper.MapActionLambda<T1, T2, T3, T4>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4>!>! action) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Expressions.Types.TypeMapper.MapActionLambda<T1, T2, T3>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3>!>! action) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Expressions.Types.TypeMapper.MapActionLambda<T1, T2>(System.Linq.Expressions.Expression<System.Action<T1, T2>!>! action) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Expressions.Types.TypeMapper.MapActionLambda<T>(System.Linq.Expressions.Expression<System.Action<T>!>! action) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Expressions.Types.TypeMapper.MapExpression<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! func, System.Linq.Expressions.Expression! p) -> System.Linq.Expressions.Expression!
+LinqToDB.Expressions.Types.TypeMapper.MapExpression<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4, System.Linq.Expressions.Expression! p5) -> System.Linq.Expressions.Expression!
+LinqToDB.Expressions.Types.TypeMapper.MapExpression<T1, T2, T3, T4, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4) -> System.Linq.Expressions.Expression!
+LinqToDB.Expressions.Types.TypeMapper.MapExpression<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3) -> System.Linq.Expressions.Expression!
+LinqToDB.Expressions.Types.TypeMapper.MapExpression<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2) -> System.Linq.Expressions.Expression!
+LinqToDB.Expressions.Types.TypeMapper.MapExpression<TR>(System.Linq.Expressions.Expression<System.Func<TR>!>! func) -> System.Linq.Expressions.Expression!
+LinqToDB.Expressions.Types.TypeMapper.MapLambda<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Expressions.Types.TypeMapper.MapLambda<T1, T2, T3, T4, T5, T6, T7, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, T6, T7, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Expressions.Types.TypeMapper.MapLambda<T1, T2, T3, T4, T5, T6, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, T6, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Expressions.Types.TypeMapper.MapLambda<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Expressions.Types.TypeMapper.MapLambda<T1, T2, T3, T4, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Expressions.Types.TypeMapper.MapLambda<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Expressions.Types.TypeMapper.MapLambda<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Expressions.Types.TypeMapper.MemberBuilder<T, TV>
+LinqToDB.Expressions.Types.TypeMapper.MemberBuilder<T, TV>.BuildGetter<TBase>() -> System.Func<TBase, TV>!
+LinqToDB.Expressions.Types.TypeMapper.MemberBuilder<T, TV>.BuildSetter<TBase>() -> System.Action<TBase, TV>!
+LinqToDB.Expressions.Types.TypeMapper.RegisterTypeWrapper(System.Type! wrapperType, System.Type! originalType) -> void
+LinqToDB.Expressions.Types.TypeMapper.RegisterTypeWrapper<TWrapper>(System.Type! originalType) -> void
+LinqToDB.Expressions.Types.TypeMapper.Type<T>() -> LinqToDB.Expressions.Types.TypeMapper.TypeBuilder<T>!
+LinqToDB.Expressions.Types.TypeMapper.TypeBuilder<T>
+LinqToDB.Expressions.Types.TypeMapper.TypeBuilder<T>.Member<TV>(System.Linq.Expressions.Expression<System.Func<T, TV>!>! memberExpression) -> LinqToDB.Expressions.Types.TypeMapper.MemberBuilder<T, TV>!
+LinqToDB.Expressions.Types.TypeMapper.TypeMapper() -> void
+LinqToDB.Expressions.Types.TypeMapper.Wrap<TR>(object? instance) -> TR?
+LinqToDB.Expressions.Types.TypeMapper.WrapTask<TR>(System.Threading.Tasks.Task! instanceTask, System.Type! instanceType, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TR?>!
+LinqToDB.Expressions.Types.TypeWrapper
+LinqToDB.Expressions.Types.TypeWrapper.CompiledWrappers.get -> System.Delegate![]!
+LinqToDB.Expressions.Types.TypeWrapper.instance_.get -> object!
+LinqToDB.Expressions.Types.TypeWrapper.TypeWrapper() -> void
+LinqToDB.Expressions.Types.TypeWrapper.TypeWrapper(object! instance, System.Delegate![]? wrappers) -> void
+LinqToDB.Expressions.Types.TypeWrapperNameAttribute
+LinqToDB.Expressions.Types.TypeWrapperNameAttribute.TypeWrapperNameAttribute(string! name) -> void
+LinqToDB.Expressions.Types.ValueTaskToTaskMapper
+LinqToDB.Expressions.Types.ValueTaskToTaskMapper.ValueTaskToTaskMapper() -> void
+LinqToDB.Expressions.Types.WrapperAttribute
+LinqToDB.Expressions.Types.WrapperAttribute.TypeName.get -> string?
+LinqToDB.Expressions.Types.WrapperAttribute.WrapperAttribute() -> void
+LinqToDB.Expressions.Types.WrapperAttribute.WrapperAttribute(string! typeName) -> void
 LinqToDB.ExprParameterAttribute
 LinqToDB.ExprParameterAttribute.DoNotParameterize.get -> bool
 LinqToDB.ExprParameterAttribute.DoNotParameterize.set -> void
@@ -3764,7 +3787,6 @@ LinqToDB.Infrastructure.UniqueIdGenerator<T>.GetNext() -> int
 LinqToDB.Infrastructure.UniqueIdGenerator<T>.UniqueIdGenerator() -> void
 LinqToDB.InsertColumnFilter<T>
 LinqToDB.InsertOrUpdateColumnFilter<T>
-LinqToDB.InterceptorExtensions
 LinqToDB.Interceptors.CommandEventData
 LinqToDB.Interceptors.CommandEventData.CommandEventData() -> void
 LinqToDB.Interceptors.CommandEventData.DataConnection.get -> LinqToDB.Data.DataConnection!
@@ -3826,6 +3848,7 @@ LinqToDB.Interceptors.IInterceptable<T>
 LinqToDB.Interceptors.IInterceptable<T>.Interceptor.get -> T?
 LinqToDB.Interceptors.IInterceptable<T>.Interceptor.set -> void
 LinqToDB.Interceptors.IInterceptor
+LinqToDB.Interceptors.InterceptorExtensions
 LinqToDB.Interceptors.Internal.EntityBindingInterceptor
 LinqToDB.Interceptors.Internal.EntityBindingInterceptor.EntityBindingInterceptor() -> void
 LinqToDB.Interceptors.Internal.IEntityBindingInterceptor
@@ -3860,6 +3883,7 @@ LinqToDB.ITableMutable<T>
 LinqToDB.ITableMutable<T>.ChangeDatabaseName(string? databaseName) -> LinqToDB.ITable<T>!
 LinqToDB.ITableMutable<T>.ChangeSchemaName(string? schemaName) -> LinqToDB.ITable<T>!
 LinqToDB.ITableMutable<T>.ChangeServerName(string? serverName) -> LinqToDB.ITable<T>!
+LinqToDB.ITableMutable<T>.ChangeTableDescriptor(LinqToDB.Mapping.EntityDescriptor! tableDescriptor) -> LinqToDB.ITable<T>!
 LinqToDB.ITableMutable<T>.ChangeTableID(string? tableID) -> LinqToDB.ITable<T>!
 LinqToDB.ITableMutable<T>.ChangeTableName(string! tableName) -> LinqToDB.ITable<T>!
 LinqToDB.ITableMutable<T>.ChangeTableOptions(LinqToDB.TableOptions options) -> LinqToDB.ITable<T>!
@@ -3917,6 +3941,14 @@ LinqToDB.Linq.Builder.SqlQueryExtensionData.SqlExpression.get -> LinqToDB.SqlQue
 LinqToDB.Linq.Builder.SqlQueryExtensionData.SqlExpression.set -> void
 LinqToDB.Linq.Builder.SqlQueryExtensionData.SqlQueryExtensionData(string! name, System.Linq.Expressions.Expression! expr, System.Reflection.ParameterInfo! parameter, int paramsIndex = -1) -> void
 LinqToDB.Linq.Builder.SqlQueryExtensionData.ToDebugString() -> string!
+LinqToDB.Linq.Builder.TranslationModifier
+LinqToDB.Linq.Builder.TranslationModifier.Equals(LinqToDB.Linq.Builder.TranslationModifier? other) -> bool
+LinqToDB.Linq.Builder.TranslationModifier.IgnoreQueryFilters.get -> System.Type![]?
+LinqToDB.Linq.Builder.TranslationModifier.InlineParameters.get -> bool
+LinqToDB.Linq.Builder.TranslationModifier.IsFilterDisabled(System.Type! entityType) -> bool
+LinqToDB.Linq.Builder.TranslationModifier.TranslationModifier(bool inlineParameters = false, System.Type![]? ignoreQueryFilters = null) -> void
+LinqToDB.Linq.Builder.TranslationModifier.WithIgnoreQueryFilters(System.Type![]? ignoreQueryFilters) -> LinqToDB.Linq.Builder.TranslationModifier!
+LinqToDB.Linq.Builder.TranslationModifier.WithInlineParameters(bool inlineParameters) -> LinqToDB.Linq.Builder.TranslationModifier!
 LinqToDB.Linq.Builder.Visitors.CanBeEvaluatedOnClientCheckVisitorBase
 LinqToDB.Linq.Builder.Visitors.CanBeEvaluatedOnClientCheckVisitorBase.CanBeEvaluated -> bool
 LinqToDB.Linq.Builder.Visitors.CanBeEvaluatedOnClientCheckVisitorBase.CanBeEvaluatedOnClientCheckVisitorBase() -> void
@@ -4144,7 +4176,6 @@ LinqToDB.LinqOptions.PreloadGroups.get -> bool
 LinqToDB.LinqOptions.PreloadGroups.init -> void
 LinqToDB.LinqOptions.TraceMapperExpression.get -> bool
 LinqToDB.LinqOptions.TraceMapperExpression.init -> void
-LinqToDB.LinqToDBConstants
 LinqToDB.LinqToDBException
 LinqToDB.LinqToDBException.LinqToDBException() -> void
 LinqToDB.LinqToDBException.LinqToDBException(string! message) -> void
@@ -4689,12 +4720,6 @@ LinqToDB.Metadata.SystemComponentModelDataAnnotationsSchemaAttributeReader.GetAt
 LinqToDB.Metadata.SystemComponentModelDataAnnotationsSchemaAttributeReader.GetDynamicColumns(System.Type! type) -> System.Reflection.MemberInfo![]!
 LinqToDB.Metadata.SystemComponentModelDataAnnotationsSchemaAttributeReader.GetObjectID() -> string!
 LinqToDB.Metadata.SystemComponentModelDataAnnotationsSchemaAttributeReader.SystemComponentModelDataAnnotationsSchemaAttributeReader() -> void
-LinqToDB.Metadata.SystemDataSqlServerAttributeReader
-LinqToDB.Metadata.SystemDataSqlServerAttributeReader.GetAttributes(System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
-LinqToDB.Metadata.SystemDataSqlServerAttributeReader.GetAttributes(System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
-LinqToDB.Metadata.SystemDataSqlServerAttributeReader.GetDynamicColumns(System.Type! type) -> System.Reflection.MemberInfo![]!
-LinqToDB.Metadata.SystemDataSqlServerAttributeReader.GetObjectID() -> string!
-LinqToDB.Metadata.SystemDataSqlServerAttributeReader.SystemDataSqlServerAttributeReader(System.Type! sqlMethodAttribute, System.Type! sqlUserDefinedTypeAttribute) -> void
 LinqToDB.Metadata.XmlAttributeReader
 LinqToDB.Metadata.XmlAttributeReader.GetAttributes(System.Type! type) -> LinqToDB.Mapping.MappingAttribute![]!
 LinqToDB.Metadata.XmlAttributeReader.GetAttributes(System.Type! type, System.Reflection.MemberInfo! memberInfo) -> LinqToDB.Mapping.MappingAttribute![]!
@@ -4735,11 +4760,11 @@ LinqToDB.Reflection.Methods.LinqToDB.DataParameter
 LinqToDB.Reflection.Methods.LinqToDB.Delete
 LinqToDB.Reflection.Methods.LinqToDB.GroupBy
 LinqToDB.Reflection.Methods.LinqToDB.Insert
-LinqToDB.Reflection.Methods.LinqToDB.Insert.DC
-LinqToDB.Reflection.Methods.LinqToDB.Insert.Q
-LinqToDB.Reflection.Methods.LinqToDB.Insert.SI
-LinqToDB.Reflection.Methods.LinqToDB.Insert.T
-LinqToDB.Reflection.Methods.LinqToDB.Insert.VI
+LinqToDB.Reflection.Methods.LinqToDB.Insert.FromDataContext
+LinqToDB.Reflection.Methods.LinqToDB.Insert.FromQuery
+LinqToDB.Reflection.Methods.LinqToDB.Insert.FromSelectInsertable
+LinqToDB.Reflection.Methods.LinqToDB.Insert.FromTable
+LinqToDB.Reflection.Methods.LinqToDB.Insert.FromValueInsertable
 LinqToDB.Reflection.Methods.LinqToDB.Merge
 LinqToDB.Reflection.Methods.LinqToDB.MultiInsert
 LinqToDB.Reflection.Methods.LinqToDB.SqlExt
@@ -5614,6 +5639,7 @@ LinqToDB.SqlProvider.BasicSqlOptimizer.BasicSqlOptimizer(LinqToDB.SqlProvider.Sq
 LinqToDB.SqlProvider.BasicSqlOptimizer.ClearColumParametersVisitor
 LinqToDB.SqlProvider.BasicSqlOptimizer.ClearColumParametersVisitor.ClearColumParametersVisitor() -> void
 LinqToDB.SqlProvider.BasicSqlOptimizer.CorrectMultiTableQueries(LinqToDB.SqlQuery.SqlStatement! statement) -> LinqToDB.SqlQuery.SqlStatement!
+LinqToDB.SqlProvider.BasicSqlOptimizer.CorrectSetters(System.Collections.Generic.List<LinqToDB.SqlQuery.SqlSetExpression!>! setters, LinqToDB.SqlQuery.SelectQuery! query) -> void
 LinqToDB.SqlProvider.BasicSqlOptimizer.CorrectUpdateSetters(LinqToDB.SqlQuery.SqlUpdateStatement! updateStatement) -> void
 LinqToDB.SqlProvider.BasicSqlOptimizer.CorrectUpdateTable(LinqToDB.SqlQuery.SqlUpdateStatement! statement, bool leaveUpdateTableInQuery, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema) -> LinqToDB.SqlQuery.SqlUpdateStatement!
 LinqToDB.SqlProvider.BasicSqlOptimizer.GetAlternativeDelete(LinqToDB.SqlQuery.SqlDeleteStatement! deleteStatement, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlQuery.SqlDeleteStatement!
@@ -5809,6 +5835,8 @@ LinqToDB.SqlProvider.SqlProviderFlags.IsNamingQueryBlockSupported.get -> bool
 LinqToDB.SqlProvider.SqlProviderFlags.IsNamingQueryBlockSupported.set -> void
 LinqToDB.SqlProvider.SqlProviderFlags.IsNestedJoinsSupported.get -> bool
 LinqToDB.SqlProvider.SqlProviderFlags.IsNestedJoinsSupported.set -> void
+LinqToDB.SqlProvider.SqlProviderFlags.IsOrderByAggregateFunctionSupported.get -> bool
+LinqToDB.SqlProvider.SqlProviderFlags.IsOrderByAggregateFunctionSupported.set -> void
 LinqToDB.SqlProvider.SqlProviderFlags.IsOuterApplyJoinSupportsCondition.get -> bool
 LinqToDB.SqlProvider.SqlProviderFlags.IsOuterApplyJoinSupportsCondition.set -> void
 LinqToDB.SqlProvider.SqlProviderFlags.IsOuterJoinSupportsInnerJoin.get -> bool
@@ -6377,6 +6405,7 @@ LinqToDB.SqlQuery.SqlExtensions
 LinqToDB.SqlQuery.SqlField
 LinqToDB.SqlQuery.SqlField.Alias.get -> string?
 LinqToDB.SqlQuery.SqlField.Alias.set -> void
+LinqToDB.SqlQuery.SqlField.Assign(LinqToDB.SqlQuery.SqlField! source) -> void
 LinqToDB.SqlQuery.SqlField.CanBeNull.get -> bool
 LinqToDB.SqlQuery.SqlField.CanBeNull.set -> void
 LinqToDB.SqlQuery.SqlField.ColumnDescriptor.get -> LinqToDB.Mapping.ColumnDescriptor!
@@ -6526,11 +6555,11 @@ LinqToDB.SqlQuery.SqlInsertStatement.SqlInsertStatement(LinqToDB.SqlQuery.Select
 LinqToDB.SqlQuery.SqlInsertWithIdentity
 LinqToDB.SqlQuery.SqlInsertWithIdentity.SqlInsertWithIdentity() -> void
 LinqToDB.SqlQuery.SqlJoinedTable
-LinqToDB.SqlQuery.SqlJoinedTable.CanConvertApply.get -> bool
-LinqToDB.SqlQuery.SqlJoinedTable.CanConvertApply.set -> void
 LinqToDB.SqlQuery.SqlJoinedTable.Cardinality.get -> LinqToDB.SqlQuery.SourceCardinality
 LinqToDB.SqlQuery.SqlJoinedTable.Cardinality.set -> void
 LinqToDB.SqlQuery.SqlJoinedTable.Condition.get -> LinqToDB.SqlQuery.SqlSearchCondition!
+LinqToDB.SqlQuery.SqlJoinedTable.IsSubqueryExpression.get -> bool
+LinqToDB.SqlQuery.SqlJoinedTable.IsSubqueryExpression.set -> void
 LinqToDB.SqlQuery.SqlJoinedTable.IsWeak.get -> bool
 LinqToDB.SqlQuery.SqlJoinedTable.IsWeak.set -> void
 LinqToDB.SqlQuery.SqlJoinedTable.JoinType.get -> LinqToDB.SqlQuery.JoinType
@@ -6891,6 +6920,7 @@ LinqToDB.SqlQuery.SqlTable.GetIdentityField() -> LinqToDB.SqlQuery.SqlField?
 LinqToDB.SqlQuery.SqlTable.IdentityFields.get -> System.Collections.Generic.IReadOnlyList<LinqToDB.SqlQuery.SqlField!>!
 LinqToDB.SqlQuery.SqlTable.ObjectType.get -> System.Type!
 LinqToDB.SqlQuery.SqlTable.ObjectType.set -> void
+LinqToDB.SqlQuery.SqlTable.ResetKeys() -> void
 LinqToDB.SqlQuery.SqlTable.SequenceAttributes.get -> LinqToDB.Mapping.SequenceNameAttribute![]?
 LinqToDB.SqlQuery.SqlTable.SequenceAttributes.set -> void
 LinqToDB.SqlQuery.SqlTable.SourceID.get -> int
@@ -7116,6 +7146,7 @@ LinqToDB.TempTable<T>.Copy(System.Collections.Generic.IEnumerable<T>! items, Lin
 LinqToDB.TempTable<T>.CopyAsync(System.Collections.Generic.IEnumerable<T>! items, LinqToDB.Data.BulkCopyOptions? options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<long>!
 LinqToDB.TempTable<T>.DatabaseName.get -> string?
 LinqToDB.TempTable<T>.DataContext.get -> LinqToDB.IDataContext!
+LinqToDB.TempTable<T>.Expression.get -> System.Linq.Expressions.Expression!
 LinqToDB.TempTable<T>.Insert(System.Linq.IQueryable<T>! items) -> long
 LinqToDB.TempTable<T>.InsertAsync(System.Linq.IQueryable<T>! items, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<long>!
 LinqToDB.TempTable<T>.SchemaName.get -> string?
@@ -8010,6 +8041,8 @@ override LinqToDB.Linq.AccessorMember.Equals(object? obj) -> bool
 override LinqToDB.Linq.AccessorMember.GetHashCode() -> int
 override LinqToDB.Linq.Builder.ExpressionTreeOptimizerVisitor.VisitConditional(System.Linq.Expressions.ConditionalExpression! node) -> System.Linq.Expressions.Expression!
 override LinqToDB.Linq.Builder.ExpressionTreeOptimizerVisitor.VisitUnary(System.Linq.Expressions.UnaryExpression! node) -> System.Linq.Expressions.Expression!
+override LinqToDB.Linq.Builder.TranslationModifier.Equals(object? obj) -> bool
+override LinqToDB.Linq.Builder.TranslationModifier.GetHashCode() -> int
 override LinqToDB.Linq.Builder.Visitors.CanBeEvaluatedOnClientCheckVisitorBase.Cleanup() -> void
 override LinqToDB.Linq.Builder.Visitors.CanBeEvaluatedOnClientCheckVisitorBase.Visit(System.Linq.Expressions.Expression? node) -> System.Linq.Expressions.Expression?
 override LinqToDB.Linq.Builder.Visitors.CanBeEvaluatedOnClientCheckVisitorBase.VisitDefault(System.Linq.Expressions.DefaultExpression! node) -> System.Linq.Expressions.Expression!
@@ -9359,8 +9392,8 @@ static LinqToDB.DataOptionsExtensions.UseCoefficient(this LinqToDB.DataOptions! 
 static LinqToDB.DataOptionsExtensions.UseCommandTimeout(this LinqToDB.DataOptions! options, int? commandTimeout) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.UseCompareNulls(this LinqToDB.DataOptions! options, LinqToDB.Common.CompareNulls compareNulls) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.UseCompareNullsAsValues(this LinqToDB.DataOptions! options, bool compareNullsAsValues) -> LinqToDB.DataOptions!
-static LinqToDB.DataOptionsExtensions.UseConfiguration(this LinqToDB.DataOptions! options, string! configurationString, LinqToDB.Mapping.MappingSchema! mappingSchema) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.UseConfiguration(this LinqToDB.DataOptions! options, string? configurationString) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.UseConfiguration(this LinqToDB.DataOptions! options, string? configurationString, LinqToDB.Mapping.MappingSchema! mappingSchema) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.UseConfigurationString(this LinqToDB.DataOptions! options, string! configurationString, LinqToDB.Mapping.MappingSchema! mappingSchema) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.UseConfigurationString(this LinqToDB.DataOptions! options, string? configurationString) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.UseConnection(this LinqToDB.DataOptions! options, LinqToDB.DataProvider.IDataProvider! dataProvider, System.Data.Common.DbConnection! connection) -> LinqToDB.DataOptions!
@@ -10584,6 +10617,9 @@ static LinqToDB.DataProvider.SqlServer.SqlType.VarChar(int size) -> LinqToDB.Dat
 static LinqToDB.DataProvider.SqlServer.SqlType.VarCharMax.get -> LinqToDB.DataProvider.SqlServer.SqlType<string?>!
 static LinqToDB.DataProvider.SqlServer.SqlType.Xml() -> LinqToDB.DataProvider.SqlServer.SqlType<string?>!
 static LinqToDB.DataProvider.SqlServer.SqlType.Xml<T>() -> LinqToDB.DataProvider.SqlServer.SqlType<T>!
+static LinqToDB.DataProvider.SqlServer.SystemDataSqlServerAttributeReader.MicrosoftDataSqlClientProvider -> LinqToDB.Metadata.IMetadataReader?
+static LinqToDB.DataProvider.SqlServer.SystemDataSqlServerAttributeReader.MicrosoftSqlServerServerProvider -> LinqToDB.Metadata.IMetadataReader?
+static LinqToDB.DataProvider.SqlServer.SystemDataSqlServerAttributeReader.SystemDataSqlClientProvider -> LinqToDB.Metadata.IMetadataReader?
 static LinqToDB.DataProvider.SqlServer.Translation.SqlServerMemberTranslator.SqlServerDateFunctionsTranslator.DatePartToStr(LinqToDB.Sql.DateParts part) -> string?
 static LinqToDB.DataProvider.Sybase.SybaseOptions.operator !=(LinqToDB.DataProvider.Sybase.SybaseOptions? left, LinqToDB.DataProvider.Sybase.SybaseOptions? right) -> bool
 static LinqToDB.DataProvider.Sybase.SybaseOptions.operator ==(LinqToDB.DataProvider.Sybase.SybaseOptions? left, LinqToDB.DataProvider.Sybase.SybaseOptions? right) -> bool
@@ -10618,8 +10654,8 @@ static LinqToDB.Expressions.ExpressionExtensions.Transform<TContext>(this System
 static LinqToDB.Expressions.ExpressionExtensions.Transform<TContext>(this System.Linq.Expressions.Expression? expr, TContext context, System.Func<TContext, System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!>! func) -> System.Linq.Expressions.Expression?
 static LinqToDB.Expressions.ExpressionExtensions.Visit<TContext>(this System.Linq.Expressions.Expression! expr, TContext context, System.Action<TContext, System.Linq.Expressions.Expression!>! func) -> void
 static LinqToDB.Expressions.ExpressionExtensions.Visit<TContext>(this System.Linq.Expressions.Expression! expr, TContext context, System.Func<TContext, System.Linq.Expressions.Expression!, bool>! func) -> void
-static LinqToDB.Expressions.ExpressionGenerator.Build(System.Action<LinqToDB.Expressions.ExpressionGenerator!>! buildFunc, LinqToDB.Expressions.TypeMapper? typeMapper = null) -> System.Linq.Expressions.Expression!
-static LinqToDB.Expressions.ExpressionGenerator.NoOpTypeMapper -> LinqToDB.Expressions.TypeMapper!
+static LinqToDB.Expressions.ExpressionGenerator.Build(System.Action<LinqToDB.Expressions.ExpressionGenerator!>! buildFunc, LinqToDB.Expressions.Types.TypeMapper? typeMapper = null) -> System.Linq.Expressions.Expression!
+static LinqToDB.Expressions.ExpressionGenerator.NoOpTypeMapper -> LinqToDB.Expressions.Types.TypeMapper!
 static LinqToDB.Expressions.ExpressionHelper.Field(System.Linq.Expressions.Expression! obj, string! name) -> System.Linq.Expressions.MemberExpression!
 static LinqToDB.Expressions.ExpressionHelper.Field(System.Type! type, string! name) -> System.Linq.Expressions.MemberExpression!
 static LinqToDB.Expressions.ExpressionHelper.Property(System.Linq.Expressions.Expression! obj, string! name) -> System.Linq.Expressions.MemberExpression!
@@ -10678,7 +10714,7 @@ static LinqToDB.Expressions.SqlQueryRootExpression.Create(LinqToDB.IDataContext!
 static LinqToDB.Expressions.SqlQueryRootExpression.Create(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! contextType) -> LinqToDB.Expressions.SqlQueryRootExpression!
 static LinqToDB.Expressions.SqlQueryRootExpression.operator !=(LinqToDB.Expressions.SqlQueryRootExpression? left, LinqToDB.Expressions.SqlQueryRootExpression? right) -> bool
 static LinqToDB.Expressions.SqlQueryRootExpression.operator ==(LinqToDB.Expressions.SqlQueryRootExpression? left, LinqToDB.Expressions.SqlQueryRootExpression? right) -> bool
-static LinqToDB.Expressions.TypeWrapper.PropertySetter<TI, TP>(System.Linq.Expressions.Expression<System.Func<TI, TP>!>! getter) -> System.Linq.Expressions.Expression<System.Action<TI, TP>!>!
+static LinqToDB.Expressions.Types.TypeWrapper.PropertySetter<TI, TP>(System.Linq.Expressions.Expression<System.Func<TI, TP>!>! getter) -> System.Linq.Expressions.Expression<System.Action<TI, TP>!>!
 static LinqToDB.ExtensionBuilderExtensions.Add(this LinqToDB.Sql.ISqExtensionBuilder! builder, LinqToDB.SqlQuery.ISqlExpression! left, int value) -> LinqToDB.SqlQuery.ISqlExpression!
 static LinqToDB.ExtensionBuilderExtensions.Add(this LinqToDB.Sql.ISqExtensionBuilder! builder, LinqToDB.SqlQuery.ISqlExpression! left, LinqToDB.SqlQuery.ISqlExpression! right, System.Type! type) -> LinqToDB.SqlQuery.ISqlExpression!
 static LinqToDB.ExtensionBuilderExtensions.Add<T>(this LinqToDB.Sql.ISqExtensionBuilder! builder, LinqToDB.SqlQuery.ISqlExpression! left, LinqToDB.SqlQuery.ISqlExpression! right) -> LinqToDB.SqlQuery.ISqlExpression!
@@ -10742,7 +10778,6 @@ static LinqToDB.Extensions.ReflectionExtensions.IsNullableHasValueMember(this Sy
 static LinqToDB.Extensions.ReflectionExtensions.IsNullableValueMember(this System.Reflection.MemberInfo! member) -> bool
 static LinqToDB.Extensions.ReflectionExtensions.IsPropertyEx(this System.Reflection.MemberInfo! memberInfo) -> bool
 static LinqToDB.Extensions.ReflectionExtensions.IsSameOrParentOf(this System.Type! parent, System.Type! child) -> bool
-static LinqToDB.Extensions.ReflectionExtensions.IsScalar(this System.Type! type, bool checkArrayElementType = true) -> bool
 static LinqToDB.Extensions.ReflectionExtensions.IsSqlPropertyMethodEx(this System.Reflection.MemberInfo! memberInfo) -> bool
 static LinqToDB.Extensions.ReflectionExtensions.IsSubClassOf(this System.Type! type, System.Type! check) -> bool
 static LinqToDB.Extensions.ReflectionExtensions.ToNullableUnderlying(this System.Type! type) -> System.Type!
@@ -10750,8 +10785,8 @@ static LinqToDB.Extensions.ReflectionExtensions.ToUnderlying(this System.Type! t
 static LinqToDB.Infrastructure.ServiceProviderExtensions.GetRequiredService<T>(this System.IServiceProvider! provider) -> T!
 static LinqToDB.Infrastructure.ServiceProviderExtensions.GetService<T>(this System.IServiceProvider! provider) -> T?
 static LinqToDB.Infrastructure.TypeExtensions.ShortDisplayName(this System.Type! type) -> string!
-static LinqToDB.InterceptorExtensions.OnNextCommandInitialized(this LinqToDB.Data.DataConnection! dataConnection, System.Func<LinqToDB.Interceptors.CommandEventData, System.Data.Common.DbCommand!, System.Data.Common.DbCommand!>! onCommandInitialized) -> void
-static LinqToDB.InterceptorExtensions.OnNextCommandInitialized(this LinqToDB.DataContext! dataContext, System.Func<LinqToDB.Interceptors.CommandEventData, System.Data.Common.DbCommand!, System.Data.Common.DbCommand!>! onCommandInitialized) -> void
+static LinqToDB.Interceptors.InterceptorExtensions.OnNextCommandInitialized(this LinqToDB.Data.DataConnection! dataConnection, System.Func<LinqToDB.Interceptors.CommandEventData, System.Data.Common.DbCommand!, System.Data.Common.DbCommand!>! onCommandInitialized) -> void
+static LinqToDB.Interceptors.InterceptorExtensions.OnNextCommandInitialized(this LinqToDB.DataContext! dataContext, System.Func<LinqToDB.Interceptors.CommandEventData, System.Data.Common.DbCommand!, System.Data.Common.DbCommand!>! onCommandInitialized) -> void
 static LinqToDB.Linq.Builder.EvaluationHelper.EvaluateExpression(System.Linq.Expressions.Expression? expression, LinqToDB.IDataContext! dataContext, object?[]? parameterValues) -> object?
 static LinqToDB.Linq.Expressions.AccessInt<T>(T value) -> T
 static LinqToDB.Linq.Expressions.AccessRound(decimal? value, int? precision) -> decimal?
@@ -11233,9 +11268,6 @@ static LinqToDB.MergeDefinition<TTarget, TSource>.Operation.Update(System.Linq.E
 static LinqToDB.MergeDefinition<TTarget, TSource>.Operation.UpdateBySource(System.Linq.Expressions.Expression<System.Func<TTarget, bool>!>! predicate, System.Linq.Expressions.Expression<System.Func<TTarget, TTarget>!>! update) -> LinqToDB.MergeDefinition<TTarget, TSource>.Operation!
 static LinqToDB.MergeDefinition<TTarget, TSource>.Operation.UpdateWithDelete(System.Linq.Expressions.Expression<System.Func<TTarget, TSource, bool>!>! updatePredicate, System.Linq.Expressions.Expression<System.Func<TTarget, TSource, TTarget>!>! update, System.Linq.Expressions.Expression<System.Func<TTarget, TSource, bool>!>! deletePredicate) -> LinqToDB.MergeDefinition<TTarget, TSource>.Operation!
 static LinqToDB.Metadata.MetadataReader.Default -> LinqToDB.Metadata.MetadataReader!
-static LinqToDB.Metadata.SystemDataSqlServerAttributeReader.MicrosoftDataSqlClientProvider -> LinqToDB.Metadata.IMetadataReader?
-static LinqToDB.Metadata.SystemDataSqlServerAttributeReader.MicrosoftSqlServerServerProvider -> LinqToDB.Metadata.IMetadataReader?
-static LinqToDB.Metadata.SystemDataSqlServerAttributeReader.SystemDataSqlClientProvider -> LinqToDB.Metadata.IMetadataReader?
 static LinqToDB.MultiInsertExtensions.Else<TSource, TTarget>(this LinqToDB.MultiInsertExtensions.IMultiInsertWhen<TSource>! source, LinqToDB.ITable<TTarget>! target, System.Linq.Expressions.Expression<System.Func<TSource, TTarget>!>! setter) -> LinqToDB.MultiInsertExtensions.IMultiInsertElse<TSource>!
 static LinqToDB.MultiInsertExtensions.Insert<TSource>(this LinqToDB.MultiInsertExtensions.IMultiInsertInto<TSource>! insert) -> int
 static LinqToDB.MultiInsertExtensions.InsertAll<TSource>(this LinqToDB.MultiInsertExtensions.IMultiInsertElse<TSource>! insert) -> int
@@ -11695,6 +11727,7 @@ static readonly LinqToDB.Data.BulkCopyOptions.Empty -> LinqToDB.Data.BulkCopyOpt
 static readonly LinqToDB.Data.QueryTraceOptions.Empty -> LinqToDB.Data.QueryTraceOptions!
 static readonly LinqToDB.DataContextOptions.Empty -> LinqToDB.DataContextOptions!
 static readonly LinqToDB.DataProvider.NoopQueryParametersNormalizer.Instance -> LinqToDB.DataProvider.IQueryParametersNormalizer!
+static readonly LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.UnmanagedAssemblyNames -> System.Collections.Generic.IEnumerable<string!>!
 static readonly LinqToDB.Expressions.ExpressionConstants.DataContextParam -> System.Linq.Expressions.ParameterExpression!
 static readonly LinqToDB.Expressions.ExpressionInstances.Constant0 -> System.Linq.Expressions.ConstantExpression!
 static readonly LinqToDB.Expressions.ExpressionInstances.Constant1 -> System.Linq.Expressions.ConstantExpression!
@@ -11707,6 +11740,7 @@ static readonly LinqToDB.Expressions.ExpressionInstances.HashMultiplier -> Syste
 static readonly LinqToDB.Expressions.ExpressionInstances.NullIDataContext -> System.Linq.Expressions.Expression!
 static readonly LinqToDB.Expressions.ExpressionInstances.True -> System.Linq.Expressions.ConstantExpression!
 static readonly LinqToDB.Expressions.ExpressionInstances.UntypedNull -> System.Linq.Expressions.ConstantExpression!
+static readonly LinqToDB.Linq.Builder.TranslationModifier.Default -> LinqToDB.Linq.Builder.TranslationModifier!
 static readonly LinqToDB.Reflection.MemberInfoEqualityComparer.Default -> LinqToDB.Reflection.MemberInfoEqualityComparer!
 static readonly LinqToDB.Reflection.Methods.ADONet.ConnectionString -> System.Reflection.PropertyInfo!
 static readonly LinqToDB.Reflection.Methods.ADONet.IsDBNull -> System.Reflection.MethodInfo!
@@ -11755,58 +11789,58 @@ static readonly LinqToDB.Reflection.Methods.LinqToDB.GroupBy.GroupingSets -> Sys
 static readonly LinqToDB.Reflection.Methods.LinqToDB.GroupBy.Rollup -> System.Reflection.MethodInfo!
 static readonly LinqToDB.Reflection.Methods.LinqToDB.IgnoreFilters -> System.Reflection.MethodInfo!
 static readonly LinqToDB.Reflection.Methods.LinqToDB.InlineParameters -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.DC.Insert -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.DC.InsertAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.DC.Into -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.Q.Insert -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.Q.InsertAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.Q.InsertWithDecimalIdentity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.Q.InsertWithDecimalIdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.Q.InsertWithIdentity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.Q.InsertWithIdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.Q.InsertWithInt32Identity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.Q.InsertWithInt32IdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.Q.InsertWithInt64Identity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.Q.InsertWithInt64IdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.Q.Into -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.SI.Insert -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.SI.InsertAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.SI.InsertWithDecimalIdentity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.SI.InsertWithDecimalIdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.SI.InsertWithIdentity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.SI.InsertWithIdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.SI.InsertWithInt32Identity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.SI.InsertWithInt32IdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.SI.InsertWithInt64Identity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.SI.InsertWithInt64IdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.SI.Value -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.SI.ValueExpression -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.SI.ValueSourceExpression -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.T.AsValueInsertable -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.T.Insert -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.T.InsertAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.T.InsertWithDecimalIdentity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.T.InsertWithDecimalIdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.T.InsertWithIdentity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.T.InsertWithIdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.T.InsertWithInt32Identity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.T.InsertWithInt32IdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.T.InsertWithInt64Identity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.T.InsertWithInt64IdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.T.Value -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.T.ValueExpression -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.VI.Insert -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.VI.InsertAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.VI.InsertWithDecimalIdentity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.VI.InsertWithDecimalIdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.VI.InsertWithIdentity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.VI.InsertWithIdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.VI.InsertWithInt32Identity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.VI.InsertWithInt32IdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.VI.InsertWithInt64Identity -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.VI.InsertWithInt64IdentityAsync -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.VI.Value -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.VI.ValueExpression -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromDataContext.Insert -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromDataContext.InsertAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromDataContext.Into -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromQuery.Insert -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromQuery.InsertAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromQuery.InsertWithDecimalIdentity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromQuery.InsertWithDecimalIdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromQuery.InsertWithIdentity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromQuery.InsertWithIdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromQuery.InsertWithInt32Identity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromQuery.InsertWithInt32IdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromQuery.InsertWithInt64Identity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromQuery.InsertWithInt64IdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromQuery.Into -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromSelectInsertable.Insert -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromSelectInsertable.InsertAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromSelectInsertable.InsertWithDecimalIdentity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromSelectInsertable.InsertWithDecimalIdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromSelectInsertable.InsertWithIdentity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromSelectInsertable.InsertWithIdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromSelectInsertable.InsertWithInt32Identity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromSelectInsertable.InsertWithInt32IdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromSelectInsertable.InsertWithInt64Identity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromSelectInsertable.InsertWithInt64IdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromSelectInsertable.Value -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromSelectInsertable.ValueExpression -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromSelectInsertable.ValueSourceExpression -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromTable.AsValueInsertable -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromTable.Insert -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromTable.InsertAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromTable.InsertWithDecimalIdentity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromTable.InsertWithDecimalIdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromTable.InsertWithIdentity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromTable.InsertWithIdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromTable.InsertWithInt32Identity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromTable.InsertWithInt32IdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromTable.InsertWithInt64Identity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromTable.InsertWithInt64IdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromTable.Value -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromTable.ValueExpression -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromValueInsertable.Insert -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromValueInsertable.InsertAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromValueInsertable.InsertWithDecimalIdentity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromValueInsertable.InsertWithDecimalIdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromValueInsertable.InsertWithIdentity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromValueInsertable.InsertWithIdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromValueInsertable.InsertWithInt32Identity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromValueInsertable.InsertWithInt32IdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromValueInsertable.InsertWithInt64Identity -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromValueInsertable.InsertWithInt64IdentityAsync -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromValueInsertable.Value -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Reflection.Methods.LinqToDB.Insert.FromValueInsertable.ValueExpression -> System.Reflection.MethodInfo!
 static readonly LinqToDB.Reflection.Methods.LinqToDB.JoinTypePredicateSelector -> System.Reflection.MethodInfo!
 static readonly LinqToDB.Reflection.Methods.LinqToDB.LoadWith -> System.Reflection.MethodInfo!
 static readonly LinqToDB.Reflection.Methods.LinqToDB.LoadWithAsTable -> System.Reflection.MethodInfo!
@@ -12459,6 +12493,7 @@ virtual LinqToDB.SqlProvider.BasicSqlOptimizer.CreateConvertVisitor(bool allowMo
 virtual LinqToDB.SqlProvider.BasicSqlOptimizer.CreateOptimizerVisitor(bool allowModify) -> LinqToDB.SqlProvider.SqlExpressionOptimizerVisitor!
 virtual LinqToDB.SqlProvider.BasicSqlOptimizer.Finalize(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.SqlQuery.SqlStatement! statement, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlQuery.SqlStatement!
 virtual LinqToDB.SqlProvider.BasicSqlOptimizer.FinalizeInsert(LinqToDB.SqlQuery.SqlStatement! statement) -> LinqToDB.SqlQuery.SqlStatement!
+virtual LinqToDB.SqlProvider.BasicSqlOptimizer.FinalizeInsertOrUpdate(LinqToDB.SqlQuery.SqlStatement! statement, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema) -> LinqToDB.SqlQuery.SqlStatement!
 virtual LinqToDB.SqlProvider.BasicSqlOptimizer.FinalizeSelect(LinqToDB.SqlQuery.SqlStatement! statement) -> LinqToDB.SqlQuery.SqlStatement!
 virtual LinqToDB.SqlProvider.BasicSqlOptimizer.FinalizeStatement(LinqToDB.SqlQuery.SqlStatement! statement, LinqToDB.SqlQuery.EvaluationContext! context, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema) -> LinqToDB.SqlQuery.SqlStatement!
 virtual LinqToDB.SqlProvider.BasicSqlOptimizer.FinalizeUpdate(LinqToDB.SqlQuery.SqlStatement! statement, LinqToDB.DataOptions! dataOptions, LinqToDB.Mapping.MappingSchema! mappingSchema) -> LinqToDB.SqlQuery.SqlStatement!

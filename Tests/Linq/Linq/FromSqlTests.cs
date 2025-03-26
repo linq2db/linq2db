@@ -6,18 +6,19 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Linq;
-	using Model;
-
 	[TestFixture]
 	public class FromSqlTests : TestBase
 	{
@@ -29,7 +30,6 @@ namespace Tests.Linq
 
 			[Column("value", Length = 50)]
 			public string? Value { get; set; }
-
 
 			public SomeOtherClass? AssociatedOne { get; set; }
 
@@ -249,7 +249,7 @@ namespace Tests.Linq
 				var query = db.FromSql<SampleClass>("SELECT * FROM\n{0}\nwhere {3} >= {1} and {3} < {2}",
 					GetName(table), new DataParameter("startId", startId, DataType.Int64), endId, GetColumn("id"));
 
-				var save = Query<SampleClass>.CacheMissCount;
+				var save = query.GetCacheMissCount();
 
 				var projection = query
 					.Where(c => c.Id > 10)
@@ -259,7 +259,7 @@ namespace Tests.Linq
 
 				if (iteration > 1)
 				{
-					Query<SampleClass>.CacheMissCount.Should().Be(save);
+					query.GetCacheMissCount().Should().Be(save);
 				}
 
 				var expected = table
@@ -431,7 +431,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void TestScalarSubquery(
 			[IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)]
@@ -464,7 +463,6 @@ namespace Tests.Linq
 
 		static Expression<Func<IDataContext, TValue[], IQueryable<UnnestEnvelope<TValue>>>> UnnestWithOrdinalityImpl<TValue>()
 			=> (db, member) => db.FromSql<UnnestEnvelope<TValue>>($"unnest({member}) with ordinality {Sql.AliasExpr()} (value, index)");
-
 
 		[Sql.Expression("{0}", ServerSideOnly = true, Precedence = Precedence.Primary)]
 		static T AsTyped<T>(string str)
@@ -783,7 +781,6 @@ namespace Tests.Linq
 				Test(null, 2);
 				Test(2, null);
 				Test(3, 3);
-
 
 				Query<Values<int?>>.CacheMissCount.Should().Be(saveCount);
 

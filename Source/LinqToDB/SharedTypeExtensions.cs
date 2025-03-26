@@ -11,16 +11,12 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace LinqToDB
-{
+using LinqToDB.Common.Internal;
 
 #pragma warning disable RS0030
 
-	using Async;
-	using Common;
-
-	using LinqToDB.Common.Internal;
-
+namespace LinqToDB
+{
 	[DebuggerStepThrough]
 	internal static class SharedTypeExtensions
 	{
@@ -56,15 +52,6 @@ namespace LinqToDB
 		public static bool IsValidEntityType(this Type type)
 			=> type is { IsClass: true, IsArray: false }
 				&& type != typeof(string);
-
-		public static bool IsValidComplexType(this Type type)
-			=> !type.IsArray
-				&& !type.IsInterface
-				&& !IsScalarType(type);
-
-		public static bool IsScalarType(this Type type)
-			=> type == typeof(string)
-				|| CommonTypeDictionary.ContainsKey(type);
 
 		public static bool IsPropertyBagType(/*[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] */ this Type type)
 		{

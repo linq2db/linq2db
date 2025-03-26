@@ -4,12 +4,12 @@ using System.Data;
 using System.Linq;
 using System.Runtime.Serialization;
 
+using LinqToDB.Common;
+using LinqToDB.DataProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using DataProvider;
-	using SqlQuery;
-
 	[DataContract]
 	public sealed class SqlProviderFlags
 	{
@@ -502,7 +502,6 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 58)]
 		public bool IsSupportedSimpleCorrelatedSubqueries { get; set; }
 
-
 		/// <summary>
 		/// Provider supports correlated subqueris, but limited how deep in subquery outer reference
 		/// Default <c>null</c>. If this value is <c>0</c>c>, provider do not support correlated subqueries
@@ -517,6 +516,16 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		[DataMember(Order = 60)]
 		public bool IsDistinctFromSupported { get; set; }
+
+		/// <summary>
+		/// Provider supports Aggregate function in ORDER BY.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
+		/// </summary>
+		/// <remarks>
+		/// Applied only to SqlCe provider.
+		/// </remarks>
+		[DataMember(Order = 61)]
+		public bool IsOrderByAggregateFunctionSupported { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
@@ -601,6 +610,7 @@ namespace LinqToDB.SqlProvider
 				^ SupportedCorrelatedSubqueriesLevel                   .GetHashCode()
 				^ IsDistinctFromSupported                              .GetHashCode()
 				^ DoesProviderTreatsEmptyStringAsNull                  .GetHashCode()
+				^ IsOrderByAggregateFunctionSupported                  .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -666,6 +676,7 @@ namespace LinqToDB.SqlProvider
 				&& SupportedCorrelatedSubqueriesLevel                    == other.SupportedCorrelatedSubqueriesLevel
 				&& IsDistinctFromSupported                               == other.IsDistinctFromSupported
 				&& DoesProviderTreatsEmptyStringAsNull                   == other.DoesProviderTreatsEmptyStringAsNull
+				&& IsOrderByAggregateFunctionSupported                   == other.IsOrderByAggregateFunctionSupported
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0

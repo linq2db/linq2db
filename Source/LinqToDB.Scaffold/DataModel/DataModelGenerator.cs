@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+
 using LinqToDB.CodeModel;
 using LinqToDB.Metadata;
 using LinqToDB.Scaffold;
@@ -133,6 +134,19 @@ namespace LinqToDB.DataModel
 			BuildAllFunctions(context);
 
 			context.MetadataBuilder?.Complete(context);
+
+			// partial static init method, called by static constructor, which could be used by user to add
+			// additional initialization logic
+			if (context.Options.GenerateStaticInitDataContextMethod)
+			{
+				var staticInitDataContext = context.MainDataContextPartialMethods
+					.New(context.AST.Name(DataModelConstants.CONTEXT_STATIC_INIT_METHOD))
+					.SetModifiers(Modifiers.Static | Modifiers.Partial);
+
+				context.StaticInitializer.Append(
+					context.AST.Call(context.ContextReference, staticInitDataContext.Method.Name)
+				);
+			}
 
 			// generate data context constructors (at the end to add context mapping schema support if needed)
 			BuildDataContextConstructors(context, initSchemasMethod?.Method.Name);

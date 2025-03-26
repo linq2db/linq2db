@@ -4,16 +4,16 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Data;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-
 	//TODO: review
 	sealed class EnumerableContext : BuildContextBase
 	{
@@ -24,8 +24,8 @@ namespace LinqToDB.Linq.Builder
 		public override MappingSchema  MappingSchema => Builder.MappingSchema;
 		public          SqlValuesTable Table         { get; }
 
-		public EnumerableContext(ExpressionBuilder builder, BuildInfo buildInfo, SelectQuery query, Type elementType)
-			: base(builder, elementType, query)
+		public EnumerableContext(TranslationModifier translationModifier, ExpressionBuilder builder, BuildInfo buildInfo, SelectQuery query, Type elementType)
+			: base(translationModifier, builder, elementType, query)
 		{
 			Parent            = buildInfo.Parent;
 			_entityDescriptor = MappingSchema.GetEntityDescriptor(elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
@@ -36,8 +36,8 @@ namespace LinqToDB.Linq.Builder
 			SelectQuery.From.Table(Table);
 		}
 
-		EnumerableContext(ExpressionBuilder builder, MappingSchema mappingSchema, Expression expression, SelectQuery query, SqlValuesTable table, Type elementType)
-			: base(builder, elementType, query)
+		EnumerableContext(TranslationModifier translationModifier, ExpressionBuilder builder, MappingSchema mappingSchema, Expression expression, SelectQuery query, SqlValuesTable table, Type elementType)
+			: base(translationModifier, builder, elementType, query)
 		{
 			Parent            = null;
 			_entityDescriptor = mappingSchema.GetEntityDescriptor(elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
@@ -279,7 +279,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			return new EnumerableContext(Builder, MappingSchema, Expression!, context.CloneElement(SelectQuery),
+			return new EnumerableContext(TranslationModifier, Builder, MappingSchema, Expression!, context.CloneElement(SelectQuery),
 				context.CloneElement(Table), ElementType);
 		}
 

@@ -6,11 +6,11 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Metadata
 {
-	using Common;
-	using Mapping;
-
 	/*
 	 * Side-notes after logic reveng:
 	 * 1. Provider works only with attributes with default constructors which we don't take into account when define new mapping attributes

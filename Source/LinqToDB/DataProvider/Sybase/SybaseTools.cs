@@ -1,11 +1,10 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Reflection;
+
+using LinqToDB.Data;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Data;
-
 	public static class SybaseTools
 	{
 		internal static SybaseProviderDetector ProviderDetector = new();
@@ -35,17 +34,20 @@ namespace LinqToDB.DataProvider.Sybase
 
 		public static DataConnection CreateDataConnection(string connectionString, SybaseProvider provider = SybaseProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString);
+			return new DataConnection(new DataOptions()
+				.UseConnectionString(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString));
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, SybaseProvider provider = SybaseProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection);
+			return new DataConnection(new DataOptions()
+				.UseConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection));
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction, SybaseProvider provider = SybaseProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction);
+			return new DataConnection(new DataOptions()
+				.UseTransaction(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction));
 		}
 
 		#endregion

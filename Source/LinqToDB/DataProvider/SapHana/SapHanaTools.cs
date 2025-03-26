@@ -3,10 +3,10 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Data;
-
 	[PublicAPI]
 	public static class SapHanaTools
 	{
@@ -37,17 +37,20 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public static DataConnection CreateDataConnection(string connectionString, SapHanaProvider provider = SapHanaProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString);
+			return new DataConnection(new DataOptions()
+				.UseConnectionString(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString));
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, SapHanaProvider provider = SapHanaProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection);
+			return new DataConnection(new DataOptions()
+				.UseConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection));
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction, SapHanaProvider provider = SapHanaProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction);
+			return new DataConnection(new DataOptions()
+				.UseTransaction(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction));
 		}
 
 		#endregion

@@ -1,14 +1,11 @@
-﻿using System;
-using System.Data.Common;
-using System.Linq;
+﻿using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
-using LinqToDB.Interceptors;
-using LinqToDB.Linq;
-using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -22,7 +19,6 @@ namespace Tests.UserTests
 			[Column("id2")] public int ID2 { get; set; } // integer
 			[Column("id3")] public int ID3 { get; set; } // integer
 		}
-
 
 		[Table]
 		public class T2

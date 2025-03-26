@@ -2,11 +2,11 @@
 using System.Globalization;
 using System.Text;
 
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider
 {
-	using SqlProvider;
-	using SqlQuery;
-
 	sealed class TableSpecHintExtensionBuilder : ISqlTableExtensionBuilder
 	{
 		void ISqlTableExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias)

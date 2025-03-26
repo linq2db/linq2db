@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	class SapHanaSchemaProvider : SchemaProviderBase
 	{
 		protected string                DefaultSchema                { get; private set; } = null!;
@@ -236,11 +235,15 @@ namespace LinqToDB.DataProvider.SapHana
 				var isNullable   = x.GetBoolean(3);
 				var position     = x.GetInt32(4);
 				var dataTypeName = x.GetString(5);
-				var length       = x.GetInt32(6);
-				var scale        = x.IsDBNull(7) ? 0 : x.GetInt32(7);
+				var length       = (int?)x.GetInt32(6);
+				var scale        = x.IsDBNull(7) ? null : (int?)x.GetInt32(7);
 				var comments     = x.IsDBNull(8) ? null : x.GetString(8);
 				var isIdentity   = x.GetBoolean(9);
 				var tableId      = schemaName + '.' + tableName;
+
+				// decfloat detect
+				if (dataTypeName == "DECIMAL" && scale == null)
+					length = null;
 
 				return new ColumnInfo
 				{
@@ -339,9 +342,13 @@ namespace LinqToDB.DataProvider.SapHana
 				var position   = rd.GetInt32(4);
 				var paramType  = rd.GetString(5);
 				var isResult   = rd.GetBoolean(6);
-				var length     = rd.GetInt32(7);
-				var scale      = rd.GetInt32(8);
+				var length     = (int?)rd.GetInt32(7);
+				var scale      = (int?)rd.GetInt32(8);
 				var isNullable = rd.GetString(9) == "TRUE";
+
+				// detect decfloat
+				if (dataType == "DECIMAL" && length == 65535)
+					scale = length = null;
 
 				return new ProcedureParameterInfo
 				{
@@ -452,8 +459,8 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 				case "BIGINT"       : return DataType.Int64;
 				case "SMALLINT"     : return DataType.Int16;
-				case "DECIMAL"      :
-				case "SMALLDECIMAL" : return DataType.Decimal;
+				case "DECIMAL"      : return scale == null ? DataType.DecFloat : DataType.Decimal;
+				case "SMALLDECIMAL" : return DataType.SmallDecFloat;
 				case "INTEGER"      : return DataType.Int32;
 				case "TINYINT"      : return DataType.Byte;
 				case "DOUBLE"       : return DataType.Double;
@@ -479,6 +486,7 @@ namespace LinqToDB.DataProvider.SapHana
 				case "CLOB"         : return DataType.Text;
 				case "NCLOB"        :
 				case "BINTEXT"      : return DataType.NText;
+				case "REAL_VECTOR"  : return DataType.Array | DataType.Single;
 
 				case "ST_GEOMETRY"          :
 				case "ST_GEOMETRYCOLLECTION":

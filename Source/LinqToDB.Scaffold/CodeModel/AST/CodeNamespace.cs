@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using LinqToDB.Common;
 
 namespace LinqToDB.CodeModel
 {
@@ -13,7 +12,7 @@ namespace LinqToDB.CodeModel
 		internal CodeNamespace(IReadOnlyList<CodeIdentifier> name, IEnumerable<IMemberGroup>? members)
 		{
 			Name     = name;
-			_members = new (members ?? []);
+			_members = [.. members ?? []];
 		}
 
 		public CodeNamespace(IReadOnlyList<CodeIdentifier> name)

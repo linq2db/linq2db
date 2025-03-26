@@ -5,16 +5,20 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.DataProvider;
+
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using DataProvider;
-	using Model;
-
 	public class CachingTests: TestBase
 	{
 		sealed class AggregateFuncBuilder : Sql.IExtensionCallBuilder
@@ -244,9 +248,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(4266)]
-		[Test]
-		public void TestExtensionCollectionParameterSameQuery([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266")]
+		public void TestExtensionCollectionParameterSameQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -261,14 +265,19 @@ namespace Tests.Linq
 							orderby p.ID
 							select p.ID;
 
+				var currentMiss = query.GetCacheMissCount();
+
 				var result =  query.ToList();
 				AreEqual(persons, result);
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1));
 
 				persons.AddRange(new int[] { 3, 4 });
 
 				result = query.ToList();
 
 				AreEqual(persons, result);
+				// cache miss
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 2));
 			}
 			finally
 			{
@@ -276,9 +285,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(4266)]
-		[Test]
-		public void TestExtensionCollectionParameterEqualQuery([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266")]
+		public void TestExtensionCollectionParameterEqualQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -293,8 +302,12 @@ namespace Tests.Linq
 							orderby p.ID
 							select p.ID;
 
+				var currentMiss = query.GetCacheMissCount();
+
 				var result =  query.ToList();
+
 				AreEqual(persons, result);
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1));
 
 				persons.AddRange(new int[] { 3, 4 });
 
@@ -306,6 +319,8 @@ namespace Tests.Linq
 				result = query.ToList();
 
 				AreEqual(persons, result);
+				// cache miss
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 2));
 			}
 			finally
 			{
@@ -345,10 +360,140 @@ namespace Tests.Linq
 
 				dataTable.AcceptChanges();
 
-				var param = new LinqToDB.SqlQuery.SqlParameter(new LinqToDB.Common.DbDataType(dataTable.GetType() ?? typeof(object), "IntTableType"), parameterName, dataTable);
+				var param = new SqlParameter(new LinqToDB.Common.DbDataType(dataTable.GetType() ?? typeof(object), "IntTableType"), parameterName, dataTable);
 
 				builder.AddParameter("values", param);
 			}
+		}
+
+		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, ServerSideOnly = true)]
+		private static bool InExtClass<T>([ExprParameter] T field, [ExprParameter] IntArrayClass values) where T : struct, IEquatable<int> => throw new NotImplementedException();
+
+		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, ServerSideOnly = true)]
+		private static bool InExtStruct<T>([ExprParameter] T field, [ExprParameter] IntArrayStruct values) where T : struct, IEquatable<int> => throw new NotImplementedException();
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266")]
+		public void Issue4266Test_Class([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConverter<IntArrayClass, DataParameter>(v => v.CreateParameter());
+			ms.AddScalarType(typeof(IntArrayClass), new SqlDataType(IntArrayClass.Type));
+
+			using var db = GetDataConnection(context, ms);
+
+			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
+			db.Execute("CREATE TYPE IntTableType AS TABLE(Id INT)");
+
+			try
+			{
+				var persons = new List<int>() { 1, 2 };
+				var query = from p in db.GetTable<Person>()
+							where InExtClass(p.ID, persons) && InExtClass(p.ID, new IntArrayClass(persons))
+							orderby p.ID
+							select p.ID;
+
+				var currentMiss = query.GetCacheMissCount();
+
+				var result =  query.ToList();
+				AreEqual(persons, result);
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1));
+
+				persons.AddRange(new int[] { 3, 4 });
+
+				result = query.ToList();
+
+				AreEqual(persons, result);
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1));
+			}
+			finally
+			{
+				db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266")]
+		public void Issue4266Test_Struct([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConverter<IntArrayStruct, DataParameter>(v => v.CreateParameter());
+			ms.SetDataType(typeof(IntArrayStruct), new SqlDataType(IntArrayStruct.Type));
+
+			using var db = GetDataConnection(context, ms);
+
+			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
+			db.Execute("CREATE TYPE IntTableType AS TABLE(Id INT)");
+
+			try
+			{
+				var persons = new List<int>() { 1, 2 };
+				var query = from p in db.GetTable<Person>()
+							where InExtStruct(p.ID, persons) && InExtStruct(p.ID, new IntArrayStruct(persons))
+							orderby p.ID
+							select p.ID;
+
+				var currentMiss = query.GetCacheMissCount();
+
+				var result =  query.ToList();
+				AreEqual(persons, result);
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1));
+
+				persons.AddRange(new int[] { 3, 4 });
+
+				result = query.ToList();
+
+				AreEqual(persons, result);
+				Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1));
+			}
+			finally
+			{
+				db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
+			}
+		}
+
+		sealed class IntArrayClass(IEnumerable<int> values)
+		{
+			public static readonly DbDataType Type = new DbDataType(typeof(DataTable), "IntTableType");
+
+			public DataParameter CreateParameter()
+			{
+				using var dataTable = new DataTable("IntTableType");
+				dataTable.Columns.Add("Id", typeof(int));
+
+				foreach (var x in values.Distinct())
+				{
+					var newRow = dataTable.Rows.Add();
+					newRow[0] = x;
+				}
+
+				dataTable.AcceptChanges();
+
+				return new DataParameter(null, dataTable);
+			}
+
+			public static implicit operator IntArrayClass(List<int> values) => new(values);
+		}
+
+		struct IntArrayStruct(IEnumerable<int> values)
+		{
+			public static readonly DbDataType Type = new DbDataType(typeof(DataTable), "IntTableType");
+
+			public DataParameter CreateParameter()
+			{
+				using var dataTable = new DataTable("IntTableType");
+				dataTable.Columns.Add("Id", typeof(int));
+
+				foreach (var x in values.Distinct())
+				{
+					var newRow = dataTable.Rows.Add();
+					newRow[0] = x;
+				}
+
+				dataTable.AcceptChanges();
+
+				return new DataParameter(null, dataTable);
+			}
+
+			public static implicit operator IntArrayStruct(List<int> values) => new(values);
 		}
 	}
 }

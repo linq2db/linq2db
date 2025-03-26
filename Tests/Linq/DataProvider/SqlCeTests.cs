@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -13,15 +12,14 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlCe;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class SqlCeTests : DataProviderTestBase
 	{
@@ -464,7 +462,7 @@ namespace Tests.DataProvider
 			SqlCeTools.CreateDatabase ("TestDatabase");
 			Assert.That(File.Exists ("TestDatabase.sdf"), Is.True);
 
-			using (var db = new DataConnection(SqlCeTools.GetDataProvider(), "Data Source=TestDatabase.sdf"))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(SqlCeTools.GetDataProvider(), "Data Source=TestDatabase.sdf")))
 			{
 				db.CreateTable<CreateTableTest>();
 				db.DropTable  <CreateTableTest>();
@@ -587,27 +585,15 @@ namespace Tests.DataProvider
 		[Test]
 		public void ParametersInlining([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] bool inline)
 		{
-			Query.ClearCaches();
-			var defaultValue = SqlCeOptions.Default.InlineFunctionParameters;
-			try
-			{
-				SqlCeOptions.Default = SqlCeOptions.Default with { InlineFunctionParameters = inline };
+			using var db = GetDataConnection(context, o => o.UseDisableQueryCache(true).UseSqlCe(o => o with { InlineFunctionParameters = inline }));
 
-				using (var db = GetDataConnection(context))
-				{
-					var minValue = SqlDateTime.MinValue.Value;
+			var minValue = SqlDateTime.MinValue.Value;
 
-					var values = db.GetTable<TestInline>()
-						.Where(_ => (_.DateTimeValue ?? minValue) <= TestData.DateTime)
-						.ToList();
+			var values = db.GetTable<TestInline>()
+				.Where(_ => (_.DateTimeValue ?? minValue) <= TestData.DateTime)
+				.ToList();
 
-					Assert.That(db.LastQuery!.Contains(", @"), Is.Not.EqualTo(inline));
-				}
-			}
-			finally
-			{
-				SqlCeOptions.Default = SqlCeOptions.Default with { InlineFunctionParameters = defaultValue };
-			}
+			Assert.That(db.LastQuery!.Contains(", @"), Is.Not.EqualTo(inline));
 		}
 
 		[Table(Name = "AllTypes")]

@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace LinqToDB.Linq.Builder
-{
-	using Common;
+using LinqToDB.Common;
 
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
 
-	using SqlQuery;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.Linq.Builder
+{
 	internal class CteContext : BuildContextBase
 	{
 		public Expression CteExpression { get; set;  }
@@ -23,16 +23,16 @@ namespace LinqToDB.Linq.Builder
 		public SubQueryContext? SubQueryContext      { get; private set; }
 		public CteClause        CteClause            { get; private set; }
 
-		public CteContext(ExpressionBuilder builder, IBuildContext? cteInnerQueryContext, CteClause cteClause, Expression cteExpression)
-			: this(builder, cteClause.ObjectType, cteInnerQueryContext?.SelectQuery ?? new SelectQuery())
+		public CteContext(TranslationModifier translationModifier, ExpressionBuilder builder, IBuildContext? cteInnerQueryContext, CteClause cteClause, Expression cteExpression)
+			: this(translationModifier, builder, cteClause.ObjectType, cteInnerQueryContext?.SelectQuery ?? new SelectQuery())
 		{
 			CteInnerQueryContext = cteInnerQueryContext;
 			CteClause            = cteClause;
 			CteExpression        = cteExpression;
 		}
 
-		CteContext(ExpressionBuilder builder, Type objectType, SelectQuery selectQuery)
-			: base(builder, objectType, selectQuery)
+		CteContext(TranslationModifier translationModifier, ExpressionBuilder builder, Type objectType, SelectQuery selectQuery)
+			: base(translationModifier, builder, objectType, selectQuery)
 		{
 			CteClause     = default!;
 			CteExpression = default!;
@@ -167,7 +167,6 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-
 			SqlField? recursiveField = null;
 
 			if (field == null)
@@ -177,7 +176,6 @@ namespace LinqToDB.Linq.Builder
 					recursiveField = (SqlField)recursivePlaceholder.Sql;
 				}
 			}
-
 
 			if (field == null)
 			{
@@ -225,7 +223,7 @@ namespace LinqToDB.Linq.Builder
 
 		class CteProxy : BuildProxyBase<CteContext>
 		{
-			public CteProxy(CteContext ownerContext, Expression currentPath, Expression innerExpression) 
+			public CteProxy(CteContext ownerContext, Expression? currentPath, Expression innerExpression) 
 				: base(ownerContext, ownerContext.CteInnerQueryContext!, currentPath, innerExpression)
 			{
 				if (ownerContext.CteInnerQueryContext == null)
@@ -254,7 +252,7 @@ namespace LinqToDB.Linq.Builder
 				return field;
 			}
 
-			public override BuildProxyBase<CteContext> CreateProxy(CteContext ownerContext, IBuildContext buildContext, Expression currentPath, Expression innerExpression)
+			public override BuildProxyBase<CteContext> CreateProxy(CteContext ownerContext, IBuildContext buildContext, Expression? currentPath, Expression innerExpression)
 			{
 				return new CteProxy(ownerContext, currentPath, innerExpression);
 			}
@@ -262,7 +260,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			var newContext = new CteContext(Builder, ElementType, SelectQuery);
+			var newContext = new CteContext(TranslationModifier, Builder, ElementType, SelectQuery);
 
 			context.RegisterCloned(this, newContext);
 

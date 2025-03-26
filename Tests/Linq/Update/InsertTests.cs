@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
+
+using Tests.Model;
 
 #region ReSharper disable
 // ReSharper disable ConvertToConstant.Local
@@ -18,8 +18,6 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using Model;
-
 	[TestFixture]
 	[Order(10000)]
 	public class InsertTests : TestBase
@@ -1000,54 +998,36 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithGuidIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			try
-			{
-				SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = false };
+			using var db = GetDataConnection(context, o => o.UseSqlServer(o => o with { GenerateScopeIdentity = false }));
 
-				using (var db = GetDataConnection(context))
-				{
-					var id = (Guid) db.InsertWithIdentity(new GuidID {Field1 = 1});
-					Assert.That(id, Is.Not.EqualTo(Guid.Empty));
-				}
-			}
-			finally
-			{
-				SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = true };
-			}
+			var id = (Guid) db.InsertWithIdentity(new GuidID {Field1 = 1});
+			Assert.That(id, Is.Not.EqualTo(Guid.Empty));
 		}
 
 		[Test]
 		public void InsertWithIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataConnection(context, o => o.UseSqlServer(o => o with { GenerateScopeIdentity = false }));
 			using (new DeletePerson(db))
 			{
-				try
-				{
-					SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = false };
 
-					for (var i = 0; i < 2; i++)
+				for (var i = 0; i < 2; i++)
+				{
+					var person = new Person
 					{
-						var person = new Person
-						{
-							FirstName = "John" + i,
-							LastName  = "Shepard",
-							Gender    = Gender.Male
-						};
+						FirstName = "John" + i,
+						LastName  = "Shepard",
+						Gender    = Gender.Male
+					};
 
-						var id = db.InsertWithIdentity(person);
+					var id = db.InsertWithIdentity(person);
 
-						Assert.That(id, Is.Not.Null);
+					Assert.That(id, Is.Not.Null);
 
-						var john = db.Person.Single(p => p.FirstName == "John" + i && p.LastName == "Shepard");
+					var john = db.Person.Single(p => p.FirstName == "John" + i && p.LastName == "Shepard");
 
-						Assert.That(john, Is.Not.Null);
-						Assert.That(john.ID, Is.EqualTo(id));
-					}
-				}
-				finally
-				{
-					SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = true };
+					Assert.That(john, Is.Not.Null);
+					Assert.That(john.ID, Is.EqualTo(id));
 				}
 			}
 		}
@@ -1849,6 +1829,7 @@ namespace Tests.xUpdate
 						var integritycount = await table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).CountAsync();
 						Assert.That(integritycount, Is.EqualTo(3));
 					}
+
 					await table.DropAsync();
 				}
 				finally
@@ -1888,7 +1869,6 @@ namespace Tests.xUpdate
 						PersonID = 2,
 						Diagnosis = "ABC2",
 					};
-
 
 					db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
 					db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
@@ -1936,7 +1916,6 @@ namespace Tests.xUpdate
 						PersonID = 2,
 						Diagnosis = "ABC2",
 					};
-
 
 					await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
 					await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);

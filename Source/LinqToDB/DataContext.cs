@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
@@ -8,17 +9,17 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.Infrastructure;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.Tools;
+
 namespace LinqToDB
 {
-	using Common.Internal;
-	using Data;
-	using DataProvider;
-	using Infrastructure;
-	using Linq;
-	using Mapping;
-	using SqlProvider;
-	using Tools;
-
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
@@ -26,6 +27,8 @@ namespace LinqToDB
 	public partial class DataContext : IDataContext, IInfrastructure<IServiceProvider>
 	{
 		bool _disposed;
+
+		#region .ctors
 
 		/// <summary>
 		/// Creates data context using default database configuration.
@@ -54,6 +57,8 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation.</param>
 		/// <param name="connectionString">Database connection string.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataContext(new DataOptions().UseConnectionString(dataProvider, connectionString))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataContext(IDataProvider dataProvider, string connectionString)
 			: this(new DataOptions()
 				.UseConnectionString(
@@ -67,6 +72,8 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataContext(new DataOptions().UseConnectionString(providerName, connectionString))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataContext( string providerName, string connectionString)
 			: this(new DataOptions()
 				.UseConnectionString(
@@ -86,6 +93,8 @@ namespace LinqToDB
 			DataProvider  = default!;
 			Options.Apply(this);
 		}
+
+		#endregion
 
 		/// <summary>
 		/// Current DataContext options
@@ -125,7 +134,7 @@ namespace LinqToDB
 					_configurationID = idBuilder
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
 						// GetDataConnection :-/
-						.Add(ConfigurationString ?? ConnectionString ?? GetDataConnection().Connection.ConnectionString)
+						.Add(ConfigurationString ?? ConnectionString ?? GetDataConnection().EnsureConnection(connect: false).ConnectionString)
 						.Add(Options)
 						.Add(GetType())
 						.CreateID();

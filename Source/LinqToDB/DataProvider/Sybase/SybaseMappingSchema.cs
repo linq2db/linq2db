@@ -3,12 +3,12 @@ using System.Data.Linq;
 using System.Globalization;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
-
 	sealed class SybaseMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
@@ -25,7 +25,9 @@ namespace LinqToDB.DataProvider.Sybase
 			SetValueToSqlConverter(typeof(byte[])  , (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary)  , (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
-			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+			SetDataType(typeof(string),  new SqlDataType(DataType.NVarChar, typeof(string), 255));
+			// in ASE DECIMAL=DECIMAL(18,0)
+			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal,  typeof(decimal), 18, 10));
 
 			SetDefaultValue(typeof(DateTime), new DateTime(1753, 1, 1));
 		}

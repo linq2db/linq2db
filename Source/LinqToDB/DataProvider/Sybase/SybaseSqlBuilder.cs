@@ -4,13 +4,13 @@ using System.Data.Common;
 using System.Globalization;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	sealed partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
 		public SybaseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
@@ -65,6 +65,8 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				case DataType.Guid      : StringBuilder.Append("VARCHAR(36)"); return;
 				case DataType.DateTime2 : StringBuilder.Append("DateTime");    return;
+				case DataType.Money     : StringBuilder.Append("MONEY");       return;
+				case DataType.SmallMoney: StringBuilder.Append("SMALLMONEY");  return;
 				case DataType.NVarChar  :
 					// yep, 5461...
 					if (type.Length == null || type.Length > 5461 || type.Length < 1)
@@ -72,6 +74,7 @@ namespace LinqToDB.DataProvider.Sybase
 						StringBuilder.Append("NVarChar(5461)");
 						return;
 					}
+
 					break;
 				case DataType.Decimal:
 					// default is ASE is 18,0

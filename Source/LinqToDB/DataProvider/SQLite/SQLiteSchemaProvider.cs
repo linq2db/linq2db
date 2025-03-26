@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Data;
+
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	sealed class SQLiteSchemaProvider : SchemaProviderBase
 	{
 		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
@@ -105,17 +105,15 @@ namespace LinqToDB.DataProvider.SQLite
 				let length   = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"])
 				select new ColumnInfo
 				{
-					TableID      = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + c.Field<string>("TABLE_NAME"),
-					Name         = c.Field<string>("COLUMN_NAME")!,
-					IsNullable   = c.Field<bool>  ("IS_NULLABLE"),
-					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
-					DataType     = dataType,
-					Length       = length > int.MaxValue ? null : (int?)length,
-					Precision    = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
-					IsIdentity   = c.Field<bool>  ("AUTOINCREMENT"),
-					SkipOnInsert = dataType == "timestamp",
-					SkipOnUpdate = dataType == "timestamp",
+					TableID    = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + c.Field<string>("TABLE_NAME"),
+					Name       = c.Field<string>("COLUMN_NAME")!,
+					IsNullable = c.Field<bool>  ("IS_NULLABLE"),
+					Ordinal    = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
+					DataType   = dataType,
+					Length     = length > int.MaxValue ? null : (int?)length,
+					Precision  = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
+					Scale      = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
+					IsIdentity = c.Field<bool>  ("AUTOINCREMENT"),
 				}
 			).ToList();
 		}
@@ -151,6 +149,7 @@ namespace LinqToDB.DataProvider.SQLite
 						f.OtherColumn = column;
 				}
 			}
+
 			return result;
 		}
 

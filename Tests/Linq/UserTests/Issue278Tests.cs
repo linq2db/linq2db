@@ -6,16 +6,16 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.UserTests
 {
-	using LinqToDB.Common;
-	using Model;
-
 	[TestFixture]
 	public class Issue278Tests : TestBase
 	{
@@ -168,7 +168,7 @@ namespace Tests.UserTests
 						for (var i = 0; i < TOTAL_QUERIES_PER_RUN / threadCount; i++)
 						{
 							if (mode == CacheMode.ClearCache)
-								Query<LinqDataTypes2>.ClearCache();
+								db.GetTable<LinqDataTypes2>().ClearCache();
 
 							if (mode == CacheMode.NoCacheScope && (rnd.Next() % 2 == 0))
 								using (NoLinqCache.Scope())

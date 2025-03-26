@@ -1,19 +1,18 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Mapping
 {
-	using Model;
-
 	[TestFixture]
 	public class FluentMappingTests : TestBase
 	{
@@ -700,10 +699,8 @@ namespace Tests.Mapping
 		[Test]
 		public void ExpressionAlias([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool finalAliases)
 		{
-			using (var db = GetDataContext(context, o => o.UseGenerateFinalAliases(finalAliases)))
+			using (var db = GetDataContext(context, o => o.UseGenerateFinalAliases(finalAliases).UseDisableQueryCache(true)))
 			{
-				Query.ClearCaches();
-
 				var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
 				var sql1 = query.ToSqlQuery().Sql;
 				BaselinesManager.LogQuery(sql1);
@@ -733,10 +730,8 @@ namespace Tests.Mapping
 				.Property(p => p.Money).IsExpression(p => Sql.AsSql(p.Age * Sql.AsSql(1000) + p.Name.Length * 10), true, "MONEY")
 				.Build();
 
-			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms).UseGenerateFinalAliases(finalAliases)))
+			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms).UseGenerateFinalAliases(finalAliases).UseDisableQueryCache(true)))
 			{
-				Query.ClearCaches();
-
 				var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
 				var sql1 = query.ToSqlQuery().Sql;
 				BaselinesManager.LogQuery(sql1);
