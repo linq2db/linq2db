@@ -21,7 +21,7 @@ namespace Cli.All.SapHana
 	{
 		[Column("InheritanceParentId", DataType = DataType.Int32   , DbType = "INTEGER"     , Length = 10, Precision = 10, Scale = 0, IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // INTEGER
 		[Column("TypeDiscriminator"  , DataType = DataType.Int32   , DbType = "INTEGER"     , Length = 10, Precision = 10, Scale = 0                     )] public int?    TypeDiscriminator   { get; set; } // INTEGER
-		[Column("Name"               , DataType = DataType.NVarChar, DbType = "NVARCHAR(50)", Length = 50, Precision = 50, Scale = 0                     )] public string? Name                { get; set; } // NVARCHAR(50)
+		[Column("Name"               , DataType = DataType.NVarChar, DbType = "NVARCHAR(50)", Length = 50, Precision = 50                                )] public string? Name                { get; set; } // NVARCHAR(50)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<InheritanceParent> _equalityComparer = ComparerBuilder.GetEqualityComparer<InheritanceParent>(c => c.InheritanceParentId);

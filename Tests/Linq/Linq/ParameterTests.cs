@@ -1443,7 +1443,7 @@ namespace Tests.Linq
 			List<Person> Query(ITestDataContext db)
 			{
 				return db.Person
-					.Where(_ => 
+					.Where(_ =>
 					 GetQuery1(db).Select(p => p.ID).Contains(_.ID) &&
 					(GetQuery2(db).Select(p => p.ID).Contains(_.ID) ||
 					 GetQuery3(db).Select(p => p.ID).Contains(_.ID)))
@@ -1983,5 +1983,14 @@ namespace Tests.Linq
 			public TValue? Value { get; }
 		}
 
+		[Test]
+		public void LambdaParameterTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var valueGetter = () => 1;
+
+			AssertQuery(db.Parent.Where(r => r.ParentID == valueGetter()));
+		}
 	}
 }

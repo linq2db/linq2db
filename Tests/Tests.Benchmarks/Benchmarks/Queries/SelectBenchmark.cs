@@ -41,7 +41,7 @@ namespace LinqToDB.Benchmarks.Queries
 			};
 
 			_cn = new MockDbConnection(result, ConnectionState.Open);
-			_db = new DataConnection(PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v95), _cn);
+			_db = new DataConnection(new DataOptions().UseConnection(PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v95), _cn));
 
 			_compiled = CompiledQuery.Compile<DataConnection, long, IQueryable<User>>(
 				(db, userId) => from c in db.GetTable<User>()

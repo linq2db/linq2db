@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "Sap.Data.Hana.Net.v6.0/2.23.27.0": {
+        "runtime": {
+          "Sap.Data.Hana.Net.v6.0.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Sap.Data.Hana.Net.v6.0/2.23.27.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
