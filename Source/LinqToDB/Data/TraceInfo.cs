@@ -128,7 +128,7 @@ namespace LinqToDB.Data
 
 					sb.AppendLine(Command.CommandText);
 
-					while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
+					while (sb[^1] is '\n' or '\r')
 						sb.Length--;
 
 					sb.AppendLine();
