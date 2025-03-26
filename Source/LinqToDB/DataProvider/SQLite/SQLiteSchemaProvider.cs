@@ -105,17 +105,15 @@ namespace LinqToDB.DataProvider.SQLite
 				let length   = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"])
 				select new ColumnInfo
 				{
-					TableID      = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + c.Field<string>("TABLE_NAME"),
-					Name         = c.Field<string>("COLUMN_NAME")!,
-					IsNullable   = c.Field<bool>  ("IS_NULLABLE"),
-					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
-					DataType     = dataType,
-					Length       = length > int.MaxValue ? null : (int?)length,
-					Precision    = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
-					Scale        = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
-					IsIdentity   = c.Field<bool>  ("AUTOINCREMENT"),
-					SkipOnInsert = dataType == "timestamp",
-					SkipOnUpdate = dataType == "timestamp",
+					TableID    = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + c.Field<string>("TABLE_NAME"),
+					Name       = c.Field<string>("COLUMN_NAME")!,
+					IsNullable = c.Field<bool>  ("IS_NULLABLE"),
+					Ordinal    = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
+					DataType   = dataType,
+					Length     = length > int.MaxValue ? null : (int?)length,
+					Precision  = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
+					Scale      = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
+					IsIdentity = c.Field<bool>  ("AUTOINCREMENT"),
 				}
 			).ToList();
 		}

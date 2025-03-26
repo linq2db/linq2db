@@ -62,6 +62,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DbSet<Issue4668Table> Issue4668 { get; set; } = null!;
 		public DbSet<IssueEnumTable> IssueEnum { get; set; } = null!;
 
+		public DbSet<Issue4783Record> Issue4783Records { get; set; } = null!;
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -323,6 +325,15 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			modelBuilder.Entity<Issue4671Entity1>();
 
 			modelBuilder.Entity<IssueEnumTable>();
+
+			modelBuilder.Entity<Issue4783Record>(builder =>
+			{
+				builder.Property(e => e.StatusString).HasConversion<string>();
+				builder.Property(e => e.StatusConverter).HasConversion(new EnumToStringConverter<Issue4783Status>());
+
+				builder.Property(e => e.NullableStatusString).HasConversion<string>();
+				builder.Property(e => e.NullableStatusConverter).HasConversion(new EnumToStringConverter<Issue4783Status>());
+			});
 		}
 	}
 }
