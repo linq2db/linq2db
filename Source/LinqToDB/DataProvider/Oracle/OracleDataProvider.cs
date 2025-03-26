@@ -210,9 +210,9 @@ namespace LinqToDB.DataProvider.Oracle
 					break;
 
 				case DataType.Boolean  :
-					dataType = dataType.WithDataType(DataType.Byte);
-					if (value is bool boolValue)
-						value = boolValue ? (byte)1 : (byte)0;
+					//dataType = dataType.WithDataType(DataType.Byte);
+					//if (value is bool boolValue)
+					//	value = boolValue ? (byte)1 : (byte)0;
 					break;
 
 				case DataType.Guid     :
@@ -308,6 +308,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.LongRaw  : type = OracleProviderAdapter.OracleDbType.LongRaw     ; break;
 				case DataType.Json     : type = OracleProviderAdapter.OracleDbType.Json        ; break;
 				case DataType.Guid     : type = OracleProviderAdapter.OracleDbType.Raw         ; break;
+				case DataType.Boolean  : type = OracleProviderAdapter.OracleDbType.Boolean     ; break;
 			}
 
 			if (type != null)
