@@ -39,8 +39,7 @@ namespace Tests.UserTests
 
 		void CheckPredicate(Expression<Func<Firm, bool>> predicate, string context)
 		{
-			using (var db = new DataConnection(context,
-				context == ProviderName.SQLiteMS ? "Data Source=:memory:;" : "Data Source=:memory:;Version=3;New=True;"))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(context, context == ProviderName.SQLiteMS ? "Data Source=:memory:;" : "Data Source=:memory:;Version=3;New=True;")))
 			{
 				db.CreateTable<TypeA>();
 				db.CreateTable<TypeB>();

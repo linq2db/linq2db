@@ -21,8 +21,8 @@ namespace Cli.All.SapHana
 		[Column("MONEYVALUE"   , DataType = DataType.Decimal  , DbType = "DECIMAL(10, 4)" , Length = 10  , Precision = 10  , Scale = 4)] public decimal?  Moneyvalue    { get; set; } // DECIMAL(10, 4)
 		[Column("DATETIMEVALUE", DataType = DataType.Timestamp, DbType = "TIMESTAMP"      , Length = 27  , Precision = 27  , Scale = 7)] public DateTime? Datetimevalue { get; set; } // TIMESTAMP
 		[Column("BOOLVALUE"    , DataType = DataType.Byte     , DbType = "TINYINT"        , Length = 3   , Precision = 3   , Scale = 0)] public byte?     Boolvalue     { get; set; } // TINYINT
-		[Column("GUIDVALUE"    , DataType = DataType.VarChar  , DbType = "VARCHAR(36)"    , Length = 36  , Precision = 36  , Scale = 0)] public string?   Guidvalue     { get; set; } // VARCHAR(36)
-		[Column("BINARYVALUE"  , DataType = DataType.VarBinary, DbType = "VARBINARY(5000)", Length = 5000, Precision = 5000, Scale = 0)] public byte[]?   Binaryvalue   { get; set; } // VARBINARY(5000)
+		[Column("GUIDVALUE"    , DataType = DataType.VarChar  , DbType = "VARCHAR(36)"    , Length = 36  , Precision = 36             )] public string?   Guidvalue     { get; set; } // VARCHAR(36)
+		[Column("BINARYVALUE"  , DataType = DataType.VarBinary, DbType = "VARBINARY(5000)", Length = 5000, Precision = 5000           )] public byte[]?   Binaryvalue   { get; set; } // VARBINARY(5000)
 		[Column("SMALLINTVALUE", DataType = DataType.Int16    , DbType = "SMALLINT"       , Length = 5   , Precision = 5   , Scale = 0)] public short?    Smallintvalue { get; set; } // SMALLINT
 		[Column("INTVALUE"     , DataType = DataType.Int32    , DbType = "INTEGER"        , Length = 10  , Precision = 10  , Scale = 0)] public int?      Intvalue      { get; set; } // INTEGER
 		[Column("BIGINTVALUE"  , DataType = DataType.Int64    , DbType = "BIGINT"         , Length = 19  , Precision = 19  , Scale = 0)] public long?     Bigintvalue   { get; set; } // BIGINT

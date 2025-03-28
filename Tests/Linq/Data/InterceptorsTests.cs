@@ -92,7 +92,7 @@ namespace Tests.Data
 			var interceptor2 = new TestCommandInterceptor();
 
 			var builder = new DataOptions()
-				.UseConfigurationString(context)
+				.UseConfiguration(context)
 				.UseInterceptor(interceptor1)
 				.UseInterceptor(interceptor2);
 
@@ -153,7 +153,7 @@ namespace Tests.Data
 			var interceptor2 = new TestCommandInterceptor();
 
 			var builder = new DataOptions()
-				.UseConfigurationString(context)
+				.UseConfiguration(context)
 				.UseInterceptor(interceptor1)
 				.UseInterceptor(interceptor2);
 

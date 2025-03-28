@@ -29,7 +29,7 @@ namespace LinqToDB
 		Values
 	}
 
-	[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Parameter)]
 	[MeansImplicitUse]
 	public class ExprParameterAttribute : Attribute
 	{

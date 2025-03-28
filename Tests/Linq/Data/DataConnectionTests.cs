@@ -34,7 +34,7 @@ namespace Tests.Data
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider     = DataConnection.GetDataProvider(context);
 
-			using (var conn = new DataConnection(dataProvider, connectionString))
+			using (var conn = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString)))
 			{
 				Assert.Multiple(() =>
 				{
@@ -337,7 +337,7 @@ namespace Tests.Data
 		public void TestServiceCollection1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var collection = new ServiceCollection();
-			collection.AddLinqToDB((serviceProvider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDB((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
 			var con = provider.GetService<IDataContext>()!;
 			Assert.Multiple(() =>
@@ -351,7 +351,7 @@ namespace Tests.Data
 		public void TestServiceCollection2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var collection = new ServiceCollection();
-			collection.AddLinqToDBContext<DataConnection>((serviceProvider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDBContext<DataConnection>((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
 			var con = provider.GetService<DataConnection>()!;
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
@@ -362,7 +362,7 @@ namespace Tests.Data
 		{
 			var collection = new ServiceCollection();
 			collection.AddTransient<DummyService>();
-			collection.AddLinqToDBContext<DbConnection3>((serviceProvider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDBContext<DbConnection3>((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
 			var con = provider.GetService<DbConnection3>()!;
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
@@ -372,7 +372,7 @@ namespace Tests.Data
 		public void TestServiceCollection_Issue4326_Positive([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var collection = new ServiceCollection();
-			collection.AddLinqToDBContext<IDataContext, DbConnection1>((serviceProvider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDBContext<IDataContext, DbConnection1>((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
 			var con = provider.GetService<IDataContext>()!;
 			Assert.That(con, Is.TypeOf<DbConnection1>());
@@ -383,7 +383,7 @@ namespace Tests.Data
 		public void TestServiceCollection_Issue4326_Compat([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var collection = new ServiceCollection();
-			collection.AddLinqToDBContext<IDataContext, DbConnection4>((serviceProvider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDBContext<IDataContext, DbConnection4>((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
 			var con = provider.GetService<IDataContext>()!;
 			Assert.That(con, Is.TypeOf<DbConnection4>());
@@ -437,7 +437,7 @@ namespace Tests.Data
 		{
 			var collection = new ServiceCollection();
 
-			collection.AddLinqToDBContext<DbConnection5>((_, options) => options.UseConfigurationString(context).UseCommandTimeout(91));
+			collection.AddLinqToDBContext<DbConnection5>((_, options) => options.UseConfiguration(context).UseCommandTimeout(91));
 
 			var provider = collection.BuildServiceProvider();
 			var con      = provider.GetService<DbConnection5>()!;
@@ -449,7 +449,7 @@ namespace Tests.Data
 		public void TestSettingsPerDb([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var collection = new ServiceCollection();
-			collection.AddLinqToDBContext<DbConnection1>((provider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDBContext<DbConnection1>((provider, options) => options.UseConfiguration(context));
 			collection.AddLinqToDBContext<DbConnection2>((provider, options) => options);
 
 			var serviceProvider = collection.BuildServiceProvider();
@@ -1040,7 +1040,7 @@ namespace Tests.Data
 		// Informix : IBM.Data.Informix
 		// ORACLE   : Oracle.DataAccess
 		// ORACLE   : Oracle.ManagedDataAccess(.Core)
-		// SAP HANA : Sap.Data.Hana.v4.5/Sap.Data.Hana.Core.v2.1
+		// SAP HANA : Sap.Data.Hana.*
 		// SAP HANA : System.Data.Odbc
 		// SQLCE    : System.Data.SqlServerCe
 		// SQLITE   : System.Data.Sqlite
@@ -1183,7 +1183,7 @@ namespace Tests.Data
 		// Informix : IBM.Data.Informix
 		// ORACLE   : Oracle.DataAccess
 		// ORACLE   : Oracle.ManagedDataAccess(.Core)
-		// SAP HANA : Sap.Data.Hana.v4.5/Sap.Data.Hana.Core.v2.1
+		// SAP HANA : Sap.Data.Hana.*
 		// SAP HANA : System.Data.Odbc
 		// SQLCE    : System.Data.SqlServerCe
 		// SQLITE   : System.Data.Sqlite

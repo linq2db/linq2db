@@ -1,4 +1,5 @@
-﻿using LinqToDB.Data;
+﻿using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
 
 using NUnit.Framework;
@@ -13,7 +14,7 @@ namespace Tests.UserTests
 		{
 			var cs = DataConnection.GetConnectionString(context).Replace("TestData", "issue_1164");
 
-			using (var db = new DataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: cs), cs))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: cs), cs)))
 			{
 				var schemaProvider = db.DataProvider.GetSchemaProvider();
 
@@ -27,7 +28,7 @@ namespace Tests.UserTests
 		public void TestOdbc([IncludeDataSources(TestProvName.AllAccessOdbc)] string context)
 		{
 			var cs = DataConnection.GetConnectionString(context).Replace("TestData.ODBC", "issue_1164");
-			using (var db = new DataConnection(AccessTools.GetDataProvider(provider: AccessProvider.ODBC, connectionString: cs), cs))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(AccessTools.GetDataProvider(provider: AccessProvider.ODBC, connectionString: cs), cs)))
 			{
 				var schemaProvider = db.DataProvider.GetSchemaProvider();
 

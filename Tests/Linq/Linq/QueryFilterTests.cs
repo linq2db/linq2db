@@ -111,7 +111,7 @@ namespace Tests.Linq
 
 		sealed class MyDataContext : DataConnection
 		{
-			public MyDataContext(string configuration, MappingSchema mappingSchema) : base(configuration, mappingSchema)
+			public MyDataContext(string configuration, MappingSchema mappingSchema) : base(new DataOptions().UseConfiguration(configuration, mappingSchema))
 			{
 
 			}
@@ -162,7 +162,7 @@ namespace Tests.Linq
 
 			Assert.That(resultFiltered1, Has.Length.LessThan(resultNotFiltered1.Length));
 
-			var currentMissCount = Query<T>.CacheMissCount;
+			var currentMissCount = query.GetCacheMissCount();
 
 			db.IsSoftDeleteFilterEnabled = true;
 			query                        = Internals.CreateExpressionQueryInstance<T>(db, query.Expression);
@@ -177,7 +177,7 @@ namespace Tests.Linq
 			AreEqualWithComparer(resultFiltered1,    resultFiltered2);
 			AreEqualWithComparer(resultNotFiltered1, resultNotFiltered2);
 
-			Assert.That(currentMissCount, Is.EqualTo(Query<T>.CacheMissCount), () => "Caching is wrong.");
+			Assert.That(currentMissCount, Is.EqualTo(query.GetCacheMissCount()), () => "Caching is wrong.");
 		}
 
 		[Test]
@@ -186,9 +186,9 @@ namespace Tests.Linq
 			var testData = GenerateTestData();
 
 			using (var db = new MyDataContext(context, _filterMappingSchema))
-			using (db.CreateLocalTable(testData.Item1))
+			using (var tb = db.CreateLocalTable(testData.Item1))
 			{
-				var currentMissCount = Query<MasterClass>.CacheMissCount;
+				var currentMissCount = tb.GetCacheMissCount();
 
 				var query =
 					from m in db.GetTable<MasterClass>()
@@ -206,7 +206,7 @@ namespace Tests.Linq
 
 				if (iteration > 1)
 				{
-					Query<MasterClass>.CacheMissCount.Should().Be(currentMissCount);
+					tb.GetCacheMissCount().Should().Be(currentMissCount);
 				}
 			}
 		}
