@@ -12,6 +12,8 @@ namespace LinqToDB.Data
 	{
 		protected virtual SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 		{
+			CheckAndThrowOnDisposed();
+
 			return statement;
 		}
 
@@ -25,6 +27,8 @@ namespace LinqToDB.Data
 
 		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
+			CheckAndThrowOnDisposed();
+
 			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 

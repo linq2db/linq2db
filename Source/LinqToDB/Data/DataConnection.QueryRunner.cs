@@ -30,6 +30,7 @@ namespace LinqToDB.Data
 			object?[]? preambles)
 		{
 			CheckAndThrowOnDisposed();
+
 			return new QueryRunner(query, queryNumber, this, parametersContext, expressions, parameters, preambles);
 		}
 
