@@ -483,7 +483,7 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-				ThrowOnDisposed();
+				CheckAndThrowOnDisposed();
 
 				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
 				{
