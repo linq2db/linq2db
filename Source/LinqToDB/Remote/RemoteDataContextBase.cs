@@ -50,6 +50,8 @@ namespace LinqToDB.Remote
 		{
 			get
 			{
+				ThrowOnDisposed();
+
 				if (_serviceProvider == null)
 				{
 					lock (_guard)
@@ -222,9 +224,16 @@ namespace LinqToDB.Remote
 
 		public MappingSchema   MappingSchema
 		{
-			get => _mappingSchema ??= _providedMappingSchema == null ? GetConfigurationInfo().MappingSchema : MappingSchema.CombineSchemas(_providedMappingSchema, GetConfigurationInfo().MappingSchema);
+			get
+			{
+				ThrowOnDisposed();
+
+				return _mappingSchema ??= _providedMappingSchema == null ? GetConfigurationInfo().MappingSchema : MappingSchema.CombineSchemas(_providedMappingSchema, GetConfigurationInfo().MappingSchema);
+			}
 			set
 			{
+				ThrowOnDisposed();
+
 				// Because setter could be called from constructor, we cannot build composite schemas here to avoid server calls on half-initialized context
 				// Instead we reset schemas status and finish initialization in getters for MappingSchema and SerializationMappingSchema, when they are called
 				if (_providedMappingSchema != value)
@@ -253,6 +262,8 @@ namespace LinqToDB.Remote
 		{
 			get
 			{
+				ThrowOnDisposed();
+
 				if (_sqlProviderType == null)
 				{
 					var type = GetConfigurationInfo().LinqServiceInfo.SqlBuilderType;
@@ -262,7 +273,12 @@ namespace LinqToDB.Remote
 				return _sqlProviderType;
 			}
 
-			set => _sqlProviderType = value;
+			set
+			{
+				ThrowOnDisposed();
+
+				_sqlProviderType = value;
+			}
 		}
 
 		private        Type? _sqlOptimizerType;
@@ -279,7 +295,12 @@ namespace LinqToDB.Remote
 				return _sqlOptimizerType;
 			}
 
-			set => _sqlOptimizerType = value;
+			set
+			{
+				ThrowOnDisposed();
+
+				_sqlOptimizerType = value;
+			}
 		}
 
 		/// <summary>
@@ -294,6 +315,8 @@ namespace LinqToDB.Remote
 
 		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
+			ThrowOnDisposed();
+
 			var dataType   = reader.GetFieldType(idx);
 			var methodInfo = GetReaderMethodInfo(dataType);
 
@@ -341,6 +364,8 @@ namespace LinqToDB.Remote
 		{
 			get
 			{
+				ThrowOnDisposed();
+
 				if (_createSqlProvider == null)
 				{
 					var key = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options);
@@ -398,6 +423,8 @@ namespace LinqToDB.Remote
 		{
 			get
 			{
+				ThrowOnDisposed();
+
 				if (_getSqlOptimizer == null)
 				{
 					var key = Tuple.Create(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags);
@@ -432,6 +459,8 @@ namespace LinqToDB.Remote
 
 		public void BeginBatch()
 		{
+			ThrowOnDisposed();
+
 			_batchCounter++;
 
 			_queryBatch ??= new List<string>();
@@ -439,6 +468,8 @@ namespace LinqToDB.Remote
 
 		public void CommitBatch()
 		{
+			ThrowOnDisposed();
+
 			if (_batchCounter == 0)
 				throw new InvalidOperationException();
 
@@ -463,6 +494,8 @@ namespace LinqToDB.Remote
 
 		public async Task CommitBatchAsync()
 		{
+			ThrowOnDisposed();
+
 			if (_batchCounter == 0)
 				throw new InvalidOperationException();
 
