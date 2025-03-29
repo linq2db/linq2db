@@ -483,12 +483,14 @@ namespace LinqToDB.Data
 		{
 			get
 			{
+				ThrowOnDisposed();
+
 				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
 				{
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
-						.Add(ConfigurationString ?? ConnectionString ?? EnsureConnection(connect: false).ConnectionString)
+						.Add(ConfigurationString)
 						.Add(Options)
 						.Add(GetType())
 						.CreateID();
