@@ -958,7 +958,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -1011,7 +1011,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				db.Person.ToList();
@@ -1086,7 +1086,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -1150,7 +1150,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				db.Person.ToList();
@@ -1227,7 +1227,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -1289,7 +1289,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				db.Person.ToList();
@@ -1341,7 +1341,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -1371,7 +1371,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS enabled");
 
 				var failed = false;
@@ -1432,7 +1432,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = await db.Person.CountAsync();
@@ -1462,7 +1462,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS enabled");
 
 				var failed = false;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlTypes;
@@ -214,6 +215,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ();
 
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public override object? GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
 			// take it from real Connection object, as dataConnection.ConnectionString could be null

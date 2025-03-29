@@ -644,7 +644,6 @@ namespace LinqToDB.Data
 
 				IAsyncDbConnection WrapConnection(DbConnection connection)
 				{
-					// TODO: IT Look into.
 					return connection is IAsyncDbConnection asyncDbConnection
 						? asyncDbConnection
 						: AsyncFactory.CreateAndSetDataContext(dataConnection, connection);

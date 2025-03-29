@@ -514,11 +514,15 @@ namespace LinqToDB.Data
 		/// </summary>
 		public IRetryPolicy? RetryPolicy         { get; set; }
 
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		private bool? _isMarsEnabled;
 		/// <summary>
 		/// Gets or sets status of Multiple Active Result Sets (MARS) feature. This feature available only for
 		/// SQL Azure and SQL Server 2005+.
 		/// </summary>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public  bool   IsMarsEnabled
 		{
 			get

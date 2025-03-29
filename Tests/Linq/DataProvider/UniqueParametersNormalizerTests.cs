@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
@@ -368,6 +369,8 @@ namespace Tests.DataProvider
 #endif
 			public IExecutionScope? ExecuteScope(DataConnection dataConnection) => _baseProvider.ExecuteScope(dataConnection);
 			public CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior) => _baseProvider.GetCommandBehavior(commandBehavior);
+			// TODO: Remove in v7
+			[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 			public object? GetConnectionInfo(DataConnection dataConnection, string parameterName) => _baseProvider.GetConnectionInfo(dataConnection, parameterName);
 			public IQueryParametersNormalizer GetQueryParameterNormalizer() => _normalizerFactory(_baseProvider.GetQueryParameterNormalizer());
 			public Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType) => _baseProvider.GetReaderExpression(reader, idx, readerExpression, toType);
