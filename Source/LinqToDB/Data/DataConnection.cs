@@ -1643,9 +1643,9 @@ namespace LinqToDB.Data
 		/// </summary>
 		public void Dispose()
 		{
-			Disposed = true;
-
 			Close();
+
+			Disposed = true;
 		}
 
 		#endregion

@@ -418,8 +418,9 @@ namespace LinqToDB
 		/// </summary>
 		protected virtual void Dispose(bool disposing)
 		{
-			_disposed = true;
 			((IDataContext)this).Close();
+
+			_disposed = true;
 		}
 
 		public async ValueTask DisposeAsync()
@@ -430,10 +431,11 @@ namespace LinqToDB
 		/// <summary>
 		/// Closes underlying connection.
 		/// </summary>
-		protected virtual ValueTask DisposeAsync(bool disposing)
+		protected virtual async ValueTask DisposeAsync(bool disposing)
 		{
+			await ((IDataContext)this).CloseAsync().ConfigureAwait(false);
+
 			_disposed = true;
-			return new ValueTask(((IDataContext)this).CloseAsync());
 		}
 
 		void IDataContext.Close()

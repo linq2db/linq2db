@@ -554,16 +554,16 @@ namespace LinqToDB.Remote
 
 		public virtual void Dispose()
 		{
-			Disposed = true;
-
 			((IDataContext)this).Close();
+
+			Disposed = true;
 		}
 
-		public virtual ValueTask DisposeAsync()
+		public virtual async ValueTask DisposeAsync()
 		{
-			Disposed = true;
+			await ((IDataContext)this).CloseAsync().ConfigureAwait(false);
 
-			return new ValueTask(((IDataContext)this).CloseAsync());
+			Disposed = true;
 		}
 
 		internal static class ConfigurationApplier

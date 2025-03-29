@@ -366,8 +366,9 @@ namespace LinqToDB.Data
 		/// <returns>Asynchronous operation completion task.</returns>
 		public async ValueTask DisposeAsync()
 		{
-			Disposed = true;
 			await CloseAsync().ConfigureAwait(false);
+
+			Disposed = true;
 		}
 
 		protected static async Task<TResult> TraceActionAsync<TContext, TResult>(
