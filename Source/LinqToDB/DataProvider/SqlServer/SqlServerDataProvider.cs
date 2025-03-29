@@ -218,7 +218,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			// take it from real Connection object, as dataConnection.ConnectionString could be null
 			// also it will not cache original connection string with credentials in _marsFlags
-			var connectionString = dataConnection.Connection.ConnectionString;
+			var connectionString = dataConnection.EnsureConnection(connect: true).Connection.ConnectionString;
 			switch (parameterName)
 			{
 				case "IsMarsEnabled" :

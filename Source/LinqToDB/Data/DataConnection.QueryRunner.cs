@@ -308,7 +308,7 @@ namespace LinqToDB.Data
 							var sqlp = command.SqlParameters[i];
 
 							dbCommand ??= forGetSqlText
-								? dataConnection.EnsureConnection(false).CreateCommand()
+								? dataConnection.EnsureConnection(connect: false).CreateCommand()
 								: dataConnection.GetOrCreateCommand();
 
 							parms[i] = CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues), forGetSqlText);
@@ -690,7 +690,7 @@ namespace LinqToDB.Data
 			{
 				_isAsync = true;
 
-				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
+				await _dataConnection.EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false);
 
 				SetCommand(false);
 
@@ -705,7 +705,7 @@ namespace LinqToDB.Data
 			{
 				_isAsync = true;
 
-				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
+				await _dataConnection.EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false);
 
 				SetCommand(false);
 
@@ -743,7 +743,7 @@ namespace LinqToDB.Data
 			{
 				_isAsync = true;
 
-				await _dataConnection.EnsureConnectionAsync(cancellationToken)
+				await _dataConnection.EnsureConnectionAsync(connect: true, cancellationToken)
 					.ConfigureAwait(false);
 
 				SetCommand();

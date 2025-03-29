@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
@@ -42,7 +43,7 @@ namespace LinqToDB.Data
 			if (!DataProvider.TransactionsSupported)
 				return new(this);
 
-			await EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
+			await EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false);
 
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
@@ -86,7 +87,7 @@ namespace LinqToDB.Data
 			if (!DataProvider.TransactionsSupported)
 				return new(this);
 
-			await EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
+			await EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false);
 
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
@@ -122,7 +123,19 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Async operation task.</returns>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public async Task EnsureConnectionAsync(CancellationToken cancellationToken = default)
+		{
+			await EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false);
+		}
+
+		/// <summary>
+		/// Ensure that database connection opened. If opened connection missing, it will be opened asynchronously.
+		/// </summary>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Async operation task.</returns>
+		internal async Task<IAsyncDbConnection> EnsureConnectionAsync(bool connect, CancellationToken cancellationToken = default)
 		{
 			CheckAndThrowOnDisposed();
 
@@ -143,7 +156,7 @@ namespace LinqToDB.Data
 						_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
 				}
 
-				if (_connection.State == ConnectionState.Closed)
+				if (connect && _connection.State == ConnectionState.Closed)
 				{
 					var interceptor = ((IInterceptable<IConnectionInterceptor>)this).Interceptor;
 
@@ -193,6 +206,8 @@ namespace LinqToDB.Data
 
 				throw;
 			}
+
+			return _connection;
 		}
 
 		/// <summary>

@@ -60,42 +60,42 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return MultipleRowsCopy(table, options, source);
 		}
 
-		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			var connections = TryGetProviderConnections(table);
+			var connections = await TryGetProviderConnectionsAsync(table, cancellationToken).ConfigureAwait(false);
 			if (connections.HasValue)
 			{
 				if (_provider.Adapter.OctonicaCreateWriterAsync != null)
-					return ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, source, cancellationToken);
+					return await ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, source, cancellationToken).ConfigureAwait(false);
 
 				if (_provider.Adapter.OctonicaCreateWriter != null)
-					return Task.FromResult(ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, source));
+					return ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, source);
 
 				if (_provider.Adapter.ClientBulkCopyCreator != null)
-					return ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), cancellationToken);
+					return await ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), cancellationToken).ConfigureAwait(false);
 			}
 
-			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+			return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
 		}
 
-		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			var connections = TryGetProviderConnections(table);
+			var connections = await TryGetProviderConnectionsAsync(table, cancellationToken).ConfigureAwait(false);
 			if (connections.HasValue)
 			{
 				if (_provider.Adapter.OctonicaCreateWriterAsync != null)
-					return ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, source, cancellationToken);
+					return await ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, source, cancellationToken).ConfigureAwait(false);
 
 				if (_provider.Adapter.OctonicaCreateWriter != null)
-					return Task.FromResult(ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, EnumerableHelper.AsyncToSyncEnumerable(source.GetAsyncEnumerator(cancellationToken))));
+					return ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, EnumerableHelper.AsyncToSyncEnumerable(source.GetAsyncEnumerator(cancellationToken)));
 
 				if (_provider.Adapter.ClientBulkCopyCreator != null)
-					return ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken), cancellationToken);
+					return await ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken), cancellationToken).ConfigureAwait(false);
 			}
 
-			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+			return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
 		}
 
 		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
@@ -103,7 +103,27 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.SupportsBulkCopy)
 			{
-				var connection  = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+				var connection  = _provider.TryGetProviderConnection(dataConnection, dataConnection.EnsureConnection(connect: true).Connection);
+
+				if (connection != null)
+				{
+					return new ProviderConnections()
+					{
+						DataConnection = dataConnection,
+						ProviderConnection = connection,
+					};
+				}
+			}
+
+			return null;
+		}
+
+		private async ValueTask<ProviderConnections?> TryGetProviderConnectionsAsync<T>(ITable<T> table, CancellationToken cancellationToken)
+			where T : notnull
+		{
+			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.SupportsBulkCopy)
+			{
+				var connection  = _provider.TryGetProviderConnection(dataConnection, (await dataConnection.EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false)).Connection);
 
 				if (connection != null)
 				{

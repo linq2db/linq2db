@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null && serverName == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.EnsureConnection(connect: true).Connection);
 
 				if (connection != null)
 				{

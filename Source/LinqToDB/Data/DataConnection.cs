@@ -712,15 +712,29 @@ namespace LinqToDB.Data
 		IAsyncDbConnection?              _connection;
 		Func<DataOptions, DbConnection>? _connectionFactory;
 
-		// TODO: V6 remove it or replace with non-creating access + creation method if such public APIs needed
 		/// <summary>
-		/// Gets underlying database connection, used by current connection object.
+		/// Gets underlying database connection, used by current connection object, or opens new.
 		/// </summary>
-		public DbConnection Connection => EnsureConnection().Connection;
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Use TryGetDbConnection instead"), EditorBrowsable(EditorBrowsableState.Never)]
+		public DbConnection Connection
+		{
+			get
+			{
+				CheckAndThrowOnDisposed();
+
+				return EnsureConnection(connect: true).Connection;
+			}
+		}
+
+		/// <summary>
+		/// Returns underlying <see cref="DbConnection"/> instance or <c>null</c> if connection is not open.
+		/// </summary>
+		public DbConnection? TryGetDbConnection() => _connection?.Connection;
 
 		internal DbConnection? CurrentConnection => _connection?.Connection;
 
-		internal IAsyncDbConnection EnsureConnection(bool connect = true)
+		internal IAsyncDbConnection EnsureConnection(bool connect)
 		{
 			CheckAndThrowOnDisposed();
 
@@ -906,7 +920,7 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
-			var command = EnsureConnection().CreateCommand();
+			var command = EnsureConnection(connect: true).CreateCommand();
 
 			if (_commandTimeout.HasValue)
 				command.CommandTimeout = _commandTimeout.Value;
@@ -1128,7 +1142,7 @@ namespace LinqToDB.Data
 						return result.Value;
 				}
 
-				using (ActivityService.Start(ActivityID.CommandExecuteScalar)?.AddQueryInfo(this, Connection, _command))
+				using (ActivityService.Start(ActivityID.CommandExecuteScalar)?.AddQueryInfo(this, command.Connection, _command))
 					return command.ExecuteScalar();
 			}
 			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
@@ -1363,13 +1377,13 @@ namespace LinqToDB.Data
 				default(object?),
 				static (dataContext, _) =>
 				{
-			// Create new transaction object.
-			//
-					dataContext.TransactionAsync = dataContext.EnsureConnection().BeginTransaction();
+					// Create new transaction object.
+					//
+					dataContext.TransactionAsync = dataContext.EnsureConnection(connect: true).BeginTransaction();
 
 					dataContext._closeTransaction = true;
 
-			// If the active command exists.
+					// If the active command exists.
 					if (dataContext._command != null)
 						dataContext._command.Transaction = dataContext.Transaction;
 
@@ -1402,13 +1416,13 @@ namespace LinqToDB.Data
 				isolationLevel,
 				static (dataConnection, isolationLevel) =>
 				{
-			// Create new transaction object.
-			//
-					dataConnection.TransactionAsync = dataConnection.EnsureConnection().BeginTransaction(isolationLevel);
+					// Create new transaction object.
+					//
+					dataConnection.TransactionAsync = dataConnection.EnsureConnection(connect: true).BeginTransaction(isolationLevel);
 
 					dataConnection._closeTransaction = true;
 
-			// If the active command exists.
+					// If the active command exists.
 					if (dataConnection._command != null)
 						dataConnection._command.Transaction = dataConnection.Transaction;
 
