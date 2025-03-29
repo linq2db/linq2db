@@ -826,7 +826,9 @@ namespace Tests.Data
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
 
 				// test MARS not set
+#pragma warning disable CS0618 // Type or member is obsolete
 				Assert.That(db.IsMarsEnabled, Is.EqualTo(cs.ToLowerInvariant().Contains("multipleactiveresultsets=true")));
+#pragma warning restore CS0618 // Type or member is obsolete
 
 				// test server version
 				using (var cn = ((SqlServerDataProvider)db.DataProvider).Adapter.CreateConnection(cs))
@@ -1005,7 +1007,9 @@ namespace Tests.Data
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
 
 				// test MARS not set
+#pragma warning disable CS0618 // Type or member is obsolete
 				Assert.That(db.IsMarsEnabled, Is.EqualTo(cs.ToLowerInvariant().Contains("multipleactiveresultsets=true")));
+#pragma warning restore CS0618 // Type or member is obsolete
 
 				// test server version
 				using (var cn = ((SqlServerDataProvider)db.DataProvider).Adapter.CreateConnection(cs))

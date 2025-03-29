@@ -1450,7 +1450,7 @@ namespace Tests.xUpdate
 				var updatedPerson = table.Single();
 				Assert.That(updatedPerson.MiddleName, Is.EqualTo("None"));
 
-				if (db is DataConnection { Connection: FirebirdSql.Data.FirebirdClient.FbConnection })
+				if (db is DataConnection dc && dc.TryGetDbConnection() is FirebirdSql.Data.FirebirdClient.FbConnection)
 					db.Close();
 
 				table.Drop();

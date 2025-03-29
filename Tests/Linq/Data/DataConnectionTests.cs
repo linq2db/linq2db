@@ -36,9 +36,12 @@ namespace Tests.Data
 
 			using (var conn = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString)))
 			{
+				var connection = conn.TryGetDbConnection();
+				Assert.That(connection, Is.Not.Null);
+
 				Assert.Multiple(() =>
 				{
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 					Assert.That(conn.ConfigurationString, Is.Null);
 				});
 			}
@@ -49,9 +52,12 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
+				var connection = conn.TryGetDbConnection();
+				Assert.That(connection, Is.Not.Null);
+
 				Assert.Multiple(() =>
 				{
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 					Assert.That(conn.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
 				});
 			}
@@ -67,9 +73,12 @@ namespace Tests.Data
 		{
 			using (var conn = GetDataConnection(context))
 			{
+				var connection = conn.TryGetDbConnection();
+				Assert.That(connection, Is.Not.Null);
+
 				Assert.Multiple(() =>
 				{
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 					Assert.That(conn.ConfigurationString, Is.EqualTo(context));
 				});
 
@@ -278,7 +287,10 @@ namespace Tests.Data
 				{
 					Assert.That(opened, Is.False);
 					Assert.That(openedAsync, Is.False);
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+
+					var connection = conn.TryGetDbConnection();
+					Assert.That(connection, Is.Not.Null);
+					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
 				});
 				Assert.Multiple(() =>
 				{
@@ -320,7 +332,9 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				var connection = conn.TryGetDbConnection();
+				Assert.That(connection, Is.Not.Null);
+				Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 			}
 		}
 
@@ -621,7 +635,9 @@ namespace Tests.Data
 				{
 					Assert.That(open, Is.False);
 					Assert.That(openAsync, Is.False);
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					var connection = conn.TryGetDbConnection();
+					Assert.That(connection, Is.Not.Null);
+					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
 				});
 				Assert.Multiple(() =>
 				{
@@ -894,7 +910,7 @@ namespace Tests.Data
 					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
 					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
 					{
-						db.Connection.EnlistTransaction(Transaction.Current);
+						db.TryGetDbConnection()!.EnlistTransaction(Transaction.Current);
 						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
 
 						Transaction.Current!.Rollback();
@@ -942,7 +958,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -995,7 +1011,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				db.Person.ToList();
@@ -1070,7 +1086,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -1134,7 +1150,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				db.Person.ToList();
@@ -1211,7 +1227,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -1273,7 +1289,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				db.Person.ToList();
@@ -1325,7 +1341,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -1355,7 +1371,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS enabled");
 
 				var failed = false;
@@ -1416,7 +1432,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = await db.Person.CountAsync();
@@ -1446,7 +1462,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS enabled");
 
 				var failed = false;

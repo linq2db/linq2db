@@ -483,12 +483,14 @@ namespace LinqToDB.Data
 		{
 			get
 			{
+				CheckAndThrowOnDisposed();
+
 				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
 				{
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
-						.Add(ConfigurationString ?? ConnectionString ?? EnsureConnection(connect: false).ConnectionString)
+						.Add(ConfigurationString)
 						.Add(Options)
 						.Add(GetType())
 						.CreateID();
@@ -642,7 +644,6 @@ namespace LinqToDB.Data
 
 				IAsyncDbConnection WrapConnection(DbConnection connection)
 				{
-					// TODO: IT Look into.
 					return connection is IAsyncDbConnection asyncDbConnection
 						? asyncDbConnection
 						: AsyncFactory.CreateAndSetDataContext(dataConnection, connection);

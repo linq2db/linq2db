@@ -182,7 +182,7 @@ namespace LinqToDB.Data
 		/// <returns>Returns collection of query result records.</returns>
 		public async Task<IEnumerable<T>> QueryAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken = default)
 		{
-			InitCommand();
+			await InitCommandAsync(cancellationToken).ConfigureAwait(false);
 
 			return ReadEnumerator(
 				await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false),
@@ -243,9 +243,7 @@ namespace LinqToDB.Data
 		/// <returns>Returns task.</returns>
 		public async Task QueryForEachAsync<T>(Func<DbDataReader, T> objectReader, Action<T> action, CancellationToken cancellationToken = default)
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
-
-			InitCommand();
+			await InitCommandAsync(cancellationToken).ConfigureAwait(false);
 
 			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 			{
@@ -268,9 +266,7 @@ namespace LinqToDB.Data
 
 			async IAsyncEnumerable<T> Impl(Func<DbDataReader, T> objectReader, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
-				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
-
-				InitCommand();
+				await InitCommandAsync(cancellationToken).ConfigureAwait(false);
 
 				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 				{
@@ -335,7 +331,7 @@ namespace LinqToDB.Data
 		/// <returns>Returns collection of query result records.</returns>
 		public async Task<IEnumerable<T>> QueryAsync<T>(CancellationToken cancellationToken = default)
 		{
-			InitCommand();
+			await InitCommandAsync(cancellationToken).ConfigureAwait(false);
 
 			return ReadEnumerator<T>(
 				await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false),
@@ -463,9 +459,7 @@ namespace LinqToDB.Data
 		/// <returns>Returns task.</returns>
 		public async Task QueryForEachAsync<T>(Action<T> action, CancellationToken cancellationToken = default)
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
-
-			InitCommand();
+			await InitCommandAsync(cancellationToken).ConfigureAwait(false);
 
 			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 			{
@@ -528,9 +522,7 @@ namespace LinqToDB.Data
 
 			async IAsyncEnumerable<T> Impl([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
-				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
-
-				InitCommand();
+				await InitCommandAsync(cancellationToken).ConfigureAwait(false);
 
 				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 				{
@@ -696,8 +688,7 @@ namespace LinqToDB.Data
 		public async Task<T> QueryMultipleAsync<T>(CancellationToken cancellationToken = default)
 			where T : class
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
-			InitCommand();
+			await InitCommandAsync(cancellationToken).ConfigureAwait(false);
 
 			T result;
 
@@ -1071,12 +1062,10 @@ namespace LinqToDB.Data
 		{
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInfoExecuteAsync))
 			{
-				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
-
 				var startedOn = DateTime.UtcNow;
 				var stopwatch = Stopwatch.StartNew();
 
-				InitCommand();
+				await InitCommandAsync(cancellationToken).ConfigureAwait(false);
 
 				var commandResult = await DataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
 
@@ -1213,11 +1202,9 @@ namespace LinqToDB.Data
 		{
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInfoExecuteAsyncT))
 			{
-				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
-
 				var startedOn     = DateTime.UtcNow;
 				var stopwatch     = Stopwatch.StartNew();
-				var hasParameters = InitCommand();
+				var hasParameters = await InitCommandAsync(cancellationToken).ConfigureAwait(false);
 
 				T result = default!;
 
@@ -1364,9 +1351,7 @@ namespace LinqToDB.Data
 		/// <returns>Task with data reader object.</returns>
 		public async Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken = default)
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
-
-			var hasParameters = InitCommand();
+			var hasParameters = await InitCommandAsync(cancellationToken).ConfigureAwait(false);
 
 			var dataReader = new DataReaderAsync(this, await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false));
 
@@ -1374,6 +1359,15 @@ namespace LinqToDB.Data
 				dataReader.ReaderWrapper.OnBeforeCommandDispose = RebindParameters;
 
 			return dataReader;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private async ValueTask<bool> InitCommandAsync(CancellationToken cancellationToken)
+		{
+			// make sure command creation will not lead to sync connection.Open call
+			await DataConnection.EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false);
+
+			return InitCommand();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

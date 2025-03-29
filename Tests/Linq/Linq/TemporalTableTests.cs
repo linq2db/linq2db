@@ -11,6 +11,8 @@ using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
+using Microsoft.AspNetCore.Razor.Runtime.TagHelpers;
+
 using NUnit.Framework;
 
 using Tests.Model;
@@ -34,7 +36,7 @@ namespace Tests.Linq
 		TemporalTest[] CreateTestTable(ITestDataContext db)
 		{
 			using var dc = db is TestDataConnection dcx ?
-				new DataConnection(db.Options.UseConnection(dcx.DataProvider, dcx.Connection)) :
+				new DataConnection(db.Options.UseConnection(dcx.DataProvider, dcx.TryGetDbConnection() ?? throw new InvalidOperationException($"Open connection first"))) :
 				new DataConnection(db.ConfigurationString);
 
 			using var sy = new SystemDB(db.ConfigurationString!);

@@ -84,7 +84,7 @@ namespace Tests.UserTests
 				using var db = GetDataConnection(options);
 				using var _  = db.CreateLocalTable(User.Data);
 
-				((NpgsqlConnection)db.Connection).ReloadTypes();
+				((NpgsqlConnection)db.TryGetDbConnection()!).ReloadTypes();
 
 				var user  = new User() { Id = 1, Type = UserTypeEnum.Organization };
 				var users = db.GetTable<User>().Where(x => x.InYourOrganization(user)).OrderBy(x => x.Id).Select(x => x.Id.ToString()).ToList();

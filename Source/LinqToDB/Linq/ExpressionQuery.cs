@@ -140,7 +140,7 @@ namespace LinqToDB.Linq
 			if (TransactionScopeHelper.IsInsideTransactionScope)
 				return null;
 
-			dc.EnsureConnection();
+			dc.EnsureConnection(connect: true);
 
 			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
 				return null;
@@ -173,7 +173,7 @@ namespace LinqToDB.Linq
 			if (TransactionScopeHelper.IsInsideTransactionScope)
 				return null;
 
-			await dc.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
+			await dc.EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false);
 
 			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
 				return null;

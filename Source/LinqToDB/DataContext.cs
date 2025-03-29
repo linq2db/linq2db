@@ -128,13 +128,14 @@ namespace LinqToDB
 			// can we just delegate it to underlying DataConnection?
 			get
 			{
+				AssertDisposed();
+
 				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
 				{
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
-						// GetDataConnection :-/
-						.Add(ConfigurationString ?? ConnectionString ?? GetDataConnection().EnsureConnection(connect: false).ConnectionString)
+						.Add(ConfigurationString)
 						.Add(Options)
 						.Add(GetType())
 						.CreateID();
@@ -173,6 +174,8 @@ namespace LinqToDB
 			get => _keepConnectionAlive;
 			set
 			{
+				AssertDisposed();
+
 				_keepConnectionAlive = value;
 
 				if (value == false)
@@ -180,15 +183,21 @@ namespace LinqToDB
 			}
 		}
 
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		private bool? _isMarsEnabled;
 		/// <summary>
 		/// Gets or sets status of Multiple Active Result Sets (MARS) feature. This feature available only for
 		/// SQL Azure and SQL Server 2005+.
 		/// </summary>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public bool   IsMarsEnabled
 		{
 			get
 			{
+				AssertDisposed();
+
 				if (_isMarsEnabled == null)
 				{
 					if (_dataConnection == null)
@@ -209,6 +218,8 @@ namespace LinqToDB
 		{
 			get
 			{
+				AssertDisposed();
+
 				if (_dataConnection != null)
 					return _dataConnection.QueryHints;
 
@@ -224,6 +235,8 @@ namespace LinqToDB
 		{
 			get
 			{
+				AssertDisposed();
+
 				if (_dataConnection != null)
 					return _dataConnection.NextQueryHints;
 
@@ -254,6 +267,8 @@ namespace LinqToDB
 			get => _commandTimeout ?? -1;
 			set
 			{
+				AssertDisposed();
+
 				if (value < 0)
 				{
 					_commandTimeout = null;
@@ -280,7 +295,12 @@ namespace LinqToDB
 		/// Creates instance of <see cref="DataConnection"/> class, used by context internally.
 		/// </summary>
 		/// <returns>New <see cref="DataConnection"/> instance.</returns>
-		protected virtual DataConnection CreateDataConnection(DataOptions options) => new(options);
+		protected virtual DataConnection CreateDataConnection(DataOptions options)
+		{
+			AssertDisposed();
+
+			return new(options);
+		}
 
 		/// <summary>
 		/// Returns associated database connection <see cref="DataConnection"/> or create new connection, if connection
@@ -333,6 +353,8 @@ namespace LinqToDB
 		/// </summary>
 		internal void ReleaseQuery()
 		{
+			AssertDisposed();
+
 			if (_dataConnection != null)
 			{
 				LastQuery = _dataConnection.LastQuery;
@@ -356,6 +378,8 @@ namespace LinqToDB
 		/// </summary>
 		internal async Task ReleaseQueryAsync()
 		{
+			AssertDisposed();
+
 			if (_dataConnection != null)
 			{
 				LastQuery = _dataConnection.LastQuery;
@@ -380,6 +404,8 @@ namespace LinqToDB
 
 		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
+			AssertDisposed();
+
 			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 
@@ -395,8 +421,9 @@ namespace LinqToDB
 		/// </summary>
 		protected virtual void Dispose(bool disposing)
 		{
-			_disposed = true;
 			((IDataContext)this).Close();
+
+			_disposed = true;
 		}
 
 		public async ValueTask DisposeAsync()
@@ -407,10 +434,11 @@ namespace LinqToDB
 		/// <summary>
 		/// Closes underlying connection.
 		/// </summary>
-		protected virtual ValueTask DisposeAsync(bool disposing)
+		protected virtual async ValueTask DisposeAsync(bool disposing)
 		{
+			await ((IDataContext)this).CloseAsync().ConfigureAwait(false);
+
 			_disposed = true;
-			return new ValueTask(((IDataContext)this).CloseAsync());
 		}
 
 		void IDataContext.Close()
@@ -465,6 +493,8 @@ namespace LinqToDB
 		/// <returns>Database transaction object.</returns>
 		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)
 		{
+			AssertDisposed();
+
 			var dct = new DataContextTransaction(this);
 
 			dct.BeginTransaction(level);
@@ -479,6 +509,8 @@ namespace LinqToDB
 		/// <returns>Database transaction object.</returns>
 		public virtual DataContextTransaction BeginTransaction()
 		{
+			AssertDisposed();
+
 			var dct = new DataContextTransaction(this);
 
 			dct.BeginTransaction();
@@ -495,6 +527,8 @@ namespace LinqToDB
 		/// <returns>Database transaction object.</returns>
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
 		{
+			AssertDisposed();
+
 			var dct = new DataContextTransaction(this);
 
 			await dct.BeginTransactionAsync(level, cancellationToken).ConfigureAwait(false);
@@ -510,6 +544,8 @@ namespace LinqToDB
 		/// <returns>Database transaction object.</returns>
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
+			AssertDisposed();
+
 			var dct = new DataContextTransaction(this);
 
 			await dct.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
@@ -519,6 +555,8 @@ namespace LinqToDB
 
 		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 		{
+			AssertDisposed();
+
 			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, parametersContext, queryNumber, expressions, parameters, preambles));
 		}
 

@@ -514,15 +514,21 @@ namespace LinqToDB.Data
 		/// </summary>
 		public IRetryPolicy? RetryPolicy         { get; set; }
 
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		private bool? _isMarsEnabled;
 		/// <summary>
 		/// Gets or sets status of Multiple Active Result Sets (MARS) feature. This feature available only for
 		/// SQL Azure and SQL Server 2005+.
 		/// </summary>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public  bool   IsMarsEnabled
 		{
 			get
 			{
+				CheckAndThrowOnDisposed();
+
 				_isMarsEnabled ??= (bool)(DataProvider.GetConnectionInfo(this, "IsMarsEnabled") ?? false);
 
 				return _isMarsEnabled.Value;
@@ -710,15 +716,29 @@ namespace LinqToDB.Data
 		IAsyncDbConnection?              _connection;
 		Func<DataOptions, DbConnection>? _connectionFactory;
 
-		// TODO: V6 remove it or replace with non-creating access + creation method if such public APIs needed
 		/// <summary>
-		/// Gets underlying database connection, used by current connection object.
+		/// Gets underlying database connection, used by current connection object, or opens new.
 		/// </summary>
-		public DbConnection Connection => EnsureConnection().Connection;
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Use TryGetDbConnection instead"), EditorBrowsable(EditorBrowsableState.Never)]
+		public DbConnection Connection
+		{
+			get
+			{
+				CheckAndThrowOnDisposed();
+
+				return EnsureConnection(connect: true).Connection;
+			}
+		}
+
+		/// <summary>
+		/// Returns underlying <see cref="DbConnection"/> instance or <c>null</c> if connection is not open.
+		/// </summary>
+		public DbConnection? TryGetDbConnection() => _connection?.Connection;
 
 		internal DbConnection? CurrentConnection => _connection?.Connection;
 
-		internal IAsyncDbConnection EnsureConnection(bool connect = true)
+		internal IAsyncDbConnection EnsureConnection(bool connect)
 		{
 			CheckAndThrowOnDisposed();
 
@@ -841,6 +861,8 @@ namespace LinqToDB.Data
 
 		internal void InitCommand(CommandType commandType, string sql, DataParameter[]? parameters, IReadOnlyCollection<string>? queryHints, bool withParameters)
 		{
+			CheckAndThrowOnDisposed();
+
 			if (queryHints?.Count > 0)
 			{
 				var sqlProvider = DataProvider.CreateSqlBuilder(MappingSchema, Options);
@@ -852,6 +874,8 @@ namespace LinqToDB.Data
 
 		internal void CommitCommandInit()
 		{
+			CheckAndThrowOnDisposed();
+
 			var interceptor = ((IInterceptable<ICommandInterceptor>)this).Interceptor;
 			if (interceptor != null)
 			{
@@ -874,6 +898,8 @@ namespace LinqToDB.Data
 			get => _commandTimeout ?? -1;
 			set
 			{
+				CheckAndThrowOnDisposed();
+
 				if (value < 0)
 				{
 					// to reset to default timeout we dispose command because as command has no reset timeout API
@@ -896,7 +922,9 @@ namespace LinqToDB.Data
 		/// </summary>
 		public DbCommand CreateCommand()
 		{
-			var command = EnsureConnection().CreateCommand();
+			CheckAndThrowOnDisposed();
+
+			var command = EnsureConnection(connect: true).CreateCommand();
 
 			if (_commandTimeout.HasValue)
 				command.CommandTimeout = _commandTimeout.Value;
@@ -912,6 +940,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		public void DisposeCommand()
 		{
+			CheckAndThrowOnDisposed();
+
 			if (_command != null)
 			{
 				DataProvider.DisposeCommand(_command);
@@ -923,6 +953,8 @@ namespace LinqToDB.Data
 
 		protected virtual int ExecuteNonQuery(DbCommand command)
 		{
+			CheckAndThrowOnDisposed();
+
 			try
 			{
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
@@ -949,6 +981,8 @@ namespace LinqToDB.Data
 
 		internal int ExecuteNonQuery()
 		{
+			CheckAndThrowOnDisposed();
+
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
 					return ExecuteNonQuery(CurrentCommand!);
@@ -1006,6 +1040,8 @@ namespace LinqToDB.Data
 
 		internal int ExecuteNonQueryCustom(DbCommand command, Func<DbCommand, int> customExecute)
 		{
+			CheckAndThrowOnDisposed();
+
 			try
 			{
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
@@ -1032,6 +1068,8 @@ namespace LinqToDB.Data
 
 		internal int ExecuteNonQueryCustom(Func<DbCommand, int> customExecute)
 		{
+			CheckAndThrowOnDisposed();
+
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
 					return ExecuteNonQueryCustom(CurrentCommand!, customExecute);
@@ -1093,6 +1131,8 @@ namespace LinqToDB.Data
 
 		protected virtual object? ExecuteScalar(DbCommand command)
 		{
+			CheckAndThrowOnDisposed();
+
 			try
 			{
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
@@ -1106,7 +1146,7 @@ namespace LinqToDB.Data
 						return result.Value;
 				}
 
-				using (ActivityService.Start(ActivityID.CommandExecuteScalar)?.AddQueryInfo(this, Connection, _command))
+				using (ActivityService.Start(ActivityID.CommandExecuteScalar)?.AddQueryInfo(this, command.Connection, _command))
 					return command.ExecuteScalar();
 			}
 			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
@@ -1179,6 +1219,8 @@ namespace LinqToDB.Data
 
 		protected virtual DataReaderWrapper ExecuteReader(CommandBehavior commandBehavior)
 		{
+			CheckAndThrowOnDisposed();
+
 			try
 			{
 				DbDataReader reader;
@@ -1229,6 +1271,8 @@ namespace LinqToDB.Data
 
 		internal DataReaderWrapper ExecuteDataReader(CommandBehavior commandBehavior)
 		{
+			CheckAndThrowOnDisposed();
+
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
 					return ExecuteReader(GetCommandBehavior(commandBehavior));
@@ -1301,7 +1345,14 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets current transaction, associated with connection.
 		/// </summary>
-		public DbTransaction? Transaction => TransactionAsync?.Transaction;
+		public DbTransaction? Transaction
+		{
+			get
+			{
+				CheckAndThrowOnDisposed();
+				return TransactionAsync?.Transaction;
+			}
+		}
 
 		/// <summary>
 		/// Async transaction wrapper over <see cref="Transaction"/>.
@@ -1314,6 +1365,8 @@ namespace LinqToDB.Data
 		/// <returns>Database transaction object.</returns>
 		public virtual DataConnectionTransaction BeginTransaction()
 		{
+			CheckAndThrowOnDisposed();
+
 			if (!DataProvider.TransactionsSupported)
 				return new(this);
 
@@ -1328,13 +1381,13 @@ namespace LinqToDB.Data
 				default(object?),
 				static (dataContext, _) =>
 				{
-			// Create new transaction object.
-			//
-					dataContext.TransactionAsync = dataContext.EnsureConnection().BeginTransaction();
+					// Create new transaction object.
+					//
+					dataContext.TransactionAsync = dataContext.EnsureConnection(connect: true).BeginTransaction();
 
 					dataContext._closeTransaction = true;
 
-			// If the active command exists.
+					// If the active command exists.
 					if (dataContext._command != null)
 						dataContext._command.Transaction = dataContext.Transaction;
 
@@ -1351,6 +1404,8 @@ namespace LinqToDB.Data
 		/// <returns>Database transaction object.</returns>
 		public virtual DataConnectionTransaction BeginTransaction(IsolationLevel isolationLevel)
 		{
+			CheckAndThrowOnDisposed();
+
 			if (!DataProvider.TransactionsSupported)
 				return new(this);
 
@@ -1365,13 +1420,13 @@ namespace LinqToDB.Data
 				isolationLevel,
 				static (dataConnection, isolationLevel) =>
 				{
-			// Create new transaction object.
-			//
-					dataConnection.TransactionAsync = dataConnection.EnsureConnection().BeginTransaction(isolationLevel);
+					// Create new transaction object.
+					//
+					dataConnection.TransactionAsync = dataConnection.EnsureConnection(connect: true).BeginTransaction(isolationLevel);
 
 					dataConnection._closeTransaction = true;
 
-			// If the active command exists.
+					// If the active command exists.
 					if (dataConnection._command != null)
 						dataConnection._command.Transaction = dataConnection.Transaction;
 
@@ -1386,6 +1441,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		public virtual void CommitTransaction()
 		{
+			CheckAndThrowOnDisposed();
+
 			if (TransactionAsync != null)
 			{
 				TraceAction(
@@ -1416,6 +1473,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		public virtual void RollbackTransaction()
 		{
+			CheckAndThrowOnDisposed();
+
 			if (TransactionAsync != null)
 			{
 				TraceAction(
@@ -1446,6 +1505,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		public virtual void DisposeTransaction()
 		{
+			CheckAndThrowOnDisposed();
+
 			if (TransactionAsync != null)
 			{
 				TraceAction(
@@ -1542,13 +1603,29 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used for all queries, executed through current connection.
 		/// </summary>
-		public  List<string>  QueryHints => _queryHints ??= new();
+		public List<string> QueryHints
+		{
+			get
+			{
+				CheckAndThrowOnDisposed();
+
+				return _queryHints ??= new();
+			}
+		}
 
 		private List<string>? _nextQueryHints;
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current connection.
 		/// </summary>
-		public  List<string>  NextQueryHints => _nextQueryHints ??= new();
+		public List<string> NextQueryHints
+		{
+			get
+			{
+				CheckAndThrowOnDisposed();
+
+				return _nextQueryHints ??= new();
+			}
+		}
 
 		/// <summary>
 		/// Adds additional mapping schema to current connection.
@@ -1558,6 +1635,8 @@ namespace LinqToDB.Data
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
+			CheckAndThrowOnDisposed();
+
 			MappingSchema    = MappingSchema.CombineSchemas(mappingSchema, MappingSchema);
 			_configurationID = null;
 
@@ -1582,15 +1661,17 @@ namespace LinqToDB.Data
 		/// </summary>
 		public void Dispose()
 		{
-			Disposed = true;
-
 			Close();
+
+			Disposed = true;
 		}
 
 		#endregion
 
 		internal CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior)
 		{
+			CheckAndThrowOnDisposed();
+
 			return DataProvider.GetCommandBehavior(commandBehavior);
 		}
 

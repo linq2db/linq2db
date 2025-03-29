@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
@@ -37,10 +38,12 @@ namespace LinqToDB.Data
 		/// <returns>Database transaction object.</returns>
 		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
+			CheckAndThrowOnDisposed();
+
 			if (!DataProvider.TransactionsSupported)
 				return new(this);
 
-			await EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
+			await EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false);
 
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
@@ -79,10 +82,12 @@ namespace LinqToDB.Data
 		/// <returns>Database transaction object.</returns>
 		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
 		{
+			CheckAndThrowOnDisposed();
+
 			if (!DataProvider.TransactionsSupported)
 				return new(this);
 
-			await EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
+			await EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false);
 
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
@@ -118,7 +123,19 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Async operation task.</returns>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public async Task EnsureConnectionAsync(CancellationToken cancellationToken = default)
+		{
+			await EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false);
+		}
+
+		/// <summary>
+		/// Ensure that database connection opened. If opened connection missing, it will be opened asynchronously.
+		/// </summary>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Async operation task.</returns>
+		internal async Task<IAsyncDbConnection> EnsureConnectionAsync(bool connect, CancellationToken cancellationToken = default)
 		{
 			CheckAndThrowOnDisposed();
 
@@ -139,7 +156,7 @@ namespace LinqToDB.Data
 						_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
 				}
 
-				if (_connection.State == ConnectionState.Closed)
+				if (connect && _connection.State == ConnectionState.Closed)
 				{
 					var interceptor = ((IInterceptable<IConnectionInterceptor>)this).Interceptor;
 
@@ -189,6 +206,8 @@ namespace LinqToDB.Data
 
 				throw;
 			}
+
+			return _connection;
 		}
 
 		/// <summary>
@@ -199,6 +218,8 @@ namespace LinqToDB.Data
 		/// <returns>Asynchronous operation completion task.</returns>
 		public virtual async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
 		{
+			CheckAndThrowOnDisposed();
+
 			if (TransactionAsync != null)
 			{
 				await TraceActionAsync(
@@ -233,6 +254,8 @@ namespace LinqToDB.Data
 		/// <returns>Asynchronous operation completion task.</returns>
 		public virtual async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
 		{
+			CheckAndThrowOnDisposed();
+
 			if (TransactionAsync != null)
 			{
 				await TraceActionAsync(
@@ -268,6 +291,8 @@ namespace LinqToDB.Data
 		/// <returns>Asynchronous operation completion task.</returns>
 		public virtual async Task DisposeTransactionAsync()
 		{
+			CheckAndThrowOnDisposed();
+
 			if (TransactionAsync != null)
 			{
 				await TraceActionAsync(
@@ -356,8 +381,9 @@ namespace LinqToDB.Data
 		/// <returns>Asynchronous operation completion task.</returns>
 		public async ValueTask DisposeAsync()
 		{
-			Disposed = true;
 			await CloseAsync().ConfigureAwait(false);
+
+			Disposed = true;
 		}
 
 		protected static async Task<TResult> TraceActionAsync<TContext, TResult>(
@@ -422,6 +448,8 @@ namespace LinqToDB.Data
 
 		protected virtual async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
+			CheckAndThrowOnDisposed();
+
 			try
 			{
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
@@ -454,6 +482,8 @@ namespace LinqToDB.Data
 
 		internal async Task<int> ExecuteNonQueryDataAsync(CancellationToken cancellationToken)
 		{
+			CheckAndThrowOnDisposed();
+
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 					return await ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
@@ -515,6 +545,8 @@ namespace LinqToDB.Data
 
 		protected virtual async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
+			CheckAndThrowOnDisposed();
+
 			try
 			{
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
@@ -547,6 +579,8 @@ namespace LinqToDB.Data
 
 		internal async Task<object?> ExecuteScalarDataAsync(CancellationToken cancellationToken)
 		{
+			CheckAndThrowOnDisposed();
+
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 					return await ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
@@ -609,6 +643,8 @@ namespace LinqToDB.Data
 			CommandBehavior   commandBehavior,
 			CancellationToken cancellationToken)
 		{
+			CheckAndThrowOnDisposed();
+
 			try
 			{
 				DbDataReader reader;
@@ -665,6 +701,8 @@ namespace LinqToDB.Data
 			CommandBehavior commandBehavior,
 			CancellationToken cancellationToken)
 		{
+			CheckAndThrowOnDisposed();
+
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 					return await ExecuteReaderAsync(commandBehavior, cancellationToken)
