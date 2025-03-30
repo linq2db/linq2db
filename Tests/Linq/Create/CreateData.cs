@@ -67,7 +67,7 @@ public class a_CreateData : TestBase
 			}
 			//db.CommandTimeout = 20;
 
-			var database = databaseName ?? db.TryGetDbConnection()!.Database;
+			var database = databaseName ?? db.OpenConnection().Database;
 
 			var cmds = text
 				.Replace("{DBNAME}", database)

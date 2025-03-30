@@ -215,8 +215,7 @@ namespace Tests.Data
 		{
 			using var db1 = GetDataConnection(context);
 
-			var connection = db1.TryGetDbConnection();
-			Assert.That(connection, Is.Not.Null);
+			var connection = db1.OpenConnection();
 
 			try
 			{
@@ -237,8 +236,7 @@ namespace Tests.Data
 		{
 			using (var db1 = GetDataConnection(context))
 			{
-				var connection = db1.TryGetDbConnection();
-				Assert.That(connection, Is.Not.Null);
+				var connection = db1.OpenConnection();
 				try
 				{
 					using (var db = GetDataConnection(context,

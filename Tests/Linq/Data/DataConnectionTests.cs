@@ -36,8 +36,7 @@ namespace Tests.Data
 
 			using (var conn = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString)))
 			{
-				var connection = conn.TryGetDbConnection();
-				Assert.That(connection, Is.Not.Null);
+				var connection = conn.OpenConnection();
 
 				Assert.Multiple(() =>
 				{
@@ -52,8 +51,7 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				var connection = conn.TryGetDbConnection();
-				Assert.That(connection, Is.Not.Null);
+				var connection = conn.OpenConnection();
 
 				Assert.Multiple(() =>
 				{
@@ -288,8 +286,7 @@ namespace Tests.Data
 					Assert.That(opened, Is.False);
 					Assert.That(openedAsync, Is.False);
 
-					var connection = conn.TryGetDbConnection();
-					Assert.That(connection, Is.Not.Null);
+					var connection = conn.OpenConnection();
 					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
 				});
 				Assert.Multiple(() =>
@@ -332,8 +329,7 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				var connection = conn.TryGetDbConnection();
-				Assert.That(connection, Is.Not.Null);
+				var connection = conn.OpenConnection();
 				Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 			}
 		}
@@ -635,8 +631,7 @@ namespace Tests.Data
 				{
 					Assert.That(open, Is.False);
 					Assert.That(openAsync, Is.False);
-					var connection = conn.TryGetDbConnection();
-					Assert.That(connection, Is.Not.Null);
+					var connection = conn.OpenConnection();
 					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
 				});
 				Assert.Multiple(() =>

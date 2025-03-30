@@ -164,6 +164,9 @@ namespace Tests.Data
 			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				using (var reader = db.ExecuteReader(sql))
 				{
@@ -203,6 +206,9 @@ namespace Tests.Data
 			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				await using (var reader = await new CommandInfo(db, sql).ExecuteReaderAsync())
 				{
@@ -242,6 +248,9 @@ namespace Tests.Data
 			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				db.SetCommand(sql).Query<Northwind.Category>().ToArray();
 
@@ -278,6 +287,9 @@ namespace Tests.Data
 			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				using (var reader = db.SetCommand(sql).ExecuteReader())
 				{
@@ -317,6 +329,10 @@ namespace Tests.Data
 			})))
 			using (db.BeginTransaction())
 			{
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
+
 				db.GetTable<Northwind.Category>()
 					.Set(c => c.CategoryName, c => c.CategoryName)
 					.Update();
@@ -356,6 +372,10 @@ namespace Tests.Data
 			})))
 			using (db.BeginTransaction())
 			{
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
+
 				db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 
 				// the same command is reported on each step
@@ -393,6 +413,10 @@ namespace Tests.Data
 			})))
 			using (db.BeginTransaction())
 			{
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
+
 				db.SetCommand(@"INSERT INTO Categories(CategoryID, CategoryName) VALUES(1024, '1024')").Execute();
 
 				// the same command is reported on each step
@@ -430,6 +454,10 @@ namespace Tests.Data
 			})))
 			using (db.BeginTransaction())
 			{
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
+
 				db.SetCommand(@"DELETE FROM Categories WHERE CategoryID = 1024").Execute();
 
 				// the same command is reported on each step
@@ -467,6 +495,10 @@ namespace Tests.Data
 			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
+
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				db.SetCommand(sql).Execute<Northwind.Category>();
 
