@@ -37,7 +37,7 @@ namespace LinqToDB.Remote
 			options.Apply(this);
 		}
 
-		public string?          ConfigurationString { get; set; }
+		public string?          ConfigurationString { get; private set; }
 
 		protected void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
@@ -231,7 +231,7 @@ namespace LinqToDB.Remote
 
 				return _mappingSchema ??= _providedMappingSchema == null ? GetConfigurationInfo().MappingSchema : MappingSchema.CombineSchemas(_providedMappingSchema, GetConfigurationInfo().MappingSchema);
 			}
-			set
+			private set
 			{
 				ThrowOnDisposed();
 
@@ -258,8 +258,8 @@ namespace LinqToDB.Remote
 		private List<string>? _nextQueryHints;
 		public  List<string>   NextQueryHints => _nextQueryHints ??= new();
 
-		private        Type? _sqlProviderType;
-		public virtual Type   SqlProviderType
+		private           Type? _sqlProviderType;
+		protected virtual Type   SqlProviderType
 		{
 			get
 			{
@@ -282,8 +282,8 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		private        Type? _sqlOptimizerType;
-		public virtual Type   SqlOptimizerType
+		private           Type? _sqlOptimizerType;
+		protected virtual Type   SqlOptimizerType
 		{
 			get
 			{
@@ -493,7 +493,7 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		public async Task CommitBatchAsync()
+		public async Task CommitBatchAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowOnDisposed();
 
@@ -509,7 +509,7 @@ namespace LinqToDB.Remote
 				try
 				{
 					var data = LinqServiceSerializer.Serialize(SerializationMappingSchema, _queryBatch!.ToArray());
-					await client.ExecuteBatchAsync(ConfigurationString, data).ConfigureAwait(false);
+					await client.ExecuteBatchAsync(ConfigurationString, data, cancellationToken).ConfigureAwait(false);
 				}
 				finally
 				{
