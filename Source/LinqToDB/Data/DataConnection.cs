@@ -720,7 +720,7 @@ namespace LinqToDB.Data
 		/// Gets underlying database connection, used by current connection object, or opens new.
 		/// </summary>
 		// TODO: Remove in v7
-		[Obsolete("This API scheduled for removal in v7. Use TryGetDbConnection instead"), EditorBrowsable(EditorBrowsableState.Never)]
+		[Obsolete("This API scheduled for removal in v7. Use TryGetDbConnection, OpenConnection or OpenConnectionAsync instead based on your use-case"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DbConnection Connection
 		{
 			get
@@ -735,6 +735,11 @@ namespace LinqToDB.Data
 		/// Returns underlying <see cref="DbConnection"/> instance or <c>null</c> if connection is not open.
 		/// </summary>
 		public DbConnection? TryGetDbConnection() => _connection?.Connection;
+
+		/// <summary>
+		/// Returns underlying <see cref="DbConnection"/> instance. If connection is not open yet - it will be opened.
+		/// </summary>
+		public DbConnection OpenConnection() => EnsureConnection(connect: true).Connection;
 
 		internal DbConnection? CurrentConnection => _connection?.Connection;
 

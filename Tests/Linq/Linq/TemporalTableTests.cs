@@ -11,8 +11,6 @@ using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
-using Microsoft.AspNetCore.Razor.Runtime.TagHelpers;
-
 using NUnit.Framework;
 
 using Tests.Model;

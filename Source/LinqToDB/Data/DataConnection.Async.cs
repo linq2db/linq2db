@@ -119,6 +119,14 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
+		/// Returns underlying <see cref="DbConnection"/> instance. If connection is not open yet - it will be opened.
+		/// </summary>
+		public async Task<DbConnection> OpenConnectionAsync(CancellationToken cancellationToken)
+		{
+			return (await EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false)).Connection;
+		}
+
+		/// <summary>
 		/// Ensure that database connection opened. If opened connection missing, it will be opened asynchronously.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
