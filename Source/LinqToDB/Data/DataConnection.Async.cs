@@ -371,13 +371,13 @@ namespace LinqToDB.Data
 					await interceptor.OnClosingAsync(new (this)).ConfigureAwait(false);
 			}
 
-#if NET6_0_OR_GREATER
 #pragma warning disable CS0618 // Type or member is obsolete
+#if NET6_0_OR_GREATER
 			await DisposeCommandAsync().ConfigureAwait(false);
-#pragma warning restore CS0618 // Type or member is obsolete
 #else
 			DisposeCommand();
 #endif
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			if (TransactionAsync != null && _closeTransaction)
 			{

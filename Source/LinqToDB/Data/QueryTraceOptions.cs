@@ -55,8 +55,6 @@ namespace LinqToDB.Data
 						.Add(WriteTrace)
 						.Add(TraceSwitch?.DisplayName)
 						.Add(TraceSwitch?.Description)
-						.Add(TraceSwitch?.DefaultValue)
-						.Add(TraceSwitch?.Level)
 						.CreateID();
 				}
 

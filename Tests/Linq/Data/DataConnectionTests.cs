@@ -71,8 +71,7 @@ namespace Tests.Data
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				var connection = conn.TryGetDbConnection();
-				Assert.That(connection, Is.Not.Null);
+				var connection = conn.OpenConnection();
 
 				Assert.Multiple(() =>
 				{
@@ -905,7 +904,7 @@ namespace Tests.Data
 					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
 					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
 					{
-						db.TryGetDbConnection()!.EnlistTransaction(Transaction.Current);
+						db.OpenConnection().EnlistTransaction(Transaction.Current);
 						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
 
 						Transaction.Current!.Rollback();

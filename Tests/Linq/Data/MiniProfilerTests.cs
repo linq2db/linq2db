@@ -1275,15 +1275,13 @@ namespace Tests.Data
 		{
 			var unmapped  = type == ConnectionType.MiniProfilerNoMappings;
 			var provider  = new TestInformixDataProvider(ProviderName.Informix, InformixProvider.Informix);
-			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.Informix.IfxConnection, IBM.Data.Informix"))
+			var trace = string.Empty;
+			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.Informix.IfxConnection, IBM.Data.Informix", onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				// IfxType type name test
 				try
 				{
@@ -1450,15 +1448,13 @@ namespace Tests.Data
 				connectionType = ((OracleDataProvider)db.DataProvider).Adapter.ConnectionType;
 			}
 
-			using (var db = CreateDataConnection(provider, context, type, connectionType))
+			var trace = string.Empty;
+			using (var db = CreateDataConnection(provider, context, type, connectionType, onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				var commandInterceptor = new SaveWrappedCommandInterceptor(wrapped);
 				db.AddInterceptor(commandInterceptor);
 
@@ -1499,7 +1495,7 @@ namespace Tests.Data
 				//schema.DataSource not asserted, as it returns db hostname
 
 				// dbcommand properties
-				db.DisposeCommand();
+				//db.DisposeCommand();
 
 				db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
 

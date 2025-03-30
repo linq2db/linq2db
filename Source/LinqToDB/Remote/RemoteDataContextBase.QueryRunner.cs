@@ -270,7 +270,12 @@ namespace LinqToDB.Remote
 
 				public ValueTask DisposeAsync()
 				{
+#if NET6_0_OR_GREATER
 					return DataReader.DisposeAsync();
+#else
+					DataReader.Dispose();
+					return default;
+#endif
 				}
 			}
 

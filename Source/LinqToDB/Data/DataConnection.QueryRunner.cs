@@ -384,7 +384,13 @@ namespace LinqToDB.Data
 				finally
 				{
 					if (forGetSqlText && dbCommand != null)
+					{
+#if NET6_0_OR_GREATER
 						await dbCommand.DisposeAsync().ConfigureAwait(false);
+#else
+						dbCommand.Dispose();
+#endif
+					}
 				}
 
 				return result;

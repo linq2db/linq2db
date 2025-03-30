@@ -238,7 +238,7 @@ public class a_CreateData : TestBase
 					new InheritanceChild2() {InheritanceChildId = 3, TypeDiscriminator = 2,    InheritanceParentId = 3, Name = "InheritanceParent2" }
 				});
 
-			action?.Invoke(db.TryGetDbConnection()!);
+			action?.Invoke(db.OpenConnection());
 
 			if (exception != null)
 				throw exception;
