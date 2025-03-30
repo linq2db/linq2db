@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
 using LinqToDB.Common.Internal.Cache;
@@ -152,7 +153,7 @@ namespace LinqToDB.Remote
 				}
 				finally
 				{
-					(client as IDisposable)?.Dispose();
+					DisposeClient(client);
 				}
 			}
 
@@ -176,16 +177,16 @@ namespace LinqToDB.Remote
 					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
 					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
-					_configurationInfo = new ConfigurationInfo
+					_configurationInfo = new ConfigurationInfo()
 					{
-						LinqServiceInfo = info,
-						MappingSchema = ms,
+						LinqServiceInfo  = info,
+						MappingSchema    = ms,
 						MemberTranslator = translator,
 					};
 				}
 				finally
 				{
-					(client as IDisposable)?.Dispose();
+					await DisposeClientAsync(client).ConfigureAwait(false);
 				}
 			}
 
@@ -486,7 +487,7 @@ namespace LinqToDB.Remote
 				}
 				finally
 				{
-					(client as IDisposable)?.Dispose();
+					DisposeClient(client);
 					_queryBatch = null;
 				}
 			}
@@ -512,10 +513,26 @@ namespace LinqToDB.Remote
 				}
 				finally
 				{
-					(client as IDisposable)?.Dispose();
+					await DisposeClientAsync(client).ConfigureAwait(false);
 					_queryBatch = null;
 				}
 			}
+		}
+
+		private static void DisposeClient(ILinqService client)
+		{
+			if (client is IDisposable disposable)
+				disposable.Dispose();
+			else if (client is IAsyncDisposable asyncDisposable)
+				SafeAwaiter.Run(asyncDisposable.DisposeAsync);
+		}
+
+		private static async ValueTask DisposeClientAsync(ILinqService client)
+		{
+			if (client is IAsyncDisposable asyncDisposable)
+				await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+			else if (client is IDisposable disposable)
+				disposable.Dispose();
 		}
 
 		protected bool Disposed { get; private set; }

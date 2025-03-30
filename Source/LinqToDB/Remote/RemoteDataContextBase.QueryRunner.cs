@@ -5,6 +5,8 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Async;
+
 #if !NET6_0_OR_GREATER
 using System.Text;
 #endif
@@ -24,6 +26,7 @@ namespace LinqToDB.Remote
 		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 		{
 			ThrowOnDisposed();
+
 			return new QueryRunner(query, queryNumber, this, parametersContext, expressions, parameters, preambles);
 		}
 
@@ -121,18 +124,16 @@ namespace LinqToDB.Remote
 
 			public override void Dispose()
 			{
-				if (_client is IDisposable disposable)
-					disposable.Dispose();
+				if (_client != null)
+					DisposeClient(_client);
 
 				base.Dispose();
 			}
 
 			public override async ValueTask DisposeAsync()
 			{
-				if (_client is IAsyncDisposable asyncDisposable)
-					await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-				else if (_client is IDisposable disposable)
-					disposable.Dispose();
+				if (_client != null)
+					await DisposeClientAsync(_client).ConfigureAwait(false);
 
 				await base.DisposeAsync().ConfigureAwait(false);
 			}
@@ -242,18 +243,7 @@ namespace LinqToDB.Remote
 
 				public Task<bool> ReadAsync(CancellationToken cancellationToken)
 				{
-					cancellationToken.ThrowIfCancellationRequested();
-
-					try
-					{
-						return DataReader.Read() ? TaskCache.True : TaskCache.False;
-					}
-					catch (Exception ex)
-					{
-						var task = new TaskCompletionSource<bool>();
-						task.SetException(ex);
-						return task.Task;
-					}
+					return DataReader.ReadAsync(cancellationToken);
 				}
 
 				public void Dispose()
@@ -263,8 +253,7 @@ namespace LinqToDB.Remote
 
 				public ValueTask DisposeAsync()
 				{
-					DataReader.Dispose();
-					return default;
+					return DataReader.DisposeAsync();
 				}
 			}
 
