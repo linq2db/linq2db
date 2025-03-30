@@ -1648,11 +1648,15 @@ namespace LinqToDB.Data
 		#region System.IDisposable Members
 
 		protected bool  Disposed        { get; private set; }
-		public    bool? ThrowOnDisposed { get; set; }
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
+		public bool? ThrowOnDisposed { get; set; }
 
 		protected void CheckAndThrowOnDisposed()
 		{
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (Disposed && (ThrowOnDisposed ?? Common.Configuration.Data.ThrowOnDisposed))
+#pragma warning restore CS0618 // Type or member is obsolete
 				throw new ObjectDisposedException("DataConnection", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 
