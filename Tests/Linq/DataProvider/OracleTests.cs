@@ -3597,17 +3597,16 @@ namespace Tests.DataProvider
 		public void BulkCopyWithSchemaName(
 			[IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withSchema)
 		{
-			using var db    = GetDataConnection(context);
+			var trace = string.Empty;
+
+			using var db    = GetDataConnection(context, o => o.UseTracing(ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}));
 			using var table = db.CreateLocalTable<BulkCopyTable>();
 			{
 				var schemaName = TestUtils.GetSchemaName(db, context);
-
-				var trace = string.Empty;
-				db.OnTraceConnection += ti =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
 
 				table.BulkCopy(
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, SchemaName = withSchema ? schemaName : null },
@@ -3624,17 +3623,16 @@ namespace Tests.DataProvider
 		public void BulkCopyWithServerName(
 			[IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withServer)
 		{
-			using var db    = GetDataConnection(context);
+			var trace = string.Empty;
+
+			using var db    = GetDataConnection(context, o => o.UseTracing(ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}));
 			using var table = db.CreateLocalTable<BulkCopyTable>();
 			{
 				var serverName = TestUtils.GetServerName(db, context);
-
-				var trace = string.Empty;
-				db.OnTraceConnection += ti =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
 
 				table.BulkCopy(
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, ServerName = withServer ? serverName : null },
@@ -3651,17 +3649,16 @@ namespace Tests.DataProvider
 		public void BulkCopyWithEscapedColumn(
 			[IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
-			using var db    = GetDataConnection(context);
+			var trace = string.Empty;
+
+			using var db    = GetDataConnection(context, o => o.UseTracing(ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}));
 			using var table = db.CreateLocalTable<BulkCopyTable2>();
 			{
 				var serverName = TestUtils.GetServerName(db, context);
-
-				var trace = string.Empty;
-				db.OnTraceConnection += ti =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
 
 				table.BulkCopy(
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
@@ -3675,7 +3672,13 @@ namespace Tests.DataProvider
 		public void BulkCopyTransactionTest(
 			[IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withTransaction, [Values] bool withInternalTransaction)
 		{
-			using var db    = GetDataConnection(context);
+			var trace = string.Empty;
+
+			using var db    = GetDataConnection(context, o => o.UseTracing(ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}));
 			using var table = db.CreateLocalTable<BulkCopyTable>();
 			{
 				IDisposable? tr = null;
@@ -3684,13 +3687,6 @@ namespace Tests.DataProvider
 
 				try
 				{
-					var trace = string.Empty;
-					db.OnTraceConnection += ti =>
-					{
-						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-							trace = ti.SqlText;
-					};
-
 					// Another devart bug: explicit + internal transaction doesn't produce error...
 					if (withTransaction && withInternalTransaction && !context.IsAnyOf(TestProvName.AllOracleDevart))
 						Assert.Throws<InvalidOperationException>(() =>

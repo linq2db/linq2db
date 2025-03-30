@@ -240,8 +240,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task CalledWithCorrectNames([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
-			db.DataProvider = new WrapperProvider(db.DataProvider, (normalizerBase) => new ValidateOriginalNameNormalizer(normalizerBase));
+			using var db = GetDataConnection(context, o => o.UseDataProvider(new WrapperProvider(GetDataProvider(context), (normalizerBase) => new ValidateOriginalNameNormalizer(normalizerBase))));
 
 			await using var dbTable1 = db.CreateLocalTable<Table1>("table1");
 			await using var dbTable2 = db.CreateLocalTable<Table2>("table2");
@@ -271,18 +270,17 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task ExecutesDeterministically([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
 			string? lastSql = null;
-			var defaultTrace = db.OnTraceConnection;
-			db.OnTraceConnection = info =>
+
+			using var db = GetDataConnection(context, o => o.UseTracing(info =>
 			{
 				if (info.TraceInfoStep == TraceInfoStep.BeforeExecute)
 				{
 					lastSql = info.SqlText;
 				}
 
-				defaultTrace(info);
-			};
+				DataConnection.DefaultOnTraceConnection(info);
+			}));
 
 			await using var dbTable1 = db.CreateLocalTable<Table1>("table1");
 			await using var dbTable2 = db.CreateLocalTable<Table2>("table2");

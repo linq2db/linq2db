@@ -967,7 +967,7 @@ namespace Tests.Data
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.CreateCommand())
+				using (var cmd = db.OpenConnection().CreateCommand())
 				{
 					cmd.CommandText = sql;
 					using (var reader1 = cmd.ExecuteReader())
@@ -1018,7 +1018,7 @@ namespace Tests.Data
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.CreateCommand())
+				using (var cmd = db.OpenConnection().CreateCommand())
 				{
 					cmd.CommandText = sql;
 					try
@@ -1095,7 +1095,7 @@ namespace Tests.Data
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.CreateCommand())
+				using (var cmd = db.OpenConnection().CreateCommand())
 				{
 					cmd.CommandText = sql;
 					using (var reader1 = cmd.ExecuteReader())
@@ -1105,7 +1105,7 @@ namespace Tests.Data
 							cnt2++;
 
 							// open another reader on new command
-							using (var cmd2 = db.CreateCommand())
+							using (var cmd2 = db.OpenConnection().CreateCommand())
 							{
 								var cnt3 = 0;
 								cmd2.CommandText = sql;
@@ -1157,7 +1157,7 @@ namespace Tests.Data
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.CreateCommand())
+				using (var cmd = db.OpenConnection().CreateCommand())
 				{
 					cmd.CommandText = sql;
 					try
@@ -1167,7 +1167,7 @@ namespace Tests.Data
 							while (reader1.Read())
 							{
 								// open another reader on new command
-								using (var cmd2 = db.CreateCommand())
+								using (var cmd2 = db.OpenConnection().CreateCommand())
 								{
 									cmd2.CommandText = sql;
 
@@ -1236,7 +1236,7 @@ namespace Tests.Data
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				var cmd = db.CreateCommand();
+				var cmd = db.OpenConnection().CreateCommand();
 				cmd.CommandText = sql;
 				using (var reader1 = cmd.ExecuteReader())
 				{
@@ -1246,7 +1246,7 @@ namespace Tests.Data
 						cnt2++;
 
 						// open another reader on new command
-						using (var cmd2 = db.CreateCommand())
+						using (var cmd2 = db.OpenConnection().CreateCommand())
 						{
 							var cnt3 = 0;
 							cmd2.CommandText = sql;
@@ -1296,7 +1296,7 @@ namespace Tests.Data
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				var cmd = db.CreateCommand();
+				var cmd = db.OpenConnection().CreateCommand();
 				cmd.CommandText = sql;
 				using (var reader1 = cmd.ExecuteReader())
 				{
@@ -1306,7 +1306,7 @@ namespace Tests.Data
 						while (reader1.Read())
 						{
 							// open another reader on new command
-							using (var cmd2 = db.CreateCommand())
+							using (var cmd2 = db.OpenConnection().CreateCommand())
 							{
 								cmd2.CommandText = sql;
 

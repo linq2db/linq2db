@@ -1367,7 +1367,16 @@ namespace LinqToDB.Data
 			// make sure command creation will not lead to sync connection.Open call
 			await DataConnection.EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false);
 
-			return InitCommand();
+			var hasParameters = Parameters?.Length > 0;
+
+			await DataConnection.InitCommandAsync(CommandType, CommandText, Parameters, null, hasParameters, cancellationToken).ConfigureAwait(false);
+
+			if (hasParameters)
+				SetParameters(DataConnection, Parameters!);
+
+			DataConnection.CommitCommandInit();
+
+			return hasParameters;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

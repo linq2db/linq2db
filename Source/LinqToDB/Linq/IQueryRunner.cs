@@ -50,7 +50,13 @@ namespace LinqToDB.Linq
 		/// </summary>
 		/// <returns>Query SQL text with parameters.</returns>
 		IReadOnlyList<QuerySql> GetSqlText();
-		
+
+		/// <summary>
+		/// Returns SQL text with parameters for query.
+		/// </summary>
+		/// <returns>Query SQL text with parameters.</returns>
+		Task<IReadOnlyList<QuerySql>> GetSqlTextAsync(CancellationToken cancellationToken);
+
 		IQueryExpressions Expressions      { get; }
 		IDataContext      DataContext      { get; }
 		object?[]?        Parameters       { get; }

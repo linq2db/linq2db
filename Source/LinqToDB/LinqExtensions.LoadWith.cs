@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
@@ -76,9 +77,10 @@ namespace LinqToDB
 
 			public IQueryable<TEntity> Query { get; }
 
-			Expression              IExpressionQuery.Expression                                   => Query.Expression;
-			IDataContext            IExpressionQuery.DataContext                                  => ((IExpressionQuery)Query.GetLinqToDBSource()).DataContext;
-			IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => ((IExpressionQuery)Query.GetLinqToDBSource()).GetSqlQueries(options);
+			Expression                    IExpressionQuery.Expression                                                                             => Query.Expression;
+			IDataContext                  IExpressionQuery.DataContext                                                                            => ((IExpressionQuery)Query.GetLinqToDBSource()).DataContext;
+			IReadOnlyList<QuerySql>       IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options)                                           => ((IExpressionQuery)Query.GetLinqToDBSource()).GetSqlQueries(options);
+			Task<IReadOnlyList<QuerySql>> IExpressionQuery.GetSqlQueriesAsync(SqlGenerationOptions? options, CancellationToken cancellationToken) => ((IExpressionQuery)Query.GetLinqToDBSource()).GetSqlQueriesAsync(options, cancellationToken);
 		}
 
 		sealed class LoadWithQueryable<TEntity, TProperty> : LoadWithQueryableBase<TEntity>, ILoadWithQueryable<TEntity, TProperty>

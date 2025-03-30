@@ -71,12 +71,40 @@ namespace LinqToDB.Linq
 			return sqlText;
 		}
 
+		async Task<IReadOnlyList<QuerySql>> IExpressionQuery.GetSqlQueriesAsync(SqlGenerationOptions? options, CancellationToken cancellationToken)
+		{
+			var oldInline = DataContext.InlineParameters;
+
+			if (options?.InlineParameters != null)
+				DataContext.InlineParameters = options.InlineParameters.Value;
+
+			var expression  = Expression;
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var info        = GetQuery(ref expressions, true, out var dependsOnParameters);
+
+			if (options?.MultiInsertMode != null && info.Queries[0].Statement is SqlMultiInsertStatement multiInsert)
+				multiInsert.InsertType = options.MultiInsertMode.Value;
+
+			if (!dependsOnParameters)
+			{
+				Expression = expressions.MainExpression;
+			}
+
+			var sqlText    = await QueryRunner.GetSqlTextAsync(info, DataContext, expressions, Parameters, Preambles, cancellationToken).ConfigureAwait(false);
+
+			DataContext.InlineParameters = oldInline;
+
+			return sqlText;
+		}
+
+#if DEBUG
 		public virtual QueryDebugView DebugView
 			=> new(
 				() => new ExpressionPrinter().PrintExpression(Expression),
 				() => ((IExpressionQuery)this).GetSqlQueries(null)[0].Sql,
 				() => ((IExpressionQuery)this).GetSqlQueries(new () { InlineParameters = true })[0].Sql
 				);
+#endif
 
 		#endregion
 

@@ -1161,6 +1161,17 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Configure the database connection to use the specified <see cref="TraceSwitch"/> for tracing.
+		/// </summary>
+		/// <param name="traceSwitch"><see cref="TraceSwitch"/> instance to use with connection.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		[Pure]
+		public static DataOptions UseTraceSwitch(this DataOptions options, TraceSwitch traceSwitch)
+		{
+			return options.WithOptions<QueryTraceOptions>(o => o with { TraceSwitch = traceSwitch });
+		}
+
+		/// <summary>
 		/// Configure the database to use the specified trace level and callback for logging or tracing.
 		/// </summary>
 		/// <param name="traceLevel">Trace level to use.</param>

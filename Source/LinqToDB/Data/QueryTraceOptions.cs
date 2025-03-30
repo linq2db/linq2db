@@ -7,7 +7,7 @@ using LinqToDB.Common.Internal;
 namespace LinqToDB.Data
 {
 	/// <param name="TraceLevel">
-	/// Gets custom trace level to use with <see cref="DataConnection"/> instance.
+	/// Gets custom trace level to use with <see cref="DataConnection"/> instance. Value is ignored when <paramref name="TraceSwitch"/> specified.
 	/// </param>
 	/// <param name="OnTrace">
 	/// Gets custom trace method to use with <see cref="DataConnection"/> instance.
@@ -15,11 +15,15 @@ namespace LinqToDB.Data
 	/// <param name="WriteTrace">
 	/// Gets custom trace writer to use with <see cref="DataConnection"/> instance.
 	/// </param>
+	/// <param name="TraceSwitch">
+	/// Gets custom trace switcher to use with <see cref="DataConnection"/> instance.
+	/// </param>
 	public sealed record QueryTraceOptions
 	(
-		TraceLevel?                       TraceLevel = default,
-		Action<TraceInfo>?                OnTrace    = default,
-		Action<string,string,TraceLevel>? WriteTrace = default
+		TraceLevel?                       TraceLevel  = default,
+		Action<TraceInfo>?                OnTrace     = default,
+		Action<string,string,TraceLevel>? WriteTrace  = default,
+		TraceSwitch?                      TraceSwitch = default
 		// If you add another parameter here, don't forget to update
 		// QueryTraceOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -31,9 +35,10 @@ namespace LinqToDB.Data
 
 		QueryTraceOptions(QueryTraceOptions original)
 		{
-			TraceLevel = original.TraceLevel;
-			OnTrace    = original.OnTrace;
-			WriteTrace = original.WriteTrace;
+			TraceLevel  = original.TraceLevel;
+			OnTrace     = original.OnTrace;
+			WriteTrace  = original.WriteTrace;
+			TraceSwitch = original.TraceSwitch;
 		}
 
 		int? _configurationID;
@@ -48,6 +53,10 @@ namespace LinqToDB.Data
 						.Add(TraceLevel)
 						.Add(OnTrace)
 						.Add(WriteTrace)
+						.Add(TraceSwitch?.DisplayName)
+						.Add(TraceSwitch?.Description)
+						.Add(TraceSwitch?.DefaultValue)
+						.Add(TraceSwitch?.Level)
 						.CreateID();
 				}
 

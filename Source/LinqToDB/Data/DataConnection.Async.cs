@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
@@ -18,10 +19,7 @@ namespace LinqToDB.Data
 	public partial class DataConnection
 	{
 #if NET6_0_OR_GREATER
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// </summary>
-		public async ValueTask DisposeCommandAsync()
+		private async ValueTask DisposeCommandAsync()
 		{
 			if (_command != null)
 			{
@@ -30,6 +28,39 @@ namespace LinqToDB.Data
 			}
 		}
 #endif
+
+		/// <summary>
+		/// Creates if needed and returns current command instance.
+		/// </summary>
+		internal async Task<DbCommand> GetOrCreateCommandAsync(CancellationToken cancellationToken) => _command ??= await CreateCommandAsync(cancellationToken).ConfigureAwait(false);
+
+		internal async Task InitCommandAsync(CommandType commandType, string sql, DataParameter[]? parameters, IReadOnlyCollection<string>? queryHints, bool withParameters, CancellationToken cancellationToken)
+		{
+			CheckAndThrowOnDisposed();
+
+			if (queryHints?.Count > 0)
+			{
+				var sqlProvider = DataProvider.CreateSqlBuilder(MappingSchema, Options);
+				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
+			}
+
+			_command = DataProvider.InitCommand(this, await GetOrCreateCommandAsync(cancellationToken).ConfigureAwait(false), commandType, sql, parameters, withParameters);
+		}
+
+		private async Task<DbCommand> CreateCommandAsync(CancellationToken cancellationToken)
+		{
+			CheckAndThrowOnDisposed();
+
+			var command = (await EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false)).CreateCommand();
+
+			if (_commandTimeout.HasValue)
+				command.CommandTimeout = _commandTimeout.Value;
+
+			if (TransactionAsync != null)
+				command.Transaction = Transaction;
+
+			return command;
+		}
 
 		/// <summary>
 		/// Starts new transaction asynchronously for current connection with default isolation level. If connection already has transaction, it will be rolled back.

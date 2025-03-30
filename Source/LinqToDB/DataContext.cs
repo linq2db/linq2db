@@ -121,9 +121,9 @@ namespace LinqToDB
 		int  _msID;
 		int? _configurationID;
 		/// <summary>
-		/// Gets or sets ContextID.
+		/// Gets context configuration ID.
 		/// </summary>
-		public int           ConfigurationID
+		int IConfigurationID.ConfigurationID
 		{
 			// can we just delegate it to underlying DataConnection?
 			get
@@ -157,7 +157,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Contains text of last command, sent to database using current context.
 		/// </summary>
-		public string?       LastQuery           { get; set; }
+		public string?       LastQuery           { get; private set; }
 
 		/// <summary>
 		/// Gets or sets trace handler, used for data connection instance.
@@ -178,6 +178,7 @@ namespace LinqToDB
 
 				_keepConnectionAlive = value;
 
+				// TODO: call to blocking operation without async API
 				if (value == false)
 					ReleaseQuery();
 			}
@@ -331,7 +332,9 @@ namespace LinqToDB
 				}
 
 				if (OnTraceConnection != null)
+#pragma warning disable CS0618 // Type or member is obsolete
 					_dataConnection.OnTraceConnection = OnTraceConnection;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 				_dataConnection.OnRemoveInterceptor += RemoveInterceptor;
 			}
@@ -343,7 +346,7 @@ namespace LinqToDB
 		{
 			if (_disposed)
 				// GetType().FullName to support inherited types
-				throw new ObjectDisposedException(GetType().FullName);
+				throw new ObjectDisposedException(GetType().FullName, "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 
 		/// <summary>
@@ -621,6 +624,11 @@ namespace LinqToDB
 			public IReadOnlyList<QuerySql> GetSqlText()
 			{
 				return _queryRunner!.GetSqlText();
+			}
+
+			public Task<IReadOnlyList<QuerySql>> GetSqlTextAsync(CancellationToken cancellationToken)
+			{
+				return _queryRunner!.GetSqlTextAsync(cancellationToken);
 			}
 
 			public IDataContext      DataContext      => _dataContext!;

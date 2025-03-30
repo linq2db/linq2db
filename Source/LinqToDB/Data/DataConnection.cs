@@ -504,7 +504,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Database provider implementation for specific database engine.
 		/// </summary>
-		public IDataProvider DataProvider        { get; internal set; }
+		public IDataProvider DataProvider        { get; private set; }
 		/// <summary>
 		/// Database connection string.
 		/// </summary>
@@ -512,7 +512,13 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Retry policy for current connection.
 		/// </summary>
-		public IRetryPolicy? RetryPolicy         { get; set; }
+		public IRetryPolicy? RetryPolicy
+		{
+			get;
+			// TODO: Make private in v7 and remove obsoletion warning ignores from callers
+			[Obsolete("This API scheduled for removal in v7. Use DataOptions's UseRetryPolicy API"), EditorBrowsable(EditorBrowsableState.Never)]
+			set;
+		}
 
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -546,7 +552,13 @@ namespace LinqToDB.Data
 		/// Configured on the connection builder using <see cref="DataOptionsExtensions.UseTracing(DataOptions,Action{TraceInfo})"/>.
 		/// defaults to <see cref="WriteTraceLineConnection"/> calls.
 		/// </summary>
-		public Action<TraceInfo> OnTraceConnection { get; set; } = DefaultOnTraceConnection;
+		public Action<TraceInfo> OnTraceConnection
+		{
+			get;
+			// TODO: Make private in v7 and remove obsoletion warning ignores from callers
+			[Obsolete("This API scheduled for removal in v7. Use DataOptions's UseTracing API"), EditorBrowsable(EditorBrowsableState.Never)]
+			set;
+		} = DefaultOnTraceConnection;
 
 		/// <summary>
 		/// Writes the trace out using <see cref="WriteTraceLineConnection"/>.
@@ -685,6 +697,8 @@ namespace LinqToDB.Data
 		public TraceSwitch TraceSwitchConnection
 		{
 			get => _traceSwitchConnection ?? _traceSwitch;
+			// TODO: Make private in v7 and remove obsoletion warning ignores from callers
+			[Obsolete("This API scheduled for removal in v7. Use DataOptions's UseTraceSwitch API"), EditorBrowsable(EditorBrowsableState.Never)]
 			set => _traceSwitchConnection = value;
 		}
 
@@ -704,7 +718,13 @@ namespace LinqToDB.Data
 		/// Defaults to <see cref="WriteTraceLine"/>.
 		/// Used for the current instance.
 		/// </summary>
-		public Action<string,string,TraceLevel> WriteTraceLineConnection { get; protected set; } = WriteTraceLine;
+		public Action<string,string,TraceLevel> WriteTraceLineConnection
+		{
+			get;
+			// TODO: Make private in v7 and remove obsoletion warning ignores from callers
+			[Obsolete("This API scheduled for removal in v7. Use DataOptions's UseTraceWith API"), EditorBrowsable(EditorBrowsableState.Never)]
+			protected set;
+		} = WriteTraceLine;
 
 		#endregion
 
@@ -815,7 +835,9 @@ namespace LinqToDB.Data
 					interceptor.OnClosing(new(this));
 			}
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			DisposeCommand();
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			if (TransactionAsync != null && _closeTransaction)
 			{
@@ -857,7 +879,9 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Creates if needed and returns current command instance.
 		/// </summary>
+#pragma warning disable CS0618 // Type or member is obsolete
 		internal DbCommand GetOrCreateCommand() => _command ??= CreateCommand();
+#pragma warning restore CS0618 // Type or member is obsolete
 
 		/// <summary>
 		/// Contains text of last command, sent to database using current connection.
@@ -911,7 +935,9 @@ namespace LinqToDB.Data
 					_commandTimeout = null;
 					// TODO: that's not good - user is not aware that he can trigger blocking operation
 					// we should postpone disposal till command used (or redesign CommandTimeout to methods)
+#pragma warning disable CS0618 // Type or member is obsolete
 					DisposeCommand();
+#pragma warning restore CS0618 // Type or member is obsolete
 				}
 				else
 				{
@@ -922,9 +948,8 @@ namespace LinqToDB.Data
 			}
 		}
 
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// </summary>
+		// TODO: Mark private in v7
+		[Obsolete("This API scheduled for removal in v7. Use TryGetConnection/OpenConnection or OpenConnectionASync chained with CreateCommand call. Note that it is your responsibility to dispose such command after use."), EditorBrowsable(EditorBrowsableState.Never)]
 		public DbCommand CreateCommand()
 		{
 			CheckAndThrowOnDisposed();
@@ -943,6 +968,8 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// </summary>
+		// TODO: Mark private in v7 and remove warning supporessions from callers
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public void DisposeCommand()
 		{
 			CheckAndThrowOnDisposed();
@@ -1338,6 +1365,8 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Removes cached data mappers.
 		/// </summary>
+		// TODO: remove in v7
+		[Obsolete("This API scheduled for removal in v7. Use CommandInfo.ClearObjectReaderCache instead"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static void ClearObjectReaderCache()
 		{
 			CommandInfo.ClearObjectReaderCache();
@@ -1662,7 +1691,7 @@ namespace LinqToDB.Data
 #pragma warning disable CS0618 // Type or member is obsolete
 			if (Disposed && (ThrowOnDisposed ?? Common.Configuration.Data.ThrowOnDisposed))
 #pragma warning restore CS0618 // Type or member is obsolete
-				throw new ObjectDisposedException("DataConnection", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
+				throw new ObjectDisposedException(GetType().FullName, "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 
 		/// <summary>

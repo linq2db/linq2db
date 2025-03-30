@@ -652,7 +652,9 @@ namespace LinqToDB.Data
 
 			public static void Apply(DataConnection dataConnection, RetryPolicyOptions options)
 			{
+#pragma warning disable CS0618 // Type or member is obsolete
 				dataConnection.RetryPolicy = options.RetryPolicy ?? options.Factory?.Invoke(dataConnection);
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			public static void Apply(DataConnection dataConnection, DataContextOptions options)
@@ -666,9 +668,13 @@ namespace LinqToDB.Data
 
 			public static void Apply(DataConnection dataConnection, QueryTraceOptions options)
 			{
-				if (options.OnTrace    != null) dataConnection.OnTraceConnection        = options.OnTrace;
-				if (options.TraceLevel != null) dataConnection.TraceSwitchConnection    = new("DataConnection", "DataConnection trace switch") {Level = options.TraceLevel.Value};
+#pragma warning disable CS0618 // Type or member is obsolete
+				if (options.OnTrace     != null) dataConnection.OnTraceConnection     = options.OnTrace;
 				if (options.WriteTrace != null) dataConnection.WriteTraceLineConnection = options.WriteTrace;
+
+				if      (options.TraceSwitch != null) dataConnection.TraceSwitchConnection = options.TraceSwitch;
+				else if (options.TraceLevel  != null) dataConnection.TraceSwitchConnection = new("DataConnection", "DataConnection trace switch") {Level = options.TraceLevel.Value};
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 		}
 	}

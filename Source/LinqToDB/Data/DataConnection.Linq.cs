@@ -41,12 +41,7 @@ namespace LinqToDB.Data
 
 		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema, Options);
 
-		static Func<DataOptions,ISqlOptimizer> GetGetSqlOptimizer(IDataProvider dp)
-		{
-			return dp.GetSqlOptimizer;
-		}
-
-		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer => GetGetSqlOptimizer(DataProvider);
+		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer => DataProvider.GetSqlOptimizer;
 
 		#endregion
 	}

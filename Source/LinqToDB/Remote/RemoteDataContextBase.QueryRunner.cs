@@ -50,12 +50,29 @@ namespace LinqToDB.Remote
 				_evaluationContext = new EvaluationContext(parameterValues);
 			}
 
+			protected override Task SetQueryAsync(IReadOnlyParameterValues parameterValues, bool forGetSqlText, CancellationToken cancellationToken)
+			{
+				_evaluationContext = new EvaluationContext(parameterValues);
+				return Task.CompletedTask;
+			}
+
 			#region GetSqlText
 
 			public override IReadOnlyList<QuerySql> GetSqlText()
 			{
 				SetCommand(true);
+				return GetSqlTextImpl();
+			}
 
+			public override async Task<IReadOnlyList<QuerySql>> GetSqlTextAsync(CancellationToken cancellationToken)
+			{
+				await SetCommandAsync(true, cancellationToken).ConfigureAwait(false);
+
+				return GetSqlTextImpl();
+			}
+
+			private IReadOnlyList<QuerySql> GetSqlTextImpl()
+			{
 				var query                  = Query.Queries[QueryNumber];
 				var sqlBuilder             = DataContext.CreateSqlProvider();
 				var sqlOptimizer           = DataContext.GetSqlOptimizer(DataContext.Options);
@@ -104,13 +121,13 @@ namespace LinqToDB.Remote
 					if (optimizationContext.HasParameters())
 					{
 						var sqlParameters = optimizationContext.GetParameters();
-						parameters        = new DataParameter[sqlParameters.Count];
+						parameters = new DataParameter[sqlParameters.Count];
 
 						for (var pIdx = 0; pIdx < sqlParameters.Count; pIdx++)
 						{
 							var p              = sqlParameters[pIdx];
 							var parameterValue = p.GetParameterValue(_evaluationContext.ParameterValues);
-							parameters[pIdx]   = new DataParameter(p.Name, parameterValue.ProviderValue, parameterValue.DbDataType);
+							parameters[pIdx] = new DataParameter(p.Name, parameterValue.ProviderValue, parameterValue.DbDataType);
 						}
 					}
 
@@ -120,7 +137,7 @@ namespace LinqToDB.Remote
 				return queries;
 			}
 
-#endregion
+			#endregion
 
 			public override void Dispose()
 			{
@@ -265,7 +282,7 @@ namespace LinqToDB.Remote
 				// preload _configurationInfo asynchronously if needed
 				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
-				SetCommand(false);
+				await SetCommandAsync(false, cancellationToken).ConfigureAwait(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
@@ -296,7 +313,7 @@ namespace LinqToDB.Remote
 				// preload _configurationInfo asynchronously if needed
 				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
-				SetCommand(false);
+				await SetCommandAsync(false, cancellationToken).ConfigureAwait(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
@@ -330,7 +347,7 @@ namespace LinqToDB.Remote
 				// preload _configurationInfo asynchronously if needed
 				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
-				SetCommand(false);
+				await SetCommandAsync(false, cancellationToken).ConfigureAwait(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
