@@ -968,7 +968,7 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// </summary>
-		// TODO: Mark private in v7 and remove warning supporessions from callers
+		// TODO: Mark private in v7 and remove warning suppressions from callers
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public void DisposeCommand()
 		{

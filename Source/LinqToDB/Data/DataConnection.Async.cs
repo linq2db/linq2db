@@ -19,7 +19,9 @@ namespace LinqToDB.Data
 	public partial class DataConnection
 	{
 #if NET6_0_OR_GREATER
-		private async ValueTask DisposeCommandAsync()
+		// TODO: Mark private in v7 and remove warning suppressions from callers
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
+		public async ValueTask DisposeCommandAsync()
 		{
 			if (_command != null)
 			{
@@ -370,7 +372,9 @@ namespace LinqToDB.Data
 			}
 
 #if NET6_0_OR_GREATER
+#pragma warning disable CS0618 // Type or member is obsolete
 			await DisposeCommandAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 #else
 			DisposeCommand();
 #endif

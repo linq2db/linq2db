@@ -157,7 +157,13 @@ namespace LinqToDB
 		/// <summary>
 		/// Contains text of last command, sent to database using current context.
 		/// </summary>
-		public string?       LastQuery           { get; private set; }
+		public string?       LastQuery
+		{
+			get;
+			// TODO: Mark private in v7 and remove warning suppressions from callers
+			[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
+			set;
+		}
 
 		/// <summary>
 		/// Gets or sets trace handler, used for data connection instance.
@@ -360,7 +366,9 @@ namespace LinqToDB
 
 			if (_dataConnection != null)
 			{
+#pragma warning disable CS0618 // Type or member is obsolete
 				LastQuery = _dataConnection.LastQuery;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
 				{
@@ -385,7 +393,9 @@ namespace LinqToDB
 
 			if (_dataConnection != null)
 			{
+#pragma warning disable CS0618 // Type or member is obsolete
 				LastQuery = _dataConnection.LastQuery;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
 				{

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -37,7 +38,13 @@ namespace LinqToDB.Remote
 			options.Apply(this);
 		}
 
-		public string?          ConfigurationString { get; private set; }
+		public string?          ConfigurationString
+		{
+			get;
+			// TODO: Mark private in v7 and remove warning suppressions from callers
+			[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
+			set;
+		}
 
 		protected void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
@@ -231,7 +238,9 @@ namespace LinqToDB.Remote
 
 				return _mappingSchema ??= _providedMappingSchema == null ? GetConfigurationInfo().MappingSchema : MappingSchema.CombineSchemas(_providedMappingSchema, GetConfigurationInfo().MappingSchema);
 			}
-			private set
+			// TODO: Mark private in v7 and remove warning suppressions from callers
+			[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
+			set
 			{
 				ThrowOnDisposed();
 
@@ -589,16 +598,22 @@ namespace LinqToDB.Remote
 			{
 				if (options.ConfigurationString != null)
 				{
+#pragma warning disable CS0618 // Type or member is obsolete
 					dataContext.ConfigurationString = options.ConfigurationString;
+#pragma warning restore CS0618 // Type or member is obsolete
 				}
 
 				if (options.MappingSchema != null)
 				{
+#pragma warning disable CS0618 // Type or member is obsolete
 					dataContext.MappingSchema = options.MappingSchema;
+#pragma warning restore CS0618 // Type or member is obsolete
 				}
 				else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
 				{
+#pragma warning disable CS0618 // Type or member is obsolete
 					dataContext.MappingSchema = new(dataContext.MappingSchema);
+#pragma warning restore CS0618 // Type or member is obsolete
 				}
 			}
 
