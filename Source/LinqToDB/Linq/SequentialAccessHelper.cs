@@ -40,6 +40,7 @@ namespace LinqToDB.Linq
 			// slow mode column types
 			public Dictionary<int, Tuple<ConvertFromDataReaderExpression.ColumnReader, ISet<Type>>>? SlowColumnTypes;
 
+			public Expression? DataContextExpr;
 			public Expression? DataReaderExpr;
 			public string?     FailMessage;
 			public bool        Updated;
@@ -146,7 +147,8 @@ namespace LinqToDB.Linq
 							if (context.SlowColumnTypes == null)
 							{
 								context.SlowColumnTypes = new Dictionary<int, Tuple<ConvertFromDataReaderExpression.ColumnReader, ISet<Type>>>();
-								context.DataReaderExpr  = call.Arguments[0];
+								context.DataContextExpr = call.Arguments[0];
+								context.DataReaderExpr  = call.Arguments[1];
 							}
 
 							context.SlowColumnTypes.Add(columnIndex.Value, new Tuple<ConvertFromDataReaderExpression.ColumnReader, ISet<Type>>(columnReader, new HashSet<Type>()));
@@ -157,7 +159,7 @@ namespace LinqToDB.Linq
 						// replacement expression build later when we know all types
 						return call.Update(
 							call.Object,
-							call.Arguments.Take(2).Select(a => a.Transform(context, TranformFunc)).Concat(new[] { context.NewVariables[index]! }));
+							new[] { call.Arguments[0] }.Concat(call.Arguments.Skip(1).Take(2).Select(a => a.Transform(context, TranformFunc)).Concat(new[] { context.NewVariables[index]! })));
 					}
 
 					foreach (var arg in call.Arguments)
@@ -219,6 +221,7 @@ namespace LinqToDB.Linq
 							Expression.Call(
 								Expression.Constant(kvp.Value.Item1),
 								Methods.LinqToDB.ColumnReader.GetRawValueSequential,
+								ctx.DataContextExpr!,
 								ctx.DataReaderExpr!,
 								Expression.Constant(kvp.Value.Item2.ToArray())),
 							valueVariable.Type));

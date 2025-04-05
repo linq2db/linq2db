@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
@@ -166,6 +167,8 @@ namespace LinqToDB.DataProvider
 		}
 #endif
 
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public virtual object? GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
 			return null;

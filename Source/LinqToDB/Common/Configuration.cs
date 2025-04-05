@@ -157,6 +157,8 @@ namespace LinqToDB.Common
 			/// Enables throwing of <see cref="ObjectDisposedException"/> when access disposed <see cref="DataConnection"/> instance.
 			/// Default value: <c>true</c>.
 			/// </summary>
+			// TODO: Remove in v7
+			[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 			public static bool ThrowOnDisposed = true;
 
 			/// <summary>

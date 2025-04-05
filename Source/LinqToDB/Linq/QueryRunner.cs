@@ -187,7 +187,7 @@ namespace LinqToDB.Linq
 						static (context, e) =>
 						{
 							if (e is ConvertFromDataReaderExpression ex)
-								return new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, context.NewVariable!, context.Context).Reduce();
+								return new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, ex.DataContextParam, context.NewVariable!, context.Context).Reduce();
 
 							return ReplaceVariable(context, e);
 						});
@@ -650,6 +650,7 @@ namespace LinqToDB.Linq
 		static readonly PropertyInfo _preamblesInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.Preambles);
 
 		public static readonly PropertyInfo RowsCountInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.RowsCount);
+		public static readonly PropertyInfo DataContextInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.DataContext);
 
 		static Expression<Func<IQueryRunner, DbDataReader, T>> WrapMapper<T>(
 			Expression<Func<IQueryRunner,IDataContext, DbDataReader, IQueryExpressions, object?[]?,object?[]?,T>> expression)

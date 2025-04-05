@@ -74,6 +74,8 @@ namespace LinqToDB
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
+			AssertDisposed();
+
 			AddInterceptor(interceptor, true);
 		}
 
@@ -122,6 +124,8 @@ namespace LinqToDB
 
 		public void RemoveInterceptor(IInterceptor interceptor)
 		{
+			AssertDisposed();
+
 			Options = Options.RemoveInterceptor(interceptor);
 
 			this.RemoveInterceptorImpl(interceptor);

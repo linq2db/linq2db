@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.Access
 
 			// user configured external connection: use it
 			// there is no big value in support for such edge case
-			if (newConnection.Connection == dataConnection.Connection)
+			if (newConnection.OpenDbConnection() == dataConnection.OpenDbConnection())
 				return action(dataConnection);
 
 			return action(newConnection);
@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.Access
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.OpenDbConnection());
 			if (connection == null)
 				return [];
 
@@ -69,7 +69,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Tables"));
+			var tables = ExecuteOnNewConnection(dataConnection, cn => cn.OpenDbConnection().GetSchema("Tables"));
 
 			return
 			(
@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.Access
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var idxs = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Indexes"));
+			var idxs = ExecuteOnNewConnection(dataConnection, cn => cn.OpenDbConnection().GetSchema("Indexes"));
 
 			return
 			(
@@ -114,7 +114,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Columns"));
+			var cs = ExecuteOnNewConnection(dataConnection, cn => cn.OpenDbConnection().GetSchema("Columns"));
 
 			return
 			(
@@ -165,7 +165,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var ps = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Procedures"));
+			var ps = ExecuteOnNewConnection(dataConnection, cn => cn.OpenDbConnection().GetSchema("Procedures"));
 
 			return
 			(

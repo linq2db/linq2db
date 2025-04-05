@@ -20,7 +20,7 @@ namespace Tests.UserTests
 
 			using (var db = new DataConnection(new DataOptions().UseConnection(new TestNoopProvider(), connection, dispose)))
 			{
-				var c = db.Connection;
+				var c = db.OpenDbConnection();
 				Assert.That(c.State, Is.EqualTo(ConnectionState.Open));
 			}
 
@@ -38,8 +38,7 @@ namespace Tests.UserTests
 
 			using (var db = new DataConnection(new DataOptions().UseConnectionString(new TestNoopProvider(), "")))
 			{
-				connection = db.Connection as TestNoopConnection;
-				Assert.That(connection, Is.Not.Null);
+				connection = db.OpenDbConnection() as TestNoopConnection;
 				Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
 			}
 
@@ -62,7 +61,8 @@ namespace Tests.UserTests
 
 			using (var db = new DataConnection(new DataOptions().UseConnection(new TestNoopProvider(), connection, false)))
 			{
-				var c = db.Connection;
+				var c = db.TryGetDbConnection();
+				Assert.That(c, Is.Not.Null);
 				Assert.That(c.State, Is.EqualTo(ConnectionState.Open));
 			}
 

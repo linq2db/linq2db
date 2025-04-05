@@ -112,9 +112,8 @@ namespace Tests.Samples
 
 			Assert.Throws<DivideByZeroException>(() =>
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataConnection(context, o => o.UseRetryPolicy(ret)))
 				{
-					db.RetryPolicy = ret;
 					db.GetTable<TestTable>().ToList();
 				}
 			});

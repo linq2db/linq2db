@@ -27,6 +27,8 @@ namespace LinqToDB.Data
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
+			CheckAndThrowOnDisposed();
+
 			this.AddInterceptorImpl(interceptor);
 		}
 
@@ -35,6 +37,8 @@ namespace LinqToDB.Data
 		/// <inheritdoc cref="IDataContext.RemoveInterceptor(IInterceptor)"/>
 		public void RemoveInterceptor(IInterceptor interceptor)
 		{
+			CheckAndThrowOnDisposed();
+
 			this.RemoveInterceptorImpl(interceptor);
 			OnRemoveInterceptor?.Invoke(interceptor);
 		}
