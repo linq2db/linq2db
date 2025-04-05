@@ -29,6 +29,18 @@ namespace LinqToDB.Data
 				_command = null;
 			}
 		}
+
+		/// <summary>
+		/// Sets command timeout to default connection value.
+		/// </summary>
+		public ValueTask ResetCommandTimeoutAsync()
+		{
+			_commandTimeout = null;
+
+#pragma warning disable CS0618 // Type or member is obsolete
+			return DisposeCommandAsync();
+#pragma warning restore CS0618 // Type or member is obsolete
+		}
 #endif
 
 		/// <summary>

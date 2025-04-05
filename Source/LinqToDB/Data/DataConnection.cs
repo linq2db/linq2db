@@ -953,13 +953,30 @@ namespace LinqToDB.Data
 		}
 
 		private int? _commandTimeout;
+#if NET6_0_OR_GREATER
 		/// <summary>
 		/// Gets or sets command execution timeout in seconds.
-		/// Negative timeout value means that default timeout will be used.
-		/// 0 timeout value corresponds to infinite timeout.
-		/// By default timeout is not set and default value for current provider used.
+		/// Supported values:
+		/// <list type="bullet">
+		/// <item>0 : infinite timeout</item>
+		/// <item> &gt; 0 : command timeout in seconds</item>
+		/// <item> -1 on property get : default provider/connection command timeout value used (not controlled by Linq To DB)</item>
+		/// <item> negative value on property set : throws <see cref="InvalidOperationException"/> exception. To reset timeout to provider/connection defaults use <see cref="ResetCommandTimeout"/> or <see cref="ResetCommandTimeoutAsync"/> methods</item>
+		/// </list>
 		/// </summary>
-		public  int   CommandTimeout
+#else
+		/// <summary>
+		/// Gets or sets command execution timeout in seconds.
+		/// Supported values:
+		/// <list type="bullet">
+		/// <item>0 : infinite timeout</item>
+		/// <item> &gt; 0 : command timeout in seconds</item>
+		/// <item> -1 on property get : default provider/connection command timeout value used (not controlled by Linq To DB)</item>
+		/// <item> negative value on property set : throws <see cref="InvalidOperationException"/> exception. To reset timeout to provider/connection defaults use <see cref="ResetCommandTimeout"/> method</item>
+		/// </list>
+		/// </summary>
+#endif
+		public int   CommandTimeout
 		{
 			get => _commandTimeout ?? -1;
 			set
@@ -968,13 +985,11 @@ namespace LinqToDB.Data
 
 				if (value < 0)
 				{
-					// to reset to default timeout we dispose command because as command has no reset timeout API
-					_commandTimeout = null;
-					// TODO: that's not good - user is not aware that he can trigger blocking operation
-					// we should postpone disposal till command used (or redesign CommandTimeout to methods)
-#pragma warning disable CS0618 // Type or member is obsolete
-					DisposeCommand();
-#pragma warning restore CS0618 // Type or member is obsolete
+#if NET6_0_OR_GREATER
+					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout or ResetCommandTimeoutAsync methods instead.");
+#else
+					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout method instead.");
+#endif
 				}
 				else
 				{
@@ -983,6 +998,21 @@ namespace LinqToDB.Data
 						_command.CommandTimeout = value;
 				}
 			}
+		}
+
+		/// <summary>
+		/// Resets command timeout to provider or connection defaults.
+		/// </summary>
+		public void ResetCommandTimeout()
+		{
+			// because DbConnection.CommandTimeout doesn't allow user to reset timeout, we must re-create command instead
+			// some providers support in-place reset logic (at least SqlClient has ResetCommandTimeout() API), but taking into account how
+			// rare this operation it doesn't make sense to add provider-specific reset operation support to IDataProvider interface
+			_commandTimeout = null;
+
+#pragma warning disable CS0618 // Type or member is obsolete
+			DisposeCommand();
+#pragma warning restore CS0618 // Type or member is obsolete
 		}
 
 		// TODO: Mark private in v7
@@ -1412,7 +1442,7 @@ namespace LinqToDB.Data
 			CommandInfo.ClearObjectReaderCache();
 		}
 
-		#endregion
+#endregion
 
 		#region Transaction
 
