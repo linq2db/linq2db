@@ -208,6 +208,11 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 			return new MathMemberTranslator();
 		}
 
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
 		class MathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
@@ -224,6 +229,15 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 					result = factory.Function(valueType, "roundBankers", value);
 				
 				return result;
+			}
+		}
+
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(factory.GetDbDataType(typeof(int)), "CHAR_LENGTH", value);
 			}
 		}
 

@@ -113,7 +113,7 @@ namespace LinqToDB.Linq.Translation
 
 		public static ISqlExpression Sub(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
-			return new SqlBinaryExpression(dbDataType, x, "-", y, Precedence.Additive);
+			return new SqlBinaryExpression(dbDataType, x, "-", y, Precedence.Subtraction);
 		}
 
 		public static ISqlExpression Add(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
@@ -249,6 +249,11 @@ namespace LinqToDB.Linq.Translation
 		public static ISqlPredicate LessOrEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
 		{
 			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.LessOrEqual, expr2, factory.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
+		}
+
+		public static ISqlPredicate IsNull(this ISqlExpressionFactory factory, ISqlExpression expr, bool isNot = false)
+		{
+			return new SqlPredicate.IsNull(expr, isNot);
 		}
 
 		#endregion
