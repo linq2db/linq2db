@@ -1004,10 +1004,10 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
-			OpenConnection();
-
 			try
 			{
+				OpenConnection();
+
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
 				{
 					Option<int> result;
@@ -1093,10 +1093,10 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
-			OpenConnection();
-
 			try
 			{
+				OpenConnection();
+
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
 				{
 					Option<int> result;
@@ -1186,10 +1186,10 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
-			OpenConnection();
-
 			try
 			{
+				OpenConnection();
+
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
 				{
 					Option<object?> result;
@@ -1276,10 +1276,10 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
-			OpenConnection();
-
 			try
 			{
+				OpenConnection();
+
 				DbDataReader reader;
 
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
@@ -1433,8 +1433,6 @@ namespace LinqToDB.Data
 			//
 			TransactionAsync?.Dispose();
 
-			OpenConnection();
-
 			var dataConnectionTransaction = TraceAction(
 				this,
 				TraceOperation.BeginTransaction,
@@ -1444,7 +1442,7 @@ namespace LinqToDB.Data
 				{
 					// Create new transaction object.
 					//
-					dataContext.TransactionAsync = dataContext._connection!.BeginTransaction();
+					dataContext.TransactionAsync = dataContext.OpenConnection().BeginTransaction();
 
 					dataContext._closeTransaction = true;
 
@@ -1474,8 +1472,6 @@ namespace LinqToDB.Data
 			//
 			TransactionAsync?.Dispose();
 
-			OpenConnection();
-
 			var dataConnectionTransaction = TraceAction(
 				this,
 				TraceOperation.BeginTransaction,
@@ -1485,7 +1481,7 @@ namespace LinqToDB.Data
 				{
 					// Create new transaction object.
 					//
-					dataConnection.TransactionAsync = dataConnection._connection!.BeginTransaction(isolationLevel);
+					dataConnection.TransactionAsync = dataConnection.OpenConnection().BeginTransaction(isolationLevel);
 
 					dataConnection._closeTransaction = true;
 

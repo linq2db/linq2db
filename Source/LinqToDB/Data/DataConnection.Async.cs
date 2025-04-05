@@ -43,8 +43,6 @@ namespace LinqToDB.Data
 			if (!DataProvider.TransactionsSupported)
 				return new(this);
 
-			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
 			if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(false);
@@ -56,9 +54,11 @@ namespace LinqToDB.Data
 				default(object?),
 				static async (dataConnection, _, cancellationToken) =>
 				{
+					var connection = await dataConnection.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+
 					// Create new transaction object.
 					//
-					dataConnection.TransactionAsync = await dataConnection._connection!.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+					dataConnection.TransactionAsync = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
 					dataConnection._closeTransaction = true;
 
@@ -87,8 +87,6 @@ namespace LinqToDB.Data
 			if (!DataProvider.TransactionsSupported)
 				return new(this);
 
-			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
 			if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(false);
@@ -100,9 +98,11 @@ namespace LinqToDB.Data
 				isolationLevel,
 				static async (dataConnection, isolationLevel, cancellationToken) =>
 				{
+					var connection = await dataConnection.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+
 					// Create new transaction object.
 					//
-					dataConnection.TransactionAsync = await dataConnection._connection!.BeginTransactionAsync(isolationLevel, cancellationToken).ConfigureAwait(false);
+					dataConnection.TransactionAsync = await connection.BeginTransactionAsync(isolationLevel, cancellationToken).ConfigureAwait(false);
 
 					dataConnection._closeTransaction = true;
 
@@ -447,10 +447,10 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
-			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-
 			try
 			{
+				await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
 				{
 					Option<int> result;
@@ -546,10 +546,10 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
-			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-
 			try
 			{
+				await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
 				{
 					Option<object?> result;
@@ -651,10 +651,10 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
-			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-
 			try
 			{
+				await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+
 				DbDataReader reader;
 
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
