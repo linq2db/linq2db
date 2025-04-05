@@ -185,12 +185,33 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 			return new SqlServerMathMemberTranslator();
 		}
 
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new SqlServerGuidMemberTranslator();
+		}
+
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			var factory  = translationContext.ExpressionFactory;
 			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID");
 
 			return timePart;
+		}
+
+		class SqlServerGuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				//"LOWER(CAST({0} AS char(36)))"
+
+				var factory = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(36);
+
+				var cast = factory.Cast(guidExpr, stringDataType);
+				var lower = factory.Function(stringDataType, "LOWER", cast);
+
+				return lower;
+			}
 		}
 	}
 }
