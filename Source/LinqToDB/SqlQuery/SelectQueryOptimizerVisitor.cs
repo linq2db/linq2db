@@ -1907,11 +1907,11 @@ namespace LinqToDB.SqlQuery
 					{
 						var columnExpression = QueryHelper.UnwrapCastAndNullability(c.Expression);
 
-						if (columnExpression is SqlColumn or SqlField or SqlTable or SqlBinaryExpression)
-							return true;
-						if (columnExpression is SqlFunction func)
-							return !func.IsAggregate;
-						return false;
+						// handling case when not_null column check is used
+						if (columnExpression is SqlValue { Value: not null })
+							return false;
+
+						return true;
 					}))
 				{
 					return false;
