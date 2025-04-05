@@ -14,6 +14,7 @@ using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB
@@ -1499,10 +1500,16 @@ namespace LinqToDB
 		{
 			var argumentsExpr = Expression.NewArrayInit(typeof(object), arguments.Select(p =>
 			{
-				Expression constant = Expression.Constant(p, p?.GetType() ?? typeof(object));
-				if (constant.Type != typeof(object))
-					constant = Expression.Convert(constant, typeof(object));
-				return constant;
+				if (p == null)
+					return Expression.Constant(null, typeof(object));
+				
+				var argumentType    = p.GetType();
+				var method          = Methods.LinqToDB.SqlParameter.MakeGenericMethod(argumentType);
+				var valueExpression = (Expression)Expression.Call(method, Expression.Constant(p, argumentType));
+				if (valueExpression.Type != typeof(object))
+					valueExpression = Expression.Convert(valueExpression, typeof(object));
+
+				return valueExpression;
 			}));
 
 			return argumentsExpr;

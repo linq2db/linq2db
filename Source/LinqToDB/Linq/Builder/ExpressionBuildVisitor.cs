@@ -782,6 +782,36 @@ namespace LinqToDB.Linq.Builder
 				return translated;
 			}
 
+			if (IsSqlOrExpression() && node.Method.Name == nameof(Sql.Parameter) && node.Method.DeclaringType == typeof(Sql))
+			{
+				using var saveFlags = UsingBuildFlags(BuildFlags.ForceParameter);
+
+				var translated = Visit(node.Arguments[0]);
+
+				translated = RegisterTranslatedSql(translated, node);
+
+				return translated;
+			}
+
+			if (IsSqlOrExpression() && node.Method.Name == nameof(Sql.Constant) && node.Method.DeclaringType == typeof(Sql))
+			{
+				using var saveFlags = UsingBuildFlags(BuildFlags.ForceParameter);
+
+				if (HandleValue(node.Arguments[0], out var translated))
+				{
+					if (translated is SqlPlaceholderExpression { Sql: SqlParameter sqlParameter })
+					{
+						sqlParameter.IsQueryParameter = false;
+					}
+
+					translated = RegisterTranslatedSql(translated, node);
+
+					return translated;
+				}
+
+				return node;
+			}
+
 			if (Builder.IsAssociation(node, out _))
 			{
 				Expression? root;
