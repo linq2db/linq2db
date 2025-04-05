@@ -64,10 +64,17 @@ namespace Tests.Linq
 			{
 				var parentId = iteration;
 
+				var cacheMissCount = db.Parent.GetCacheMissCount();
+
 				var query = from q in db.Parent.AsQueryable()
 							where q.ParentID == Sql.Constant(parentId)
 							select q;
 				var result = query.ToList();
+
+				if (iteration > 1)
+				{
+					Assert.That(query.GetCacheMissCount(), Is.EqualTo(cacheMissCount));
+				}
 
 				var parameters = new List<SqlParameter>();
 				QueryHelper.CollectParameters(query.GetSelectQuery(), parameters);
