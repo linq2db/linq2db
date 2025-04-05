@@ -834,8 +834,8 @@ namespace LinqToDB.Data
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.Open, false)
 					{
 						TraceLevel = TraceLevel.Error,
-						StartTime = DateTime.UtcNow,
-						Exception = ex,
+						StartTime  = DateTime.UtcNow,
+						Exception  = ex,
 					});
 				}
 
@@ -1062,9 +1062,9 @@ namespace LinqToDB.Data
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery, false)
 				{
-					TraceLevel     = TraceLevel.Info,
-					Command        = CurrentCommand,
-					StartTime      = now,
+					TraceLevel = TraceLevel.Info,
+					Command    = CurrentCommand,
+					StartTime  = now,
 				});
 			}
 
@@ -1094,11 +1094,11 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, false)
 					{
-						TraceLevel     = TraceLevel.Error,
-						Command        = CurrentCommand,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
-						Exception      = ex,
+						TraceLevel    = TraceLevel.Error,
+						Command       = CurrentCommand,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
+						Exception     = ex,
 					});
 				}
 
@@ -1152,8 +1152,8 @@ namespace LinqToDB.Data
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery, false)
 				{
 					TraceLevel = TraceLevel.Info,
-					Command = CurrentCommand,
-					StartTime = now,
+					Command    = CurrentCommand,
+					StartTime  = now,
 				});
 			}
 
@@ -1167,10 +1167,10 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQuery, false)
 					{
-						TraceLevel = TraceLevel.Info,
-						Command = CurrentCommand,
-						StartTime = now,
-						ExecutionTime = sw.Elapsed,
+						TraceLevel      = TraceLevel.Info,
+						Command         = CurrentCommand,
+						StartTime       = now,
+						ExecutionTime   = sw.Elapsed,
 						RecordsAffected = ret,
 					});
 				}
@@ -1183,11 +1183,11 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, false)
 					{
-						TraceLevel = TraceLevel.Error,
-						Command = CurrentCommand,
-						StartTime = now,
+						TraceLevel    = TraceLevel.Error,
+						Command       = CurrentCommand,
+						StartTime     = now,
 						ExecutionTime = sw.Elapsed,
-						Exception = ex,
+						Exception     = ex,
 					});
 				}
 
@@ -1242,9 +1242,9 @@ namespace LinqToDB.Data
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteScalar, false)
 				{
-					TraceLevel     = TraceLevel.Info,
-					Command        = CurrentCommand,
-					StartTime      = now,
+					TraceLevel = TraceLevel.Info,
+					Command    = CurrentCommand,
+					StartTime  = now,
 				});
 			}
 
@@ -1258,10 +1258,10 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteScalar, false)
 					{
-						TraceLevel     = TraceLevel.Info,
-						Command        = CurrentCommand,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
+						TraceLevel    = TraceLevel.Info,
+						Command       = CurrentCommand,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
 					});
 				}
 
@@ -1273,11 +1273,11 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteScalar, false)
 					{
-						TraceLevel     = TraceLevel.Error,
-						Command        = CurrentCommand,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
-						Exception      = ex,
+						TraceLevel    = TraceLevel.Error,
+						Command       = CurrentCommand,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
+						Exception     = ex,
 					});
 				}
 
@@ -1353,9 +1353,9 @@ namespace LinqToDB.Data
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, false)
 				{
-					TraceLevel     = TraceLevel.Info,
-					Command        = CurrentCommand,
-					StartTime      = now,
+					TraceLevel = TraceLevel.Info,
+					Command    = CurrentCommand,
+					StartTime  = now,
 				});
 			}
 
@@ -1370,10 +1370,10 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, false)
 					{
-						TraceLevel     = TraceLevel.Info,
-						Command        = ret.Command,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
+						TraceLevel    = TraceLevel.Info,
+						Command       = ret.Command,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
 					});
 				}
 
@@ -1385,11 +1385,11 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, false)
 					{
-						TraceLevel     = TraceLevel.Error,
-						Command        = CurrentCommand,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
-						Exception      = ex,
+						TraceLevel    = TraceLevel.Error,
+						Command       = CurrentCommand,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
+						Exception     = ex,
 					});
 				}
 
@@ -1489,7 +1489,7 @@ namespace LinqToDB.Data
 			var dataConnectionTransaction = TraceAction(
 				this,
 				TraceOperation.BeginTransaction,
-				static il => $"BeginTransaction({il})",
+				static ctx => $"BeginTransaction({ctx.isolationLevel})",
 				(isolationLevel, connection),
 				static (dataConnection, ctx) =>
 				{

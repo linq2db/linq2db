@@ -640,7 +640,7 @@ namespace LinqToDB.Data
 
 				InitFirstCommand(dataConnection, executionQuery);
 
-				return dataConnection.ExecuteReader(CommandBehavior.Default);
+				return dataConnection.ExecuteDataReader(CommandBehavior.Default);
 			}
 
 			public override DataReaderWrapper ExecuteReader()
@@ -649,7 +649,7 @@ namespace LinqToDB.Data
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
-				return _dataConnection.ExecuteReader(CommandBehavior.Default);
+				return _dataConnection.ExecuteDataReader(CommandBehavior.Default);
 			}
 
 			#endregion

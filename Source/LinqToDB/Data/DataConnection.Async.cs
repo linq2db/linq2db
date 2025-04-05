@@ -94,7 +94,7 @@ namespace LinqToDB.Data
 			var dataConnectionTransaction = await TraceActionAsync(
 				this,
 				TraceOperation.BeginTransaction,
-				static il => $"BeginTransactionAsync({il})",
+				static ctx => $"BeginTransactionAsync({ctx.isolationLevel})",
 				(isolationLevel, connection),
 				static async (dataConnection, ctx, cancellationToken) =>
 				{
