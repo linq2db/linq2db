@@ -55,7 +55,7 @@ namespace Tests.DataProvider
 				// as IEnumerable<SqlDataRecord>
 				yield return new ParameterFactory("SqlDataRecords", db =>
 				{
-					var connection = db.OpenConnection();
+					var connection = db.OpenDbConnection();
 					return connection is Microsoft.Data.SqlClient.SqlConnection ? (object)SqlServerTestUtils.GetSqlDataRecordsMS() : SqlServerTestUtils.GetSqlDataRecords();
 				});
 

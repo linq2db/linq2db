@@ -1003,14 +1003,6 @@ namespace LinqToDB.Linq
 			return runner.GetSqlText();
 		}
 
-		public static Task<IReadOnlyList<QuerySql>> GetSqlTextAsync(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, CancellationToken cancellationToken)
-		{
-			using var m      = ActivityService.Start(ActivityID.GetSqlText);
-
-			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
-			return runner.GetSqlTextAsync(cancellationToken);
-		}
-
 		#endregion
 	}
 }

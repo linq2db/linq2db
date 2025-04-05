@@ -3913,7 +3913,7 @@ CREATE TABLE ""TABLE_A""(
 
 			using var tx = dc.BeginTransaction();
 
-			using var blob = new OracleBlob((OracleConnection)dc.OpenConnection());
+			using var blob = new OracleBlob((OracleConnection)dc.OpenDbConnection());
 			blob.WriteByte(1);
 
 			db.GetTable<LinqDataTypesBlobs>().Insert(() => new LinqDataTypesBlobs { ID = -10, BinaryValue = blob });
@@ -3949,7 +3949,7 @@ CREATE TABLE ""TABLE_A""(
 
 			using var tx = dc.BeginTransaction();
 
-			using var blob = new DA.OracleLob((DA.OracleConnection)dc.OpenConnection(), DA.OracleDbType.Blob);
+			using var blob = new DA.OracleLob((DA.OracleConnection)dc.OpenDbConnection(), DA.OracleDbType.Blob);
 			blob.WriteByte(1);
 
 			db.GetTable<LinqDataTypesBlobsDevart>().Insert(() => new LinqDataTypesBlobsDevart { ID = -10, BinaryValue = blob });
@@ -3986,7 +3986,7 @@ CREATE TABLE ""TABLE_A""(
 
 			using var tx = dc.BeginTransaction();
 
-			using var blob = new Oracle.DataAccess.Types.OracleBlob((Oracle.DataAccess.Client.OracleConnection)dc.OpenConnection());
+			using var blob = new Oracle.DataAccess.Types.OracleBlob((Oracle.DataAccess.Client.OracleConnection)dc.OpenDbConnection());
 			blob.WriteByte(1);
 
 			db.GetTable<LinqDataTypesBlobsNative>().Insert(() => new LinqDataTypesBlobsNative { ID = -10, BinaryValue = blob });

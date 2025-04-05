@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.EnsureConnection(connect: true).Connection);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.OpenDbConnection());
 
 				if (connection != null)
 					return DB2BulkCopyShared.ProviderSpecificCopyImpl(
@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection, (await dataConnection.EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false)).Connection);
+				var connection = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 				if (connection != null)
 					// call the synchronous provider-specific implementation
 					return DB2BulkCopyShared.ProviderSpecificCopyImpl(
@@ -71,7 +71,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection, (await dataConnection.EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false)).Connection);
+				var connection = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 
 				if (connection != null)
 				{

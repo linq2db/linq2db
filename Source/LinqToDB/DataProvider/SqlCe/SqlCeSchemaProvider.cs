@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = dataConnection.EnsureConnection(connect: true).Connection.GetSchema("Tables");
+			var tables = dataConnection.OpenDbConnection().GetSchema("Tables");
 
 			return
 			(
@@ -82,7 +82,7 @@ WHERE PRIMARY_KEY = 1");
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = dataConnection.EnsureConnection(connect: true).Connection.GetSchema("Columns");
+			var cs = dataConnection.OpenDbConnection().GetSchema("Columns");
 
 			return
 			(
@@ -127,7 +127,7 @@ FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			return Path.GetFileNameWithoutExtension(dbConnection.EnsureConnection(connect: true).Connection.Database);
+			return Path.GetFileNameWithoutExtension(dbConnection.OpenDbConnection().Database);
 		}
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)

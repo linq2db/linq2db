@@ -32,39 +32,6 @@ namespace LinqToDB.Data
 #endif
 
 		/// <summary>
-		/// Creates if needed and returns current command instance.
-		/// </summary>
-		internal async Task<DbCommand> GetOrCreateCommandAsync(CancellationToken cancellationToken) => _command ??= await CreateCommandAsync(cancellationToken).ConfigureAwait(false);
-
-		internal async Task InitCommandAsync(CommandType commandType, string sql, DataParameter[]? parameters, IReadOnlyCollection<string>? queryHints, bool withParameters, CancellationToken cancellationToken)
-		{
-			CheckAndThrowOnDisposed();
-
-			if (queryHints?.Count > 0)
-			{
-				var sqlProvider = DataProvider.CreateSqlBuilder(MappingSchema, Options);
-				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
-			}
-
-			_command = DataProvider.InitCommand(this, await GetOrCreateCommandAsync(cancellationToken).ConfigureAwait(false), commandType, sql, parameters, withParameters);
-		}
-
-		private async Task<DbCommand> CreateCommandAsync(CancellationToken cancellationToken)
-		{
-			CheckAndThrowOnDisposed();
-
-			var command = (await EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false)).CreateCommand();
-
-			if (_commandTimeout.HasValue)
-				command.CommandTimeout = _commandTimeout.Value;
-
-			if (TransactionAsync != null)
-				command.Transaction = Transaction;
-
-			return command;
-		}
-
-		/// <summary>
 		/// Starts new transaction asynchronously for current connection with default isolation level. If connection already has transaction, it will be rolled back.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
@@ -76,7 +43,7 @@ namespace LinqToDB.Data
 			if (!DataProvider.TransactionsSupported)
 				return new(this);
 
-			await EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false);
+			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
@@ -120,7 +87,7 @@ namespace LinqToDB.Data
 			if (!DataProvider.TransactionsSupported)
 				return new(this);
 
-			await EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false);
+			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
@@ -154,9 +121,9 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Returns underlying <see cref="DbConnection"/> instance. If connection is not open yet - it will be opened.
 		/// </summary>
-		public async Task<DbConnection> OpenConnectionAsync(CancellationToken cancellationToken)
+		public async Task<DbConnection> OpenDbConnectionAsync(CancellationToken cancellationToken)
 		{
-			return (await EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false)).Connection;
+			return (await OpenConnectionAsync(cancellationToken).ConfigureAwait(false)).Connection;
 		}
 
 		/// <summary>
@@ -168,7 +135,7 @@ namespace LinqToDB.Data
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public async Task EnsureConnectionAsync(CancellationToken cancellationToken = default)
 		{
-			await EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false);
+			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -176,35 +143,22 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Async operation task.</returns>
-		internal async Task<IAsyncDbConnection> EnsureConnectionAsync(bool connect, CancellationToken cancellationToken = default)
+		internal async Task<IAsyncDbConnection> OpenConnectionAsync(CancellationToken cancellationToken = default)
 		{
 			CheckAndThrowOnDisposed();
 
 			try
 			{
-				if (_connection == null)
-				{
-					DbConnection connection;
+				var connection = GetOrCreateConnection();
 
-					if (_connectionFactory != null)
-						connection = _connectionFactory(Options);
-					else
-						connection = DataProvider.CreateConnection(ConnectionString!);
-
-					_connection = AsyncFactory.CreateAndSetDataContext(this, connection);
-
-					if (RetryPolicy != null)
-						_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
-				}
-
-				if (connect && _connection.State == ConnectionState.Closed)
+				if (connection.State == ConnectionState.Closed)
 				{
 					var interceptor = ((IInterceptable<IConnectionInterceptor>)this).Interceptor;
 
 					if (interceptor is not null)
 					{
 						await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpeningAsync))
-							await interceptor.ConnectionOpeningAsync(new(this), _connection.Connection, cancellationToken)
+							await interceptor.ConnectionOpeningAsync(new(this), connection.Connection, cancellationToken)
 								.ConfigureAwait(false);
 					}
 
@@ -212,14 +166,14 @@ namespace LinqToDB.Data
 
 					if (activity is null)
 					{
-						await _connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+						await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 					}
 					else
 					{
 						await using (activity)
 						{
-							await _connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-							activity.AddQueryInfo(this, _connection.Connection, null);
+							await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+							activity.AddQueryInfo(this, connection.Connection, null);
 						}
 					}
 
@@ -228,10 +182,12 @@ namespace LinqToDB.Data
 					if (interceptor is not null)
 					{
 						await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpenedAsync))
-							await interceptor.ConnectionOpenedAsync(new (this), _connection.Connection, cancellationToken)
+							await interceptor.ConnectionOpenedAsync(new (this), connection.Connection, cancellationToken)
 								.ConfigureAwait(false);
 					}
 				}
+
+				return connection;
 			}
 			catch (Exception ex)
 			{
@@ -247,8 +203,6 @@ namespace LinqToDB.Data
 
 				throw;
 			}
-
-			return _connection;
 		}
 
 		/// <summary>
@@ -493,6 +447,8 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
+			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+
 			try
 			{
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
@@ -590,6 +546,8 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
+			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+
 			try
 			{
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
@@ -682,11 +640,18 @@ namespace LinqToDB.Data
 
 		#region ExecuteReaderAsync
 
+		Task<DataReaderWrapper> ExecuteReaderAsync(CancellationToken cancellationToken)
+		{
+			return ExecuteReaderAsync(CommandBehavior.Default, cancellationToken);
+		}
+
 		protected virtual async Task<DataReaderWrapper> ExecuteReaderAsync(
 			CommandBehavior   commandBehavior,
 			CancellationToken cancellationToken)
 		{
 			CheckAndThrowOnDisposed();
+
+			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 			try
 			{

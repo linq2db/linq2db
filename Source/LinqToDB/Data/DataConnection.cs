@@ -5,8 +5,6 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Threading;
 
 using JetBrains.Annotations;
@@ -740,16 +738,8 @@ namespace LinqToDB.Data
 		/// Gets underlying database connection, used by current connection object, or opens new.
 		/// </summary>
 		// TODO: Remove in v7
-		[Obsolete("This API scheduled for removal in v7. Use TryGetDbConnection, OpenConnection or OpenConnectionAsync instead based on your use-case"), EditorBrowsable(EditorBrowsableState.Never)]
-		public DbConnection Connection
-		{
-			get
-			{
-				CheckAndThrowOnDisposed();
-
-				return EnsureConnection(connect: true).Connection;
-			}
-		}
+		[Obsolete("This API scheduled for removal in v7. Use TryGetDbConnection, OpenDbConnection or OpenDbConnectionAsync instead based on your use-case"), EditorBrowsable(EditorBrowsableState.Never)]
+		public DbConnection Connection => OpenDbConnection();
 
 		/// <summary>
 		/// Returns underlying <see cref="DbConnection"/> instance or <c>null</c> if connection is not open.
@@ -759,51 +749,66 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Returns underlying <see cref="DbConnection"/> instance. If connection is not open yet - it will be opened.
 		/// </summary>
-		public DbConnection OpenConnection() => EnsureConnection(connect: true).Connection;
+		public DbConnection OpenDbConnection() => OpenConnection().Connection;
 
 		internal DbConnection? CurrentConnection => _connection?.Connection;
 
-		internal IAsyncDbConnection EnsureConnection(bool connect)
+		/// <summary>
+		/// Creates database connection instance (but not open connection) or return already created (and possibly opened) instance.
+		/// </summary>
+		internal IAsyncDbConnection GetOrCreateConnection()
+		{
+			if (_connection == null)
+			{
+				DbConnection connection;
+
+				if (_connectionFactory != null)
+					connection = _connectionFactory(Options);
+				else
+					connection = DataProvider.CreateConnection(ConnectionString!);
+
+				_connection = AsyncFactory.CreateAndSetDataContext(this, connection);
+
+				if (RetryPolicy != null)
+					_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
+			}
+			else if (RetryPolicy != null && _connection is not RetryingDbConnection)
+				_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
+
+			return _connection;
+		}
+
+		/// <summary>
+		/// Returns connection instance in Open state.
+		/// </summary>
+		internal IAsyncDbConnection OpenConnection()
 		{
 			CheckAndThrowOnDisposed();
 
 			try
 			{
-				if (_connection == null)
-				{
-					DbConnection connection;
+				var connection = GetOrCreateConnection();
 
-					if (_connectionFactory != null)
-						connection = _connectionFactory(Options);
-					else
-						connection = DataProvider.CreateConnection(ConnectionString!);
-
-					_connection = AsyncFactory.CreateAndSetDataContext(this, connection);
-
-					if (RetryPolicy != null)
-						_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
-				}
-				else if (RetryPolicy != null && _connection is not RetryingDbConnection)
-					_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
-
-				if (connect && _connection.State == ConnectionState.Closed)
+				if (connection.State == ConnectionState.Closed)
 				{
 					var interceptor = ((IInterceptable<IConnectionInterceptor>)this).Interceptor;
 					if (interceptor != null)
 					{
 						using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
-							interceptor.ConnectionOpening(new(this), _connection.Connection);
+							interceptor.ConnectionOpening(new(this), connection.Connection);
 					}
 
-					_connection.Open();
+					connection.Open();
 					_closeConnection = true;
 
 					if (interceptor != null)
 					{
 						using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
-							interceptor.ConnectionOpened(new(this), _connection.Connection);
+							interceptor.ConnectionOpened(new(this), connection.Connection);
 					}
 				}
+
+				return connection;
 			}
 			catch (Exception ex)
 			{
@@ -819,8 +824,6 @@ namespace LinqToDB.Data
 
 				throw;
 			}
-
-			return _connection;
 		}
 
 		/// <summary>
@@ -879,9 +882,23 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Creates if needed and returns current command instance.
 		/// </summary>
-#pragma warning disable CS0618 // Type or member is obsolete
-		internal DbCommand GetOrCreateCommand() => _command ??= CreateCommand();
-#pragma warning restore CS0618 // Type or member is obsolete
+		internal DbCommand GetOrCreateCommand()
+		{
+			CheckAndThrowOnDisposed();
+
+			if (_command == null)
+			{
+				_command = GetOrCreateConnection().CreateCommand();
+
+				if (_commandTimeout.HasValue)
+					_command.CommandTimeout = _commandTimeout.Value;
+
+				if (TransactionAsync != null)
+					_command.Transaction = Transaction;
+			}
+
+			return _command;
+		}
 
 		/// <summary>
 		/// Contains text of last command, sent to database using current connection.
@@ -949,12 +966,12 @@ namespace LinqToDB.Data
 		}
 
 		// TODO: Mark private in v7
-		[Obsolete("This API scheduled for removal in v7. Use TryGetConnection/OpenConnection or OpenConnectionASync chained with CreateCommand call. Note that it is your responsibility to dispose such command after use."), EditorBrowsable(EditorBrowsableState.Never)]
+		[Obsolete("This API scheduled for removal in v7. Use TryGetConnection/OpenDbConnection or OpenDbConnectionAsync chained with CreateCommand call. Note that it is your responsibility to dispose such command after use."), EditorBrowsable(EditorBrowsableState.Never)]
 		public DbCommand CreateCommand()
 		{
 			CheckAndThrowOnDisposed();
 
-			var command = EnsureConnection(connect: true).CreateCommand();
+			var command = OpenDbConnection().CreateCommand();
 
 			if (_commandTimeout.HasValue)
 				command.CommandTimeout = _commandTimeout.Value;
@@ -987,6 +1004,8 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
+			OpenConnection();
+
 			try
 			{
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
@@ -1000,7 +1019,7 @@ namespace LinqToDB.Data
 						return result.Value;
 				}
 
-				using (ActivityService.Start(ActivityID.CommandExecuteNonQuery)?.AddQueryInfo(this, _command!.Connection, _command))
+				using (ActivityService.Start(ActivityID.CommandExecuteNonQuery)?.AddQueryInfo(this, command.Connection, command))
 					return command.ExecuteNonQuery();
 			}
 			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
@@ -1070,9 +1089,11 @@ namespace LinqToDB.Data
 			}
 		}
 
-		internal int ExecuteNonQueryCustom(DbCommand command, Func<DbCommand, int> customExecute)
+		private int ExecuteNonQueryCustom(DbCommand command, Func<DbCommand, int> customExecute)
 		{
 			CheckAndThrowOnDisposed();
+
+			OpenConnection();
 
 			try
 			{
@@ -1087,7 +1108,7 @@ namespace LinqToDB.Data
 						return result.Value;
 				}
 
-				using (ActivityService.Start(ActivityID.CommandExecuteNonQuery)?.AddQueryInfo(this, _command!.Connection, _command))
+				using (ActivityService.Start(ActivityID.CommandExecuteNonQuery)?.AddQueryInfo(this, command.Connection, command))
 					return customExecute(command);
 			}
 			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
@@ -1165,6 +1186,8 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
+			OpenConnection();
+
 			try
 			{
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
@@ -1178,7 +1201,7 @@ namespace LinqToDB.Data
 						return result.Value;
 				}
 
-				using (ActivityService.Start(ActivityID.CommandExecuteScalar)?.AddQueryInfo(this, command.Connection, _command))
+				using (ActivityService.Start(ActivityID.CommandExecuteScalar)?.AddQueryInfo(this, command.Connection, command))
 					return command.ExecuteScalar();
 			}
 			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
@@ -1252,6 +1275,8 @@ namespace LinqToDB.Data
 		protected virtual DataReaderWrapper ExecuteReader(CommandBehavior commandBehavior)
 		{
 			CheckAndThrowOnDisposed();
+
+			OpenConnection();
 
 			try
 			{
@@ -1408,6 +1433,8 @@ namespace LinqToDB.Data
 			//
 			TransactionAsync?.Dispose();
 
+			OpenConnection();
+
 			var dataConnectionTransaction = TraceAction(
 				this,
 				TraceOperation.BeginTransaction,
@@ -1417,7 +1444,7 @@ namespace LinqToDB.Data
 				{
 					// Create new transaction object.
 					//
-					dataContext.TransactionAsync = dataContext.EnsureConnection(connect: true).BeginTransaction();
+					dataContext.TransactionAsync = dataContext._connection!.BeginTransaction();
 
 					dataContext._closeTransaction = true;
 
@@ -1447,6 +1474,8 @@ namespace LinqToDB.Data
 			//
 			TransactionAsync?.Dispose();
 
+			OpenConnection();
+
 			var dataConnectionTransaction = TraceAction(
 				this,
 				TraceOperation.BeginTransaction,
@@ -1456,7 +1485,7 @@ namespace LinqToDB.Data
 				{
 					// Create new transaction object.
 					//
-					dataConnection.TransactionAsync = dataConnection.EnsureConnection(connect: true).BeginTransaction(isolationLevel);
+					dataConnection.TransactionAsync = dataConnection._connection!.BeginTransaction(isolationLevel);
 
 					dataConnection._closeTransaction = true;
 

@@ -34,7 +34,7 @@ namespace Tests.Linq
 		TemporalTest[] CreateTestTable(ITestDataContext db)
 		{
 			using var dc = db is TestDataConnection dcx ?
-				new DataConnection(db.Options.UseConnection(dcx.DataProvider, dcx.OpenConnection())) :
+				new DataConnection(db.Options.UseConnection(dcx.DataProvider, dcx.OpenDbConnection())) :
 				new DataConnection(db.ConfigurationString);
 
 			using var sy = new SystemDB(db.ConfigurationString!);

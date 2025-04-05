@@ -53,7 +53,7 @@ namespace LinqToDB.DataProvider.DB2
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var database = dataConnection.EnsureConnection(connect: true).Connection.Database;
+			var database = dataConnection.OpenDbConnection().Database;
 
 			return _primaryKeys = dataConnection.Query(
 				rd => new PrimaryKeyInfo
@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.DB2
 				WHERE
 					" + GetSchemaFilter("TBCREATOR");
 
-			var database = dataConnection.EnsureConnection(connect: true).Connection.Database;
+			var database = dataConnection.OpenDbConnection().Database;
 
 			return dataConnection.Query(rd =>
 				{
@@ -162,7 +162,7 @@ namespace LinqToDB.DataProvider.DB2
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var database = dataConnection.EnsureConnection(connect: true).Connection.Database;
+			var database = dataConnection.OpenDbConnection().Database;
 
 			return
 			(
@@ -211,7 +211,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var database = dataConnection.EnsureConnection(connect: true).Connection.Database;
+			var database = dataConnection.OpenDbConnection().Database;
 
 			return dataConnection
 				.Query(rd =>
@@ -244,7 +244,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
-			var database = dataConnection.EnsureConnection(connect: true).Connection.Database;
+			var database = dataConnection.OpenDbConnection().Database;
 			return dataConnection
 				.Query(rd =>
 				{

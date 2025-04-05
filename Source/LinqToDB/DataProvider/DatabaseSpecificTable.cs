@@ -32,8 +32,7 @@ namespace LinqToDB.DataProvider
 
 		public Expression Expression => _table.Expression;
 
-		IReadOnlyList<QuerySql>       IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options)                                           => _table.GetSqlQueries(options);
-		Task<IReadOnlyList<QuerySql>> IExpressionQuery.GetSqlQueriesAsync(SqlGenerationOptions? options, CancellationToken cancellationToken) => _table.GetSqlQueriesAsync(options, cancellationToken);
+		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => _table.GetSqlQueries(options);
 
 		public IDataContext   DataContext => _table.DataContext;
 		public Type           ElementType => _table.ElementType;

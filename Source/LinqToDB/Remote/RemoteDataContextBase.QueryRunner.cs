@@ -50,24 +50,11 @@ namespace LinqToDB.Remote
 				_evaluationContext = new EvaluationContext(parameterValues);
 			}
 
-			protected override Task SetQueryAsync(IReadOnlyParameterValues parameterValues, bool forGetSqlText, CancellationToken cancellationToken)
-			{
-				_evaluationContext = new EvaluationContext(parameterValues);
-				return Task.CompletedTask;
-			}
-
 			#region GetSqlText
 
 			public override IReadOnlyList<QuerySql> GetSqlText()
 			{
 				SetCommand(true);
-				return GetSqlTextImpl();
-			}
-
-			public override async Task<IReadOnlyList<QuerySql>> GetSqlTextAsync(CancellationToken cancellationToken)
-			{
-				await SetCommandAsync(true, cancellationToken).ConfigureAwait(false);
-
 				return GetSqlTextImpl();
 			}
 
@@ -287,7 +274,7 @@ namespace LinqToDB.Remote
 				// preload _configurationInfo asynchronously if needed
 				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
-				await SetCommandAsync(false, cancellationToken).ConfigureAwait(false);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
@@ -318,7 +305,7 @@ namespace LinqToDB.Remote
 				// preload _configurationInfo asynchronously if needed
 				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
-				await SetCommandAsync(false, cancellationToken).ConfigureAwait(false);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
@@ -352,7 +339,7 @@ namespace LinqToDB.Remote
 				// preload _configurationInfo asynchronously if needed
 				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
-				await SetCommandAsync(false, cancellationToken).ConfigureAwait(false);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 

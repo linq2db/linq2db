@@ -103,7 +103,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.SupportsBulkCopy)
 			{
-				var connection  = _provider.TryGetProviderConnection(dataConnection, dataConnection.EnsureConnection(connect: true).Connection);
+				var connection  = _provider.TryGetProviderConnection(dataConnection, dataConnection.OpenDbConnection());
 
 				if (connection != null)
 				{
@@ -123,7 +123,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.SupportsBulkCopy)
 			{
-				var connection  = _provider.TryGetProviderConnection(dataConnection, (await dataConnection.EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false)).Connection);
+				var connection  = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 
 				if (connection != null)
 				{

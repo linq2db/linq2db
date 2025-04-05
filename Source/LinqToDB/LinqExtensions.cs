@@ -4105,37 +4105,11 @@ namespace LinqToDB
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
-		/// <remarks>Eager load queries currently return only SQL for main query.</remarks>
-		public static async Task<QuerySql> ToSqlQueryAsync<T>(this IQueryable<T> query, SqlGenerationOptions? options = null, CancellationToken cancellationToken = default)
-		{
-			if (query is LoadWithQueryableBase<T> loadWith)
-				query = loadWith.Query;
-
-			var expressionQuery = (IExpressionQuery)query.GetLinqToDBSource();
-
-			// currently we have only non-linq APIs that could generate multiple commands like
-			// InsertOrReplace, CreateTable, DropTable
-			return (await expressionQuery.GetSqlQueriesAsync(options, cancellationToken).ConfigureAwait(false))[0];
-		}
-
-		/// <summary>
-		/// Convert Linq To DB query to SQL command with parameters.
-		/// </summary>
 		public static QuerySql ToSqlQuery<T>(this IUpdatable<T> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((Updatable<T>)query).Query.GetLinqToDBSource();
 
 			return expressionQuery.GetSqlQueries(options)[0];
-		}
-
-		/// <summary>
-		/// Convert Linq To DB query to SQL command with parameters.
-		/// </summary>
-		public static async Task<QuerySql> ToSqlQueryAsync<T>(this IUpdatable<T> query, SqlGenerationOptions? options = null, CancellationToken cancellationToken = default)
-		{
-			var expressionQuery = (IExpressionQuery)((Updatable<T>)query).Query.GetLinqToDBSource();
-
-			return (await expressionQuery.GetSqlQueriesAsync(options, cancellationToken).ConfigureAwait(false))[0];
 		}
 
 		/// <summary>
@@ -4151,31 +4125,11 @@ namespace LinqToDB
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
-		public static async Task<QuerySql> ToSqlQueryAsync<T>(this IValueInsertable<T> query, SqlGenerationOptions? options = null, CancellationToken cancellationToken = default)
-		{
-			var expressionQuery = (IExpressionQuery)((ValueInsertable<T>)query).Query.GetLinqToDBSource();
-
-			return (await expressionQuery.GetSqlQueriesAsync(options, cancellationToken).ConfigureAwait(false))[0];
-		}
-
-		/// <summary>
-		/// Convert Linq To DB query to SQL command with parameters.
-		/// </summary>
 		public static QuerySql ToSqlQuery<TSource, TTarget>(this ISelectInsertable<TSource, TTarget> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((SelectInsertable<TSource, TTarget>)query).Query.GetLinqToDBSource();
 
 			return expressionQuery.GetSqlQueries(options)[0];
-		}
-
-		/// <summary>
-		/// Convert Linq To DB query to SQL command with parameters.
-		/// </summary>
-		public static async Task<QuerySql> ToSqlQueryAsync<TSource, TTarget>(this ISelectInsertable<TSource, TTarget> query, SqlGenerationOptions? options = null, CancellationToken cancellationToken = default)
-		{
-			var expressionQuery = (IExpressionQuery)((SelectInsertable<TSource, TTarget>)query).Query.GetLinqToDBSource();
-
-			return (await expressionQuery.GetSqlQueriesAsync(options, cancellationToken).ConfigureAwait(false))[0];
 		}
 
 		/// <summary>
@@ -4193,33 +4147,11 @@ namespace LinqToDB
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
 		/// <remarks>Eager load queries currently return only SQL for main query.</remarks>
-		public static async Task<QuerySql> ToSqlQueryAsync<TSource>(this IMultiInsertInto<TSource> query, SqlGenerationOptions? options = null, CancellationToken cancellationToken = default)
-		{
-			var expressionQuery = (IExpressionQuery)((MultiInsertQuery<TSource>)query).Query.GetLinqToDBSource();
-
-			return (await expressionQuery.GetSqlQueriesAsync(options, cancellationToken).ConfigureAwait(false))[0];
-		}
-
-		/// <summary>
-		/// Convert Linq To DB query to SQL command with parameters.
-		/// </summary>
-		/// <remarks>Eager load queries currently return only SQL for main query.</remarks>
 		public static QuerySql ToSqlQuery<TSource>(this IMultiInsertElse<TSource> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((MultiInsertQuery<TSource>)query).Query.GetLinqToDBSource();
 
 			return expressionQuery.GetSqlQueries(options)[0];
-		}
-
-		/// <summary>
-		/// Convert Linq To DB query to SQL command with parameters.
-		/// </summary>
-		/// <remarks>Eager load queries currently return only SQL for main query.</remarks>
-		public static async Task<QuerySql> ToSqlQueryAsync<TSource>(this IMultiInsertElse<TSource> query, SqlGenerationOptions? options = null, CancellationToken cancellationToken = default)
-		{
-			var expressionQuery = (IExpressionQuery)((MultiInsertQuery<TSource>)query).Query.GetLinqToDBSource();
-
-			return (await expressionQuery.GetSqlQueriesAsync(options, cancellationToken).ConfigureAwait(false))[0];
 		}
 
 		/// <summary>
@@ -4233,16 +4165,6 @@ namespace LinqToDB
 			return expressionQuery.GetSqlQueries(options)[0];
 		}
 
-		/// <summary>
-		/// Convert Linq To DB query to SQL command with parameters.
-		/// </summary>
-		/// <remarks>Eager load queries currently return only SQL for main query.</remarks>
-		public static async Task<QuerySql> ToSqlQueryAsync<TSource, TTarget>(this IMergeable<TSource, TTarget> query, SqlGenerationOptions? options = null, CancellationToken cancellationToken = default)
-		{
-			var expressionQuery = (IExpressionQuery)((MergeQuery<TSource, TTarget>)query).Query.GetLinqToDBSource();
-
-			return (await expressionQuery.GetSqlQueriesAsync(options, cancellationToken).ConfigureAwait(false))[0];
-		}
 		#endregion
 	}
 }

@@ -86,7 +86,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.EnsureConnection(connect: true).Connection);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.OpenDbConnection());
 
 				// for run in transaction see
 				// https://stackoverflow.com/questions/57675379
@@ -115,7 +115,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection, (await dataConnection.EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false)).Connection);
+				var connection = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 
 				// for run in transaction see
 				// https://stackoverflow.com/questions/57675379

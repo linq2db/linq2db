@@ -195,9 +195,6 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) =>
 			((IExpressionQuery)QueryProvider).GetSqlQueries(options);
 
-		Task<IReadOnlyList<QuerySql>> IExpressionQuery.GetSqlQueriesAsync(SqlGenerationOptions? options, CancellationToken cancellationToken) =>
-			((IExpressionQuery)QueryProvider).GetSqlQueriesAsync(options, cancellationToken);
-
 		#endregion
 	}
 }

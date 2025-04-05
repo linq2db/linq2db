@@ -636,11 +636,6 @@ namespace LinqToDB
 				return _queryRunner!.GetSqlText();
 			}
 
-			public Task<IReadOnlyList<QuerySql>> GetSqlTextAsync(CancellationToken cancellationToken)
-			{
-				return _queryRunner!.GetSqlTextAsync(cancellationToken);
-			}
-
 			public IDataContext      DataContext      => _dataContext!;
 			public IQueryExpressions Expressions      => _queryRunner!.Expressions;
 			public object?[]?        Parameters       => _queryRunner!.Parameters;

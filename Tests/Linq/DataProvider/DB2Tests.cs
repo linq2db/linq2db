@@ -691,7 +691,7 @@ namespace Tests.DataProvider
 
 				Assert.Multiple(() =>
 				{
-					var connection = (DB2Connection)conn.OpenConnection();
+					var connection = (DB2Connection)conn.OpenDbConnection();
 					Assert.That(new DB2Clob(connection).IsNull, Is.True);
 					Assert.That(new DB2Blob(connection).IsNull, Is.True);
 				});

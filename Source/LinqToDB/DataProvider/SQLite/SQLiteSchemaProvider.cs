@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var dbConnection = dataConnection.EnsureConnection(connect: true).Connection;
+			var dbConnection = dataConnection.OpenDbConnection();
 
 			var tables = dbConnection.GetSchema("Tables");
 			var views =  dbConnection.GetSchema("Views");
@@ -74,7 +74,7 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var dbConnection = dataConnection.EnsureConnection(connect: true).Connection;
+			var dbConnection = dataConnection.OpenDbConnection();
 			var pks          = dbConnection.GetSchema("IndexColumns");
 			var idxs         = dbConnection.GetSchema("Indexes");
 
@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = dataConnection.EnsureConnection(connect: true).Connection.GetSchema("Columns");
+			var cs = dataConnection.OpenDbConnection().GetSchema("Columns");
 
 			return
 			(
@@ -123,7 +123,7 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var fks = dataConnection.EnsureConnection(connect: true).Connection.GetSchema("ForeignKeys");
+			var fks = dataConnection.OpenDbConnection().GetSchema("ForeignKeys");
 
 			var result =
 			(
@@ -157,7 +157,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			return dbConnection.EnsureConnection(connect: true).Connection.DataSource;
+			return dbConnection.OpenDbConnection().DataSource;
 		}
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)

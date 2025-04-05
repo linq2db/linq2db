@@ -63,19 +63,8 @@ namespace LinqToDB.Linq
 			SetQuery(parameterValues, forGetSqlText);
 		}
 
-		protected virtual Task SetCommandAsync(bool forGetSqlText, CancellationToken cancellationToken)
-		{
-			var parameterValues = new SqlParameterValues();
-
-			QueryRunner.SetParameters(Query, Expressions, ParametersContext, Parameters, QueryNumber, parameterValues);
-
-			return SetQueryAsync(parameterValues, forGetSqlText, cancellationToken);
-		}
-
 		protected abstract void SetQuery(IReadOnlyParameterValues parameterValues, bool forGetSqlText);
-		protected abstract Task SetQueryAsync(IReadOnlyParameterValues parameterValues, bool forGetSqlText, CancellationToken cancellationToken);
 
-		public    abstract IReadOnlyList<QuerySql>       GetSqlText();
-		public    abstract Task<IReadOnlyList<QuerySql>> GetSqlTextAsync(CancellationToken cancellationToken);
+		public abstract IReadOnlyList<QuerySql> GetSqlText();
 	}
 }

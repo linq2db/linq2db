@@ -215,7 +215,7 @@ namespace Tests.Data
 		{
 			using var db1 = GetDataConnection(context);
 
-			var connection = db1.OpenConnection();
+			var connection = db1.OpenDbConnection();
 
 			try
 			{
@@ -236,7 +236,7 @@ namespace Tests.Data
 		{
 			using (var db1 = GetDataConnection(context))
 			{
-				var connection = db1.OpenConnection();
+				var connection = db1.OpenDbConnection();
 				try
 				{
 					using (var db = GetDataConnection(context,

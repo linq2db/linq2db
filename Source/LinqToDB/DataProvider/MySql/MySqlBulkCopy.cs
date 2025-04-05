@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null)
 			{
-				var connection  = _provider.TryGetProviderConnection(dataConnection, dataConnection.EnsureConnection(connect: true).Connection);
+				var connection  = _provider.TryGetProviderConnection(dataConnection, dataConnection.OpenDbConnection());
 				var transaction = dataConnection.Transaction;
 
 				if (connection != null && transaction != null)
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null)
 			{
-				var connection  = _provider.TryGetProviderConnection(dataConnection, (await dataConnection.EnsureConnectionAsync(connect: true, cancellationToken).ConfigureAwait(false)).Connection);
+				var connection  = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 				var transaction = dataConnection.Transaction;
 
 				if (connection != null && transaction != null)

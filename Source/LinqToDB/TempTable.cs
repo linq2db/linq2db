@@ -674,7 +674,6 @@ namespace LinqToDB
 		public IDataContext DataContext => _table.DataContext;
 
 		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => _table.GetSqlQueries(options);
-		Task<IReadOnlyList<QuerySql>> IExpressionQuery.GetSqlQueriesAsync(SqlGenerationOptions? options, CancellationToken cancellationToken) => _table.GetSqlQueriesAsync(options, cancellationToken);
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		Expression IExpressionQuery.Expression => ((IExpressionQuery)_table).Expression;

@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			DataTypesSchema = dataConnection.EnsureConnection(connect: true).Connection.GetSchema("DataTypes");
+			DataTypesSchema = dataConnection.OpenDbConnection().GetSchema("DataTypes");
 
 			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
@@ -59,7 +59,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var connection = dataConnection.EnsureConnection(connect: true).Connection;
+			var connection = dataConnection.OpenDbConnection();
 			var database   = connection.Database;
 
 			var tables = connection.GetSchema("Tables");
@@ -90,7 +90,7 @@ namespace LinqToDB.DataProvider.DB2
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var database = dataConnection.EnsureConnection(connect: true).Connection.Database;
+			var database = dataConnection.OpenDbConnection().Database;
 
 			return
 			(
@@ -144,7 +144,7 @@ FROM
 WHERE
 	" + GetSchemaFilter("TABSCHEMA");
 
-			var database = dataConnection.EnsureConnection(connect: true).Connection.Database;
+			var database = dataConnection.OpenDbConnection().Database;
 
 			return _columns = dataConnection.Query(rd =>
 				{
@@ -214,7 +214,7 @@ WHERE
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var database = dataConnection.EnsureConnection(connect: true).Connection.Database;
+			var database = dataConnection.OpenDbConnection().Database;
 
 			return dataConnection
 				.Query(rd => new
@@ -391,7 +391,7 @@ WHERE
 
 		protected override string GetDataSourceName(DataConnection dbConnection)
 		{
-			var str = dbConnection.EnsureConnection(connect: true).Connection.ConnectionString;
+			var str = dbConnection.OpenDbConnection().ConnectionString;
 
 			var host = str?.Split(';')
 				.Select(s =>

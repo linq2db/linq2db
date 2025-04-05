@@ -10,7 +10,6 @@ namespace LinqToDB.Linq
 		Expression   Expression  { get; }
 		IDataContext DataContext { get; }
 
-		IReadOnlyList<QuerySql>       GetSqlQueries(SqlGenerationOptions? options);
-		Task<IReadOnlyList<QuerySql>> GetSqlQueriesAsync(SqlGenerationOptions? options, CancellationToken cancellationToken);
+		IReadOnlyList<QuerySql> GetSqlQueries(SqlGenerationOptions? options);
 	}
 }
