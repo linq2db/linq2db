@@ -6,6 +6,9 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
+#if NETFRAMEWORK || NETSTANDARD2_0
+using System.Text;
+#endif
 
 using JetBrains.Annotations;
 
