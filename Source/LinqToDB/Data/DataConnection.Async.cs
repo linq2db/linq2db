@@ -32,7 +32,8 @@ namespace LinqToDB.Data
 #endif
 
 		/// <summary>
-		/// Starts new transaction asynchronously for current connection with default isolation level. If connection already has transaction, it will be rolled back.
+		/// Starts new transaction asynchronously for current connection with default isolation level.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
@@ -43,19 +44,17 @@ namespace LinqToDB.Data
 			if (!DataProvider.TransactionsSupported)
 				return new(this);
 
-			// If transaction is open, we dispose it, it will rollback all changes.
-			//
-			if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(false);
+			if (TransactionAsync != null) throw new InvalidOperationException("Data connection already has transaction");
+
+			var connection = await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 			var dataConnectionTransaction = await TraceActionAsync(
 				this,
 				TraceOperation.BeginTransaction,
 				static _ => "BeginTransactionAsync",
-				default(object?),
-				static async (dataConnection, _, cancellationToken) =>
+				connection,
+				static async (dataConnection, connection, cancellationToken) =>
 				{
-					var connection = await dataConnection.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-
 					// Create new transaction object.
 					//
 					dataConnection.TransactionAsync = await connection.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
@@ -75,7 +74,8 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Starts new transaction asynchronously for current connection with specified isolation level. If connection already have transaction, it will be rolled back.
+		/// Starts new transaction asynchronously for current connection with specified isolation level.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="isolationLevel">Transaction isolation level.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
@@ -87,22 +87,20 @@ namespace LinqToDB.Data
 			if (!DataProvider.TransactionsSupported)
 				return new(this);
 
-			// If transaction is open, we dispose it, it will rollback all changes.
-			//
-			if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(false);
+			if (TransactionAsync != null) throw new InvalidOperationException("Data connection already has transaction");
+
+			var connection = await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 			var dataConnectionTransaction = await TraceActionAsync(
 				this,
 				TraceOperation.BeginTransaction,
 				static il => $"BeginTransactionAsync({il})",
-				isolationLevel,
-				static async (dataConnection, isolationLevel, cancellationToken) =>
+				(isolationLevel, connection),
+				static async (dataConnection, ctx, cancellationToken) =>
 				{
-					var connection = await dataConnection.OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-
 					// Create new transaction object.
 					//
-					dataConnection.TransactionAsync = await connection.BeginTransactionAsync(isolationLevel, cancellationToken).ConfigureAwait(false);
+					dataConnection.TransactionAsync = await ctx.connection.BeginTransactionAsync(ctx.isolationLevel, cancellationToken).ConfigureAwait(false);
 
 					dataConnection._closeTransaction = true;
 
@@ -147,10 +145,10 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
+			var connection = GetOrCreateConnection();
+
 			try
 			{
-				var connection = GetOrCreateConnection();
-
 				if (connection.State == ConnectionState.Closed)
 				{
 					var interceptor = ((IInterceptable<IConnectionInterceptor>)this).Interceptor;
@@ -221,21 +219,21 @@ namespace LinqToDB.Data
 					this,
 					TraceOperation.CommitTransaction,
 					static _ => "CommitTransactionAsync",
-					default(object?),
-					static async (dataConnection, _, cancellationToken) =>
+					TransactionAsync,
+					static async (dataConnection, transaction, cancellationToken) =>
 					{
-						await dataConnection.TransactionAsync!.CommitAsync(cancellationToken).ConfigureAwait(false);
+						await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 
 						if (dataConnection._closeTransaction)
 						{
-							await dataConnection.TransactionAsync.DisposeAsync().ConfigureAwait(false);
+							await transaction.DisposeAsync().ConfigureAwait(false);
 							dataConnection.TransactionAsync = null;
 
 							if (dataConnection._command != null)
 								dataConnection._command.Transaction = null;
 						}
 
-						return _;
+						return (object?)null;
 					}, cancellationToken)
 					.ConfigureAwait(false);
 			}
@@ -257,21 +255,21 @@ namespace LinqToDB.Data
 					this,
 					TraceOperation.RollbackTransaction,
 					static _ => "RollbackTransactionAsync",
-					default(object?),
-					static async (dataConnection, _, cancellationToken) =>
+					TransactionAsync,
+					static async (dataConnection, transaction, cancellationToken) =>
 					{
-						await dataConnection.TransactionAsync!.RollbackAsync(cancellationToken).ConfigureAwait(false);
+						await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
 
 						if (dataConnection._closeTransaction)
 						{
-							await dataConnection.TransactionAsync.DisposeAsync().ConfigureAwait(false);
+							await transaction.DisposeAsync().ConfigureAwait(false);
 							dataConnection.TransactionAsync = null;
 
 							if (dataConnection._command != null)
 								dataConnection._command.Transaction = null;
 						}
 
-						return _;
+						return (object?)null;
 					},
 					cancellationToken
 				)
@@ -294,16 +292,16 @@ namespace LinqToDB.Data
 					this,
 					TraceOperation.DisposeTransaction,
 					static _ => "DisposeTransactionAsync",
-					default(object?),
-					static async (dataConnection, _, cancellationToken) =>
+					TransactionAsync,
+					static async (dataConnection, transaction, cancellationToken) =>
 					{
-						await dataConnection.TransactionAsync!.DisposeAsync().ConfigureAwait(false);
+						await transaction.DisposeAsync().ConfigureAwait(false);
 						dataConnection.TransactionAsync = null;
 
 						if (dataConnection._command != null)
 							dataConnection._command.Transaction = null;
 
-						return _;
+						return (object?)null;
 					},
 					default
 				)
@@ -639,11 +637,6 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region ExecuteReaderAsync
-
-		Task<DataReaderWrapper> ExecuteReaderAsync(CancellationToken cancellationToken)
-		{
-			return ExecuteReaderAsync(CommandBehavior.Default, cancellationToken);
-		}
 
 		protected virtual async Task<DataReaderWrapper> ExecuteReaderAsync(
 			CommandBehavior   commandBehavior,

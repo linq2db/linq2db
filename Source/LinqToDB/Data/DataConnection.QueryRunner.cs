@@ -367,7 +367,7 @@ namespace LinqToDB.Data
 				{
 					InitFirstCommand(dataConnection, executionQuery);
 
-					return await dataConnection.ExecuteNonQueryAsync(cancellationToken)
+					return await dataConnection.ExecuteNonQueryDataAsync(cancellationToken)
 						.ConfigureAwait(false);
 				}
 
@@ -381,7 +381,7 @@ namespace LinqToDB.Data
 					{
 						try
 						{
-							await dataConnection.ExecuteNonQueryAsync(cancellationToken)
+							await dataConnection.ExecuteNonQueryDataAsync(cancellationToken)
 								.ConfigureAwait(false);
 						}
 						catch (Exception)
@@ -390,7 +390,7 @@ namespace LinqToDB.Data
 					}
 					else
 					{
-						var n = await dataConnection.ExecuteNonQueryAsync(cancellationToken)
+						var n = await dataConnection.ExecuteNonQueryDataAsync(cancellationToken)
 							.ConfigureAwait(false);
 
 						if (i == 0)
@@ -630,7 +630,7 @@ namespace LinqToDB.Data
 
 				InitFirstCommand(dataConnection, executionQuery);
 
-				return dataConnection.ExecuteReaderAsync(cancellationToken);
+				return dataConnection.ExecuteDataReaderAsync(CommandBehavior.Default, cancellationToken);
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
@@ -640,7 +640,7 @@ namespace LinqToDB.Data
 
 				InitFirstCommand(dataConnection, executionQuery);
 
-				return dataConnection.ExecuteReader();
+				return dataConnection.ExecuteReader(CommandBehavior.Default);
 			}
 
 			public override DataReaderWrapper ExecuteReader()
@@ -649,7 +649,7 @@ namespace LinqToDB.Data
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
-				return _dataConnection.ExecuteReader();
+				return _dataConnection.ExecuteReader(CommandBehavior.Default);
 			}
 
 			#endregion
@@ -689,7 +689,7 @@ namespace LinqToDB.Data
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
-				var dataReader = await _dataConnection.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+				var dataReader = await _dataConnection.ExecuteDataReaderAsync(CommandBehavior.Default, cancellationToken).ConfigureAwait(false);
 
 				return new DataReaderAsync(dataReader);
 			}

@@ -669,7 +669,7 @@ namespace LinqToDB.Data
 			public static void Apply(DataConnection dataConnection, QueryTraceOptions options)
 			{
 #pragma warning disable CS0618 // Type or member is obsolete
-				if (options.OnTrace     != null) dataConnection.OnTraceConnection     = options.OnTrace;
+				if (options.OnTrace    != null) dataConnection.OnTraceConnection     = options.OnTrace;
 				if (options.WriteTrace != null) dataConnection.WriteTraceLineConnection = options.WriteTrace;
 
 				if      (options.TraceSwitch != null) dataConnection.TraceSwitchConnection = options.TraceSwitch;

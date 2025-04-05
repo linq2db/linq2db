@@ -758,24 +758,41 @@ namespace LinqToDB.Data
 		/// </summary>
 		internal IAsyncDbConnection GetOrCreateConnection()
 		{
-			if (_connection == null)
+			try
 			{
-				DbConnection connection;
+				if (_connection == null)
+				{
+					DbConnection connection;
 
-				if (_connectionFactory != null)
-					connection = _connectionFactory(Options);
-				else
-					connection = DataProvider.CreateConnection(ConnectionString!);
+					if (_connectionFactory != null)
+						connection = _connectionFactory(Options);
+					else
+						connection = DataProvider.CreateConnection(ConnectionString!);
 
-				_connection = AsyncFactory.CreateAndSetDataContext(this, connection);
+					_connection = AsyncFactory.CreateAndSetDataContext(this, connection);
 
-				if (RetryPolicy != null)
+					if (RetryPolicy != null)
+						_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
+				}
+				else if (RetryPolicy != null && _connection is not RetryingDbConnection)
 					_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
-			}
-			else if (RetryPolicy != null && _connection is not RetryingDbConnection)
-				_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
 
-			return _connection;
+				return _connection;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitchConnection.TraceError)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.Open, false)
+					{
+						TraceLevel = TraceLevel.Error,
+						StartTime  = DateTime.UtcNow,
+						Exception  = ex,
+					});
+				}
+
+				throw;
+			}
 		}
 
 		/// <summary>
@@ -785,10 +802,10 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
+			var connection = GetOrCreateConnection();
+
 			try
 			{
-				var connection = GetOrCreateConnection();
-
 				if (connection.State == ConnectionState.Closed)
 				{
 					var interceptor = ((IInterceptable<IConnectionInterceptor>)this).Interceptor;
@@ -1321,11 +1338,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-		DataReaderWrapper ExecuteReader()
-		{
-			return ExecuteDataReader(CommandBehavior.Default);
-		}
-
 		internal DataReaderWrapper ExecuteDataReader(CommandBehavior commandBehavior)
 		{
 			CheckAndThrowOnDisposed();
@@ -1419,7 +1431,8 @@ namespace LinqToDB.Data
 		internal IAsyncDbTransaction? TransactionAsync { get; private set; }
 
 		/// <summary>
-		/// Starts new transaction for current connection with default isolation level. If connection already has transaction, it will be rolled back.
+		/// Starts new transaction for current connection with default isolation level.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
 		public virtual DataConnectionTransaction BeginTransaction()
@@ -1429,20 +1442,20 @@ namespace LinqToDB.Data
 			if (!DataProvider.TransactionsSupported)
 				return new(this);
 
-			// If transaction is open, we dispose it, it will rollback all changes.
-			//
-			TransactionAsync?.Dispose();
+			if (TransactionAsync != null) throw new InvalidOperationException("Data connection already has transaction");
+
+			var connection = OpenConnection();
 
 			var dataConnectionTransaction = TraceAction(
 				this,
 				TraceOperation.BeginTransaction,
 				static _ => "BeginTransaction",
-				default(object?),
-				static (dataContext, _) =>
+				connection,
+				static (dataContext, connection) =>
 				{
 					// Create new transaction object.
 					//
-					dataContext.TransactionAsync = dataContext.OpenConnection().BeginTransaction();
+					dataContext.TransactionAsync = connection.BeginTransaction();
 
 					dataContext._closeTransaction = true;
 
@@ -1457,7 +1470,8 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Starts new transaction for current connection with specified isolation level. If connection already have transaction, it will be rolled back.
+		/// Starts new transaction for current connection with specified isolation level.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="isolationLevel">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
@@ -1468,20 +1482,20 @@ namespace LinqToDB.Data
 			if (!DataProvider.TransactionsSupported)
 				return new(this);
 
-			// If transaction is open, we dispose it, it will rollback all changes.
-			//
-			TransactionAsync?.Dispose();
+			if (TransactionAsync != null) throw new InvalidOperationException("Data connection already has transaction");
+
+			var connection = OpenConnection();
 
 			var dataConnectionTransaction = TraceAction(
 				this,
 				TraceOperation.BeginTransaction,
 				static il => $"BeginTransaction({il})",
-				isolationLevel,
-				static (dataConnection, isolationLevel) =>
+				(isolationLevel, connection),
+				static (dataConnection, ctx) =>
 				{
 					// Create new transaction object.
 					//
-					dataConnection.TransactionAsync = dataConnection.OpenConnection().BeginTransaction(isolationLevel);
+					dataConnection.TransactionAsync = ctx.connection.BeginTransaction(ctx.isolationLevel);
 
 					dataConnection._closeTransaction = true;
 
@@ -1508,14 +1522,14 @@ namespace LinqToDB.Data
 					this,
 					TraceOperation.CommitTransaction,
 					static _ => "CommitTransaction",
-					default(object?),
-					static (dataConnection, _) =>
+					TransactionAsync,
+					static (dataConnection, transaction) =>
 					{
-						dataConnection.TransactionAsync!.Commit();
+						transaction.Commit();
 
 						if (dataConnection._closeTransaction)
 						{
-							dataConnection.TransactionAsync.Dispose();
+							transaction.Dispose();
 							dataConnection.TransactionAsync = null;
 
 							if (dataConnection._command != null)
@@ -1540,14 +1554,14 @@ namespace LinqToDB.Data
 					this,
 					TraceOperation.RollbackTransaction,
 					static _ => "RollbackTransaction",
-					default(object?),
-					static (dataConnection, _) =>
+					TransactionAsync,
+					static (dataConnection, transaction) =>
 					{
-						dataConnection.TransactionAsync!.Rollback();
+						transaction.Rollback();
 
 						if (dataConnection._closeTransaction)
 						{
-							dataConnection.TransactionAsync.Dispose();
+							transaction.Dispose();
 							dataConnection.TransactionAsync = null;
 
 							if (dataConnection._command != null)
@@ -1572,10 +1586,10 @@ namespace LinqToDB.Data
 					this,
 					TraceOperation.DisposeTransaction,
 					static _ => "DisposeTransaction",
-					default(object?),
-					static (dataConnection, _) =>
+					TransactionAsync,
+					static (dataConnection, transaction) =>
 					{
-						dataConnection.TransactionAsync!.Dispose();
+						transaction.Dispose();
 						dataConnection.TransactionAsync = null;
 
 						if (dataConnection._command != null)
