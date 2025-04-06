@@ -32,6 +32,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Sets command timeout to default connection value.
+		/// Note that default provider/connection timeout is not the same value as timeout value you can specify upon context configuration.
 		/// </summary>
 		public ValueTask ResetCommandTimeoutAsync()
 		{
@@ -459,8 +460,6 @@ namespace LinqToDB.Data
 
 			try
 			{
-				await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
 				{
 					Option<int> result;
@@ -492,6 +491,8 @@ namespace LinqToDB.Data
 		internal async Task<int> ExecuteNonQueryDataAsync(CancellationToken cancellationToken)
 		{
 			CheckAndThrowOnDisposed();
+
+			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
@@ -558,8 +559,6 @@ namespace LinqToDB.Data
 
 			try
 			{
-				await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
 				{
 					Option<object?> result;
@@ -591,6 +590,8 @@ namespace LinqToDB.Data
 		internal async Task<object?> ExecuteScalarDataAsync(CancellationToken cancellationToken)
 		{
 			CheckAndThrowOnDisposed();
+
+			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
@@ -658,8 +659,6 @@ namespace LinqToDB.Data
 
 			try
 			{
-				await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
-
 				DbDataReader reader;
 
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
@@ -715,6 +714,8 @@ namespace LinqToDB.Data
 			CancellationToken cancellationToken)
 		{
 			CheckAndThrowOnDisposed();
+
+			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))

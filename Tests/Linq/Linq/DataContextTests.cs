@@ -185,7 +185,9 @@ namespace Tests.Linq
 				Assert.That(db.DataConnection, Is.Not.Null);
 				Assert.That(db.DataConnection!.CommandTimeout, Is.EqualTo(10));
 
-				db.CommandTimeout = -10;
+				Assert.That(() => db.CommandTimeout = -10, Throws.InstanceOf<ArgumentOutOfRangeException>());
+
+				db.ResetCommandTimeout();
 				Assert.That(db.DataConnection.CommandTimeout, Is.EqualTo(-1));
 
 				db.CommandTimeout = 11;

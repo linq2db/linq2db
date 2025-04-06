@@ -375,7 +375,7 @@ namespace LinqToDB.Data
 
 				for (var i = 0; i < executionQuery.PreparedQuery.Commands.Length; i++)
 				{
-					InitCommand(dataConnection, executionQuery, 1);
+					InitCommand(dataConnection, executionQuery, i);
 
 					if (i < executionQuery.PreparedQuery.Commands.Length - 1 && executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP"))
 					{
@@ -709,7 +709,7 @@ namespace LinqToDB.Data
 
 				for (var i = 0; i < _executionQuery.PreparedQuery.Commands.Length; i++)
 				{
-					InitCommand(_dataConnection, _executionQuery, 1);
+					InitCommand(_dataConnection, _executionQuery, i);
 
 					if (i < _executionQuery.PreparedQuery.Commands.Length - 1 && _executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP"))
 					{

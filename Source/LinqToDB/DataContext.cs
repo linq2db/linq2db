@@ -278,9 +278,11 @@ namespace LinqToDB
 
 				if (value < 0)
 				{
-					_commandTimeout = null;
-					if (_dataConnection != null)
-						_dataConnection.CommandTimeout = -1;
+#if NET6_0_OR_GREATER
+					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout or ResetCommandTimeoutAsync methods instead.");
+#else
+					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout method instead.");
+#endif
 				}
 				else
 				{
@@ -290,6 +292,37 @@ namespace LinqToDB
 				}
 			}
 		}
+
+		/// <summary>
+		/// Resets command timeout to provider or connection defaults.
+		/// Note that default provider/connection timeout is not the same value as timeout value you can specify upon context configuration.
+		/// </summary>
+		public void ResetCommandTimeout()
+		{
+			// because DbConnection.CommandTimeout doesn't allow user to reset timeout, we must re-create command instead
+			// some providers support in-place reset logic (at least SqlClient has ResetCommandTimeout() API), but taking into account how
+			// rare this operation it doesn't make sense to add provider-specific reset operation support to IDataProvider interface
+			_commandTimeout = null;
+
+#pragma warning disable CS0618 // Type or member is obsolete
+			_dataConnection?.ResetCommandTimeout();
+#pragma warning restore CS0618 // Type or member is obsolete
+		}
+
+#if NET6_0_OR_GREATER
+		/// <summary>
+		/// Sets command timeout to default connection value.
+		/// Note that default provider/connection timeout is not the same value as timeout value you can specify upon context configuration.
+		/// </summary>
+		public ValueTask ResetCommandTimeoutAsync()
+		{
+			_commandTimeout = null;
+
+#pragma warning disable CS0618 // Type or member is obsolete
+			return _dataConnection?.ResetCommandTimeoutAsync() ?? default;
+#pragma warning restore CS0618 // Type or member is obsolete
+		}
+#endif
 
 		/// <summary>
 		/// Underlying active database connection.

@@ -1002,6 +1002,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Resets command timeout to provider or connection defaults.
+		/// Note that default provider/connection timeout is not the same value as timeout value you can specify upon context configuration.
 		/// </summary>
 		public void ResetCommandTimeout()
 		{
@@ -1056,8 +1057,6 @@ namespace LinqToDB.Data
 
 			try
 			{
-				OpenConnection();
-
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
 				{
 					Option<int> result;
@@ -1083,6 +1082,8 @@ namespace LinqToDB.Data
 		internal int ExecuteNonQuery()
 		{
 			CheckAndThrowOnDisposed();
+
+			OpenConnection();
 
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
@@ -1145,8 +1146,6 @@ namespace LinqToDB.Data
 
 			try
 			{
-				OpenConnection();
-
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
 				{
 					Option<int> result;
@@ -1172,6 +1171,8 @@ namespace LinqToDB.Data
 		internal int ExecuteNonQueryCustom(Func<DbCommand, int> customExecute)
 		{
 			CheckAndThrowOnDisposed();
+
+			OpenConnection();
 
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
@@ -1238,8 +1239,6 @@ namespace LinqToDB.Data
 
 			try
 			{
-				OpenConnection();
-
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
 				{
 					Option<object?> result;
@@ -1264,6 +1263,8 @@ namespace LinqToDB.Data
 
 		object? ExecuteScalar()
 		{
+			OpenConnection();
+
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
 					return ExecuteScalar(CurrentCommand!);
@@ -1328,8 +1329,6 @@ namespace LinqToDB.Data
 
 			try
 			{
-				OpenConnection();
-
 				DbDataReader reader;
 
 				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
@@ -1374,6 +1373,8 @@ namespace LinqToDB.Data
 		internal DataReaderWrapper ExecuteDataReader(CommandBehavior commandBehavior)
 		{
 			CheckAndThrowOnDisposed();
+
+			OpenConnection();
 
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
