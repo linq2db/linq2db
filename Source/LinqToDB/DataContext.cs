@@ -172,22 +172,43 @@ namespace LinqToDB
 
 		private bool _keepConnectionAlive;
 		/// <summary>
-		/// Gets or sets option to dispose underlying connection after use.
+		/// Gets flag indicating wether context should dispose underlying connection after use or not.
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public  bool  KeepConnectionAlive
 		{
 			get => _keepConnectionAlive;
-			set
-			{
-				AssertDisposed();
+			// TODO: Remove in v7
+			[Obsolete("This API scheduled for removal in v7. To set KeepAlive value use SetKeepAlive or SetKeepAliveAsync methods"), EditorBrowsable(EditorBrowsableState.Never)]
+			set => SetKeepConnectionAlive(value);
+		}
 
-				_keepConnectionAlive = value;
+		/// <summary>
+		/// Sets connection management behavior to specify if context should dispose underlying connection after use or not.
+		/// </summary>
+		public void SetKeepConnectionAlive(bool keepAlive)
+		{
+			AssertDisposed();
 
-				// TODO: call to blocking operation without async API
-				if (value == false)
-					ReleaseQuery();
-			}
+			_keepConnectionAlive = keepAlive;
+
+			if (keepAlive == false)
+				ReleaseQuery();
+		}
+
+		/// <summary>
+		/// Sets connection management behavior to specify if context should dispose underlying connection after use or not.
+		/// </summary>
+		public Task SetKeepConnectionAliveAsync(bool keepAlive)
+		{
+			AssertDisposed();
+
+			_keepConnectionAlive = keepAlive;
+
+			if (keepAlive == false)
+				return ReleaseQueryAsync();
+
+			return Task.CompletedTask;
 		}
 
 		// TODO: Remove in v7

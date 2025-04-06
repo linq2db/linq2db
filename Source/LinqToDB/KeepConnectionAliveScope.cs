@@ -23,7 +23,7 @@ namespace LinqToDB
 			_dataContext = dataContext;
 			_savedValue  = dataContext.KeepConnectionAlive;
 
-			dataContext.KeepConnectionAlive = true;
+			dataContext.SetKeepConnectionAlive(true);
 		}
 
 		/// <summary>
@@ -31,7 +31,7 @@ namespace LinqToDB
 		/// </summary>
 		public void Dispose()
 		{
-			_dataContext.KeepConnectionAlive = _savedValue;
+			_dataContext.SetKeepConnectionAlive(_savedValue);
 		}
 	}
 }
