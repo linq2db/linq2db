@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Common
+﻿using System;
+
+namespace LinqToDB.Common
 {
 	interface IApplicable<in T>
 	{
