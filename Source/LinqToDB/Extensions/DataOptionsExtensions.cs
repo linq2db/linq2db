@@ -773,12 +773,31 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Defines mapping schema to use with DataOptions.
+		/// Defines mapping schema to use with DataOptions. Replaces all previous registrations by both
+		/// <see cref="UseMappingSchema"/> and <see cref="UseAdditionalMappingSchema"/>.
 		/// </summary>
 		[Pure]
 		public static DataOptions UseMappingSchema(this DataOptions options, MappingSchema mappingSchema)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { MappingSchema = mappingSchema });
+		}
+
+		/// <summary>
+		/// Defines additional mapping schema to use with DataOptions.
+		/// Adds information, and it combines mapping information with schemas added before by
+		/// <see cref="UseMappingSchema"/> and <see cref="UseAdditionalMappingSchema"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseAdditionalMappingSchema(this DataOptions options, MappingSchema mappingSchema)
+		{
+			return options.WithOptions<ConnectionOptions>(o =>
+			{
+				var ms = o.MappingSchema == null
+					? mappingSchema
+					: MappingSchema.CombineSchemas(o.MappingSchema, mappingSchema);
+
+				return o with { MappingSchema = ms };
+			});
 		}
 
 		/// <summary>
