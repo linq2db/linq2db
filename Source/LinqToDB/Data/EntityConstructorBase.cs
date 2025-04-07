@@ -174,6 +174,9 @@ namespace LinqToDB.Data
 
 					foreach (var info in loadWith.MembersToLoad)
 					{
+						if (!info.ShouldLoad)
+							continue;
+
 						var memberInfo = info.MemberInfo;
 
 						if (!assignedMembers.Add(memberInfo))

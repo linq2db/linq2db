@@ -329,8 +329,9 @@ namespace LinqToDB.Linq.Builder
 					member = found;
 				}
 
-				member.Entity ??= new LoadWithEntity();
-				member.Entity.Parent = current;
+				member.Entity        ??= new LoadWithEntity();
+				member.Entity.Parent =   current;
+				member.ShouldLoad    =   true;
 
 				current = member.Entity!;
 			}

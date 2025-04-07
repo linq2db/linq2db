@@ -16,6 +16,7 @@ namespace LinqToDB.Linq.Builder
 		public MemberInfo        MemberInfo       { get; }
 		public LambdaExpression? FilterExpression { get; set; }
 		public Expression?       FilterFunc       { get; set; }
+		public bool              ShouldLoad       { get; set; }
 
 		bool Equals(LoadWithMember other)
 		{
