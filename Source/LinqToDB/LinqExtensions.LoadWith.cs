@@ -765,8 +765,7 @@ namespace LinqToDB
 		[Pure]
 		internal static TSource LoadWithInternal<TSource>(
 			this TSource             source,
-			LoadWithInfo             loadWith,
-			MemberInfo[]?            loadWithPath)
+			LoadWithEntity           loadWith)
 			where TSource : class
 		{
 			return source;

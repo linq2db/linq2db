@@ -3514,7 +3514,6 @@ FROM
 			];
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4797")]
 		public void Issue4797Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

@@ -8,7 +8,6 @@ using LinqToDB.Expressions;
 using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -30,26 +29,6 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqToDBException("Invalid filter function usage.");
 		}
 
-		static LoadWithInfo CorrectLastPath(LoadWithInfo lastPath, MemberInfo[]? loadWithPath)
-		{
-			if (loadWithPath?.Length > 0)
-			{
-				var current = lastPath;
-				foreach (var memberInfo in loadWithPath)
-				{
-					var found = current.NextInfos?.FirstOrDefault(li =>
-						MemberInfoEqualityComparer.Default.Equals(li.MemberInfo, memberInfo));
-					if (found == null)
-						throw new InvalidOperationException();
-					current = found;
-				}
-
-				lastPath = current;
-			}
-
-			return lastPath;
-		}
-
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
@@ -59,7 +38,7 @@ namespace LinqToDB.Linq.Builder
 
 			ILoadWithContext? table = null;
 
-			LoadWithInfo lastLoadWith;
+			LoadWithEntity lastLoadWith;
 
 			if (methodCall.Method.Name == "LoadWithInternal")
 			{
@@ -68,11 +47,9 @@ namespace LinqToDB.Linq.Builder
 				if (table == null)
 					return BuildSequenceResult.Error(methodCall);
 
-				var loadWith     = methodCall.Arguments[1].EvaluateExpression<LoadWithInfo>();
-				var loadWithPath = methodCall.Arguments[2].EvaluateExpression<MemberInfo[]>();
+				var loadWith     = methodCall.Arguments[1].EvaluateExpression<LoadWithEntity>();
 
 				table.LoadWithRoot = loadWith!;
-				table.LoadWithPath = loadWithPath;
 				lastLoadWith       = loadWith!;
 			}
 			else
@@ -109,24 +86,24 @@ namespace LinqToDB.Linq.Builder
 
 				table = extractResult.Value.context ?? throw new LinqToDBException("Unable to find table for LoadWith association.");
 
+				if (table.LoadWithRoot == null)
+					table.LoadWithRoot = new();
+
 				var tableLoadWith = table.LoadWithRoot;
 
 				if (methodCall.Method.Name == "ThenLoad")
 				{
 					var prevSequence = (LoadWithContext)sequence;
-					if (prevSequence.LastLoadWithInfo == null)
-						throw new InvalidOperationException();
+
+					lastLoadWith = prevSequence.LastLoadWithInfo ?? throw new InvalidOperationException();
 
 					// append to the last member chain
-					var lastPath = CorrectLastPath(prevSequence.LastLoadWithInfo, table.LoadWithPath);
-					if (lastPath == null)
-						throw new LinqToDBException($"ThenLoad function should be followed after LoadWith. Cannot find previous property for '{path}'.");
 
-					lastLoadWith = MergeLoadWith(lastPath, associations);
+					lastLoadWith = MergeLoadWith(lastLoadWith, associations);
 
 					if (methodCall.Arguments.Count == 3)
 					{
-						var lastElement = associations[associations.Length - 1];
+						var lastElement = associations[^1];
 						lastElement.FilterFunc = (Expression?)methodCall.Arguments[2];
 						if (lastElement.MemberInfo != null)
 							CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, sequence.MappingSchema);
@@ -134,20 +111,17 @@ namespace LinqToDB.Linq.Builder
 				}
 				else if (methodCall.Method.Name == "LoadWith" || methodCall.Method.Name == "LoadWithAsTable")
 				{
-					var lastPath = CorrectLastPath(tableLoadWith, table.LoadWithPath);
-
-					if (tableLoadWith == null)
-						throw new InvalidOperationException();
+					lastLoadWith = tableLoadWith ?? throw new InvalidOperationException();
 
 					if (methodCall.Arguments.Count == 3)
 					{
-						var lastElement = associations[associations.Length - 1];
+						var lastElement = associations[^1];
 						lastElement.FilterFunc = (Expression?)methodCall.Arguments[2];
 						if (lastElement.MemberInfo != null)
 							CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, sequence.MappingSchema);
 					}
 
-					lastLoadWith = MergeLoadWith(lastPath, associations);
+					lastLoadWith = MergeLoadWith(lastLoadWith, associations);
 				}
 				else
 					throw new InvalidOperationException();
@@ -159,7 +133,7 @@ namespace LinqToDB.Linq.Builder
 			return BuildSequenceResult.FromContext(loadWithSequence);
 		}
 
-		static (ILoadWithContext? context, LoadWithInfo[] info)? ExtractAssociations(ExpressionBuilder builder, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
+		static (ILoadWithContext? context, LoadWithMember[] info)? ExtractAssociations(ExpressionBuilder builder, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
 		{
 			var currentExpression = expression;
 
@@ -188,7 +162,7 @@ namespace LinqToDB.Linq.Builder
 				return default;
 
 			var loadWithInfos = members
-				.Select((m, i) => new LoadWithInfo(m, true) { MemberFilter = i == 0 ? filterExpression : null })
+				.Select((m, i) => new LoadWithMember(m) { FilterExpression = i == 0 ? filterExpression : null })
 				.ToArray();
 
 			return (context, loadWithInfos);
@@ -336,36 +310,29 @@ namespace LinqToDB.Linq.Builder
 			return (context ?? parentContext, members);
 		}
 
-		static LoadWithInfo MergeLoadWith(LoadWithInfo loadWith, LoadWithInfo[] defined)
+		static LoadWithEntity MergeLoadWith(LoadWithEntity loadWith, LoadWithMember[] defined)
 		{
 			var current = loadWith;
 
 			for (var index = 0; index < defined.Length; index++)
 			{
-				current.NextInfos ??= new List<LoadWithInfo>();
+				var member = defined[index];
+				current.MembersToLoad ??= new List<LoadWithMember>();
 
-				var d = defined[index];
-				var found = current.NextInfos.FirstOrDefault(lw =>
-					MemberInfoEqualityComparer.Default.Equals(lw.MemberInfo, d.MemberInfo));
-
-				if (found != null)
+				var found = current.MembersToLoad.FirstOrDefault(m => m.MemberInfo.EqualsTo(member.MemberInfo));
+				if (found == null)
 				{
-					found.ShouldLoad = true;
-
-					if (index == defined.Length - 1)
-					{
-						// reassign everything
-						found.FilterFunc   = d.FilterFunc;
-						found.MemberFilter = d.MemberFilter;
-					}
-
-					current = found;
+					current.MembersToLoad.Add(member);
 				}
 				else
 				{
-					current.NextInfos.Add(d);
-					current = d;
+					member = found;
 				}
+
+				member.Entity ??= new LoadWithEntity();
+				member.Entity.Parent = current;
+
+				current = member.Entity!;
 			}
 
 			return current;
@@ -373,8 +340,8 @@ namespace LinqToDB.Linq.Builder
 
 		internal sealed class LoadWithContext : PassThroughContext
 		{
-			public IBuildContext RegisterContext { get; }
-			public LoadWithInfo? LastLoadWithInfo { get; set; }
+			public IBuildContext   RegisterContext  { get; }
+			public LoadWithEntity? LastLoadWithInfo { get; set; }
 
 			public LoadWithContext(IBuildContext context, IBuildContext registerContext) : base(context)
 			{
