@@ -224,28 +224,26 @@ namespace LinqToDB.Linq.Builder
 
 			if (loadWith != null)
 			{
-				var found = loadWith.MembersToLoad?.Where(x => x.MemberInfo.EqualsTo(association.MemberInfo)).FirstOrDefault();
+				var associationLoadWith = loadWith.MembersToLoad?.Where(x => x.MemberInfo.EqualsTo(association.MemberInfo)).FirstOrDefault();
 
-				if (found == null)
+				if (associationLoadWith == null)
 				{
 					loadWith.MembersToLoad ??= new();
-					found = new LoadWithMember(association.MemberInfo);
-					loadWith.MembersToLoad.Add(found);
+					associationLoadWith = new LoadWithMember(association.MemberInfo);
+					loadWith.MembersToLoad.Add(associationLoadWith);
 				}
 
-				found.Entity ??= new LoadWithEntity();
-				found.Entity.Parent = loadWith;
+				associationLoadWith.Entity ??= new LoadWithEntity();
+				associationLoadWith.Entity.Parent = loadWith;
 
 				var body = definedQueryMethod.Body;
 
 				body = Expression.Call(
 					Methods.LinqToDB.LoadWithInternal.MakeGenericMethod(body.Type),
 					body,
-					Expression.Constant(found.Entity));
+					Expression.Constant(associationLoadWith.Entity));
 
 				definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
-
-				var associationLoadWith = found;
 
 				if (associationLoadWith.FilterExpression != null || associationLoadWith.FilterFunc != null)
 				{
