@@ -32,5 +32,21 @@
 		/// <returns>The same <paramref name="expression"/> when calling directly.</returns>
 		/// <exception cref="LinqToDBException">Exception is throw when used not in OrderBy/ThenBy extension methods.</exception>
 		public static T Ordinal<T>(T expression) => expression;
+
+		/// <summary>
+		/// Forces LINQ translator to generate parameter for <paramref name="expression"/>.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="expression"></param>
+		/// <returns></returns>
+		public static T Parameter<T>(T expression) => expression;
+
+		/// <summary>
+		/// Forces LINQ translator to generate constant for <paramref name="expression"/>.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="expression"></param>
+		/// <returns></returns>
+		public static T Constant<T>(T expression) => expression;
 	}
 }
