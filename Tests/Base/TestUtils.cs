@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -194,6 +195,19 @@ namespace Tests
 				FirebirdTools.ClearAllPools();
 				base.Dispose();
 			}
+
+			public override ValueTask DisposeAsync()
+			{
+				if (DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird))
+				{
+					FirebirdTools.ClearAllPools();
+				}
+
+				DataContext.CloseAsync();
+				FirebirdTools.ClearAllPools();
+
+				return base.DisposeAsync();
+			}
 		}
 		class TestTempTable<T> : TempTable<T>
 			where T : notnull
@@ -207,6 +221,12 @@ namespace Tests
 			{
 				using var _ = new DisableBaseline("Test setup");
 				base.Dispose();
+			}
+
+			public override ValueTask DisposeAsync()
+			{
+				using var _ = new DisableBaseline("Test setup");
+				return base.DisposeAsync();
 			}
 		}
 
