@@ -33,6 +33,36 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+		bool Equals(LoadWithEntity other)
+		{
+			if (MembersToLoad == null && other.MembersToLoad == null)
+				return true;
+
+			if (MembersToLoad == null || other.MembersToLoad == null)
+				return false;
+
+			if (MembersToLoad?.Count != other.MembersToLoad?.Count)
+				return false;
+
+			for(var i = 0; i < MembersToLoad!.Count; i++)
+			{
+				if (!MembersToLoad[i].Equals(other.MembersToLoad![i]))
+					return false;
+			}
+
+			return true;
+		}
+
+		public override bool Equals(object? obj)
+		{
+			return ReferenceEquals(this, obj) || obj is LoadWithEntity other && Equals(other);
+		}
+
+		public override int GetHashCode()
+		{
+			return 0;
+		}
+
 		public string ToDebugString()
 		{
 			var str = string.Join(", ", ToDebugStrings());
