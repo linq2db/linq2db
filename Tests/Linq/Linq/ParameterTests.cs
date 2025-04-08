@@ -595,7 +595,7 @@ namespace Tests.Linq
 
 				var parameters = new List<SqlParameter>();
 				QueryHelper.CollectParameters(query.GetSelectQuery(), parameters);
-				parameters.Distinct().Should().HaveCount(1);
+				parameters.Distinct().Should().HaveCount(2);
 			}
 
 			{
@@ -1443,7 +1443,7 @@ namespace Tests.Linq
 			List<Person> Query(ITestDataContext db)
 			{
 				return db.Person
-					.Where(_ => 
+					.Where(_ =>
 					 GetQuery1(db).Select(p => p.ID).Contains(_.ID) &&
 					(GetQuery2(db).Select(p => p.ID).Contains(_.ID) ||
 					 GetQuery3(db).Select(p => p.ID).Contains(_.ID)))
@@ -1920,6 +1920,77 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			Assert.That(db.Select(() => Sql.AsSql(Sql.PadLeft(null, 1, '.'))), Is.EqualTo(null));
+		}
+
+		sealed class IssueDedup
+		{
+			public int Id { get; set; }
+			public bool? Value1 { get; set; }
+			public bool? Value2 { get; set; }
+			public bool? Value3 { get; set; }
+			public bool? Value4 { get; set; }
+			public bool? Value5 { get; set; }
+		}
+
+		[Test]
+		public void DedupOfParameters([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable([new IssueDedup()]);
+
+			Test(new Wrap<bool>(true), new Wrap<bool>(false), new Wrap<bool>(true), new Wrap<bool>(false), new Wrap<bool>(false));
+			Test(new Wrap<bool>(true), new Wrap<bool>(false), new Wrap<bool>(false), new Wrap<bool>(true), new Wrap<bool>(false));
+			Test(new Wrap<bool>(false), new Wrap<bool>(true), new Wrap<bool>(false), new Wrap<bool>(true), new Wrap<bool>(false));
+			Test(new Wrap<bool>(true), new Wrap<bool>(true), new Wrap<bool>(false), new Wrap<bool>(true), new Wrap<bool>(true));
+
+			void Test(Wrap<bool> f1, Wrap<bool> f2, Wrap<bool> f3, Wrap<bool> f4, Wrap<bool> f5)
+			{
+				var cacheMissCount = tb.GetCacheMissCount();
+
+				tb
+					.Set(r => r.Value1, r => f1.Value)
+					.Set(r => r.Value2, r => f2.Value)
+					.Set(r => r.Value3, r => f3.Value)
+					.Set(r => r.Value4, r => f4.Value)
+					.Set(r => r.Value5, r => f5.Value)
+					.Update();
+
+				if (iteration > 1)
+				{
+					Assert.That(tb.GetCacheMissCount(), Is.EqualTo(cacheMissCount));
+				}
+
+				var record = tb.Single();
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.Value1, Is.EqualTo(f1.Value));
+					Assert.That(record.Value2, Is.EqualTo(f2.Value));
+					Assert.That(record.Value3, Is.EqualTo(f3.Value));
+					Assert.That(record.Value4, Is.EqualTo(f4.Value));
+					Assert.That(record.Value5, Is.EqualTo(f5.Value));
+				});
+			}
+		}
+
+		readonly struct Wrap<TValue>
+		{
+			public Wrap(TValue? value)
+			{
+				Value = value;
+			}
+
+			public TValue? Value { get; }
+		}
+
+		[Test]
+		public void LambdaParameterTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var valueGetter = () => 1;
+
+			AssertQuery(db.Parent.Where(r => r.ParentID == valueGetter()));
 		}
 	}
 }

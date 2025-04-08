@@ -1016,7 +1016,7 @@ namespace Tests.DataProvider
 				// color enum type will not work without this call if _create test was run in the same session
 				// More details here: https://github.com/npgsql/npgsql/issues/1357
 				// must be called before transaction opened due to: https://github.com/npgsql/npgsql/issues/2244
-				((dynamic)db.Connection).ReloadTypes();
+				((dynamic)db.OpenDbConnection()).ReloadTypes();
 
 				DataConnectionTransaction? ts = null;
 
@@ -1160,7 +1160,7 @@ namespace Tests.DataProvider
 				// color enum type will not work without this call if _create test was run in the same session
 				// More details here: https://github.com/npgsql/npgsql/issues/1357
 				// must be called before transaction opened due to: https://github.com/npgsql/npgsql/issues/2244
-				((dynamic)db.Connection).ReloadTypes();
+				((dynamic)db.OpenDbConnection()).ReloadTypes();
 
 				DataConnectionTransaction? ts = null;
 

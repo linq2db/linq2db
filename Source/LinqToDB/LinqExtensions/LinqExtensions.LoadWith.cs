@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
@@ -758,5 +759,5 @@ namespace LinqToDB
 			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
+		}
 	}
-}

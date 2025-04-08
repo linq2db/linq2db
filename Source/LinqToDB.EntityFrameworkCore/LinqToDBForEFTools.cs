@@ -256,6 +256,7 @@ namespace LinqToDB.EntityFrameworkCore
 			var info    = GetEFProviderInfo(context);
 			var options = context.GetLinqToDBOptions() ?? new DataOptions();
 			options     = AddMappingSchema(options, GetMappingSchema(context.Model, context, options));
+			options     = EnableTracing(options, CreateLogger(info.Options));
 
 			DataConnection? dc = null;
 
@@ -286,20 +287,19 @@ namespace LinqToDB.EntityFrameworkCore
 				}
 			}
 
-			var logger = CreateLogger(info.Options);
-			if (logger != null)
-				EnableTracing(dc, logger);
-
 			return dc;
 		}
 
 		private static readonly TraceSwitch _defaultTraceSwitch =
 			new("DataConnection", "DataConnection trace switch", TraceLevel.Info.ToString());
 
-		static void EnableTracing(DataConnection dc, ILogger logger)
+		static DataOptions EnableTracing(DataOptions options, ILogger? logger)
 		{
-			dc.OnTraceConnection = t => Implementation.LogConnectionTrace(t, logger);
-			dc.TraceSwitchConnection = _defaultTraceSwitch;
+			return logger == null
+				? options
+				: options
+					.UseTracing(t => Implementation.LogConnectionTrace(t, logger))
+					.UseTraceSwitch(_defaultTraceSwitch);
 		}
 
 		/// <summary>
@@ -334,6 +334,7 @@ namespace LinqToDB.EntityFrameworkCore
 			var connectionInfo = GetConnectionInfo(info);
 			var provider       = GetDataProvider(options, info, connectionInfo);
 			var logger         = CreateLogger(info.Options);
+			options            = EnableTracing(options, logger);
 
 			if (transaction != null)
 			{
@@ -369,9 +370,6 @@ namespace LinqToDB.EntityFrameworkCore
 				}
 			}
 
-			if (logger != null)
-				EnableTracing(dc, logger);
-
 			return dc;
 		}
 
@@ -394,11 +392,9 @@ namespace LinqToDB.EntityFrameworkCore
 				.UseDataProvider(dataProvider)
 				.UseConnectionString(connectionInfo.ConnectionString!);
 
-			var dc = new LinqToDBForEFToolsDataConnection(context, options, context.Model, TransformExpression);
-			var logger = CreateLogger(info.Options);
+			options = EnableTracing(options, CreateLogger(info.Options));
 
-			if (logger != null)
-				EnableTracing(dc, logger);
+			var dc = new LinqToDBForEFToolsDataConnection(context, options, context.Model, TransformExpression);
 
 			return dc;
 		}
@@ -454,6 +450,7 @@ namespace LinqToDB.EntityFrameworkCore
 				dataOptions = AddMappingSchema(dataOptions, GetMappingSchema(model, null, dataOptions));
 
 			dataOptions = dataOptions.UseDataProvider(dataProvider);
+			dataOptions = EnableTracing(dataOptions, CreateLogger(info.Options));
 
 			if (connectionInfo.Connection != null)
 			{
@@ -468,10 +465,6 @@ namespace LinqToDB.EntityFrameworkCore
 
 			if (dc == null)
 				throw new LinqToDBForEFToolsException($"Can not extract connection information from {nameof(DbContextOptions)}");
-
-			var logger = CreateLogger(info.Options);
-			if (logger != null)
-				EnableTracing(dc, logger);
 
 			return dc;
 		}

@@ -16,7 +16,7 @@ namespace Tests.Model
 		{
 		}
 
-		public TestDataConnection(Func<DataOptions,DataOptions> optionsSetter) : base(optionsSetter)
+		public TestDataConnection(Func<DataOptions,DataOptions> optionsSetter) : base(optionsSetter(new DataOptions()))
 		{
 		}
 

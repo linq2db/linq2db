@@ -98,7 +98,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var destinationRef = new ContextRefExpression(methodCall.Method.GetGenericArguments()[2], destination);
 
 					var outputSetters = new List<UpdateBuilder.SetExpressionEnvelope>();
-					UpdateBuilder.ParseSetter(builder, destinationRef, outputExpression, outputSetters);
+					UpdateBuilder.ParseSetter(builder, destinationRef, destinationRef, outputExpression, outputSetters);
 					UpdateBuilder.InitializeSetExpressions(builder, mergeContext.SourceContext,
 						mergeContext.TargetContext, outputSetters, mergeContext.Merge.Output.OutputItems, createColumns : false);
 

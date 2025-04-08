@@ -1,15 +1,26 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
 using LinqToDB.DataProvider.SapHana;
+using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions.Types;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
+using static LinqToDB.Internal.DataProvider.OdbcProviderAdapter;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
+	// TODO: add HanaDecimal support
+	// TODO: add ReadVector support
 	public class SapHanaProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _unmanagedSyncRoot = new ();
@@ -19,9 +30,13 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		private static SapHanaProviderAdapter? _odbcProvider;
 
 #if NETFRAMEWORK
-		public  const string UnmanagedAssemblyName        = "Sap.Data.Hana.v4.5";
+		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.v4.5"];
+#elif NET6_0 || NET7_0
+		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Net.v6.0", "Sap.Data.Hana.Core.v2.1"];
+#elif NET8_0_OR_GREATER
+		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Net.v8.0", "Sap.Data.Hana.Net.v6.0", "Sap.Data.Hana.Core.v2.1"];
 #else
-		public  const string UnmanagedAssemblyName        = "Sap.Data.Hana.Core.v2.1";
+		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Core.v2.1"];
 #endif
 
 		public  const string UnmanagedClientNamespace     = "Sap.Data.Hana";
@@ -36,9 +51,18 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			Func<string, DbConnection> connectionFactory,
 
 			Action<DbParameter, HanaDbType> dbTypeSetter,
+			Func<DbParameter, HanaDbType> dbTypeGetter,
 
 			Func<DbConnection, HanaBulkCopyOptions, DbTransaction?, HanaBulkCopy> bulkCopyCreator,
-			Func<int, string, HanaBulkCopyColumnMapping>                          bulkCopyColumnMappingCreator)
+			Func<int, string, HanaBulkCopyColumnMapping>                          bulkCopyColumnMappingCreator,
+			
+			string? getDateTimeOffsetMethod,
+			string? getHanaDecimalMethod,
+			string? getRealVectorMethod,
+			string? getTimeSpanMethod,
+			
+			MappingSchema? mappingSchema,
+			Type? hanaDecimalType)
 		{
 			ConnectionType     = connectionType;
 			DataReaderType     = dataReaderType;
@@ -48,19 +72,31 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			_connectionFactory = connectionFactory;
 
 			SetDbType = dbTypeSetter;
+			GetDbType = dbTypeGetter;
 
 			CreateBulkCopy              = bulkCopyCreator;
 			CreateBulkCopyColumnMapping = bulkCopyColumnMappingCreator;
+
+			GetDateTimeOffsetMethod = getDateTimeOffsetMethod;
+			GetHanaDecimalMethod    = getHanaDecimalMethod;
+			GetRealVectorMethod     = getRealVectorMethod;
+			GetTimeSpanMethod       = getTimeSpanMethod;
+
+			MappingSchema   = mappingSchema;
+			HanaDecimalType = hanaDecimalType;
 		}
 
 		private SapHanaProviderAdapter(OdbcProviderAdapter odbcProviderAdapter)
 		{
-			ConnectionType = odbcProviderAdapter.ConnectionType;
-			DataReaderType = odbcProviderAdapter.DataReaderType;
-			ParameterType = odbcProviderAdapter.ParameterType;
-			CommandType = odbcProviderAdapter.CommandType;
-			TransactionType = odbcProviderAdapter.TransactionType;
+			ConnectionType     = odbcProviderAdapter.ConnectionType;
+			DataReaderType     = odbcProviderAdapter.DataReaderType;
+			ParameterType      = odbcProviderAdapter.ParameterType;
+			CommandType        = odbcProviderAdapter.CommandType;
+			TransactionType    = odbcProviderAdapter.TransactionType;
 			_connectionFactory = odbcProviderAdapter.CreateConnection;
+
+			SetOdbcDbType = odbcProviderAdapter.SetDbType;
+			GetOdbcDbType = odbcProviderAdapter.GetDbType;
 		}
 
 		#region IDynamicProviderAdapter
@@ -76,7 +112,20 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 #endregion
 
+		public string? GetDateTimeOffsetMethod { get; }
+		public string? GetHanaDecimalMethod    { get; }
+		public string? GetRealVectorMethod     { get; }
+		public string? GetTimeSpanMethod       { get; }
+
+		public MappingSchema? MappingSchema { get; }
+
+		public Type? HanaDecimalType { get; }
+
 		public Action<DbParameter, HanaDbType>? SetDbType { get; }
+		public Func<DbParameter, HanaDbType>?   GetDbType { get; }
+
+		public Action<DbParameter, OdbcType>? SetOdbcDbType   { get; }
+		public Func<DbParameter, OdbcType>?   GetOdbcDbType   { get; }
 
 		internal Func<DbConnection, HanaBulkCopyOptions, DbTransaction?, HanaBulkCopy>? CreateBulkCopy              { get; }
 		public   Func<int, string, HanaBulkCopyColumnMapping>?                          CreateBulkCopyColumnMapping { get; }
@@ -104,9 +153,19 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						if (_unmanagedProvider == null)
 #pragma warning restore CA1508 // Avoid dead conditional code
 						{
-							var assembly = Internal.Common.Tools.TryLoadAssembly(UnmanagedAssemblyName, UnmanagedProviderFactoryName);
+							MappingSchema? ms = null;
+
+							Assembly? assembly = null;
+							foreach (var assemblyName in UnmanagedAssemblyNames)
+							{
+								assembly = Common.Tools.TryLoadAssembly(assemblyName, UnmanagedProviderFactoryName);
+
+								if (assembly != null)
+									break;
+							}
+
 							if (assembly == null)
-								throw new InvalidOperationException($"Cannot load assembly {UnmanagedAssemblyName}");
+								throw new InvalidOperationException($"Cannot load assembly by name(s) {string.Join(", ", UnmanagedAssemblyNames)}");
 
 							var connectionType  = assembly.GetType($"{UnmanagedClientNamespace}.HanaConnection" , true)!;
 							var dataReaderType  = assembly.GetType($"{UnmanagedClientNamespace}.HanaDataReader" , true)!;
@@ -121,6 +180,11 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							var rowsCopiedEventHandlerType      = assembly.GetType($"{UnmanagedClientNamespace}.HanaRowsCopiedEventHandler"         , true)!;
 							var rowsCopiedEventArgs             = assembly.GetType($"{UnmanagedClientNamespace}.HanaRowsCopiedEventArgs"            , true)!;
 							var bulkCopyColumnMappingCollection = assembly.GetType($"{UnmanagedClientNamespace}.HanaBulkCopyColumnMappingCollection", true)!;
+
+							var hanaDecimalType = LoadType("HanaDecimal", type => new DbDataType(type, DataType.Decimal, dbType: null, length: null, precision: 38, scale: 10),
+								// this currently doesn't work for client-to-db conversions
+								null/*ReflectionExtensions.GetDefaultValue*/,
+								optional: true, register: true);
 
 							var typeMapper = new TypeMapper();
 
@@ -137,11 +201,26 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							typeMapper.RegisterTypeWrapper<HanaBulkCopyOptions>(bulkCopyOptionsType);
 							typeMapper.RegisterTypeWrapper<HanaBulkCopyColumnMapping>(bulkCopyColumnMappingType);
 
+							if (hanaDecimalType != null)
+								typeMapper.RegisterTypeWrapper<HanaDecimal>(hanaDecimalType);
+
 							typeMapper.FinalizeMappings();
+
+							if (hanaDecimalType != null)
+							{
+								var decimalConverter = typeMapper.BuildFunc<object, string>(typeMapper.MapLambda((object value) => ((HanaDecimal)value).ToString()));
+
+								ms!.SetValueToSqlConverter(hanaDecimalType, (sb, dt, _, v) =>
+								{
+									// because sap developers never heard about cultures, we must ensure that decimal.ToString will not result in invalid literal
+									using var r = new InvariantCultureRegion(null);
+									sb.Append(decimalConverter(v));
+								});
+							}
 
 							var connectionFactory = typeMapper.BuildTypedFactory<string, HanaConnection, DbConnection>((string connectionString) => new HanaConnection(connectionString));
 
-							var typeSetter = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType).BuildSetter<DbParameter>();
+							var typeProperty = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType);
 
 							_unmanagedProvider = new SapHanaProviderAdapter(
 								connectionType,
@@ -150,9 +229,35 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 								commandType,
 								transactionType,
 								connectionFactory,
-								typeSetter,
+								typeProperty.BuildSetter<DbParameter>(),
+								typeProperty.BuildGetter<DbParameter>(),
 								typeMapper.BuildWrappedFactory((DbConnection connection, HanaBulkCopyOptions options, DbTransaction? transaction) => new HanaBulkCopy((HanaConnection)(object)connection, options, (HanaTransaction?)(object?)transaction)),
-								typeMapper.BuildWrappedFactory((int source, string destination) => new HanaBulkCopyColumnMapping(source, destination)));
+								typeMapper.BuildWrappedFactory((int source, string destination) => new HanaBulkCopyColumnMapping(source, destination)),
+
+								dataReaderType.GetMethod("GetDateTimeOffset")?.Name,
+								dataReaderType.GetMethod("GetHanaDecimal")?.Name,
+								dataReaderType.GetMethod("GetRealVector")?.Name,
+								dataReaderType.GetMethod("GetTimeSpan")?.Name,
+								
+								ms,
+								hanaDecimalType);
+
+							Type? LoadType(string typeName, Func<Type, DbDataType> getDataType, Func<Type, object?>? getNullValue = null, bool optional = false, bool register = true)
+							{
+								var type = assembly!.GetType($"{UnmanagedClientNamespace}.{typeName}", !optional);
+
+								if (type == null)
+									return null;
+
+								if (register)
+								{
+									(ms ??= new()).AddScalarType(type, new SqlDataType(getDataType(type)));
+									if (getNullValue != null)
+										ms.SetDefaultValue(type, getNullValue(type));
+						}
+
+								return type;
+				}
 						}
 				}
 
@@ -173,11 +278,20 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		}
 
 		[Wrapper]
+		private sealed class HanaDecimal
+		{
+			public override string ToString() => throw new NotImplementedException();
+		}
+
+		[Wrapper]
 		private sealed class HanaParameter
 		{
 			public HanaDbType HanaDbType { get; set; }
 		}
 
+		// note that hana provider devs don't respect numeric values and could change them with
+		// new release of client (like they did with RealVector type addition)
+		// so we rely on value names mapping actually
 		[Wrapper]
 		public enum HanaDbType
 		{
@@ -193,17 +307,18 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			NClob        = 10,
 			NVarChar     = 11,
 			Real         = 12,
-			SecondDate   = 13,
-			ShortText    = 14,
-			SmallDecimal = 15,
-			SmallInt     = 16,
-			TableType    = 23,
-			Text         = 17,
-			Time         = 18,
-			TimeStamp    = 19,
-			TinyInt      = 20,
-			VarBinary    = 21,
-			VarChar      = 22
+			RealVector   = 13,
+			SecondDate   = 14,
+			ShortText    = 15,
+			SmallDecimal = 16,
+			SmallInt     = 17,
+			Text         = 18,
+			Time         = 19,
+			TimeStamp    = 20,
+			TinyInt      = 21,
+			VarBinary    = 22,
+			VarChar      = 23,
+			TableType    = 24,
 		}
 
 		#region BulkCopy

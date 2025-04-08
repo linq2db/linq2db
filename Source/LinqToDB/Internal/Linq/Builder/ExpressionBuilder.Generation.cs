@@ -23,15 +23,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				Builder = builder;
 			}
 
-			public override List<LoadWithInfo>? GetTableLoadWith(Expression path)
+			public override LoadWithEntity? GetTableLoadWith(Expression path)
 			{
 				var unwrapped = path.UnwrapConvert();
 				var table     = SequenceHelper.GetTableOrCteContext(Builder, unwrapped);
 
-				if (table == null)
-					return null;
-
-				return Builder.GetTableLoadWith(table);
+				return table?.LoadWithRoot;
 			}
 
 			public override Expression? TryConstructFullEntity(SqlGenericConstructorExpression constructorExpression, Type constructType, ProjectFlags flags, bool checkInheritance, out string? error)

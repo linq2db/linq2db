@@ -20,7 +20,7 @@ namespace Cli.All.SapHana
 	public class Doctor : IEquatable<Doctor>
 	{
 		[Column("PersonID", DataType  = DataType.Int32, DbType   = "INTEGER"        , Length = 10            , Precision = 10, Scale     = 0 , IsPrimaryKey = true)] public int    PersonId { get; set; } // INTEGER
-		[Column("Taxonomy", CanBeNull = false         , DataType = DataType.NVarChar, DbType = "NVARCHAR(50)", Length    = 50, Precision = 50, Scale        = 0   )] public string Taxonomy { get; set; } = null!; // NVARCHAR(50)
+		[Column("Taxonomy", CanBeNull = false         , DataType = DataType.NVarChar, DbType = "NVARCHAR(50)", Length    = 50, Precision = 50                     )] public string Taxonomy { get; set; } = null!; // NVARCHAR(50)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<Doctor> _equalityComparer = ComparerBuilder.GetEqualityComparer<Doctor>(c => c.PersonId);

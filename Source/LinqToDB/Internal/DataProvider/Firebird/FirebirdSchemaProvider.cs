@@ -30,7 +30,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = dataConnection.Connection.GetSchema("Tables");
+			var tables = dataConnection.OpenDbConnection().GetSchema("Tables");
 
 			return
 			(
@@ -55,7 +55,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var pks = dataConnection.Connection.GetSchema("PrimaryKeys");
+			var pks = dataConnection.OpenDbConnection().GetSchema("PrimaryKeys");
 
 			return
 			(
@@ -72,7 +72,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tcs  = dataConnection.Connection.GetSchema("Columns");
+			var tcs  = dataConnection.OpenDbConnection().GetSchema("Columns");
 
 			return
 			(
@@ -101,7 +101,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var cols = dataConnection.Connection.GetSchema("ForeignKeyColumns");
+			var cols = dataConnection.OpenDbConnection().GetSchema("ForeignKeyColumns");
 
 			return
 			(

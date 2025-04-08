@@ -2289,5 +2289,73 @@ namespace Tests.Linq
 				});
 			}
 		}
+
+		enum EnumChar
+		{
+			[MapValue("A")] Value1 = 1,
+			[MapValue("B")] Value2 = 2,
+		}
+
+		[Table]
+		class EnumCharTable
+		{
+			[Column(DbType="char(1)", DataType=DataType.Char, Length=1), Nullable] 
+			public EnumChar? EnumValue { get; set; }
+
+			[Column]
+			public int? IntValue { get; set; }
+
+			[Column]
+			public double? DoubleValue { get; set; }
+		}
+
+		[Test]
+		public void TestEqualityFromObject([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db  = GetDataContext(context);
+			
+			EnumCharTable[] items =
+			[
+				new () { EnumValue = EnumChar.Value1, IntValue = 1, DoubleValue    = 1.0 },
+				new () { EnumValue = null, IntValue            = null, DoubleValue = null },
+			];
+
+			using var tmp = db.CreateLocalTable(items);
+
+			object? charValue      = "A";
+			object? intValue       = 1;
+			object? stringIntValue = "1";
+			object? doubleValue    = 1.0;
+
+			CheckCount();
+
+			charValue      = null;
+			intValue       = null;
+			stringIntValue = null;
+			doubleValue    = null;
+
+			CheckCount();
+
+			void CheckCount()
+			{
+				var count = tmp.Count(t =>
+					t.EnumValue.Equals(charValue)
+					&& t.EnumValue.Equals(intValue)
+					&& t.IntValue.Equals(stringIntValue)
+					&& t.DoubleValue.Equals(doubleValue)
+				);
+
+				Assert.That(count, Is.EqualTo(1));
+
+				count = db.GetTable<EnumCharTable>().Count(t =>
+					charValue!.Equals(t.EnumValue)
+					&& intValue!.Equals(t.EnumValue)
+					&& stringIntValue!.Equals(t.IntValue)
+					&& doubleValue!.Equals(t.DoubleValue)
+				);
+
+				Assert.That(count, Is.EqualTo(1));
+			}
+		}
 	}
 }

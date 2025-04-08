@@ -106,10 +106,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var setterExpression = source.PrepareSourceBody(setterLambda);
 
-			var targetRef        = new ContextRefExpression(setterExpression.Type, into);
+			var targetRef = new ContextRefExpression(setterExpression.Type, into);
+			var sourceRef = SequenceHelper.CreateRef(source);
 
 			var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
-			UpdateBuilder.ParseSetter(builder, targetRef, setterExpression, setterExpressions);
+			UpdateBuilder.ParseSetter(builder, targetRef, sourceRef, setterExpression, setterExpressions);
 			UpdateBuilder.InitializeSetExpressions(builder, into, source, setterExpressions, insert.Items, false);
 
 			return multiInsertContext;

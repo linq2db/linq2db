@@ -313,7 +313,7 @@ namespace Tests.SchemaProvider
 		public void SchemaProviderNormalizeName([IncludeDataSources(TestProvName.AllSQLiteClassic)]
 			string context)
 		{
-			using (var db = new DataConnection(context, "Data Source=:memory:;"))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(context, "Data Source=:memory:;")))
 			{
 				db.Execute(
 					@"create table Customer

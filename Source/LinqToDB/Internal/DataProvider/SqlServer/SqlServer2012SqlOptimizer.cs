@@ -44,9 +44,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				{
 					var orderByClause = (SqlOrderByClause)element;
 					// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-					if (orderByClause.SelectQuery != null && orderByClause.OrderBy.IsEmpty && orderByClause.SelectQuery.Select.SkipValue != null)
+					if (orderByClause is { SelectQuery.Select.SkipValue: not null, OrderBy.IsEmpty: true })
 					{
-						return new SqlOrderByClause(new[] { new SqlOrderByItem(new SqlValue(typeof(int), 1), false, false) });
+						return new SqlOrderByClause([new SqlOrderByItem(new SqlExpression(typeof(int), "1"), false, true)]);
 					}
 				}
 

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Globalization;
 using System.Text;
 
 using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.SapHana;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -110,6 +112,17 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					return;
 				case DataType.Guid:
 					StringBuilder.Append("Char (36)");
+					return;
+				case DataType.SmallDecFloat:
+					StringBuilder.Append("SMALLDECIMAL");
+					return;
+				case DataType.DecFloat:
+					StringBuilder.Append("DECIMAL");
+					return;
+				case DataType.Array | DataType.Single:
+					StringBuilder.Append("REAL_VECTOR");
+					if (type.Length != null)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
 					return;
 				case DataType.NVarChar:
 				case DataType.VarChar:
@@ -269,5 +282,22 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		}
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
+
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
+		{
+			if (DataProvider is SapHanaDataProvider provider)
+			{
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
+				if (param != null)
+				{
+					if (provider.Provider == SapHanaProvider.ODBC)
+						return provider.Adapter.GetOdbcDbType!(param).ToString();
+					else
+						return provider.Adapter.GetDbType!(param).ToString();
+				}
+			}
+
+			return base.GetProviderTypeName(dataContext, parameter);
+		}
 	}
 }

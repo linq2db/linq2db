@@ -83,7 +83,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			DataConnection dataConnection, ITable<T> table, DataOptions options, IEnumerable<T> source)
 			where T : notnull
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.OpenDbConnection());
 
 			if (connection == null)
 				return MultipleRowsCopy(table, options, source);
@@ -249,7 +249,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			CancellationToken cancellationToken)
 			where T : notnull
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+			var connection = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 
 			if (connection == null)
 				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
@@ -370,7 +370,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			CancellationToken   cancellationToken)
 		where T: notnull
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+			var connection = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 
 			if (connection == null)
 				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);

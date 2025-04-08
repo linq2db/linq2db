@@ -86,7 +86,7 @@ namespace Tests.Samples
 			MappingHelper.GenerateConvertorsForTables(typeof(MyDataConnection), _convertorSchema);
 		}
 
-		public MyDataConnection(string providerName, string connectionString, MappingSchema mappingSchema) : base(providerName, connectionString, mappingSchema)
+		public MyDataConnection(string providerName, string connectionString, MappingSchema mappingSchema) : base(new DataOptions().UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema))
 		{
 			AddMappingSchema(_convertorSchema);
 		}

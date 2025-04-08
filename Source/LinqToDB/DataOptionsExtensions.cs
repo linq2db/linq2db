@@ -689,6 +689,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Defines configuration sting to use with DataOptions.
 		/// </summary>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Use UseConfiguration method instead"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Pure]
 		public static DataOptions UseConfigurationString(this DataOptions options, string? configurationString)
 		{
@@ -698,6 +700,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Defines configuration sting and MappingSchema to use with DataOptions.
 		/// </summary>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Use UseConfiguration method instead"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Pure]
 		public static DataOptions UseConfigurationString(this DataOptions options, string configurationString, MappingSchema mappingSchema)
 		{
@@ -718,7 +722,7 @@ namespace LinqToDB
 		/// Defines configuration sting and MappingSchema to use with DataOptions.
 		/// </summary>
 		[Pure]
-		public static DataOptions UseConfiguration(this DataOptions options, string configurationString, MappingSchema mappingSchema)
+		public static DataOptions UseConfiguration(this DataOptions options, string? configurationString, MappingSchema mappingSchema)
 		{
 			return options
 				.WithOptions<ConnectionOptions> (o => o with { ConfigurationString = configurationString, MappingSchema = mappingSchema });
@@ -1155,6 +1159,17 @@ namespace LinqToDB
 		public static DataOptions UseTracing(this DataOptions options, Action<TraceInfo> onTrace)
 		{
 			return options.WithOptions<QueryTraceOptions>(o => o with { OnTrace = onTrace });
+		}
+
+		/// <summary>
+		/// Configure the database connection to use the specified <see cref="TraceSwitch"/> for tracing.
+		/// </summary>
+		/// <param name="traceSwitch"><see cref="TraceSwitch"/> instance to use with connection.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		[Pure]
+		public static DataOptions UseTraceSwitch(this DataOptions options, TraceSwitch traceSwitch)
+		{
+			return options.WithOptions<QueryTraceOptions>(o => o with { TraceSwitch = traceSwitch });
 		}
 
 		/// <summary>

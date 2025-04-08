@@ -53,7 +53,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null && serverName == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.OpenDbConnection());
 
 				if (connection != null)
 				{

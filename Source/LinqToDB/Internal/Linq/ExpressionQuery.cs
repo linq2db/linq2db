@@ -69,12 +69,14 @@ namespace LinqToDB.Internal.Linq
 			return sqlText;
 		}
 
+#if DEBUG
 		public virtual QueryDebugView DebugView
 			=> new(
 				() => new ExpressionPrinter().PrintExpression(Expression),
 				() => ((IExpressionQuery)this).GetSqlQueries(null)[0].Sql,
 				() => ((IExpressionQuery)this).GetSqlQueries(new () { InlineParameters = true })[0].Sql
 				);
+#endif
 
 		#endregion
 
@@ -138,8 +140,6 @@ namespace LinqToDB.Internal.Linq
 			if (TransactionScopeHelper.IsInsideTransactionScope)
 				return null;
 
-			dc.EnsureConnection();
-
 			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
 				return null;
 
@@ -170,8 +170,6 @@ namespace LinqToDB.Internal.Linq
 			//
 			if (TransactionScopeHelper.IsInsideTransactionScope)
 				return null;
-
-			await dc.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
 				return null;

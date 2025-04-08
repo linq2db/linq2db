@@ -5,6 +5,7 @@ using System.Text;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Internal.DataProvider.Informix;
+using LinqToDB.Internal.DataProvider.SqlServer;
 
 using Tests.Model;
 using Tests.Tools;
@@ -14,6 +15,14 @@ namespace Tests
 	public partial class TestBase
 	{
 		protected internal const string LinqServiceSuffix = ".LinqService";
+
+		protected static bool IsSqlServerMarsEnabled(DataConnection dc)
+		{
+			// good-enough check for tests
+			return dc.DataProvider is SqlServerDataProvider
+				&& dc.ConnectionString is string cs
+				&& cs.Contains("MultipleActiveResultSets=True", StringComparison.OrdinalIgnoreCase);
+		}
 
 		protected static char GetParameterToken(string context)
 		{

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
@@ -167,6 +168,8 @@ namespace LinqToDB.Internal.DataProvider
 		}
 #endif
 
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public virtual object? GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
 			return null;
@@ -473,6 +476,8 @@ namespace LinqToDB.Internal.DataProvider
 				case DataType.DateTimeOffset : dbType = DbType.DateTimeOffset;        break;
 				case DataType.Variant        : dbType = DbType.Object;                break;
 				case DataType.VarNumeric     : dbType = DbType.VarNumeric;            break;
+				case DataType.SmallDecFloat  : dbType = DbType.Decimal;               break;
+				case DataType.DecFloat       : dbType = DbType.Decimal;               break;
 				default                      : return;
 			}
 

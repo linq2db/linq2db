@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			expr = SimplifyConversion(expr);
 
-			var suggested     = ExpressionCacheManager.SuggestParameterName(expr);
+			var suggested     = ExpressionCacheManager.SuggestParameterDisplayName(expr);
 			var parameterName = suggested ?? alias;
 
 			if (parameterName == null && columnDescriptor != null)
@@ -199,14 +199,24 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (valueType != columnDescriptor.MemberType)
 					{
 						var memberType = columnDescriptor.MemberType;
-						var noConvert  = providerValueGetter;
+						var noConvert  = providerValueGetter.UnwrapConvert();
 
 						if (noConvert.Type != typeof(object))
+						{
 							providerValueGetter = noConvert;
+						}
 						else if (!isParameterList && providerValueGetter.Type != paramExpression.Type)
+						{
 							providerValueGetter = Expression.Convert(noConvert, paramExpression.Type);
+						}
 						else if (providerValueGetter.Type == typeof(object))
-							providerValueGetter = Expression.Convert(noConvert, elementType != null && elementType != typeof(object) ? elementType : memberType);
+						{
+							var convertLambda = GenerateConvertFromObject(mappingSchema, memberType);
+							if (convertLambda == null)
+								return null;
+
+							providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, noConvert);
+						}
 
 						if (providerValueGetter.Type != memberType
 							&& !(providerValueGetter.Type.IsNullable() && providerValueGetter.Type.ToNullableUnderlying() == memberType.ToNullableUnderlying()))
@@ -316,6 +326,61 @@ namespace LinqToDB.Internal.Linq.Builder
 				dbDataTypeExpression);
 
 			return parameterCacheEntry;
+		}
+
+		static LambdaExpression? GenerateConvertFromObject(MappingSchema mappingSchema, Type toType)
+		{
+			var param = Expression.Parameter(typeof(object), "p");
+			var continuation = Expression.Parameter(toType, "cont");
+
+			Expression convertBody = Expression.Condition(Expression.Equal(param, Expression.Constant(null)),
+				Expression.Default(toType),
+				continuation
+			);
+
+			var underlying = toType.ToNullableUnderlying();
+
+			if (underlying != toType)
+			{
+				convertBody = Inject(convertBody, Expression.Condition(Expression.TypeIs(param, underlying),
+					Expression.Convert(param, toType),
+					continuation));
+			}
+
+			if (underlying.IsEnum)
+			{
+				var intConverter = mappingSchema.GetConvertExpression(new DbDataType(typeof(int)), new DbDataType(toType), checkNull : false, createDefault : true);
+
+				if (intConverter != null)
+				{
+					convertBody = Inject(convertBody, Expression.Condition(
+						Expression.TypeIs(param, typeof(int)),
+						Expression.Invoke(intConverter, Expression.Convert(param, typeof(int))), 
+						continuation));
+				}
+
+				var stringConverter = mappingSchema.GetConvertExpression(new DbDataType(typeof(string)), new DbDataType(toType), checkNull : false, createDefault : true);
+
+				if (stringConverter != null)
+				{
+					convertBody = Inject(convertBody, Expression.Condition(
+						Expression.TypeIs(param, typeof(string)),
+						Expression.Invoke(stringConverter, Expression.Convert(param, typeof(string))),
+						continuation));
+				}
+			}
+
+			var defaultConverter = mappingSchema.GetConvertExpression(new DbDataType(typeof(object)), new DbDataType(toType), checkNull : false, createDefault : true);
+
+			convertBody = Inject(convertBody, Expression.Invoke(defaultConverter!, param));
+
+			return Expression.Lambda(convertBody, param);
+
+			// --- helper method ---
+			Expression Inject(Expression expr, Expression addition)
+			{
+				return expr.Replace(continuation, addition);
+			}
 		}
 
 		static bool HasDbMapping(MappingSchema mappingSchema, Type testedType, out LambdaExpression? convertExpr)

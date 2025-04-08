@@ -1472,7 +1472,7 @@ namespace Tests.DataProvider
 
 			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<DbDataReader, int, decimal>>)((r, i) => GetDecimal(r, i));
 
-			using (var db = new DataConnection(provider, DataConnection.GetConnectionString(context)))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(provider, DataConnection.GetConnectionString(context))))
 			{
 				var list = db.GetTable<DecimalOverflow>().ToList();
 			}

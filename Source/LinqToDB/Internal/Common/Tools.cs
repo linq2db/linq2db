@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.Common
 		{
 			Query.ClearCaches();
 			MappingSchema.ClearCache();
-			DataConnection.ClearObjectReaderCache();
+			CommandInfo.ClearObjectReaderCache();
 		}
 	}
 }

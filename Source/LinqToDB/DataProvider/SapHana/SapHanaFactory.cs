@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 using JetBrains.Annotations;
 
@@ -13,12 +14,14 @@ namespace LinqToDB.DataProvider.SapHana
 	{
 		public override IDataProvider GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			var provider = GetAssemblyName(attributes) switch
-			{
-				SapHanaProviderAdapter.UnmanagedAssemblyName => SapHanaProvider.Unmanaged,
-				OdbcProviderAdapter.AssemblyName             => SapHanaProvider.ODBC,
-				_                                            => SapHanaProvider.AutoDetect
-			};
+			var assemblyName = GetAssemblyName(attributes);
+
+			var provider = SapHanaProvider.AutoDetect;
+
+			if (SapHanaProviderAdapter.UnmanagedAssemblyNames.Any(an => an == assemblyName))
+				provider = SapHanaProvider.Unmanaged;
+			else if (assemblyName == OdbcProviderAdapter.AssemblyName)
+				provider = SapHanaProvider.ODBC;
 
 			return SapHanaTools.GetDataProvider(provider);
 		}

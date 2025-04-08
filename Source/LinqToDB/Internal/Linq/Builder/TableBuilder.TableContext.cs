@@ -21,7 +21,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			#region Properties
 
-			MappingSchema _mappingSchema;
+			readonly MappingSchema _mappingSchema;
 
 			public override Expression?   Expression    { get; }
 			public override MappingSchema MappingSchema => _mappingSchema;
@@ -30,10 +30,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			public          Type             OriginalType;
 			public          EntityDescriptor EntityDescriptor;
 
-			public Type          ObjectType    { get; set; }
-			public SqlTable      SqlTable      { get; set; }
-			public LoadWithInfo  LoadWithRoot  { get; set; } = new();
-			public MemberInfo[]? LoadWithPath  { get; set; }
+			public Type            ObjectType   { get; set; }
+			public SqlTable        SqlTable     { get; set; }
+			public LoadWithEntity? LoadWithRoot { get; set; }
 
 			public bool IsSubQuery { get; }
 
@@ -74,7 +73,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
 				SqlTable         = table;
-				EntityDescriptor = MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				EntityDescriptor = mappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
 					SelectQuery.From.Table(SqlTable);
@@ -94,7 +93,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
 				SqlTable         = table;
-				EntityDescriptor = MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				EntityDescriptor = mappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
 					SelectQuery.From.Table(SqlTable);
@@ -280,7 +279,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new TableContext(TranslationModifier, Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable), IsOptional);
+				return new TableContext(TranslationModifier, Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable), IsOptional)
+				{
+					LoadWithRoot = LoadWithRoot
+				};
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)

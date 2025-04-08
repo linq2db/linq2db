@@ -2251,7 +2251,6 @@ namespace Tests.DataProvider
 		}
 
 		#region Issue 4439
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4439")]
 		public void Issue4439Test([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{

@@ -108,7 +108,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!SequenceHelper.IsSqlReady(sqlExpr))
 			{
 				if (sqlExpr is SqlErrorExpression errorExpr)
-					return BuildSequenceResult.Error(methodCall, errorExpr.Message);
+					return BuildSequenceResult.Error(sqlExpr, errorExpr.Message);
 				return BuildSequenceResult.Error(methodCall);
 			}
 

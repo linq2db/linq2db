@@ -736,6 +736,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void OrderByBoolean([DataSources] string context, [Values] bool offlineBool)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person
+					.OrderBy(i => offlineBool && i.FirstName.Length > 1)
+					.ThenBy(i => !offlineBool && i.FirstName.Length > 4);
+
+				AssertQuery(query);
+			}
+		}
+
+		[Test]
 		public void EnableConstantExpressionInOrderByTest([DataSources(ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
 		{
 			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));

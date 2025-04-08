@@ -143,8 +143,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					objectType                  = genericArguments[0];
 
 					var targetRef = new ContextRefExpression(objectType, updateContext.TargetTable);
+					var sourceRef = SequenceHelper.CreateRef(sequence);
 
-					ParseSetter(builder, targetRef, setterExpr, updateContext.SetExpressions);
+					ParseSetter(builder, targetRef, sourceRef, setterExpr, updateContext.SetExpressions);
 
 					outputExpression = RewriteOutputExpression(outputExpression);
 
@@ -235,8 +236,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 
 					var targetRef = new ContextRefExpression(objectType, updateContext.TargetTable);
+					var sourceRef = SequenceHelper.CreateRef(sequence);
 
-					ParseSetter(builder, targetRef, setterExpr, updateContext.SetExpressions);
+					ParseSetter(builder, targetRef, sourceRef, setterExpr, updateContext.SetExpressions);
 
 					break;
 				}
@@ -291,8 +293,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var outputBody = SequenceHelper.PrepareBody(outputExpression, sequence, deletedContext, insertedContext);
 
+				var sourceRef         = SequenceHelper.CreateRef(sequence);
 				var outputExpressions = new List<SetExpressionEnvelope>();
-				ParseSetter(builder, destinationRef, outputBody, outputExpressions);
+				ParseSetter(builder, destinationRef, sourceRef, outputBody, outputExpressions);
 
 				InitializeSetExpressions(builder, destinationContext, sequence, outputExpressions, updateStatement.Output.OutputItems, false);
 
@@ -541,6 +544,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		internal static void ParseSet(
 			ContextRefExpression        targetRef,
+			ContextRefExpression        sourceRef,
 			Expression                  fieldExpression,
 			Expression                  valueExpression,
 			List<SetExpressionEnvelope> envelopes,
@@ -552,6 +556,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		internal static void ParseSetter(
 			ExpressionBuilder           builder,
 			ContextRefExpression        targetRef,
+			ContextRefExpression        sourceRef,
 			Expression                  setterExpression,
 			List<SetExpressionEnvelope> envelopes)
 		{
@@ -559,7 +564,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (correctedSetter is not SqlGenericConstructorExpression)
 			{
-				correctedSetter = builder.BuildSqlExpression(targetRef.BuildContext, correctedSetter);
+				correctedSetter = builder.BuildSqlExpression(sourceRef.BuildContext, correctedSetter);
 			}
 
 			if (correctedSetter is SqlGenericConstructorExpression generic)
@@ -568,7 +573,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var memberAccess = Expression.MakeMemberAccess(targetRef, assignment.MemberInfo);
 
-					ParseSet(builder, targetRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
+					ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
 				}
 			}
 			else
@@ -767,7 +772,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (sqlExpr is SqlPlaceholderExpression)
 							outputExpressions.Add(new SetExpressionEnvelope(sqlExpr, sqlExpr, false));
 						else
-							ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
+							ParseSetter(Builder, outputRef, outputRef, sqlExpr, outputExpressions);
 
 						var setItems = new List<SqlSetExpression>();
 						InitializeSetExpressions(Builder, selectContext, selectContext, outputExpressions, setItems, false);

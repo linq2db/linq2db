@@ -81,7 +81,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (sqlExpr is SqlPlaceholderExpression)
 						outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr, false));
 					else
-						UpdateBuilder.ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
+						UpdateBuilder.ParseSetter(Builder, outputRef, outputRef, sqlExpr, outputExpressions);
 
 					var setItems = new List<SqlSetExpression>();
 					UpdateBuilder.InitializeSetExpressions(Builder, selectContext, selectContext, outputExpressions, setItems, false);

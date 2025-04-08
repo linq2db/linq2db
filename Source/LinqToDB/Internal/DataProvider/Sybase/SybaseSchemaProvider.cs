@@ -93,7 +93,7 @@ FROM
 	sysobjects
 WHERE
 	type IN ('U','V')",
-				new { @db = dataConnection.Connection.Database})
+				new { @db = dataConnection.OpenDbConnection().Database})
 				.ToList();
 		}
 

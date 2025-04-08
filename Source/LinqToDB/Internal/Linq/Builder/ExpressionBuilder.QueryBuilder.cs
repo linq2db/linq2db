@@ -567,7 +567,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 
 					var readerExpression = (Expression)new ConvertFromDataReaderExpression(valueType, placeholder.Index.Value,
-						columnDescriptor?.ValueConverter, DataReaderParam, canBeNull);
+						columnDescriptor?.ValueConverter, Expression.Property(QueryRunnerParam, QueryRunner.DataContextInfo), DataReaderParam, canBeNull);
 
 					if (placeholder.Type != readerExpression.Type)
 					{

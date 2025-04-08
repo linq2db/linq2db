@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			DataTypesSchema = dataConnection.Connection.GetSchema("DataTypes");
+			DataTypesSchema = dataConnection.OpenDbConnection().GetSchema("DataTypes");
 
 			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
@@ -60,13 +60,16 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = dataConnection.Connection.GetSchema("Tables");
+			var connection = dataConnection.OpenDbConnection();
+			var database   = connection.Database;
+
+			var tables = connection.GetSchema("Tables");
 
 			return
 			(
 				from t in tables.AsEnumerable()
 				where _tableTypes.Contains(t.Field<string>("TABLE_TYPE"))
-				let catalog = dataConnection.Connection.Database
+				let catalog = database
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
 				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
@@ -88,13 +91,15 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
+			var database = dataConnection.OpenDbConnection().Database;
+
 			return
 			(
 				from pk in dataConnection.Query(
 					rd => new
 					{
 						// IMPORTANT: reader calls must be ordered to support SequentialAccess
-						id   = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1),
+						id   = database + "." + rd.ToString(0) + "." + rd.ToString(1),
 						name = rd.ToString(2),
 						cols = rd.ToString(3)!.Split('+').Skip(1).ToArray(),
 					},@"
@@ -140,10 +145,12 @@ FROM
 WHERE
 	" + GetSchemaFilter("TABSCHEMA");
 
+			var database = dataConnection.OpenDbConnection().Database;
+
 			return _columns = dataConnection.Query(rd =>
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var tableId     = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1);
+					var tableId     = database + "." + rd.ToString(0) + "." + rd.ToString(1);
 					var name        = rd.ToString(2)!;
 					var size        = Converter.ChangeTypeTo<int?>(rd[3]);
 					var scale       = Converter.ChangeTypeTo<int?>(rd[4]);
@@ -208,14 +215,16 @@ WHERE
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
+			var database = dataConnection.OpenDbConnection().Database;
+
 			return dataConnection
 				.Query(rd => new
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					name         = rd.ToString(0)!,
-					thisTable    = dataConnection.Connection.Database + "." + rd.ToString(1)  + "." + rd.ToString(2),
+					thisTable    = database + "." + rd.ToString(1)  + "." + rd.ToString(2),
 					thisColumns  = rd.ToString(3)!,
-					otherTable   = dataConnection.Connection.Database + "." + rd.ToString(4)  + "." + rd.ToString(5),
+					otherTable   = database + "." + rd.ToString(4)  + "." + rd.ToString(5),
 					otherColumns = rd.ToString(6)!,
 				},@"
 SELECT
@@ -383,7 +392,7 @@ WHERE
 
 		protected override string GetDataSourceName(DataConnection dbConnection)
 		{
-			var str = dbConnection.Connection.ConnectionString;
+			var str = dbConnection.OpenDbConnection().ConnectionString;
 
 			var host = str?.Split(';')
 				.Select(s =>
