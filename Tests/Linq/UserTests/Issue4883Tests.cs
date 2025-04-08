@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Tests.UserTests
 {
 	[TestFixture]
-	public class Issue4883Tests
+	public class Issue4883Tests : TestBase
 	{
 		[Test]
 		public async Task TestDataConnection()
