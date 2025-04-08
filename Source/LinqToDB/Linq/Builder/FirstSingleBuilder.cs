@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			if (buildResult.BuildContext == null)
-				return BuildSequenceResult.Error(methodCall);
+				return buildResult;
 
 			var sequence = buildResult.BuildContext;
 

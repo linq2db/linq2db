@@ -27,19 +27,19 @@ namespace Cli.All.SapHana
 		[Column("Field5"         , DataType = DataType.Int32    , DbType = "INTEGER"        , Length = 10, Precision = 10, Scale = 0                      )] public int?      Field5          { get; set; } // INTEGER
 		[Column("FieldInt64"     , DataType = DataType.Int64    , DbType = "BIGINT"         , Length = 19, Precision = 19, Scale = 0                      )] public long?     FieldInt64      { get; set; } // BIGINT
 		[Column("FieldBoolean"   , DataType = DataType.Byte     , DbType = "TINYINT"        , Length = 3 , Precision = 3 , Scale = 0                      )] public byte?     FieldBoolean    { get; set; } // TINYINT
-		[Column("FieldString"    , DataType = DataType.VarChar  , DbType = "VARCHAR(20)"    , Length = 20, Precision = 20, Scale = 0                      )] public string?   FieldString     { get; set; } // VARCHAR(20)
-		[Column("FieldNString"   , DataType = DataType.NVarChar , DbType = "NVARCHAR(20)"   , Length = 20, Precision = 20, Scale = 0                      )] public string?   FieldNString    { get; set; } // NVARCHAR(20)
-		[Column("FieldChar"      , DataType = DataType.Char     , DbType = "CHAR(1)"        , Length = 1 , Precision = 1 , Scale = 0                      )] public char?     FieldChar       { get; set; } // CHAR(1)
-		[Column("FieldNChar"     , DataType = DataType.NChar    , DbType = "NCHAR(1)"       , Length = 1 , Precision = 1 , Scale = 0                      )] public char?     FieldNChar      { get; set; } // NCHAR(1)
-		[Column("FieldFloat"     , DataType = DataType.Single   , DbType = "REAL"           , Length = 7 , Precision = 7 , Scale = 0                      )] public float?    FieldFloat      { get; set; } // REAL
-		[Column("FieldDouble"    , DataType = DataType.Double   , DbType = "DOUBLE"         , Length = 15, Precision = 15, Scale = 0                      )] public double?   FieldDouble     { get; set; } // DOUBLE
+		[Column("FieldString"    , DataType = DataType.VarChar  , DbType = "VARCHAR(20)"    , Length = 20, Precision = 20                                 )] public string?   FieldString     { get; set; } // VARCHAR(20)
+		[Column("FieldNString"   , DataType = DataType.NVarChar , DbType = "NVARCHAR(20)"   , Length = 20, Precision = 20                                 )] public string?   FieldNString    { get; set; } // NVARCHAR(20)
+		[Column("FieldChar"      , DataType = DataType.Char     , DbType = "CHAR(1)"        , Length = 1 , Precision = 1                                  )] public char?     FieldChar       { get; set; } // CHAR(1)
+		[Column("FieldNChar"     , DataType = DataType.NChar    , DbType = "NCHAR(1)"       , Length = 1 , Precision = 1                                  )] public char?     FieldNChar      { get; set; } // NCHAR(1)
+		[Column("FieldFloat"     , DataType = DataType.Single   , DbType = "REAL"           , Length = 7 , Precision = 7                                  )] public float?    FieldFloat      { get; set; } // REAL
+		[Column("FieldDouble"    , DataType = DataType.Double   , DbType = "DOUBLE"         , Length = 15, Precision = 15                                 )] public double?   FieldDouble     { get; set; } // DOUBLE
 		[Column("FieldDateTime"  , DataType = DataType.Timestamp, DbType = "TIMESTAMP"      , Length = 27, Precision = 27, Scale = 7                      )] public DateTime? FieldDateTime   { get; set; } // TIMESTAMP
-		[Column("FieldBinary"    , DataType = DataType.VarBinary, DbType = "VARBINARY(20)"  , Length = 20, Precision = 20, Scale = 0                      )] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
-		[Column("FieldGuid"      , DataType = DataType.Char     , DbType = "CHAR(36)"       , Length = 36, Precision = 36, Scale = 0                      )] public string?   FieldGuid       { get; set; } // CHAR(36)
+		[Column("FieldBinary"    , DataType = DataType.VarBinary, DbType = "VARBINARY(20)"  , Length = 20, Precision = 20                                 )] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
+		[Column("FieldGuid"      , DataType = DataType.Char     , DbType = "CHAR(36)"       , Length = 36, Precision = 36                                 )] public string?   FieldGuid       { get; set; } // CHAR(36)
 		[Column("FieldDecimal"   , DataType = DataType.Decimal  , DbType = "DECIMAL(24, 10)", Length = 24, Precision = 24, Scale = 10                     )] public decimal?  FieldDecimal    { get; set; } // DECIMAL(24, 10)
-		[Column("FieldDate"      , DataType = DataType.Date     , DbType = "DATE"           , Length = 10, Precision = 10, Scale = 0                      )] public DateTime? FieldDate       { get; set; } // DATE
+		[Column("FieldDate"      , DataType = DataType.Date     , DbType = "DATE"           , Length = 10, Precision = 10                                 )] public DateTime? FieldDate       { get; set; } // DATE
 		[Column("FieldTime"      , DataType = DataType.Time     , DbType = "TIME"           , Length = 8 , Precision = 8 , Scale = 0                      )] public TimeSpan? FieldTime       { get; set; } // TIME
-		[Column("FieldEnumString", DataType = DataType.VarChar  , DbType = "VARCHAR(20)"    , Length = 20, Precision = 20, Scale = 0                      )] public string?   FieldEnumString { get; set; } // VARCHAR(20)
+		[Column("FieldEnumString", DataType = DataType.VarChar  , DbType = "VARCHAR(20)"    , Length = 20, Precision = 20                                 )] public string?   FieldEnumString { get; set; } // VARCHAR(20)
 		[Column("FieldEnumNumber", DataType = DataType.Int32    , DbType = "INTEGER"        , Length = 10, Precision = 10, Scale = 0                      )] public int?      FieldEnumNumber { get; set; } // INTEGER
 
 		#region IEquatable<T> support

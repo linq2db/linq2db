@@ -21,9 +21,26 @@ namespace Tests
 {
 	partial class TestBase
 	{
-		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false, bool printData = false)
+#if !NETFRAMEWORK
+		public static readonly IEqualityComparer<decimal> DecimalComparerInstance = EqualityComparer<decimal>.Default;
+#else
+		public static readonly IEqualityComparer<decimal> DecimalComparerInstance = new DecimalComparer();
+
+		sealed class DecimalComparer : IEqualityComparer<decimal>
 		{
-			AreEqual(t => t, expected, result, EqualityComparer<T>.Default, allowEmpty, printData : printData);
+			bool IEqualityComparer<decimal>.Equals(decimal x, decimal y) => x == y;
+
+			int IEqualityComparer<decimal>.GetHashCode(decimal obj)
+			{
+				// workaround netfx bug in decimal.GetHashCode
+				return (obj / 1.00000000000000000000000000000m).GetHashCode();
+			}
+		}
+#endif
+
+        protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false, bool printData = false)
+		{
+            AreEqual(t => t, expected, result, EqualityComparer<T>.Default, allowEmpty, printData : printData);
 		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, Func<IEnumerable<T>, IEnumerable<T>> sort)

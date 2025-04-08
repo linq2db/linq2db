@@ -330,7 +330,7 @@ namespace Tests.Data
 				var v1 = dc.Query<object>("SELECT v1 FROM #t1").ToList();
 				dc.Execute("ALTER TABLE #t1 ALTER COLUMN v1 INT NULL");
 
-				DataConnection.ClearObjectReaderCache();
+				CommandInfo.ClearObjectReaderCache();
 
 				dc.Execute("INSERT INTO #t1(v1) VALUES (null)");
 				var v2 = dc.Query<object>("SELECT v1 FROM #t1").ToList();

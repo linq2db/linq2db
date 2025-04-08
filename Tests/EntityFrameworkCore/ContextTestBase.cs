@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 using Tests;
+
+#if NETFRAMEWORK
+using System.Linq;
+#endif
 
 namespace LinqToDB.EntityFrameworkCore.Tests
 {

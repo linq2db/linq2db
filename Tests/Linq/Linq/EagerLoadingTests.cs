@@ -1791,7 +1791,7 @@ FROM
 
 			await using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = true;
+				await db.SetKeepConnectionAliveAsync(true);
 
 				await db.GetTable<Parent>()
 					.LoadWith(x => x.Children)
@@ -1800,7 +1800,7 @@ FROM
 
 			await using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = false;
+				await db.SetKeepConnectionAliveAsync(false);
 
 				await db.GetTable<Parent>()
 					.LoadWith(x => x.Children)
@@ -1823,7 +1823,7 @@ FROM
 
 			using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = true;
+				db.SetKeepConnectionAlive(true);
 
 				db.GetTable<Parent>()
 					.LoadWith(x => x.Children)
@@ -1832,7 +1832,7 @@ FROM
 
 			using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = false;
+				db.SetKeepConnectionAlive(false);
 
 				db.GetTable<Parent>()
 					.LoadWith(x => x.Children)
@@ -1856,7 +1856,7 @@ FROM
 
 			await using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = true;
+				db.SetKeepConnectionAlive(true);
 
 				using var _ = db.BeginTransaction();
 				await db.GetTable<Parent>()
@@ -1866,7 +1866,7 @@ FROM
 
 			await using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = false;
+				db.SetKeepConnectionAlive(false);
 
 				using var _ = db.BeginTransaction();
 				await db.GetTable<Parent>()
@@ -1891,7 +1891,7 @@ FROM
 
 			using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = true;
+				db.SetKeepConnectionAlive(true);
 
 				using var _ = db.BeginTransaction();
 				db.GetTable<Parent>()
@@ -1901,7 +1901,7 @@ FROM
 
 			using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = false;
+				db.SetKeepConnectionAlive(false);
 
 				using var _ = db.BeginTransaction();
 				db.GetTable<Parent>()

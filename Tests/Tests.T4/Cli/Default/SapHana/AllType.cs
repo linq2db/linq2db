@@ -19,8 +19,9 @@ namespace Cli.Default.SapHana
 		[Column("ID"                  , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       Id                   { get; set; } // INTEGER
 		[Column("bigintDataType"                                                                                        )] public long?     BigintDataType       { get; set; } // BIGINT
 		[Column("smallintDataType"                                                                                      )] public short?    SmallintDataType     { get; set; } // SMALLINT
-		[Column("decimalDataType"                                                                                       )] public decimal?  DecimalDataType      { get; set; } // DECIMAL(34, 0)
-		[Column("smalldecimalDataType"                                                                                  )] public decimal?  SmalldecimalDataType { get; set; } // SMALLDECIMAL(16, 0)
+		[Column("decimalDataType"                                                                                       )] public decimal?  DecimalDataType      { get; set; } // DECIMAL(38, 10)
+		[Column("decFloatDataType"                                                                                      )] public decimal?  DecFloatDataType     { get; set; } // DECIMAL
+		[Column("smalldecimalDataType"                                                                                  )] public decimal?  SmalldecimalDataType { get; set; } // SMALLDECIMAL
 		[Column("intDataType"                                                                                           )] public int?      IntDataType          { get; set; } // INTEGER
 		[Column("tinyintDataType"                                                                                       )] public byte?     TinyintDataType      { get; set; } // TINYINT
 		[Column("floatDataType"                                                                                         )] public double?   FloatDataType        { get; set; } // DOUBLE

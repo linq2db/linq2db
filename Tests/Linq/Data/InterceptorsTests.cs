@@ -92,7 +92,7 @@ namespace Tests.Data
 			var interceptor2 = new TestCommandInterceptor();
 
 			var builder = new DataOptions()
-				.UseConfigurationString(context)
+				.UseConfiguration(context)
 				.UseInterceptor(interceptor1)
 				.UseInterceptor(interceptor2);
 
@@ -153,7 +153,7 @@ namespace Tests.Data
 			var interceptor2 = new TestCommandInterceptor();
 
 			var builder = new DataOptions()
-				.UseConfigurationString(context)
+				.UseConfiguration(context)
 				.UseInterceptor(interceptor1)
 				.UseInterceptor(interceptor2);
 
@@ -1465,7 +1465,7 @@ namespace Tests.Data
 			IDataContext main;
 			using (var db = main = new DataContext(context))
 			{
-				((DataContext)db).KeepConnectionAlive = false;
+				((DataContext)db).SetKeepConnectionAlive(false);
 				db.CloseAfterUse = closeAfterUse;
 				db.AddInterceptor(closeInterceptor);
 				db.AddInterceptor(openInterceptor);
@@ -1523,7 +1523,7 @@ namespace Tests.Data
 			IDataContext main;
 			using (var db = main = new DataContext(context))
 			{
-				((DataContext)db).KeepConnectionAlive = true;
+				((DataContext)db).SetKeepConnectionAlive(true);
 				db.CloseAfterUse = closeAfterUse;
 				db.AddInterceptor(closeInterceptor);
 				db.AddInterceptor(openInterceptor);
