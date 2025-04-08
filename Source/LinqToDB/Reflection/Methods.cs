@@ -157,7 +157,7 @@ namespace LinqToDB.Reflection
 
 			#region Internal methods
 
-			internal static readonly MethodInfo LoadWithInternal          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.LoadWithInternal(null!, null));
+			internal static readonly MethodInfo LoadWithInternal          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.LoadWithInternal(null!));
 			internal static readonly MethodInfo AssociationRecord         = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.AssociationRecord());
 			internal static readonly MethodInfo AssociationOptionalRecord = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.AssociationOptionalRecord());
 			internal static readonly MethodInfo SelectDistinct            = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.SelectDistinct());
