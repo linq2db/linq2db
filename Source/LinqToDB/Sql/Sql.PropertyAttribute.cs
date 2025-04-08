@@ -80,7 +80,7 @@ namespace LinqToDB
 					throw new LinqToDBException($"Cannot retrieve property name for expression '{expression}'.");
 
 				var sqlExpr = new SqlExpression(expression.Type, name!, SqlQuery.Precedence.Primary, SqlFlags.IsPure,
-					ToParametersNullabilityType(IsNullable), _canBeNull);
+					ToParametersNullabilityType(IsNullable), ConfiguredCanBeNull);
 
 				return ExpressionBuilder.CreatePlaceholder(query, sqlExpr, expression);
 			}

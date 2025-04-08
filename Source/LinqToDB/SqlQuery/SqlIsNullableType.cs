@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.SqlQuery
 {
-	//Note it is full copy of Sql.IsNullableType
+	// !!! must be in sync by value with Sql.IsNullableType
 
 	/// <summary>
 	/// Provides information when function or expression could return null.

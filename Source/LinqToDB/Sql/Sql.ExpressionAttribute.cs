@@ -161,14 +161,15 @@ namespace LinqToDB
 			/// </summary>
 			public bool IgnoreGenericParameters { get; set; }
 
-			internal  bool? _canBeNull;
+			protected bool? ConfiguredCanBeNull;
 			/// <summary>
-			/// If <c>true</c>, result can be null
+			/// If <c>true</c>, result can be null.
+			/// If value is not set explicitly, nullability calculated based on return type and <see cref="IsNullable"/> value.
 			/// </summary>
 			public    bool   CanBeNull
 			{
-				get => _canBeNull ?? true;
-				set => _canBeNull = value;
+				get => ConfiguredCanBeNull ?? true;
+				set => ConfiguredCanBeNull = value;
 			}
 
 			const  string MatchParamPattern = @"{([0-9a-z_A-Z?]*)(,\s'(.*)')?}";
@@ -557,11 +558,11 @@ namespace LinqToDB
 					(IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |
 					(IsWindowFunction ? SqlFlags.IsWindowFunction : SqlFlags.None),
 					ToParametersNullabilityType(IsNullable),
-					_canBeNull,
+					ConfiguredCanBeNull,
 					parameters!);
 
-				if (_canBeNull != null)
-					sqlExpression.CanBeNull = _canBeNull.Value;
+				if (ConfiguredCanBeNull != null)
+					sqlExpression.CanBeNull = ConfiguredCanBeNull.Value;
 
 				// placeholder will be updated later by concrete path
 				return ExpressionBuilder.CreatePlaceholder(query, sqlExpression, expression);
@@ -576,7 +577,7 @@ namespace LinqToDB
 
 			public override string GetObjectID()
 			{
-				return FormattableString.Invariant($".{Configuration}.{Expression}.{IdentifierBuilder.GetObjectID(ArgIndices)}.{Precedence}.{(ServerSideOnly ? 1 : 0)}.{(PreferServerSide ? 1 : 0)}.{(InlineParameters ? 1 : 0)}.{(ExpectExpression ? 1 : 0)}.{(IsPredicate ? 1 : 0)}.{(IsAggregate ? 1 : 0)}.{(IsWindowFunction ? 1 : 0)}.{(IsPure ? 1 : 0)}.{(int)IsNullable}.{(IgnoreGenericParameters ? 1 : 0)}.{(CanBeNull ? 1 : 0)}.");
+				return FormattableString.Invariant($".{Configuration}.{Expression}.{IdentifierBuilder.GetObjectID(ArgIndices)}.{Precedence}.{(ServerSideOnly ? 1 : 0)}.{(PreferServerSide ? 1 : 0)}.{(InlineParameters ? 1 : 0)}.{(ExpectExpression ? 1 : 0)}.{(IsPredicate ? 1 : 0)}.{(IsAggregate ? 1 : 0)}.{(IsWindowFunction ? 1 : 0)}.{(IsPure ? 1 : 0)}.{(int)IsNullable}.{(IgnoreGenericParameters ? 1 : 0)}.{(ConfiguredCanBeNull == null ? -1 : ConfiguredCanBeNull.Value ? 1 : 0)}.");
 			}
 		}
 	}
