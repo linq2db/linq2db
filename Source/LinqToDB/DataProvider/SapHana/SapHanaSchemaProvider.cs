@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			var dts = dataConnection.Connection.GetSchema("DataTypes");
+			var dts = dataConnection.OpenDbConnection().GetSchema("DataTypes");
 
 			var dt = dts.AsEnumerable()
 				.Select(t => new DataTypeInfo
@@ -161,7 +161,7 @@ namespace LinqToDB.DataProvider.SapHana
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var pks = dataConnection.Connection.GetSchema("IndexColumns");
+			var pks = dataConnection.OpenDbConnection().GetSchema("IndexColumns");
 
 			return
 			(

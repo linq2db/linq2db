@@ -36,9 +36,11 @@ namespace Tests.Data
 
 			using (var conn = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString)))
 			{
+				var connection = conn.OpenDbConnection();
+
 				Assert.Multiple(() =>
 				{
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 					Assert.That(conn.ConfigurationString, Is.Null);
 				});
 			}
@@ -49,9 +51,11 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
+				var connection = conn.OpenDbConnection();
+
 				Assert.Multiple(() =>
 				{
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 					Assert.That(conn.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
 				});
 			}
@@ -67,9 +71,11 @@ namespace Tests.Data
 		{
 			using (var conn = GetDataConnection(context))
 			{
+				var connection = conn.OpenDbConnection();
+
 				Assert.Multiple(() =>
 				{
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 					Assert.That(conn.ConfigurationString, Is.EqualTo(context));
 				});
 
@@ -278,7 +284,9 @@ namespace Tests.Data
 				{
 					Assert.That(opened, Is.False);
 					Assert.That(openedAsync, Is.False);
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+
+					var connection = conn.OpenDbConnection();
+					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
 				});
 				Assert.Multiple(() =>
 				{
@@ -320,7 +328,8 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				var connection = conn.OpenDbConnection();
+				Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 			}
 		}
 
@@ -621,7 +630,8 @@ namespace Tests.Data
 				{
 					Assert.That(open, Is.False);
 					Assert.That(openAsync, Is.False);
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					var connection = conn.OpenDbConnection();
+					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
 				});
 				Assert.Multiple(() =>
 				{
@@ -894,7 +904,7 @@ namespace Tests.Data
 					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
 					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
 					{
-						db.Connection.EnlistTransaction(Transaction.Current);
+						db.OpenDbConnection().EnlistTransaction(Transaction.Current);
 						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
 
 						Transaction.Current!.Rollback();
@@ -942,7 +952,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -951,7 +961,7 @@ namespace Tests.Data
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.CreateCommand())
+				using (var cmd = db.OpenDbConnection().CreateCommand())
 				{
 					cmd.CommandText = sql;
 					using (var reader1 = cmd.ExecuteReader())
@@ -995,14 +1005,14 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				db.Person.ToList();
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.CreateCommand())
+				using (var cmd = db.OpenDbConnection().CreateCommand())
 				{
 					cmd.CommandText = sql;
 					try
@@ -1070,7 +1080,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -1079,7 +1089,7 @@ namespace Tests.Data
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.CreateCommand())
+				using (var cmd = db.OpenDbConnection().CreateCommand())
 				{
 					cmd.CommandText = sql;
 					using (var reader1 = cmd.ExecuteReader())
@@ -1089,7 +1099,7 @@ namespace Tests.Data
 							cnt2++;
 
 							// open another reader on new command
-							using (var cmd2 = db.CreateCommand())
+							using (var cmd2 = db.OpenDbConnection().CreateCommand())
 							{
 								var cnt3 = 0;
 								cmd2.CommandText = sql;
@@ -1134,14 +1144,14 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				db.Person.ToList();
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.CreateCommand())
+				using (var cmd = db.OpenDbConnection().CreateCommand())
 				{
 					cmd.CommandText = sql;
 					try
@@ -1151,7 +1161,7 @@ namespace Tests.Data
 							while (reader1.Read())
 							{
 								// open another reader on new command
-								using (var cmd2 = db.CreateCommand())
+								using (var cmd2 = db.OpenDbConnection().CreateCommand())
 								{
 									cmd2.CommandText = sql;
 
@@ -1211,7 +1221,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -1220,7 +1230,7 @@ namespace Tests.Data
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				var cmd = db.CreateCommand();
+				var cmd = db.OpenDbConnection().CreateCommand();
 				cmd.CommandText = sql;
 				using (var reader1 = cmd.ExecuteReader())
 				{
@@ -1230,7 +1240,7 @@ namespace Tests.Data
 						cnt2++;
 
 						// open another reader on new command
-						using (var cmd2 = db.CreateCommand())
+						using (var cmd2 = db.OpenDbConnection().CreateCommand())
 						{
 							var cnt3 = 0;
 							cmd2.CommandText = sql;
@@ -1273,14 +1283,14 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				db.Person.ToList();
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				var cmd = db.CreateCommand();
+				var cmd = db.OpenDbConnection().CreateCommand();
 				cmd.CommandText = sql;
 				using (var reader1 = cmd.ExecuteReader())
 				{
@@ -1290,7 +1300,7 @@ namespace Tests.Data
 						while (reader1.Read())
 						{
 							// open another reader on new command
-							using (var cmd2 = db.CreateCommand())
+							using (var cmd2 = db.OpenDbConnection().CreateCommand())
 							{
 								cmd2.CommandText = sql;
 
@@ -1325,7 +1335,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -1355,7 +1365,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS enabled");
 
 				var failed = false;
@@ -1416,7 +1426,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = await db.Person.CountAsync();
@@ -1446,7 +1456,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS enabled");
 
 				var failed = false;
