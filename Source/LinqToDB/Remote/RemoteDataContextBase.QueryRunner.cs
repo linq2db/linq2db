@@ -5,19 +5,18 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Async;
-
 #if !NET6_0_OR_GREATER
 using System.Text;
 #endif
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal;
+using LinqToDB.Internal.Remote;
 
 namespace LinqToDB.Remote
 {

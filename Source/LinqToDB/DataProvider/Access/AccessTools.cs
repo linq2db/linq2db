@@ -4,15 +4,17 @@ using System.Data.Common;
 using System.IO;
 using System.Security;
 
-using LinqToDB.Compatibility;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.Access;
 
 namespace LinqToDB.DataProvider.Access
 {
 	/// <summary>
 	/// Contains Access provider management tools.
 	/// </summary>
-	public static partial class AccessTools
+	public static class AccessTools
 	{
 		internal static AccessProviderDetector ProviderDetector = new();
 

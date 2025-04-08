@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Tools;
+using LinqToDB.Internal;
 
 using NUnit.Framework;
 

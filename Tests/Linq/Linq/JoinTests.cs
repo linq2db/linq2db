@@ -8,6 +8,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

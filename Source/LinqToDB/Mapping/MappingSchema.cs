@@ -9,22 +9,23 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
-using LinqToDB.Common.Internal.Cache;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.ExpressionVisitors;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Cache;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Conversion;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Metadata;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+using LinqToDB.Model;
 
 namespace LinqToDB.Mapping
 {

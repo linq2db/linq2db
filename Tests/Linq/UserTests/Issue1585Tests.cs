@@ -1,5 +1,6 @@
 ﻿using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 
 using NUnit.Framework;
 

@@ -4,6 +4,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SQLite;
+using LinqToDB.Internal.DataProvider.SQLite;
 
 using StackExchange.Profiling;
 using StackExchange.Profiling.Data;

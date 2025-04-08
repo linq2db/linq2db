@@ -3,6 +3,7 @@
 using JetBrains.Annotations;
 
 using LinqToDB.Configuration;
+using LinqToDB.Internal.DataProvider;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
