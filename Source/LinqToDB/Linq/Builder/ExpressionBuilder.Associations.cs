@@ -164,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 						attribute.Storage,
 						attribute.AssociationSetterExpressionMethod,
 						attribute.AssociationSetterExpression,
-						attribute.CanBeNull,
+						attribute.ConfiguredCanBeNull,
 						attribute.AliasName
 					);
 			}
