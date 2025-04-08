@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -12,6 +13,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Reflection
 {
+	[DebuggerDisplay("{Name}: {Type.Name}")]
 	public class MemberAccessor
 	{
 		static readonly ConstructorInfo ArgumentExceptionConstructorInfo = typeof(ArgumentException).GetConstructor(new[] {typeof(string)})!;
