@@ -103,7 +103,7 @@ namespace LinqToDB
 					return SqlErrorExpression.EnsureError(error, expression.Type);
 
 				var function = new SqlFunction(expression.Type, expressionStr!, IsAggregate, IsPure, Precedence,
-					ToParametersNullabilityType(IsNullable), ConfiguredCanBeNull, parameters!);
+					ToParametersNullabilityType(IsNullable), СonfiguredCanBeNull, parameters!);
 
 				return ExpressionBuilder.CreatePlaceholder(query, function, expression);
 			}
