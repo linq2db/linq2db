@@ -2072,6 +2072,48 @@ namespace Tests.xUpdate
 			}
 		}
 
+		class InsertEntity
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column]
+			public string Name { get; set; } = null!;
+
+			public bool IsDeleted { get; set; }
+		}
+
+		[Test]
+		public void InsertWithFilter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			var ms = new MappingSchema();
+			var builder = new FluentMappingBuilder(ms);
+
+			builder.Entity<InsertEntity>()
+				.HasQueryFilter(e => !e.IsDeleted);
+
+			builder.Build();
+
+			using var db = GetDataContext(context, ms);
+			var table = db.CreateLocalTable<InsertEntity>();
+
+			var affected = table.Insert(() => new InsertEntity()
+			{
+				Id = 1,
+				Name = "test",
+				IsDeleted = false
+			});
+
+			var entity = table.Single(e => e.Id == 1);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(affected, Is.EqualTo(1));
+				Assert.That(entity.Name, Is.EqualTo("test"));
+				Assert.That(entity.IsDeleted, Is.False);
+			});
+		}
+
 		#region InsertIfNotExists (https://github.com/linq2db/linq2db/issues/3005)
 		private int GetEmptyRowCount(string context)
 		{
