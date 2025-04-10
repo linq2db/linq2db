@@ -262,6 +262,15 @@ namespace LinqToDB.DataProvider.DB2.Translation
 			}
 		}
 
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(factory.GetDbDataType(typeof(int)), "CHAR_LENGTH", value);
+			}
+		}
+
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();
@@ -275,6 +284,11 @@ namespace LinqToDB.DataProvider.DB2.Translation
 		protected override IMemberTranslator CreateMathMemberTranslator()
 		{
 			return new DB2MathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
 		}
 	}
 }

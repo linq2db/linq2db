@@ -294,6 +294,26 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LengthWhiteSpace([DataSources] string context, [Values("abc ", " ", " abc ")] string stringValue)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Select(() =>
+				new 
+				{
+					Str = Sql.AsSql(stringValue),
+					Len = Sql.AsSql(stringValue.Length),
+				});
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Str, Is.EqualTo(stringValue));
+					Assert.That(result.Len, Is.EqualTo(stringValue.Length));
+				});
+			}
+		}
+
+		[Test]
 		public void ContainsConstant([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1194,7 +1214,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4799")]
 		public void String_PadLeft_Translation([DataSources] string context)
 		{
@@ -1202,12 +1221,32 @@ namespace Tests.Linq
 
 			Assert.Multiple(() =>
 			{
-				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(0, '.'))), Is.EqualTo("test"));
-				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(3, '.'))), Is.EqualTo("test"));
-				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(4, '.'))), Is.EqualTo("test"));
-				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(5, '.'))), Is.EqualTo(".test"));
-				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(6, '.'))), Is.EqualTo("..test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(0, '.'))),  Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(3, '.'))),  Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(4, '.'))),  Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(5, '.'))),  Is.EqualTo(".test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(6, ' '))),  Is.EqualTo("  test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(6))),       Is.EqualTo("  test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(16, '.'))), Is.EqualTo("............test"));
 			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4799")]
+		public void String_PadLeft_TranslationExpressionArguments([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Person
+				select new
+				{
+					p.ID,
+					FirstName = p.FirstName.PadLeft(p.ID, '.')
+				} into s
+				where s.FirstName != ""
+				select s;
+
+			AssertQuery(query);
 		}
 
 		[ActiveIssue]
