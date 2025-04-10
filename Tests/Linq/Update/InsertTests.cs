@@ -2180,6 +2180,7 @@ namespace Tests.xUpdate
 				Assert.That(entities, Has.Count.EqualTo(2));
 			});
 		}
+  
 		#region InsertIfNotExists (https://github.com/linq2db/linq2db/issues/3005)
 		private int GetEmptyRowCount(string context)
 		{
