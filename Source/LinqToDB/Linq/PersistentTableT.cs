@@ -31,6 +31,7 @@ namespace LinqToDB.Linq
 		public Expression Expression => _query.Expression;
 
 		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => Array.Empty<QuerySql>();
+
 		public IDataContext   DataContext                                                     => null!;
 		public Type           ElementType                                                     => _query.ElementType;
 		public IQueryProvider Provider                                                        => _query.Provider;

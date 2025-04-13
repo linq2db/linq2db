@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.Informix
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
 				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.OpenDbConnection());
 
 				if (connection != null)
 				{
@@ -54,38 +54,38 @@ namespace LinqToDB.DataProvider.Informix
 			return MultipleRowsCopy(table, options, source);
 		}
 
-		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
 				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+				var connection = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 
 				if (connection != null)
 				{
 					// call the synchronous provider-specific implementation
 					if (_provider.Adapter.InformixBulkCopy != null)
-						return Task.FromResult(IDSProviderSpecificCopy(
+						return IDSProviderSpecificCopy(
 							table,
 							options.BulkCopyOptions,
 							source,
 							dataConnection,
 							connection,
-							_provider.Adapter.InformixBulkCopy));
+							_provider.Adapter.InformixBulkCopy);
 					else
-						return Task.FromResult(DB2.DB2BulkCopyShared.ProviderSpecificCopyImpl(
+						return DB2.DB2BulkCopyShared.ProviderSpecificCopyImpl(
 							table,
 							options.BulkCopyOptions,
 							source,
 							dataConnection,
 							connection,
 							_provider.Adapter.DB2BulkCopy!,
-							TraceAction));
+							TraceAction);
 				}
 			}
 
-			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+			return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
 		}
 
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.Informix
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
 				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+				var connection = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 
 				if (connection != null)
 				{

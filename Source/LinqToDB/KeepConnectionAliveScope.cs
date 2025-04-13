@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
@@ -9,7 +10,7 @@ namespace LinqToDB
 	/// See <see cref="DataContext.KeepConnectionAlive"/> for more details.
 	/// </summary>
 	[PublicAPI]
-	public class KeepConnectionAliveScope : IDisposable
+	public class KeepConnectionAliveScope : IDisposable, IAsyncDisposable
 	{
 		readonly DataContext _dataContext;
 		readonly bool        _savedValue;
@@ -23,7 +24,8 @@ namespace LinqToDB
 			_dataContext = dataContext;
 			_savedValue  = dataContext.KeepConnectionAlive;
 
-			dataContext.KeepConnectionAlive = true;
+			// it is safe to call sync API as 'true' value doesn't trigger blocking operation
+			dataContext.SetKeepConnectionAlive(true);
 		}
 
 		/// <summary>
@@ -31,7 +33,12 @@ namespace LinqToDB
 		/// </summary>
 		public void Dispose()
 		{
-			_dataContext.KeepConnectionAlive = _savedValue;
+			_dataContext.SetKeepConnectionAlive(_savedValue);
+		}
+
+		public async ValueTask DisposeAsync()
+		{
+			await _dataContext.SetKeepConnectionAliveAsync(_savedValue).ConfigureAwait(false);
 		}
 	}
 }

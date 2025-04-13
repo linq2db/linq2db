@@ -493,7 +493,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (sqlExpression is { Parameters: [var p] }
 				&& sqlExpression.Expr.Trim() == "{0}" 
-				&& (!checkNullability || sqlExpression.CanBeNull == p.CanBeNullable(NullabilityContext.NonQuery)))
+				&& (!checkNullability || sqlExpression.CanBeNullable(NullabilityContext.NonQuery) == p.CanBeNullable(NullabilityContext.NonQuery)))
 			{
 				if (p is SqlExpression argExpression)
 					return IsTransitiveExpression(argExpression, checkNullability);
@@ -1602,14 +1602,16 @@ namespace LinqToDB.SqlQuery
 			return newSc;
 		}
 
-		public static bool CalcCanBeNull(bool? canBeNull, ParametersNullabilityType isNullable, IEnumerable<bool> nullInfo)
+		public static bool CalcCanBeNull(Type? type, bool? canBeNull, ParametersNullabilityType isNullable, IEnumerable<bool> nullInfo)
 		{
 			if (canBeNull != null)
 				return canBeNull.Value;
 
+			if (isNullable == ParametersNullabilityType.Undefined)
+				return type == null ? true : SqlDataType.TypeCanBeNull(type);
+
 			switch (isNullable)
 			{
-				case ParametersNullabilityType.Undefined              : return true;
 				case ParametersNullabilityType.Nullable               : return true;
 				case ParametersNullabilityType.NotNullable            : return false;
 			}

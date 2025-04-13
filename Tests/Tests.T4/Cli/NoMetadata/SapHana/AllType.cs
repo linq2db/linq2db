@@ -17,8 +17,9 @@ namespace Cli.NoMetadata.SapHana
 		public int       Id                   { get; set; } // INTEGER
 		public long?     BigintDataType       { get; set; } // BIGINT
 		public short?    SmallintDataType     { get; set; } // SMALLINT
-		public decimal?  DecimalDataType      { get; set; } // DECIMAL(34, 0)
-		public decimal?  SmalldecimalDataType { get; set; } // SMALLDECIMAL(16, 0)
+		public decimal?  DecimalDataType      { get; set; } // DECIMAL(38, 10)
+		public decimal?  DecFloatDataType     { get; set; } // DECIMAL
+		public decimal?  SmalldecimalDataType { get; set; } // SMALLDECIMAL
 		public int?      IntDataType          { get; set; } // INTEGER
 		public byte?     TinyintDataType      { get; set; } // TINYINT
 		public double?   FloatDataType        { get; set; } // DOUBLE
