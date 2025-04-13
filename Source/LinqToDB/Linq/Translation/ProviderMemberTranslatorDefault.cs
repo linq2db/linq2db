@@ -28,6 +28,11 @@ namespace LinqToDB.Linq.Translation
 			return new StringMemberTranslatorBase();
 		}
 
+		protected virtual IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new WindowFunctionsMemberTranslator();
+		}
+
 		protected ProviderMemberTranslatorDefault()
 		{
 			InitDefaultTranslators();
@@ -51,6 +56,10 @@ namespace LinqToDB.Linq.Translation
 			CombinedMemberTranslator.Add(CreateDateMemberTranslator());
 			CombinedMemberTranslator.Add(CreateMathMemberTranslator());
 			CombinedMemberTranslator.Add(CreateStringMemberTranslator());
+
+			var windowFunctionsTranslator = CreateWindowFunctionsMemberTranslator();
+			if (windowFunctionsTranslator != null)
+				CombinedMemberTranslator.Add(windowFunctionsTranslator);
 		}
 
 		protected SqlPlaceholderExpression? TranslateNoRequiredObjectExpression(ITranslationContext translationContext, Expression? objExpression, TranslationFlags translationFlags)
