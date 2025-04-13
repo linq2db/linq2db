@@ -1003,7 +1003,6 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
 		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
-		/// <item>PostgreSQL 17+ (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> MergeWithOutputAsync<TTarget, TSource, TOutput>(
@@ -1040,7 +1039,6 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
 		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
-		/// <item>PostgreSQL 17+ (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> MergeWithOutputAsync<TTarget,TSource,TOutput>(
