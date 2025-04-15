@@ -922,6 +922,7 @@ namespace LinqToDB
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputExpression">Output record constructor expression.
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Sequence of records returned by output.</returns>
 		/// <remarks>
@@ -959,6 +960,7 @@ namespace LinqToDB
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputExpression">Output record constructor expression.
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new, <typeparamref name="TSource"/> source.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Sequence of records returned by output.</returns>
 		/// <remarks>
@@ -996,6 +998,7 @@ namespace LinqToDB
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputExpression">Output record constructor expression.
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new.        		
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Async sequence of records returned by output.</returns>
 		/// <remarks>
@@ -1032,6 +1035,7 @@ namespace LinqToDB
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputExpression">Output record constructor expression.
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new, <typeparamref name="TSource"/> source.        		
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Async sequence of records returned by output.</returns>
 		/// <remarks>
@@ -1069,7 +1073,8 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputTable">Table which should handle output result.</param>
 		/// <param name="outputExpression">Output record constructor expression.
-		/// Expression supports only record new expression with field initializers.</param>
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new.
+        /// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
 		/// <remarks>
 		/// Database support:
@@ -1110,7 +1115,8 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputTable">Table which should handle output result.</param>
 		/// <param name="outputExpression">Output record constructor expression.
-		/// Expression supports only record new expression with field initializers.</param>
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new, <typeparamref name="TSource"/> source.
+        /// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
 		/// <remarks>
 		/// Database support:
@@ -1151,8 +1157,9 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputTable">Table which should handle output result.</param>
 		/// <param name="outputExpression">Output record constructor expression.
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new.
 		/// Expression supports only record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
 		/// <remarks>
 		/// Database support:
@@ -1195,8 +1202,9 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputTable">Table which should handle output result.</param>
 		/// <param name="outputExpression">Output record constructor expression.
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new, <typeparamref name="TSource"/> source.
 		/// Expression supports only record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
 		/// <remarks>
 		/// Database support:
