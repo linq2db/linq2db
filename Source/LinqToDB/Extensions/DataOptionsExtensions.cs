@@ -49,7 +49,7 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		[Pure]
-		public static LinqOptions WithIgnoreEmptyUpdate(LinqOptions options, bool ignoreEmptyUpdate)
+		public static LinqOptions WithIgnoreEmptyUpdate(this LinqOptions options, bool ignoreEmptyUpdate)
 		{
 			return options with { IgnoreEmptyUpdate = ignoreEmptyUpdate };
 		}
@@ -290,7 +290,7 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		[Pure]
-		public static DataOptions UseIgnoreEmptyUpdate(DataOptions options, bool ignoreEmptyUpdate)
+		public static DataOptions UseIgnoreEmptyUpdate(this DataOptions options, bool ignoreEmptyUpdate)
 		{
 			return options.WithOptions<LinqOptions>(o => o with { IgnoreEmptyUpdate = ignoreEmptyUpdate });
 		}
