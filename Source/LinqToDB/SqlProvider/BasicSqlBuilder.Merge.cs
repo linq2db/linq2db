@@ -435,10 +435,20 @@ namespace LinqToDB.SqlProvider
 		{
 			StringBuilder.Append("USING ");
 
-			if (merge.Source.SourceQuery != null)
-				BuildMergeSourceQuery(nullability, merge.Source);
-			else
+			var buildAsEnumerable = merge.Source.SourceEnumerable != null;
+			if (buildAsEnumerable)
+			{
+				if (merge.Source.SourceQuery != null)
+				{
+					if (!merge.Source.SourceQuery.IsSimple)
+						buildAsEnumerable = false;
+				}
+			}
+
+			if (buildAsEnumerable)
 				BuildMergeSourceEnumerable(nullability, merge);
+			else
+				BuildMergeSourceQuery(nullability, merge.Source);
 
 			StringBuilder.AppendLine();
 		}
