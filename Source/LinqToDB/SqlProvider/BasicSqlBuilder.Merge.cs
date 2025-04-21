@@ -440,8 +440,20 @@ namespace LinqToDB.SqlProvider
 			{
 				if (merge.Source.SourceQuery != null)
 				{
-					if (!merge.Source.SourceQuery.IsSimple)
+					if (!merge.Source.SourceQuery.IsSimple || merge.Source.SourceQuery.Select.Columns.Count != merge.Source.SourceFields.Count)
 						buildAsEnumerable = false;
+					else
+					{
+						for (var i = 0; i < merge.Source.SourceQuery.Select.Columns.Count; i++)
+						{
+							var columnExp = merge.Source.SourceQuery.Select.Columns[i].Expression;
+							if (columnExp is not SqlField)
+							{
+								buildAsEnumerable = false;
+								break;
+							}
+						}
+					}
 				}
 			}
 

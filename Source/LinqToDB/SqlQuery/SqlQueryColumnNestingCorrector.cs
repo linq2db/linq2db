@@ -66,42 +66,113 @@ namespace LinqToDB.SqlQuery
 				return true;
 			}
 
+			protected bool Equals(QueryNesting other)
+			{
+				return TableSource == other.TableSource;
+			}
+
 			public ISqlExpression UpdateNesting(ISqlExpression element)
 			{
-				if (TableSource is SelectQuery selectQuery)
+				if (Parent is { TableSource: SelectQuery parentSelectQuery })
 				{
-					if (Parent is { TableSource: SelectQuery { HasSetOperators: true } parentSelectQuery })
+					return UpdateNestingInQuery(parentSelectQuery, element);
+				}
+
+				if (Parent is { TableSource: SqlTableLikeSource { SourceQuery: not null } tableLike})
+				{
+					var columnCount = tableLike.SourceQuery.Select.Columns.Count;
+					var newElement  = UpdateNestingInQuery(tableLike.SourceQuery, element);
+						
+					if (newElement is not SqlColumn column)
+						throw new InvalidOperationException("Invalid AST");
+
+					if (columnCount == tableLike.SourceQuery.Select.Columns.Count)
 					{
-						if (parentSelectQuery.SetOperators.Any(so => so.SelectQuery == selectQuery))
-						{
-							var saveCount      = selectQuery.Select.Columns.Count;
-							var setColumnIndex = selectQuery.Select.Add(element);
-
-							// Column found, just return column from parent query.
-							if (saveCount == selectQuery.Select.Columns.Count)
-								return parentSelectQuery.Select.Columns[setColumnIndex];
-
-							var dbDataType = QueryHelper.GetDbDataTypeWithoutSchema(element);
-							var resultColumn = parentSelectQuery.Select.AddNewColumn(new SqlValue(dbDataType, null));
-
-							foreach (var so in parentSelectQuery.SetOperators)
-							{
-								if (so.SelectQuery != selectQuery)
-								{
-									so.SelectQuery.Select.AddNew(new SqlValue(dbDataType, null));
-								}
-							}
-
-							return resultColumn.Expression;
-						}
+						var columnIndex = tableLike.SourceQuery.Select.Columns.IndexOf(column);
+						if (columnIndex < 0)
+							throw new InvalidOperationException("Invalid AST");
+						return tableLike.SourceFields[columnIndex];
 					}
 
-					return selectQuery.Select.AddColumn(element);
+					SqlField? field            = null;
+					var       columnDescriptor = QueryHelper.GetColumnDescriptor(newElement);
+					if (columnDescriptor != null)
+					{
+						field = new SqlField(columnDescriptor) { Name = "field" };
+					}
+					else
+					{
+						var dbDataType = QueryHelper.GetDbDataTypeWithoutSchema(newElement);
+						field = new SqlField(dbDataType, "field", true);
+					}
+
+					var nullability = NullabilityContext.GetContext(tableLike.SourceQuery);
+					var canBeNull   = nullability.CanBeNull(newElement);
+					field.CanBeNull = canBeNull;
+
+					tableLike.AddField(field);
+
+					return field;
 				}
 
 				return element;
 			}
 
+			public ISqlExpression UpdateNestingInQuery(SelectQuery selectQuery, ISqlExpression element)
+			{
+				if (Parent is { TableSource: SelectQuery { HasSetOperators: true } parentSelectQuery })
+				{
+					if (parentSelectQuery.SetOperators.Any(so => so.SelectQuery == selectQuery))
+					{
+						var saveCount      = selectQuery.Select.Columns.Count;
+						var setColumnIndex = selectQuery.Select.Add(element);
+
+						// Column found, just return column from parent query.
+						if (saveCount == selectQuery.Select.Columns.Count)
+							return parentSelectQuery.Select.Columns[setColumnIndex];
+
+						var dbDataType   = QueryHelper.GetDbDataTypeWithoutSchema(element);
+						var resultColumn = parentSelectQuery.Select.AddNewColumn(new SqlValue(dbDataType, null));
+
+						foreach (var so in parentSelectQuery.SetOperators)
+						{
+							if (so.SelectQuery != selectQuery)
+							{
+								so.SelectQuery.Select.AddNew(new SqlValue(dbDataType, null));
+							}
+						}
+
+						return resultColumn.Expression;
+					}
+				}
+
+				return selectQuery.Select.AddColumn(element);
+			}
+
+			public override bool Equals(object? obj)
+			{
+				if (obj is null)
+				{
+					return false;
+				}
+
+				if (ReferenceEquals(this, obj))
+				{
+					return true;
+				}
+
+				if (obj.GetType() != GetType())
+				{
+					return false;
+				}
+
+				return Equals((QueryNesting)obj);
+			}
+
+			public override int GetHashCode()
+			{
+				return TableSource.GetHashCode();
+			}
 		}
 
 		QueryNesting? _parentQueryNesting;
@@ -171,6 +242,24 @@ namespace LinqToDB.SqlQuery
 
 			if (element.Table != null)
 			{
+				if (element.Table is SqlTableLikeSource tableLikeSource && tableLikeSource.SourceQuery != null)
+				{
+					var current = _parentQueryNesting?.Parent;
+					while (current != null)
+					{
+						if (current.TableSource == element.Table)
+						{
+							var fieldIndex = tableLikeSource.SourceFields.IndexOf(element);
+							if (fieldIndex < 0)
+								throw new InvalidOperationException("Invalid field field for SqlTableLikeSource");
+							var fieldExpression = tableLikeSource.SourceQuery.Select.Columns[fieldIndex].Expression;
+							return Visit(fieldExpression);
+						}
+
+						current = current.Parent;
+					}
+				}
+
 				newElement = ProcessNesting(element.Table, element);
 			}
 
@@ -216,5 +305,17 @@ namespace LinqToDB.SqlQuery
 			return newElement;
 		}
 
+		protected override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+		{
+			var saveQueryNesting = _parentQueryNesting;
+			_parentQueryNesting = new QueryNesting(saveQueryNesting, element);
+
+			var newElement = base.VisitSqlTableLikeSource(element);
+
+			if (saveQueryNesting != null)
+				_parentQueryNesting = saveQueryNesting;
+
+			return newElement;
+		}
 	}
 }
