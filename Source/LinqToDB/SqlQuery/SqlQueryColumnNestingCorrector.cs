@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
+using LinqToDB.Common;
 using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
@@ -66,53 +67,45 @@ namespace LinqToDB.SqlQuery
 				return true;
 			}
 
-			protected bool Equals(QueryNesting other)
-			{
-				return TableSource == other.TableSource;
-			}
-
 			public ISqlExpression UpdateNesting(ISqlExpression element)
 			{
-				if (Parent is { TableSource: SelectQuery parentSelectQuery })
+				if (TableSource is SelectQuery selectQuery)
 				{
-					return UpdateNestingInQuery(parentSelectQuery, element);
+					element = UpdateNestingInQuery(selectQuery, element);
 				}
 
-				if (Parent is { TableSource: SqlTableLikeSource { SourceQuery: not null } tableLike})
+				if (element is SqlColumn column)
 				{
-					var columnCount = tableLike.SourceQuery.Select.Columns.Count;
-					var newElement  = UpdateNestingInQuery(tableLike.SourceQuery, element);
-						
-					if (newElement is not SqlColumn column)
-						throw new InvalidOperationException("Invalid AST");
-
-					if (columnCount == tableLike.SourceQuery.Select.Columns.Count)
+					if (Parent is { TableSource: SqlTableLikeSource tableLike } && tableLike.SourceQuery != null)
 					{
 						var columnIndex = tableLike.SourceQuery.Select.Columns.IndexOf(column);
-						if (columnIndex < 0)
-							throw new InvalidOperationException("Invalid AST");
-						return tableLike.SourceFields[columnIndex];
+						if (columnIndex >= 0 && tableLike.SourceFields.Count > columnIndex)
+						{
+							return tableLike.SourceFields[columnIndex];
+						}
+
+						SqlField? field            = null;
+						var       columnDescriptor = QueryHelper.GetColumnDescriptor(element);
+						if (columnDescriptor != null)
+						{
+							field = new SqlField(columnDescriptor) { Name = "field" };
+						}
+						else
+						{
+							var dbDataType = QueryHelper.GetDbDataTypeWithoutSchema(element);
+							field = new SqlField(dbDataType, "field", true);
+						}
+
+						var nullability = NullabilityContext.GetContext(tableLike.SourceQuery);
+						var canBeNull   = nullability.CanBeNull(element);
+						field.CanBeNull = canBeNull;
+
+						Utils.MakeUniqueNames([field], tableLike.SourceFields.Select(f => f.Name), f => f.Name, (f, n, _) => f.Name = n);
+
+						tableLike.AddField(field);
+
+						return field;
 					}
-
-					SqlField? field            = null;
-					var       columnDescriptor = QueryHelper.GetColumnDescriptor(newElement);
-					if (columnDescriptor != null)
-					{
-						field = new SqlField(columnDescriptor) { Name = "field" };
-					}
-					else
-					{
-						var dbDataType = QueryHelper.GetDbDataTypeWithoutSchema(newElement);
-						field = new SqlField(dbDataType, "field", true);
-					}
-
-					var nullability = NullabilityContext.GetContext(tableLike.SourceQuery);
-					var canBeNull   = nullability.CanBeNull(newElement);
-					field.CanBeNull = canBeNull;
-
-					tableLike.AddField(field);
-
-					return field;
 				}
 
 				return element;
@@ -147,31 +140,6 @@ namespace LinqToDB.SqlQuery
 				}
 
 				return selectQuery.Select.AddColumn(element);
-			}
-
-			public override bool Equals(object? obj)
-			{
-				if (obj is null)
-				{
-					return false;
-				}
-
-				if (ReferenceEquals(this, obj))
-				{
-					return true;
-				}
-
-				if (obj.GetType() != GetType())
-				{
-					return false;
-				}
-
-				return Equals((QueryNesting)obj);
-			}
-
-			public override int GetHashCode()
-			{
-				return TableSource.GetHashCode();
 			}
 		}
 
