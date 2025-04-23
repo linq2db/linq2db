@@ -81,12 +81,6 @@ namespace LinqToDB.DataProvider.Ydb
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
-		{
-			// IF EXISTS формируется базовым методом
-			BuildDropTableStatementIfExists(dropTable);
-		}
-
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
 			string command;
@@ -244,15 +238,69 @@ namespace LinqToDB.DataProvider.Ydb
 		#region MERGE / UPSERT
 
 		/// <summary>
-		///     YQL has its own <c>UPSERT</c> statement, however LINQ to DB’s
-		///     higher‑level Merge‑API generates complex MERGE commands which are
-		///     not yet implemented for YDB.  Until the advanced MERGE support
-		///     is added, we throw a clear, descriptive exception.
+		/// Generate YDB-UPSERT instead of MERGE.
+		/// Only simple cases are supported (Insert operation only).
 		/// </summary>
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
-			=> throw new LinqToDBException(
-				$"{Name} provider doesn’t support LINQ to DB SQL MERGE yet. " +
-				"Use BulkCopy/Upsert methods or plain SQL instead.");
+		{
+			// 1) From all Merge operations, take the first INSERT
+			var insertOp = merge.Operations
+				.FirstOrDefault(op => op.OperationType == MergeOperationType.Insert);
+			if (insertOp == null || insertOp.Items.Count == 0)
+				return;
+
+			// 2) UPSERT INTO <table> AS Target
+			AppendIndent().Append("UPSERT INTO ");
+			BuildPhysicalTable(merge.Target.Source, merge.Target.Alias);
+
+			// 3) Column list
+			StringBuilder.Append(" (");
+			for (int i = 0; i < insertOp.Items.Count; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(", ");
+
+				// insertOp.Items[i].Column is an ISqlExpression
+				bool addAlias = false;
+				BuildExpression(
+					insertOp.Items[i].Column,   // expr
+					false,                      // buildTableName
+					true,                       // checkParentheses
+					null,                       // alias
+					ref addAlias                // addAlias
+				);
+			}
+
+			StringBuilder.Append(')');
+
+			// 4) SELECT values
+			StringBuilder.AppendLine();
+			AppendIndent().Append("SELECT ");
+			for (int i = 0; i < insertOp.Items.Count; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(", ");
+
+				// insertOp.Items[i].Expression is an ISqlExpression
+				var expr = insertOp.Items[i].Expression!;
+				bool addAlias = false;
+				BuildExpression(
+					expr,       // expr
+					false,      // buildTableName
+					true,       // checkParentheses
+					null,       // alias
+					ref addAlias
+				);
+			}
+
+			// 5) FROM (<source>) — call the appropriate overload
+			StringBuilder.AppendLine();
+			AppendIndent().Append("FROM ");
+			BuildMergeSourceQuery(NullabilityContext, merge.Source);
+
+			// 6) Merge terminator (semicolon, etc.)
+			BuildMergeTerminator(NullabilityContext, merge);
+		}
 
 		#endregion
 
