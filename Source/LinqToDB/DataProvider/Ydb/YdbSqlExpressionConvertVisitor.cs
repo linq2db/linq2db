@@ -73,39 +73,86 @@ namespace LinqToDB.DataProvider.Ydb
 
 		#endregion
 
-		#region Функции
+		#region Functions
 
+		/// <summary>
+		/// Converts pseudo-SQL functions into YDB-compatible expressions.
+		/// Handles case-insensitive string operations, safe type conversions, and character indexing.
+		/// </summary>
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
+			switch (func.Name)
 			{
-				// CHARINDEX(substr, str)
-				case { Name: "CharIndex", Parameters: [var sub, var str], SystemType: var t }:
-					return new SqlExpression(t,
-						"Position({0} in {1})",
-						Precedence.Primary,
-						sub, str);
+				// ---------- Case-insensitive string functions ----------
+				case PseudoFunctions.TO_LOWER:
+					// Unicode::ToLower(<string>)
+					return func.WithName("Unicode::ToLower");
 
-				// CHARINDEX(substr, str, start)
-				case { Name: "CharIndex", Parameters: [var sub, var str, var start], SystemType: var t }:
-					return Add<int>(
-						new SqlExpression(t,
-							"Position({0} in {1})",
+				case PseudoFunctions.TO_UPPER:
+					// Unicode::ToUpper(<string>)
+					return func.WithName("Unicode::ToUpper");
+
+				// ---------- Safe type conversions ----------
+				case PseudoFunctions.TRY_CONVERT:
+					// CAST(<value> AS <type>?) → returns null on conversion error
+					return new SqlExpression(
+							func.SystemType,
+							"CAST({0} AS {1}?)",
 							Precedence.Primary,
-							sub,
-							(ISqlExpression)Visit(
-								new SqlFunction(typeof(string), "Substring",
-									str,
-									start,
-									Sub<int>(
-										(ISqlExpression)Visit(
-											new SqlFunction(typeof(int), "Length", str)),
-										start)))),
-						Sub(start, 1));
+							func.Parameters[2],        // value
+							func.Parameters[0]         // target type
+						)
+					{ CanBeNull = true };
 
-				default:
-					return base.ConvertSqlFunction(func);
+				case PseudoFunctions.TRY_CONVERT_OR_DEFAULT:
+					// COALESCE(CAST(<value> AS <type>?), <defaultValue>)
+					return new SqlExpression(
+							func.SystemType,
+							"COALESCE(CAST({0} AS {1}?), {2})",
+							Precedence.Primary,
+							func.Parameters[2],        // value
+							func.Parameters[0],        // target type
+							func.Parameters[3]         // default value
+						)
+					{
+						CanBeNull =
+								func.Parameters[2].CanBeNullable(NullabilityContext) ||
+								func.Parameters[3].CanBeNullable(NullabilityContext)
+					};
+
+				// ---------- Substring search ----------
+				// CharIndex(substring, source [, startLocation])
+				case "CharIndex":
+					switch (func.Parameters.Length)
+					{
+						// Two-argument form: search from beginning
+						case 2:
+							// COALESCE(FIND(source, substring) + 1, 0)
+							return new SqlExpression(
+								func.SystemType,
+								"COALESCE(FIND({1}, {0}) + 1, 0)",
+								Precedence.Primary,
+								func.Parameters[0],    // substring
+								func.Parameters[1]     // source
+							);
+
+						// Three-argument form: search from specified offset (T-SQL is 1-based)
+						case 3:
+							// COALESCE(FIND(SUBSTRING(source, start-1), substring) + start, 0)
+							return new SqlExpression(
+								func.SystemType,
+								"COALESCE(FIND(SUBSTRING({1}, {2} - 1), {0}) + {2}, 0)",
+								Precedence.Primary,
+								func.Parameters[0],    // substring
+								func.Parameters[1],    // source
+								func.Parameters[2]     // startLocation
+							);
+					}
+
+					break;
 			}
+
+			return base.ConvertSqlFunction(func);
 		}
 
 		#endregion
