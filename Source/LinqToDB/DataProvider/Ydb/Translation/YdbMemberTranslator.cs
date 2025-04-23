@@ -185,14 +185,70 @@ namespace LinqToDB.DataProvider.Ydb.Translation
 
 		#endregion
 
+		class MathMemberTranslator : MathMemberTranslatorBase
+		{
+
+			/// <summary>
+			/// Banker's rounding: In YQL, ROUND(value, precision?) already performs to-even rounding for Decimal types.
+			/// </summary>
+			protected override ISqlExpression? TranslateRoundToEven(
+				ITranslationContext translationContext,
+				MethodCallExpression methodCall,
+				ISqlExpression value,
+				ISqlExpression? precision)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				return precision != null
+					? factory.Function(valueType, "ROUND", value, precision)
+					: factory.Function(valueType, "ROUND", value);
+			}
+
+			/// <summary>
+			/// Away-from-zero rounding: In YQL, ROUND(value, precision?) for Numeric types already uses away-from-zero rounding.
+			/// </summary>
+			protected override ISqlExpression? TranslateRoundAwayFromZero(
+				ITranslationContext translationContext,
+				MethodCallExpression methodCall,
+				ISqlExpression value,
+				ISqlExpression? precision)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				return precision != null
+					? factory.Function(valueType, "ROUND", value, precision)
+					: factory.Function(valueType, "ROUND", value);
+			}
+
+			/// <summary>
+			/// Exponentiation using the built-in POWER(a, b) function.
+			/// </summary>
+			protected override ISqlExpression? TranslatePow(
+				ITranslationContext translationContext,
+				MethodCallExpression methodCall,
+				ISqlExpression xValue,
+				ISqlExpression yValue)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var xType   = factory.GetDbDataType(xValue);
+				var yType   = factory.GetDbDataType(yValue);
+
+				if (!xType.EqualsDbOnly(yType))
+					yValue = factory.Cast(yValue, xType);
+
+				return factory.Function(xType, "POWER", xValue, yValue);
+			}
+		}
+
 		#region --- Registration --------------------------------------------
 
 		protected override IMemberTranslator CreateSqlTypesTranslator() => new SqlTypesTranslation();
 
 		protected override IMemberTranslator CreateDateMemberTranslator() => new DateFunctionsTranslator();
 
-		// YDB base math functions match the standard,
-		// so a separate math translator is not needed.
+		protected override IMemberTranslator CreateMathMemberTranslator() => new MathMemberTranslator();
 
 		#endregion
 	}
