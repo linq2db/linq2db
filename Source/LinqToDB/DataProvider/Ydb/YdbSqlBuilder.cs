@@ -58,14 +58,24 @@ namespace LinqToDB.DataProvider.Ydb
 		#region Identity / sequences
 
 		/// <summary>
-		///     YDB doesn’t expose the concept of “identity”/“auto‑increment”
-		///     that can be fetched back in the same statement,
-		///     therefore we refuse to generate a <c>RETURNING</c> clause.
+		/// YDB supports serial data types (Serial, SmallSerial, BigSerial),
+		/// so after an INSERT we can return the generated value.
 		/// </summary>
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
-			=> throw new LinqToDBException(
-				"YDB provider cannot generate SQL to fetch the last auto‑generated identity value. " +
-				"Use PRIMARY KEY values supplied by the application instead.");
+		{
+			// 1) Find the identity field in the table
+			var identityField = insertClause.Into?.GetIdentityField();
+			if (identityField == null)
+				throw new LinqToDBException(
+					$"Identity field must be defined for '{insertClause.Into?.NameForLogging}'.");
+
+			// 2) Generate RETURNING <field_name>
+			AppendIndent().AppendLine("RETURNING");
+			AppendIndent().Append('\t');
+			// render the column expression
+			BuildExpression(identityField, false, true);
+			StringBuilder.AppendLine();
+		}
 
 		#endregion
 
