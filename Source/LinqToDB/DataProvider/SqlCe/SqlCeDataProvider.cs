@@ -28,21 +28,24 @@ namespace LinqToDB.DataProvider.SqlCe
 		protected SqlCeDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema, SqlCeProviderAdapter.GetInstance())
 		{
-			SqlProviderFlags.IsSubQueryColumnSupported            = false;
-			SqlProviderFlags.IsCountSubQuerySupported             = false;
-			SqlProviderFlags.IsApplyJoinSupported                 = true;
-			SqlProviderFlags.IsInsertOrUpdateSupported            = false;
-			SqlProviderFlags.IsDistinctSetOperationsSupported     = false;
-			SqlProviderFlags.IsUpdateFromSupported                = false;
-			SqlProviderFlags.IsCountDistinctSupported             = false;
-			SqlProviderFlags.IsAggregationDistinctSupported       = false;
-			SqlProviderFlags.SupportsBooleanType                  = false;
-			SqlProviderFlags.IsWindowFunctionsSupported           = false;
+			SqlProviderFlags.IsSubQueryColumnSupported           = false;
+			SqlProviderFlags.IsCountSubQuerySupported            = false;
+			SqlProviderFlags.IsApplyJoinSupported                = true;
+			SqlProviderFlags.IsInsertOrUpdateSupported           = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported    = false;
+			SqlProviderFlags.IsUpdateFromSupported               = false;
+			SqlProviderFlags.IsCountDistinctSupported            = false;
+			SqlProviderFlags.IsAggregationDistinctSupported      = false;
+			SqlProviderFlags.SupportsBooleanType                 = false;
+			SqlProviderFlags.IsWindowFunctionsSupported          = false;
+			SqlProviderFlags.IsOrderByAggregateFunctionSupported = false;
 
 			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 
 			SetCharField("NChar",    (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NVarChar", (r,i) => r.GetString(i).TrimEnd(' '));
+
+			ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), ProviderFieldType = typeof(SqlDecimal), DataReaderType = Adapter.DataReaderType }] = Adapter.GetDecimalExpression;
 
 			_sqlOptimizer = new SqlCeSqlOptimizer(SqlProviderFlags);
 		}

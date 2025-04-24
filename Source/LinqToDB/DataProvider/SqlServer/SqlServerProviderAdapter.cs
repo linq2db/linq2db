@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
@@ -24,8 +25,8 @@ namespace LinqToDB.DataProvider.SqlServer
 	// We don't take it into account, as there is no reason to use such old provider versions
 	public class SqlServerProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _sysSyncRoot = new ();
-		private static readonly object _msSyncRoot  = new ();
+		private static readonly Lock _sysSyncRoot = new ();
+		private static readonly Lock _msSyncRoot  = new ();
 
 		private static SqlServerProviderAdapter? _systemAdapter;
 		private static SqlServerProviderAdapter? _microsoftAdapter;
@@ -58,7 +59,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			Action<DbParameter, string> typeNameSetter,
 			Func  <DbParameter, string> typeNameGetter,
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			Func<string, SqlConnectionStringBuilder> createConnectionStringBuilder,
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> createBulkCopy,
 			Func<int, string, SqlBulkCopyColumnMapping>                         createBulkCopyColumnMapping,
@@ -85,9 +88,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetTypeName    = typeNameSetter;
 			GetTypeName    = typeNameGetter;
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			_createConnectionStringBuilder = createConnectionStringBuilder;
+#pragma warning restore CS0618 // Type or member is obsolete
 
-			_createBulkCopy              = createBulkCopy;
+			_createBulkCopy = createBulkCopy;
 			_createBulkCopyColumnMapping = createBulkCopyColumnMapping;
 
 			MappingSchema = mappingSchema;
@@ -122,7 +127,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		public string? GetSqlJsonReaderMethod => SqlJsonType == null ? null : "GetSqlJson";
 		public SqlDbType JsonDbType => SqlJsonType == null ? SqlDbType.NVarChar : (SqlDbType)35;
 
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		private readonly Func<string, SqlConnectionStringBuilder> _createConnectionStringBuilder;
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public SqlConnectionStringBuilder CreateConnectionStringBuilder(string connectionString) => _createConnectionStringBuilder(connectionString);
 
 		private readonly Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> _createBulkCopy;
@@ -221,7 +230,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			typeMapper.RegisterTypeWrapper<SqlErrorCollection>(sqlErrorCollectionType);
 			typeMapper.RegisterTypeWrapper<SqlException>(sqlExceptionType);
 			typeMapper.RegisterTypeWrapper<SqlError>(sqlErrorType);
+#pragma warning disable CS0618 // Type or member is obsolete
 			typeMapper.RegisterTypeWrapper<SqlConnectionStringBuilder>(sqlConnectionStringBuilderType);
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			// bulk copy types
 			typeMapper.RegisterTypeWrapper<SqlBulkCopy>(bulkCopyType);
@@ -312,7 +323,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				typeNameBuilder.BuildSetter<DbParameter>(),
 				typeNameBuilder.BuildGetter<DbParameter>(),
 
+#pragma warning disable CS0618 // Type or member is obsolete
 				typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnectionStringBuilder(connectionString)),
+#pragma warning restore CS0618 // Type or member is obsolete
 
 				typeMapper.BuildWrappedFactory((DbConnection connection, SqlBulkCopyOptions options, DbTransaction? transaction) => new SqlBulkCopy((SqlConnection)(object)connection, options, (SqlTransaction?)(object?)transaction)),
 				typeMapper.BuildWrappedFactory((int source, string destination) => new SqlBulkCopyColumnMapping(source, destination)),
@@ -430,6 +443,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			public SqlDbType SqlDbType   { get; set; }
 		}
 
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Wrapper]
 		public class SqlConnectionStringBuilder : TypeWrapper
 		{

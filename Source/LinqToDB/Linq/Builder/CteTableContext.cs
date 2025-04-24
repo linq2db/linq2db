@@ -34,10 +34,9 @@ namespace LinqToDB.Linq.Builder
 			set => _cteTable = value;
 		}
 
-		public Type          ObjectType   => _objectType;
-		public SqlTable      SqlTable     => CteTable;
-		public LoadWithInfo  LoadWithRoot { get; set; } = new();
-		public MemberInfo[]? LoadWithPath { get; set; }
+		public Type            ObjectType   => _objectType;
+		public SqlTable        SqlTable     => CteTable;
+		public LoadWithEntity? LoadWithRoot { get; set; }
 
 		public CteTableContext(TranslationModifier translationModifier, ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext)
 			: this(translationModifier, builder, parent, objectType, selectQuery)
@@ -117,7 +116,7 @@ namespace LinqToDB.Linq.Builder
 
 		class CteTableProxy : BuildProxyBase<CteTableContext>
 		{
-			public CteTableProxy(CteTableContext ownerContext, Expression currentPath, Expression innerExpression) : base(ownerContext, ownerContext.CteContext, currentPath, innerExpression)
+			public CteTableProxy(CteTableContext ownerContext, Expression? currentPath, Expression innerExpression) : base(ownerContext, ownerContext.CteContext, currentPath, innerExpression)
 			{
 			}
 
@@ -133,7 +132,7 @@ namespace LinqToDB.Linq.Builder
 				return placeholder;
 			}
 
-			public override BuildProxyBase<CteTableContext> CreateProxy(CteTableContext ownerContext, IBuildContext buildContext, Expression currentPath, Expression innerExpression)
+			public override BuildProxyBase<CteTableContext> CreateProxy(CteTableContext ownerContext, IBuildContext buildContext, Expression? currentPath, Expression innerExpression)
 			{
 				return new CteTableProxy(ownerContext, currentPath, innerExpression);
 			}
@@ -198,7 +197,10 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			var newContext = new CteTableContext(TranslationModifier, Builder, Parent, ObjectType, context.CloneElement(SelectQuery));
+			var newContext = new CteTableContext(TranslationModifier, Builder, Parent, ObjectType, context.CloneElement(SelectQuery))
+			{
+				LoadWithRoot = LoadWithRoot
+			};
 			context.RegisterCloned(this, newContext);
 			newContext.CteContext = context.CloneContext(CteContext);
 			return newContext;

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.Sybase
 {
@@ -46,38 +47,38 @@ namespace LinqToDB.DataProvider.Sybase
 			return MultipleRowsCopy(table, options, source);
 		}
 
-		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			var connections = GetProviderConnection(table);
+			var connections = await GetProviderConnectionAsync(table, cancellationToken).ConfigureAwait(false);
 			if (connections.HasValue && !table.TableOptions.HasIsTemporary())
 			{
 				// call the synchronous provider-specific implementation
-				return Task.FromResult(ProviderSpecificCopyInternal(
+				return ProviderSpecificCopyInternal(
 					connections.Value,
 					table,
 					options.BulkCopyOptions,
-					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source)));
+					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source));
 			}
 
-			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+			return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
 		}
 
-		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			var connections = GetProviderConnection(table);
+			var connections = await GetProviderConnectionAsync(table, cancellationToken).ConfigureAwait(false);
 			if (connections.HasValue && !table.TableOptions.HasIsTemporary())
 			{
 				// call the synchronous provider-specific implementation
-				return Task.FromResult(ProviderSpecificCopyInternal(
+				return ProviderSpecificCopyInternal(
 					connections.Value,
 					table,
 					options.BulkCopyOptions,
-					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken)));
+					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken));
 			}
 
-			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+			return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
 		}
 
 		private ProviderConnections? GetProviderConnection<T>(ITable<T> table)
@@ -85,7 +86,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.OpenDbConnection());
 
 				// for run in transaction see
 				// https://stackoverflow.com/questions/57675379
@@ -109,11 +110,40 @@ namespace LinqToDB.DataProvider.Sybase
 			return default;
 		}
 
+		private async Task<ProviderConnections?> GetProviderConnectionAsync<T>(ITable<T> table, CancellationToken cancellationToken)
+			where T : notnull
+		{
+			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null)
+			{
+				var connection = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
+
+				// for run in transaction see
+				// https://stackoverflow.com/questions/57675379
+				// provider will call sp_oledb_columns which creates temp table
+				var transaction = dataConnection.Transaction;
+
+				if (connection != null && transaction != null)
+					transaction = _provider.TryGetProviderTransaction(dataConnection, transaction);
+
+				if (connection != null && (dataConnection.Transaction == null || transaction != null))
+				{
+					return new ProviderConnections()
+					{
+						DataConnection = dataConnection,
+						ProviderConnection = connection,
+						ProviderTransaction = transaction
+					};
+				}
+			}
+
+			return default;
+		}
+
 		private BulkCopyRowsCopied ProviderSpecificCopyInternal<T>(
-			ProviderConnections                                     providerConnections,
-			ITable<T>                                               table,
-			BulkCopyOptions                                         options,
-			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader)
+			ProviderConnections                             providerConnections,
+			ITable<T>                                       table,
+			BulkCopyOptions                                 options,
+			Func<List<ColumnDescriptor>, BulkCopyReader<T>> createDataReader)
 			where T : notnull
 		{
 			var dataConnection = providerConnections.DataConnection;

@@ -120,7 +120,6 @@ namespace LinqToDB.Reflection
 
 			public static readonly MethodInfo LoadWithAsTable       = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.LoadWithAsTable(e => e.Single2));
 
-			internal static readonly MethodInfo LoadWithInternal      = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWithInternal(null!, null));
 			internal static readonly MethodInfo DisableFilterInternal = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.DisableFilterInternal());
 			internal static readonly MethodInfo ApplyModifierInternal = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.ApplyModifierInternal(null!));
 
@@ -146,14 +145,24 @@ namespace LinqToDB.Reflection
 
 			public static readonly MethodInfo Select              = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.Select(() => 1));
 
-			internal static readonly MethodInfo SelectDistinct = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.SelectDistinct());
-
 			public static readonly MethodInfo AsQueryable         = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsQueryable(null!));
 			public static readonly MethodInfo AsSubQuery          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsSubQuery());
 
 			public static readonly MethodInfo TagQuery            = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.TagQuery(string.Empty));
 
 			public static readonly MethodInfo JoinTypePredicateSelector = MemberHelper.MethodOfGeneric((IQueryable<object> q1, IQueryable<object> q2, Expression<Func<object, object, bool>> p, Expression<Func<object, object, object>> r) => q1.Join(q2, default(SqlJoinType), p, r));
+
+			public static readonly MethodInfo SqlParameter = MemberHelper.MethodOfGeneric<int>(p => global::LinqToDB.Sql.Parameter(p));
+			public static readonly MethodInfo SqlConstant  = MemberHelper.MethodOfGeneric<int>(p => global::LinqToDB.Sql.Constant(p));
+
+			#region Internal methods
+
+			internal static readonly MethodInfo LoadWithInternal          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.LoadWithInternal(null!));
+			internal static readonly MethodInfo AssociationRecord         = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.AssociationRecord());
+			internal static readonly MethodInfo AssociationOptionalRecord = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.AssociationOptionalRecord());
+			internal static readonly MethodInfo SelectDistinct            = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.SelectDistinct());
+
+			#endregion
 
 			public static class Table
 			{
@@ -166,6 +175,8 @@ namespace LinqToDB.Reflection
 
 				public static readonly MethodInfo With                = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.With(""));
 				public static readonly MethodInfo WithTableExpression = MemberHelper.MethodOfGeneric<ITable<int>>(t => t.WithTableExpression(""));
+
+				internal static readonly MethodInfo UseTableDescriptor = MemberHelper.MethodOfGeneric<ITable<object>>(t => t.UseTableDescriptor(null!));
 			}
 
 			public static class GroupBy
@@ -353,9 +364,9 @@ namespace LinqToDB.Reflection
 
 			public static class ColumnReader
 			{
-				public static readonly MethodInfo GetValue              = MemberHelper.MethodOf<ConvertFromDataReaderExpression.ColumnReader>(cr => cr.GetValue(null!));
-				public static readonly MethodInfo GetValueSequential    = MemberHelper.MethodOf<ConvertFromDataReaderExpression.ColumnReader>(cr => cr.GetValueSequential(null!, false, null));
-				public static readonly MethodInfo GetRawValueSequential = MemberHelper.MethodOf<ConvertFromDataReaderExpression.ColumnReader>(cr => cr.GetRawValueSequential(null!, null!));
+				public static readonly MethodInfo GetValue              = MemberHelper.MethodOf<ConvertFromDataReaderExpression.ColumnReader>(cr => cr.GetValue(null!, null!));
+				public static readonly MethodInfo GetValueSequential    = MemberHelper.MethodOf<ConvertFromDataReaderExpression.ColumnReader>(cr => cr.GetValueSequential(null!, null!, false, null));
+				public static readonly MethodInfo GetRawValueSequential = MemberHelper.MethodOf<ConvertFromDataReaderExpression.ColumnReader>(cr => cr.GetRawValueSequential(null!, null!, null!));
 				public static readonly MethodInfo RawValuePlaceholder   = MemberHelper.MethodOf(() => ConvertFromDataReaderExpression.ColumnReader.RawValuePlaceholder());
 			}
 

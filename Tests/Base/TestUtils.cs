@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -194,6 +195,19 @@ namespace Tests
 				FirebirdTools.ClearAllPools();
 				base.Dispose();
 			}
+
+			public override ValueTask DisposeAsync()
+			{
+				if (DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird))
+				{
+					FirebirdTools.ClearAllPools();
+				}
+
+				DataContext.CloseAsync();
+				FirebirdTools.ClearAllPools();
+
+				return base.DisposeAsync();
+			}
 		}
 		class TestTempTable<T> : TempTable<T>
 			where T : notnull
@@ -207,6 +221,12 @@ namespace Tests
 			{
 				using var _ = new DisableBaseline("Test setup");
 				base.Dispose();
+			}
+
+			public override ValueTask DisposeAsync()
+			{
+				using var _ = new DisableBaseline("Test setup");
+				return base.DisposeAsync();
 			}
 		}
 
@@ -227,13 +247,8 @@ namespace Tests
 
 		public static Version GetSqliteVersion(DataConnection db)
 		{
-			using (var cmd = db.CreateCommand())
-			{
-				cmd.CommandText = "select sqlite_version();";
-				var version     = (string)cmd.ExecuteScalar()!;
-
-				return new Version(version);
-			}
+			var version = db.Execute<string>("select sqlite_version();");
+			return new Version(version);
 		}
 
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.CheckExistence)
@@ -299,7 +314,7 @@ namespace Tests
 				string when providerName.IsAnyOf(TestProvName.AllFirebird)     => "UNICODE_FSS",
 				string when providerName.IsAnyOf(TestProvName.AllMySql)        => "utf8_bin",
 				string when providerName.IsAnyOf(TestProvName.AllSqlServer)    => "Albanian_CI_AS",
-				_                                                              => "whatever"
+				_                                                              => "what-ever"
 			};
 		}
 

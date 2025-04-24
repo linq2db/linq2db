@@ -32,8 +32,7 @@ namespace LinqToDB.Linq.Builder
 			bool                  inline,
 			bool?                 enforceDefault,
 			TranslationModifier   modifier,
-			LoadWithInfo?         loadWith,
-			MemberInfo[]?         loadWithPath,
+			LoadWithEntity?       loadWith,
 			out bool?             isOptional)
 		{
 			Expression dataContextExpr = SqlQueryRootExpression.Create(mappingSchema, builder.DataContext.GetType());
@@ -225,38 +224,32 @@ namespace LinqToDB.Linq.Builder
 
 			if (loadWith != null)
 			{
-				var newPath = new[] { association.MemberInfo };
-				var path = loadWithPath == null || loadWithPath.Length == 0
-					? newPath
-					: loadWithPath.Concat(newPath).ToArray();
+				var associationLoadWith = loadWith.MembersToLoad?.Where(x => x.MemberInfo.EqualsTo(association.MemberInfo)).FirstOrDefault();
+
+				if (associationLoadWith == null)
+				{
+					loadWith.MembersToLoad ??= new();
+					associationLoadWith = new LoadWithMember(association.MemberInfo);
+					loadWith.MembersToLoad.Add(associationLoadWith);
+				}
+
+				associationLoadWith.Entity ??= new LoadWithEntity();
+				associationLoadWith.Entity.Parent = loadWith;
 
 				var body = definedQueryMethod.Body;
 
 				body = Expression.Call(
 					Methods.LinqToDB.LoadWithInternal.MakeGenericMethod(body.Type),
 					body,
-					Expression.Constant(loadWith),
-					Expression.Constant(path, typeof(MemberInfo[])));
+					Expression.Constant(associationLoadWith.Entity));
 
 				definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
-			}
 
-			if (loadWith?.NextInfos != null)
-			{
-				var associationLoadWith = loadWith.NextInfos
-					.FirstOrDefault(li =>
-						MemberInfoEqualityComparer.Default.Equals(li.MemberInfo, association.MemberInfo));
-
-				associationLoadWith ??= loadWith.NextInfos
-					.FirstOrDefault(li =>
-						li.MemberInfo?.Name == association.MemberInfo.Name);
-
-				if (associationLoadWith != null &&
-					(associationLoadWith.MemberFilter != null || associationLoadWith.FilterFunc != null))
+				if (associationLoadWith.FilterExpression != null || associationLoadWith.FilterFunc != null)
 				{
-					var body = definedQueryMethod.Body.Unwrap();
+					body = definedQueryMethod.Body.Unwrap();
 
-					var memberFilter = associationLoadWith.MemberFilter;
+					var memberFilter = associationLoadWith.FilterExpression;
 					if (memberFilter != null)
 					{
 						var elementType = EagerLoading.GetEnumerableElementType(memberFilter.Parameters[0].Type,
@@ -279,7 +272,7 @@ namespace LinqToDB.Linq.Builder
 						else
 						{
 							var filterDelegate = builder.EvaluateExpression<Delegate>(loadWithFunc) ??
-												 throw new LinqToDBException($"Cannot convert filter function '{loadWithFunc}' to Delegate.");
+							                     throw new LinqToDBException($"Cannot convert filter function '{loadWithFunc}' to Delegate.");
 
 							var argumentType = filterDelegate.GetType().GetGenericArguments()[0].GetGenericArguments()[0];
 							// check for fake argument q => q
@@ -288,13 +281,12 @@ namespace LinqToDB.Linq.Builder
 
 								var query    = ExpressionQueryImpl.CreateQuery(objectType, builder.DataContext, body);
 								var filtered = filterDelegate.DynamicInvokeExt<IQueryable>(query);
-								body         = filtered.Expression;
+								body = filtered.Expression;
 							}
 						}
 					}
 
 					definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
-
 				}
 			}
 
@@ -336,7 +328,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var body = definedQueryMethod.Body.Unwrap();
 				body = Expression.Call(
-					(shouldAddDefaultIfEmpty ? Methods.Queryable.SingleOrDefault : Methods.Queryable.Single)
+					(shouldAddDefaultIfEmpty ? Methods.LinqToDB.AssociationOptionalRecord : Methods.LinqToDB.AssociationRecord)
 					.MakeGenericMethod(objectType), body);
 
 				definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
@@ -349,7 +341,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext,
-			AccessorMember onMember, AssociationDescriptor descriptor, Expression? additionalCondition, bool inline, TranslationModifier modifier, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath,
+			AccessorMember onMember, AssociationDescriptor descriptor, Expression? additionalCondition, bool inline, TranslationModifier modifier, LoadWithEntity? loadwith,
 			ref bool? isOptional)
 		{
 			var elementType     = descriptor.GetElementType();
@@ -358,7 +350,7 @@ namespace LinqToDB.Linq.Builder
 			var queryMethod = CreateAssociationQueryLambda(
 				builder, tableContext.BuildContext.MappingSchema, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType, elementType,
 				additionalCondition,
-				inline, isOptional, modifier, loadwith, loadWithPath, out isOptional);
+				inline, isOptional, modifier, loadwith, out isOptional);
 
 			var correctedContext = tableContext.WithType(queryMethod.Parameters[0].Type);
 

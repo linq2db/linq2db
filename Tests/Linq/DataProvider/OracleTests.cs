@@ -2117,7 +2117,7 @@ namespace Tests.DataProvider
 
 			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<DbDataReader, int, decimal>>)((r,i) => GetDecimal(r, i));
 
-			using (var db = new DataConnection(provider, DataConnection.GetConnectionString(context)))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(provider, DataConnection.GetConnectionString(context))))
 			{
 				var list = db.GetTable<DecimalOverflow>().ToList();
 			}
@@ -2926,8 +2926,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestLowercaseIdentifiersQuotation([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseDisableQueryCache(true)))
 			{
+				// TODO: don't modify default options from tests + investigate wether it is expected behavior to react to options change after context created
 				var initial = OracleOptions.Default;
 
 				try
@@ -2936,8 +2937,6 @@ namespace Tests.DataProvider
 
 					_ = db.GetTable<TestIdentifiersTable1>().ToList();
 					_ = db.GetTable<TestIdentifiersTable2>().ToList();
-
-					Query.ClearCaches();
 
 					OracleOptions.Default = OracleOptions.Default with { DontEscapeLowercaseIdentifiers = false };
 
@@ -2949,7 +2948,6 @@ namespace Tests.DataProvider
 				finally
 				{
 					OracleOptions.Default = initial;
-					Query.ClearCaches();
 				}
 			}
 		}
@@ -3599,17 +3597,16 @@ namespace Tests.DataProvider
 		public void BulkCopyWithSchemaName(
 			[IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withSchema)
 		{
-			using var db    = GetDataConnection(context);
+			var trace = string.Empty;
+
+			using var db    = GetDataConnection(context, o => o.UseTracing(ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}));
 			using var table = db.CreateLocalTable<BulkCopyTable>();
 			{
 				var schemaName = TestUtils.GetSchemaName(db, context);
-
-				var trace = string.Empty;
-				db.OnTraceConnection += ti =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
 
 				table.BulkCopy(
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, SchemaName = withSchema ? schemaName : null },
@@ -3626,17 +3623,16 @@ namespace Tests.DataProvider
 		public void BulkCopyWithServerName(
 			[IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withServer)
 		{
-			using var db    = GetDataConnection(context);
+			var trace = string.Empty;
+
+			using var db    = GetDataConnection(context, o => o.UseTracing(ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}));
 			using var table = db.CreateLocalTable<BulkCopyTable>();
 			{
 				var serverName = TestUtils.GetServerName(db, context);
-
-				var trace = string.Empty;
-				db.OnTraceConnection += ti =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
 
 				table.BulkCopy(
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, ServerName = withServer ? serverName : null },
@@ -3653,17 +3649,16 @@ namespace Tests.DataProvider
 		public void BulkCopyWithEscapedColumn(
 			[IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
-			using var db    = GetDataConnection(context);
+			var trace = string.Empty;
+
+			using var db    = GetDataConnection(context, o => o.UseTracing(ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}));
 			using var table = db.CreateLocalTable<BulkCopyTable2>();
 			{
 				var serverName = TestUtils.GetServerName(db, context);
-
-				var trace = string.Empty;
-				db.OnTraceConnection += ti =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
 
 				table.BulkCopy(
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
@@ -3677,7 +3672,13 @@ namespace Tests.DataProvider
 		public void BulkCopyTransactionTest(
 			[IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool withTransaction, [Values] bool withInternalTransaction)
 		{
-			using var db    = GetDataConnection(context);
+			var trace = string.Empty;
+
+			using var db    = GetDataConnection(context, o => o.UseTracing(ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}));
 			using var table = db.CreateLocalTable<BulkCopyTable>();
 			{
 				IDisposable? tr = null;
@@ -3686,13 +3687,6 @@ namespace Tests.DataProvider
 
 				try
 				{
-					var trace = string.Empty;
-					db.OnTraceConnection += ti =>
-					{
-						if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-							trace = ti.SqlText;
-					};
-
 					// Another devart bug: explicit + internal transaction doesn't produce error...
 					if (withTransaction && withInternalTransaction && !context.IsAnyOf(TestProvName.AllOracleDevart))
 						Assert.Throws<InvalidOperationException>(() =>
@@ -3919,7 +3913,7 @@ CREATE TABLE ""TABLE_A""(
 
 			using var tx = dc.BeginTransaction();
 
-			using var blob = new OracleBlob((OracleConnection)dc.Connection);
+			using var blob = new OracleBlob((OracleConnection)dc.OpenDbConnection());
 			blob.WriteByte(1);
 
 			db.GetTable<LinqDataTypesBlobs>().Insert(() => new LinqDataTypesBlobs { ID = -10, BinaryValue = blob });
@@ -3955,7 +3949,7 @@ CREATE TABLE ""TABLE_A""(
 
 			using var tx = dc.BeginTransaction();
 
-			using var blob = new DA.OracleLob((DA.OracleConnection)dc.Connection, DA.OracleDbType.Blob);
+			using var blob = new DA.OracleLob((DA.OracleConnection)dc.OpenDbConnection(), DA.OracleDbType.Blob);
 			blob.WriteByte(1);
 
 			db.GetTable<LinqDataTypesBlobsDevart>().Insert(() => new LinqDataTypesBlobsDevart { ID = -10, BinaryValue = blob });
@@ -3992,7 +3986,7 @@ CREATE TABLE ""TABLE_A""(
 
 			using var tx = dc.BeginTransaction();
 
-			using var blob = new Oracle.DataAccess.Types.OracleBlob((Oracle.DataAccess.Client.OracleConnection)dc.Connection);
+			using var blob = new Oracle.DataAccess.Types.OracleBlob((Oracle.DataAccess.Client.OracleConnection)dc.OpenDbConnection());
 			blob.WriteByte(1);
 
 			db.GetTable<LinqDataTypesBlobsNative>().Insert(() => new LinqDataTypesBlobsNative { ID = -10, BinaryValue = blob });
@@ -4034,7 +4028,7 @@ CREATE TABLE ""TABLE_A""(
 			if ((copyType == BulkCopyType.ProviderSpecific || copyType == BulkCopyType.Default) && !keepIdentity)
 				Assert.Inconclusive($"{nameof(BulkCopyType.ProviderSpecific)} doesn't support {nameof(BulkCopyOptions.KeepIdentity)} = false mode");
 
-			using (var db    = new DataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = multipeRowsMode })))
+			using (var db    = new DataConnection(new DataOptions().UseConfiguration(context).UseOracle(o => o with { AlternativeBulkCopy = multipeRowsMode })))
 			using (var table = db.CreateLocalTable<NativeIdentity>())
 			{
 				var ms = new MappingSchema();

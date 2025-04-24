@@ -6,7 +6,7 @@
 		<EF8Version>8.0.0.0</EF8Version>
 		<EF9Version>9.0.0.0</EF9Version>
 
-		<Configurations>Debug;Release;Azure</Configurations>
+		<Configurations>Testing;Debug;Release;Azure</Configurations>
 
 		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko, and others</Authors>
 		<Company>linq2db.net</Company>
@@ -51,7 +51,7 @@
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_COMPOSITE_FORMAT;$(DefineConstants)</DefineConstants>
 
 		<ArtifactsPath>$(MSBuildThisFileDirectory).build</ArtifactsPath>
-		<ArtifactsPivots>$(Configuration)\$(TargetFramework)</ArtifactsPivots>
+		<ArtifactsPivots>$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)</ArtifactsPivots>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Code Analysis Setup">
@@ -79,4 +79,9 @@
 	<ItemGroup Condition="'$(Language)'=='C#'">
 		<Compile Include="$(MSBuildThisFileDirectory)/Source/Shared/*.cs" LinkBase="Compatibility" />
 	</ItemGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Testing'">
+		<TargetFrameworks>net9.0</TargetFrameworks>
+		<DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
 </Project>

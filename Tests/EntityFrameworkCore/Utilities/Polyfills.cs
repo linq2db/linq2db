@@ -35,7 +35,7 @@ namespace System.Linq
 {
 	internal static class EnumerablePolyfill
 	{
-		public static HashSet<TSource> ToHashSet<TSource>(this IEnumerable<TSource> source) => new HashSet<TSource>(source);
+		public static HashSet<TSource> ToHashSet<TSource>(this IEnumerable<TSource> source) => [.. source];
 	}
 }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlTypes;
@@ -214,11 +215,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ();
 
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public override object? GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
 			// take it from real Connection object, as dataConnection.ConnectionString could be null
 			// also it will not cache original connection string with credentials in _marsFlags
-			var connectionString = dataConnection.Connection.ConnectionString;
+			var connectionString = dataConnection.OpenDbConnection().ConnectionString;
 			switch (parameterName)
 			{
 				case "IsMarsEnabled" :
@@ -332,6 +335,39 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 				case DataType.Time when value is TimeSpan ts:
 					value = TimeSpan.FromTicks(ts.GetTicks(dataType.Precision ?? 7));
+					break;
+
+				case DataType.Money     :
+				case DataType.SmallMoney:
+					parameter.Precision = 0;
+					parameter.Scale     = 0;
+					break;
+
+				case DataType.Decimal:
+					if (parameter.Precision != 0 || parameter.Scale != 0)
+					{
+						SqlDecimal sqlDecimal;
+
+						if (value is SqlDecimal sqlDec)
+							sqlDecimal = sqlDec;
+						else if (value is decimal dec)
+							sqlDecimal = dec;
+						else
+						{
+							// better safe than sorry
+							parameter.Precision = 0;
+							parameter.Scale     = 0;
+							break;
+						}
+
+						// reset precison/scale if default mappings doesn't fit value
+						if ((parameter.Precision - parameter.Scale) < (sqlDecimal.Precision - sqlDecimal.Scale) || parameter.Scale < sqlDecimal.Scale)
+						{
+							parameter.Precision = sqlDecimal.Precision;
+							parameter.Scale     = sqlDecimal.Scale;
+						}
+					}
+
 					break;
 
 				case DataType.Undefined:

@@ -218,8 +218,8 @@ namespace LinqToDB.Linq
 		/// Registers parameter entry in cache. Searches for duplicates and registers them.
 		/// </summary>
 		/// <param name="paramExpr"></param>
-		/// <param name="entry"></param>
-		public void RegisterParameterEntry(Expression paramExpr, ParameterCacheEntry entry, Func<Expression, object?>? evaluator, out int finalParameterId)
+		/// <param name="paramEntry"></param>
+		public void RegisterParameterEntry(Expression paramExpr, ParameterCacheEntry paramEntry, Func<Expression, object?>? evaluator, out int finalParameterId)
 		{
 			void EnsureEvaluated(ParameterCacheEntry localEntry, Expression expr)
 			{
@@ -231,23 +231,23 @@ namespace LinqToDB.Linq
 
 			_parameterEntries ??= new();
 
-			foreach (var pair in _parameterEntries.Values)
+			foreach (var (param, entry) in _parameterEntries.Values)
 			{
-				if (ExpressionEqualityComparer.Instance.Equals(pair.param, paramExpr)
-					&& pair.entry.DbDataType.Equals(entry.DbDataType)
-					&& ExpressionEqualityComparer.Instance.Equals(pair.entry.ClientValueGetter, entry.ClientValueGetter)
-				    && ExpressionEqualityComparer.Instance.Equals(pair.entry.ClientToProviderConverter, entry.ClientToProviderConverter)
-				    && ExpressionEqualityComparer.Instance.Equals(pair.entry.ItemAccessor, entry.ItemAccessor)
-				    && ExpressionEqualityComparer.Instance.Equals(pair.entry.DbDataTypeAccessor, entry.DbDataTypeAccessor))
+				if (ExpressionEqualityComparer.Instance.Equals(param, paramExpr)
+					&& entry.DbDataType.Equals(paramEntry.DbDataType)
+					&& ExpressionEqualityComparer.Instance.Equals(entry.ClientValueGetter, paramEntry.ClientValueGetter)
+				    && ExpressionEqualityComparer.Instance.Equals(entry.ClientToProviderConverter, paramEntry.ClientToProviderConverter)
+				    && ExpressionEqualityComparer.Instance.Equals(entry.ItemAccessor, paramEntry.ItemAccessor)
+				    && ExpressionEqualityComparer.Instance.Equals(entry.DbDataTypeAccessor, paramEntry.DbDataTypeAccessor))
 				{
 					// found duplicate, we have to register value comparison
 
-					finalParameterId = pair.entry.ParameterId;
+					finalParameterId = entry.ParameterId;
 
 					// register for duplicates only non the same parameter expressions
-					if (!ReferenceEquals(pair.param, paramExpr))
+					if (!ReferenceEquals(param, paramExpr))
 					{
-						RegisterDuplicateCheck(pair.entry.ParameterId, pair.entry.ClientValueGetter, entry.ClientValueGetter);
+						RegisterDuplicateCheck(entry.ParameterId, entry.ClientValueGetter, paramEntry.ClientValueGetter);
 					}
 
 					return;
@@ -257,61 +257,91 @@ namespace LinqToDB.Linq
 			// find duplicates by name and value
 			if (evaluator != null)
 			{
-				var testedName = SuggestParameterName(paramExpr);
-				if (testedName != null)
+				var paramName = BuildParameterPath(paramExpr);
+				if (paramName != null)
 				{
-					foreach (var pair in _parameterEntries.Values)
+					foreach (var (param, entry) in _parameterEntries.Values)
 					{
-						if (paramExpr.Type.UnwrapNullableType() != pair.param.Type.UnwrapNullableType())
-							continue;
-
-						var iteratedName = SuggestParameterName(pair.param);
-
-						if (
-							iteratedName == testedName
-							&& !ExpressionEqualityComparer.Instance.Equals(pair.param, paramExpr)
-							&& pair.entry.DbDataType.EqualsDbOnly(entry.DbDataType)
-							&& ExpressionEqualityComparer.Instance.Equals(pair.entry.ClientToProviderConverter, entry.ClientToProviderConverter)
-							&& ExpressionEqualityComparer.Instance.Equals(pair.entry.ItemAccessor, entry.ItemAccessor)
-							&& ExpressionEqualityComparer.Instance.Equals(pair.entry.DbDataTypeAccessor, entry.DbDataTypeAccessor))
+						if (CanBeDuplicate(paramEntry, paramExpr, paramName, param, entry, BuildParameterPath(param)))
 						{
-							EnsureEvaluated(pair.entry, pair.param);
-							EnsureEvaluated(entry, paramExpr);
+							EnsureEvaluated(entry, param);
+							EnsureEvaluated(paramEntry, paramExpr);
 
-							if (Equals(pair.entry.EvaluatedValue, entry.EvaluatedValue))
+							if (Equals(entry.EvaluatedValue, paramEntry.EvaluatedValue))
 							{
 								// found duplicate, we have to register value comparison
 
-								finalParameterId = pair.entry.ParameterId;
-
-								RegisterDuplicateCheck(pair.entry.ParameterId, pair.entry.ClientValueGetter, entry.ClientValueGetter);
+								finalParameterId = entry.ParameterId;
+								RegisterDuplicateCheck(entry.ParameterId, entry.ClientValueGetter, paramEntry.ClientValueGetter);
 
 								return;
 							}
 						}
 					}
 				}
-			
 			}
 
-			_parameterEntries.Add(entry.ParameterId, (paramExpr, entry));
-			finalParameterId = entry.ParameterId;
+			_parameterEntries.Add(paramEntry.ParameterId, (paramExpr, paramEntry));
+			finalParameterId = paramEntry.ParameterId;
+
+			static bool CanBeDuplicate(ParameterCacheEntry paramEntry, Expression paramExpression, string paramName, Expression testedExprExpression, ParameterCacheEntry testedEntry, string? testedName)
+			{
+				return paramName == testedName
+					   && paramExpression.Type.UnwrapNullableType() == testedExprExpression.Type.UnwrapNullableType()
+					   && !ExpressionEqualityComparer.Instance.Equals(paramExpression, testedExprExpression)
+				       && testedEntry.DbDataType.EqualsDbOnly(paramEntry.DbDataType)
+				       && ExpressionEqualityComparer.Instance.Equals(testedEntry.ClientToProviderConverter, paramEntry.ClientToProviderConverter)
+				       && ExpressionEqualityComparer.Instance.Equals(testedEntry.ItemAccessor, paramEntry.ItemAccessor)
+				       && ExpressionEqualityComparer.Instance.Equals(testedEntry.DbDataTypeAccessor, paramEntry.DbDataTypeAccessor);
+			}
 		}
 
-		public static string? SuggestParameterName(Expression? expression)
+		public static string? SuggestParameterDisplayName(Expression? expression)
 		{
-			if (expression is MemberExpression member)
+			return expression switch
+			{
+				MemberExpression member when member.Member.IsNullableValueMember() =>
+					SuggestParameterDisplayName(member.Expression) ?? member.Member.Name,
+
+				MemberExpression { Member.Name: var name } => name,
+
+				UnaryExpression { Operand: var operand } =>
+					SuggestParameterDisplayName(operand),
+
+				_ => null,
+			};
+		}
+
+		static string? BuildParameterPath(Expression? expression)
+		{
+			return expression switch
+			{
+				MemberExpression member when member.Member.IsNullableValueMember() =>
+					BuildParameterPath(member.Expression),
+
+				MemberExpression member => BuildParameterPathCore(member),
+
+				UnaryExpression unary => BuildParameterPath(unary.Operand),
+
+				_ => null,
+			};
+
+			static string? BuildParameterPathCore(MemberExpression member)
 			{
 				var result = member.Member.Name;
-				if (member.Member.IsNullableValueMember())
-					result = SuggestParameterName(member.Expression) ?? result;
+
+				var next = member.Expression;
+				while (next is MemberExpression nextMember)
+				{
+					result = nextMember.Member.Name + "_" + result;
+					next   = nextMember.Expression;
+				}
+
+				if (next != null && next.NodeType != ExpressionType.Constant)
+					return null;
+
 				return result;
 			}
-
-			if (expression is UnaryExpression unary)
-				return SuggestParameterName(unary.Operand);
-
-			return null;
 		}
 
 		public static Expression CorrectAccessorExpression(Expression accessorExpression, IDataContext dataContext)
@@ -388,9 +418,9 @@ namespace LinqToDB.Linq
 		/// <param name="nonComparable"></param>
 		/// <param name="newParameterized"></param>
 		/// <returns></returns>
-		Expression ReplaceParameterizedAndClosures(Expression expression, HashSet<Expression> nonComparable, Dictionary<Expression, ConstantPlaceholderExpression>? newParameterized)
+		Expression ReplaceParameterizedAndClosures(Expression expression, HashSet<Expression> nonComparable, Dictionary<Expression, ConstantPlaceholderExpression>? newParameterized, MappingSchema mappingSchema)
 		{
-			var result = expression.Transform((nonComparable, newParameterized), static (ctx, e) =>
+			var result = expression.Transform((nonComparable, newParameterized, mappingSchema), static (ctx, e) =>
 			{
 				if (ctx.newParameterized != null && ctx.newParameterized.TryGetValue(e, out var constantPlaceholder))
 				{
@@ -408,7 +438,7 @@ namespace LinqToDB.Linq
 				{
 					var c = (ConstantExpression)e;
 
-					if (ExpressionCacheHelpers.ShouldRemoveConstantFromCache(c))
+					if (ExpressionCacheHelpers.ShouldRemoveConstantFromCache(c, ctx.mappingSchema))
 					{
 						var replacement = new ConstantPlaceholderExpression(e.Type);
 						ctx.newParameterized![e] = replacement;
@@ -453,7 +483,7 @@ namespace LinqToDB.Linq
 				var usedEntries = _parameterEntries.Where(e => knownParameters.Any(p => p.AccessorId == e.Key)).Select(e => e.Value).ToList();
 				if (usedEntries.Count > 0)
 				{
-					nonComparable = new HashSet<Expression>(NonComparableExpressions);
+					nonComparable = [.. NonComparableExpressions];
 
 					parameterAccessors = new List<ParameterAccessor>(usedEntries.Count);
 					foreach (var (paramExpr, entry) in usedEntries)
@@ -493,7 +523,7 @@ namespace LinqToDB.Linq
 						}
 
 						var accessor = new ParameterAccessor(
-							entry.ParameterId, 
+							entry.ParameterId,
 							clientValueGetter,
 							clientToProviderConverter,
 							itemAccessor,
@@ -524,7 +554,7 @@ namespace LinqToDB.Linq
 				{
 					runtimeExpressions.AddExpression(da.ExpressionId, da.Used);
 
-					var replaced = ReplaceParameterizedAndClosures(da.Used, nonComparable, replacements);
+					var replaced = ReplaceParameterizedAndClosures(da.Used, nonComparable, replacements, dc.MappingSchema);
 
 					dynamicAccessors.Add(da with { Used = replaced });
 				}
@@ -599,7 +629,7 @@ namespace LinqToDB.Linq
 				}
 			}
 
-			var mainExpression = ReplaceParameterizedAndClosures(MainExpression, nonComparable, replacements);
+			var mainExpression = ReplaceParameterizedAndClosures(MainExpression, nonComparable, replacements, dc.MappingSchema);
 			var compareInfo    = new QueryCacheCompareInfo(mainExpression, dynamicAccessors, comparisionFunctions);
 
 			return (compareInfo, parameterAccessors, parameterExpressions);
