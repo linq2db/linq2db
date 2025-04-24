@@ -314,6 +314,8 @@ namespace LinqToDB.DataProvider.DB2.Translation
 					)
 				);
 
+				resultExpression = factory.Condition(factory.IsNullPredicate(guidExpr), factory.Value<string?>(stringDbType, null), factory.NotNull(resultExpression));
+
 				return resultExpression;
 
 				ISqlExpression SubString(ISqlExpression expression, int pos, int length)

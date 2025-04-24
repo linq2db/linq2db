@@ -47,22 +47,10 @@ namespace LinqToDB.Linq.Translation
 
 		public Expression? Translate(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
 		{
-			if (memberExpression is MethodCallExpression { Method: { } method })
+			if (memberExpression is (MethodCallExpression or MemberExpression or NewExpression))
 			{
-				var translationFunc = Registration.GetTranslation(method);
-				if (translationFunc != null)
-					return translationFunc(translationContext, memberExpression, translationFlags);
-
-			}
-			else if (memberExpression is MemberExpression { Member: { } member })
-			{
-				var translationFunc = Registration.GetTranslation(member);
-				if (translationFunc != null)
-					return translationFunc(translationContext, memberExpression, translationFlags);
-			}
-			else if (memberExpression is NewExpression { Constructor: { } constructor })
-			{
-				var translationFunc = Registration.GetTranslation(constructor);
+				var memberInfoWithType = MemberHelper.GetMemberInfoWithType(memberExpression);
+				var translationFunc    = Registration.GetTranslation(memberInfoWithType);
 				if (translationFunc != null)
 					return translationFunc(translationContext, memberExpression, translationFlags);
 			}

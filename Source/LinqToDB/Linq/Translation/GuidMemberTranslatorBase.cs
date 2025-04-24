@@ -1,16 +1,18 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Translation
 {
+	[SuppressMessage("ReSharper", "ReturnValueOfPureMethodIsNotUsed")]
 	public class GuidMemberTranslatorBase : MemberTranslatorBase
 	{
 		public GuidMemberTranslatorBase()
 		{
-			// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 			Registration.RegisterMethod(() => Guid.NewGuid().ToString(), TranslateGuildToStringMethod);
+			Registration.RegisterMethod(() => ((Guid?)Guid.NewGuid()).ToString(), TranslateGuildToStringMethod);
 		}
 
 		Expression? TranslateGuildToStringMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

@@ -15,52 +15,75 @@ namespace Tests.Linq
 		public class TableWithGuid
 		{
 			[Column] public Guid Id { get; set; }
+			[Column] public Guid? NullableGuid { get; set; }
 		}
 
 		[Test]
 		public void GuidToString([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<TableWithGuid>())
-			{
-				var expected = "193AE7F4-5309-4EEE-A746-27B28C7E30F3".ToLowerInvariant();
+			var expectedFirst = TestData.Guid1.ToString();
 
-				var a = new TableWithGuid() { Id = Guid.Parse(expected) };
-				db.Insert(a);
+			TableWithGuid[] data = [new () { Id = TestData.Guid1, NullableGuid = null }];
 
-				var id = (from t in db.GetTable<TableWithGuid>()
-						   select t.Id.ToString()).First();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			
+			var id = (from t in table
+				select t.Id.ToString()).First();
 
-				Assert.That(id, Is.EqualTo(expected));
+			Assert.That(id, Is.EqualTo(expectedFirst));
 
-				var qryA = from t in db.GetTable<TableWithGuid>()
-						   where t.Id.ToString().Contains("7f4-53")
-						   select t;
+			var subStr = expectedFirst.Substring(5, 6);
 
-				var lA = qryA.ToList();
-				Assert.That(lA, Has.Count.EqualTo(1));
+			var qryA = from t in table
+				where t.Id.ToString().Contains(Sql.Constant(subStr))
+				select t;
 
-				var qryB = from t in db.GetTable<TableWithGuid>()
-						   where t.Id.ToString().StartsWith("193ae")
-						   select t;
+			var lA = qryA.ToList();
+			Assert.That(lA, Has.Count.EqualTo(1));
 
-				var lB = qryB.ToList();
-				Assert.That(lB, Has.Count.EqualTo(1));
+			var startStr = expectedFirst.Substring(0, 5);
 
-				var qryC = from t in db.GetTable<TableWithGuid>()
-						   where t.Id.ToString().Contains("8f4-53")
-						   select t;
+			var qryB = from t in table
+				where t.Id.ToString().StartsWith(Sql.Constant(startStr))
+				select t;
 
-				var lC = qryC.ToList();
-				Assert.That(lC, Has.Count.EqualTo(0));
+			var lB = qryB.ToList();
+			Assert.That(lB, Has.Count.EqualTo(1));
 
-				var qryD = from t in db.GetTable<TableWithGuid>()
-						   where t.Id.ToString().ToLower().StartsWith("293ae")
-						   select t;
+			var qryC = from t in table
+				where t.Id.ToString().Contains("8f4-53")
+				select t;
 
-				var lD = qryD.ToList();
-				Assert.That(lD, Has.Count.EqualTo(0));
-			}
+			var lC = qryC.ToList();
+			Assert.That(lC, Has.Count.EqualTo(0));
+
+			var qryD = from t in table
+				where t.Id.ToString().ToLower().StartsWith("8f4-53")
+				select t;
+
+			var lD = qryD.ToList();
+			Assert.That(lD, Has.Count.EqualTo(0));
 		}
+
+		[Test]
+		public void GuidToStringIsNull([DataSources] string context)
+		{
+			TableWithGuid[] data = [new ()
+				{
+					Id = TestData.Guid1
+				},
+				new ()
+				{
+					Id           = TestData.Guid2,
+					NullableGuid = TestData.Guid2
+				}];
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			_ = table.Single(x => x.NullableGuid.ToString() == null && x.Id == Sql.Parameter(TestData.Guid1));
+		}
+
 	}
 }
