@@ -219,6 +219,20 @@ namespace LinqToDB.Linq.Translation
 			return factory.Cast(expression, dbDataType);
 		}
 
+		#region String functions
+
+		public static ISqlExpression ToLower(this ISqlExpressionFactory factory, ISqlExpression expression)
+		{
+			return factory.Function(factory.GetDbDataType(expression), PseudoFunctions.TO_LOWER, expression);
+		}
+
+		public static ISqlExpression ToUpper(this ISqlExpressionFactory factory, ISqlExpression expression)
+		{
+			return factory.Function(factory.GetDbDataType(expression), PseudoFunctions.TO_UPPER, expression);
+		}
+
+		#endregion
+
 		#region Predicates
 
 		public static ISqlPredicate Equal(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)

@@ -877,7 +877,25 @@ namespace LinqToDB.SqlProvider
 				return QueryHelper.CreateSqlValue(value, QueryHelper.GetDbDataType(element, _mappingSchema), element.Parameters);
 			}
 
+			newElement = OptimizeFunction(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
 			return element;
+		}
+
+		protected virtual IQueryElement OptimizeFunction(SqlFunction function)
+		{
+			if (function.Parameters.Length == 1 && function.Name is PseudoFunctions.TO_LOWER or PseudoFunctions.TO_UPPER)
+			{
+				if (function.Parameters[0] is SqlFunction { Parameters.Length: 1, Name: PseudoFunctions.TO_LOWER or PseudoFunctions.TO_UPPER } func)
+				{
+					return new SqlFunction(function.SystemType, function.Name, func.Parameters[0]);
+				}
+			}
+
+			return function;
 		}
 
 		protected override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
