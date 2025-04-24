@@ -284,8 +284,8 @@ namespace LinqToDB
 //		[Expression(PN.Oracle, "lower((substr(rawtohex({0}), 7, 2) || substr(rawtohex({0}), 5, 2) || substr(rawtohex({0}), 3, 2) || substr(rawtohex({0}), 1, 2) || '-' || substr(rawtohex({0}), 11, 2) || substr(rawtohex({0}), 9, 2) || '-' || substr(rawtohex({0}), 15, 2) || substr(rawtohex({0}), 13, 2) || '-' || substr(rawtohex({0}), 17, 4) || '-' || substr(rawtohex({0}), 21, 12)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 //		[Expression(PN.ClickHouse, "lower(toString({0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 //		[Expression(PN.SapHana, "Lower(Cast({0} as NVarChar(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
-		[Expression(PN.Sybase, "Lower(Convert(NVarChar(36), {0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
-		[Expression(PN.SqlServer, "LOWER(CAST({0} AS char(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+//		[Expression(PN.Sybase, "Lower(Convert(NVarChar(36), {0}))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
+//		[Expression(PN.SqlServer, "LOWER(CAST({0} AS char(36)))", IsNullable = IsNullableType.IfAnyParameterNullable, PreferServerSide = true)]
 		[Extension("", BuilderType = typeof(GuidToStringBuilder), PreferServerSide = true)]
 #if NET30_OR_GREATER || NETSTANDARD2_1_OR_GREATER
 		[return: NotNullIfNotNull(nameof(guid))]
