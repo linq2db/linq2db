@@ -214,7 +214,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 
 				var dividerExpr = factory.Value(stringDbType, "-");
 
-				var resultExpression = factory.Function(stringDbType, "lower",
+				var resultExpression = factory.ToLower(
 					factory.Concat(
 						SubString(hexExpr, 7, 2),
 						SubString(hexExpr, 5, 2),
