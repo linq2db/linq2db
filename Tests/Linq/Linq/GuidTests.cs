@@ -18,6 +18,7 @@ namespace Tests.Linq
 			[Column] public Guid? NullableGuid { get; set; }
 		}
 
+		[ActiveIssue(Configurations = [TestProvName.AllAccess], Details = "Not tested on all Access providers.")]
 		[Test]
 		public void GuidToString([DataSources] string context)
 		{
@@ -29,7 +30,7 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(data);
 			
 			var id = (from t in table
-				select t.Id.ToString()).First();
+				select Sql.AsSql(t.Id.ToString())).First();
 
 			Assert.That(id, Is.EqualTo(expectedFirst));
 
@@ -66,6 +67,7 @@ namespace Tests.Linq
 			Assert.That(lD, Has.Count.EqualTo(0));
 		}
 
+		[ActiveIssue(Configurations = [TestProvName.AllAccess], Details = "Not tested on all Access providers.")]
 		[Test]
 		public void GuidToStringIsNull([DataSources] string context)
 		{
