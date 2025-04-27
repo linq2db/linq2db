@@ -15,7 +15,7 @@ namespace Default.SqlServer
 		static DataOptions GetSqlServerDataOptions(string? configuration = null)
 		{
 			return _sqlServerDataOptions ??= new DataOptions()
-				.UseConfigurationString(configuration ?? "SqlServerConfig")
+				.UseConfiguration(configuration ?? "SqlServerConfig")
 				.WithOptions<BulkCopyOptions>  (o => o with { BulkCopyTimeout = 60 * 100 })
 				;
 		}

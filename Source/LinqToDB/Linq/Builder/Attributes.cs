@@ -14,7 +14,7 @@ namespace LinqToDB.Linq.Builder
 	// but it's a "Won't fix" C# bug: https://github.com/dotnet/roslyn/issues/4293
 	// Feel free to add more overloads as needed.
 
-	[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Class, Inherited = false)]
 	sealed class BuildsAnyAttribute : Attribute
 	{ }
 

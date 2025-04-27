@@ -314,6 +314,7 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
+      reg import $(System.DefaultWorkingDirectory)/scripts/tls11_disable.reg
       Write-Host "Add baselines changes to commit (index)"
       $output = git add -A
       if ($LASTEXITCODE -ne 0) {

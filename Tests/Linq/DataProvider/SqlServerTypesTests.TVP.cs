@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
@@ -55,7 +53,11 @@ namespace Tests.DataProvider
 				yield return new ParameterFactory("DataTable", _ => GetDataTable());
 
 				// as IEnumerable<SqlDataRecord>
-				yield return new ParameterFactory("SqlDataRecords", _ => _.Connection is Microsoft.Data.SqlClient.SqlConnection ? (object)SqlServerTestUtils.GetSqlDataRecordsMS() : SqlServerTestUtils.GetSqlDataRecords());
+				yield return new ParameterFactory("SqlDataRecords", db =>
+				{
+					var connection = db.OpenDbConnection();
+					return connection is Microsoft.Data.SqlClient.SqlConnection ? (object)SqlServerTestUtils.GetSqlDataRecordsMS() : SqlServerTestUtils.GetSqlDataRecords();
+				});
 
 				// TODO: doesn't work now as DbDataReader converted to Lst<object> of DbDataRecordInternal somewhere in linq2db
 				// before we can pass it to provider
@@ -121,11 +123,9 @@ namespace Tests.DataProvider
 			throw new InvalidOperationException();
 		}
 
-		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => TableValue(null!));
-
 		private static ITable<SqlServerTestUtils.TVPRecord> TableValue(IDataContext ctx, DataParameter p)
 		{
-			return ctx.GetTable<SqlServerTestUtils.TVPRecord>(null, _methodInfo, p);
+			return ctx.TableFromExpression<SqlServerTestUtils.TVPRecord>(() => TableValue(p));
 		}
 
 		[Test]

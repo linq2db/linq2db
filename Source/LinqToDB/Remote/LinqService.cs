@@ -427,7 +427,7 @@ namespace LinqToDB.Remote
 			var columnReaders = new ConvertFromDataReaderExpression.ColumnReader[rd.DataReader!.FieldCount];
 
 			for (var i = 0; i < ret.FieldCount; i++)
-				columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema,
+				columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db.MappingSchema,
 					// converter must be null, see notes above
 					ret.FieldTypes[i], i, converter: null, true);
 
@@ -441,7 +441,7 @@ namespace LinqToDB.Remote
 				{
 					if (!reader.IsDBNull(i))
 					{
-						var value = columnReaders[i].GetValue(reader);
+						var value = columnReaders[i].GetValue(db, reader);
 
 						if (value != null)
 							data[i] = SerializationConverter.Serialize(SerializationMappingSchema, value);

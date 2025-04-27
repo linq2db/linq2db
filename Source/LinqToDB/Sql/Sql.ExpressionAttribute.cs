@@ -161,14 +161,15 @@ namespace LinqToDB
 			/// </summary>
 			public bool IgnoreGenericParameters { get; set; }
 
-			internal  bool? _canBeNull;
+			protected bool? СonfiguredCanBeNull { get; private set; }
 			/// <summary>
-			/// If <c>true</c>, result can be null
+			/// If <c>true</c>, result can be null.
+			/// If value is not set explicitly, nullability calculated based on return type and <see cref="IsNullable"/> value.
 			/// </summary>
 			public    bool   CanBeNull
 			{
-				get => _canBeNull ?? true;
-				set => _canBeNull = value;
+				get => СonfiguredCanBeNull ?? true;
+				set => СonfiguredCanBeNull = value;
 			}
 
 			const  string MatchParamPattern = @"{([0-9a-z_A-Z?]*)(,\s'(.*)')?}";
@@ -385,41 +386,41 @@ namespace LinqToDB
 					{
 						ctx.WriteableValue = (true, ctx.WriteableValue.error);
 
-						var argIdx = int.Parse(v, NumberFormatInfo.InvariantInfo);
-						var idx    = argIdx;
+						var idxInExpr   = int.Parse(v, NumberFormatInfo.InvariantInfo);
+						var idxInMethod = idxInExpr;
 
 						if (ctx.StaticValue.argIndices != null)
 						{
-							if (idx < 0 || idx >= ctx.StaticValue.argIndices.Length)
-								throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong ArgIndices mapping. Index '{idx}' do not fit in range."));
+							if (idxInMethod < 0 || idxInMethod >= ctx.StaticValue.argIndices.Length)
+								throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong ArgIndices mapping. Index '{idxInMethod}' do not fit in range."));
 
-							idx = ctx.StaticValue.argIndices[idx];
+							idxInMethod = ctx.StaticValue.argIndices[idxInMethod];
 						}
 
-						if (idx < 0)
-							throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{idx}' do not fit in range."));
+						if (idxInMethod < 0)
+							throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{idxInMethod}' do not fit in range."));
 
-						while (idx >= ctx.StaticValue.parms.Count)
+						while (idxInExpr >= ctx.StaticValue.parms.Count)
 						{
 							ctx.StaticValue.parms.Add(null);
 						}
 
-						if (ctx.StaticValue.parms[idx] == null)
+						if (ctx.StaticValue.parms[idxInExpr] == null)
 						{
 							ISqlExpression? paramExpr = null;
-							if (argIdx >= ctx.StaticValue.knownExpressions.Count)
+							if (idxInExpr >= ctx.StaticValue.knownExpressions.Count)
 							{
-								var typeIndex = argIdx - ctx.StaticValue.knownExpressions.Count;
+								var typeIndex = idxInExpr - ctx.StaticValue.knownExpressions.Count;
 								if (ctx.StaticValue.genericTypes == null || typeIndex >= ctx.StaticValue.genericTypes.Count || typeIndex < 0)
 								{
-									throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{argIdx}' do not fit in parameters range."));
+									throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{idxInExpr}' do not fit in parameters range."));
 								}
 
 								paramExpr = ctx.StaticValue.genericTypes[typeIndex];
 							}
 							else
 							{
-								var (expression, parameter) = ctx.StaticValue.knownExpressions[argIdx];
+								var (expression, parameter) = ctx.StaticValue.knownExpressions[idxInMethod];
 								if (expression != null)
 								{
 									var converted = ctx.StaticValue.converter(ctx.StaticValue.context, expression, null, ctx.StaticValue.forceInlineParameters || parameter?.DoNotParameterize == true);
@@ -435,7 +436,7 @@ namespace LinqToDB
 								}
 							}
 
-							ctx.StaticValue.parms[idx] = paramExpr;
+							ctx.StaticValue.parms[idxInExpr] = paramExpr;
 						}
 
 						return v;
@@ -557,11 +558,11 @@ namespace LinqToDB
 					(IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |
 					(IsWindowFunction ? SqlFlags.IsWindowFunction : SqlFlags.None),
 					ToParametersNullabilityType(IsNullable),
-					_canBeNull,
+					СonfiguredCanBeNull,
 					parameters!);
 
-				if (_canBeNull != null)
-					sqlExpression.CanBeNull = _canBeNull.Value;
+				if (СonfiguredCanBeNull != null)
+					sqlExpression.CanBeNull = СonfiguredCanBeNull.Value;
 
 				// placeholder will be updated later by concrete path
 				return ExpressionBuilder.CreatePlaceholder(query, sqlExpression, expression);
@@ -576,7 +577,7 @@ namespace LinqToDB
 
 			public override string GetObjectID()
 			{
-				return FormattableString.Invariant($".{Configuration}.{Expression}.{IdentifierBuilder.GetObjectID(ArgIndices)}.{Precedence}.{(ServerSideOnly ? 1 : 0)}.{(PreferServerSide ? 1 : 0)}.{(InlineParameters ? 1 : 0)}.{(ExpectExpression ? 1 : 0)}.{(IsPredicate ? 1 : 0)}.{(IsAggregate ? 1 : 0)}.{(IsWindowFunction ? 1 : 0)}.{(IsPure ? 1 : 0)}.{(int)IsNullable}.{(IgnoreGenericParameters ? 1 : 0)}.{(CanBeNull ? 1 : 0)}.");
+				return FormattableString.Invariant($".{Configuration}.{Expression}.{IdentifierBuilder.GetObjectID(ArgIndices)}.{Precedence}.{(ServerSideOnly ? 1 : 0)}.{(PreferServerSide ? 1 : 0)}.{(InlineParameters ? 1 : 0)}.{(ExpectExpression ? 1 : 0)}.{(IsPredicate ? 1 : 0)}.{(IsAggregate ? 1 : 0)}.{(IsWindowFunction ? 1 : 0)}.{(IsPure ? 1 : 0)}.{(int)IsNullable}.{(IgnoreGenericParameters ? 1 : 0)}.{(СonfiguredCanBeNull switch { null => -1, true => 1, _ => 0 })}.");
 			}
 		}
 	}
