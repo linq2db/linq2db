@@ -773,7 +773,9 @@ namespace LinqToDB.Data
 
 				Apply(dataConnection, options);
 
+#pragma warning disable CS0618 // Type or member is obsolete
 				return () => dataConnection.RetryPolicy = retryPolicy;
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			public static void Apply(DataConnection dataConnection, DataContextOptions options)

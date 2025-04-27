@@ -642,6 +642,7 @@ namespace LinqToDB.Remote
 
 					dataContext._mappingSchema = null;
 
+#pragma warning disable CS0618 // Type or member is obsolete
 					if (options.MappingSchema != null)
 					{
 						dataContext.MappingSchema = options.MappingSchema;
@@ -650,6 +651,7 @@ namespace LinqToDB.Remote
 					{
 						dataContext.MappingSchema = new (dataContext.MappingSchema);
 					}
+#pragma warning restore CS0618 // Type or member is obsolete
 
 					action += () =>
 					{

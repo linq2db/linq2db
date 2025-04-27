@@ -537,7 +537,7 @@ namespace Tests.Infrastructure
 		{
 			using var db = new TestDataConnection();
 			Assert.Throws<LinqToDBException>(
-				() => { using (db.UseOptions(o => o.UseConfigurationString("new config"))) { } },
+				() => { using (db.UseOptions(o => o.UseConfiguration("new config"))) { } },
 				"ConfigurationString cannot be changed.");
 		}
 
@@ -564,7 +564,7 @@ namespace Tests.Infrastructure
 		{
 			using var db = new TestDataConnection();
 			Assert.Throws<LinqToDBException>(
-				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDbConnection(db.Connection)))) { } },
+				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithDbConnection(db.OpenDbConnection())))) { } },
 				"DbConnection cannot be changed.");
 		}
 
@@ -612,7 +612,7 @@ namespace Tests.Infrastructure
 		{
 			using var db = new TestDataConnection();
 			Assert.Throws<LinqToDBException>(
-				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithConnectionFactory(_ => db.Connection)))) { } },
+				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithConnectionFactory(_ => db.OpenDbConnection())))) { } },
 				"ConnectionFactory cannot be changed.");
 		}
 
