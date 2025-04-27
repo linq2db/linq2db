@@ -8,6 +8,7 @@
 
 		<!--published targets-->
 		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net9.0</TargetFrameworks>
 
 		<Title>LINQ to DB Scaffold Framework</Title>
 		<Description>LINQ to DB Scaffold framework is used for database model generation for Linq To DB projects.</Description>

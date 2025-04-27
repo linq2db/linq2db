@@ -96,7 +96,7 @@ namespace LinqToDB.SchemaProvider
 			ExcludedCatalogs      = GetHashSet(options.ExcludedCatalogs, options.StringComparer);
 			GenerateChar1AsString = options.GenerateChar1AsString;
 
-			var dbConnection = dataConnection.Connection;
+			var dbConnection = dataConnection.OpenDbConnection();
 
 			InitProvider(dataConnection, options);
 
@@ -570,8 +570,8 @@ namespace LinqToDB.SchemaProvider
 			).ToList();
 		}
 
-		protected virtual string GetDataSourceName(DataConnection dbConnection) => dbConnection.Connection.DataSource;
-		protected virtual string GetDatabaseName  (DataConnection dbConnection) => dbConnection.Connection.Database;
+		protected virtual string GetDataSourceName(DataConnection dbConnection) => dbConnection.OpenDbConnection().DataSource;
+		protected virtual string GetDatabaseName  (DataConnection dbConnection) => dbConnection.OpenDbConnection().Database;
 
 		protected virtual void InitProvider(DataConnection dataConnection, GetSchemaOptions options)
 		{
@@ -584,7 +584,7 @@ namespace LinqToDB.SchemaProvider
 		/// <returns>List of database data types.</returns>
 		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			DataTypesSchema = dataConnection.Connection.GetSchema("DataTypes");
+			DataTypesSchema = dataConnection.OpenDbConnection().GetSchema("DataTypes");
 
 			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo

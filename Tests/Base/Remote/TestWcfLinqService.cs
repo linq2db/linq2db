@@ -11,7 +11,7 @@ using LinqToDB.Remote.Wcf;
 namespace Tests.Remote
 {
 
-	internal sealed class TestWcfLinqService : WcfLinqService
+	internal sealed class TestWcfLinqService : WcfLinqService, ITestLinqService
 	{
 		private readonly LinqService    _linqService;
 
@@ -21,7 +21,7 @@ namespace Tests.Remote
 			set => _linqService.AllowUpdates = value;
 		}
 
-		public MappingSchema? MappingSchema
+		MappingSchema? ITestLinqService.MappingSchema
 		{
 			get => _linqService.MappingSchema;
 			set => _linqService.MappingSchema = value;
