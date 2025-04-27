@@ -40,8 +40,23 @@ namespace LinqToDB.Tools
 
 			if (connection != null)
 			{
-				AddTag(ActivityTagID.DataSourceName, connection.DataSource);
-				AddTag(ActivityTagID.DatabaseName,   connection.Database);
+				// those properties could throw for some providers when connection failed to initialize, e.g. due to bad connection string
+				// Observed for MySqlConnector and Sap.Data.*
+				try
+				{
+					AddTag(ActivityTagID.DataSourceName, connection.DataSource);
+				}
+				catch
+				{
+				}
+
+				try
+				{
+					AddTag(ActivityTagID.DatabaseName,   connection.Database);
+				}
+				catch
+				{
+				}
 			}
 
 			if (command != null)

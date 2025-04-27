@@ -782,6 +782,36 @@ namespace LinqToDB.Linq.Builder
 				return translated;
 			}
 
+			if (IsSqlOrExpression() && node.Method.Name == nameof(Sql.Parameter) && node.Method.DeclaringType == typeof(Sql))
+			{
+				using var saveFlags = UsingBuildFlags(BuildFlags.ForceParameter);
+
+				var translated = Visit(node.Arguments[0]);
+
+				translated = RegisterTranslatedSql(translated, node);
+
+				return translated;
+			}
+
+			if (IsSqlOrExpression() && node.Method.Name == nameof(Sql.Constant) && node.Method.DeclaringType == typeof(Sql))
+			{
+				using var saveFlags = UsingBuildFlags(BuildFlags.ForceParameter);
+
+				if (HandleValue(node.Arguments[0], out var translated))
+				{
+					if (translated is SqlPlaceholderExpression { Sql: SqlParameter sqlParameter })
+					{
+						sqlParameter.IsQueryParameter = false;
+					}
+
+					translated = RegisterTranslatedSql(translated, node);
+
+					return translated;
+				}
+
+				return node;
+			}
+
 			if (Builder.IsAssociation(node, out _))
 			{
 				Expression? root;
@@ -1075,6 +1105,14 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return base.VisitChangeTypeExpression(node);
+		}
+
+		protected override Expression VisitInvocation(InvocationExpression node)
+		{
+			if (IsSqlOrExpression() && HandleValue(node, out var translated))
+				return Visit(translated);
+
+			return base.VisitInvocation(node);
 		}
 
 		public bool HandleExtension(IBuildContext context, Expression expr, [NotNullWhen(true)] out Sql.ExpressionAttribute? attribute, [NotNullWhen(true)] out Expression? translated)
@@ -1599,8 +1637,7 @@ namespace LinqToDB.Linq.Builder
 				return associationExpression;
 			}
 
-			LoadWithInfo? loadWith     = null;
-			MemberInfo[]? loadWithPath = null;
+			LoadWithEntity? loadWith     = null;
 
 			var   prevIsOuter = _buildFlags.HasFlag(BuildFlags.ForceOuter);
 			bool? isOptional  = prevIsOuter ? true : null;
@@ -1612,8 +1649,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (table != null)
 			{
+				table.LoadWithRoot ??= new();
 				loadWith = table.LoadWithRoot;
-				loadWithPath = table.LoadWithPath;
 				if (table.IsOptional)
 					isOptional = true;
 			}
@@ -1639,7 +1676,7 @@ namespace LinqToDB.Linq.Builder
 			var modifier = associationRoot.BuildContext.TranslationModifier;
 
 			var association = AssociationHelper.BuildAssociationQuery(Builder, rootContext, memberInfo,
-				associationDescriptor, notNullCheck, !associationDescriptor.IsList, modifier, loadWith, loadWithPath, ref isOptional);
+				associationDescriptor, notNullCheck, !associationDescriptor.IsList, modifier, loadWith, ref isOptional);
 
 			associationExpression = association;
 
@@ -2215,7 +2252,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override Expression VisitConstant(ConstantExpression node)
 		{
-			if (node.Type == typeof(MemberInfo[]) || node.Type == typeof(LoadWithInfo))
+			if (node.Type == typeof(MemberInfo[]) || node.Type == typeof(LoadWithEntity))
 				return node;
 
 			if (IsSqlOrExpression())

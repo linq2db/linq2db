@@ -64,8 +64,11 @@ namespace Tests.Infrastructure
 
 			Assert.That(s1, Is.Null);
 
+			var connection = db.TryGetDbConnection();
+			Assert.That(connection, Is.Not.Null);
+
 			using var db1 = new TestDataConnection(db.Options
-				.UseConnection   (db.DataProvider, db.Connection, false)
+				.UseConnection   (db.DataProvider, connection, false)
 				.UseMappingSchema(db.MappingSchema)
 				.UseTracing(ti => s1 = ti.SqlText));
 

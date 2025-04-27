@@ -1,10 +1,7 @@
-﻿using System.Reflection;
-
-namespace LinqToDB.Linq.Builder
+﻿namespace LinqToDB.Linq.Builder
 {
 	interface ILoadWithContext : IBuildContext
 	{
-		public LoadWithInfo  LoadWithRoot { get; set; }
-		public MemberInfo[]? LoadWithPath { get; set; }
+		public LoadWithEntity? LoadWithRoot { get; set; }
 	}
 }

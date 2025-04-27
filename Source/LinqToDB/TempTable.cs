@@ -23,8 +23,8 @@ namespace LinqToDB
 	// TODO: v6: obsolete methods with setTable parameter
 	// IT: ??? how to use anonymous types then?
 	/// <summary>
-	/// Temporary table. Temporary table is a table, created when you create instance of this class and deleted when
-	/// you dispose it. It uses regular tables even if underlying database supports temporary tables concept.
+	/// Temporary table. Temporary table is a table, created when you create instance of this class and deleted when you dispose it.
+	/// It uses regular tables, unless option <see cref="TableOptions.IsTemporary"/> is specified and underlying database supports temporary tables.
 	/// </summary>
 	/// <typeparam name="T">Table record mapping class.</typeparam>
 	[PublicAPI]

@@ -485,12 +485,14 @@ namespace LinqToDB.Data
 		{
 			get
 			{
+				CheckAndThrowOnDisposed();
+
 				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
 				{
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
-						.Add(ConfigurationString ?? ConnectionString ?? Connection.ConnectionString)
+						.Add(ConfigurationString)
 						.Add(Options)
 						.Add(GetType())
 						.CreateID();
@@ -669,7 +671,6 @@ namespace LinqToDB.Data
 
 				IAsyncDbConnection WrapConnection(DbConnection connection)
 				{
-					// TODO: IT Look into.
 					return connection is IAsyncDbConnection asyncDbConnection
 						? asyncDbConnection
 						: AsyncFactory.CreateAndSetDataContext(dataConnection, connection);
@@ -761,7 +762,9 @@ namespace LinqToDB.Data
 
 			public static void Apply(DataConnection dataConnection, RetryPolicyOptions options)
 			{
+#pragma warning disable CS0618 // Type or member is obsolete
 				dataConnection.RetryPolicy = options.RetryPolicy ?? options.Factory?.Invoke(dataConnection);
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			public static Action? Reapply(DataConnection dataConnection, RetryPolicyOptions options, RetryPolicyOptions? previousOptions)
@@ -822,11 +825,16 @@ namespace LinqToDB.Data
 
 			public static void Apply(DataConnection dataConnection, QueryTraceOptions options)
 			{
+#pragma warning disable CS0618 // Type or member is obsolete
 				dataConnection.OnTraceConnection        = options.OnTrace    ?? DefaultOnTraceConnection;
 				dataConnection.WriteTraceLineConnection = options.WriteTrace ?? WriteTraceLine;
-				dataConnection._traceSwitchConnection   = options.TraceLevel != null
-					? new ("DataConnection", "DataConnection trace switch") { Level = options.TraceLevel.Value }
-					: null;
+				dataConnection._traceSwitchConnection   =
+					options.TraceSwitch != null
+						? dataConnection.TraceSwitchConnection = options.TraceSwitch
+						: options.TraceLevel != null
+							? new ("DataConnection", "DataConnection trace switch") { Level = options.TraceLevel.Value }
+							: null;
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			public static Action Reapply(DataConnection dataConnection, QueryTraceOptions options, QueryTraceOptions? previousOptions)
@@ -839,9 +847,11 @@ namespace LinqToDB.Data
 
 				return () =>
 				{
+#pragma warning disable CS0618 // Type or member is obsolete
 					dataConnection.OnTraceConnection        = onTraceConnection;
 					dataConnection.WriteTraceLineConnection = writeTraceLineConnection;
 					dataConnection._traceSwitchConnection   = traceSwitchConnection;
+#pragma warning restore CS0618 // Type or member is obsolete
 				};
 			}
 		}

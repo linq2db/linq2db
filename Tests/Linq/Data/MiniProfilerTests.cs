@@ -74,7 +74,7 @@ namespace Tests.Data
 		{
 			public MiniProfilerDataContext(string configurationString)
 #pragma warning disable CA2000 // Dispose objects before losing scope
-				: base(GetDataProvider(), GetConnection(configurationString)) { }
+				: base(new DataOptions().UseConnection(GetDataProvider(), GetConnection(configurationString))) { }
 #pragma warning restore CA2000 // Dispose objects before losing scope
 
 			private static IDataProvider GetDataProvider()
@@ -108,21 +108,25 @@ namespace Tests.Data
 		[Test]
 		public void TestAccessOleDb([IncludeDataSources(TestProvName.AllAccessOleDb)] string context, [Values] ConnectionType type)
 		{
+			var trace = string.Empty;
+
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			var connectionString = DataConnection.GetConnectionString(context);
+
 #if NETFRAMEWORK
-			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: connectionString), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
-#else
-			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: connectionString), context, type, "System.Data.OleDb.OleDbConnection, System.Data.OleDb"))
-#endif
-			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
+			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: connectionString), context, type, cs => new System.Data.OleDb.OleDbConnection(cs), onTrace: ti =>
 				{
 					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
 						trace = ti.SqlText;
-				};
-
+				}))
+#else
+			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: connectionString), context, type, "System.Data.OleDb.OleDbConnection, System.Data.OleDb", onTrace: ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+#endif
+			{
 				Assert.Multiple(() =>
 				{
 					// assert provider-specific parameter type name
@@ -166,21 +170,24 @@ namespace Tests.Data
 		[Test]
 		public void TestAccessODBC([IncludeDataSources(TestProvName.AllAccessOdbc)] string context, [Values] ConnectionType type)
 		{
+			var trace = string.Empty;
+
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			var connectionString = DataConnection.GetConnectionString(context);
 #if NETFRAMEWORK
-			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.ODBC, connectionString: connectionString), context, type, cs => new System.Data.Odbc.OdbcConnection(cs)))
-#else
-			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.ODBC, connectionString: connectionString), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc"))
-#endif
-			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
+			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.ODBC, connectionString: connectionString), context, type, cs => new System.Data.Odbc.OdbcConnection(cs), onTrace: ti =>
 				{
 					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
 						trace = ti.SqlText;
-				};
-
+				}))
+#else
+			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.ODBC, connectionString: connectionString), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc", onTrace: ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+#endif
+			{
 				Assert.Multiple(() =>
 				{
 					// assert provider-specific parameter type name
@@ -218,16 +225,14 @@ namespace Tests.Data
 			}
 
 			var provider = (FirebirdDataProvider)Activator.CreateInstance(providerType)!;
+			var trace = string.Empty;
 
-			using (var db = CreateDataConnection(provider, context, type, "FirebirdSql.Data.FirebirdClient.FbConnection, FirebirdSql.Data.FirebirdClient"))
+			using (var db = CreateDataConnection(provider, context, type, "FirebirdSql.Data.FirebirdClient.FbConnection, FirebirdSql.Data.FirebirdClient", onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				Assert.Multiple(() =>
 				{
 					// assert provider-specific parameter type name
@@ -262,16 +267,15 @@ namespace Tests.Data
 		[Test]
 		public void TestSqlCe([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] ConnectionType type)
 		{
-			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new SqlCeDataProvider(), context, type, DbProviderFactories.GetFactory("System.Data.SqlServerCe.4.0").GetType().Assembly.GetType("System.Data.SqlServerCe.SqlCeConnection")!))
-			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
+			var trace = string.Empty;
 
+			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			using (var db = CreateDataConnection(new SqlCeDataProvider(), context, type, DbProviderFactories.GetFactory("System.Data.SqlServerCe.4.0").GetType().Assembly.GetType("System.Data.SqlServerCe.SqlCeConnection")!, onTrace: ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				Assert.Multiple(() =>
 				{
 					// assert provider-specific parameter type name
@@ -456,17 +460,15 @@ namespace Tests.Data
 
 			var provider = (MySqlDataProvider)Activator.CreateInstance(providerType)!;
 
+			var trace = string.Empty;
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			// AllowZeroDateTime is to enable MySqlDateTime type
-			using (var db = CreateDataConnection(provider, context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(provider, context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true", onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				// test provider-specific type readers
 				// (using both SetProviderField and SetToTypeField registrations)
 				var decValue = 123.456m;
@@ -541,15 +543,13 @@ namespace Tests.Data
 
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			var connectionTypeName = "MySqlConnector.MySqlConnection, MySqlConnector";
-			using (var db = CreateDataConnection(provider, context, type, connectionTypeName, ";AllowZeroDateTime=true"))
+			var trace = string.Empty;
+			using (var db = CreateDataConnection(provider, context, type, connectionTypeName, ";AllowZeroDateTime=true", onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				// test provider-specific type readers
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 				Assert.That(db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime(), Is.EqualTo(dtValue));
@@ -645,15 +645,13 @@ namespace Tests.Data
 		public void TestDB2([IncludeDataSources(ProviderName.DB2)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new TestDB2LUWDataProvider(), context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}"))
+			var trace = string.Empty;
+			using (var db = CreateDataConnection(new TestDB2LUWDataProvider(), context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}", onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				// we have DB2 tests for all types, so here we will test only one type (they all look the same)
 				// test provider-specific type readers
 				var longValue = -12335L;
@@ -726,21 +724,23 @@ namespace Tests.Data
 			var tvpSupported = version >= SqlServerVersion.v2008;
 			var hierarchyidSupported = version >= SqlServerVersion.v2008;
 
+			var trace = string.Empty;
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			using (new DisableBaseline("TODO: debug reason for inconsistent bulk copy sql"))
 #if NETFRAMEWORK
-			using (var db = CreateDataConnection(new SqlServerTests.TestSqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, typeof(SqlConnection)))
-#else
-			using (var db = CreateDataConnection(new SqlServerTests.TestSqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, "System.Data.SqlClient.SqlConnection, System.Data.SqlClient"))
-#endif
-			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
+			using (var db = CreateDataConnection(new SqlServerTests.TestSqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, typeof(SqlConnection), onTrace: ti =>
 				{
 					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
 						trace = ti.SqlText;
-				};
-
+				}))
+#else
+			using (var db = CreateDataConnection(new SqlServerTests.TestSqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, "System.Data.SqlClient.SqlConnection, System.Data.SqlClient", onTrace: ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+#endif
+			{
 				var testValue = -1.2335m;
 				Assert.That(db.Execute<SqlMoney>("SELECT Cast(@p as money)", new DataParameter("@p", testValue, DataType.Money)).Value, Is.EqualTo(testValue));
 				var rawValue = db.Execute<object>("SELECT Cast(@p as money)", new DataParameter("@p", testValue, DataType.Money));
@@ -826,7 +826,9 @@ namespace Tests.Data
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
 
 				// test MARS not set
+#pragma warning disable CS0618 // Type or member is obsolete
 				Assert.That(db.IsMarsEnabled, Is.EqualTo(cs.ToLowerInvariant().Contains("multipleactiveresultsets=true")));
+#pragma warning restore CS0618 // Type or member is obsolete
 
 				// test server version
 				using (var cn = ((SqlServerDataProvider)db.DataProvider).Adapter.CreateConnection(cs))
@@ -914,16 +916,14 @@ namespace Tests.Data
 			var tvpSupported = version >= SqlServerVersion.v2008;
 
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			var trace = string.Empty;
 			using (new DisableBaseline("TODO: debug reason for inconsistent bulk copy sql"))
-			using (var db = CreateDataConnection(new SqlServerTests.TestSqlServerDataProvider(providerName, version, SqlServerProvider.MicrosoftDataSqlClient), context, type, "Microsoft.Data.SqlClient.SqlConnection, Microsoft.Data.SqlClient"))
+			using (var db = CreateDataConnection(new SqlServerTests.TestSqlServerDataProvider(providerName, version, SqlServerProvider.MicrosoftDataSqlClient), context, type, "Microsoft.Data.SqlClient.SqlConnection, Microsoft.Data.SqlClient", onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				var testValue = -1.2335m;
 				Assert.That(db.Execute<SqlMoney>("SELECT Cast(@p as money)", new DataParameter("@p", testValue, DataType.Money)).Value, Is.EqualTo(testValue));
 				var rawValue = db.Execute<object>("SELECT Cast(@p as money)", new DataParameter("@p", testValue, DataType.Money));
@@ -1005,7 +1005,9 @@ namespace Tests.Data
 				var cs = DataConnection.GetConnectionString(GetProviderName(context, out var _));
 
 				// test MARS not set
+#pragma warning disable CS0618 // Type or member is obsolete
 				Assert.That(db.IsMarsEnabled, Is.EqualTo(cs.ToLowerInvariant().Contains("multipleactiveresultsets=true")));
+#pragma warning restore CS0618 // Type or member is obsolete
 
 				// test server version
 				using (var cn = ((SqlServerDataProvider)db.DataProvider).Adapter.CreateConnection(cs))
@@ -1083,38 +1085,34 @@ namespace Tests.Data
 		public async Task TestSapHanaNative([IncludeDataSources(ProviderName.SapHanaNative)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-#if NETFRAMEWORK
-			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, DbProviderFactories.GetFactory("Sap.Data.Hana").GetType().Assembly.GetType("Sap.Data.Hana.HanaConnection")!))
-#else
-			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, "Sap.Data.Hana.HanaConnection, Sap.Data.Hana.Core.v2.1"))
-#endif
-			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
+			var trace = string.Empty;
 
+			var connectionType = ((SapHanaDataProvider)SapHanaTools.GetDataProvider(SapHanaProvider.Unmanaged)).Adapter.ConnectionType;
+			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, connectionType, onTrace: ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				var binaryValue = new byte[] { 1, 2, 3 };
 				Assert.Multiple(() =>
 				{
 					Assert.That(db.Execute<byte[]>("SELECT cast(:p as blob) from dummy", new DataParameter("p", binaryValue, DataType.Image)), Is.EqualTo(binaryValue));
-					Assert.That(trace, Does.Contain("DECLARE @p Binary("));
+					Assert.That(trace, Does.Contain("DECLARE @p Blob("));
 					Assert.That(db.Execute<byte[]>("SELECT cast(:p as varbinary) from dummy", new DataParameter("p", binaryValue, DataType.Binary)), Is.EqualTo(binaryValue));
 				});
-				Assert.That(trace, Does.Contain("DECLARE @p Binary("));
+				Assert.That(trace, Does.Contain("DECLARE @p VarBinary("));
 				var textValue = "test";
 				Assert.Multiple(() =>
 				{
 					Assert.That(db.Execute<string>("SELECT cast(:p as text) from dummy", new DataParameter("p", textValue, DataType.Text)), Is.EqualTo(textValue));
-					Assert.That(trace, Does.Contain("DECLARE @p NVarChar("));
+					Assert.That(trace, Does.Contain("DECLARE @p Text("));
 				});
 				var ntextValue = "тест";
 				Assert.Multiple(() =>
 				{
 					Assert.That(db.Execute<string>("SELECT cast(:p as nclob) from dummy", new DataParameter("p", ntextValue, DataType.NText)), Is.EqualTo(ntextValue));
-					Assert.That(trace, Does.Contain("DECLARE @p  -- Xml"));
+					Assert.That(trace, Does.Contain("DECLARE @p NClob"));
 				});
 
 				// bulk copy without and with transaction
@@ -1196,16 +1194,14 @@ namespace Tests.Data
 		[Test]
 		public void TestSybaseNative([IncludeDataSources(ProviderName.Sybase)] string context, [Values] ConnectionType type)
 		{
+			var trace = string.Empty;
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(SybaseTools.GetDataProvider(SybaseProvider.Unmanaged), context, type, DbProviderFactories.GetFactory("Sybase.Data.AseClient").GetType().Assembly.GetType("Sybase.Data.AseClient.AseConnection")!))
+			using (var db = CreateDataConnection(SybaseTools.GetDataProvider(SybaseProvider.Unmanaged), context, type, DbProviderFactories.GetFactory("Sybase.Data.AseClient").GetType().Assembly.GetType("Sybase.Data.AseClient.AseConnection")!, onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				var ntextValue = "тест";
 				Assert.Multiple(() =>
 				{
@@ -1254,16 +1250,14 @@ namespace Tests.Data
 		[Test]
 		public void TestSybaseManaged([IncludeDataSources(ProviderName.SybaseManaged)] string context, [Values] ConnectionType type)
 		{
+			var trace = string.Empty;
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(SybaseTools.GetDataProvider(SybaseProvider.DataAction), context, type, "AdoNetCore.AseClient.AseConnection, AdoNetCore.AseClient"))
+			using (var db = CreateDataConnection(SybaseTools.GetDataProvider(SybaseProvider.DataAction), context, type, "AdoNetCore.AseClient.AseConnection, AdoNetCore.AseClient", onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				var ntextValue = "тест";
 				Assert.Multiple(() =>
 				{
@@ -1281,15 +1275,13 @@ namespace Tests.Data
 		{
 			var unmapped  = type == ConnectionType.MiniProfilerNoMappings;
 			var provider  = new TestInformixDataProvider(ProviderName.Informix, InformixProvider.Informix);
-			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.Informix.IfxConnection, IBM.Data.Informix"))
+			var trace = string.Empty;
+			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.Informix.IfxConnection, IBM.Data.Informix", onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				// IfxType type name test
 				try
 				{
@@ -1375,17 +1367,15 @@ namespace Tests.Data
 		[Test]
 		public void TestInformixDB2([IncludeDataSources(ProviderName.InformixDB2)] string context, [Values] ConnectionType type)
 		{
+			var trace = string.Empty;
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			var provider = new TestInformixDataProvider(ProviderName.InformixDB2, InformixProvider.DB2);
-			using (var db = CreateDataConnection(provider, context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}"))
+			using (var db = CreateDataConnection(provider, context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}", onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				// DB2Type type name test
 				try
 				{
@@ -1458,15 +1448,13 @@ namespace Tests.Data
 				connectionType = ((OracleDataProvider)db.DataProvider).Adapter.ConnectionType;
 			}
 
-			using (var db = CreateDataConnection(provider, context, type, connectionType))
+			var trace = string.Empty;
+			using (var db = CreateDataConnection(provider, context, type, connectionType, onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				var commandInterceptor = new SaveWrappedCommandInterceptor(wrapped);
 				db.AddInterceptor(commandInterceptor);
 
@@ -1507,7 +1495,7 @@ namespace Tests.Data
 				//schema.DataSource not asserted, as it returns db hostname
 
 				// dbcommand properties
-				db.DisposeCommand();
+				//db.DisposeCommand();
 
 				db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
 
@@ -1563,15 +1551,13 @@ namespace Tests.Data
 			using (var db = GetDataConnection(context))
 				provider = new OracleTests.TestOracleDataProvider(db.DataProvider.Name, ((OracleDataProvider)db.DataProvider).Provider, ((OracleDataProvider)db.DataProvider).Version);
 
-			using (var db = CreateDataConnection(provider, context, type, "Oracle.ManagedDataAccess.Client.OracleConnection, Oracle.ManagedDataAccess"))
+			var trace = string.Empty;
+			using (var db = CreateDataConnection(provider, context, type, "Oracle.ManagedDataAccess.Client.OracleConnection, Oracle.ManagedDataAccess", onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				var commandInterceptor = new SaveWrappedCommandInterceptor(wrapped);
 				db.AddInterceptor(commandInterceptor);
 
@@ -1618,7 +1604,7 @@ namespace Tests.Data
 				//schema.DataSource not asserted, as it returns db hostname
 
 				// dbcommand properties
-				db.DisposeCommand();
+				//db.DisposeCommand();
 
 				// starting from v23 those properties available only on non-disposed command
 				void assertCommand(DbCommand command)
@@ -1683,15 +1669,13 @@ namespace Tests.Data
 			using (var db = GetDataConnection(context))
 				provider = new OracleTests.TestOracleDataProvider(db.DataProvider.Name, ((OracleDataProvider)db.DataProvider).Provider, ((OracleDataProvider)db.DataProvider).Version);
 
-			using (var db = CreateDataConnection(provider, context, type, "Devart.Data.Oracle.OracleConnection, Devart.Data.Oracle"))
+			var trace = string.Empty;
+			using (var db = CreateDataConnection(provider, context, type, "Devart.Data.Oracle.OracleConnection, Devart.Data.Oracle", onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				var commandInterceptor = new SaveWrappedCommandInterceptor(wrapped);
 				db.AddInterceptor(commandInterceptor);
 
@@ -1735,7 +1719,7 @@ namespace Tests.Data
 					TestBulkCopy();
 
 				// dbcommand properties
-				db.DisposeCommand();
+				//db.DisposeCommand();
 
 				db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
 
@@ -1790,18 +1774,16 @@ namespace Tests.Data
 			}
 
 			var provider = (PostgreSQLDataProvider)Activator.CreateInstance(providerType)!;
+			var trace = string.Empty;
 
-			using (var db = CreateDataConnection(provider, context, type, "Npgsql.NpgsqlConnection, Npgsql"))
+			using (var db = CreateDataConnection(provider, context, type, "Npgsql.NpgsqlConnection, Npgsql", onTrace: ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
 			{
 				// needed for proper AllTypes columns mapping
 				db.AddMappingSchema(new MappingSchema(context));
-
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
 
 				var jsonValue = /*lang=json,strict*/ "{ \"x\": 1 }";
 				Assert.Multiple(() =>
@@ -1959,15 +1941,13 @@ namespace Tests.Data
 			using (var db = GetDataConnection(context))
 				provider = new TestClickHouseDataProvider(db.DataProvider.Name, ((ClickHouseDataProvider)db.DataProvider).Provider);
 
-			using (var db = CreateDataConnection(provider, context, type, provider.Adapter.ConnectionType))
+			var trace = string.Empty;
+			using (var db = CreateDataConnection(provider, context, type, provider.Adapter.ConnectionType, onTrace: ti =>
 			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			}))
+			{
 				// native bulk copy not supported for mysql interface
 				if (!context.IsAnyOf(ProviderName.ClickHouseMySql))
 				{
@@ -2033,19 +2013,30 @@ namespace Tests.Data
 			MiniProfilerNoMappings
 		}
 
-		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Type connectionType, string? csExtra = null)
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Type connectionType, string? csExtra = null, Action<TraceInfo>? onTrace = null)
 		{
-			return CreateDataConnection(provider, context, type, cs => (DbConnection)Activator.CreateInstance(connectionType, cs)!, csExtra);
+			return CreateDataConnection(provider, context, type, cs => (DbConnection)Activator.CreateInstance(connectionType, cs)!, csExtra, onTrace: onTrace);
 		}
 
-		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, string connectionTypeName, string? csExtra = null)
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, string connectionTypeName, string? csExtra = null, Action<TraceInfo>? onTrace = null)
 		{
-			return CreateDataConnection(provider, context, type, cs => (DbConnection)Activator.CreateInstance(Type.GetType(connectionTypeName, true)!, cs)!, csExtra);
+			return CreateDataConnection(provider, context, type, cs => (DbConnection)Activator.CreateInstance(Type.GetType(connectionTypeName, true)!, cs)!, csExtra, onTrace: onTrace);
 		}
 
-		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, DbConnection> connectionFactory, string? csExtra = null, Func<DataConnection, IRetryPolicy?>? retryPolicyFactory = null)
+		private DataConnection CreateDataConnection(
+			IDataProvider provider,
+			string context,
+			ConnectionType type,
+			Func<string, DbConnection> connectionFactory,
+			string? csExtra = null,
+			Func<DataConnection, IRetryPolicy?>? retryPolicyFactory = null,
+			Action<TraceInfo>? onTrace = null)
 		{
-			var db = new DataConnection(new DataOptions().UseConnectionFactory(provider, options =>
+			var options = new DataOptions();
+			if (onTrace != null)
+				options = options.UseTracing(onTrace);
+
+			var db = new DataConnection(options.UseConnectionFactory(provider, options =>
 			{
 				// don't create connection using provider, or it will initialize types
 				var cn = connectionFactory(DataConnection.GetConnectionString(context) + csExtra);
