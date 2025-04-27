@@ -219,7 +219,7 @@ namespace LinqToDB.SqlQuery
 						{
 							var fieldIndex = tableLikeSource.SourceFields.IndexOf(element);
 							if (fieldIndex < 0)
-								throw new InvalidOperationException("Invalid field field for SqlTableLikeSource");
+								throw new InvalidOperationException($"Invalid field for {nameof(SqlTableLikeSource)}");
 							var fieldExpression = tableLikeSource.SourceQuery.Select.Columns[fieldIndex].Expression;
 							return Visit(fieldExpression);
 						}
