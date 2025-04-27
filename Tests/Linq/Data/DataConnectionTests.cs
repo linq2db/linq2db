@@ -41,8 +41,8 @@ namespace Tests.Data
 
 				Assert.Multiple(() =>
 				{
-					Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
-					Assert.That(conn.ConfigurationString, Is.Null);
+					Assert.That(connection.State,         Is.EqualTo(ConnectionState.Open));
+					Assert.That(conn.ConfigurationString, Is.EqualTo(context));
 				});
 			}
 		}
