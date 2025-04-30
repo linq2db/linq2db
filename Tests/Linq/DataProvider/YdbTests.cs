@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.DataProvider.Ydb;
 
 using NUnit.Framework;
@@ -31,5 +29,19 @@ namespace Tests.DataProvider
 			});
 		}
 
+		[Test]
+		public void MappingSchema_ShouldMapBasicDotNetTypes()
+		{
+			var schema = YdbMappingSchema.Instance;
+			Assert.That(schema, Is.Not.Null);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(schema.GetDataType(typeof(string)).Type.DataType, Is.EqualTo(DataType.VarChar));
+				Assert.That(schema.GetDataType(typeof(bool)).Type.DataType, Is.EqualTo(DataType.Boolean));
+				Assert.That(schema.GetDataType(typeof(Guid)).Type.DataType, Is.EqualTo(DataType.Guid));
+				Assert.That(schema.GetDataType(typeof(byte[])).Type.DataType, Is.EqualTo(DataType.VarBinary));
+			});
+		}
 	}
 }
