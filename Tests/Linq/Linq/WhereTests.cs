@@ -2410,5 +2410,41 @@ namespace Tests.Linq
 			Assert.That(db.LastQuery, Does.Contain(" = "));
 			Assert.That(db.LastQuery, Does.Contain("IS NULL"));
 		}
+
+		[Test]
+		public void PredicateOptimization_Exception([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			int? p1 = 1;
+			int? p2 = 2;
+			int? p3 = 3;
+			int? p4 = null;
+
+			_ = db.Person.Where(
+				p =>
+						(p1.HasValue && p1.Value == 6 && p2.HasValue && p2.Value == p.ID)
+
+						|| (p1.HasValue && p1.Value == 5 && p3.HasValue && p3.Value == p.ID)
+
+						|| (p1.HasValue
+							&& p1.Value == 7
+							&& ((p.FirstName == p.LastName && p.FirstName == p.MiddleName) || (p.FirstName == p.MiddleName && p.FirstName == p.FirstName)))
+
+						|| (p1.HasValue && p1.Value == 8
+							&& ((p.FirstName == p.LastName && p.FirstName == p.MiddleName) || (p.FirstName == p.MiddleName && p.FirstName == p.FirstName)))
+
+						|| (p1.HasValue && p1.Value == 2
+							&& ((p.FirstName == p.LastName && p.FirstName == p.MiddleName) || (p.FirstName == p.MiddleName && p.FirstName == p.FirstName)))
+
+						|| (p1.HasValue && p1.Value == 3)
+
+						|| (p1.HasValue && p1.Value == 4
+							&& ((p.FirstName == p.LastName && p.FirstName == p.MiddleName) || (p.FirstName == p.MiddleName && p.FirstName == p.FirstName)))
+
+						|| (p1.HasValue && p1.Value == 1
+							&& ((p4 <= p.ID && p.ID <= p4) || (p4 <= p.ID && p.ID <= p4))))
+				.ToArray();
+		}
 	}
 }
