@@ -139,6 +139,37 @@ namespace Tests.xUpdate
 				Assert.That(hasRecord, Is.True);
 			}
 		}
+		
+		[Test]
+		public async Task MergeWithOutputWithoutOldAsync([IncludeDataSources(true, OUTPUT_WITH_ACTION)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var outputRows = table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutputAsync((a, deleted, inserted) => new {a, inserted});
+
+				var cnt = 0;
+				await foreach (var record in outputRows)
+				{
+					cnt++;
+
+					record.a.Should().Be("INSERT");
+
+					record.inserted.Id.Should().Be(5);
+					record.inserted.Field1.Should().Be(10);
+				}
+
+				Assert.That(cnt, Is.EqualTo(1));
+			}
+		}
 
 		[Test]
 		public void MergeWithOutputProjected([IncludeDataSources(true, OUTPUT_WITH_ACTION)] string context)
