@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider.Ydb
 		static YdbProviderAdapter? _instance;
 
 		public const string AssemblyName    = "Ydb.Sdk";
-		public const string ClientNamespace = "Ydb";
+		public const string ClientNamespace = "Ydb.Sdk.Ado";
 		internal Func<DbConnection, string, YdbBinaryImporter>? BeginBinaryImport { get; }
 		internal Func<DbConnection, string, CancellationToken, Task<YdbBinaryImporter>>? BeginBinaryImportAsync { get; }
 
