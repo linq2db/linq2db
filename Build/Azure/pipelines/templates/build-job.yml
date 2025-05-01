@@ -8,7 +8,7 @@ parameters:
 jobs:
 - job: build_job
   pool:
-    vmImage: 'windows-2022'
+    vmImage: 'windows-2025'
   displayName: 'Build'
 
   steps:

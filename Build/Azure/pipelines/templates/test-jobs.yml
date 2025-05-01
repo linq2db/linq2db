@@ -12,7 +12,7 @@ jobs:
 ##############################################################################################
 - job: create_baselines_branch
   pool:
-    vmImage: 'windows-2022'
+    vmImage: 'windows-2025'
   displayName: 'Create Test Baselines Branch'
   dependsOn: build_job
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.with_baselines }}, 'true'))
@@ -128,11 +128,11 @@ jobs:
 
 ###################
 #  Tests: Windows #
-#  Windows 2022   #
+#  Windows 2025   #
 ###################
 - job: test_windows_job
   pool:
-    vmImage: 'windows-2022'
+    vmImage: 'windows-2025'
 
   displayName: 'Tests: Windows'
   dependsOn: create_baselines_branch
@@ -240,7 +240,7 @@ jobs:
 ################################################################
 - job: create_baselines_pr
   pool:
-    vmImage: 'windows-2022'
+    vmImage: 'windows-2025'
   displayName: 'Create Test Baselines Pull Request'
   dependsOn:
   - create_baselines_branch # for variables flow

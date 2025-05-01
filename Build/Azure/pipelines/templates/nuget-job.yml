@@ -4,7 +4,7 @@ parameters:
 jobs:
 - job: build_nugets_job
   pool:
-    vmImage: 'windows-2022'
+    vmImage: 'windows-2025'
   displayName: 'Nugets Generation'
   dependsOn: build_job
   condition: succeeded()
