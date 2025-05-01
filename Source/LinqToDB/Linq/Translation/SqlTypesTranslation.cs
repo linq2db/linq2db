@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Common;
+using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Translation
@@ -211,16 +212,12 @@ namespace LinqToDB.Linq.Translation
 
 		public Expression? Translate(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
 		{
-			MemberInfo memberInfo;
-
-			if (memberExpression is MethodCallExpression methodCall)
-				memberInfo = methodCall.Method;
-			else if (memberExpression is MemberExpression member)
-				memberInfo = member.Member;
-			else
+			if (memberExpression is not (MethodCallExpression or MemberExpression or NewExpression))
 				return null;
 
-			var translationFunc = _registration.GetTranslation(memberInfo);
+			var memberInfoWithType = MemberHelper.GetMemberInfoWithType(memberExpression);
+
+			var translationFunc = _registration.GetTranslation(memberInfoWithType);
 			if (translationFunc == null)
 				return null;
 
