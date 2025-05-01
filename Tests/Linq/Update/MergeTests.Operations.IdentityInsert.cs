@@ -211,7 +211,7 @@ namespace Tests.xUpdate
 				Assert.Multiple(() =>
 				{
 					Assert.That(result[0].Id, Is.EqualTo(lastId));
-					Assert.That(result[0].Field, Is.EqualTo(null));
+					Assert.That(result[0].Field, Is.Null);
 					Assert.That(result[1].Id, Is.EqualTo(lastId + 1));
 					Assert.That(result[1].Field, Is.EqualTo(22));
 					Assert.That(result[2].Id, Is.EqualTo(lastId + 2));

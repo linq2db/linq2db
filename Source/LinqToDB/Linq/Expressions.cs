@@ -541,7 +541,7 @@ namespace LinqToDB.Linq
 			{ M(() => "".PadRight   (0,' ')   ), N(() => L<string?,int,char,string?>       ((string? obj,int  p0,char   p1)           => Sql.PadRight (obj, p0, p1))) },
 			{ M(() => "".Trim       ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Trim     (obj))) },
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			{ M(() => "".TrimEnd    ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimRight(obj)))     },
 			{ M(() => "".TrimEnd    (' ')     ), N(() => L<string,char,string?>            ((string obj,char ch)                      =>     TrimRight(obj, ch))) },
 			{ M(() => "".TrimStart  ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimLeft (obj)))     },
@@ -617,7 +617,7 @@ namespace LinqToDB.Linq
 			{ M(() => ulong.   Parse("")), N(() => L<string,ulong>   ((string p0) => Sql.ConvertTo<ulong>.   From(p0))) },
 #pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 #pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => DateOnly.Parse("")), N(() => L<string,DateOnly>((string p0) => Sql.ConvertTo<DateOnly>.From(p0))) },
 #pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs

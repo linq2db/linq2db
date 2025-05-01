@@ -154,7 +154,6 @@ jobs:
             psscript_local: ${{ test_config.psscript_win_local }}
             extra: ${{ test_config.extra }}
             netfx: ${{ test_config.enable_fw_netfx }}
-            net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             x86: ${{ test_config.x86 }}
@@ -189,7 +188,6 @@ jobs:
             script_global: ${{ test_config.script_linux_global }}
             script_local: ${{ test_config.script_linux_local }}
             extra: ${{ test_config.extra }}
-            net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             retry: ${{ test_config.retry }}
@@ -224,7 +222,6 @@ jobs:
             script_local: ${{ test_config.script_macos_local }}
             docker: ${{ test_config.install_docker_macos }}
             extra: ${{ test_config.extra }}
-            net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             retry: ${{ test_config.retry }}

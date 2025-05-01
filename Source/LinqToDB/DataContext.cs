@@ -299,7 +299,7 @@ namespace LinqToDB
 
 				if (value < 0)
 				{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout or ResetCommandTimeoutAsync methods instead.");
 #else
 					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout method instead.");
@@ -330,7 +330,7 @@ namespace LinqToDB
 #pragma warning restore CS0618 // Type or member is obsolete
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		/// <summary>
 		/// Sets command timeout to default connection value.
 		/// Note that default provider/connection timeout is not the same value as timeout value you can specify upon context configuration.

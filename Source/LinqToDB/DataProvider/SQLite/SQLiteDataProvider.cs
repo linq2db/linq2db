@@ -274,7 +274,7 @@ namespace LinqToDB.DataProvider.SQLite
 					dataType = dataType.WithDataType(DataType.VarChar);
 			}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (!Adapter.SupportsDateOnly && value is DateOnly d)
 			{
 				value     = d.ToDateTime(TimeOnly.MinValue);
