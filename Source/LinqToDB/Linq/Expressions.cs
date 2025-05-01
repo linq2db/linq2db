@@ -596,6 +596,12 @@ namespace LinqToDB.Linq
 
 			#endregion
 
+			#region ConvertTo
+
+			{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => p.ToString())) },
+
+			#endregion
+
 			#region Parse
 
 			{ M(() => bool.    Parse("")), N(() => L<string,bool>    ((string p0) => Sql.ConvertTo<bool>.    From(p0))) },
@@ -1079,12 +1085,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>  ((p0,p1,p2)    => p0.Length > p1 ? p0 : VarChar(Replicate(p2, p1 - p0.Length)!, 1000) + p0)) },
 
 					{ M(() => Sql.ConvertTo<string>.From((decimal)0)), N(() => L<decimal,string?>((decimal p) => Sql.TrimLeft(Sql.Convert<string,decimal>(p), '0'))) },
-					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,   string?>((Guid    p) => Sql.Lower(
-						Sql.Substring(Hex(p),  7,  2) + Sql.Substring(Hex(p),  5, 2) + Sql.Substring(Hex(p), 3, 2) + Sql.Substring(Hex(p), 1, 2) + "-" +
-						Sql.Substring(Hex(p), 11,  2) + Sql.Substring(Hex(p),  9, 2) + "-" +
-						Sql.Substring(Hex(p), 15,  2) + Sql.Substring(Hex(p), 13, 2) + "-" +
-						Sql.Substring(Hex(p), 17,  4) + "-" +
-						Sql.Substring(Hex(p), 21, 12)))) },
 
 					{ M(() => Sql.Log(0m, 0)), N(() => L<decimal?,decimal?,decimal?>((m,n) => Sql.Log(n) / Sql.Log(m))) },
 					{ M(() => Sql.Log(0.0,0)), N(() => L<double?,double?,double?>   ((m,n) => Sql.Log(n) / Sql.Log(m))) },
@@ -1136,13 +1136,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((string? p0,int? p1,int? p2,string? p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>       ((int? p0)                 => Sql.PadRight(" ", p0, ' '))) },
 
-					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => Sql.Lower(
-						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p),  7,  2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p),  5, 2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 3, 2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 1, 2) + "-" +
-						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 11,  2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p),  9, 2) + "-" +
-						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 15,  2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 13, 2) + "-" +
-						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 17,  4) + "-" +
-						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 21, 12)))) },
-
 					{ M(() => Sql.Cot  (0)),   N(() => L<double?,double?>(v => Sql.Cos(v) / Sql.Sin(v) )) },
 					{ M(() => Sql.Log10(0.0)), N(() => L<double?,double?>(v => Sql.Log(10, v)          )) },
 
@@ -1173,8 +1166,6 @@ namespace LinqToDB.Linq
 
 					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?,double?>     ((double? v)        => (double?)Sql.RoundToEven((decimal)v!)))    },
 					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?,int?,double?>((double? v,int? p) => (double?)Sql.RoundToEven((decimal)v!, p))) },
-
-					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>((Guid p) => Sql.Lower(Sql.Ext.Firebird().UuidToChar(p)))) },
 				}},
 
 				#endregion
@@ -1219,13 +1210,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
-
-					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>((Guid p) => Sql.Lower(
-						Sql.Substring(Hex(p),  7,  2) + Sql.Substring(Hex(p),  5, 2) + Sql.Substring(Hex(p), 3, 2) + Sql.Substring(Hex(p), 1, 2) + "-" +
-						Sql.Substring(Hex(p), 11,  2) + Sql.Substring(Hex(p),  9, 2) + "-" +
-						Sql.Substring(Hex(p), 15,  2) + Sql.Substring(Hex(p), 13, 2) + "-" +
-						Sql.Substring(Hex(p), 17,  4) + "-" +
-						Sql.Substring(Hex(p), 21, 12)))) },
 
 					{ M(() => Sql.Log (0m, 0)), N(() => L<decimal?,decimal?,decimal?>((m,n) => Sql.Log(n) / Sql.Log(m))) },
 					{ M(() => Sql.Log (0.0,0)), N(() => L<double?,double?,double?>   ((m,n) => Sql.Log(n) / Sql.Log(m))) },
@@ -1275,8 +1259,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
-
-					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => Sql.Lower(Sql.Substring(p.ToString(), 2, 36)))) },
 
 					{ M(() => Sql.Ceiling((decimal)0)), N(() => L<decimal?,decimal?>(p => -Sql.Floor(-p) )) },
 					{ M(() => Sql.Ceiling((double) 0)), N(() => L<double?, double?> (p => -Sql.Floor(-p) )) },
