@@ -2350,11 +2350,17 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		static int CountUsage(SelectQuery rootQuery, SqlColumn column)
+		int CountUsage(SelectQuery rootQuery, SqlColumn column)
 		{
-			int counter = 0;
+			IQueryElement root = rootQuery;
+			if (_rootElement is not SqlSelectStatement)
+			{
+				root = _rootElement;
+			}
 
-			rootQuery.VisitParentFirstAll(e =>
+			var counter = 0;
+
+			root.VisitParentFirstAll(e =>
 			{
 				// do not search in the same query
 				if (e is SelectQuery sq && sq == column.Parent)

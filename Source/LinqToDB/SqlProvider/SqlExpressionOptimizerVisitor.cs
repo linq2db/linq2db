@@ -418,7 +418,7 @@ namespace LinqToDB.SqlProvider
 					if (predicate is SqlSearchCondition sc && (sc.IsOr == element.IsOr || sc.Predicates.Count <= 1))
 					{
 						EnsureCopied(i);
-						newPredicates!.InsertRange(i, sc.Predicates);
+						newPredicates!.AddRange(sc.Predicates);
 						continue;
 					}
 

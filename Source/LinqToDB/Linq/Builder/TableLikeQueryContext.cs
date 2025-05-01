@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 			SelfTargetPropAccess = Expression.Property(thisContextRef, nameof(ProjectionHelper<object, object>.selft_target));
 
 			Source = sourceContextRef.BuildContext is EnumerableContext enumerableSource
-				? new SqlTableLikeSource { SourceEnumerable = enumerableSource.Table }
+				? new SqlTableLikeSource { SourceEnumerable = enumerableSource.Table, SourceQuery = enumerableSource.SelectQuery }
 				: new SqlTableLikeSource { SourceQuery = sourceContextRef.BuildContext.SelectQuery };
 		}
 
