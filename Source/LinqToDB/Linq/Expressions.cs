@@ -1276,7 +1276,7 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
 
-					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => Sql.Lower(Sql.Substring(p.ToString(), 2, 36)))) },
+					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => p.ToString())) },
 
 					{ M(() => Sql.Ceiling((decimal)0)), N(() => L<decimal?,decimal?>(p => -Sql.Floor(-p) )) },
 					{ M(() => Sql.Ceiling((double) 0)), N(() => L<double?, double?> (p => -Sql.Floor(-p) )) },

@@ -18,7 +18,6 @@ namespace Tests.Linq
 			[Column] public Guid? NullableGuid { get; set; }
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllAccess], Details = "Not tested on all Access providers.")]
 		[Test]
 		public void GuidToString([DataSources] string context)
 		{
@@ -67,7 +66,6 @@ namespace Tests.Linq
 			Assert.That(lD, Has.Count.EqualTo(0));
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllAccess], Details = "Not tested on all Access providers.")]
 		[Test]
 		public void GuidToStringIsNull([DataSources] string context)
 		{
