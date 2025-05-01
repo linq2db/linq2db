@@ -1890,57 +1890,143 @@ AS
 			}
 		}
 
-		public class Issue1294Table
-		{
-			public int Id { get; set; }
-		}
+		#region Issue 1294
 
-		[Sql.TableFunction(Name = "Issue1294")]
-		private LinqToDB.ITable<Issue1294Table> GetPermissions(int p1, int p2)
+		private void InitIssue1294(DataConnection db)
 		{
-			throw new InvalidOperationException();
-		}
+			using var _ = new DisableBaseline("test setup");
 
-		[Test]
-		[ActiveIssue(1294)]
-		public void Issue1294Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
-		{
-			var methodInfo = GetType().GetMethod(nameof(GetPermissions), new[] { typeof(int), typeof(int) })!;
-
-			using (var db = GetDataConnection(context))
-			using (db.CreateLocalTable<Issue1294Table>())
-			{
-				db.Execute(@"
+			db.Execute(@"
 IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'Issue1294')
 	BEGIN DROP FUNCTION Issue1294
 END
 ");
 
-				db.Execute(@"
+			db.Execute(@"
 CREATE FUNCTION dbo.Issue1294(@p1 int, @p2 int)
 RETURNS TABLE
 AS
 	RETURN SELECT @p1 + @p2 as Id
 ");
-
-				var p1 = 1;
-				var p2 = 2;
-				var p11 = 3;
-				var permissions = CallFunc(p1, p2)
-					.Select(x => x.Id)
-					.Union(CallFunc(p11, p2).Select(x => x.Id));
-				var q = db.GetTable<Issue1294Table>().Where(x => permissions.Contains(x.Id));
-
-				q.ToArray();
-
-				Assert.That(db.LastQuery!, Does.Contain("@"));
-
-				LinqToDB.ITable<Issue1294Table> CallFunc(int p1, int p2)
-				{
-					return db.GetTable<Issue1294Table>(this, methodInfo, p1, p2);
-				}
-			}
 		}
+
+		public class Issue1294Table
+		{
+			public int Id { get; set; }
+		}
+
+		[Sql.TableFunction("Issue1294", argIndices: new[] { 1, 2 })]
+		private static LinqToDB.ITable<Issue1294Table> GetPermissions(IDataContext db, int p1, int p2)
+		{
+			return db.TableFromExpression(() => GetPermissions(db, p1, p2));
+		}
+
+		[Sql.TableFunction("Issue1294", argIndices: new[] { 1, 2 })]
+		private static LinqToDB.ITable<Issue1294Table> GetPermissionsLiteral(IDataContext db, [ExprParameter(DoNotParameterize = true)] int p1, [ExprParameter(DoNotParameterize = true)] int p2)
+		{
+			return db.TableFromExpression(() => GetPermissions(db, p1, p2));
+		}
+
+		[Test]
+		public void Issue1294Test_Parameter([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue1294Table>();
+
+			InitIssue1294(db);
+
+			var p1 = 1;
+			var p2 = 2;
+			var p11 = 3;
+			var permissions = GetPermissions(db, p1, p2)
+					.Select(x => x.Id)
+					.Union(GetPermissions(db, p11, p2).Select(x => x.Id));
+			var q = db.GetTable<Issue1294Table>().Where(x => permissions.Contains(x.Id));
+
+			q.ToArray();
+
+			Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(5));
+		}
+
+		[Test]
+		public void Issue1294Test_Literal([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue1294Table>();
+
+			InitIssue1294(db);
+
+			var permissions = GetPermissions(db, 1, 2)
+					.Select(x => x.Id)
+					.Union(GetPermissions(db, 1, 3).Select(x => x.Id));
+			var q = db.GetTable<Issue1294Table>().Where(x => permissions.Contains(x.Id));
+
+			q.ToArray();
+
+			Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(1));
+		}
+
+		[Test]
+		public void Issue1294Test_LiteralByAttribute([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue1294Table>();
+
+			InitIssue1294(db);
+
+			var p1 = 1;
+			var p2 = 2;
+			var p11 = 3;
+			var permissions = GetPermissionsLiteral(db, p1, p2)
+					.Select(x => x.Id)
+					.Union(GetPermissionsLiteral(db, p11, p2).Select(x => x.Id));
+			var q = db.GetTable<Issue1294Table>().Where(x => permissions.Contains(x.Id));
+
+			q.ToArray();
+
+			Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(1));
+		}
+
+		[Test]
+		public void Issue1294Test_LiteralByHelper([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue1294Table>();
+
+			InitIssue1294(db);
+
+			var p1 = 1;
+			var p2 = 2;
+			var p11 = 3;
+			var permissions = GetPermissions(db, Sql.Constant(p1), Sql.Constant(p2))
+					.Select(x => x.Id)
+					.Union(GetPermissions(db, Sql.Constant(p11), Sql.Constant(p2)).Select(x => x.Id));
+			var q = db.GetTable<Issue1294Table>().Where(x => permissions.Contains(x.Id));
+
+			q.ToArray();
+
+			Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(1));
+		}
+
+		[Test]
+		public void Issue1294Test_ParameterByHelper([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue1294Table>();
+
+			InitIssue1294(db);
+
+			var permissions = GetPermissions(db, Sql.Parameter(2), Sql.Parameter(5))
+					.Select(x => x.Id)
+					.Union(GetPermissions(db, Sql.Parameter(3), Sql.Parameter(4)).Select(x => x.Id));
+			var q = db.GetTable<Issue1294Table>().Where(x => permissions.Contains(x.Id));
+
+			q.ToArray();
+
+			Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(5));
+		}
+
+		#endregion
 
 		[Test]
 		[ActiveIssue(1468)]
