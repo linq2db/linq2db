@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
-			var dataConnection = table.GetDataConnection()!;
+			var dataConnection = table.GetDataConnection();
 
 			if (((DB2DataProvider)dataConnection.DataProvider).Version == DB2Version.zOS)
 				return MultipleRowsCopy2(table, options, source, " FROM SYSIBM.SYSDUMMY1");
@@ -106,7 +106,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			var dataConnection = table.GetDataConnection()!;
+			var dataConnection = table.GetDataConnection();
 
 			if (((DB2DataProvider)dataConnection.DataProvider).Version == DB2Version.zOS)
 				return MultipleRowsCopy2Async(table, options, source, " FROM SYSIBM.SYSDUMMY1", cancellationToken);
@@ -116,7 +116,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			var dataConnection = table.GetDataConnection()!;
+			var dataConnection = table.GetDataConnection();
 
 			if (((DB2DataProvider)dataConnection.DataProvider).Version == DB2Version.zOS)
 				return MultipleRowsCopy2Async(table, options, source, " FROM SYSIBM.SYSDUMMY1", cancellationToken);

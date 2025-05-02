@@ -2446,7 +2446,7 @@ namespace LinqToDB.Data
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
-			var dataConnection = table.GetDataConnection()!;
+			var dataConnection = table.GetDataConnection();
 
 			return table.GetDataProvider().BulkCopy(
 				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize, }),
@@ -2468,7 +2468,7 @@ namespace LinqToDB.Data
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
-			var dataConnection = table.GetDataConnection()!;
+			var dataConnection = table.GetDataConnection();
 
 			return table.GetDataProvider().BulkCopy(
 				dataConnection.Options,
@@ -2614,7 +2614,7 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var dataConnection = table.GetDataConnection()!;
+			var dataConnection = table.GetDataConnection();
 
 			return CallMetrics(() =>
 				table.GetDataProvider().BulkCopyAsync(
@@ -2638,7 +2638,7 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var dataConnection = table.GetDataConnection()!;
+			var dataConnection = table.GetDataConnection();
 
 			return CallMetrics(() =>
 				table.GetDataProvider().BulkCopyAsync(
@@ -2735,7 +2735,7 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var dataConnection = table.GetDataConnection()!;
+			var dataConnection = table.GetDataConnection();
 
 			return CallMetrics(() =>
 				table.GetDataProvider().BulkCopyAsync(
@@ -2760,7 +2760,7 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var dataConnection = table.GetDataConnection()!;
+			var dataConnection = table.GetDataConnection();
 
 			return CallMetrics(() =>
 				table.GetDataProvider().BulkCopyAsync(
@@ -2784,7 +2784,7 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var dataConnection = table.GetDataConnection()!;
+			var dataConnection = table.GetDataConnection();
 
 			return CallMetrics(() =>
 				table.GetDataProvider().BulkCopyAsync(
