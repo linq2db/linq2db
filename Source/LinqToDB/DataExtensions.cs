@@ -78,8 +78,11 @@ namespace LinqToDB
 
 				for (var i = 0; i < parameters.Length; i++)
 				{
-					var type = pis[i].ParameterType;
-					args.Add(Expression.Constant(parameters[i], (type.IsByRef ? type.GetElementType() : type)!));
+					var        type    = pis[i].ParameterType;
+					Expression argExpr = Expression.Constant(parameters[i], (type.IsByRef ? type.GetElementType() : type)!);
+					argExpr = Expression.Call(Methods.LinqToDB.SqlParameter.MakeGenericMethod(argExpr.Type), argExpr);
+
+					args.Add(argExpr);
 				}
 
 				expr = Expression.Call(instance == null ? null : Expression.Constant(instance), methodInfo, args);

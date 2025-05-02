@@ -100,13 +100,12 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public SqlParameter? BuildParameter(
-			IBuildContext? context,
-			Expression expr,
-			ColumnDescriptor? columnDescriptor,
-			bool doNotCheckCompatibility = false,
-			bool forceNew = false,
-			string? alias = null,
-			BuildParameterType buildParameterType = BuildParameterType.Default)
+			IBuildContext?     context,
+			Expression         expr,
+			ColumnDescriptor?  columnDescriptor,
+			bool               doNotCheckCompatibility = false,
+			string?            alias                   = null,
+			BuildParameterType buildParameterType      = BuildParameterType.Default)
 		{
 			if (columnDescriptor is null && expr is ConstantExpression { Value: null })
 				return null;
@@ -136,6 +135,8 @@ namespace LinqToDB.Linq.Builder
 				return null;
 
 			var finalParameterId = entry.ParameterId;
+
+			var forceNew = expr.UnwrapConvert().NodeType == ExpressionType.Constant;
 
 			if (forceNew)
 				CacheManager.RegisterParameterEntry(expr, entry);

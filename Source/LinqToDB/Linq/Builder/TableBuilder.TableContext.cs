@@ -127,21 +127,21 @@ namespace LinqToDB.Linq.Builder
 
 				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), mappingSchema, SqlTable, mc, static (context, a, _, inline) =>
 				{
-					if (context.builder.CanBeEvaluatedOnClient(a))
-					{
-						var param = context.builder.ParametersContext.BuildParameter(context.context, a, columnDescriptor : null, doNotCheckCompatibility : true, forceNew: false);
-						if (param != null)
-						{
-							if (inline == true)
-							{
-								param.IsQueryParameter = false;
-							}
+					using var saveState = context.builder.UsingColumnDescriptor(null);
 
-							return new SqlPlaceholderExpression(null, param, a);
-						}
+					if (inline == true)
+					{
+						context.builder.PushTranslationModifier(context.builder.GetTranslationModifier().WithInlineParameters(true), false);
 					}
 
-					return context.builder.BuildSqlExpression(context.context, a);
+					var sqlExpr = context.builder.BuildSqlExpression(context.context, a);
+
+					if (inline == true)
+					{
+						context.builder.PopTranslationModifier();
+					}
+
+					return sqlExpr;
 				});
 
 				builder.RegisterExtensionAccessors(mc);
