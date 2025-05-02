@@ -131,7 +131,6 @@ namespace LinqToDB
 		/// Adds mapping schema to current context.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema to add.</param>
-		/// <returns>Returns current context instance.</returns>
-		IDataContext AddMappingSchema(MappingSchema mappingSchema);
+		void AddMappingSchema(MappingSchema mappingSchema);
 	}
 }

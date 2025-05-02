@@ -46,14 +46,12 @@ namespace LinqToDB.Remote
 			set;
 		}
 
-		public IDataContext AddMappingSchema(MappingSchema mappingSchema)
+		public void AddMappingSchema(MappingSchema mappingSchema)
 		{
 #pragma warning disable CS0618 // Type or member is obsolete
 			MappingSchema    = MappingSchema.CombineSchemas(mappingSchema, MappingSchema);
 #pragma warning restore CS0618 // Type or member is obsolete
 			_configurationID = null;
-
-			return this;
 		}
 
 		protected void InitServiceProvider(SimpleServiceProvider serviceProvider)

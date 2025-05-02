@@ -105,12 +105,10 @@ namespace LinqToDB
 		/// </summary>
 		public string?       ConfigurationString { get; private set; }
 
-		public IDataContext AddMappingSchema(MappingSchema mappingSchema)
+		public void AddMappingSchema(MappingSchema mappingSchema)
 		{
 			MappingSchema    = MappingSchema.CombineSchemas(mappingSchema, MappingSchema);
 			_configurationID = null;
-
-			return this;
 		}
 
 		/// <summary>
