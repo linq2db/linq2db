@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -83,9 +82,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public async Task MergeTestAsync([DataSources(
-			ProviderName.SqlServer2005, ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllPostgreSQL16Minus, TestProvName.AllSqlServer2005)]
-			string context)
+		public async Task MergeTestAsync([MergeDataContextSource] string context)
 		{
 			await using var db  = GetDataContext(context);
 
