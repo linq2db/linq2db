@@ -1924,7 +1924,7 @@ AS
 		[Sql.TableFunction("Issue1294", argIndices: new[] { 1, 2 })]
 		private static LinqToDB.ITable<Issue1294Table> GetPermissionsLiteral(IDataContext db, [ExprParameter(DoNotParameterize = true)] int p1, [ExprParameter(DoNotParameterize = true)] int p2)
 		{
-			return db.TableFromExpression(() => GetPermissions(db, p1, p2));
+			return db.TableFromExpression(() => GetPermissionsLiteral(db, p1, p2));
 		}
 
 		[Test]
@@ -1938,10 +1938,10 @@ AS
 			var p1 = 1;
 			var p2 = 2;
 			var p11 = 3;
-			var permissions = GetPermissions(db, p1, p2)
+
+			var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, p1, p2)
 					.Select(x => x.Id)
-					.Union(GetPermissions(db, p11, p2).Select(x => x.Id));
-			var q = db.GetTable<Issue1294Table>().Where(x => permissions.Contains(x.Id));
+					.Union(GetPermissions(db, p11, p2).Select(x => x.Id)).Contains(x.Id));
 
 			q.ToArray();
 
@@ -1956,10 +1956,9 @@ AS
 
 			InitIssue1294(db);
 
-			var permissions = GetPermissions(db, 1, 2)
+			var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, 1, 2)
 					.Select(x => x.Id)
-					.Union(GetPermissions(db, 1, 3).Select(x => x.Id));
-			var q = db.GetTable<Issue1294Table>().Where(x => permissions.Contains(x.Id));
+					.Union(GetPermissions(db, 1, 3).Select(x => x.Id)).Contains(x.Id));
 
 			q.ToArray();
 
@@ -1977,10 +1976,10 @@ AS
 			var p1 = 1;
 			var p2 = 2;
 			var p11 = 3;
-			var permissions = GetPermissionsLiteral(db, p1, p2)
+
+			var q = db.GetTable<Issue1294Table>().Where(x => GetPermissionsLiteral(db, p1, p2)
 					.Select(x => x.Id)
-					.Union(GetPermissionsLiteral(db, p11, p2).Select(x => x.Id));
-			var q = db.GetTable<Issue1294Table>().Where(x => permissions.Contains(x.Id));
+					.Union(GetPermissionsLiteral(db, p11, p2).Select(x => x.Id)).Contains(x.Id));
 
 			q.ToArray();
 
@@ -1998,10 +1997,10 @@ AS
 			var p1 = 1;
 			var p2 = 2;
 			var p11 = 3;
-			var permissions = GetPermissions(db, Sql.Constant(p1), Sql.Constant(p2))
+
+			var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, Sql.Constant(p1), Sql.Constant(p2))
 					.Select(x => x.Id)
-					.Union(GetPermissions(db, Sql.Constant(p11), Sql.Constant(p2)).Select(x => x.Id));
-			var q = db.GetTable<Issue1294Table>().Where(x => permissions.Contains(x.Id));
+					.Union(GetPermissions(db, Sql.Constant(p11), Sql.Constant(p2)).Select(x => x.Id)).Contains(x.Id));
 
 			q.ToArray();
 
@@ -2016,10 +2015,9 @@ AS
 
 			InitIssue1294(db);
 
-			var permissions = GetPermissions(db, Sql.Parameter(2), Sql.Parameter(5))
+			var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, Sql.Parameter(2), Sql.Parameter(5))
 					.Select(x => x.Id)
-					.Union(GetPermissions(db, Sql.Parameter(3), Sql.Parameter(4)).Select(x => x.Id));
-			var q = db.GetTable<Issue1294Table>().Where(x => permissions.Contains(x.Id));
+					.Union(GetPermissions(db, Sql.Parameter(3), Sql.Parameter(4)).Select(x => x.Id)).Contains(x.Id));
 
 			q.ToArray();
 
