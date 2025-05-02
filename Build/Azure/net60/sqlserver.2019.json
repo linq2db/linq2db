@@ -1,8 +1,0 @@
-﻿{
-	"NET60.Azure": {
-		"Providers": [
-			"SqlServer.2019",
-			"SqlServer.2019.MS"
-		]
-	}
-}

@@ -1741,7 +1741,7 @@ namespace Tests.Linq
 				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Table]
 		public sealed class Issue4371Table2
 		{
@@ -1919,7 +1919,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			Assert.That(db.Select(() => Sql.AsSql(Sql.PadLeft(null, 1, '.'))), Is.EqualTo(null));
+			Assert.That(db.Select(() => Sql.AsSql(Sql.PadLeft(null, 1, '.'))), Is.Null);
 		}
 
 		sealed class IssueDedup

@@ -30,8 +30,6 @@ namespace LinqToDB.DataProvider.SapHana
 
 #if NETFRAMEWORK
 		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.v4.5"];
-#elif NET6_0 || NET7_0
-		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Net.v6.0", "Sap.Data.Hana.Core.v2.1"];
 #elif NET8_0_OR_GREATER
 		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Net.v8.0", "Sap.Data.Hana.Net.v6.0", "Sap.Data.Hana.Core.v2.1"];
 #else

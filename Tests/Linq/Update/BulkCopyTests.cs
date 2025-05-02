@@ -322,7 +322,7 @@ namespace Tests.xUpdate
 			[Column] public int Id { get; set; }
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Table]
 		public class DateOnlyTable
 		{
@@ -412,7 +412,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Test]
 		public void BulkCopyDateOnly(
 			[DataSources(false)] string context,

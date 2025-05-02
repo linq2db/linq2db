@@ -278,7 +278,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.NText("p", "123")), Is.EqualTo("123"));
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.Create("p", "123")), Is.EqualTo("123"));
 
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.Create("p", (string?)null)), Is.Null);
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 				});
 			}
@@ -301,8 +301,8 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Blob("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Blob("p", null)), Is.EqualTo(null));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Blob("p", null)), Is.Null);
+					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.VarBinary("p", null)), Is.Null);
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Binary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Blob("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
@@ -926,32 +926,32 @@ namespace Tests.DataProvider
 				Assert.Multiple(() =>
 				{
 					Assert.That(t.Where(_ => _.DecFloat16 == TestFbTypesTable.Data[0].DecFloat16).Count(), Is.EqualTo(1));
-					Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(true));
+					Assert.That(db.LastQuery!, Does.Contain("@"));
 					Assert.That(t.Where(_ => _.DecFloat30 == TestFbTypesTable.Data[0].DecFloat30).Count(), Is.EqualTo(1));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(true));
+					Assert.That(db.LastQuery!, Does.Contain("@"));
 					Assert.That(t.Where(_ => _.DecFloat34 == TestFbTypesTable.Data[0].DecFloat34).Count(), Is.EqualTo(1));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(true));
+					Assert.That(db.LastQuery!, Does.Contain("@"));
 					Assert.That(t.Where(_ => _.DecFloat == TestFbTypesTable.Data[0].DecFloat).Count(), Is.EqualTo(1));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(true));
+					Assert.That(db.LastQuery!, Does.Contain("@"));
 					Assert.That(t.Where(_ => _.DateTimeTZ == TestFbTypesTable.Data[0].DateTimeTZ).Count(), Is.EqualTo(1));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(true));
+					Assert.That(db.LastQuery!, Does.Contain("@"));
 					Assert.That(t.Where(_ => _.TimeTZ == TestFbTypesTable.Data[0].TimeTZ).Count(), Is.EqualTo(1));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(true));
+					Assert.That(db.LastQuery!, Does.Contain("@"));
 					Assert.That(t.Where(_ => _.Int128 == TestFbTypesTable.Data[0].Int128).Count(), Is.EqualTo(1));
 				});
 				Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(!inline));
