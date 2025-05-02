@@ -70,12 +70,12 @@ namespace LinqToDB.CommandLine
 				return true;
 
 			foreach (var regex in _regexes.Values)
-				if (regex.Match(name).Success)
+				if (regex.IsMatch(name))
 					return true;
 
 			if (schema != null && _schemaRegexes.TryGetValue(schema, out var regexes))
 				foreach (var regex in regexes.Values)
-					if (regex.Match(name).Success)
+					if (regex.IsMatch(name))
 						return true;
 
 			return false;

@@ -336,11 +336,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 					fromSqlQueryRoot.Argument);
 			}
 
-#if EF6
-			var entityType = queryRoot.EntityType.ClrType;
-#else
-			var entityType = queryRoot.ElementType;
-#endif
+			var entityType   = queryRoot.ElementType;
 			var getTableExpr = Expression.Call(null, Methods.LinqToDB.GetTable.MakeGenericMethod(entityType),
 				Expression.Constant(dc));
 

@@ -331,14 +331,12 @@ namespace Tests
 
 		internal static string GetConfigName()
 		{
-#if NET6_0
-			return "NET60";
+#if NETFRAMEWORK
+			return "NETFX";
 #elif NET8_0
 			return "NET80";
 #elif NET9_0
 			return "NET90";
-#elif NETFRAMEWORK
-			return "NETFX";
 #else
 #error Unknown framework
 #endif
