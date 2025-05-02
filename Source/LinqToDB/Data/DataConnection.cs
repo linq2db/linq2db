@@ -982,7 +982,7 @@ namespace LinqToDB.Data
 		}
 
 		private int? _commandTimeout;
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		/// <summary>
 		/// Gets or sets command execution timeout in seconds.
 		/// Supported values:
@@ -1014,7 +1014,7 @@ namespace LinqToDB.Data
 
 				if (value < 0)
 				{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout or ResetCommandTimeoutAsync methods instead.");
 #else
 					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout method instead.");

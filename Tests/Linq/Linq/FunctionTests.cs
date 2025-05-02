@@ -289,7 +289,7 @@ namespace Tests.Linq
 					from p in db.Parent where arr.Contains(p.ParentID) select p);
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Test]
 		public void ContainsReadOnlySet([DataSources] string context)
 		{

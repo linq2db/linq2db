@@ -41,13 +41,12 @@ parameters:
 # - retry   (true/false string, optional) : specify that test run should retry on failue, use only for unstable runs like access and oracle
 
 # OPERATION SYSTEM SELECTORS
-# - enable_os_windows  (true/false string) : enables testrun for windows 2022 image (windows-2022)
+# - enable_os_windows  (true/false string) : enables testrun for windows 2025 image (windows-2025)
 # - enable_os_ubuntu   (true/false string) : enables testrun for Ubuntu 24.04 image (ubuntu-24.04)
 # - enable_os_macos    (true/false string) : enables testrun for Mac OS image (macOS-13)
 
 # TARGET FRAMEWORK SELECTORS
 # - enable_fw_netfx    (true/false string) : enables testrun against .net framework 4.6.2
-# - enable_fw_net60    (true/false string) : enables testrun against .net 6.0
 # - enable_fw_net80    (true/false string) : enables testrun against .net 8.0
 # - enable_fw_net90    (true/false string) : enables testrun against .net 9.0
 
@@ -89,7 +88,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
@@ -106,7 +104,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
@@ -122,7 +119,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           x86: true
@@ -140,7 +136,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           x86: true
@@ -159,7 +154,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           extra: --arch x64
@@ -178,7 +172,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]')) }}:
@@ -198,7 +191,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
@@ -217,7 +209,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
@@ -236,7 +227,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
@@ -256,7 +246,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
@@ -275,7 +264,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
@@ -294,7 +282,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
@@ -313,7 +300,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
@@ -332,7 +318,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
@@ -349,7 +334,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
@@ -365,7 +349,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
@@ -381,7 +364,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
@@ -397,7 +379,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
@@ -413,7 +394,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
@@ -434,7 +414,6 @@ jobs:
           enable_os_ubuntu: false # true ; disabled temporary (I hope) till MS fix crash in linux version
           enable_os_macos: false # true ; disabled temporary (I hope) till MS fix crash in linux version
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
@@ -455,7 +434,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos:  true
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
@@ -477,7 +455,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos:  true
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
@@ -498,7 +475,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos:  true
           enable_fw_netfx: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if and(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2022]')), not(contains(parameters.db_filter, '[metrics]'))) }}:
@@ -519,7 +495,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos:  true
           enable_fw_net472: true
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if contains(parameters.db_filter, '[metrics]') }}:
@@ -539,7 +514,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]')) }}:
@@ -559,7 +533,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
@@ -578,7 +551,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           retry: true # provider has issue with resource management
@@ -598,7 +570,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           retry: true # provider has issue with resource management
@@ -618,7 +589,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           retry: true # provider has issue with resource management
@@ -638,7 +608,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           retry: true # provider has issue with resource management
@@ -658,7 +627,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           retry: true # provider has issue with resource management
@@ -679,7 +647,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
@@ -698,7 +665,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
@@ -717,7 +683,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
@@ -736,7 +701,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
@@ -758,7 +722,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           retry: true # 26/1/2024: temporary: some issues with debian image
@@ -781,7 +744,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           retry: true # 26/1/2024: temporary: some issues with debian image
@@ -804,7 +766,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]')) }}:
@@ -824,7 +785,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
@@ -843,7 +803,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
@@ -862,7 +821,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
-          enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:

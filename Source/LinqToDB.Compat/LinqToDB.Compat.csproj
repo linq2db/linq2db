@@ -6,7 +6,7 @@
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 
 		<!--published targets-->
-		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net462;netstandard2.0;net8.0;net9.0</TargetFrameworks>
 
 		<!-- Define COMPAT constant -->
 		<DefineConstants>$(DefineConstants);COMPAT</DefineConstants>

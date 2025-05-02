@@ -538,7 +538,7 @@ namespace Tests.Linq
 
 				query.ToArray();
 
-				Assert.That(str.Contains("WITH"), Is.EqualTo(true));
+				Assert.That(str, Does.Contain("WITH"));
 			}
 		}
 
@@ -1777,8 +1777,8 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid2));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(true));
-				Assert.That(data[1].BoolN, Is.EqualTo(false));
+				Assert.That(data[1].Bool, Is.True);
+				Assert.That(data[1].BoolN, Is.False);
 			});
 		}
 
@@ -1814,8 +1814,8 @@ namespace Tests.Linq
 				Assert.That(data[0].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[0].Enum, Is.Null);
 				Assert.That(data[0].EnumN, Is.Null);
-				Assert.That(data[0].Bool, Is.EqualTo(true));
-				Assert.That(data[0].BoolN, Is.EqualTo(true));
+				Assert.That(data[0].Bool, Is.True);
+				Assert.That(data[0].BoolN, Is.True);
 
 				Assert.That(data[1].Id, Is.EqualTo(4));
 				Assert.That(data[1].Byte, Is.EqualTo(3));
@@ -1824,8 +1824,8 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(false));
-				Assert.That(data[1].BoolN, Is.EqualTo(true));
+				Assert.That(data[1].Bool, Is.False);
+				Assert.That(data[1].BoolN, Is.True);
 			});
 		}
 
@@ -1861,8 +1861,8 @@ namespace Tests.Linq
 				Assert.That(data[0].GuidN, Is.EqualTo(new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE30")));
 				Assert.That(data[0].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[0].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[0].Bool, Is.EqualTo(true));
-				Assert.That(data[0].BoolN, Is.EqualTo(false));
+				Assert.That(data[0].Bool, Is.True);
+				Assert.That(data[0].BoolN, Is.False);
 
 				Assert.That(data[1].Id, Is.EqualTo(4));
 				Assert.That(data[1].Byte, Is.EqualTo(3));
@@ -1871,8 +1871,8 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(false));
-				Assert.That(data[1].BoolN, Is.EqualTo(true));
+				Assert.That(data[1].Bool, Is.False);
+				Assert.That(data[1].BoolN, Is.True);
 			});
 		}
 

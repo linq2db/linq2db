@@ -213,6 +213,22 @@ namespace LinqToDB.DataProvider.MySql.Translation
 			}
 		}
 
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// Lower(Cast({0} as CHAR(36)))
+
+				var factory        = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(36);
+
+				var cast    = factory.Cast(guidExpr, stringDataType);
+				var toLower = factory.ToLower(cast);
+
+				return toLower;
+			}
+		}
+
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();
@@ -221,6 +237,11 @@ namespace LinqToDB.DataProvider.MySql.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

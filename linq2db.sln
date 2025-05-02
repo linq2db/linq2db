@@ -203,52 +203,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "templates", "templates", "{
 		Build\Azure\pipelines\templates\test-workflow-windows.yml = Build\Azure\pipelines\templates\test-workflow-windows.yml
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net60", "net60", "{AA850554-8CD1-4231-A3E3-804B62FF3622}"
-	ProjectSection(SolutionItems) = preProject
-		Build\Azure\net60\access.ace.json = Build\Azure\net60\access.ace.json
-		Build\Azure\net60\access.ace.x64.json = Build\Azure\net60\access.ace.x64.json
-		Build\Azure\net60\access.mdb.json = Build\Azure\net60\access.mdb.json
-		Build\Azure\net60\clickhouse.client.json = Build\Azure\net60\clickhouse.client.json
-		Build\Azure\net60\clickhouse.mysql.json = Build\Azure\net60\clickhouse.mysql.json
-		Build\Azure\net60\clickhouse.octonica.json = Build\Azure\net60\clickhouse.octonica.json
-		Build\Azure\net60\db2.json = Build\Azure\net60\db2.json
-		Build\Azure\net60\firebird25.json = Build\Azure\net60\firebird25.json
-		Build\Azure\net60\firebird3.json = Build\Azure\net60\firebird3.json
-		Build\Azure\net60\firebird4.json = Build\Azure\net60\firebird4.json
-		Build\Azure\net60\firebird5.json = Build\Azure\net60\firebird5.json
-		Build\Azure\net60\hana2.json = Build\Azure\net60\hana2.json
-		Build\Azure\net60\informix.json = Build\Azure\net60\informix.json
-		Build\Azure\net60\mariadb11.json = Build\Azure\net60\mariadb11.json
-		Build\Azure\net60\mysql.json = Build\Azure\net60\mysql.json
-		Build\Azure\net60\mysql57.json = Build\Azure\net60\mysql57.json
-		Build\Azure\net60\oracle11.json = Build\Azure\net60\oracle11.json
-		Build\Azure\net60\oracle12.json = Build\Azure\net60\oracle12.json
-		Build\Azure\net60\oracle18.json = Build\Azure\net60\oracle18.json
-		Build\Azure\net60\oracle19.json = Build\Azure\net60\oracle19.json
-		Build\Azure\net60\oracle21.json = Build\Azure\net60\oracle21.json
-		Build\Azure\net60\oracle23.json = Build\Azure\net60\oracle23.json
-		Build\Azure\net60\pgsql13.json = Build\Azure\net60\pgsql13.json
-		Build\Azure\net60\pgsql14.json = Build\Azure\net60\pgsql14.json
-		Build\Azure\net60\pgsql15.json = Build\Azure\net60\pgsql15.json
-		Build\Azure\net60\pgsql16.json = Build\Azure\net60\pgsql16.json
-		Build\Azure\net60\pgsql17.json = Build\Azure\net60\pgsql17.json
-		Build\Azure\net60\sqlce.json = Build\Azure\net60\sqlce.json
-		Build\Azure\net60\sqlite.extras.json = Build\Azure\net60\sqlite.extras.json
-		Build\Azure\net60\sqlite.json = Build\Azure\net60\sqlite.json
-		Build\Azure\net60\sqlserver.2005.json = Build\Azure\net60\sqlserver.2005.json
-		Build\Azure\net60\sqlserver.2008.json = Build\Azure\net60\sqlserver.2008.json
-		Build\Azure\net60\sqlserver.2012.json = Build\Azure\net60\sqlserver.2012.json
-		Build\Azure\net60\sqlserver.2014.json = Build\Azure\net60\sqlserver.2014.json
-		Build\Azure\net60\sqlserver.2016.json = Build\Azure\net60\sqlserver.2016.json
-		Build\Azure\net60\sqlserver.2017.json = Build\Azure\net60\sqlserver.2017.json
-		Build\Azure\net60\sqlserver.2019.json = Build\Azure\net60\sqlserver.2019.json
-		Build\Azure\net60\sqlserver.2022.json = Build\Azure\net60\sqlserver.2022.json
-		Build\Azure\net60\sqlserver.2022.metrics.json = Build\Azure\net60\sqlserver.2022.metrics.json
-		Build\Azure\net60\sqlserver.extras.json = Build\Azure\net60\sqlserver.extras.json
-		Build\Azure\net60\sqlserver.fts.2019.json = Build\Azure\net60\sqlserver.fts.2019.json
-		Build\Azure\net60\sybase.json = Build\Azure\net60\sybase.json
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Wcf", "Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj", "{CBFFC259-5165-4828-B9AC-15DFB769BFEC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Grpc", "Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj", "{130786F1-BAD8-4390-8B4E-3FD2DEF50D56}"
@@ -681,7 +635,6 @@ Global
 		{49A37E5A-A8A3-4C89-B11C-D700A9F52BAA} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{C937AC8E-2714-4850-A1EA-1710D980DF0B} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{DAD073A0-C4D2-4C92-AB6D-F8162DB2D5D3} = {C937AC8E-2714-4850-A1EA-1710D980DF0B}
-		{AA850554-8CD1-4231-A3E3-804B62FF3622} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{CBFFC259-5165-4828-B9AC-15DFB769BFEC} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{130786F1-BAD8-4390-8B4E-3FD2DEF50D56} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA} = {AF93451E-198C-4A94-8EB4-C330D886E102}

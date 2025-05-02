@@ -532,7 +532,7 @@ namespace Tests.Linq
 				Assert.Multiple(() =>
 				{
 					Assert.That(query(db, 1), Is.EqualTo(1));
-					Assert.That(query(db, -1), Is.EqualTo(null));
+					Assert.That(query(db, -1), Is.Null);
 				});
 			}
 		}
@@ -548,7 +548,7 @@ namespace Tests.Linq
 				Assert.Multiple(async () =>
 				{
 					Assert.That(await query(db, 1), Is.EqualTo(1));
-					Assert.That(await query(db, -1), Is.EqualTo(null));
+					Assert.That(await query(db, -1), Is.Null);
 				});
 			}
 		}
@@ -564,7 +564,7 @@ namespace Tests.Linq
 				Assert.Multiple(() =>
 				{
 					Assert.That(query(db, 1), Is.EqualTo(1));
-					Assert.That(query(db, -1), Is.EqualTo(null));
+					Assert.That(query(db, -1), Is.Null);
 				});
 			}
 		}
@@ -580,7 +580,7 @@ namespace Tests.Linq
 				Assert.Multiple(async () =>
 				{
 					Assert.That(await query(db, 1), Is.EqualTo(1));
-					Assert.That(await query(db, -1), Is.EqualTo(null));
+					Assert.That(await query(db, -1), Is.Null);
 				});
 			}
 		}

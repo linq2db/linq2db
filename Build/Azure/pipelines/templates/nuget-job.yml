@@ -4,7 +4,7 @@ parameters:
 jobs:
 - job: build_nugets_job
   pool:
-    vmImage: 'windows-2022'
+    vmImage: 'windows-2025'
   displayName: 'Nugets Generation'
   dependsOn: build_job
   condition: succeeded()
@@ -16,10 +16,6 @@ jobs:
     displayName: Update nuget version
 
   - powershell: echo "##vso[task.setvariable variable=ef3PackageVersion]$(ef3PackageVersion)-rc.$(Build.BuildId)"
-    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
-    displayName: Update nuget version
-
-  - powershell: echo "##vso[task.setvariable variable=ef6PackageVersion]$(ef6PackageVersion)-rc.$(Build.BuildId)"
     condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
     displayName: Update nuget version
 
@@ -144,14 +140,6 @@ jobs:
       custom: script
       workingDirectory: '$(Build.SourcesDirectory)/NuGet'
       arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v3.nuspec /buildPath:../.build/nuspecs /version:$(ef3PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
-
-  - task: DotNetCoreCLI@2
-    displayName: Update nuspecs (EF6)
-    inputs:
-      command: custom
-      custom: script
-      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
-      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v6.nuspec /buildPath:../.build/nuspecs /version:$(ef6PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
 
   - task: DotNetCoreCLI@2
     displayName: Update nuspecs (EF8)

@@ -38,13 +38,6 @@ namespace Tests.Remote.ServerContainer
 
 		private static string GetServiceUrl(int port)
 		{
-#if NET6_0
-			// https://learn.microsoft.com/en-us/aspnet/core/grpc/troubleshoot?view=aspnetcore-7.0#unable-to-start-aspnet-core-grpc-app-on-macos
-			if (OperatingSystem.IsMacOS())
-			{
-				return $"http://localhost:{port}";
-			}
-#endif
 			return $"https://localhost:{port}";
 		}
 
@@ -90,17 +83,6 @@ namespace Tests.Remote.ServerContainer
 				webBuilder =>
 				{
 					webBuilder.UseStartup<Startup>();
-
-#if NET6_0
-					// https://learn.microsoft.com/en-us/aspnet/core/grpc/troubleshoot?view=aspnetcore-7.0#unable-to-start-aspnet-core-grpc-app-on-macos
-					if (OperatingSystem.IsMacOS())
-					{
-						webBuilder.ConfigureKestrel(o =>
-						{
-							o.ListenLocalhost(port, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2);
-						});
-					}
-#endif
 
 					var url = GetServiceUrl(port);
 					webBuilder.UseUrls(url);
