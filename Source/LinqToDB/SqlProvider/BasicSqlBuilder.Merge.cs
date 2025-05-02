@@ -265,9 +265,9 @@ namespace LinqToDB.SqlProvider
 		/// <param name="row">Index of data row to check. Could contain -1 to indicate that this is a check for empty source NULL value.</param>
 		/// <param name="column">Index of data column to check in row.</param>
 		/// <returns>Returns <c>true</c>, if generated SQL should include type information for value at specified position, otherwise <c>false</c> returned.</returns>
-		protected virtual bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column) => false;
+		protected virtual bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows, int row, int column) => false;
 
-		private void BuildValuesAsSelectsUnion(IList<SqlField> sourceFields, SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows)
+		private void BuildValuesAsSelectsUnion(IList<SqlField> sourceFields, SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows)
 		{
 			var columnTypes = new DbDataType[sourceFields.Count];
 			for (var i = 0; i < sourceFields.Count; i++)
@@ -292,7 +292,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append("\tSELECT ");
 
 				var row = rows[i];
-				for (var j = 0; j < row.Length; j++)
+				for (var j = 0; j < row.Count; j++)
 				{
 					var value = row[j];
 					if (j > 0)
@@ -368,7 +368,7 @@ namespace LinqToDB.SqlProvider
 			return true;
 		}
 
-		protected void BuildValues(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows)
+		protected void BuildValues(SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows)
 		{
 			if (rows.Count == 0)
 				return;

@@ -69,7 +69,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (MappingSchema.IsScalarType(ElementType))
 			{
-				var rows        = arrayExpression.Expressions.Select(e => new[] {Builder.ConvertToSql(Parent, e, false)}).ToList();
+				var rows        = arrayExpression.Expressions.Select(e => new List<ISqlExpression> {Builder.ConvertToSql(Parent, e, false)}).ToList();
 				var contextRef  = new ContextRefExpression(ElementType, this);
 				var specialProp = SequenceHelper.CreateSpecialProperty(contextRef, ElementType, "item");
 				var field       = new SqlField(Table, "item") { Type = new DbDataType(ElementType)};
@@ -91,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 
 			var ed = MappingSchema.GetEntityDescriptor(ElementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
-			var builtRows = new List<ISqlExpression[]>(arrayExpression.Expressions.Count);
+			var builtRows = new List<List<ISqlExpression>>(arrayExpression.Expressions.Count);
 
 			var columnsInfo = knownMembers
 				.Select(m => (Member: m, Column: ed.Columns.FirstOrDefault(c => c.MemberInfo == m)))
@@ -102,7 +102,7 @@ namespace LinqToDB.Linq.Builder
 				var members = new Dictionary<MemberInfo, Expression>();
 				Builder.ProcessProjection(MappingSchema, members, row);
 
-				var rowValues = new ISqlExpression[columnsInfo.Count];
+				var rowValues = new List<ISqlExpression>(columnsInfo.Count);
 
 				var idx = 0;
 				foreach (var (member, column) in columnsInfo)
@@ -119,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 						sql = Builder.ConvertToSql(Parent, nullValue, false);
 					}
 
-					rowValues[idx] = sql;
+					rowValues.Add(sql);
 					++idx;
 				}
 

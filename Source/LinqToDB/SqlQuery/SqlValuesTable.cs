@@ -11,6 +11,17 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// To create new instance in build context.
 		/// </summary>
+		internal SqlValuesTable()
+		{
+			Source       = null;
+			FieldsLookup = new();
+
+			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+		}
+
+		/// <summary>
+		/// To create new instance in build context.
+		/// </summary>
 		/// <param name="source">Expression, that contains enumerable source.</param>
 		internal SqlValuesTable(ISqlExpression source)
 		{
@@ -23,7 +34,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Constructor for convert visitor.
 		/// </summary>
-		internal SqlValuesTable(ISqlExpression? source, List<Func<object, ISqlExpression>>? valueBuilders, IEnumerable<SqlField> fields, List<ISqlExpression[]>? rows)
+		internal SqlValuesTable(ISqlExpression? source, List<Func<object, ISqlExpression>>? valueBuilders, IEnumerable<SqlField> fields, List<List<ISqlExpression>>? rows)
 		{
 			Source        = source;
 			ValueBuilders = valueBuilders;
@@ -42,7 +53,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Constructor for remote context.
 		/// </summary>
-		internal SqlValuesTable(SqlField[] fields, MemberInfo?[]? members, List<ISqlExpression[]> rows)
+		internal SqlValuesTable(SqlField[] fields, MemberInfo?[]? members, List<List<ISqlExpression>> rows)
 		{
 			Rows         = rows;
 			FieldsLookup = new();
@@ -101,9 +112,9 @@ namespace LinqToDB.SqlQuery
 			ValueBuilders.Add(valueBuilder);
 		}
 
-		internal List<ISqlExpression[]>? Rows { get; private set; }
+		internal List<List<ISqlExpression>>? Rows { get; set; }
 
-		internal IReadOnlyList<ISqlExpression[]> BuildRows(EvaluationContext context)
+		internal IReadOnlyList<List<ISqlExpression>> BuildRows(EvaluationContext context)
 		{
 			if (Rows != null)
 				return Rows;
@@ -113,7 +124,7 @@ namespace LinqToDB.SqlQuery
 			if (!(Source?.EvaluateExpression(context) is IEnumerable source))
 				throw new LinqToDBException($"Source must be enumerable: {Source}");
 
-			var rows = new List<ISqlExpression[]>();
+			var rows = new List<List<ISqlExpression>>();
 
 			if (ValueBuilders != null)
 			{
@@ -122,14 +133,12 @@ namespace LinqToDB.SqlQuery
 					if (record == null)
 						throw new LinqToDBException("Merge source cannot hold null records");
 
-					var row = new ISqlExpression[ValueBuilders!.Count];
-					var idx = 0;
+					var row = new List<ISqlExpression>(ValueBuilders!.Count);
 					rows.Add(row);
 
 					foreach (var valueBuilder in ValueBuilders!)
 					{
-						row[idx] = valueBuilder(record);
-						idx++;
+						row.Add(valueBuilder(record));
 					}
 				}
 			}
@@ -237,6 +246,11 @@ namespace LinqToDB.SqlQuery
 		public void Modify(ISqlExpression? source)
 		{
 			Source = source;
+		}
+
+		public void AddField(SqlField field)
+		{
+			Fields.Add(field);
 		}
 	}
 }

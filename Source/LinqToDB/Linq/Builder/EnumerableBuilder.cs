@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Extensions;
@@ -42,6 +43,26 @@ namespace LinqToDB.Linq.Builder
 		{
 			var collectionType = typeof(IEnumerable<>).GetGenericType(buildInfo.Expression.Type) ??
 			                     throw new InvalidOperationException();
+
+			if (buildInfo.Expression is NewArrayExpression)
+			{
+				if (buildInfo.Parent == null)
+					return BuildSequenceResult.Error(buildInfo.Expression);
+
+				var expressions = ((NewArrayExpression)buildInfo.Expression).Expressions.Select(e =>
+					builder.BuildExtractExpression(buildInfo.Parent, e))
+					.ToArray();
+
+				var dynamicContext = new EnumerableContextDynamic(
+					builder.GetTranslationModifier(),
+					buildInfo.Parent,
+					builder,
+					expressions,
+					buildInfo.SelectQuery,
+					collectionType.GetGenericArguments()[0]);
+
+				return BuildSequenceResult.FromContext(dynamicContext);
+			}
 
 			var enumerableContext = new EnumerableContext(builder.GetTranslationModifier(), builder, buildInfo, buildInfo.SelectQuery, collectionType.GetGenericArguments()[0]);
 

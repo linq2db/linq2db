@@ -188,5 +188,36 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test]
+		public void WithSubqueries([IncludeDataSources(
+			TestProvName.AllFirebird4Plus,
+			TestProvName.AllMySql80,
+			TestProvName.AllOracle12Plus,
+			TestProvName.AllPostgreSQL93Plus,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var (items, colors, styles) = SomeItem.Seed();
+
+			using var itemsTable  = db.CreateLocalTable(items);
+			using var colorsTable = db.CreateLocalTable(colors);
+			using var stylesTable = db.CreateLocalTable(styles);
+
+			var query =
+				from item in itemsTable.LoadWith(it => it.Color).LoadWith(it => it.Style)
+				from it in new[]
+				{
+					new {ColorName = (string?)(item.Color!.Name), StyleName = item.Style!.Name, Count = itemsTable.Count() },
+					new {ColorName = (string?)null, StyleName               = item.Style!.Name, Count = 0 },
+				}.DefaultIfEmpty()
+				where it.ColorName == "Red"
+				select it;
+				//select new {it.ColorName, it.StyleName, it.Count};
+
+			AssertQuery(query);
+		}
+
 	}
 }
