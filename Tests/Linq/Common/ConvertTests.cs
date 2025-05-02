@@ -67,12 +67,12 @@ namespace Tests.Common
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Convert<int?, Enum1?>.From(null), Is.EqualTo(null));
+				Assert.That(Convert<int?, Enum1?>.From(null), Is.Null);
 				Assert.That(Convert<int?, int>.From(null), Is.EqualTo(0));
 				Assert.That(Convert<int, int?>.From(10), Is.EqualTo(10));
 				Assert.That(Convert<int?, Enum1>.From(null), Is.EqualTo(Enum1.Value1));
 				Assert.That(Convert<Enum1, int?>.From(Enum1.Value2), Is.EqualTo(1));
-				Assert.That(Convert<Enum1?, int?>.From(null), Is.EqualTo(null));
+				Assert.That(Convert<Enum1?, int?>.From(null), Is.Null);
 			});
 		}
 
@@ -232,7 +232,7 @@ namespace Tests.Common
 
 				Assert.That(ConvertTo<string>.From(Enum4.Value1), Is.EqualTo("115"));
 				Assert.That(ConvertTo<string>.From(Enum4.Value2), Is.EqualTo("125"));
-				Assert.That(ConvertTo<string>.From(Enum4.Value3), Is.EqualTo(null));
+				Assert.That(ConvertTo<string>.From(Enum4.Value3), Is.Null);
 			});
 		}
 
@@ -477,7 +477,7 @@ namespace Tests.Common
 			Assert.Multiple(() =>
 			{
 				Assert.That(ConvertTo<string>.From((Enum14?)Enum14.AA), Is.EqualTo("A"));
-				Assert.That(ConvertTo<string>.From((Enum14?)null), Is.EqualTo(null));
+				Assert.That(ConvertTo<string>.From((Enum14?)null), Is.Null);
 
 				Assert.That(ConvertTo<string>.From((Enum14?)Enum14.BB), Is.EqualTo("B"));
 
@@ -509,7 +509,7 @@ namespace Tests.Common
 			{
 				Assert.That(ConvertTo<int>.From((Enum15?)Enum15.AA), Is.EqualTo(10));
 				Assert.That(ConvertTo<int>.From((Enum15?)null), Is.EqualTo(0));
-				Assert.That(ConvertTo<int?>.From((Enum15?)null), Is.EqualTo(null));
+				Assert.That(ConvertTo<int?>.From((Enum15?)null), Is.Null);
 			});
 		}
 

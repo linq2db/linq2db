@@ -50,7 +50,7 @@ namespace Tests.DataProvider
 					Assert.That(TestType<float?>(conn, "realDataType", DataType.Single), Is.EqualTo(20.31f));
 					Assert.That(TestType<double?>(conn, "floatDataType", DataType.Double), Is.EqualTo(16.2d));
 
-					Assert.That(TestType<bool?>(conn, "boolDataType", DataType.Boolean), Is.EqualTo(true));
+					Assert.That(TestType<bool?>(conn, "boolDataType", DataType.Boolean), Is.True);
 
 					Assert.That(TestType<string>(conn, "charDataType", DataType.Char), Is.EqualTo("1"));
 					Assert.That(TestType<string>(conn, "varcharDataType", DataType.VarChar), Is.EqualTo("234"));

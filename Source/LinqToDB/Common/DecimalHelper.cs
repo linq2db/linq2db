@@ -10,7 +10,7 @@ namespace LinqToDB.Common
 			if (value == 0)
 				return 0;
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			Span<int> bits = stackalloc int[4];
 			decimal.GetBits(value, bits);
 #else
@@ -25,7 +25,7 @@ namespace LinqToDB.Common
 			if (value == 0)
 				return 0;
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			Span<int> bits = stackalloc int[4];
 			decimal.GetBits(value, bits);
 #else

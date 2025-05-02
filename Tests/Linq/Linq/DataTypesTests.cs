@@ -66,7 +66,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region DateOnly
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Table]
 		public class DateOnlyTable : TypeTable<DateOnly>
 		{

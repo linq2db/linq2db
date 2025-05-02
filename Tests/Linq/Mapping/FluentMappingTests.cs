@@ -559,9 +559,9 @@ namespace Tests.Mapping
 			{
 				Assert.That(ed.Name.Name, Is.EqualTo(nameof(IInterfaceBase)));
 
-				Assert.That(ed[nameof(MyInheritedClass4.IntValue)]!.SkipOnUpdate, Is.EqualTo(true));
-				Assert.That(ed[nameof(MyInheritedClass4.StringValue)]!.SkipOnInsert, Is.EqualTo(true));
-				Assert.That(ed[nameof(MyInheritedClass4.MarkedOnType)]!.SkipOnInsert, Is.EqualTo(true));
+				Assert.That(ed[nameof(MyInheritedClass4.IntValue)]!.SkipOnUpdate, Is.True);
+				Assert.That(ed[nameof(MyInheritedClass4.StringValue)]!.SkipOnInsert, Is.True);
+				Assert.That(ed[nameof(MyInheritedClass4.MarkedOnType)]!.SkipOnInsert, Is.True);
 			});
 		}
 

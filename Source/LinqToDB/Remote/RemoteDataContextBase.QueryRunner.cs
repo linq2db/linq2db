@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Async;
 
-#if !NET6_0_OR_GREATER
+#if !NET8_0_OR_GREATER
 using System.Text;
 #endif
 
@@ -257,7 +257,7 @@ namespace LinqToDB.Remote
 
 				public ValueTask DisposeAsync()
 				{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					return DataReader.DisposeAsync();
 #else
 					DataReader.Dispose();
