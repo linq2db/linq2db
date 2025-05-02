@@ -4214,6 +4214,26 @@ END convert_bool;");
 			}
 		}
 
+		[Test]
+		public void Issue3740Test3([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.Execute("CREATE OR REPLACE FUNCTION ISSUE3742(myParameter IN VARCHAR2) RETURN BOOLEAN AS BEGIN RETURN TRUE; END;");
+			try
+			{
+				var parameters = new DataParameter[2];
+				parameters[0] = new DataParameter("myParameter", "test");
+				//parameters[1] = new DataParameter("result", null) { Direction = ParameterDirection.Output };
+				parameters[1] = new DataParameter() { Direction = ParameterDirection.ReturnValue, DataType = DataType.Boolean };
+				db.ExecuteProc<bool>("ISSUE3742", parameters);
+			}
+			finally
+			{
+				db.Execute("DROP FUNCTION ISSUE3742");
+			}
+		}
+
 		[Sql.Expression("convert_bool({0})", ServerSideOnly = true)]
 		private static bool Issue3742Function(string parameter) => throw new InvalidOperationException();
 
