@@ -8,6 +8,7 @@ using System.Text;
 
 using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
+using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
@@ -130,7 +131,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (arg is SqlParameter p)
 				{
-					exp = exp.Unwrap();
+					exp = SequenceHelper.UnwrapConstantAndParameter(exp.Unwrap()).Unwrap();
 
 					// TODO: ValueConverter contract nullability violations
 					if (exp is ConstantExpression constExpr)

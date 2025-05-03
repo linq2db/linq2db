@@ -13,8 +13,8 @@ using LinqToDB.Expressions;
 using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;
-using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB
@@ -80,7 +80,7 @@ namespace LinqToDB
 				{
 					var        type    = pis[i].ParameterType;
 					Expression argExpr = Expression.Constant(parameters[i], (type.IsByRef ? type.GetElementType() : type)!);
-					argExpr = Expression.Call(Methods.LinqToDB.SqlParameter.MakeGenericMethod(argExpr.Type), argExpr);
+					argExpr = SequenceHelper.WrapAsParameter(argExpr);
 
 					args.Add(argExpr);
 				}
@@ -1507,8 +1507,7 @@ namespace LinqToDB
 					return Expression.Constant(null, typeof(object));
 				
 				var argumentType    = p.GetType();
-				var method          = Methods.LinqToDB.SqlParameter.MakeGenericMethod(argumentType);
-				var valueExpression = (Expression)Expression.Call(method, Expression.Constant(p, argumentType));
+				var valueExpression = SequenceHelper.WrapAsParameter(Expression.Constant(p, argumentType));
 				if (valueExpression.Type != typeof(object))
 					valueExpression = Expression.Convert(valueExpression, typeof(object));
 

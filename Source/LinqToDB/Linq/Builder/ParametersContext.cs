@@ -96,6 +96,10 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			var unwrapped = SequenceHelper.UnwrapConstantAndParameter(expression);
+			if (!ReferenceEquals(unwrapped, expression))
+				return SimplifyConversion(unwrapped);
+
 			return expression;
 		}
 
