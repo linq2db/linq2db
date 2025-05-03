@@ -316,7 +316,7 @@ namespace Tests.Data
 			{
 				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null });
 
-				Assert.That(n, Is.EqualTo(null));
+				Assert.That(n, Is.Null);
 			}
 		}
 

@@ -100,7 +100,7 @@ namespace LinqToDB.Linq.Translation
 
 		void RegisterDateOnly()
 		{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			Registration.RegisterMethod((int year, int month, int day) => Sql.MakeDateOnly(year, month, day), TranslateMakeDateOnlyMethod);
 
 			Registration.RegisterConstructor((int year, int month, int day) => new DateOnly(year, month, day), TranslateDateOnlyConstructor);
@@ -536,7 +536,7 @@ namespace LinqToDB.Linq.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		Expression? TranslateDateOnlyConstructor(ITranslationContext translationContext, Expression expression, TranslationFlags translationFlags)
 		{
 			if (expression is not NewExpression newExpression)

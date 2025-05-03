@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CA1873 // Avoid potentially expensive logging
+using System;
 using System.Collections.Concurrent;
 using System.Data.Common;
 using System.Diagnostics;
