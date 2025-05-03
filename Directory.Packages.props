@@ -145,6 +145,9 @@
 		<PackageVersion Include="OpenTelemetry"                                         Version="1.12.0"                       />
 		<PackageVersion Include="OpenTelemetry.Exporter.Console"                        Version="1.12.0"                       />
 		<PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation"     Version="4.3.0"                        />
+	
+		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly"           Version="9.0.4"                        />
+		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server"    Version="9.0.4"                        />
 	</ItemGroup>
 
 	<ItemGroup Label="Compat">

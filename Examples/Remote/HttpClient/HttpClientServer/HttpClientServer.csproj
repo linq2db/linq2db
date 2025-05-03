@@ -10,5 +10,6 @@
 		<ProjectReference Include="..\HttpClientClient\HttpClientClient.csproj" />
 
 		<PackageReference Include="Microsoft.Data.Sqlite" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
 	</ItemGroup>
 </Project>
