@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			AddScalarType(typeof(string),    DataType.Text);
 			AddScalarType(typeof(TimeSpan),  DataType.Interval);
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDate(sb, dt, (DateOnly)v));
 #endif
 
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		static void BuildDate(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
 		{
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value, dt.Type.DbType ?? "date");

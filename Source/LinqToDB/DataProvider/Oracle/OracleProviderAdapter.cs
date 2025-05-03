@@ -1672,7 +1672,10 @@ namespace LinqToDB.DataProvider.Oracle
 			public enum OracleBulkCopyOptions
 			{
 				Default                = 0,
-				UseInternalTransaction = 1
+				UseInternalTransaction = 1,
+				// unused
+				//NotifyAllRowsProcessed = 2,
+				//EnforceIndexChecks = 4,
 			}
 
 			[Wrapper]

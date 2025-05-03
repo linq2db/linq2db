@@ -1,9 +1,0 @@
-﻿{
-	"NET60.Azure": {
-		"Providers": [
-			// Access with Jet OLE DB provider
-			"Access.Jet.OleDb",
-			"Access.Jet.Odbc"
-		]
-	}
-}

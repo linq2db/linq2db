@@ -28,12 +28,12 @@ namespace Tests.DataProvider
 				Assert.Multiple(() =>
 				{
 					Assert.That(proc.CatalogName, Is.Null);
-					Assert.That(proc.IsAggregateFunction, Is.EqualTo(false));
-					Assert.That(proc.IsDefaultSchema, Is.EqualTo(true));
-					Assert.That(proc.IsFunction, Is.EqualTo(false));
-					Assert.That(proc.IsLoaded, Is.EqualTo(true));
-					Assert.That(proc.IsResultDynamic, Is.EqualTo(false));
-					Assert.That(proc.IsTableFunction, Is.EqualTo(false));
+					Assert.That(proc.IsAggregateFunction, Is.False);
+					Assert.That(proc.IsDefaultSchema, Is.True);
+					Assert.That(proc.IsFunction, Is.False);
+					Assert.That(proc.IsLoaded, Is.True);
+					Assert.That(proc.IsResultDynamic, Is.False);
+					Assert.That(proc.IsTableFunction, Is.False);
 					Assert.That(proc.MemberName, Is.EqualTo("Person_SelectByKey"));
 					Assert.That(proc.ProcedureName, Is.EqualTo("Person_SelectByKey"));
 					Assert.That(proc.ResultException, Is.Null);
@@ -49,10 +49,10 @@ namespace Tests.DataProvider
 				Assert.Multiple(() =>
 				{
 					Assert.That(proc.Parameters[0].DataType, Is.EqualTo(DataType.Int32));
-					Assert.That(proc.Parameters[0].IsIn, Is.EqualTo(true));
-					Assert.That(proc.Parameters[0].IsNullable, Is.EqualTo(true));
-					Assert.That(proc.Parameters[0].IsOut, Is.EqualTo(false));
-					Assert.That(proc.Parameters[0].IsResult, Is.EqualTo(false));
+					Assert.That(proc.Parameters[0].IsIn, Is.True);
+					Assert.That(proc.Parameters[0].IsNullable, Is.True);
+					Assert.That(proc.Parameters[0].IsOut, Is.False);
+					Assert.That(proc.Parameters[0].IsResult, Is.False);
 					Assert.That(proc.Parameters[0].ParameterName, Is.EqualTo("@id"));
 					Assert.That(proc.Parameters[0].ParameterType, Is.EqualTo("int?"));
 					Assert.That(proc.Parameters[0].ProviderSpecificType, Is.Null);
@@ -73,10 +73,10 @@ namespace Tests.DataProvider
 				{
 					Assert.That(proc.ResultTable.ForeignKeys, Is.Empty);
 					Assert.That(proc.ResultTable.ID, Is.Null);
-					Assert.That(proc.ResultTable.IsDefaultSchema, Is.EqualTo(false));
-					Assert.That(proc.ResultTable.IsProcedureResult, Is.EqualTo(true));
-					Assert.That(proc.ResultTable.IsProviderSpecific, Is.EqualTo(false));
-					Assert.That(proc.ResultTable.IsView, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.IsDefaultSchema, Is.False);
+					Assert.That(proc.ResultTable.IsProcedureResult, Is.True);
+					Assert.That(proc.ResultTable.IsProviderSpecific, Is.False);
+					Assert.That(proc.ResultTable.IsView, Is.False);
 					Assert.That(proc.ResultTable.SchemaName, Is.Null);
 					Assert.That(proc.ResultTable.TableName, Is.Null);
 					Assert.That(proc.ResultTable.TypeName, Is.EqualTo("Person_SelectByKeyResult"));
@@ -92,9 +92,9 @@ namespace Tests.DataProvider
 					Assert.That(proc.ResultTable.Columns[0].ColumnType, Is.EqualTo(isODBC ? "COUNTER" : "Long"));
 					Assert.That(proc.ResultTable.Columns[0].DataType, Is.EqualTo(DataType.Int32));
 					Assert.That(proc.ResultTable.Columns[0].Description, Is.Null);
-					Assert.That(proc.ResultTable.Columns[0].IsIdentity, Is.EqualTo(true));
-					Assert.That(proc.ResultTable.Columns[0].IsNullable, Is.EqualTo(false));
-					Assert.That(proc.ResultTable.Columns[0].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[0].IsIdentity, Is.True);
+					Assert.That(proc.ResultTable.Columns[0].IsNullable, Is.False);
+					Assert.That(proc.ResultTable.Columns[0].IsPrimaryKey, Is.False);
 					Assert.That(proc.ResultTable.Columns[0].Length, Is.Null);
 				});
 				Assert.Multiple(() =>
@@ -105,8 +105,8 @@ namespace Tests.DataProvider
 					Assert.That(proc.ResultTable.Columns[0].PrimaryKeyOrder, Is.EqualTo(0));
 					Assert.That(proc.ResultTable.Columns[0].ProviderSpecificType, Is.Null);
 					Assert.That(proc.ResultTable.Columns[0].Scale, Is.Null);
-					Assert.That(proc.ResultTable.Columns[0].SkipOnInsert, Is.EqualTo(false));
-					Assert.That(proc.ResultTable.Columns[0].SkipOnUpdate, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[0].SkipOnInsert, Is.False);
+					Assert.That(proc.ResultTable.Columns[0].SkipOnUpdate, Is.False);
 					Assert.That(proc.ResultTable.Columns[0].SystemType, Is.EqualTo(typeof(int)));
 					Assert.That(proc.ResultTable.Columns[0].Table, Is.EqualTo(proc.ResultTable));
 
@@ -114,9 +114,9 @@ namespace Tests.DataProvider
 					Assert.That(proc.ResultTable.Columns[1].ColumnType, Is.EqualTo(isODBC ? "VARCHAR(255)" : "VarChar(50)"));
 					Assert.That(proc.ResultTable.Columns[1].DataType, Is.EqualTo(DataType.VarChar));
 					Assert.That(proc.ResultTable.Columns[1].Description, Is.Null);
-					Assert.That(proc.ResultTable.Columns[1].IsIdentity, Is.EqualTo(false));
-					Assert.That(proc.ResultTable.Columns[1].IsNullable, Is.EqualTo(true));
-					Assert.That(proc.ResultTable.Columns[1].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[1].IsIdentity, Is.False);
+					Assert.That(proc.ResultTable.Columns[1].IsNullable, Is.True);
+					Assert.That(proc.ResultTable.Columns[1].IsPrimaryKey, Is.False);
 					Assert.That(proc.ResultTable.Columns[1].Length, Is.Null);
 				});
 				Assert.Multiple(() =>
@@ -127,8 +127,8 @@ namespace Tests.DataProvider
 					Assert.That(proc.ResultTable.Columns[1].PrimaryKeyOrder, Is.EqualTo(0));
 					Assert.That(proc.ResultTable.Columns[1].ProviderSpecificType, Is.Null);
 					Assert.That(proc.ResultTable.Columns[1].Scale, Is.Null);
-					Assert.That(proc.ResultTable.Columns[1].SkipOnInsert, Is.EqualTo(false));
-					Assert.That(proc.ResultTable.Columns[1].SkipOnUpdate, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[1].SkipOnInsert, Is.False);
+					Assert.That(proc.ResultTable.Columns[1].SkipOnUpdate, Is.False);
 					Assert.That(proc.ResultTable.Columns[1].SystemType, Is.EqualTo(typeof(string)));
 					Assert.That(proc.ResultTable.Columns[1].Table, Is.EqualTo(proc.ResultTable));
 
@@ -136,9 +136,9 @@ namespace Tests.DataProvider
 					Assert.That(proc.ResultTable.Columns[2].ColumnType, Is.EqualTo(isODBC ? "VARCHAR(255)" : "VarChar(50)"));
 					Assert.That(proc.ResultTable.Columns[2].DataType, Is.EqualTo(DataType.VarChar));
 					Assert.That(proc.ResultTable.Columns[2].Description, Is.Null);
-					Assert.That(proc.ResultTable.Columns[2].IsIdentity, Is.EqualTo(false));
-					Assert.That(proc.ResultTable.Columns[2].IsNullable, Is.EqualTo(true));
-					Assert.That(proc.ResultTable.Columns[2].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[2].IsIdentity, Is.False);
+					Assert.That(proc.ResultTable.Columns[2].IsNullable, Is.True);
+					Assert.That(proc.ResultTable.Columns[2].IsPrimaryKey, Is.False);
 					Assert.That(proc.ResultTable.Columns[2].Length, Is.Null);
 				});
 				Assert.Multiple(() =>
@@ -149,8 +149,8 @@ namespace Tests.DataProvider
 					Assert.That(proc.ResultTable.Columns[2].PrimaryKeyOrder, Is.EqualTo(0));
 					Assert.That(proc.ResultTable.Columns[2].ProviderSpecificType, Is.Null);
 					Assert.That(proc.ResultTable.Columns[2].Scale, Is.Null);
-					Assert.That(proc.ResultTable.Columns[2].SkipOnInsert, Is.EqualTo(false));
-					Assert.That(proc.ResultTable.Columns[2].SkipOnUpdate, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[2].SkipOnInsert, Is.False);
+					Assert.That(proc.ResultTable.Columns[2].SkipOnUpdate, Is.False);
 					Assert.That(proc.ResultTable.Columns[2].SystemType, Is.EqualTo(typeof(string)));
 					Assert.That(proc.ResultTable.Columns[2].Table, Is.EqualTo(proc.ResultTable));
 
@@ -158,9 +158,9 @@ namespace Tests.DataProvider
 					Assert.That(proc.ResultTable.Columns[3].ColumnType, Is.EqualTo(isODBC ? "VARCHAR(255)" : "VarChar(50)"));
 					Assert.That(proc.ResultTable.Columns[3].DataType, Is.EqualTo(DataType.VarChar));
 					Assert.That(proc.ResultTable.Columns[3].Description, Is.Null);
-					Assert.That(proc.ResultTable.Columns[3].IsIdentity, Is.EqualTo(false));
-					Assert.That(proc.ResultTable.Columns[3].IsNullable, Is.EqualTo(true));
-					Assert.That(proc.ResultTable.Columns[3].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[3].IsIdentity, Is.False);
+					Assert.That(proc.ResultTable.Columns[3].IsNullable, Is.True);
+					Assert.That(proc.ResultTable.Columns[3].IsPrimaryKey, Is.False);
 					Assert.That(proc.ResultTable.Columns[3].Length, Is.Null);
 				});
 				Assert.Multiple(() =>
@@ -171,8 +171,8 @@ namespace Tests.DataProvider
 					Assert.That(proc.ResultTable.Columns[3].PrimaryKeyOrder, Is.EqualTo(0));
 					Assert.That(proc.ResultTable.Columns[3].ProviderSpecificType, Is.Null);
 					Assert.That(proc.ResultTable.Columns[3].Scale, Is.Null);
-					Assert.That(proc.ResultTable.Columns[3].SkipOnInsert, Is.EqualTo(false));
-					Assert.That(proc.ResultTable.Columns[3].SkipOnUpdate, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[3].SkipOnInsert, Is.False);
+					Assert.That(proc.ResultTable.Columns[3].SkipOnUpdate, Is.False);
 					Assert.That(proc.ResultTable.Columns[3].SystemType, Is.EqualTo(typeof(string)));
 					Assert.That(proc.ResultTable.Columns[3].Table, Is.EqualTo(proc.ResultTable));
 
@@ -180,9 +180,9 @@ namespace Tests.DataProvider
 					Assert.That(proc.ResultTable.Columns[4].ColumnType, Is.EqualTo(isODBC ? "VARCHAR(255)" : "VarChar(1)"));
 					Assert.That(proc.ResultTable.Columns[4].DataType, Is.EqualTo(DataType.VarChar));
 					Assert.That(proc.ResultTable.Columns[4].Description, Is.Null);
-					Assert.That(proc.ResultTable.Columns[4].IsIdentity, Is.EqualTo(false));
-					Assert.That(proc.ResultTable.Columns[4].IsNullable, Is.EqualTo(true));
-					Assert.That(proc.ResultTable.Columns[4].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[4].IsIdentity, Is.False);
+					Assert.That(proc.ResultTable.Columns[4].IsNullable, Is.True);
+					Assert.That(proc.ResultTable.Columns[4].IsPrimaryKey, Is.False);
 					Assert.That(proc.ResultTable.Columns[4].Length, Is.Null);
 				});
 				Assert.Multiple(() =>
@@ -193,8 +193,8 @@ namespace Tests.DataProvider
 					Assert.That(proc.ResultTable.Columns[4].PrimaryKeyOrder, Is.EqualTo(0));
 					Assert.That(proc.ResultTable.Columns[4].ProviderSpecificType, Is.Null);
 					Assert.That(proc.ResultTable.Columns[4].Scale, Is.Null);
-					Assert.That(proc.ResultTable.Columns[4].SkipOnInsert, Is.EqualTo(false));
-					Assert.That(proc.ResultTable.Columns[4].SkipOnUpdate, Is.EqualTo(false));
+					Assert.That(proc.ResultTable.Columns[4].SkipOnInsert, Is.False);
+					Assert.That(proc.ResultTable.Columns[4].SkipOnUpdate, Is.False);
 					Assert.That(proc.ResultTable.Columns[4].SystemType, Is.EqualTo(isODBC ? typeof(string) : typeof(char)));
 					Assert.That(proc.ResultTable.Columns[4].Table, Is.EqualTo(proc.ResultTable));
 				});

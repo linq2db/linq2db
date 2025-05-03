@@ -514,7 +514,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Test]
 		public void TestLiteralsAndParameters_DateOnly([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{

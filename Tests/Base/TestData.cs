@@ -26,7 +26,7 @@ namespace Tests
 		public static DateTime NonReadonlyDate                        = new (2020, 2, 29);
 		public static DateTime NonReadonlyDateAmbiguous               = new (2020, 8, 9);
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		public static readonly DateOnly DateOnly                      = new (2020, 2, 29);
 			public static readonly DateOnly DateOnlyAmbiguous             = new (2020, 8, 9);
 #endif

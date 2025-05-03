@@ -270,7 +270,7 @@ namespace LinqToDB.Data
 
 				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 				{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false);
 					await using (rd.ConfigureAwait(false))
 #else
@@ -526,7 +526,7 @@ namespace LinqToDB.Data
 
 				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 				{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false);
 					await using (rd.ConfigureAwait(false))
 #else

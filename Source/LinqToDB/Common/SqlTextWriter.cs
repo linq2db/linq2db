@@ -198,7 +198,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(StringBuilder? value)
 		{
 			if (value != null)
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				StringBuilder.Append(value);
 #else
 				Append(value.ToString());

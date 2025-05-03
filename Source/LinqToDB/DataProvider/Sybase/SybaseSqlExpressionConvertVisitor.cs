@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.Sybase
 				var stype = cast.Expression.SystemType!.ToUnderlying();
 
 				if (stype == typeof(DateTime)
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 							|| stype == typeof(DateOnly)
 #endif
 				   )
