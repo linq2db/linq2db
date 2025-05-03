@@ -1,10 +1,8 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-#pragma warning disable CA2007
 #pragma warning disable IL2026
 #pragma warning disable IL3050
 
@@ -70,69 +68,69 @@ namespace LinqToDB.Remote.HttpClient.Client
 
 		async Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)
 		{
-			var response = await HttpClient.PostAsJsonAsync($"{requestUri}/{nameof(ILinqService.GetInfoAsync)}", configuration, cancellationToken)
+			var response = await HttpClient.PostAsJsonAsync($"{requestUri}/{nameof(ILinqService.GetInfoAsync)}", configuration, cancellationToken).ConfigureAwait(false)
 				?? throw new LinqToDBException("Return value is not allowed to be null");
 
 			response.EnsureSuccessStatusCode();
 
-			return await response.Content.ReadFromJsonAsync<LinqServiceInfo>(cancellationToken : cancellationToken)
+			return await response.Content.ReadFromJsonAsync<LinqServiceInfo>(cancellationToken : cancellationToken).ConfigureAwait(false)
 				?? throw new LinqToDBException("Return value is not allowed to be null");
 		}
 
 		async Task<int> ILinqService.ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var response = await HttpClient.PostAsJsonAsync($"{requestUri}/{nameof(ILinqService.ExecuteNonQueryAsync)}/{configuration}", queryData, cancellationToken)
+			var response = await HttpClient.PostAsJsonAsync($"{requestUri}/{nameof(ILinqService.ExecuteNonQueryAsync)}/{configuration}", queryData, cancellationToken).ConfigureAwait(false)
 				?? throw new LinqToDBException("Return value is not allowed to be null");
 
 			response.EnsureSuccessStatusCode();
 
 			return int.Parse(await response.Content.ReadAsStringAsync(
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				cancellationToken
 #endif
-				), CultureInfo.InvariantCulture);
+				).ConfigureAwait(false), CultureInfo.InvariantCulture);
 		}
 
 		async Task<string?> ILinqService.ExecuteScalarAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var response = await HttpClient.PostAsJsonAsync($"{requestUri}/{nameof(ILinqService.ExecuteScalarAsync)}/{configuration}", queryData, cancellationToken)
+			var response = await HttpClient.PostAsJsonAsync($"{requestUri}/{nameof(ILinqService.ExecuteScalarAsync)}/{configuration}", queryData, cancellationToken).ConfigureAwait(false)
 				?? throw new LinqToDBException("Return value is not allowed to be null");
 
 			response.EnsureSuccessStatusCode();
 
 			return await response.Content.ReadAsStringAsync(
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				cancellationToken
 #endif
-				);
+				).ConfigureAwait(false);
 		}
 
 		async Task<string> ILinqService.ExecuteReaderAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var response = await HttpClient.PostAsJsonAsync($"{requestUri}/{nameof(ILinqService.ExecuteReaderAsync)}/{configuration}", queryData, cancellationToken)
+			var response = await HttpClient.PostAsJsonAsync($"{requestUri}/{nameof(ILinqService.ExecuteReaderAsync)}/{configuration}", queryData, cancellationToken).ConfigureAwait(false)
 				?? throw new LinqToDBException("Return value is not allowed to be null");
 
 			response.EnsureSuccessStatusCode();
 
 			return await response.Content.ReadAsStringAsync(
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				cancellationToken
 #endif
-				);
+				).ConfigureAwait(false);
 		}
 
 		async Task<int> ILinqService.ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var response = await HttpClient.PostAsJsonAsync($"{requestUri}/{nameof(ILinqService.ExecuteNonQueryAsync)}/{configuration}", queryData, cancellationToken)
+			var response = await HttpClient.PostAsJsonAsync($"{requestUri}/{nameof(ILinqService.ExecuteNonQueryAsync)}/{configuration}", queryData, cancellationToken).ConfigureAwait(false)
 				?? throw new LinqToDBException("Return value is not allowed to be null");
 
 			response.EnsureSuccessStatusCode();
 
 			return int.Parse(await response.Content.ReadAsStringAsync(
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				cancellationToken
 #endif
-				), CultureInfo.InvariantCulture);
+				).ConfigureAwait(false), CultureInfo.InvariantCulture);
 		}
 
 		string? ILinqService.RemoteClientTag { get; set; } = "HttpClient";

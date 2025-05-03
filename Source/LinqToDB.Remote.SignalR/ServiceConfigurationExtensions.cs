@@ -62,7 +62,7 @@ namespace LinqToDB.Remote.SignalR
 				return new SignalRLinqServiceClient(client.Object);
 			});
 
-			services.AddTransient<TContext>(provider =>
+			services.AddTransient(provider =>
 			{
 				var client = provider.GetRequiredService<SignalRLinqServiceClient>();
 				return getContext(client);

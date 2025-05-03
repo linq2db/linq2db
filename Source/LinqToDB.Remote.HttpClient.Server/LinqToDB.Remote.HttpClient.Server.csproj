@@ -1,11 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
 		<AssemblyName>linq2db.Remote.HttpClient.Server</AssemblyName>
 		<RootNamespace>LinqToDB.Remote.HttpClient.Server</RootNamespace>
+		<OutputType>Library</OutputType>
 
-		<TargetFrameworks>net6.0;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net9.0</TargetFrameworks>
 
-		<IsAotCompatible Condition="$(TargetFramework) == 'net8.0' OR $(TargetFramework) == 'net9.0'">true</IsAotCompatible>
+		<IsAotCompatible>true</IsAotCompatible>
 
 		<Title>Linq to DB HttpClient Server Remote</Title>
 		<Description>Linq to DB support for querying remote data contexts over HttpClient</Description>
@@ -14,7 +16,5 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
-
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
 	</ItemGroup>
 </Project>
