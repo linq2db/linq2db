@@ -13,4 +13,8 @@
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<None Include="..\Linq\app.config" Link="app.config" />
+	</ItemGroup>
+
 </Project>
