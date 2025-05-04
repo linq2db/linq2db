@@ -6,7 +6,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Extensions\LinqToDB.Extensions.csproj" />
-		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.SignalR\LinqToDB.Remote.SignalR.csproj" />
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.SignalR.Server\LinqToDB.Remote.SignalR.Server.csproj" />
 		<ProjectReference Include="..\SignalRClient\SignalRClient.csproj" />
 
 		<PackageReference Include="Microsoft.Data.Sqlite" />

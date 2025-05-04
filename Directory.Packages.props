@@ -85,8 +85,9 @@
 
 		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Core"                     Version="1.2.0"                        />
 
+		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="1.2.0"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="8.0.15"                       Condition="'$(TargetFramework)'=='net8.0'" />
-		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="9.0.4"                        Condition="'$(TargetFramework)'!='net8.0'" />
+		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="9.0.4"                        Condition="'$(TargetFramework)'=='net9.0'" />
 
 		<PackageVersion Include="System.Net.Http.Json"                                  Version="9.0.4"                        />
 		<PackageVersion Include="Microsoft.Extensions.Http"                             Version="8.0.1"                        Condition="'$(TargetFramework)'=='net8.0'" />

@@ -200,9 +200,16 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.SignalR/Release'
-      artifact: '$(artifact_linq2db_remote_signalr_binaries)'
-    displayName: Publish linq2db.remote.SignalR build results
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.SignalR.Client/Release'
+      artifact: '$(artifact_linq2db_remote_signalr_client_binaries)'
+    displayName: Publish linq2db.remote.SignalR Client build results
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.SignalR.Server/Release'
+      artifact: '$(artifact_linq2db_remote_signalr_server_binaries)'
+    displayName: Publish linq2db.remote.SignalR Server build results
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1

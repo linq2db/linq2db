@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<AssemblyName>linq2db.Remote.SignalR</AssemblyName>
+		<AssemblyName>linq2db.Remote.SignalR.Client</AssemblyName>
 		<RootNamespace>LinqToDB.Remote.SignalR</RootNamespace>
 
 		<TargetFrameworks>netstandard2.0;net462;net8.0;net9.0</TargetFrameworks>
@@ -8,7 +8,7 @@
 
 		<IsAotCompatible Condition="$(TargetFramework) == 'net8.0' OR $(TargetFramework) == 'net9.0'">true</IsAotCompatible>
 
-		<Title>Linq to DB Signal/R Remote</Title>
+		<Title>Linq to DB Signal/R Client Remote</Title>
 		<Description>Linq to DB support for querying remote data contexts over Signal/R</Description>
 		<Product>$(Title)</Product>
 	</PropertyGroup>
@@ -17,7 +17,6 @@
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
-		<PackageReference Include="Microsoft.AspNetCore.SignalR.Core" />
 	</ItemGroup>
 
 </Project>

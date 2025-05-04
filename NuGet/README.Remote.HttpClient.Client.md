@@ -12,7 +12,8 @@ You can find working example [here](https://github.com/linq2db/linq2db/tree/mast
 
 We provide
 [gRPC support](https://www.nuget.org/packages/linq2db.Remote.gRPC),
-[Signal/R support](https://www.nuget.org/packages/linq2db.Remote.SignalR),
+[Signal/R Client support](https://www.nuget.org/packages/linq2db.Remote.SignalR.Client) and
+[Signal/R Server support](https://www.nuget.org/packages/linq2db.Remote.SignalR.Server),
 [HttpClient.Client support](https://www.nuget.org/packages/linq2db.Remote.HttpClient.Client) and
 [HttpClient.Server support](https://www.nuget.org/packages/linq2db.Remote.HttpClient.Server),
 and [WCF support](https://www.nuget.org/packages/linq2db.Remote.Wcf) (.NET Framework only currently).

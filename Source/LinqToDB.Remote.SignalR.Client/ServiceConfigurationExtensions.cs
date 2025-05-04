@@ -53,7 +53,9 @@ namespace LinqToDB.Remote.SignalR
 			services.AddSingleton(provider =>
 				new Container<HubConnection>(new HubConnectionBuilder()
 					.WithUrl(new Uri(new Uri(baseAddress), serviceName))
+#if NET8_0_OR_GREATER
 					.WithAutomaticReconnect()
+#endif
 					.Build()));
 
 			services.AddScoped(provider =>

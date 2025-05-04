@@ -7,7 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.SignalR\LinqToDB.Remote.SignalR.csproj" />
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.SignalR.Client\LinqToDB.Remote.SignalR.Client.csproj" />
 
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" />

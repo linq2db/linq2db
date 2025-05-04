@@ -6,7 +6,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Source\LinqToDB.Remote.SignalR\LinqToDB.Remote.SignalR.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Remote.SignalR.Client\LinqToDB.Remote.SignalR.Client.csproj" />
 	</ItemGroup>
 	
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">

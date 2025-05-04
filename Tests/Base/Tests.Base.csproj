@@ -10,6 +10,7 @@
 		<ProjectCapability Remove="TestContainer" />
 
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Remote.SignalR.Server\LinqToDB.Remote.SignalR.Server.csproj" />
 
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="NUnit.Analyzers" />
