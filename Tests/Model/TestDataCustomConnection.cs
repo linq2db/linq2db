@@ -109,6 +109,8 @@ namespace Tests.Model
 
 		public string? ConfigurationString => ((IDataContext)Connection).ConfigurationString;
 
+		public void AddMappingSchema(MappingSchema mappingSchema) {}
+
 		public int ConfigurationID => ((IConfigurationID)Connection).ConfigurationID;
 
 		public void AddInterceptor(IInterceptor interceptor)

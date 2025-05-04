@@ -13,72 +13,7 @@ namespace Tests.xUpdate
 //	[Order(10101)]
 	public partial class MergeTests : TestBase
 	{
-		[AttributeUsage(AttributeTargets.Parameter)]
-		public class MergeNotMatchedBySourceDataContextSourceAttribute : IncludeDataSourcesAttribute
-		{
-			static string[] Supported = new[]
-			{
-				TestProvName.AllFirebird5Plus,
-				TestProvName.AllSqlServer2008Plus,
-				TestProvName.AllPostgreSQL17Plus,
-			}.SelectMany(_ => _.Split(',')).ToArray();
-
-			public MergeNotMatchedBySourceDataContextSourceAttribute(params string[] except)
-				: base(true, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
-			{
-			}
-
-			public MergeNotMatchedBySourceDataContextSourceAttribute(bool excludeLinqService, params string[] except)
-				: base(!excludeLinqService, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
-			{
-			}
-		}
-
-		[AttributeUsage(AttributeTargets.Parameter)]
-		public class MergeDataContextSourceAttribute : DataSourcesAttribute
-		{
-			public static List<string> Unsupported = new[]
-			{
-				TestProvName.AllAccess,
-				ProviderName.SqlCe,
-				TestProvName.AllSQLite,
-				TestProvName.AllSqlServer2005,
-				TestProvName.AllClickHouse,
-				TestProvName.AllPostgreSQL14Minus,
-				TestProvName.AllMySql,
-			}.SelectMany(_ => _.Split(',')).ToList();
-
-			public MergeDataContextSourceAttribute(params string[] except)
-				: base(true, Unsupported.Concat(except.SelectMany(_ => _.Split(','))).ToArray())
-			{
-			}
-
-			public MergeDataContextSourceAttribute(bool includeLinqService, params string[] except)
-				: base(includeLinqService, Unsupported.Concat(except.SelectMany(_ => _.Split(','))).ToArray())
-			{
-			}
-		}
-
-		[AttributeUsage(AttributeTargets.Parameter)]
-		public class IdentityInsertMergeDataContextSourceAttribute : IncludeDataSourcesAttribute
-		{
-			static string[] Supported = new[]
-			{
-				TestProvName.AllSybase,
-				TestProvName.AllSqlServer2008Plus,
-				TestProvName.AllPostgreSQL15Plus,
-			}.SelectMany(_ => _.Split(',')).ToArray();
-
-			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
-				: base(true, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
-			{
-			}
-
-			public IdentityInsertMergeDataContextSourceAttribute(bool includeLinqService, params string[] except)
-				: base(includeLinqService, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
-			{
-			}
-		}
+		
 
 		[Table("merge1")]
 		internal sealed class TestMapping1

@@ -105,6 +105,12 @@ namespace LinqToDB
 		/// </summary>
 		public string?       ConfigurationString { get; private set; }
 
+		public void AddMappingSchema(MappingSchema mappingSchema)
+		{
+			MappingSchema    = MappingSchema.CombineSchemas(mappingSchema, MappingSchema);
+			_configurationID = null;
+		}
+
 		/// <summary>
 		/// Gets initial value for database connection string.
 		/// </summary>
