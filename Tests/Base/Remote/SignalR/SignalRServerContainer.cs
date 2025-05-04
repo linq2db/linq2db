@@ -35,11 +35,7 @@ namespace Tests.Remote.ServerContainer
 
 		private ConcurrentDictionary<int, ITestLinqService> _openHosts = new();
 
-#if NETFRAMEWORK
 		private static string GetServiceUrl(int port) => $"http://localhost:{port}";
-#else
-		private static string GetServiceUrl(int port) => $"https://localhost:{port}";
-#endif
 
 		private Func<string?, MappingSchema?, DataConnection> _connectionFactory = null!;
 
