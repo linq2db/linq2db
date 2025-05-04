@@ -10,5 +10,6 @@
 		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.HttpClient.Client\LinqToDB.Remote.HttpClient.Client.csproj" />
 
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" />
 	</ItemGroup>
 </Project>

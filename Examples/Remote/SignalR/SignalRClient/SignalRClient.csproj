@@ -10,5 +10,6 @@
 		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.SignalR\LinqToDB.Remote.SignalR.csproj" />
 
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" />
 	</ItemGroup>
 </Project>
