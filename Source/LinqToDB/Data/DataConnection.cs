@@ -1769,14 +1769,12 @@ namespace LinqToDB.Data
 		/// <remarks><see cref="DataConnection"/> will share <see cref="Mapping.MappingSchema"/> instances that were created by combining same mapping schemas.</remarks>
 		/// <param name="mappingSchema">Mapping schema.</param>
 		/// <returns>Current connection object.</returns>
-		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
+		public void AddMappingSchema(MappingSchema mappingSchema)
 		{
 			CheckAndThrowOnDisposed();
 
 			MappingSchema    = MappingSchema.CombineSchemas(mappingSchema, MappingSchema);
 			_configurationID = null;
-
-			return this;
 		}
 
 		#endregion

@@ -17,42 +17,6 @@ namespace Tests.Linq
 {
 	public class CteTests : TestBase
 	{
-		public static string[] CteSupportedProviders = new[]
-		{
-			TestProvName.AllSqlServer,
-			TestProvName.AllFirebird,
-			TestProvName.AllPostgreSQL,
-			ProviderName.DB2,
-			TestProvName.AllSQLite,
-			TestProvName.AllOracle,
-			TestProvName.AllClickHouse,
-			TestProvName.AllMySqlWithCTE,
-			TestProvName.AllInformix,
-			TestProvName.AllSapHana,
-		}.SelectMany(_ => _.Split(',')).ToArray();
-
-		public class CteContextSourceAttribute : IncludeDataSourcesAttribute
-		{
-			public CteContextSourceAttribute() : this(true)
-			{
-			}
-
-			public CteContextSourceAttribute(bool includeLinqService)
-				: base(includeLinqService, CteSupportedProviders)
-			{
-			}
-
-			public CteContextSourceAttribute(params string[] excludedProviders)
-				: base(CteSupportedProviders.Except(excludedProviders.SelectMany(_ => _.Split(','))).ToArray())
-			{
-			}
-
-			public CteContextSourceAttribute(bool includeLinqService, params string[] excludedProviders)
-				: base(includeLinqService, CteSupportedProviders.Except(excludedProviders.SelectMany(_ => _.Split(','))).ToArray())
-			{
-			}
-		}
-
 		[Test]
 		public void Test1([CteContextSource] string context)
 		{
