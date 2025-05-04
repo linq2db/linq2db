@@ -4,10 +4,6 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR.Client;
 
-#pragma warning disable CA2007
-#pragma warning disable IL2026
-#pragma warning disable IL3050
-
 namespace LinqToDB.Remote.SignalR
 {
 	sealed class Container<T>(T @object)

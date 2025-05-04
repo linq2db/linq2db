@@ -28,17 +28,15 @@ namespace Tests.Remote.ServerContainer
 
 		private ConcurrentDictionary<int, TestWcfLinqService> _openHosts = new();
 
-		private Func<string, MappingSchema?, DataConnection> _connectionFactory = null!;
+		private Func<string?, MappingSchema?, DataConnection> _connectionFactory = null!;
 
-		ITestDataContext IServerContainer.CreateContext(Func<ITestLinqService,DataOptions, DataOptions> optionBuilder, Func<string, MappingSchema?, DataConnection> connectionFactory)
+		ITestDataContext IServerContainer.CreateContext(Func<ITestLinqService,DataOptions, DataOptions> optionBuilder, Func<string?, MappingSchema?, DataConnection> connectionFactory)
 		{
 			_connectionFactory = connectionFactory;
 
 			var service = OpenHost();
 
 			var dx = new TestWcfDataContext(GetPort(), o => optionBuilder(service, o));
-
-			Debug.WriteLine(((IDataContext)dx).ConfigurationID, "Provider ");
 
 			return dx;
 		}

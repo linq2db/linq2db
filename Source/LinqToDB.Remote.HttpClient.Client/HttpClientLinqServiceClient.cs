@@ -121,7 +121,7 @@ namespace LinqToDB.Remote.HttpClient.Client
 
 		async Task<int> ILinqService.ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var response = await HttpClient.PostAsJsonAsync($"{requestUri}/{nameof(ILinqService.ExecuteNonQueryAsync)}/{configuration}", queryData, cancellationToken).ConfigureAwait(false)
+			var response = await HttpClient.PostAsJsonAsync($"{requestUri}/{nameof(ILinqService.ExecuteBatchAsync)}/{configuration}", queryData, cancellationToken).ConfigureAwait(false)
 				?? throw new LinqToDBException("Return value is not allowed to be null");
 
 			response.EnsureSuccessStatusCode();

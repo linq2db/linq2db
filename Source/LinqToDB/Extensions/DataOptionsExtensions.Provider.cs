@@ -417,12 +417,14 @@ namespace LinqToDB
 			     SQLiteProvider                      provider     = SQLiteProvider.AutoDetect,
 			     Func<SQLiteOptions, SQLiteOptions>? optionSetter = null)
 		{
-			var o = options.UseConnectionString(connectionString).UseSQLite(provider, optionSetter);
+			return options.UseConnectionString(connectionString).UseSQLite(provider, optionSetter);
+			// TODO: commented temporary. remove or uncomment if it is needed
+			//var o = options.UseConnectionString(connectionString).UseSQLite(provider, optionSetter);
 
-			if (o.ConnectionOptions.ConfigurationString is null)
-				o = o.UseConfiguration(DataConnection.DefaultConfiguration ?? "");
+			//if (o.ConnectionOptions.ConfigurationString is null)
+			//	o = o.UseConfiguration(DataConnection.DefaultConfiguration ?? "");
 
-			return o;
+			//return o;
 		}
 
 		#endregion
