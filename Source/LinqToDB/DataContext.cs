@@ -778,6 +778,63 @@ namespace LinqToDB
 				}
 			}
 
+			public static Action? Reapply(DataContext dataContext, ConnectionOptions options, ConnectionOptions? previousOptions)
+			{
+				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
+				// Connection string, configuration, data provider, etc. are not reapplyable.
+				//
+				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException("Configuration string cannot be changed.");
+				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException("ConnectionString cannot be changed.");
+				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException("ProviderName cannot be changed.");
+				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException("DbConnection cannot be changed.");
+				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException("DbTransaction cannot be changed.");
+				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException("DisposeConnection cannot be changed.");
+				if (options.DataProvider              != previousOptions?.DataProvider)              throw new LinqToDBException("DataProvider cannot be changed.");
+				if (options.ConnectionFactory         != previousOptions?.ConnectionFactory)         throw new LinqToDBException("ConnectionFactory cannot be changed.");
+				if (options.DataProviderFactory       != previousOptions?.DataProviderFactory)       throw new LinqToDBException("DataProviderFactory cannot be changed.");
+				if (options.OnEntityDescriptorCreated != previousOptions?.OnEntityDescriptorCreated) throw new LinqToDBException("OnEntityDescriptorCreated cannot be changed.");
+
+				Action? action = null;
+
+				if (!ReferenceEquals(options.ConnectionInterceptor, previousOptions?.ConnectionInterceptor))
+				{
+					if (previousOptions?.ConnectionInterceptor != null)
+						dataContext.RemoveInterceptor(previousOptions.ConnectionInterceptor);
+
+					if (options.ConnectionInterceptor != null)
+						dataContext.AddInterceptor(options.ConnectionInterceptor);
+
+					action += () =>
+					{
+						if (options.ConnectionInterceptor != null)
+							dataContext.RemoveInterceptor(options.ConnectionInterceptor);
+
+						if (previousOptions?.ConnectionInterceptor != null)
+							dataContext.AddInterceptor(previousOptions.ConnectionInterceptor);
+					};
+				}
+
+				if (!ReferenceEquals(options.MappingSchema, previousOptions?.MappingSchema))
+				{
+					var mappingSchema = dataContext.MappingSchema;
+
+					dataContext.MappingSchema = dataContext.DataProvider.MappingSchema;
+
+					if (options.MappingSchema != null)
+					{
+						dataContext.MappingSchema = options.MappingSchema;
+					}
+					else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
+					{
+						dataContext.MappingSchema = new (dataContext.MappingSchema);
+					}
+
+					action += () => dataContext.MappingSchema = mappingSchema;
+				}
+
+				return action;
+			}
+
 			public static void Apply(DataContext dataContext, DataContextOptions options)
 			{
 				dataContext._commandTimeout = options.CommandTimeout;
@@ -786,11 +843,83 @@ namespace LinqToDB
 					foreach (var interceptor in options.Interceptors)
 						dataContext.AddInterceptor(interceptor, false);
 			}
+
+			public static Action? Reapply(DataContext dataContext, DataContextOptions options, DataContextOptions? previousOptions)
+			{
+				Action? action = null;
+
+				if (options.CommandTimeout != previousOptions?.CommandTimeout)
+				{
+					var commandTimeout = dataContext._commandTimeout;
+
+					dataContext.CommandTimeout = options.CommandTimeout ?? -1;
+
+					action += () => dataContext.CommandTimeout = commandTimeout ?? -1;
+				}
+
+				if (!ReferenceEquals(options.Interceptors, previousOptions?.Interceptors))
+				{
+					if (previousOptions?.Interceptors != null)
+						foreach (var interceptor in previousOptions.Interceptors)
+							dataContext.RemoveInterceptor(interceptor);
+
+					if (options.Interceptors != null)
+						foreach (var interceptor in options.Interceptors)
+							dataContext.AddInterceptor(interceptor);
+
+					action += () =>
+					{
+						if (options.Interceptors != null)
+							foreach (var interceptor in options.Interceptors)
+								dataContext.RemoveInterceptor(interceptor);
+
+						if (previousOptions?.Interceptors != null)
+							foreach (var interceptor in previousOptions.Interceptors)
+								dataContext.AddInterceptor(interceptor);
+					};
+				}
+
+				return action;
+			}
 		}
 
 		/// <summary>
 		/// Gets service provider, used for data connection instance.
 		/// </summary>
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance => ((IInfrastructure<IServiceProvider>)DataProvider).Instance;
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public IDisposable? UseOptions(Func<DataOptions,DataOptions> optionsSetter)
+		{
+			var prevOptions = Options;
+			var newOptions  = optionsSetter(Options) ?? throw new ArgumentNullException(nameof(optionsSetter));
+
+			if (((IConfigurationID)prevOptions).ConfigurationID == ((IConfigurationID)newOptions).ConfigurationID)
+				return null;
+
+			var configurationID = _configurationID;
+			var msID            = _msID;
+
+			Options          = newOptions;
+			_configurationID = null;
+			_msID            = 0;
+
+			var action = Options.Reapply(this, prevOptions);
+
+			action += () =>
+			{
+				Options          = prevOptions;
+
+#if DEBUG
+				_configurationID = null;
+				_msID            = 0;
+#else
+				_configurationID = configurationID;
+				_msID            = msID;
+#endif
+			};
+
+			return new DisposableAction(action);
+		}
 	}
 }
