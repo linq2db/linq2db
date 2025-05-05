@@ -1121,7 +1121,7 @@ namespace LinqToDB.SqlProvider
 
 			if (_reduceBinary)
 			{
-				var reduced = predicate.Reduce(_nullabilityContext, _evaluationContext, _dataOptions.LinqOptions);
+				var reduced = predicate.Reduce(_nullabilityContext, _evaluationContext, _isInsideNot, _dataOptions.LinqOptions);
 
 				if (!ReferenceEquals(reduced, predicate))
 				{

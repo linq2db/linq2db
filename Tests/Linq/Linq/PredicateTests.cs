@@ -64,14 +64,14 @@ namespace Tests.Linq
 		[Sql.Expression("{0} IS NOT FALSE", IsPredicate = true, ServerSideOnly = true)]
 		static bool IsNotFalse(bool? value) => throw new InvalidOperationException();
 
-		[Sql.Expression("{0} = TRUE", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Unknown)]
+		[Sql.Expression("{0} = TRUE", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison)]
 		static bool? EqualTrue(bool? value) => throw new InvalidOperationException();
-		[Sql.Expression("{0} <> TRUE", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Unknown)]
+		[Sql.Expression("{0} <> TRUE", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison)]
 		static bool? NotEqualTrue(bool? value) => throw new InvalidOperationException();
 
-		[Sql.Expression("{0} = FALSE", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Unknown)]
+		[Sql.Expression("{0} = FALSE", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison)]
 		static bool? EqualFalse(bool? value) => throw new InvalidOperationException();
-		[Sql.Expression("{0} <> FALSE", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Unknown)]
+		[Sql.Expression("{0} <> FALSE", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison)]
 		static bool? NotEqualFalse(bool? value) => throw new InvalidOperationException();
 
 		[Sql.Expression("{0} = UNKNOWN", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.Nullable)]
@@ -109,22 +109,22 @@ namespace Tests.Linq
 		[Sql.Expression("NOT EXISTS{0}", IsPredicate = true, ServerSideOnly = true)]
 		static bool NotExists(IQueryable<int?> values) => throw new InvalidOperationException();
 
-		[Sql.Expression("{0} = (1=1)", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Unknown)]
+		[Sql.Expression("{0} = (1=1)", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison)]
 		static bool? EqualCalculatedTrue(bool? value) => throw new InvalidOperationException();
-		[Sql.Expression("{0} <> (1=1)", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Unknown)]
+		[Sql.Expression("{0} <> (1=1)", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison)]
 		static bool? NotEqualCalculatedTrue(bool? value) => throw new InvalidOperationException();
 
-		[Sql.Expression("{0} = (1=0)", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Unknown)]
+		[Sql.Expression("{0} = (1=0)", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison)]
 		static bool? EqualCalculatedFalse(bool? value) => throw new InvalidOperationException();
-		[Sql.Expression("{0} <> (1=0)", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Unknown)]
+		[Sql.Expression("{0} <> (1=0)", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison)]
 		static bool? NotEqualCalculatedFalse(bool? value) => throw new InvalidOperationException();
 
-		[Sql.Expression("{0} = (1=null)", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.Nullable, Precedence = Precedence.Unknown)]
+		[Sql.Expression("{0} = (1=null)", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.Nullable, Precedence = Precedence.Comparison)]
 		static bool? EqualCalculatedUnknown(bool? value) => throw new InvalidOperationException();
-		[Sql.Expression("{0} <> (1=null)", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.Nullable, Precedence = Precedence.Unknown)]
+		[Sql.Expression("{0} <> (1=null)", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.Nullable, Precedence = Precedence.Comparison)]
 		static bool? NotEqualCalculatedUnknown(bool? value) => throw new InvalidOperationException();
 
-		[Sql.Expression("{0} IS NULL", IsPredicate = true, ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Unknown)]
+		[Sql.Expression("{0} IS NULL", IsPredicate = true, ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Comparison)]
 		static bool IsNull(object? value) => throw new InvalidOperationException();
 
 		// Supported: DB2, FB3+, MySQL, PostgreSQL, SQLite
@@ -267,209 +267,209 @@ namespace Tests.Linq
 			});
 		}
 
-		//// Supported: Access, ClickHouse, DB2, Firebird3+, MySQL, PostgreSQL, SQLite
-		//[Test(Description = "<PREDICATE> <>/= TRUE")]
-		//public void Test_Feature_True(
-		//	[DataSources(false,
-		//		ProviderName.Firebird25,
-		//		TestProvName.AllInformix,
-		//		ProviderName.SqlCe,
-		//		TestProvName.AllOracle,
-		//		TestProvName.AllSapHana,
-		//		TestProvName.AllSqlServer,
-		//		TestProvName.AllSybase)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+		// Supported: Access, ClickHouse, DB2, Firebird3+, MySQL, PostgreSQL, SQLite
+		[Test(Description = "<PREDICATE> <>/= TRUE")]
+		public void Test_Feature_True(
+			[DataSources(false,
+				ProviderName.Firebird25,
+				TestProvName.AllInformix,
+				ProviderName.SqlCe,
+				TestProvName.AllOracle,
+				TestProvName.AllSapHana,
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-		//	Assert.Multiple(() =>
-		//	{
-		//		Assert.That(tb.Where(r => true == EqualTrue(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => true == EqualTrue(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => true == EqualTrue(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualTrue(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualTrue(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualTrue(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
 
-		//		Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
-		//	});
-		//}
+				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+			});
+		}
 
-		//// Supported: Access, ClickHouse, DB2, Firebird3+, MySQL, PostgreSQL, SQLite
-		//[Test(Description = "<PREDICATE> <>/= FALSE")]
-		//public void Test_Feature_False(
-		//	[DataSources(false,
-		//		ProviderName.Firebird25,
-		//		TestProvName.AllInformix,
-		//		ProviderName.SqlCe,
-		//		TestProvName.AllOracle,
-		//		TestProvName.AllSapHana,
-		//		TestProvName.AllSqlServer,
-		//		TestProvName.AllSybase)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+		// Supported: Access, ClickHouse, DB2, Firebird3+, MySQL, PostgreSQL, SQLite
+		[Test(Description = "<PREDICATE> <>/= FALSE")]
+		public void Test_Feature_False(
+			[DataSources(false,
+				ProviderName.Firebird25,
+				TestProvName.AllInformix,
+				ProviderName.SqlCe,
+				TestProvName.AllOracle,
+				TestProvName.AllSapHana,
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-		//	Assert.Multiple(() =>
-		//	{
-		//		Assert.That(tb.Where(r => true == EqualFalse(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualFalse(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualFalse(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualFalse(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => true == EqualFalse(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualFalse(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
 
-		//		Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
-		//	});
-		//}
+				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+			});
+		}
 
-		//// Supported: Firebird3+
-		//[Test(Description = "UNKNOWN literal")]
-		//public void Test_Feature_Unknown(
-		//	[DataSources(false,
-		//		TestProvName.AllAccess,
-		//		TestProvName.AllClickHouse,
-		//		TestProvName.AllDB2,
-		//		TestProvName.AllInformix,
-		//		TestProvName.AllMySql,
-		//		TestProvName.AllOracle,
-		//		TestProvName.AllPostgreSQL,
-		//		TestProvName.AllSapHana,
-		//		ProviderName.Firebird25,
-		//		ProviderName.SqlCe,
-		//		TestProvName.AllSQLite,
-		//		TestProvName.AllSqlServer,
-		//		TestProvName.AllSybase)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+		// Supported: Firebird3+
+		[Test(Description = "<PREDICATE> <>/= UNKNOWN")]
+		public void Test_Feature_Unknown(
+			[DataSources(false,
+				TestProvName.AllAccess,
+				TestProvName.AllClickHouse,
+				TestProvName.AllDB2,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSapHana,
+				ProviderName.Firebird25,
+				ProviderName.SqlCe,
+				TestProvName.AllSQLite,
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-		//	Assert.Multiple(() =>
-		//	{
-		//		Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
 
-		//		Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
-		//	});
-		//}
+				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+			});
+		}
 
-		//// Supported: ACCESS, CH, DB2, FB3+, MYSQL, PGSQL, SQLITE
-		//[Test(Description = "predicate = (1=1)")]
-		//public void Test_Feature_CalculatedTrue(
-		//	[DataSources(false,
-		//		ProviderName.Firebird25,
-		//		TestProvName.AllInformix,
-		//		TestProvName.AllOracle,
-		//		TestProvName.AllSapHana,
-		//		ProviderName.SqlCe,
-		//		TestProvName.AllSqlServer,
-		//		TestProvName.AllSybase)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+		// Supported: ACCESS, CH, DB2, FB3+, MYSQL, PGSQL, SQLITE
+		[Test(Description = "<PREDICATE> = (1=1)")]
+		public void Test_Feature_CalculatedTrue(
+			[DataSources(false,
+				ProviderName.Firebird25,
+				TestProvName.AllInformix,
+				TestProvName.AllOracle,
+				TestProvName.AllSapHana,
+				ProviderName.SqlCe,
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-		//	Assert.Multiple(() =>
-		//	{
-		//		Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
 
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
-		//	});
-		//}
+				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+			});
+		}
 
-		//// Supported: ACCESS, CH, DB2, FB3+, MYSQL, PGSQL, SQLITE
-		//[Test(Description = "predicate = (1=0)")]
-		//public void Test_Feature_CalculatedFalse(
-		//	[DataSources(false,
-		//		ProviderName.Firebird25,
-		//		TestProvName.AllInformix,
-		//		TestProvName.AllOracle,
-		//		TestProvName.AllSapHana,
-		//		ProviderName.SqlCe,
-		//		TestProvName.AllSqlServer,
-		//		TestProvName.AllSybase)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+		// Supported: ACCESS, CH, DB2, FB3+, MYSQL, PGSQL, SQLITE
+		[Test(Description = "<PREDICATE> = (1=0)")]
+		public void Test_Feature_CalculatedFalse(
+			[DataSources(false,
+				ProviderName.Firebird25,
+				TestProvName.AllInformix,
+				TestProvName.AllOracle,
+				TestProvName.AllSapHana,
+				ProviderName.SqlCe,
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-		//	Assert.Multiple(() =>
-		//	{
-		//		Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
 
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
-		//	});
-		//}
+				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+			});
+		}
 
-		//// Supported: ACCESS, CH, DB2, FB3+, MYSQL, PGSQL, SQLITE
-		//[Test(Description = "predicate = (1=null)")]
-		//public void Test_Feature_CalculatedUnknown(
-		//	[DataSources(false,
-		//		ProviderName.Firebird25,
-		//		TestProvName.AllInformix,
-		//		TestProvName.AllOracle,
-		//		TestProvName.AllSapHana,
-		//		ProviderName.SqlCe,
-		//		TestProvName.AllSqlServer,
-		//		TestProvName.AllSybase)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+		// Supported: ACCESS, CH, DB2, FB3+, MYSQL, PGSQL, SQLITE
+		[Test(Description = "<PREDICATE> = (1=null)")]
+		public void Test_Feature_CalculatedUnknown(
+			[DataSources(false,
+				ProviderName.Firebird25,
+				TestProvName.AllInformix,
+				TestProvName.AllOracle,
+				TestProvName.AllSapHana,
+				ProviderName.SqlCe,
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-		//	Assert.Multiple(() =>
-		//	{
-		//		Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
 
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
-		//	});
-		//}
+				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+			});
+		}
 
 		//// Supported: DB2, Firebird, PostgreSQL, SQLite, SQLServer2022
 		//// ClickHouse: tracked by https://github.com/ClickHouse/ClickHouse/issues/58145

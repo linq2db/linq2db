@@ -309,7 +309,7 @@ namespace LinqToDB.SqlQuery
 			/// <summary>
 			/// Converts predicate to final form based on null comparison options.
 			/// </summary>
-			public ISqlPredicate Reduce(NullabilityContext nullability, EvaluationContext context, LinqOptions options)
+			public ISqlPredicate Reduce(NullabilityContext nullability, EvaluationContext context, bool insideNot, LinqOptions options)
 			{
 				if (options.CompareNulls == CompareNulls.LikeSql)
 					return this;
@@ -412,10 +412,11 @@ namespace LinqToDB.SqlQuery
 					}
 					default:
 					{
-						if (WithNull.Value /*|| insideNot*/)
+						if (WithNull.Value || insideNot)
 							return this;
 
 						var search = new SqlSearchCondition(true)
+							.Add(MakeWithoutNulls())
 							.Add(new IsNull(Expr1, false))
 							.Add(new IsNull(Expr2, false));
 

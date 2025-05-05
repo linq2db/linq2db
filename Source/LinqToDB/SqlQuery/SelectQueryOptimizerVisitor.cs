@@ -2787,7 +2787,7 @@ namespace LinqToDB.SqlQuery
 
 			protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 			{
-				IQueryElement reduced = predicate.Reduce(_nullability, _evaluationContext, _dataOptions.LinqOptions);
+				IQueryElement reduced = predicate.Reduce(_nullability, _evaluationContext, _isInsideNot, _dataOptions.LinqOptions);
 				if (!ReferenceEquals(reduced, predicate))
 				{
 					reduced = _optimizerVisitor.Optimize(_evaluationContext, _nullability, null, _dataOptions, _mappingSchema, reduced, false, _isInsideNot, true);
