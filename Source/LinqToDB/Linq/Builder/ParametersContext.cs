@@ -140,7 +140,11 @@ namespace LinqToDB.Linq.Builder
 
 			var finalParameterId = entry.ParameterId;
 
-			var forceNew = expr.UnwrapConvert().NodeType == ExpressionType.Constant;
+			var unwrapped = expr.UnwrapConvert();
+			var forceNew  = false;
+
+			if (unwrapped.NodeType == ExpressionType.Constant)
+				forceNew = CanBeConstant(unwrapped);
 
 			if (forceNew)
 				CacheManager.RegisterParameterEntry(expr, entry);
