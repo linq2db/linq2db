@@ -1566,7 +1566,7 @@ namespace LinqToDB.SqlProvider
 				}
 				else
 				{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					StringBuilder.Append(field.StringBuilder);
 #else
 					StringBuilder.Append(field.StringBuilder.ToString());

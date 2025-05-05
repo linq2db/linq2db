@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace LinqToDB.CommandLine
 {
@@ -46,7 +47,7 @@ namespace LinqToDB.CommandLine
 		/// </summary>
 		/// <param name="args">Raw CLI arguments.</param>
 		/// <returns>Command execution status code.</returns>
-		public virtual int Execute(string[] args)
+		public virtual ValueTask<int> Execute(string[] args)
 		{
 			if (args.Length == 0)
 			{
@@ -54,7 +55,7 @@ namespace LinqToDB.CommandLine
 				if (_defaultCommand != null)
 					return _defaultCommand.Execute(this, args, new Dictionary<CliOption, object?>(), args);
 
-				return StatusCodes.SUCCESS;
+				return new(StatusCodes.SUCCESS);
 			}
 			else
 			{
@@ -69,7 +70,7 @@ namespace LinqToDB.CommandLine
 					{
 						(options, var hasErrors) = ParseCommandOptions(command, args, unknownArgs, true);
 						if (hasErrors)
-							return StatusCodes.INVALID_ARGUMENTS;
+							return new(StatusCodes.INVALID_ARGUMENTS);
 					}
 
 					return command.Execute(this, args, options ?? new(), unknownArgs);
@@ -80,7 +81,7 @@ namespace LinqToDB.CommandLine
 			if (_defaultCommand != null)
 				return _defaultCommand.Execute(this, args, new Dictionary<CliOption, object?>(), args);
 
-			return StatusCodes.INVALID_ARGUMENTS;
+			return new(StatusCodes.INVALID_ARGUMENTS);
 		}
 
 		private (Dictionary<CliOption, object?> options, bool hasErrors) ParseCommandOptions(CliCommand command, string[] args, List<string> unknownArgs, bool reportFirstErrorOnly)

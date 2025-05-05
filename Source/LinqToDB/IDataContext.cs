@@ -141,5 +141,11 @@ namespace LinqToDB
 		/// </returns>
 		/// <exception cref="ArgumentNullException"></exception>
 		public IDisposable? UseOptions(Func<DataOptions,DataOptions> optionsSetter);
+
+		/// <summary>
+		/// Adds mapping schema to current context.
+		/// </summary>
+		/// <param name="mappingSchema">Mapping schema to add.</param>
+		void AddMappingSchema(MappingSchema mappingSchema);
 	}
 }

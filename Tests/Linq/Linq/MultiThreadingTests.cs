@@ -123,7 +123,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MergeInsert([MergeTests.MergeDataContextSource(false, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void MergeInsert([MergeDataContextSource(false, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();

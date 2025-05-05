@@ -49,7 +49,7 @@ namespace Tests.DataProvider
 				{
 					Assert.That(TestType<long?>(conn, "bigintDataType", DataType.UInt64, skipUndefinedNull: true), Is.EqualTo(1000000L));
 					Assert.That(TestType<decimal?>(conn, "numericDataType", DataType.Decimal, skipUndefinedNull: true), Is.EqualTo(9999999m));
-					Assert.That(TestType<bool?>(conn, "bitDataType", DataType.Boolean, skipUndefinedNull: true), Is.EqualTo(true));
+					Assert.That(TestType<bool?>(conn, "bitDataType", DataType.Boolean, skipUndefinedNull: true), Is.True);
 					Assert.That(TestType<short?>(conn, "smallintDataType", DataType.Int16, skipUndefinedNull: true), Is.EqualTo(25555));
 					Assert.That(TestType<decimal?>(conn, "decimalDataType", DataType.Decimal, skipUndefinedNull: true), Is.EqualTo(2222222m));
 					Assert.That(TestType<int?>(conn, "intDataType", DataType.Int32, skipUndefinedNull: true), Is.EqualTo(7777777));
@@ -254,7 +254,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as ntext)", DataParameter.NText("p", "123")), Is.EqualTo("123"));
 					Assert.That(conn.Execute<string>("SELECT @p + ''", DataParameter.Create("p", "123")), Is.EqualTo("123"));
 
-					Assert.That(conn.Execute<string>("SELECT @p + ''", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<string>("SELECT @p + ''", DataParameter.Create("p", (string?)null)), Is.Null);
 					Assert.That(conn.Execute<string>("SELECT @p + ''", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 				});
 			}
@@ -276,12 +276,12 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as varbinary(2))"), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as varbinary(4))"), Is.EqualTo(new Binary(arr2)));
 
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"), Is.Null);
 
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(2))", DataParameter.Binary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary(2))", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary(2))", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary)", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary)", DataParameter.VarBinary("p", null)), Is.Null);
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(1))", DataParameter.Binary("p", Array.Empty<byte>())), Is.EqualTo(new byte[] { 0 }));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary)", DataParameter.Binary("p", Array.Empty<byte>())), Is.EqualTo(new byte[8000]));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary)", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
@@ -303,7 +303,7 @@ namespace Tests.DataProvider
 				Assert.Multiple(() =>
 				{
 					Assert.That(conn.Execute<SqlBinary>("SELECT Cast(12345    as binary(2))").Value, Is.EqualTo(arr));
-					Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(1        as bit)").Value, Is.EqualTo(true));
+					Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(1        as bit)").Value, Is.True);
 					Assert.That(conn.Execute<SqlByte>("SELECT Cast(1        as tinyint)").Value, Is.EqualTo((byte)1));
 					Assert.That(conn.Execute<SqlDecimal>("SELECT Cast(1        as decimal)").Value, Is.EqualTo(1));
 					Assert.That(conn.Execute<SqlDouble>("SELECT Cast(1        as float)").Value, Is.EqualTo(1.0));
@@ -326,8 +326,8 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<SqlBinary>("SELECT Cast(@p as varbinary)", new DataParameter("p", new SqlBinary(arr))).Value, Is.EqualTo(arr));
 					Assert.That(conn.Execute<SqlBinary>("SELECT Cast(@p as varbinary)", new DataParameter("p", new SqlBinary(arr), DataType.VarBinary)).Value, Is.EqualTo(arr));
 
-					Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(@p as bit)", new DataParameter("p", true)).Value, Is.EqualTo(true));
-					Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(@p as bit)", new DataParameter("p", true, DataType.Boolean)).Value, Is.EqualTo(true));
+					Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(@p as bit)", new DataParameter("p", true)).Value, Is.True);
+					Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(@p as bit)", new DataParameter("p", true, DataType.Boolean)).Value, Is.True);
 				});
 
 				var conv = conn.MappingSchema.GetConverter<string,SqlXml>()!;

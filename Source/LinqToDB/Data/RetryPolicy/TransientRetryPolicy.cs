@@ -1,6 +1,6 @@
 ﻿// IsTransient property added in .NET 5
 // Some providers implement it for other runtimes (e.g. MySqlConnector), but we don't handle them here (could be added on request)
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 using System;
 using System.Collections.Generic;
 
