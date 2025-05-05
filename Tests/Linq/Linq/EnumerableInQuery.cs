@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -214,9 +215,64 @@ namespace Tests.Linq
 				}.DefaultIfEmpty()
 				where it.ColorName == "Red"
 				select it;
-				//select new {it.ColorName, it.StyleName, it.Count};
 
 			AssertQuery(query);
+		}
+
+		class IntermediateProjection
+		{
+			public string?    ColorName   { get; set; }
+			public string?    StyleName   { get; set; }
+			public int        Count       { get; set; }
+			public int        Conditional { get; set; }
+			public List<int>? ArrayOfInts { get; set; }
+		}
+
+		[Test]
+		public void WithComplexProjection([IncludeDataSources(
+			TestProvName.AllFirebird4Plus,
+			TestProvName.AllMySql80,
+			TestProvName.AllOracle12Plus,
+			TestProvName.AllPostgreSQL93Plus,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var (items, colors, styles) = SomeItem.Seed();
+
+			using var itemsTable  = db.CreateLocalTable(items);
+			using var colorsTable = db.CreateLocalTable(colors);
+			using var stylesTable = db.CreateLocalTable(styles);
+
+			var query =
+				from item in itemsTable.LoadWith(it => it.Color).LoadWith(it => it.Style)
+				from it in new[]
+				{
+					new IntermediateProjection
+					{
+						ColorName   = item.Color!.Name,
+						StyleName   = item.Style!.Name,
+						Count       = itemsTable.Count(),
+						Conditional = item.Color!.Name == "Red" ? itemsTable.Count() : 0,
+						ArrayOfInts = new List<int> { 1, 2, 3 }
+					},
+					new IntermediateProjection()
+					{
+						ColorName   = null, 
+						StyleName   = item.Style!.Name, 
+						Count       = 0,
+						ArrayOfInts = new List<int> { 4, 5, 6 }
+					},
+				}.DefaultIfEmpty()
+				where it.ColorName == "Red" || it.Count == 0
+				select it;
+
+			AssertQuery(query);
+
+			var distinctQuery = query.Select(x => x.Conditional).Distinct();
+
+			AssertQuery(distinctQuery);
+
 		}
 
 	}

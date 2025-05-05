@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 		public MappingSchema     MappingSchema { get; }
 		public MergeFallback?    Fallback      { get; }
 
-		public delegate bool MergeFallback(Expression projection1, Expression projection2, [NotNullWhen(true)] out Expression? merged);
+		public delegate bool MergeFallback(Expression projection1, Expression projection2, out Expression? merged);
 
 		public MergeProjectionHelper(ExpressionBuilder builder, MappingSchema mappingSchema, MergeFallback? fallback = null)
 		{
@@ -247,7 +247,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (Fallback != null && Fallback(projection1, projection2, out merged))
+			if (Fallback != null && Fallback(projection1, projection2, out merged) && merged != null)
 				return true;
 
 			return false;

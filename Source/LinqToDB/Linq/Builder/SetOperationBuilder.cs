@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
@@ -457,12 +456,14 @@ namespace LinqToDB.Linq.Builder
 				error = null;
 				var ref1 = new ContextRefExpression(ElementType, _sequence1);
 
-				if (!BuildProjectionExpression(ref1, _sequence1, out var projection1, out var placeholders1, out var eager1, out error))
+				var helper = new MergeProjectionHelper(Builder, MappingSchema);
+
+				if (!helper.BuildProjectionExpression(ref1, _sequence1, out var projection1, out var placeholders1, out var eager1, out error))
 					return false;
 
 				var ref2 = new ContextRefExpression(ElementType, _sequence2);
 
-				if (!BuildProjectionExpression(ref2, _sequence2, out var projection2, out var placeholders2, out var eager2, out error))
+				if (!helper.BuildProjectionExpression(ref2, _sequence2, out var projection2, out var placeholders2, out var eager2, out error))
 					return false;
 
 				_projection1 = projection1;
@@ -1009,56 +1010,6 @@ namespace LinqToDB.Linq.Builder
 
 					return newEager;
 				}
-			}
-
-			public bool BuildProjectionExpression(
-				Expression                                                                                path, 
-				IBuildContext                                                                             context,
-				[NotNullWhen(true)] out  Expression?                                                      projection,
-				[NotNullWhen(true)] out  List<(SqlPlaceholderExpression placeholder, Expression[] path)>? foundPlaceholders,
-				[NotNullWhen(true)] out  List<SqlEagerLoadExpression>?                                    foundEager,
-				[NotNullWhen(false)] out SqlErrorExpression?                                              error)
-			{
-				var current = path;
-
-				do
-				{
-					var projected = Builder.BuildSqlExpression(context, current, buildPurpose: BuildPurpose.Expression, buildFlags: BuildFlags.ForceDefaultIfEmpty | BuildFlags.ForSetProjection | BuildFlags.ResetPrevious);
-
-					error = SequenceHelper.FindError(projected);
-
-					if (error != null)
-					{
-						projection = null;
-						foundPlaceholders = null;
-						foundEager = null;
-						return false;
-					}
-
-					projected = Builder.BuildExtractExpression(context, projected);
-
-					var lambdaResolver = new LambdaResolveVisitor(context, BuildPurpose.Sql, true);
-					projected = lambdaResolver.Visit(projected);
-
-					var optimizer = new ExpressionOptimizerVisitor();
-					projected = optimizer.Visit(projected);
-
-					projected = SequenceHelper.RemoveMarkers(projected);
-
-					if (ExpressionEqualityComparer.Instance.Equals(projected, current))
-						break;
-
-					current = projected;
-				} while (true);
-
-				var pathBuilder = new ExpressionPathVisitor();
-				var withPath    = pathBuilder.Visit(current);
-
-				foundPlaceholders = pathBuilder.FoundPlaceholders;
-				foundEager = pathBuilder.FoundEager;
-				projection = withPath;
-
-				return true;
 			}
 
 			public override IBuildContext Clone(CloningContext context)
