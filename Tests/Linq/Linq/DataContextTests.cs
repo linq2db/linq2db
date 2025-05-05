@@ -65,6 +65,8 @@ namespace Tests.Linq
 		[Test, NonParallelizable]
 		public void TestNullConfiguration_UnsetRemote([Values] bool cleanDefault)
 		{
+			if (TestConfiguration.DisableRemoteContext) Assert.Ignore("Remote context disabled");
+
 			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
 
 			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
@@ -91,6 +93,8 @@ namespace Tests.Linq
 		[Test, NonParallelizable]
 		public void TestNullConfiguration_SetNullRemote([Values] bool cleanDefault)
 		{
+			if (TestConfiguration.DisableRemoteContext) Assert.Ignore("Remote context disabled");
+
 			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
 
 			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
