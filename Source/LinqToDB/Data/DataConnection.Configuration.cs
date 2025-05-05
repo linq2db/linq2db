@@ -520,20 +520,12 @@ namespace LinqToDB.Data
 					return;
 				}
 
-				// TODO: commented temporary. remove or uncomment if it is needed
-				//DefaultConfiguration ??= options.ConfigurationString ?? "";
-
 				var dataProvider = options.DataProviderFactory == null ? options.DataProvider : options.DataProviderFactory(options);
-
-				//DefaultSettings ??= new LinqToDBSettings(
-				//	options.ConfigurationString ?? DefaultConfiguration,
-				//	options.ProviderName        ?? dataProvider?.Name ?? DefaultDataProvider ?? string.Empty,
-				//	options.ConnectionString    ?? string.Empty);
 
 				var doSave = true;
 
 				switch (
-				          options.ConfigurationString,// ?? DefaultConfiguration ?? string.Empty,
+				          options.ConfigurationString,
 				                           options.ConnectionString,
 				                                                dataProvider,
 				                                                             options.ProviderName,

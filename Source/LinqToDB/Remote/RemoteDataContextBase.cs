@@ -159,9 +159,7 @@ namespace LinqToDB.Remote
 					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
 					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
-					_configurationInfo = new ConfigurationInfo()
-					// TODO: commented temporary. remove or uncomment if it is needed
-					//_configurations[ConfigurationString ?? ""] = _configurationInfo = new ConfigurationInfo
+					_configurations[ConfigurationString ?? ""] = _configurationInfo = new ConfigurationInfo
 					{
 						LinqServiceInfo  = info,
 						MappingSchema    = ms,
@@ -193,9 +191,7 @@ namespace LinqToDB.Remote
 					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
 					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
-					_configurationInfo = new ConfigurationInfo()
-					// TODO: commented temporary. remove or uncomment if it is needed
-					//_configurations[ConfigurationString ?? ""] = _configurationInfo = new ConfigurationInfo
+					_configurations[ConfigurationString ?? ""] = _configurationInfo = new ConfigurationInfo
 					{
 						LinqServiceInfo  = info,
 						MappingSchema    = ms,

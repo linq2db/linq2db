@@ -34,9 +34,9 @@ namespace Tests
 		protected IServerContainer GetServerContainer(RemoteTransport transport = DefaultTransport) => _serverContainers[transport];
 
 #if NETFRAMEWORK
-		const RemoteTransport DefaultTransport = RemoteTransport.WCF;
+		protected const RemoteTransport DefaultTransport = RemoteTransport.WCF;
 #else
-		const RemoteTransport DefaultTransport = RemoteTransport.gRPC;
+		protected const RemoteTransport DefaultTransport = RemoteTransport.gRPC;
 #endif
 
 		public enum RemoteTransport

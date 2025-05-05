@@ -418,13 +418,6 @@ namespace LinqToDB
 			     Func<SQLiteOptions, SQLiteOptions>? optionSetter = null)
 		{
 			return options.UseConnectionString(connectionString).UseSQLite(provider, optionSetter);
-			// TODO: commented temporary. remove or uncomment if it is needed
-			//var o = options.UseConnectionString(connectionString).UseSQLite(provider, optionSetter);
-
-			//if (o.ConnectionOptions.ConfigurationString is null)
-			//	o = o.UseConfiguration(DataConnection.DefaultConfiguration ?? "");
-
-			//return o;
 		}
 
 		#endregion
