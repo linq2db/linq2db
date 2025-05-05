@@ -3291,7 +3291,7 @@ FROM
 		sealed record CteRecord(int Id, int Value1, int Value2, int Value4, int Value5);
 
 		[Test]
-		public void CteCloning_Original([CteTests.CteContextSource(TestProvName.AllSapHana)] string context)
+		public void CteCloning_Original([CteContextSource(TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<CteTable>();
@@ -3328,7 +3328,7 @@ FROM
 		}
 
 		[Test]
-		public void CteCloning_Simple([CteTests.CteContextSource] string context)
+		public void CteCloning_Simple([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<CteTable>();
@@ -3358,7 +3358,7 @@ FROM
 		}
 
 		[Test]
-		public void CteCloning_SimpleChain([CteTests.CteContextSource] string context)
+		public void CteCloning_SimpleChain([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<CteTable>();
@@ -3398,7 +3398,7 @@ FROM
 		}
 
 		[Test]
-		public void CteCloning_RecursiveChain([CteTests.CteContextSource(TestProvName.AllSapHana, TestProvName.AllOracle)] string context)
+		public void CteCloning_RecursiveChain([CteContextSource(TestProvName.AllSapHana, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<CteTable>();
