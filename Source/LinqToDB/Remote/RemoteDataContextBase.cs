@@ -1,33 +1,34 @@
 ﻿using System;
-using System.Data.Common;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Async;
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Common.Internal.Cache;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Interceptors;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Remote
 {
-	using Common;
-	using Common.Internal;
-	using Common.Internal.Cache;
-	using DataProvider;
-	using Expressions;
-	using Extensions;
-	using Infrastructure;
-	using Interceptors;
-	using Linq.Translation;
-	using Tools;
-
-	using Data;
-
-	using Mapping;
-	using SqlProvider;
-
 	[PublicAPI]
-	public abstract partial class RemoteDataContextBase : IDataContext, 
+	public abstract partial class RemoteDataContextBase : IDataContext,
 		IInfrastructure<IServiceProvider>
 	{
 		protected RemoteDataContextBase(DataOptions options)
@@ -37,14 +38,21 @@ namespace LinqToDB.Remote
 			options.Apply(this);
 		}
 
-		[Obsolete("Use ConfigurationString instead.")]
-		public string? Configuration
+		public string?          ConfigurationString
 		{
-			get => ConfigurationString;
-			set => ConfigurationString = value;
+			get;
+			// TODO: Mark private in v7 and remove warning suppressions from callers
+			[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
+			set;
 		}
 
-		public string?          ConfigurationString { get; set; }
+		public void AddMappingSchema(MappingSchema mappingSchema)
+		{
+#pragma warning disable CS0618 // Type or member is obsolete
+			MappingSchema    = MappingSchema.CombineSchemas(mappingSchema, MappingSchema);
+#pragma warning restore CS0618 // Type or member is obsolete
+			_configurationID = null;
+		}
 
 		protected void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
@@ -52,12 +60,14 @@ namespace LinqToDB.Remote
 		}
 
 		SimpleServiceProvider? _serviceProvider;
-		readonly object        _guard = new();
+		readonly Lock          _guard = new();
 
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance
 		{
 			get
 			{
+				ThrowOnDisposed();
+
 				if (_serviceProvider == null)
 				{
 					lock (_guard)
@@ -95,7 +105,7 @@ namespace LinqToDB.Remote
 					static entry =>
 					{
 						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return new RemoteMappingSchema(entry.Key.contextIDPrefix, (MappingSchema)Activator.CreateInstance(entry.Key.mappingSchemaType)!);
+						return new RemoteMappingSchema(entry.Key.contextIDPrefix, ActivatorExt.CreateInstance<MappingSchema>(entry.Key.mappingSchemaType));
 					});
 			}
 
@@ -118,7 +128,7 @@ namespace LinqToDB.Remote
 					static entry =>
 					{
 						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return new RemoteMemberTranslator((IMemberTranslator)Activator.CreateInstance(entry.Key)!);
+						return new RemoteMemberTranslator(ActivatorExt.CreateInstance<IMemberTranslator>(entry.Key));
 					});
 			}
 
@@ -127,7 +137,7 @@ namespace LinqToDB.Remote
 				ProviderTranslator = providerTranslator;
 			}
 
-			public Expression? Translate(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags) 
+			public Expression? Translate(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
 				=> ProviderTranslator.Translate(translationContext, memberExpression, translationFlags);
 		}
 
@@ -149,16 +159,16 @@ namespace LinqToDB.Remote
 					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
 					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
-					_configurationInfo = new ConfigurationInfo
+					_configurationInfo = new ConfigurationInfo()
 					{
-						LinqServiceInfo = info,
-						MappingSchema   = ms,
+						LinqServiceInfo  = info,
+						MappingSchema    = ms,
 						MemberTranslator = translator,
 					};
 				}
 				finally
 				{
-					(client as IDisposable)?.Dispose();
+					DisposeClient(client);
 				}
 			}
 
@@ -182,16 +192,16 @@ namespace LinqToDB.Remote
 					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
 					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
-					_configurationInfo = new ConfigurationInfo
+					_configurationInfo = new ConfigurationInfo()
 					{
-						LinqServiceInfo = info,
-						MappingSchema = ms,
+						LinqServiceInfo  = info,
+						MappingSchema    = ms,
 						MemberTranslator = translator,
 					};
 				}
 				finally
 				{
-					(client as IDisposable)?.Dispose();
+					await DisposeClientAsync(client).ConfigureAwait(false);
 				}
 			}
 
@@ -224,18 +234,36 @@ namespace LinqToDB.Remote
 			}
 		}
 
+		private MappingSchema? _providedMappingSchema;
 		private MappingSchema? _mappingSchema;
-		public  MappingSchema   MappingSchema
+		private MappingSchema? _serializationMappingSchema;
+
+		public MappingSchema   MappingSchema
 		{
-			get => _mappingSchema ??= GetConfigurationInfo().MappingSchema;
+			get
+			{
+				ThrowOnDisposed();
+
+				return _mappingSchema ??= _providedMappingSchema == null ? GetConfigurationInfo().MappingSchema : MappingSchema.CombineSchemas(_providedMappingSchema, GetConfigurationInfo().MappingSchema);
+			}
+			// TODO: Mark private in v7 and remove warning suppressions from callers
+			[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 			set
 			{
-				_mappingSchema = value;
-				_serializationMappingSchema = MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, MappingSchema);
+				ThrowOnDisposed();
+
+				// Because setter could be called from constructor, we cannot build composite schemas here to avoid server calls on half-initialized context
+				// Instead we reset schemas status and finish initialization in getters for MappingSchema and SerializationMappingSchema, when they are called
+				if (_providedMappingSchema != value)
+				{
+					_providedMappingSchema = value;
+					// reset schemas
+					_mappingSchema              = null;
+					_serializationMappingSchema = null;
+				}
 			}
 		}
 
-		private  MappingSchema? _serializationMappingSchema;
 		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, MappingSchema);
 
 		public  bool InlineParameters { get; set; }
@@ -247,11 +275,13 @@ namespace LinqToDB.Remote
 		private List<string>? _nextQueryHints;
 		public  List<string>   NextQueryHints => _nextQueryHints ??= new();
 
-		private        Type? _sqlProviderType;
-		public virtual Type   SqlProviderType
+		private           Type? _sqlProviderType;
+		protected virtual Type   SqlProviderType
 		{
 			get
 			{
+				ThrowOnDisposed();
+
 				if (_sqlProviderType == null)
 				{
 					var type = GetConfigurationInfo().LinqServiceInfo.SqlBuilderType;
@@ -261,11 +291,16 @@ namespace LinqToDB.Remote
 				return _sqlProviderType;
 			}
 
-			set => _sqlProviderType = value;
+			set
+			{
+				ThrowOnDisposed();
+
+				_sqlProviderType = value;
+			}
 		}
 
-		private        Type? _sqlOptimizerType;
-		public virtual Type   SqlOptimizerType
+		private           Type? _sqlOptimizerType;
+		protected virtual Type   SqlOptimizerType
 		{
 			get
 			{
@@ -278,7 +313,12 @@ namespace LinqToDB.Remote
 				return _sqlOptimizerType;
 			}
 
-			set => _sqlOptimizerType = value;
+			set
+			{
+				ThrowOnDisposed();
+
+				_sqlOptimizerType = value;
+			}
 		}
 
 		/// <summary>
@@ -293,6 +333,8 @@ namespace LinqToDB.Remote
 
 		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
+			ThrowOnDisposed();
+
 			var dataType   = reader.GetFieldType(idx);
 			var methodInfo = GetReaderMethodInfo(dataType);
 
@@ -340,6 +382,8 @@ namespace LinqToDB.Remote
 		{
 			get
 			{
+				ThrowOnDisposed();
+
 				if (_createSqlProvider == null)
 				{
 					var key = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options);
@@ -397,6 +441,8 @@ namespace LinqToDB.Remote
 		{
 			get
 			{
+				ThrowOnDisposed();
+
 				if (_getSqlOptimizer == null)
 				{
 					var key = Tuple.Create(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags);
@@ -431,6 +477,8 @@ namespace LinqToDB.Remote
 
 		public void BeginBatch()
 		{
+			ThrowOnDisposed();
+
 			_batchCounter++;
 
 			_queryBatch ??= new List<string>();
@@ -438,6 +486,8 @@ namespace LinqToDB.Remote
 
 		public void CommitBatch()
 		{
+			ThrowOnDisposed();
+
 			if (_batchCounter == 0)
 				throw new InvalidOperationException();
 
@@ -454,14 +504,16 @@ namespace LinqToDB.Remote
 				}
 				finally
 				{
-					(client as IDisposable)?.Dispose();
+					DisposeClient(client);
 					_queryBatch = null;
 				}
 			}
 		}
 
-		public async Task CommitBatchAsync()
+		public async Task CommitBatchAsync(CancellationToken cancellationToken = default)
 		{
+			ThrowOnDisposed();
+
 			if (_batchCounter == 0)
 				throw new InvalidOperationException();
 
@@ -474,14 +526,30 @@ namespace LinqToDB.Remote
 				try
 				{
 					var data = LinqServiceSerializer.Serialize(SerializationMappingSchema, _queryBatch!.ToArray());
-					await client.ExecuteBatchAsync(ConfigurationString, data).ConfigureAwait(false);
+					await client.ExecuteBatchAsync(ConfigurationString, data, cancellationToken).ConfigureAwait(false);
 				}
 				finally
 				{
-					(client as IDisposable)?.Dispose();
+					await DisposeClientAsync(client).ConfigureAwait(false);
 					_queryBatch = null;
 				}
 			}
+		}
+
+		private static void DisposeClient(ILinqService client)
+		{
+			if (client is IDisposable disposable)
+				disposable.Dispose();
+			else if (client is IAsyncDisposable asyncDisposable)
+				SafeAwaiter.Run(asyncDisposable.DisposeAsync);
+		}
+
+		private static async ValueTask DisposeClientAsync(ILinqService client)
+		{
+			if (client is IAsyncDisposable asyncDisposable)
+				await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+			else if (client is IDisposable disposable)
+				disposable.Dispose();
 		}
 
 		protected bool Disposed { get; private set; }
@@ -489,7 +557,7 @@ namespace LinqToDB.Remote
 		protected void ThrowOnDisposed()
 		{
 			if (Disposed)
-				throw new ObjectDisposedException("RemoteDataContext", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
+				throw new ObjectDisposedException(GetType().FullName, "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 
 		void IDataContext.Close()
@@ -520,29 +588,40 @@ namespace LinqToDB.Remote
 
 		public virtual void Dispose()
 		{
-			Disposed = true;
-
 			((IDataContext)this).Close();
+
+			Disposed = true;
 		}
 
-		public virtual ValueTask DisposeAsync()
+		public virtual async ValueTask DisposeAsync()
 		{
-			Disposed = true;
+			await ((IDataContext)this).CloseAsync().ConfigureAwait(false);
 
-			return new ValueTask(((IDataContext)this).CloseAsync());
+			Disposed = true;
 		}
 
 		internal static class ConfigurationApplier
 		{
 			public static void Apply(RemoteDataContextBase dataContext, ConnectionOptions options)
 			{
+				if (options.ConfigurationString != null)
+				{
+#pragma warning disable CS0618 // Type or member is obsolete
+					dataContext.ConfigurationString = options.ConfigurationString;
+#pragma warning restore CS0618 // Type or member is obsolete
+				}
+
 				if (options.MappingSchema != null)
 				{
+#pragma warning disable CS0618 // Type or member is obsolete
 					dataContext.MappingSchema = options.MappingSchema;
+#pragma warning restore CS0618 // Type or member is obsolete
 				}
 				else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
 				{
+#pragma warning disable CS0618 // Type or member is obsolete
 					dataContext.MappingSchema = new(dataContext.MappingSchema);
+#pragma warning restore CS0618 // Type or member is obsolete
 				}
 			}
 

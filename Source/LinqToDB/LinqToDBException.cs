@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace LinqToDB
 {
@@ -15,7 +16,8 @@ namespace LinqToDB
 		/// This constructor initializes the <see cref="Exception.Message"/>
 		/// property with generic error message "A Linq To DB exception has occurred.".
 		/// </remarks>
-		[Obsolete("Use one of constructors with message")]
+		// don't remove, we just want to guard users from using it explicitly
+		[Obsolete("Use one of constructors with message parameter"), EditorBrowsable(EditorBrowsableState.Never)]
 		public LinqToDBException()
 			: base("A Linq To DB exception has occurred.")
 		{
@@ -55,7 +57,8 @@ namespace LinqToDB
 		/// <param name="innerException">The InnerException, if any, that threw
 		/// the current exception.</param>
 		/// <seealso cref="Exception.InnerException"/>
-		[Obsolete("Use one of constructors with message")]
+		// don't remove, we just want to guard users from using it explicitly
+		[Obsolete("Use one of constructors with message parameter"), EditorBrowsable(EditorBrowsableState.Never)]
 		public LinqToDBException(Exception innerException)
 			: base(innerException.Message, innerException)
 		{

@@ -8,17 +8,17 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.Sybase.Translation;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Common;
-	using Data;
-	using Extensions;
-	using Linq.Translation;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
-	using Translation;
-
 	sealed class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase,        SybaseProvider.Unmanaged ) {} }
 	sealed class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged, SybaseProvider.DataAction) {} }
 
@@ -172,7 +172,7 @@ namespace LinqToDB.DataProvider.Sybase
 							value = chr.ToString();
 					break;
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				case DataType.Date       :
 					if (value is DateOnly d)
 						value = d.ToDateTime(TimeOnly.MinValue);

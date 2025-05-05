@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Async;
-using LinqToDB.Interceptors;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -257,7 +259,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void TestLoadWithAndDuplications([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -273,7 +274,6 @@ namespace Tests.Linq
 					select m;
 
 				query = query.LoadWith(d => d.Details);
-
 
 				var expectedQuery = from m in masterRecords
 					join dd in detailRecords on m.Id1 equals dd.MasterId
@@ -316,7 +316,6 @@ namespace Tests.Linq
 					.LoadWith(a => a.One.d.SubDetails)
 					.LoadWith(b => b.Two.SubDetails).ThenLoad(sd => sd.Detail);
 
-
 				var result = query.ToArray();
 
 				foreach (var item in result)
@@ -330,7 +329,6 @@ namespace Tests.Linq
 				}
 			}
 		}
-
 
 		[Test]
 		public void TestLoadWithToString1([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -449,7 +447,6 @@ FROM
 				var result = query.ToList();
 			}
 		}
-
 
 		[Test]
 		public void TestSelectProjectionList([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -911,7 +908,6 @@ FROM
 				result   = result .Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
 				expected = expected.Select(_ => new { _.Master, Details = _.Details.OrderBy(_ => _.DetailId).ToArray() }).ToArray();
 
-
 				AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 			}
 		}
@@ -1056,7 +1052,6 @@ FROM
 				Assert.That(result, Has.Length.EqualTo(result2.Length));
 			}
 		}
-
 
 		[Test]
 		public void ProjectionWithoutClass([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -1367,7 +1362,6 @@ FROM
 			}
 		}
 #endregion
-
 
 #region issue 2196
 		public class EventScheduleItemBase
@@ -1797,7 +1791,7 @@ FROM
 
 			await using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = true;
+				await db.SetKeepConnectionAliveAsync(true);
 
 				await db.GetTable<Parent>()
 					.LoadWith(x => x.Children)
@@ -1806,7 +1800,7 @@ FROM
 
 			await using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = false;
+				await db.SetKeepConnectionAliveAsync(false);
 
 				await db.GetTable<Parent>()
 					.LoadWith(x => x.Children)
@@ -1829,7 +1823,7 @@ FROM
 
 			using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = true;
+				db.SetKeepConnectionAlive(true);
 
 				db.GetTable<Parent>()
 					.LoadWith(x => x.Children)
@@ -1838,7 +1832,7 @@ FROM
 
 			using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = false;
+				db.SetKeepConnectionAlive(false);
 
 				db.GetTable<Parent>()
 					.LoadWith(x => x.Children)
@@ -1862,7 +1856,7 @@ FROM
 
 			await using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = true;
+				db.SetKeepConnectionAlive(true);
 
 				using var _ = db.BeginTransaction();
 				await db.GetTable<Parent>()
@@ -1872,7 +1866,7 @@ FROM
 
 			await using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = false;
+				db.SetKeepConnectionAlive(false);
 
 				using var _ = db.BeginTransaction();
 				await db.GetTable<Parent>()
@@ -1897,7 +1891,7 @@ FROM
 
 			using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = true;
+				db.SetKeepConnectionAlive(true);
 
 				using var _ = db.BeginTransaction();
 				db.GetTable<Parent>()
@@ -1907,7 +1901,7 @@ FROM
 
 			using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = false;
+				db.SetKeepConnectionAlive(false);
 
 				using var _ = db.BeginTransaction();
 				db.GetTable<Parent>()
@@ -3271,6 +3265,294 @@ FROM
 			public DateTime Date { get; set; }
 			public bool IsActive { get; set; }
 		}
+		#endregion
+
+		#region Issue : CTE cloning
+
+		class CteTable
+		{
+			public int Id { get; set; }
+			public int Value1 { get; set; }
+			public int Value2 { get; set; }
+			public int Value3 { get; set; }
+			public int Value4 { get; set; }
+			public int Value5 { get; set; }
+		}
+
+		class CteChildTable
+		{
+			public int Id { get; set; }
+			public int Value { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(CteTable.Value3))]
+			public CteTable[]? MainRecords { get; set; }
+		}
+
+		sealed record CteRecord(int Id, int Value1, int Value2, int Value4, int Value5);
+
+		[Test]
+		public void CteCloning_Original([CteContextSource(TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CteTable>();
+			using var tc = db.CreateLocalTable<CteChildTable>();
+
+			var cte = db.GetCte<CteTable>(cte =>
+			{
+				return (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				).Concat(
+					from c in cte
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+					);
+			});
+
+			var query = (from r in cte
+						 join c in tc on r.Value4 equals c.Id into ds
+						 from d in ds.DefaultIfEmpty()
+						 select new
+						 {
+							 r.Id,
+							 r.Value1,
+							 r.Value2,
+							 r.Value3,
+							 r.Value4,
+							 r.Value5,
+							 Children = d.MainRecords!.ToArray()
+						 }
+						);
+
+			query.ToArray();
+		}
+
+		[Test]
+		public void CteCloning_Simple([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CteTable>();
+			using var tc = db.CreateLocalTable<CteChildTable>();
+
+			var cte = (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				).AsCte();
+
+			var query = (from r in cte
+						 join c in tc on r.Value4 equals c.Id into ds
+						 from d in ds.DefaultIfEmpty()
+						 select new
+						 {
+							 r.Id,
+							 r.Value1,
+							 r.Value2,
+							 r.Value3,
+							 r.Value4,
+							 r.Value5,
+							 Children = d.MainRecords!.ToArray()
+						 }
+						);
+
+			query.ToArray();
+		}
+
+		[Test]
+		public void CteCloning_SimpleChain([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CteTable>();
+			using var tc = db.CreateLocalTable<CteChildTable>();
+
+			var cte1 = (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				).AsCte();
+
+			var cte2 = (
+				from r in cte1
+				select new CteTable() { Id = r.Id, Value1 = r.Value2, Value2 = r.Value2, Value3 = r.Value5, Value4 = r.Value4, Value5 = r.Value3 }
+				).AsCte();
+
+			var cte3 = (
+				from r in cte2
+				select new CteTable() { Id = r.Value1, Value1 = r.Value3, Value2 = r.Value5, Value3 = r.Value2, Value4 = r.Id, Value5 = r.Value4 }
+				).AsCte();
+
+			var query = (from r in cte3
+						 join c in tc on r.Value4 equals c.Id into ds
+						 from d in ds.DefaultIfEmpty()
+						 select new
+						 {
+							 r.Id,
+							 r.Value1,
+							 r.Value2,
+							 r.Value3,
+							 r.Value4,
+							 r.Value5,
+							 Children = d.MainRecords!.ToArray()
+						 }
+						);
+
+			query.ToArray();
+		}
+
+		[Test]
+		public void CteCloning_RecursiveChain([CteContextSource(TestProvName.AllSapHana, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CteTable>();
+			using var tc = db.CreateLocalTable<CteChildTable>();
+
+			var cte1 = db.GetCte<CteTable>(cte =>
+			{
+				return (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				).Concat(
+					from c in cte
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value1, Value3 = r.Value3, Value4 = r.Value1, Value5 = r.Value5 }
+					);
+			});
+
+			var cte2 = db.GetCte<CteTable>(cte =>
+			{
+				return (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Id }
+				)
+				.Concat(
+					from c in cte1
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value2, Value4 = r.Id, Value5 = r.Value5 }
+					)
+				.Concat(
+					from c in cte
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Id, Value4 = r.Value2, Value5 = r.Value5 }
+					)
+				;
+			});
+
+			var cte3 = db.GetCte<CteTable>(cte =>
+			{
+				return (
+				from r in tb
+				select new CteTable() { Id = r.Value4, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				)
+				.Concat(
+					from c in cte2
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Id, Value5 = r.Value4 }
+					)
+				.Concat(
+					from c in cte1
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value4, Value2 = r.Id, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+					)
+				.Concat(
+					from c in cte
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Id, Value4 = r.Value4, Value5 = r.Value5 }
+					);
+			});
+
+			var query = (from r in cte3
+						 join c in tc on r.Value4 equals c.Id into ds
+						 from d in ds.DefaultIfEmpty()
+						 select new
+						 {
+							 r.Id,
+							 r.Value1,
+							 r.Value2,
+							 r.Value3,
+							 r.Value4,
+							 r.Value5,
+							 Children = d.MainRecords!.ToArray()
+						 }
+						);
+
+			query.ToArray();
+		}
+
+		#endregion
+
+		#region Issue 4797
+
+		[Table]
+		public class Issue4797Parent
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue4797Child.ParentId))]
+			public Issue4797Child[]? Children { get; set; }
+
+			public static readonly Issue4797Parent[] Data =
+			[
+				new Issue4797Parent() { Id = 1 }
+			];
+		}
+
+		[Table]
+		public class Issue4797Child
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column]
+			public int? ParentId { get; set; }
+
+			[Association(ThisKey = nameof(ParentId), OtherKey = nameof(Issue4797Parent.Id))]
+			public Issue4797Parent? Parent { get; set; }
+
+			public static readonly Issue4797Child[] Data =
+			[
+				new Issue4797Child() { Id = 1, ParentId = 1 },
+				new Issue4797Child() { Id = 2, ParentId = 1 },
+			];
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4797")]
+		public void Issue4797Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var pt = db.CreateLocalTable(Issue4797Parent.Data);
+			using var ct = db.CreateLocalTable(Issue4797Child.Data);
+
+			var result = pt
+				.LoadWith(
+					x => x.Children,
+					x => x.LoadWith(y => y.Parent, y => y.LoadWith(z => z.Children)))
+				.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Children, Is.Not.Null);
+			});
+			Assert.That(result[0].Children, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Children.Count(r => r.Id == 1), Is.EqualTo(1));
+				Assert.That(result[0].Children.Count(r => r.Id == 2), Is.EqualTo(1));
+			});
+			Assert.That(result[0].Children[0].Parent, Is.Not.Null);
+			Assert.That(result[0].Children[0].Parent.Children, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Children[0].Parent.Children, Has.Length.EqualTo(2));
+				Assert.That(result[0].Children[1].Parent, Is.Not.Null);
+			});
+			Assert.That(result[0].Children[1].Parent.Children, Is.Not.Null);
+			Assert.That(result[0].Children[1].Parent.Children, Has.Length.EqualTo(2));
+
+			// TODO: right now we create separate objects for same record on different levels
+			// if we want to change this behavior - it makes sense to add object equality asserts
+		}
+
 		#endregion
 	}
 }

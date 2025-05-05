@@ -1,6 +1,6 @@
-﻿using System;
+﻿#pragma warning disable CA1873 // Avoid potentially expensive logging
+using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -9,6 +9,24 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
+
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.DB2;
+using LinqToDB.DataProvider.Firebird;
+using LinqToDB.DataProvider.MySql;
+using LinqToDB.DataProvider.Oracle;
+using LinqToDB.DataProvider.PostgreSQL;
+using LinqToDB.DataProvider.SqlCe;
+using LinqToDB.DataProvider.SQLite;
+using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.EntityFrameworkCore.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Metadata;
+using LinqToDB.SqlQuery;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -21,24 +39,6 @@ using Microsoft.Extensions.Logging;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Data;
-	using DataProvider;
-	using DataProvider.DB2;
-	using DataProvider.Firebird;
-	using DataProvider.MySql;
-	using DataProvider.Oracle;
-	using DataProvider.PostgreSQL;
-	using DataProvider.SqlCe;
-	using DataProvider.SQLite;
-	using DataProvider.SqlServer;
-	using Expressions;
-	using Extensions;
-	using Mapping;
-	using Metadata;
-	using SqlQuery;
-	using Internal;
-	using LinqToDB.Common;
-
 	// ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
 	/// <summary>
 	/// Default EF Core - LINQ To DB integration bridge implementation.
@@ -92,7 +92,6 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				ExpirationScanFrequency = TimeSpan.FromHours(1.0)
 			});
-
 
 		/// <summary>
 		/// Force clear of internal caches.
@@ -541,7 +540,7 @@ namespace LinqToDB.EntityFrameworkCore
 					}
 			}
 
-			var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();
+			var value = Expression.Lambda(expr).CompileExpression().DynamicInvokeExt();
 			return value;
 		}
 
@@ -679,6 +678,7 @@ namespace LinqToDB.EntityFrameworkCore
 					{
 						logger.Log(logLevel, "Query Execution Time: {ExecutionTime}. Records Affected: {RecordsAffected}.", info.ExecutionTime, info.RecordsAffected);
 					}
+
 					break;
 
 				case TraceInfoStep.Error:
@@ -697,6 +697,7 @@ namespace LinqToDB.EntityFrameworkCore
 					{
 						logger.Log(logLevel, "Total Execution Time: {TotalExecutionTime}. Rows Count: {RecordsAffected}.", info.ExecutionTime, info.RecordsAffected);
 					}
+
 					break;
 				}
 			}

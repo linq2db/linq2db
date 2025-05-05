@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
+
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+using LinqToDB.SqlQuery.Visitors;
 
 // ReSharper disable InconsistentNaming
 
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using Expressions;
-	using Linq;
-	using Mapping;
-	using SqlQuery;
-	using SqlQuery.Visitors;
-
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
 		#region Init
@@ -137,6 +136,7 @@ namespace LinqToDB.SqlProvider
 				if (result.tableSource != null)
 					return result;
 			}
+
 			currentPath.Pop();
 
 			return default;
@@ -387,6 +387,30 @@ namespace LinqToDB.SqlProvider
 				{
 					item.Expression = QueryHelper.SimplifyColumnExpression(item.Expression);
 				});
+			}
+
+			return statement;
+		}
+
+		protected virtual SqlStatement FinalizeInsertOrUpdate(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			if (statement is SqlInsertOrUpdateStatement insertOrUpdateStatement)
+			{
+				// get from columns expression
+				//
+
+				insertOrUpdateStatement.Insert.Items.ForEach(item =>
+				{
+					item.Expression = QueryHelper.SimplifyColumnExpression(item.Expression);
+				});
+
+				insertOrUpdateStatement.Update.Items.ForEach(item =>
+				{
+					item.Expression = QueryHelper.SimplifyColumnExpression(item.Expression);
+				});
+
+				CorrectSetters(insertOrUpdateStatement.Insert.Items, insertOrUpdateStatement.SelectQuery);
+				CorrectSetters(insertOrUpdateStatement.Update.Items, insertOrUpdateStatement.SelectQuery);
 			}
 
 			return statement;
@@ -816,6 +840,7 @@ namespace LinqToDB.SqlProvider
 									context.StaticValue.newExpressions.Add(normalized);
 									return newIndex;
 								}
+
 								return idx;
 							});
 
@@ -827,6 +852,7 @@ namespace LinqToDB.SqlProvider
 						return newExpression;
 					}
 				}
+
 				return e;
 			});
 
@@ -1365,15 +1391,15 @@ namespace LinqToDB.SqlProvider
 			return updateStatement;
 		}
 
-		protected void CorrectUpdateSetters(SqlUpdateStatement updateStatement)
+		protected void CorrectSetters(List<SqlSetExpression> setters, SelectQuery query)
 		{
 			// remove current column wrapping
-			foreach (var item in updateStatement.Update.Items)
+			foreach (var item in setters)
 			{
 				if (item.Expression == null)
 					continue;
 
-				item.Expression = item.Expression.Convert(updateStatement.SelectQuery, (v, e) =>
+				item.Expression = item.Expression.Convert(query, (v, e) =>
 				{
 					if (e is SqlColumn column && column.Parent == v.Context)
 					{
@@ -1394,6 +1420,7 @@ namespace LinqToDB.SqlProvider
 
 						return column.Expression;
 					}
+
 					return e;
 				});
 
@@ -1420,6 +1447,11 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 			}
+		}
+
+		protected void CorrectUpdateSetters(SqlUpdateStatement updateStatement)
+		{
+			CorrectSetters(updateStatement.Update.Items, updateStatement.SelectQuery);
 		}
 
 		protected static SqlUpdateStatement DetachUpdateTableFromUpdateQuery(SqlUpdateStatement updateStatement, DataOptions dataOptions, bool moveToJoin, bool addNewSource, out SqlTableSource newSource)
@@ -1746,6 +1778,7 @@ namespace LinqToDB.SqlProvider
 							break;
 						}
 					}
+
 					break;
 				}
 				case QueryElementType.SqlInlinedExpression:
@@ -1766,6 +1799,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var newStatement = TransformStatement(statement, dataOptions, mappingSchema);
 			newStatement = FinalizeUpdate(newStatement, dataOptions, mappingSchema);
+			newStatement = FinalizeInsertOrUpdate(newStatement, dataOptions, mappingSchema);
 
 			if (SqlProviderFlags.IsParameterOrderDependent)
 			{

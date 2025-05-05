@@ -94,6 +94,7 @@ namespace Tests.SchemaProvider
 							Assert.That(indexTable.ForeignKeys, Has.Count.EqualTo(1));
 							Assert.That(indexTable.ForeignKeys[0].ThisColumns, Has.Count.EqualTo(2));
 						}
+
 						break;
 
 					case string when context.IsAnyOf(TestProvName.AllInformix):
@@ -105,6 +106,7 @@ namespace Tests.SchemaProvider
 							Assert.That(indexTable.ForeignKeys, Has.Count.EqualTo(2));
 						});
 					}
+
 						break;
 				}
 
@@ -125,6 +127,7 @@ namespace Tests.SchemaProvider
 							Assert.That(col.Scale, Is.Null);
 						});
 					}
+
 						break;
 				}
 			}
@@ -309,7 +312,7 @@ namespace Tests.SchemaProvider
 		public void SchemaProviderNormalizeName([IncludeDataSources(TestProvName.AllSQLiteClassic)]
 			string context)
 		{
-			using (var db = new DataConnection(context, "Data Source=:memory:;"))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(context, "Data Source=:memory:;")))
 			{
 				db.Execute(
 					@"create table Customer
@@ -377,6 +380,13 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		[ActiveIssue("Unstable, depends on metadata selection order")]
+		/*
+		 * Expected Was
+		 * ! FK_TestSchemaY_OtherID <> FK_TestSchemaY_TestSchemaX
+		 * ParentTestSchemaX == ParentTestSchemaX
+		 * TestSchemaX == TestSchemaX
+		 */
 		[Test]
 		public void ForeignKeyMemberNameTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -498,6 +508,18 @@ namespace Tests.SchemaProvider
 					}
 				}
 			}
+		}
+
+		[Test]
+		public void ClickHouseDataTypeTest([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var conn     = GetDataConnection(context);
+			var       sp       = conn.DataProvider.GetSchemaProvider();
+			var       dbSchema = sp.GetSchema(conn);
+			var       table    = dbSchema.Tables.Single(t => t.TableName!.Equals("alltypes", StringComparison.OrdinalIgnoreCase));
+			var       pk       = table.Columns.FirstOrDefault(t => t.IsPrimaryKey);
+
+			Assert.That(pk, Is.Not.Null);
 		}
 	}
 }

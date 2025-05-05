@@ -8,9 +8,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-#if !EF6 && !EF31
-using LinqToDB.Common.Internal;
-#endif
 using Microsoft.EntityFrameworkCore;
 #if !EF31
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -25,28 +22,25 @@ using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.EntityFrameworkCore.Storage;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Metadata;
+using LinqToDB.SqlQuery;
+
+using EfExpressionPrinter = Microsoft.EntityFrameworkCore.Query.ExpressionPrinter;
+using EfSqlExpression = Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression;
+
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Internal;
-	using Mapping;
-	using Metadata;
-	using Reflection;
-	using SqlQuery;
-
-	using EfSqlExpression = SqlExpression;
-	using EfExpressionPrinter = ExpressionPrinter;
-
 	/// <summary>
 	/// LINQ To DB metadata reader for EF.Core model.
 	/// </summary>
 	internal sealed class EFCoreMetadataReader : IMetadataReader
 	{
-#if EF6
-		private const string PgBinaryExpressionName = "PostgresBinaryExpression";
-#elif !EF31
+#if !EF31
 		// renamed in 8.0.0
 		private const string PgBinaryExpressionName = "PgBinaryExpression";
 #endif
@@ -64,7 +58,7 @@ namespace LinqToDB.EntityFrameworkCore
 #if !EF31
 		private readonly IDiagnosticsLogger<DbLoggerCategory.Query>?                  _logger;
 #endif
-#if !EF6 && !EF31
+#if !EF31
 		private readonly DatabaseDependencies?                                        _databaseDependencies;
 #endif
 
@@ -77,13 +71,11 @@ namespace LinqToDB.EntityFrameworkCore
 				_dependencies         = accessor.GetService<RelationalSqlTranslatingExpressionVisitorDependencies>();
 				_mappingSource        = accessor.GetService<IRelationalTypeMappingSource>();
 #if EF31
-				_annotationProvider = accessor.GetService<IMigrationsAnnotationProvider>();
+				_annotationProvider   = accessor.GetService<IMigrationsAnnotationProvider>();
 #else
 				_annotationProvider   = accessor.GetService<IRelationalAnnotationProvider>();
 				_logger               = accessor.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();
-#if !EF6
 				_databaseDependencies = accessor.GetService<DatabaseDependencies>();
-#endif
 #endif
 			}
 
@@ -300,7 +292,6 @@ namespace LinqToDB.EntityFrameworkCore
 					{
 						if (prop.FindColumn(storeObjectId.Value) is IColumn column)
 							annotations = annotations.Concat(_annotationProvider.For(column, false));
-#if !EF6
 
 						if (_annotationProvider.GetType().Name == "SqliteAnnotationProvider")
 						{
@@ -316,11 +307,10 @@ namespace LinqToDB.EntityFrameworkCore
 								isIdentity = true;
 							}
 						}
-#endif
 					}
 #endif
 
-#if !EF6 && !EF31
+#if !EF31
 					isIdentity = isIdentity || annotations
 #else
 					isIdentity = annotations
@@ -360,16 +350,12 @@ namespace LinqToDB.EntityFrameworkCore
 						}
 					}
 
-					var behavior = prop.GetBeforeSaveBehavior();
-					var skipOnInsert = prop.ValueGenerated.HasFlag(ValueGenerated.OnAdd);
+					var beforeSaveBehavior = prop.GetBeforeSaveBehavior();
+					var afterSaveBehavior = prop.GetAfterSaveBehavior();
 
-					if (skipOnInsert)
-					{
-						skipOnInsert = isIdentity || behavior != PropertySaveBehavior.Save;
-					}
+					var skipOnInsert = isIdentity || beforeSaveBehavior != PropertySaveBehavior.Save;
 
-					var skipOnUpdate = behavior != PropertySaveBehavior.Save ||
-						prop.ValueGenerated.HasFlag(ValueGenerated.OnUpdate);
+					var skipOnUpdate = afterSaveBehavior != PropertySaveBehavior.Save;
 
 					var ca = new ColumnAttribute()
 					{
@@ -538,20 +524,19 @@ namespace LinqToDB.EntityFrameworkCore
 			public override void Print(EfExpressionPrinter expressionPrinter)
 #endif
 			{
-#if !EF6 && !EF31
+#if !EF31
 				expressionPrinter.PrintExpression(Expression);
 #else
 				expressionPrinter.Print(Expression);
 #endif
 			}
 
-#if !EF31 && !EF6 && !EF8
+#if !EF31 && !EF8
 			private static readonly ConstructorInfo _ctor = typeof(SqlTransparentExpression).GetConstructor([typeof(ExceptExpression), typeof(RelationalTypeMapping)])
 				?? throw new InvalidOperationException();
 
 			private static readonly MethodInfo _constantExpressionFactoryMethod = typeof(Expression).GetMethod(nameof(Constant), [typeof(object), typeof(Type)])
 				?? throw new InvalidOperationException();
-
 
 			public override Expression Quote()
 			{
@@ -622,7 +607,7 @@ namespace LinqToDB.EntityFrameworkCore
 							ctx.this_._mappingSource?.FindMapping(p.ParameterType));
 					}
 
-#if !EF6 && !EF31
+#if !EF31
 					// https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/issues/1801
 					if (ctx.this_._dependencies!.MethodCallTranslatorProvider.GetType().Name == "MySqlMethodCallTranslatorProvider")
 					{

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using LinqToDB.Common;
+
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
@@ -91,7 +91,7 @@ namespace Tests
 
 		HashSet<string> GetIssueConfigurations()
 		{
-			return _issueConfigurations ??= new HashSet<string>(Configurations ?? []);
+			return _issueConfigurations ??= [.. Configurations ?? []];
 		}
 
 		IEnumerable<TestMethod> ITestBuilder.BuildFrom(IMethodInfo method, Test? suite)

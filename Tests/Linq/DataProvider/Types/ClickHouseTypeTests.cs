@@ -3,10 +3,13 @@ using System.Globalization;
 using System.Net;
 using System.Numerics;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
 #if !NETFRAMEWORK
 using ClickHouse.Client.Numerics;
 #endif
@@ -320,7 +323,7 @@ namespace Tests.DataProvider
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date), TestData.Date, default);
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date), min, max);
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly), DataType.Date), DateOnly.FromDateTime(TestData.Date), default);
 			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly), DataType.Date), DateOnly.FromDateTime(min), DateOnly.FromDateTime(max));
 #endif
@@ -348,7 +351,7 @@ namespace Tests.DataProvider
 			var max = new DateTime(2299, 12, 31);
 
 			// Date32
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly)), DateOnly.FromDateTime(TestData.Date), default);
 			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly)), DateOnly.FromDateTime(min), DateOnly.FromDateTime(max));
 

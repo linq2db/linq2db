@@ -2,13 +2,13 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	[BuildsMethodCall("Contains")]
 	[BuildsMethodCall("ContainsAsync", CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class ContainsBuilder : MethodCallBuilder
@@ -39,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 
 			var sequence = new SubQueryContext(buildResult.BuildContext);
 
-			var containsContext = new ContainsContext(buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence);
+			var containsContext = new ContainsContext(builder.GetTranslationModifier(), buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence);
 			var placeholder     = containsContext.TryCreatePlaceholder();
 			if (placeholder == null)
 				return BuildSequenceResult.Error(methodCall, ErrorHelper.Error_Correlated_Subqueries);
@@ -57,8 +57,8 @@ namespace LinqToDB.Linq.Builder
 
 			readonly MethodCallExpression _methodCall;
 
-			public ContainsContext(IBuildContext? parent, MethodCallExpression methodCall, SelectQuery outerQuery, IBuildContext innerSequence)
-				: base(innerSequence.Builder, typeof(bool), outerQuery)
+			public ContainsContext(TranslationModifier translationModifier, IBuildContext? parent, MethodCallExpression methodCall, SelectQuery outerQuery, IBuildContext innerSequence)
+				: base(translationModifier, innerSequence.Builder, typeof(bool), outerQuery)
 			{
 				Parent            = parent;
 				OuterQuery        = outerQuery;
@@ -116,7 +116,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				var result = new ContainsContext(null, _methodCall, context.CloneElement(OuterQuery), context.CloneContext(InnerSequence));
+				var result = new ContainsContext(TranslationModifier, null, _methodCall, context.CloneElement(OuterQuery), context.CloneContext(InnerSequence));
 				if (_cachedPlaceholder != null)
 					result._cachedPlaceholder = context.CloneExpression(_cachedPlaceholder);
 				return result;
@@ -143,7 +143,7 @@ namespace LinqToDB.Linq.Builder
 				var contextRef   = new ContextRefExpression(args[0], InnerSequence);
 				var sequenceExpr = Builder.BuildSqlExpression(InnerSequence, contextRef, BuildPurpose.Sql, BuildFlags.ForKeys);
 
-				var sequencePlaceholders = ExpressionBuilder.CollectPlaceholders(sequenceExpr);
+				var sequencePlaceholders = ExpressionBuilder.CollectPlaceholders(sequenceExpr, false);
 				if (sequencePlaceholders.Count == 0)
 				{
 					//TODO: better error handling
@@ -151,7 +151,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var testExpr         = Builder.BuildSqlExpression(placeholderContext, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
-				var testPlaceholders = ExpressionBuilder.CollectPlaceholders(testExpr);
+				var testPlaceholders = ExpressionBuilder.CollectPlaceholders(testExpr, false);
 
 				ISqlPredicate predicate;
 

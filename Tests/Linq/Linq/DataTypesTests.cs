@@ -4,14 +4,15 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	// TODO: delete this test when we implement type tests for all databases similar to CLickHouse tests
 	[TestFixture]
 	public class DataTypesTests : TestBase
@@ -65,7 +66,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region DateOnly
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Table]
 		public class DateOnlyTable : TypeTable<DateOnly>
 		{

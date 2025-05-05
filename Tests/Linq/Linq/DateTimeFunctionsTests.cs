@@ -3,16 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class DateTimeFunctionsTests : TestBase
 	{
@@ -1651,7 +1649,6 @@ namespace Tests.Linq
 						DateTime2 = t.DateTime2 + ts,
 						DateTime2Nullable = t.DateTime2Nullable + ts,
 
-
 						M_DateTime = t.DateTime - ts,
 						M_DateTimeNullable = t.DateTimeNullable - ts,
 						M_DateTime2 = t.DateTime2 - ts,
@@ -1698,7 +1695,6 @@ namespace Tests.Linq
 
 						DateTimeOffset = t.DateTimeOffset + ts,
 						DateTimeOffsetNullable = t.DateTimeOffsetNullable + ts,
-
 
 						M_DateTimeOffset = t.DateTimeOffset - ts,
 						M_DateTimeOffsetNullable = t.DateTimeOffsetNullable - ts,

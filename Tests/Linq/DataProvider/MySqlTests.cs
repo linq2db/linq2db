@@ -1,39 +1,38 @@
-﻿extern alias MySqlData;
-extern alias MySqlConnector;
+﻿extern alias MySqlConnector;
+extern alias MySqlData;
 
 using System;
-using System.Data.Linq;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
-using System.Threading.Tasks;
+using System.Data.Linq;
+using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.MySql;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
-using LinqToDB.DataProvider.MySql;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
-using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
+
+using Tests.Model;
+
 using MySqlConnectorDateTime = MySqlConnector::MySqlConnector.MySqlDateTime;
 using MySqlConnectorDecimal = MySqlConnector::MySqlConnector.MySqlDecimal;
 using MySqlConnectorGuidFormat = MySqlConnector::MySqlConnector.MySqlGuidFormat;
-
+using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
 
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class MySqlTests : DataProviderTestBase
 	{
@@ -411,7 +410,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)), Is.Null);
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
@@ -1423,7 +1422,7 @@ namespace Tests.DataProvider
 			{
 				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				var res = schema.Tables.FirstOrDefault(c => c.ID!.ToLowerInvariant().Contains("fulltextindex"));
-				Assert.That(res, Is.Not.EqualTo(null));
+				Assert.That(res, Is.Not.Null);
 			}
 		}
 
@@ -1635,6 +1634,7 @@ namespace Tests.DataProvider
 						Assert.That(sql, Does.Contain("\t`TimeStamp`        TIMESTAMP         NOT NULL"));
 						Assert.That(sql, Does.Contain("\t`TimeStamp5`       TIMESTAMP(5)      NOT NULL"));
 					}
+
 					Assert.That(sql, Does.Contain("\t`Time`             TIME              NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`TinyInt`          TINYINT           NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`UnsignedTinyInt`  TINYINT UNSIGNED  NOT NULL"));
@@ -2250,9 +2250,7 @@ namespace Tests.DataProvider
 			});
 		}
 
-
 		#region Issue 4439
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4439")]
 		public void Issue4439Test([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{
@@ -2382,7 +2380,6 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable<Issue3726Table>();
-
 
 			db.Insert(new Issue3726Table() { Id = 1, Value = 123 });
 

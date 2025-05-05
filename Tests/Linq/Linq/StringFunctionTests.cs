@@ -6,16 +6,19 @@ using System.Data;
 #endif
 
 using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class StringFunctionTests : TestBase
 	{
@@ -26,7 +29,7 @@ namespace Tests.Linq
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Sql.Length((string)null!), Is.EqualTo(null));
+				Assert.That(Sql.Length((string)null!), Is.Null);
 				Assert.That(Sql.Length(string.Empty), Is.EqualTo(0));
 				Assert.That(Sql.Length("test"), Is.EqualTo(4));
 			});
@@ -37,12 +40,12 @@ namespace Tests.Linq
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Sql.Substring(null, 0, 0), Is.EqualTo(null));
-				Assert.That(Sql.Substring("test", null, 0), Is.EqualTo(null));
-				Assert.That(Sql.Substring("test", -1, 0), Is.EqualTo(null));
-				Assert.That(Sql.Substring("test", 5, 0), Is.EqualTo(null));
-				Assert.That(Sql.Substring("test", 0, null), Is.EqualTo(null));
-				Assert.That(Sql.Substring("test", 0, -1), Is.EqualTo(null));
+				Assert.That(Sql.Substring(null, 0, 0), Is.Null);
+				Assert.That(Sql.Substring("test", null, 0), Is.Null);
+				Assert.That(Sql.Substring("test", -1, 0), Is.Null);
+				Assert.That(Sql.Substring("test", 5, 0), Is.Null);
+				Assert.That(Sql.Substring("test", 0, null), Is.Null);
+				Assert.That(Sql.Substring("test", 0, -1), Is.Null);
 
 				Assert.That(Sql.Substring("test", 3, 0), Is.EqualTo(""));
 				Assert.That(Sql.Substring("test", 3, 1), Is.EqualTo("s"));
@@ -67,8 +70,8 @@ namespace Tests.Linq
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Sql.CharIndex("", null), Is.EqualTo(null));
-				Assert.That(Sql.CharIndex((string)null!, "test"), Is.EqualTo(null));
+				Assert.That(Sql.CharIndex("", null), Is.Null);
+				Assert.That(Sql.CharIndex((string)null!, "test"), Is.Null);
 
 				Assert.That(Sql.CharIndex("", "test"), Is.EqualTo(0));
 				Assert.That(Sql.CharIndex("g", "test"), Is.EqualTo(0));
@@ -81,9 +84,9 @@ namespace Tests.Linq
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Sql.CharIndex("", null, 0), Is.EqualTo(null));
-				Assert.That(Sql.CharIndex((string)null!, "test", 0), Is.EqualTo(null));
-				Assert.That(Sql.CharIndex("st", "test", null), Is.EqualTo(null));
+				Assert.That(Sql.CharIndex("", null, 0), Is.Null);
+				Assert.That(Sql.CharIndex((string)null!, "test", 0), Is.Null);
+				Assert.That(Sql.CharIndex("st", "test", null), Is.Null);
 
 				Assert.That(Sql.CharIndex("", "test", 0), Is.EqualTo(0));
 				Assert.That(Sql.CharIndex("g", "test", 0), Is.EqualTo(0));
@@ -99,8 +102,8 @@ namespace Tests.Linq
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Sql.CharIndex('t', null), Is.EqualTo(null));
-				Assert.That(Sql.CharIndex((char?)null!, "test"), Is.EqualTo(null));
+				Assert.That(Sql.CharIndex('t', null), Is.Null);
+				Assert.That(Sql.CharIndex((char?)null!, "test"), Is.Null);
 
 				Assert.That(Sql.CharIndex(Char.MinValue, "test"), Is.EqualTo(0));
 				Assert.That(Sql.CharIndex('g', "test"), Is.EqualTo(0));
@@ -113,9 +116,9 @@ namespace Tests.Linq
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Sql.CharIndex('t', null, 0), Is.EqualTo(null));
-				Assert.That(Sql.CharIndex((char?)null!, "test", 0), Is.EqualTo(null));
-				Assert.That(Sql.CharIndex('t', "test", null), Is.EqualTo(null));
+				Assert.That(Sql.CharIndex('t', null, 0), Is.Null);
+				Assert.That(Sql.CharIndex((char?)null!, "test", 0), Is.Null);
+				Assert.That(Sql.CharIndex('t', "test", null), Is.Null);
 
 				Assert.That(Sql.CharIndex(Char.MinValue, "test", 0), Is.EqualTo(0));
 				Assert.That(Sql.CharIndex('g', "test", 0), Is.EqualTo(0));
@@ -131,7 +134,7 @@ namespace Tests.Linq
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Sql.Reverse(null), Is.EqualTo(null));
+				Assert.That(Sql.Reverse(null), Is.Null);
 				Assert.That(Sql.Reverse(string.Empty), Is.EqualTo(string.Empty));
 				Assert.That(Sql.Reverse("abcd"), Is.EqualTo("dcba"));
 			});
@@ -142,9 +145,9 @@ namespace Tests.Linq
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Sql.Left(null, 0), Is.EqualTo(null));
-				Assert.That(Sql.Left("test", null), Is.EqualTo(null));
-				Assert.That(Sql.Left("test", -1), Is.EqualTo(null));
+				Assert.That(Sql.Left(null, 0), Is.Null);
+				Assert.That(Sql.Left("test", null), Is.Null);
+				Assert.That(Sql.Left("test", -1), Is.Null);
 				Assert.That(Sql.Left("test", 0), Is.EqualTo(""));
 				Assert.That(Sql.Left("test", 2), Is.EqualTo("te"));
 				Assert.That(Sql.Left("test", 5), Is.EqualTo("test"));
@@ -156,9 +159,9 @@ namespace Tests.Linq
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Sql.Right(null, 0), Is.EqualTo(null));
-				Assert.That(Sql.Right("test", null), Is.EqualTo(null));
-				Assert.That(Sql.Right("test", -1), Is.EqualTo(null));
+				Assert.That(Sql.Right(null, 0), Is.Null);
+				Assert.That(Sql.Right("test", null), Is.Null);
+				Assert.That(Sql.Right("test", -1), Is.Null);
 				Assert.That(Sql.Right("test", 0), Is.EqualTo(""));
 				Assert.That(Sql.Right("test", 2), Is.EqualTo("st"));
 				Assert.That(Sql.Right("test", 5), Is.EqualTo("test"));
@@ -171,17 +174,17 @@ namespace Tests.Linq
 			Assert.Multiple(() =>
 			{
 				// Disallowed null parameters
-				Assert.That(Sql.Stuff((string)null!, 1, 1, "test"), Is.EqualTo(null));
-				Assert.That(Sql.Stuff("test", null, 1, "test"), Is.EqualTo(null));
-				Assert.That(Sql.Stuff("test", 1, null, "test"), Is.EqualTo(null));
-				Assert.That(Sql.Stuff("test", 1, 1, null), Is.EqualTo(null));
+				Assert.That(Sql.Stuff((string)null!, 1, 1, "test"), Is.Null);
+				Assert.That(Sql.Stuff("test", null, 1, "test"), Is.Null);
+				Assert.That(Sql.Stuff("test", 1, null, "test"), Is.Null);
+				Assert.That(Sql.Stuff("test", 1, 1, null), Is.Null);
 
 				// Disallowed start
-				Assert.That(Sql.Stuff("test", 0, 1, "test"), Is.EqualTo(null));
-				Assert.That(Sql.Stuff("test", 5, 1, "test"), Is.EqualTo(null));
+				Assert.That(Sql.Stuff("test", 0, 1, "test"), Is.Null);
+				Assert.That(Sql.Stuff("test", 5, 1, "test"), Is.Null);
 
 				// Disallowed length
-				Assert.That(Sql.Stuff("test", 1, -1, "test"), Is.EqualTo(null));
+				Assert.That(Sql.Stuff("test", 1, -1, "test"), Is.Null);
 
 				// Correct start and length
 				Assert.That(Sql.Stuff("1234", 1, 4, "5678"), Is.EqualTo("5678"));
@@ -206,8 +209,8 @@ namespace Tests.Linq
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Sql.Space(null), Is.EqualTo(null));
-				Assert.That(Sql.Space(-1), Is.EqualTo(null));
+				Assert.That(Sql.Space(null), Is.Null);
+				Assert.That(Sql.Space(-1), Is.Null);
 				Assert.That(Sql.Space(0), Is.EqualTo(""));
 				Assert.That(Sql.Space(1), Is.EqualTo(" "));
 			});
@@ -218,11 +221,11 @@ namespace Tests.Linq
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Sql.PadLeft(null, 1, '.'), Is.EqualTo(null));
-				Assert.That(Sql.PadLeft("test", null, '.'), Is.EqualTo(null));
-				Assert.That(Sql.PadLeft("test", 1, null), Is.EqualTo(null));
+				Assert.That(Sql.PadLeft(null, 1, '.'), Is.Null);
+				Assert.That(Sql.PadLeft("test", null, '.'), Is.Null);
+				Assert.That(Sql.PadLeft("test", 1, null), Is.Null);
 
-				Assert.That(Sql.PadLeft("test", -1, '.'), Is.EqualTo(null));
+				Assert.That(Sql.PadLeft("test", -1, '.'), Is.Null);
 				Assert.That(Sql.PadLeft("test", 0, '.'), Is.EqualTo(""));
 				Assert.That(Sql.PadLeft("test", 3, '.'), Is.EqualTo("tes"));
 				Assert.That(Sql.PadLeft("test", 4, '.'), Is.EqualTo("test"));
@@ -235,11 +238,11 @@ namespace Tests.Linq
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Sql.PadRight(null, 1, '.'), Is.EqualTo(null));
-				Assert.That(Sql.PadRight("test", null, '.'), Is.EqualTo(null));
-				Assert.That(Sql.PadRight("test", 1, null), Is.EqualTo(null));
+				Assert.That(Sql.PadRight(null, 1, '.'), Is.Null);
+				Assert.That(Sql.PadRight("test", null, '.'), Is.Null);
+				Assert.That(Sql.PadRight("test", 1, null), Is.Null);
 
-				Assert.That(Sql.PadRight("test", -1, '.'), Is.EqualTo(null));
+				Assert.That(Sql.PadRight("test", -1, '.'), Is.Null);
 				Assert.That(Sql.PadRight("test", 0, '.'), Is.EqualTo(""));
 				Assert.That(Sql.PadRight("test", 3, '.'), Is.EqualTo("tes"));
 				Assert.That(Sql.PadRight("test", 4, '.'), Is.EqualTo("test"));
@@ -252,9 +255,9 @@ namespace Tests.Linq
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Sql.Replace(null, "e", "oa"), Is.EqualTo(null));
-				Assert.That(Sql.Replace("test", null, "oa"), Is.EqualTo(null));
-				Assert.That(Sql.Replace("test", "e", null), Is.EqualTo(null));
+				Assert.That(Sql.Replace(null, "e", "oa"), Is.Null);
+				Assert.That(Sql.Replace("test", null, "oa"), Is.Null);
+				Assert.That(Sql.Replace("test", "e", null), Is.Null);
 
 				Assert.That(Sql.Replace("", "e", "oa"), Is.EqualTo(""));
 				Assert.That(Sql.Replace("test", "", "oa"), Is.EqualTo("test"));
@@ -268,9 +271,9 @@ namespace Tests.Linq
 		{
 			Assert.Multiple(() =>
 			{
-				Assert.That(Sql.Replace(null, 'e', 'o'), Is.EqualTo(null));
-				Assert.That(Sql.Replace("test", null, 'o'), Is.EqualTo(null));
-				Assert.That(Sql.Replace("test", 'e', null), Is.EqualTo(null));
+				Assert.That(Sql.Replace(null, 'e', 'o'), Is.Null);
+				Assert.That(Sql.Replace("test", null, 'o'), Is.Null);
+				Assert.That(Sql.Replace("test", 'e', null), Is.Null);
 
 				Assert.That(Sql.Replace("", 'e', 'o'), Is.EqualTo(""));
 				Assert.That(Sql.Replace("test", 'g', 'o'), Is.EqualTo("test"));
@@ -300,7 +303,7 @@ namespace Tests.Linq
 			}
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Test]
 		public void ContainsConstantWithCase1([DataSources(ProviderName.SqlCe)] string context)
 		{
@@ -323,7 +326,6 @@ namespace Tests.Linq
 				db.Person.Count(p => !p.FirstName.Contains("Joh") && p.ID == 1).Should().Be(0);
 			}
 		}
-
 
 		[Test]
 		public void ContainsConstant2([DataSources] string context)
@@ -392,7 +394,6 @@ namespace Tests.Linq
 			db.Person.Count(p => p.ID == 1 && s.Contains(Sql.ToSql(toTest))).Should().Be(1);
 			db.Person.Count(p => p.ID == 1 && !s.Contains(Sql.ToSql(toTest))).Should().Be(0);
 		}
-
 
 		[Test]
 		public void ContainsParameterAll([DataSources] string context,
@@ -1193,6 +1194,38 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4799")]
+		public void String_PadLeft_Translation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(0, '.'))), Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(3, '.'))), Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(4, '.'))), Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(5, '.'))), Is.EqualTo(".test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(6, '.'))), Is.EqualTo("..test"));
+			});
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4799")]
+		public void String_PadRight_Translation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(0, '.'))), Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(3, '.'))), Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(4, '.'))), Is.EqualTo("test"));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(5, '.'))), Is.EqualTo("test."));
+				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(6, '.'))), Is.EqualTo("test.."));
+			});
+		}
+
 		[Test]
 		public void Replace([DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -1537,7 +1570,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.ID == 1 select string.IsNullOrEmpty(p.FirstName);
-				Assert.That(q.ToList().First(), Is.EqualTo(false));
+				Assert.That(q.ToList().First(), Is.False);
 			}
 		}
 
@@ -1551,7 +1584,7 @@ namespace Tests.Linq
 			public static readonly CollatedTable TestData = new () { Id = 1, CaseSensitive = "TestString", CaseInsensitive = "TestString" };
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Test]
 		public void ExplicitOrdinalIgnoreCase_Contains([DataSources] string context)
 		{

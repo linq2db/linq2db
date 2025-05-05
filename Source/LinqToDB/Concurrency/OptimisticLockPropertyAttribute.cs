@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Concurrency
 {
-	using Expressions;
-	using Mapping;
-	using Reflection;
-
 	/// <summary>
 	/// Implements built-in optimistic lock value generation strategies for updates.
 	/// See <see cref="VersionBehavior"/> for supported strategies.
 	/// Used with <see cref="ConcurrencyExtensions" /> extensions.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
 	public class OptimisticLockPropertyAttribute : OptimisticLockPropertyBaseAttribute
 	{
 		private static readonly Expression _newGuidCall       = Expression.Call(null, Methods.System.Guid_NewGuid);

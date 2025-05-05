@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB
+﻿namespace LinqToDB
 {
 	/// <summary>
 	/// List of data types, supported by linq2db.
@@ -304,9 +302,14 @@ namespace LinqToDB
 		BFile,
 
 		/// <summary>
-		/// Type representing number with fixed precision and floating scale.
+		/// Type representing number with fixed precision and floating scale (full size).
 		/// </summary>
 		DecFloat,
+
+		/// <summary>
+		/// Type representing number with fixed precision and floating scale (half size).
+		/// </summary>
+		SmallDecFloat,
 
 		/// <summary>
 		/// Type representing a time value with timezone or offset.
@@ -408,5 +411,10 @@ namespace LinqToDB
 		/// Decimal256 ClickHouse type.
 		/// </summary>
 		Decimal256,
+
+		/// <summary>
+		/// Array type flag.
+		/// </summary>
+		Array = unchecked((int)0x8000_0000),
 	}
 }

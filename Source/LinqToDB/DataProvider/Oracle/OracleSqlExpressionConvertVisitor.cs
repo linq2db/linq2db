@@ -1,12 +1,12 @@
 ﻿using System;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Oracle
 {
-	using LinqToDB.Common;
-	using LinqToDB.Extensions;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class OracleSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public OracleSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
@@ -164,7 +164,7 @@ namespace LinqToDB.DataProvider.Oracle
 			var argument = cast.Expression;
 
 			if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				|| ftype == typeof(DateOnly)
 #endif
 			   )
@@ -209,7 +209,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 				}
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				else if (stype == typeof(DateOnly))
 				{
 					return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("YYYY-MM-DD"));

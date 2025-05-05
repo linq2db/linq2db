@@ -6,11 +6,10 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Linq;
+
 namespace LinqToDB.DataProvider
 {
-	using Async;
-	using Linq;
-
 	abstract class DatabaseSpecificTable<TSource> : ITable<TSource>
 		where TSource : notnull
 	{
@@ -34,9 +33,10 @@ namespace LinqToDB.DataProvider
 		public Expression Expression => _table.Expression;
 
 		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => _table.GetSqlQueries(options);
-		public IDataContext   DataContext                                                     => _table.DataContext;
-		public Type           ElementType                                                     => _table.ElementType;
-		public IQueryProvider Provider                                                        => _table.Provider;
+
+		public IDataContext   DataContext => _table.DataContext;
+		public Type           ElementType => _table.ElementType;
+		public IQueryProvider Provider    => _table.Provider;
 
 		public IQueryable CreateQuery(Expression expression)
 		{

@@ -1,8 +1,6 @@
 ﻿using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.FSharp;
 
 using NUnit.Framework;
 

@@ -1,13 +1,13 @@
 ﻿using System;
 
+using LinqToDB.EntityFrameworkCore.Internal;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Interceptors;
-	using Internal;
-	using Mapping;
-
 	/// <summary>
 	/// Linq To DB context options builder
 	/// </summary>

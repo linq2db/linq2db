@@ -3,13 +3,14 @@ using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Mapping;
-
 	public class DB2ProviderAdapter : IDynamicProviderAdapter
 	{
 		public const string ProviderFactoryName  = "IBM.Data.DB2";
@@ -20,10 +21,6 @@ namespace LinqToDB.DataProvider.DB2
 #if NETFRAMEWORK
 		public const string AssemblyName         = "IBM.Data.DB2";
 		public const string ClientNamespace      = "IBM.Data.DB2";
-		[Obsolete("Unused. Will be removed in v6")]
-		public const string? AssemblyNameOld     = null;
-		[Obsolete("Unused. Will be removed in v6")]
-		public const string? ClientNamespaceOld  = null;
 #else
 		public const string  AssemblyName        = "IBM.Data.Db2";
 		public const string  ClientNamespace     = "IBM.Data.Db2";
@@ -34,12 +31,12 @@ namespace LinqToDB.DataProvider.DB2
 		DB2ProviderAdapter()
 		{
 			var clientNamespace = ClientNamespace;
-			var assembly        = Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
+			var assembly        = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 
 #if !NETFRAMEWORK
 			if (assembly == null)
 			{
-				assembly = Tools.TryLoadAssembly(AssemblyNameOld, ProviderFactoryName);
+				assembly = Common.Tools.TryLoadAssembly(AssemblyNameOld, ProviderFactoryName);
 				if (assembly != null)
 					clientNamespace = ClientNamespaceOld;
 			}

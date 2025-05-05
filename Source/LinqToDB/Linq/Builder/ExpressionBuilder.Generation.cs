@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+
+using static LinqToDB.Data.EntityConstructorBase;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Data;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using static Data.EntityConstructorBase;
-
 	internal partial class ExpressionBuilder
 	{
 		EntityConstructor? _entityConstructor;
@@ -23,15 +24,12 @@ namespace LinqToDB.Linq.Builder
 				Builder = builder;
 			}
 
-			public override List<LoadWithInfo>? GetTableLoadWith(Expression path)
+			public override LoadWithEntity? GetTableLoadWith(Expression path)
 			{
 				var unwrapped = path.UnwrapConvert();
 				var table     = SequenceHelper.GetTableOrCteContext(Builder, unwrapped);
 
-				if (table == null)
-					return null;
-
-				return Builder.GetTableLoadWith(table);
+				return table?.LoadWithRoot;
 			}
 
 			public override Expression? TryConstructFullEntity(SqlGenericConstructorExpression constructorExpression, Type constructType, ProjectFlags flags, bool checkInheritance, out string? error)

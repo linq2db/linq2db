@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
-using LinqToDB.Extensions;
 
 using NUnit.Framework;
 
@@ -17,7 +17,7 @@ namespace Tests.Samples
 	{
 		sealed class InterceptDataConnection : DataConnection
 		{
-			public InterceptDataConnection(string providerName, string connectionString) : base(providerName, connectionString)
+			public InterceptDataConnection(string providerName, string connectionString) : base(new DataOptions().UseConnectionString(providerName, connectionString))
 			{
 			}
 
@@ -117,7 +117,6 @@ namespace Tests.Samples
 
 					if (rowVersion == null)
 						return statement;
-
 
 					var newInsertStatement = Clone(statement);
 					var insertClause       = newInsertStatement.RequireInsertClause();

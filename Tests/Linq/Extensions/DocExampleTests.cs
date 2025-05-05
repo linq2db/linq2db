@@ -1,10 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.DataProvider.Access;
-using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.MySql;
+using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SQLite;

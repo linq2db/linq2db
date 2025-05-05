@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
@@ -11,10 +13,10 @@ using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class TemporalTableTests : TestBase
 	{
@@ -32,7 +34,7 @@ namespace Tests.Linq
 		TemporalTest[] CreateTestTable(ITestDataContext db)
 		{
 			using var dc = db is TestDataConnection dcx ?
-				new DataConnection(db.Options.UseConnection(dcx.DataProvider, dcx.Connection)) :
+				new DataConnection(db.Options.UseConnection(dcx.DataProvider, dcx.OpenDbConnection())) :
 				new DataConnection(db.ConfigurationString);
 
 			using var sy = new SystemDB(db.ConfigurationString!);

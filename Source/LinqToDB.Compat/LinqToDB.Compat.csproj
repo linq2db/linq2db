@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<AssemblyName>linq2db.Compat</AssemblyName>
+		<RootNamespace>LinqToDB</RootNamespace>
+
+		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+
+		<!--published targets-->
+		<TargetFrameworks>net462;netstandard2.0;net8.0;net9.0</TargetFrameworks>
+
+		<!-- Define COMPAT constant -->
+		<DefineConstants>$(DefineConstants);COMPAT</DefineConstants>
+
+		<Title>LINQ to DB Compat</Title>
+		<Description>LINQ to DB Compat provides .NET Framework compatibility functionality to leverage migration to .NET.</Description>
+		<Product>$(Title)</Product>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+
+		<PackageReference Include="System.Configuration.ConfigurationManager" />
+
+		<Compile Include="..\LinqToDB\Configuration\LinqToDBSection.cs"               Link="LinqToDBSection.cs" />
+		<Compile Include="..\LinqToDB\Configuration\DataProviderElementCollection.cs" Link="DataProviderElementCollection.cs" />
+		<Compile Include="..\LinqToDB\Configuration\DataProviderElement.cs"           Link="DataProviderElement.cs" />
+		<Compile Include="..\LinqToDB\Configuration\ElementBase.cs"                   Link="ElementBase.cs" />
+		<Compile Include="..\LinqToDB\Configuration\ElementCollectionBase.cs"         Link="ElementCollectionBase.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
+		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
+	</ItemGroup>
+</Project>

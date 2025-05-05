@@ -7,22 +7,22 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Logging;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Interceptors;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Linq.Internal;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 // ReSharper disable StaticMemberInGenericType
 
 namespace LinqToDB.Linq
 {
-	using Builder;
-	using Common;
-	using Common.Logging;
-	using Interceptors;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.ExpressionVisitors;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-	using Tools;
-	using Internal;
-
 	public abstract class Query
 	{
 		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,object?>                         GetElement      = null!;
@@ -267,8 +267,9 @@ namespace LinqToDB.Linq
 			}
 
 			// lock for cache instance modification
-			readonly object _syncCache    = new ();
+			readonly Lock   _syncCache    = new ();
 			// lock for query priority modification
+			// NB: remains an `object` for use with `Monitor.TryEnter()` instead of `lock()`
 			readonly object _syncPriority = new ();
 
 			// stores all cached queries
@@ -606,11 +607,16 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				query = new ExpressionBuilder(query, false, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null).Build<T>(ref expressions);
+				var validateSubqueries = !ExpressionBuilder.NeedsSubqueryValidation(dataContext);
+				query = new ExpressionBuilder(query, validateSubqueries, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null).Build<T>(ref expressions);
 				if (query.ErrorExpression != null)
 				{
-					query = new Query<T>(dataContext);
-					query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null).Build<T>(ref expressions);
+					if (!validateSubqueries)
+					{
+						query = new Query<T>(dataContext);
+						query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null).Build<T>(ref expressions);
+					}
+
 					if (query.ErrorExpression != null)
 						throw query.ErrorExpression.CreateException();
 				}

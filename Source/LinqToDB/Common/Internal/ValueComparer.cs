@@ -5,11 +5,11 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Common.Internal
 {
-	using Expressions;
-	using Extensions;
-
 	abstract class ValueComparer : IEqualityComparer, IEqualityComparer<object>
 	{
 		private protected static readonly MethodInfo _doubleEqualsMethodInfo
@@ -122,9 +122,9 @@ namespace LinqToDB.Common.Internal
 					? typeof(DefaultValueComparer<>)
 					: typeof(ValueComparer<>);
 
-			return (ValueComparer)Activator.CreateInstance(
+			return ActivatorExt.CreateInstance<ValueComparer>(
 				comparerType.MakeGenericType(type),
-				new object[] { favorStructuralComparisons })!;
+				new object[] { favorStructuralComparisons });
 		}
 
 		static readonly ConcurrentDictionary<(Type, bool), ValueComparer> _defaultValueComparers = new();

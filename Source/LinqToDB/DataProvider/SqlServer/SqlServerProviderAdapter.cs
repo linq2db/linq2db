@@ -1,25 +1,32 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Expressions;
-
 	// old System.Data.SqlClient versions for .net core (< 4.5.0)
 	// miss UDT and BulkCopy support
 	// We don't take it into account, as there is no reason to use such old provider versions
 	public class SqlServerProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _sysSyncRoot = new ();
-		private static readonly object _msSyncRoot  = new ();
+		private static readonly Lock _sysSyncRoot = new ();
+		private static readonly Lock _msSyncRoot  = new ();
 
 		private static SqlServerProviderAdapter? _systemAdapter;
 		private static SqlServerProviderAdapter? _microsoftAdapter;
@@ -33,6 +40,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		public const string MicrosoftProviderFactoryName = "Microsoft.Data.SqlClient";
 
 		private SqlServerProviderAdapter(
+			SqlServerProvider provider,
+
 			Type connectionType,
 			Type dataReaderType,
 			Type parameterType,
@@ -50,12 +59,19 @@ namespace LinqToDB.DataProvider.SqlServer
 			Action<DbParameter, string> typeNameSetter,
 			Func  <DbParameter, string> typeNameGetter,
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			Func<string, SqlConnectionStringBuilder> createConnectionStringBuilder,
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> createBulkCopy,
-			Func<int, string, SqlBulkCopyColumnMapping>                         createBulkCopyColumnMapping)
+			Func<int, string, SqlBulkCopyColumnMapping>                         createBulkCopyColumnMapping,
+			
+			MappingSchema? mappingSchema,
+			Type? sqlJsonType)
 		{
-			ConnectionType     = connectionType;
+			Provider = provider;
+
+			ConnectionType = connectionType;
 			DataReaderType     = dataReaderType;
 			ParameterType      = parameterType;
 			CommandType        = commandType;
@@ -72,11 +88,18 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetTypeName    = typeNameSetter;
 			GetTypeName    = typeNameGetter;
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			_createConnectionStringBuilder = createConnectionStringBuilder;
+#pragma warning restore CS0618 // Type or member is obsolete
 
-			_createBulkCopy              = createBulkCopy;
+			_createBulkCopy = createBulkCopy;
 			_createBulkCopyColumnMapping = createBulkCopyColumnMapping;
+
+			MappingSchema = mappingSchema;
+			SqlJsonType   = sqlJsonType;
 		}
+
+		public SqlServerProvider Provider { get; }
 
 #region IDynamicProviderAdapter
 
@@ -98,7 +121,17 @@ namespace LinqToDB.DataProvider.SqlServer
 		public string GetDateTimeOffsetReaderMethod => "GetDateTimeOffset";
 		public string GetTimeSpanReaderMethod       => "GetTimeSpan";
 
+		public MappingSchema? MappingSchema { get; }
+
+		public Type?   SqlJsonType { get; }
+		public string? GetSqlJsonReaderMethod => SqlJsonType == null ? null : "GetSqlJson";
+		public SqlDbType JsonDbType => SqlJsonType == null ? SqlDbType.NVarChar : (SqlDbType)35;
+
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		private readonly Func<string, SqlConnectionStringBuilder> _createConnectionStringBuilder;
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public SqlConnectionStringBuilder CreateConnectionStringBuilder(string connectionString) => _createConnectionStringBuilder(connectionString);
 
 		private readonly Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> _createBulkCopy;
@@ -126,7 +159,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					lock (_sysSyncRoot)
 #pragma warning disable CA1508 // Avoid dead conditional code
-						_systemAdapter ??= CreateAdapter(SystemAssemblyName, SystemClientNamespace, SystemProviderFactoryName);
+						_systemAdapter ??= CreateAdapter(provider, SystemAssemblyName, SystemClientNamespace, SystemProviderFactoryName);
 #pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
@@ -138,7 +171,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					lock (_msSyncRoot)
 #pragma warning disable CA1508 // Avoid dead conditional code
-						_microsoftAdapter ??= CreateAdapter(MicrosoftAssemblyName, MicrosoftClientNamespace, MicrosoftProviderFactoryName);
+						_microsoftAdapter ??= CreateAdapter(provider, MicrosoftAssemblyName, MicrosoftClientNamespace, MicrosoftProviderFactoryName);
 #pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
@@ -146,7 +179,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		private static SqlServerProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string factoryName)
+		private static SqlServerProviderAdapter CreateAdapter(SqlServerProvider provider, string assemblyName, string clientNamespace, string factoryName)
 		{
 			var isSystem = assemblyName == SystemAssemblyName;
 
@@ -197,7 +230,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			typeMapper.RegisterTypeWrapper<SqlErrorCollection>(sqlErrorCollectionType);
 			typeMapper.RegisterTypeWrapper<SqlException>(sqlExceptionType);
 			typeMapper.RegisterTypeWrapper<SqlError>(sqlErrorType);
+#pragma warning disable CS0618 // Type or member is obsolete
 			typeMapper.RegisterTypeWrapper<SqlConnectionStringBuilder>(sqlConnectionStringBuilderType);
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			// bulk copy types
 			typeMapper.RegisterTypeWrapper<SqlBulkCopy>(bulkCopyType);
@@ -217,7 +252,60 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			var connectionFactory = typeMapper.BuildTypedFactory<string, SqlConnection, DbConnection>((string connectionString) => new SqlConnection(connectionString));
 
+			MappingSchema? mappingSchema = null;
+			Type?          sqlJsonType   = null;
+
+			if (provider == SqlServerProvider.MicrosoftDataSqlClient)
+			{
+				sqlJsonType = LoadType("SqlJson", DataType.Json, null, true, true);
+				if (sqlJsonType != null)
+				{
+					var sb = Expression.Parameter(typeof(StringBuilder));
+					var dt = Expression.Parameter(typeof(SqlDataType));
+					var op = Expression.Parameter(typeof(DataOptions));
+					var v = Expression.Parameter(typeof(object));
+
+					var converter = Expression.Lambda<Action<StringBuilder,SqlDataType,DataOptions,object>>(
+						Expression.Call(
+							null,
+							Methods.SqlServer.ConvertStringToSql,
+							sb,
+							ExpressionHelper.Property(ExpressionHelper.Property(dt, nameof(SqlDataType.Type)), nameof(DbDataType.DataType)),
+							ExpressionHelper.Property(Expression.Convert(v, sqlJsonType), "Value")
+							),
+						sb, dt, op, v)
+						.CompileExpression();
+
+					mappingSchema!.SetValueToSqlConverter(sqlJsonType, converter);
+
+					// JsonDocument inlining
+					var jsonDocumentType = Type.GetType("System.Text.Json.JsonDocument, System.Text.Json");
+
+					if (jsonDocumentType != null)
+					{
+						mappingSchema.SetScalarType(jsonDocumentType);
+						mappingSchema.SetDataType(jsonDocumentType, new SqlDataType(new DbDataType(jsonDocumentType, DataType.Json)));
+
+						var jsdocConverter = Expression.Lambda<Action<StringBuilder,SqlDataType,DataOptions,object>>(
+						Expression.Call(
+							null,
+							Methods.SqlServer.ConvertStringToSql,
+							sb,
+							ExpressionHelper.Property(ExpressionHelper.Property(dt, nameof(SqlDataType.Type)), nameof(DbDataType.DataType)),
+							Expression.Call(ExpressionHelper.Property(Expression.Convert(v, jsonDocumentType), "RootElement"), "GetRawText", null)
+							),
+						sb, dt, op, v)
+						.CompileExpression();
+
+						mappingSchema!.SetValueToSqlConverter(jsonDocumentType, jsdocConverter);
+					}
+
+				}
+			}
+
 			return new SqlServerProviderAdapter(
+				provider,
+
 				connectionType,
 				dataReaderType,
 				parameterType,
@@ -235,12 +323,46 @@ namespace LinqToDB.DataProvider.SqlServer
 				typeNameBuilder.BuildSetter<DbParameter>(),
 				typeNameBuilder.BuildGetter<DbParameter>(),
 
+#pragma warning disable CS0618 // Type or member is obsolete
 				typeMapper.BuildWrappedFactory((string connectionString) => new SqlConnectionStringBuilder(connectionString)),
+#pragma warning restore CS0618 // Type or member is obsolete
 
 				typeMapper.BuildWrappedFactory((DbConnection connection, SqlBulkCopyOptions options, DbTransaction? transaction) => new SqlBulkCopy((SqlConnection)(object)connection, options, (SqlTransaction?)(object?)transaction)),
-				typeMapper.BuildWrappedFactory((int source, string destination) => new SqlBulkCopyColumnMapping(source, destination)));
+				typeMapper.BuildWrappedFactory((int source, string destination) => new SqlBulkCopyColumnMapping(source, destination)),
+
+				mappingSchema,
+				sqlJsonType);
 
 			IEnumerable<int> exceptionErrorsGettter(Exception ex) => typeMapper.Wrap<SqlException>(ex).Errors.Errors.Select(err => err.Number);
+
+			Type? LoadType(string typeName, DataType dataType, string? dbType, bool optional = false, bool register = true)
+			{
+				var type = assembly!.GetType($"Microsoft.Data.SqlTypes.{typeName}", !optional);
+
+				if (type == null)
+					return null;
+
+				if (register)
+				{
+					var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(ExpressionHelper.Property(type, "Null"), typeof(object))).CompileExpression();
+
+					mappingSchema ??= new SqlServerAdapterMappingSchema(provider);
+
+					mappingSchema.SetScalarType(type);
+					mappingSchema.SetDefaultValue(type, getNullValue());
+					mappingSchema.SetCanBeNull(type, true);
+					mappingSchema.SetDataType(type, new SqlDataType(new DbDataType(type, dataType, dbType)));
+				}
+
+				return type;
+			}
+		}
+
+		sealed class SqlServerAdapterMappingSchema : LockedMappingSchema
+		{
+			public SqlServerAdapterMappingSchema(SqlServerProvider provider) : base($"SqlServerAdapter.{provider}")
+			{
+			}
 		}
 
 		#region Wrappers
@@ -321,6 +443,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			public SqlDbType SqlDbType   { get; set; }
 		}
 
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Wrapper]
 		public class SqlConnectionStringBuilder : TypeWrapper
 		{

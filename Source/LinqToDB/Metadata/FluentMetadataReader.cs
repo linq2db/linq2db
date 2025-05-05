@@ -5,13 +5,12 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Metadata
 {
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Mapping;
-
 	public class FluentMetadataReader : IMetadataReader
 	{
 		private readonly string _objectId;
@@ -24,8 +23,10 @@ namespace LinqToDB.Metadata
 
 		public FluentMetadataReader(IReadOnlyDictionary<Type, List<MappingAttribute>> typeAttributes, IReadOnlyDictionary<MemberInfo, List<MappingAttribute>> memberAttributes, IReadOnlyList<MemberInfo> orderedMembers)
 		{
+#pragma warning disable IDE0306
 			_types   = new(typeAttributes  .Select(kvp => new KeyValuePair<Type, MappingAttribute[]>      (kvp.Key, kvp.Value.ToArray())));
 			_members = new(memberAttributes.Select(kvp => new KeyValuePair<MemberInfo, MappingAttribute[]>(kvp.Key, kvp.Value.ToArray())));
+#pragma warning restore IDE0306
 
 			// dynamic columns collection
 			Dictionary<Type,List<MemberInfo>>? dynamicColumns = null;

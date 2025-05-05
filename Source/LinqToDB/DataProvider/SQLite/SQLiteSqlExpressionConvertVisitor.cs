@@ -1,12 +1,12 @@
 ﻿using System;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Extensions;
-	using LinqToDB.Common;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class SQLiteSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public SQLiteSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
@@ -162,7 +162,7 @@ namespace LinqToDB.DataProvider.SQLite
 			var underlying = cast.SystemType.ToUnderlying();
 
 			if (underlying == typeof(DateTime) || underlying == typeof(DateTimeOffset)
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			                                   || underlying == typeof(DateOnly)
 #endif
 			   )

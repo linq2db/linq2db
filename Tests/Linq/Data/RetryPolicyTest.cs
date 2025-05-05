@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.SqlServer;
@@ -215,9 +214,12 @@ namespace Tests.Data
 		public void ExternalConnection([DataSources(false)] string context)
 		{
 			using var db1 = GetDataConnection(context);
+
+			var connection = db1.OpenDbConnection();
+
 			try
 			{
-				using (var db = new DataConnection(new DataOptions().UseConnection(db1.DataProvider, db1.Connection).UseFactory(connection => new DummyRetryPolicy())))
+				using (var db = new DataConnection(new DataOptions().UseConnection(db1.DataProvider, connection).UseFactory(connection => new DummyRetryPolicy())))
 				using (db.CreateLocalTable<MyEntity>())
 				{
 					Assert.Fail("Exception expected");
@@ -234,11 +236,12 @@ namespace Tests.Data
 		{
 			using (var db1 = GetDataConnection(context))
 			{
+				var connection = db1.OpenDbConnection();
 				try
 				{
 					using (var db = GetDataConnection(context,
 						o => o
-							.UseConnection(db1.DataProvider, db1.Connection)
+							.UseConnection(db1.DataProvider, connection)
 							.UseRetryPolicy(new DummyRetryPolicy())))
 
 					using (db.CreateLocalTable<MyEntity>())

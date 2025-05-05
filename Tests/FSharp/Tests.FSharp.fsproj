@@ -4,11 +4,13 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.FSharp</AssemblyName>
 		<WarningLevel>5</WarningLevel>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net9.0</TargetFrameworks>
 
 		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="Issue4851.fs" />
 		<Compile Include="Issue2678.fs" />
 		<Compile Include="Models.fs" />
 		<Compile Include="Issue3357.fs" />

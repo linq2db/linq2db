@@ -1,9 +1,9 @@
 ﻿using System;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-
 	public static class PredicateExtensions
 	{
 		public static ISqlPredicate MakeNot(this ISqlPredicate predicate)

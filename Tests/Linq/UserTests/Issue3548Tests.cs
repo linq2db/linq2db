@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+
 using FluentAssertions;
+
 using LinqToDB;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
+
 using Npgsql;
+
 using NpgsqlTypes;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -80,7 +84,7 @@ namespace Tests.UserTests
 				using var db = GetDataConnection(options);
 				using var _  = db.CreateLocalTable(User.Data);
 
-				((NpgsqlConnection)db.Connection).ReloadTypes();
+				((NpgsqlConnection)db.OpenDbConnection()).ReloadTypes();
 
 				var user  = new User() { Id = 1, Type = UserTypeEnum.Organization };
 				var users = db.GetTable<User>().Where(x => x.InYourOrganization(user)).OrderBy(x => x.Id).Select(x => x.Id.ToString()).ToList();

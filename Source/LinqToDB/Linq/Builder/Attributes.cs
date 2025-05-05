@@ -14,7 +14,7 @@ namespace LinqToDB.Linq.Builder
 	// but it's a "Won't fix" C# bug: https://github.com/dotnet/roslyn/issues/4293
 	// Feel free to add more overloads as needed.
 
-	[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Class, Inherited = false)]
 	sealed class BuildsAnyAttribute : Attribute
 	{ }
 
@@ -41,5 +41,6 @@ namespace LinqToDB.Linq.Builder
 		public BuildsMethodCallAttribute(string method1, string method2, string method3, string method4, string method5) { }
 		public BuildsMethodCallAttribute(string method1, string method2, string method3, string method4, string method5, string method6) { }
 		public BuildsMethodCallAttribute(string method1, string method2, string method3, string method4, string method5, string method6, string method7) { }
+		public BuildsMethodCallAttribute(string method1, string method2, string method3, string method4, string method5, string method6, string method7, string method8) { }
 	}
 }

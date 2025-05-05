@@ -1,8 +1,10 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
 
 namespace Tests.Linq

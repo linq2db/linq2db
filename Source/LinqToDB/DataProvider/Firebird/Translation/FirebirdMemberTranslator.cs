@@ -2,14 +2,29 @@
 using System.Globalization;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Firebird.Translation
 {
-	using Common;
-	using Linq.Translation;
-	using SqlQuery;
-
 	public class FirebirdMemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new FirebirdDateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -139,7 +154,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 				// Firebird does not support dynamic increment in DateAdd function
 				QueryHelper.MarkAsNonQueryParameters(number);
 
-				var partExpression   = factory.Fragment(factory.GetDbDataType(typeof(string)), datepart.ToString());
+				var partExpression   = factory.NotNullFragment(factory.GetDbDataType(typeof(string)), datepart.ToString());
 				var resultExpression = factory.Function(factory.GetDbDataType(dateTimeExpression), "DateAdd", partExpression, number, dateTimeExpression);
 
 				return resultExpression;
@@ -173,6 +188,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 					}
 
 					return factory.Function(stringDataType, "LPad",
+						ParametersNullabilityType.SameAsFirstParameter,
 						CastToLength(expression, padSize),
 						factory.Value(intDataType, padSize),
 						factory.Value(stringDataType, "0"));
@@ -223,16 +239,6 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 			}
 		}
 
-		protected override IMemberTranslator CreateSqlTypesTranslator()
-		{
-			return new SqlTypesTranslation();
-		}
-
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new FirebirdDateFunctionsTranslator();
-		}
-
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			var factory  = translationContext.ExpressionFactory;
@@ -240,5 +246,21 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 
 			return timePart;
 		}
+
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// lower(UUID_TO_CHAR({0}))
+
+				var factory        = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string));
+				var toChar         = factory.Function(stringDataType, "UUID_TO_CHAR", guidExpr);
+				var toLower        = factory.ToLower(toChar);
+
+				return toLower;
+			}
+		}
+
 	}
 }

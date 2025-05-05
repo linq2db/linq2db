@@ -16,8 +16,8 @@ let private TestOnePerson id firstName persons =
 
     let person = list |> List.head
 
-    Assert.That(person.ID, Is.EqualTo id)
-    Assert.That(person.FirstName, Is.EqualTo firstName)
+    Assert.That(person.ID, Is.EqualTo(id : int))
+    Assert.That(person.FirstName, Is.EqualTo(firstName : string))
 
 let TestOneJohn = TestOnePerson 1 "John"
 

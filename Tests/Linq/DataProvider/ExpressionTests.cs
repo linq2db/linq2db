@@ -1,9 +1,11 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+
 using NUnit.Framework;
 
 namespace Tests.DataProvider
@@ -17,8 +19,7 @@ namespace Tests.DataProvider
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider     = DataConnection.GetDataProvider(context);
 
-
-			using (var conn = new DataConnection(dataProvider, connectionString))
+			using (var conn = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString)))
 			using (var rd = conn.ExecuteReader("SELECT 1"))
 			{
 				if (rd.Reader!.Read())

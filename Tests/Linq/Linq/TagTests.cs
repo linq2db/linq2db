@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
 using Tests.xUpdate;
 
 namespace Tests.Linq
@@ -190,7 +194,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test_SqlMergeStatement([MergeTests.MergeDataContextSource] string context)
+		public void Test_SqlMergeStatement([MergeDataContextSource] string context)
 		{
 			var tag = "My Test";
 			var expected = $"/* {tag} */{Environment.NewLine}";

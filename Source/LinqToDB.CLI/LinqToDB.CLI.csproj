@@ -3,44 +3,44 @@
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.CLI</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
-		<TargetFrameworks>net6.0;net8.0;net9.0</TargetFrameworks>
-		<!--don't uncomment, used to generate x86 apphosts manually
-		<PlatformTarget>x86</PlatformTarget>-->
+		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<OutputType>Exe</OutputType>
 		<WarningsAsErrors>true</WarningsAsErrors>
 		<SignAssembly>False</SignAssembly>
 		<RollForward>Major</RollForward>
+		<RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
+		<SelfContained>false</SelfContained>
 	</PropertyGroup>
 
-	<Target Name="CopyHosts" AfterTargets="Build">
-		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net6.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net6.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net6.0" />
-		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net8.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net8.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net8.0" />
-		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net9.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net9.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net9.0" />
-
-		<!--cleanup for pack-->
+	<!--build windows executables, inspired by https://github.com/dotnet/sdk/issues/43317-->
+	<Target Name="MultiArchPublish" AfterTargets="Build" Condition="$(RuntimeIdentifier) == ''">
 		<ItemGroup>
-			<JunkFiles
-				Condition="$(Configuration) == 'Release'"
-				Include="
-			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net6.0\*.xml;
-			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net6.0\*.pdb;
-			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net8.0\*.xml;
-			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net8.0\*.pdb;
-			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net9.0\*.xml;
-			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net9.0\*.pdb;"
-		/>
+			<!--either property set depends on build type: VS, msbuild, dotnet-->
+			<TFM Include="$(TargetFramework)" />
+			<TFM Include="$(TargetFrameworks)" />
+
+			<!--generate TMF+RID pairs-->
+			<PublishTarget Include="$(RuntimeIdentifiers)">
+				<TargetFramework>%(TFM.Identity)</TargetFramework>
+			</PublishTarget>
 		</ItemGroup>
 
-		<Delete Condition="$(Configuration) == 'Release'" Files="@(JunkFiles)" />
+		<!--publish each RID+TFM-->
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Publish" BuildInParallel="true" Properties="_IsPublishing=true;RuntimeIdentifier=%(PublishTarget.Identity);TargetFramework=%(PublishTarget.TargetFramework);TargetFrameworks=%(PublishTarget.TargetFramework)" />
+	</Target>
+	
+	<Target Name="MultiArchCleanup" AfterTargets="CopyFilesToPublishDirectory" Condition="$(RuntimeIdentifier) != ''">
+		<!--copy built executables-->
+		<Copy SourceFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\$(AssemblyName).exe" DestinationFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).$(RuntimeIdentifier).exe" />
+		<!--cleanup bin from RID builds-->
+		<RemoveDir Directories="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)" />
 	</Target>
 
 	<ItemGroup>
 		<EmbeddedResource Include="Template.tt" />
-	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
@@ -58,9 +58,7 @@
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="ClickHouse.Client" />
 		<PackageReference Include="Octonica.ClickHouseClient" />
-	</ItemGroup>
 
-	<ItemGroup>
 		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>
 </Project>

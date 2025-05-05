@@ -6,18 +6,19 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Linq;
-	using Model;
-
 	[TestFixture]
 	public class FromSqlTests : TestBase
 	{
@@ -29,7 +30,6 @@ namespace Tests.Linq
 
 			[Column("value", Length = 50)]
 			public string? Value { get; set; }
-
 
 			public SomeOtherClass? AssociatedOne { get; set; }
 
@@ -249,7 +249,7 @@ namespace Tests.Linq
 				var query = db.FromSql<SampleClass>("SELECT * FROM\n{0}\nwhere {3} >= {1} and {3} < {2}",
 					GetName(table), new DataParameter("startId", startId, DataType.Int64), endId, GetColumn("id"));
 
-				var save = Query<SampleClass>.CacheMissCount;
+				var save = query.GetCacheMissCount();
 
 				var projection = query
 					.Where(c => c.Id > 10)
@@ -259,7 +259,7 @@ namespace Tests.Linq
 
 				if (iteration > 1)
 				{
-					Query<SampleClass>.CacheMissCount.Should().Be(save);
+					query.GetCacheMissCount().Should().Be(save);
 				}
 
 				var expected = table
@@ -431,7 +431,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void TestScalarSubquery(
 			[IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)]
@@ -464,7 +463,6 @@ namespace Tests.Linq
 
 		static Expression<Func<IDataContext, TValue[], IQueryable<UnnestEnvelope<TValue>>>> UnnestWithOrdinalityImpl<TValue>()
 			=> (db, member) => db.FromSql<UnnestEnvelope<TValue>>($"unnest({member}) with ordinality {Sql.AliasExpr()} (value, index)");
-
 
 		[Sql.Expression("{0}", ServerSideOnly = true, Precedence = Precedence.Primary)]
 		static T AsTyped<T>(string str)
@@ -512,6 +510,71 @@ namespace Tests.Linq
 			}
 		}
 
+		class StringSplitTable
+		{
+			public string Value { get; set; } = default!;
+		}
+
+		[Test]
+		public void TestSplitStringParametrized(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)]
+			string context, [Values(1, 2)] int iteration)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var values = iteration == 1
+					? "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z"
+					: "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20";
+
+				var query  = db.FromSql<StringSplitTable>($"STRING_SPLIT({values},',')").Select(x => x.Value);
+
+				var cacheMissCount = query.GetCacheMissCount();
+
+				var result = query.ToArray();
+
+				var expectedValues = values.Split(',').Select(x => x.Trim()).ToArray();
+
+				AreEqual(expectedValues, result);
+
+				if (iteration > 1)
+				{
+					query.GetCacheMissCount().Should().Be(cacheMissCount);
+				}
+
+				query.GetSelectQuery().HasQueryParameter().Should().BeTrue();
+			}
+		}
+
+		[Test]
+		public void TestSplitStringParametrizedExplicitParameter(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)]
+			string context, [Values(1, 2)] int iteration)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var values = iteration == 1
+					? "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z"
+					: "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20";
+
+				var query = db.FromSql<StringSplitTable>($"STRING_SPLIT({new DataParameter("p", values, DataType.VarChar)},',')").Select(x => x.Value);
+
+				var cacheMissCount = query.GetCacheMissCount();
+
+				var result = query.ToArray();
+
+				var expectedValues = values.Split(',').Select(x => x.Trim()).ToArray();
+
+				AreEqual(expectedValues, result);
+
+				if (iteration > 1)
+				{
+					query.GetCacheMissCount().Should().Be(cacheMissCount);
+				}
+
+				query.GetSelectQuery().HasQueryParameter().Should().BeTrue();
+			}
+		}
+
 		[Test]
 		public void TestInvaildAliasExprUsage(
 			[IncludeDataSources(TestProvName.AllPostgreSQL15Minus)]
@@ -552,7 +615,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// TODO: right now we don't create parameter from endId, as expression compiler pass it by value
 		[Test]
 		public void TestQueryCaching_Interpolated_ValueParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -568,7 +630,7 @@ namespace Tests.Linq
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
-				Assert.That(ReferenceEquals(query1, query2), Is.False);
+				Assert.That(ReferenceEquals(query1, query2), Is.True);
 
 				IQueryable<SampleClass> GetQuery(int startId, int endId)
 				{
@@ -648,7 +710,7 @@ namespace Tests.Linq
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
-				Assert.That(ReferenceEquals(query1, query2), Is.False);
+				Assert.That(ReferenceEquals(query1, query2), Is.True);
 
 				IQueryable<SampleClass> GetQuery(int startId, int endId)
 				{
@@ -783,7 +845,6 @@ namespace Tests.Linq
 				Test(null, 2);
 				Test(2, null);
 				Test(3, 3);
-
 
 				Query<Values<int?>>.CacheMissCount.Should().Be(saveCount);
 

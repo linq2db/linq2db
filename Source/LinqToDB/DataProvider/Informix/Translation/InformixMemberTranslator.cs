@@ -2,14 +2,29 @@
 using System.Globalization;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Informix.Translation
 {
-	using Common;
-	using Linq.Translation;
-	using SqlQuery;
-
 	public class InformixMemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -49,6 +64,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 					}
 
 					return factory.Function(stringDataType, "LPad",
+						ParametersNullabilityType.SameAsFirstParameter,
 						CastToLength(expression, padSize),
 						factory.Value(intDataType, padSize),
 						factory.Value(stringDataType, "0"));
@@ -91,7 +107,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 					);
 				}
 
-				resultExpression = factory.Function(resulType, "To_Date", resultExpression, factory.Value("%Y-%m-%d %H:%M:%S"));
+				resultExpression = factory.Function(resulType, "To_Date", ParametersNullabilityType.SameAsFirstParameter, resultExpression, factory.Value("%Y-%m-%d %H:%M:%S"));
 
 				return resultExpression;
 			}
@@ -122,7 +138,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 						var day      = factory.Function(intDataType, "Day", dateTimeExpression);
 						var year     = factory.Function(intDataType, "Year", dateTimeExpression);
 						var mdy      = factory.Function(dateType, "Mdy", month, day, year);
-						var firstDay = factory.Function(dateType, "Mdy", factory.Value(intDataType, 1), factory.Value(intDataType, 1), year);
+						var firstDay = factory.Function(dateType, "Mdy", ParametersNullabilityType.SameAsLastParameter, factory.Value(intDataType, 1), factory.Value(intDataType, 1), year);
 						var diff     = factory.Sub(intDataType, mdy, firstDay);
 						var result   = factory.Increment(diff);
 						return result;
@@ -134,9 +150,9 @@ namespace LinqToDB.DataProvider.Informix.Translation
 					{
 						//((Extend({date}, year to day) - (Mdy(12, 31 - WeekDay(Mdy(1, 1, year({date}))), Year({date}) - 1) + Interval(1) day to day)) / 7 + Interval(1) day to day)::char(10)::int
 
-						var dateWithoutTime = factory.Function(dateType, "Extend", dateTimeExpression, factory.Fragment(dateType, "Year to Day"));
+						var dateWithoutTime = factory.Function(dateType, "Extend", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.NotNullFragment(dateType, "Year to Day"));
 						var year            = factory.Function(intDataType, "Year", dateTimeExpression);
-						var firstDay        = factory.Function(dateType, "Mdy", factory.Value(intDataType, 1), factory.Value(intDataType, 1), year);
+						var firstDay        = factory.Function(dateType, "Mdy", ParametersNullabilityType.SameAsLastParameter, factory.Value(intDataType, 1), factory.Value(intDataType, 1), year);
 
 						var lastDay = factory.Function(dateType, "Mdy",
 							factory.Value(intDataType, 12),
@@ -146,7 +162,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 							factory.Decrement(year)
 						);
 
-						var interval = factory.Fragment(intervalType, "Interval (1) Day to Day");
+						var interval = factory.NotNullFragment(intervalType, "Interval (1) Day to Day");
 
 						//var result = factory.Sub(dateType, dateWithoutTime, factory.Add(dateType, lastDay, interval));
 						var result = factory.Sub(dateType, dateWithoutTime, lastDay);
@@ -177,7 +193,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 						var result =
 							factory.Cast(
 								factory.Cast(
-									factory.Fragment(intervalType, Precedence.Primary, "{0}::datetime Hour to Hour", dateTimeExpression),
+									factory.Cast(dateTimeExpression, intervalType.WithDbType("datetime Hour to Hour"), isMandatory: true),
 									factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(3)),
 								intDataType
 							);
@@ -189,7 +205,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 						var result =
 							factory.Cast(
 								factory.Cast(
-									factory.Fragment(intervalType, Precedence.Primary, "{0}::datetime Minute to Minute", dateTimeExpression),
+									factory.Cast(dateTimeExpression, intervalType.WithDbType("datetime Minute to Minute"), isMandatory: true),
 									factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(3)),
 								intDataType
 							);
@@ -201,7 +217,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 						var result =
 							factory.Cast(
 								factory.Cast(
-									factory.Fragment(intervalType, Precedence.Primary, "{0}::datetime Second to Second", dateTimeExpression),
+									factory.Cast(dateTimeExpression, intervalType.WithDbType("datetime Second to Second"), isMandatory: true),
 									factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(3)),
 								intDataType
 							);
@@ -267,7 +283,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 				// interval literal cannot be dynamic so we should try to disable at least parameters
 				QueryHelper.MarkAsNonQueryParameters(increment);
 
-				var intervalExpr     = factory.Fragment(intervalType, "Interval ({0}) " + fragmentStr, increment);
+				var intervalExpr     = factory.NotNullFragment(intervalType, "Interval ({0}) " + fragmentStr, increment);
 				if (multiplier != null)
 				{
 					intervalExpr = factory.Multiply(incrementType, intervalExpr, multiplier);
@@ -283,7 +299,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 				// EXTEND(your_datetime_column, YEAR TO DAY)
 
 				var factory = translationContext.ExpressionFactory;
-				var extend  = new SqlFunction(factory.GetDbDataType(dateExpression).WithDataType(DataType.Date), "Extend", dateExpression, new SqlExpression("Year to Day"));
+				var extend  = new SqlFunction(factory.GetDbDataType(dateExpression).WithDataType(DataType.Date), "Extend", ParametersNullabilityType.SameAsFirstParameter, dateExpression, new SqlExpression("Year to Day") { CanBeNull = false });
 
 				return extend;
 			}
@@ -291,11 +307,11 @@ namespace LinqToDB.DataProvider.Informix.Translation
 			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				var factory  = translationContext.ExpressionFactory;
-				var timeType = factory.GetDbDataType(typeof(TimeSpan));
+				var timeType = factory.GetDbDataType(typeof(TimeSpan)).WithDbType("datetime Hour to Second");
 
 				var result =
 					factory.Cast(
-						factory.Fragment(timeType, Precedence.Additive, "{0}::datetime Hour to Second", dateExpression),
+						factory.Cast(dateExpression, timeType, isMandatory: true),
 						factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(8));
 
 				return result;
@@ -309,15 +325,19 @@ namespace LinqToDB.DataProvider.Informix.Translation
 			}
 		}
 
-		protected override IMemberTranslator CreateSqlTypesTranslator()
+		class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
-			return new SqlTypesTranslation();
-		}
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// Lower(To_Char({0}))
 
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new DateFunctionsTranslator();
-		}
+				var factory        = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string));
+				var toChar         = factory.Function(stringDataType, "To_Char", guidExpr);
+				var toLower        = factory.ToLower(toChar);
 
+				return toLower;
+			}
+		}
 	}
 }

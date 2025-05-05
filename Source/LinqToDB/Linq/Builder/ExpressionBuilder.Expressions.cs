@@ -1,14 +1,13 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using LinqToDB.Expressions;
-	using Mapping;
-
 	class LambdaResolveVisitor : ExpressionVisitorBase
 	{
 		readonly IBuildContext _context;
@@ -107,7 +106,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSqlExpression(IBuildContext? context, Expression expression, BuildFlags buildFlags, string? alias = null)
 		{
-			var result = _buildVisitor.BuildExpression(context, expression, buildFlags, alias);
+			var result = _buildVisitor.BuildExpression(context, expression, BuildPurpose.Sql, buildFlags, alias);
 			return context != null ? UpdateNesting(context, result) : result;
 		}
 
@@ -115,6 +114,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			var result = _buildVisitor.BuildExpression(context, expression, BuildPurpose.Sql);
 			return context != null ? UpdateNesting(context, result) : result;
+		}
+
+		public Expression BuildExpression(IBuildContext? context, Expression expression, BuildFlags buildFlags, string? alias = null)
+		{
+			return _buildVisitor.BuildExpression(context, expression, buildFlags, alias);
 		}
 
 		public Expression BuildExpression(IBuildContext context, Expression expression)
@@ -166,7 +170,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			return _buildVisitor.ConvertToExtensionSql(context, expression, columnDescriptor, inlineParameters);
 		}
-
 
 		bool _handlingAlias;
 

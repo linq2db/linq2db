@@ -2,7 +2,7 @@
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
+
 using Tests.xUpdate;
 
 namespace Tests.Mapping
@@ -60,7 +60,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDefaultInsertUpdateMerge([MergeTests.MergeDataContextSource(true, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void TestDefaultInsertUpdateMerge([MergeDataContextSource(true, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<TestTable>())

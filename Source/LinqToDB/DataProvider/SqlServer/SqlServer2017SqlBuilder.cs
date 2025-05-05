@@ -1,8 +1,8 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
-{
-	using Mapping;
-	using SqlProvider;
+﻿using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
 
+namespace LinqToDB.DataProvider.SqlServer
+{
 	class SqlServer2017SqlBuilder : SqlServer2016SqlBuilder
 	{
 		public SqlServer2017SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)

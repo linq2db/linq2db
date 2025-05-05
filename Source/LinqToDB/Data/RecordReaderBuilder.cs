@@ -5,15 +5,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Data
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Linq.Builder;
-	using Linq;
-	using Mapping;
-
 	sealed class RecordReaderBuilder
 	{
 		class EntityConstructor : EntityConstructorBase
@@ -33,7 +33,7 @@ namespace LinqToDB.Data
 				if (idx < 0)
 					return Expression.Constant(Builder.MappingSchema.GetDefaultValue(memberInfo.GetMemberType()));
 
-				return new ConvertFromDataReaderExpression(memberInfo.GetMemberType(), idx, column.ValueConverter, DataReaderParam, Builder.DataContext);
+				return new ConvertFromDataReaderExpression(memberInfo.GetMemberType(), idx, column.ValueConverter, DataContextParam, DataReaderParam, Builder.DataContext);
 			}
 
 			protected override Expression MakeIsNullExpression(Expression objExpression, MemberInfo memberInfo, ColumnDescriptor column)
@@ -51,7 +51,8 @@ namespace LinqToDB.Data
 			}
 		}
 
-		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader),  "rd");
+		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dc");
+		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader), "rd");
 
 		public IDataContext           DataContext   { get; }
 		public MappingSchema          MappingSchema { get; }
@@ -77,7 +78,7 @@ namespace LinqToDB.Data
 			return value;
 		}
 
-		public Func<DbDataReader, T> BuildReaderFunction<T>()
+		public Func<IDataContext,DbDataReader, T> BuildReaderFunction<T>()
 		{
 			var generator          = new ExpressionGenerator();
 			var typedDataReader    = Expression.Convert(DataReaderParam, Reader.GetType());
@@ -113,10 +114,10 @@ namespace LinqToDB.Data
 
 			generator.AddExpression(finalized);
 			
-			var lambda = Expression.Lambda<Func<DbDataReader,T>>(generator.ResultExpression, DataReaderParam);
+			var lambda = Expression.Lambda<Func<IDataContext,DbDataReader,T>>(generator.ResultExpression, DataContextParam, DataReaderParam);
 
-			if (Configuration.OptimizeForSequentialAccess)
-				lambda = (Expression<Func<DbDataReader, T>>)SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(lambda, Reader.FieldCount, reduce: true);
+			if (Common.Configuration.OptimizeForSequentialAccess)
+				lambda = (Expression<Func<IDataContext, DbDataReader, T>>)SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(lambda, Reader.FieldCount, reduce: true);
 
 			return lambda.CompileExpression();
 		}

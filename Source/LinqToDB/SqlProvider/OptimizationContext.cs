@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
+using LinqToDB.Common;
+using LinqToDB.DataProvider;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using DataProvider;
-	using Mapping;
-	using SqlQuery;
-
 	public class OptimizationContext
 	{
 		private IQueryParametersNormalizer?                      _parametersNormalizer;
@@ -19,7 +18,7 @@ namespace LinqToDB.SqlProvider
 		private Dictionary<(DbDataType, object?), SqlParameter>? _dynamicParameters;
 
 		public DataOptions                   DataOptions      { get; }
-		public SqlProviderFlags?             SqlProviderFlags { get; }
+		public SqlProviderFlags              SqlProviderFlags { get; }
 		public MappingSchema                 MappingSchema    { get; }
 		public SqlExpressionConvertVisitor   ConvertVisitor   { get; }
 		public SqlExpressionOptimizerVisitor OptimizerVisitor { get; }
@@ -39,7 +38,7 @@ namespace LinqToDB.SqlProvider
 		public OptimizationContext(
 			EvaluationContext                evaluationContext,
 			DataOptions                      dataOptions,
-			SqlProviderFlags?                sqlProviderFlags,
+			SqlProviderFlags                 sqlProviderFlags,
 			MappingSchema                    mappingSchema,
 			SqlExpressionOptimizerVisitor    optimizerVisitor,
 			SqlExpressionConvertVisitor      convertVisitor,

@@ -4,14 +4,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using LinqToDB.Common.Internal;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	internal static class SequenceHelper
 	{
 		public static Expression PrepareBody(LambdaExpression lambda, params IBuildContext[] sequences)
@@ -56,6 +56,22 @@ namespace LinqToDB.Linq.Builder
 				|| (expression is ContextRefExpression contextRef && contextRef.BuildContext == context);
 		}
 
+		public static ContextRefExpression CreateRef(IBuildContext buildContext)
+		{
+			return new ContextRefExpression(buildContext.ElementType, buildContext);
+		}
+
+		public static IBuildContext UnwrapProxy(IBuildContext buildContext)
+		{
+			var current = buildContext;
+			while (current is IBuildProxy proxy)
+			{
+				current = proxy.Owner;
+			}
+
+			return current;
+		}
+
 		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? CorrectExpression(Expression? expression, IBuildContext current,
 			IBuildContext                                       underlying)
@@ -66,6 +82,11 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return expression;
+		}
+
+		public static bool HasContextRef(Expression expression)
+		{
+			return null != expression.Find(1, static (_, e) => e is ContextRefExpression);
 		}
 
 		public static Expression CorrectTrackingPath(ExpressionBuilder builder, Expression expression, Expression toPath)
@@ -658,6 +679,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					return expression;
 				}
+
 				if (!expression.Type.IsValueType)
 				{
 					if (expression is DefaultExpression)
@@ -868,9 +890,16 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (expression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
 				return UnwrapDefaultIfEmpty(defaultIfEmptyExpression.InnerExpression);
+
 			return expression;
 		}
 
+		public static Expression UnwrapProxy(Expression expression)
+		{
+			if (expression is ContextRefExpression { BuildContext: IBuildProxy proxy })
+				return UnwrapDefaultIfEmpty(proxy.InnerExpression);
+			return expression;
+		}
 		public static Expression RemoveMarkers(Expression expression)
 		{
 			var result = expression.Transform(e => e is MarkerExpression marker ? marker.InnerExpression : e);

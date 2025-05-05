@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	sealed class TableLikeQueryContext : BuildContextBase
 	{
 		public ContextRefExpression  TargetContextRef         { get; }
@@ -32,8 +32,8 @@ namespace LinqToDB.Linq.Builder
 
 		public bool? IsSourceOuter { get; set; }
 
-		public TableLikeQueryContext(ContextRefExpression targetContextRef, ContextRefExpression sourceContextRef)
-			: base(sourceContextRef.BuildContext.Builder, targetContextRef.ElementType, sourceContextRef.BuildContext.SelectQuery)
+		public TableLikeQueryContext(TranslationModifier translationModifier, ContextRefExpression targetContextRef, ContextRefExpression sourceContextRef)
+			: base(translationModifier, sourceContextRef.BuildContext.Builder, targetContextRef.ElementType, sourceContextRef.BuildContext.SelectQuery)
 		{
 			TargetContextRef  = targetContextRef;
 			SourceContextRef  = sourceContextRef;
@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 			SelfTargetPropAccess = Expression.Property(thisContextRef, nameof(ProjectionHelper<object, object>.selft_target));
 
 			Source = sourceContextRef.BuildContext is EnumerableContext enumerableSource
-				? new SqlTableLikeSource { SourceEnumerable = enumerableSource.Table }
+				? new SqlTableLikeSource { SourceEnumerable = enumerableSource.Table, SourceQuery = enumerableSource.SelectQuery }
 				: new SqlTableLikeSource { SourceQuery = sourceContextRef.BuildContext.SelectQuery };
 		}
 
@@ -190,7 +190,6 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-
 		public Expression PrepareSelfTargetLambda(LambdaExpression lambdaExpression)
 		{
 			if (lambdaExpression.Parameters.Count != 1)
@@ -287,6 +286,7 @@ namespace LinqToDB.Linq.Builder
 				if (TargetInSourceContextRef == null)
 				{
 					var cloningContext = new CloningContext();
+					cloningContext.CloneElements(Builder.GetCteClauses());
 					var targetCloned   = cloningContext.CloneContext(TargetContextRef.BuildContext);
 
 					if (ConnectionLambda == null)
@@ -322,7 +322,7 @@ namespace LinqToDB.Linq.Builder
 				// replace tracking path back
 				var translated = SequenceHelper.CorrectTrackingPath(Builder, correctedPath, path);
 
-				var placeholders = ExpressionBuilder.CollectPlaceholders(translated);
+				var placeholders = ExpressionBuilder.CollectPlaceholders(translated, true);
 
 				var remapped = TableLikeHelpers.RemapToFields(SubqueryContext, Source, Source.SourceFields, _knownMap, null, translated, placeholders);
 
@@ -357,7 +357,7 @@ namespace LinqToDB.Linq.Builder
 		class SelfTargetContainerContext : BuildContextBase
 		{
 			public SelfTargetContainerContext(ParameterExpression targetParam, ContextRefExpression targetContextRef, Expression substitutedExpression, bool needsCloning) : 
-				base(targetContextRef.BuildContext.Builder, targetContextRef.BuildContext.ElementType, targetContextRef.BuildContext.SelectQuery)
+				base(targetContextRef.BuildContext.TranslationModifier, targetContextRef.BuildContext.Builder, targetContextRef.BuildContext.ElementType, targetContextRef.BuildContext.SelectQuery)
 			{
 				TargetParam           = targetParam;
 				TargetContextRef      = targetContextRef;
@@ -401,6 +401,7 @@ namespace LinqToDB.Linq.Builder
 				// in case when there is no access to the Source we are trying to generate subquery SQL
 				//
 				var cloningContext = new CloningContext();
+				cloningContext.CloneElements(Builder.GetCteClauses());
 
 				var targetContext       = TargetContext;
 				var clonedTargetContext = NeedsCloning ? cloningContext.CloneContext(targetContext) : targetContext;

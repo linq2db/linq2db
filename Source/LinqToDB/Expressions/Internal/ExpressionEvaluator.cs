@@ -4,11 +4,12 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Expressions.Internal
 {
-	using Common;
-	using Extensions;
-
 	/// <summary>
 	/// Internal API.
 	/// </summary>
@@ -87,6 +88,7 @@ namespace LinqToDB.Expressions.Internal
 							if (propertyInfo.IsNullableHasValueMember())
 								return false;
 						}
+
 						return propertyInfo.GetValue(obj, null);
 					}
 
@@ -102,7 +104,7 @@ namespace LinqToDB.Expressions.Internal
 					if (instance == null && mc.Method.IsNullableGetValueOrDefault())
 						return null;
 
-					return mc.Method.Invoke(instance, arguments);
+					return mc.Method.InvokeExt(instance, arguments);
 				}
 			}
 
@@ -119,17 +121,8 @@ namespace LinqToDB.Expressions.Internal
 				return expr.EvaluateExpressionInternal();
 			}
 
-			try
-			{
-				var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();
-				return value;
-			}
-			catch (TargetInvocationException ti )
-			{
-				if (ti.InnerException != null)
-					throw ti.InnerException;
-				throw;
-			}
+			var value = Expression.Lambda(expr).CompileExpression().DynamicInvokeExt();
+			return value;
 		}
 	}
 }

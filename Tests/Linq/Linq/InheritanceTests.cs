@@ -6,17 +6,16 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
+using static Tests.xUpdate.MergeTests;
+
 namespace Tests.Linq
 {
-	using Model;
-
-	using static Tests.xUpdate.MergeTests;
-
 	[TestFixture]
 	public class InheritanceTests : TestBase
 	{
@@ -1158,7 +1157,7 @@ namespace Tests.Linq
 
 			var res = db.GetTable<Issue4460_4_Base>()
 				.OrderBy(r => r.Id)
-				.Where(e => e is Issue4460_4_BaseChild ? additionalFlag || e.Id != default : e.Id != default).ToArray();
+				.Where(e => e is Issue4460_4_BaseChild ? additionalFlag || e.Id != default : e.Id == default).ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(2));
 
@@ -1798,7 +1797,6 @@ namespace Tests.Linq
 				Assert.That(result[0].Type, Is.EqualTo(1));
 				Assert.That(((CreateTable1)result[0]).Field1, Is.EqualTo(1));
 
-
 				Assert.That(result[1], Is.InstanceOf<CreateTable2>());
 			});
 			Assert.Multiple(() =>
@@ -1900,7 +1898,6 @@ namespace Tests.Linq
 
 			public int ChildId { get; set; }
 		}
-
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3891")]
 		public void Issue3891AttributesMapping([InsertOrUpdateDataSources] string context)

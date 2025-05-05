@@ -1,0 +1,41 @@
+<#@ assembly name="$(LinqToDBT4FirebirdClientPath)FirebirdSql.Data.FirebirdClient.dll" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude" once="true"            #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true"      #>
+<#
+	LinqToDB.DataProvider.Firebird.FirebirdTools.ResolveFirebird(
+		typeof(FirebirdSql.Data.FirebirdClient.FbConnection).Assembly);
+#>
+<#+
+LinqToDB.Data.DataConnection GetFirebirdConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(connectionString);
+}
+
+LinqToDB.Data.DataConnection GetFirebirdConnection(string server, string database)
+{
+	return GetFirebirdConnection(server, database, "SYSDBA", "masterkey");
+}
+
+LinqToDB.Data.DataConnection GetFirebirdConnection(string server, string database, string uid, string password)
+{
+	return GetFirebirdConnection(string.Format("DataSource={0};Database={1};User Id={2};Password={3}", server, database, uid, password));
+}
+
+public void LoadFirebirdMetadata(string connectionString)
+{
+	using (var dataConnection = GetFirebirdConnection(connectionString))
+		LoadMetadata(dataConnection);
+}
+
+public void LoadFirebirdMetadata(string server, string database, string uid, string password)
+{
+	using (var dataConnection = GetFirebirdConnection(server, database, uid, password))
+		LoadMetadata(dataConnection);
+}
+
+public void LoadFirebirdMetadata(string server, string database)
+{
+	using (var dataConnection = GetFirebirdConnection(server, database))
+		LoadMetadata(dataConnection);
+}
+#>

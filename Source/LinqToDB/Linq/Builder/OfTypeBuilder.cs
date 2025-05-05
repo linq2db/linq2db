@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	[BuildsMethodCall("OfType")]
 	sealed class OfTypeBuilder : MethodCallBuilder
 	{

@@ -1,11 +1,9 @@
-﻿using System;
+﻿using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Mapping;
-	using SqlQuery;
-	using SqlProvider;
-
 	class SqlServer2012SqlOptimizer : SqlServerSqlOptimizer
 	{
 		public SqlServer2012SqlOptimizer(SqlProviderFlags sqlProviderFlags) : this(sqlProviderFlags, SqlServerVersion.v2012)
@@ -45,11 +43,12 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var orderByClause = (SqlOrderByClause)element;
 					// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-					if (orderByClause.SelectQuery != null && orderByClause.OrderBy.IsEmpty && orderByClause.SelectQuery.Select.SkipValue != null)
+					if (orderByClause is { SelectQuery.Select.SkipValue: not null, OrderBy.IsEmpty: true })
 					{
-						return new SqlOrderByClause(new[] { new SqlOrderByItem(new SqlValue(typeof(int), 1), false, false) });
+						return new SqlOrderByClause([new SqlOrderByItem(new SqlExpression(typeof(int), "1"), false, true)]);
 					}
 				}
+
 				return element;
 			});
 			return statement;

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	internal partial class MergeBuilder
 	{
 		sealed class MergeContext : SequenceContextBase
@@ -18,8 +18,8 @@ namespace LinqToDB.Linq.Builder
 				Merge = merge;
 			}
 
-			public MergeContext(SqlMergeStatement merge, IBuildContext target, TableLikeQueryContext source)
-				: base(null, new[] { target, source }, null)
+			public MergeContext(TranslationModifier translationModifier, SqlMergeStatement merge, IBuildContext target, TableLikeQueryContext source)
+				: base(translationModifier, null, [target, source], null)
 			{
 				Merge        = merge;
 				Merge.Source = source.Source;
@@ -81,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 					if (sqlExpr is SqlPlaceholderExpression)
 						outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr, false));
 					else
-						UpdateBuilder.ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
+						UpdateBuilder.ParseSetter(Builder, outputRef, outputRef, sqlExpr, outputExpressions);
 
 					var setItems = new List<SqlSetExpression>();
 					UpdateBuilder.InitializeSetExpressions(Builder, selectContext, selectContext, outputExpressions, setItems, false);
@@ -90,6 +90,7 @@ namespace LinqToDB.Linq.Builder
 
 					return sqlExpr;
 				}
+
 				return path;
 			}
 

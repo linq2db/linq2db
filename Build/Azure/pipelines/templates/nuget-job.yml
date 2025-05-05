@@ -4,24 +4,18 @@ parameters:
 jobs:
 - job: build_nugets_job
   pool:
-    vmImage: 'windows-2022'
+    vmImage: 'windows-2025'
   displayName: 'Nugets Generation'
   dependsOn: build_job
   condition: succeeded()
 
   steps:
 
-  - task: NuGetToolInstaller@1
-
   - powershell: echo "##vso[task.setvariable variable=packageVersion]$(packageVersion)-rc.$(Build.BuildId)"
     condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
     displayName: Update nuget version
 
   - powershell: echo "##vso[task.setvariable variable=ef3PackageVersion]$(ef3PackageVersion)-rc.$(Build.BuildId)"
-    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
-    displayName: Update nuget version
-
-  - powershell: echo "##vso[task.setvariable variable=ef6PackageVersion]$(ef6PackageVersion)-rc.$(Build.BuildId)"
     condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
     displayName: Update nuget version
 
@@ -52,6 +46,12 @@ jobs:
       targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Extensions/Release'
 
   - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.Compat files
+    inputs:
+      artifactName: '$(artifact_linq2db_compat_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Compat/Release'
+
+  - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB.Remote.Wcf files
     inputs:
       artifactName: '$(artifact_linq2db_remote_wcf_binaries)'
@@ -68,6 +68,12 @@ jobs:
     inputs:
       artifactName: '$(artifact_linq2db_cli_binaries)'
       targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.CLI/Release'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.Scaffold files
+    inputs:
+      artifactName: '$(artifact_linq2db_scaffold_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Scaffold/Release'
 
   - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB.FSharp files
@@ -91,54 +97,61 @@ jobs:
     displayName: Download test files (for t4 nugets)
     inputs:
       artifactName: '$(artifact_t4_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/Tests/$(release_configuration)/$(netfx_tfm)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)'
 
-  - task: PowerShell@2
+#dotnet tool install -g dotnet-script
+  - task: DotNetCoreCLI@2
+    displayName: Install dotnet-script tool
     inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/NuGet/*.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(packageVersion) -branch $(Build.SourceBranchName)
+      command: custom
+      custom: tool
+      arguments: install -g dotnet-script
+
+  - task: DotNetCoreCLI@2
     displayName: Update nuspecs
-
-  - task: PowerShell@2
     inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/NuGet/linq2db.EntityFrameworkCore.v3.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(ef3PackageVersion) -branch $(Build.SourceBranchName) -linq2DbVersion $(packageVersion)
+      command: custom
+      custom: script
+      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
+      arguments: BuildNuspecs.csx /path:**/*.nuspec /buildPath:../.build/nuspecs /version:$(packageVersion) /clean:true /branch:$(Build.SourceBranchName)
+
+  - task: DotNetCoreCLI@2
     displayName: Update nuspecs (EF3)
-
-  - task: PowerShell@2
     inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/NuGet/linq2db.EntityFrameworkCore.v6.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(ef6PackageVersion) -branch $(Build.SourceBranchName) -linq2DbVersion $(packageVersion)
-    displayName: Update nuspecs (EF6)
+      command: custom
+      custom: script
+      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
+      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v3.nuspec /buildPath:../.build/nuspecs /version:$(ef3PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
 
-  - task: PowerShell@2
-    inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/NuGet/linq2db.EntityFrameworkCore.v8.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(ef8PackageVersion) -branch $(Build.SourceBranchName) -linq2DbVersion $(packageVersion)
+  - task: DotNetCoreCLI@2
     displayName: Update nuspecs (EF8)
-
-  - task: PowerShell@2
     inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/NuGet/linq2db.EntityFrameworkCore.v9.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(ef9PackageVersion) -branch $(Build.SourceBranchName) -linq2DbVersion $(packageVersion)
+      command: custom
+      custom: script
+      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
+      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v8.nuspec /buildPath:../.build/nuspecs /version:$(ef8PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
+
+  - task: DotNetCoreCLI@2
     displayName: Update nuspecs (EF9)
+    inputs:
+      command: custom
+      custom: script
+      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
+      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v9.nuspec /buildPath:../.build/nuspecs /version:$(ef9PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
 
   - task: CmdLine@2
     inputs:
       script: $(Build.SourcesDirectory)/NuGet/Pack.cmd
-      workingDirectory: $(Build.SourcesDirectory)/.build
+      workingDirectory: $(Build.SourcesDirectory)/NuGet
+      failOnStderr: true # needed as dotnet pack doesn't set exit code
     displayName: Build nugets for Azure Artifacts
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], variables['release_branch']))
 
   - task: CmdLine@2
     inputs:
       script: $(Build.SourcesDirectory)/NuGet/Pack.cmd snupkg
-      workingDirectory: $(Build.SourcesDirectory)/.build
+      workingDirectory: $(Build.SourcesDirectory)/NuGet
+      failOnStderr: true # needed as dotnet pack doesn't set exit code
     displayName: Build nugets for Nuget.org
     condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']))
 

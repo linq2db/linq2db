@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace LinqToDB.EntityFrameworkCore
 {
@@ -10,7 +11,8 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <summary>
 		/// Creates new instance of exception.
 		/// </summary>
-		[Obsolete("Use one of constructors with message")]
+		// don't remove, we just want to guard users from using it explicitly
+		[Obsolete("Use one of constructors with message parameter"), EditorBrowsable(EditorBrowsableState.Never)]
 		public LinqToDBForEFToolsException()
 		{
 		}

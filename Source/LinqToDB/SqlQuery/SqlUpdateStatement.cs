@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	public class SqlUpdateStatement : SqlStatementWithQueryBase
 	{
@@ -31,7 +28,7 @@ namespace LinqToDB.SqlQuery
 				.AppendElement(With)
 				.AppendLine("UPDATE")
 				.AppendElement(Update)
-				.AppendLine()
+				.AppendLine("--- query ---")
 				.AppendElement(SelectQuery)
 				.AppendElement(Output);
 

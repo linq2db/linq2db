@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
@@ -7,11 +6,11 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak, SqlSearchCondition searchCondition)
 		{
-			JoinType        = joinType;
-			Table           = table;
-			IsWeak          = isWeak;
-			Condition       = searchCondition;
-			CanConvertApply = true;
+			JoinType             = joinType;
+			Table                = table;
+			IsWeak               = isWeak;
+			Condition            = searchCondition;
+			IsSubqueryExpression = false;
 		}
 
 		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak)
@@ -24,13 +23,13 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public JoinType                 JoinType           { get; set; }
-		public SqlTableSource           Table              { get; set; }
-		public SqlSearchCondition       Condition          { get; internal set; }
-		public bool                     IsWeak             { get; set; }
-		public bool                     CanConvertApply    { get; set; }
-		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
-		public SourceCardinality        Cardinality        { get; set; }
+		public JoinType                 JoinType             { get; set; }
+		public SqlTableSource           Table                { get; set; }
+		public SqlSearchCondition       Condition            { get; internal set; }
+		public bool                     IsWeak               { get; set; }
+		public bool                     IsSubqueryExpression { get; set; }
+		public List<SqlQueryExtension>? SqlQueryExtensions   { get; set; }
+		public SourceCardinality        Cardinality          { get; set; }
 
 		public override QueryElementType ElementType => QueryElementType.JoinedTable;
 

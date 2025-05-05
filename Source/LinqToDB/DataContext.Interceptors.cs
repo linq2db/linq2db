@@ -1,10 +1,10 @@
 ﻿using System;
 
+using LinqToDB.Interceptors;
+using LinqToDB.Interceptors.Internal;
+
 namespace LinqToDB
 {
-	using Interceptors;
-	using Interceptors.Internal;
-
 	public partial class DataContext :
 		IInterceptable<ICommandInterceptor>,
 		IInterceptable<IConnectionInterceptor>,
@@ -74,6 +74,8 @@ namespace LinqToDB
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
+			AssertDisposed();
+
 			AddInterceptor(interceptor, true);
 		}
 
@@ -122,6 +124,8 @@ namespace LinqToDB
 
 		public void RemoveInterceptor(IInterceptor interceptor)
 		{
+			AssertDisposed();
+
 			Options = Options.RemoveInterceptor(interceptor);
 
 			this.RemoveInterceptorImpl(interceptor);

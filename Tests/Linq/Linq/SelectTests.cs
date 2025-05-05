@@ -2,22 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
-using LinqToDB.Reflection;
 using LinqToDB.Mapping;
+using LinqToDB.Reflection;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
-	using Model;
-
 	[TestFixture]
 	public class SelectTests : TestBase
 	{
@@ -396,32 +398,29 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				if (db is DataConnection)
-				{
-					((DataConnection)db).AddMappingSchema(_myMapSchema);
+				db.AddMappingSchema(_myMapSchema);
 
-					var q = (
+				var q = (
 
-						from p in db.Person
-						where p.ID == 1
-						select new
-						{
-							p.ID,
-							FirstName  = p.MiddleName ?? p.FirstName  ?? "None",
-							LastName   = p.LastName   ?? p.FirstName  ?? "None",
-							MiddleName = p.MiddleName ?? p.MiddleName ?? "None"
-						}
-
-					).ToList().First();
-
-					Assert.Multiple(() =>
+					from p in db.Person
+					where p.ID == 1
+					select new
 					{
-						Assert.That(q.ID, Is.EqualTo(1));
-						Assert.That(q.FirstName, Is.EqualTo("John"));
-						Assert.That(q.LastName, Is.EqualTo("Pupkin"));
-						Assert.That(q.MiddleName, Is.EqualTo("None"));
-					});
-				}
+						p.ID,
+						FirstName  = p.MiddleName ?? p.FirstName  ?? "None",
+						LastName   = p.LastName   ?? p.FirstName  ?? "None",
+						MiddleName = p.MiddleName ?? p.MiddleName ?? "None"
+					}
+
+				).ToList().First();
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(q.ID, Is.EqualTo(1));
+					Assert.That(q.FirstName, Is.EqualTo("John"));
+					Assert.That(q.LastName, Is.EqualTo("Pupkin"));
+					Assert.That(q.MiddleName, Is.EqualTo("None"));
+				});
 			}
 		}
 
@@ -1003,7 +1002,6 @@ namespace Tests.Linq
 			internal string? InternalStr { get; set; }
 		}
 
-
 		[Test]
 		public void InternalFieldProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -1170,7 +1168,7 @@ namespace Tests.Linq
 				from c in db.Child
 				select new IntermediateChildResult { ParentId = c.ParentID, Child = includeChild ? c : null };
 
-			var cacheMissCount = Query<IntermediateChildResult>.CacheMissCount;
+			var cacheMissCount = query.GetCacheMissCount();
 
 			var result = query.ToArray().First();
 
@@ -1198,10 +1196,9 @@ namespace Tests.Linq
 
 			if (iteration > 1)
 			{
-				Query<IntermediateChildResult>.CacheMissCount.Should().Be(cacheMissCount);
+				query.GetCacheMissCount().Should().Be(cacheMissCount);
 			}
 		}
-
 
 		[Test]
 		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -1490,6 +1487,48 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexer([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderByDescending(p => p.ID)
+				.Select((p, idx) => new { p.FirstName, p.LastName, Index = idx })
+				.Where(x => x.Index > 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexerAfterGroupBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.GroupBy(p => p.ID)
+				.OrderByDescending(g => g.Key)
+				.Select((g, idx) => new { g.Key, Index = idx })
+				.Where(x => x.Index > 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_OrderByRequiredForIndexing)]
+		public void SelectWithIndexerNoOrder([DataSources(TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Select((p, idx) => new { p.FirstName, Index = idx })
+				.Where(x => x.Index > 1);
+
+			AssertQuery(query);
+		}
+
 		public class Table1788
 		{
 			[PrimaryKey]
@@ -1502,8 +1541,8 @@ namespace Tests.Linq
 			{
 				return new Table1788[]
 				{
-					new () { Id = 1, Value1 = 11 }, 
-					new () { Id = 2, Value1 = 22 }, 
+					new () { Id = 1, Value1 = 11 },
+					new () { Id = 2, Value1 = 22 },
 					new () { Id = 3, Value1 = 33 }
 				};
 			}
@@ -1520,7 +1559,7 @@ namespace Tests.Linq
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
 					select new
 					{
-						f1 = Sql.ToNullable(l.Value1).HasValue, 
+						f1 = Sql.ToNullable(l.Value1).HasValue,
 						f2 = Sql.ToNullable(l.Value1)
 					};
 
@@ -1548,9 +1587,9 @@ namespace Tests.Linq
 				var results =
 					from p in table
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
-					select new 
-					{ 
-						f1 = Sql.ToNullable(l.Value1) != null, 
+					select new
+					{
+						f1 = Sql.ToNullable(l.Value1) != null,
 						f2 = Sql.ToNullable(l.Value1)
 					};
 
@@ -1569,7 +1608,6 @@ namespace Tests.Linq
 			}
 		}
 
-		
 		[Test]
 		public void Issue1788Test3([DataSources] string context)
 		{
@@ -1579,8 +1617,8 @@ namespace Tests.Linq
 				var results =
 					from p in table
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
-					select new 
-					{ 
+					select new
+					{
 #pragma warning disable CS0472 // comparison of non-null int? with null
 						f1 = ((int?)l.Value1) != null,
 #pragma warning restore CS0472
@@ -1611,8 +1649,8 @@ namespace Tests.Linq
 				var results =
 					from p in table
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
-					select new 
-					{ 
+					select new
+					{
 						f1 = ((int?)l.Value1).HasValue,
 						f2 = (int?)l.Value1
 					};
@@ -1631,7 +1669,6 @@ namespace Tests.Linq
 					results);
 			}
 		}
-		
 
 		[Test]
 		public void OuterApplyTest(
@@ -1664,7 +1701,6 @@ namespace Tests.Linq
 				query = query
 				 	.Distinct()
 				 	.OrderBy(_ => _.Parent.ParentID);
-
 
 				var expectedQuery =
 					from p in Parent
@@ -1811,7 +1847,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Table("test_mapping_column_2_prop")]
 		public partial class TestMappingColumn1PropInfo
 		{
@@ -1916,16 +1951,15 @@ namespace Tests.Linq
 			p1.All(p => ReferenceEquals(p.Reference, reference)).Should().BeTrue();
 
 			reference = new Parent() { ParentID = 1002 };
-			var cacheMissCount = Query<Person>.CacheMissCount;
+			var cacheMissCount = db.Person.GetCacheMissCount();
 
 			var p2 = query.ToList();
 
 			p2.All(p => ReferenceEquals(p.Reference, reference)).Should().BeTrue();
 
-			Query<Person>.CacheMissCount.Should().Be(cacheMissCount);
+			db.Person.GetCacheMissCount().Should().Be(cacheMissCount);
 
 		}
-		
 
 		#endregion
 

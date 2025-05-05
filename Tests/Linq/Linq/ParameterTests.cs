@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
-using Tests.Model;
-
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -275,7 +276,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		static class AdditionalSql
 		{
 			[Sql.Expression("(({2} * ({1} - {0}) / {2}) * {0})", ServerSideOnly = true)]
@@ -327,9 +327,7 @@ namespace Tests.Linq
 		public void TestQueryableCallWithParameters([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// baselines could be affected by cache
-			Query.ClearCaches();
-
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseDisableQueryCache(true));
 			db.Parent.Where(p => GetChildrenFiltered(db, c => c.ChildID != 5).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
 		}
 
@@ -337,9 +335,7 @@ namespace Tests.Linq
 		public void TestQueryableCallWithParametersWorkaround([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// baselines could be affected by cache
-			Query.ClearCaches();
-
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseDisableQueryCache(true));
 			db.Parent.Where(p => GetChildrenFiltered(db, ChildFilter).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
 		}
 
@@ -573,7 +569,6 @@ namespace Tests.Linq
 			return db.Person.Where(p => p.ID == personId!.Value);
 		}
 
-
 		[Test]
 		public void TestParametersByEquality([DataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
@@ -600,7 +595,7 @@ namespace Tests.Linq
 
 				var parameters = new List<SqlParameter>();
 				QueryHelper.CollectParameters(query.GetSelectQuery(), parameters);
-				parameters.Distinct().Should().HaveCount(1);
+				parameters.Distinct().Should().HaveCount(2);
 			}
 
 			{
@@ -673,7 +668,7 @@ namespace Tests.Linq
 					String3 = str3,
 				});
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -706,7 +701,7 @@ namespace Tests.Linq
 					String3 = str3,
 				});
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 				sql = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -760,7 +755,7 @@ namespace Tests.Linq
 					String3 = "str",
 				});
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@Id");
@@ -784,7 +779,7 @@ namespace Tests.Linq
 					String3 = "str3",
 				});
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 				sql = db.LastQuery!;
 
 				sql.Should().Contain("@Id");
@@ -837,7 +832,7 @@ namespace Tests.Linq
 					.Value(_ => _.String3, "str")
 					.Insert();
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@Id");
@@ -860,7 +855,7 @@ namespace Tests.Linq
 					.Value(_ => _.String3, "str3")
 					.Insert();
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 				sql = db.LastQuery!;
 
 				sql.Should().Contain("@Id");
@@ -922,7 +917,7 @@ namespace Tests.Linq
 					.Value(_ => _.String3, () => str3)
 					.Insert();
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -954,7 +949,7 @@ namespace Tests.Linq
 					.Value(_ => _.String3, () => str3)
 					.Insert();
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 
 				sql = db.LastQuery!;
 
@@ -1018,7 +1013,7 @@ namespace Tests.Linq
 						String3 = str3,
 					});
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -1051,7 +1046,7 @@ namespace Tests.Linq
 						String3 = str3,
 					});
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 				sql = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -1105,7 +1100,7 @@ namespace Tests.Linq
 					String3 = "str",
 				});
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@Id");
@@ -1129,7 +1124,7 @@ namespace Tests.Linq
 					String3 = "str3",
 				});
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 				sql = db.LastQuery!;
 
 				sql.Should().Contain("@Id");
@@ -1182,7 +1177,7 @@ namespace Tests.Linq
 					.Set(_ => _.String3, "str")
 					.Update();
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -1205,7 +1200,7 @@ namespace Tests.Linq
 					.Set(_ => _.String3, "str3")
 					.Update();
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 				sql = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -1266,7 +1261,7 @@ namespace Tests.Linq
 					.Set(_ => _.String3, () => str3)
 					.Update();
 
-				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var cacheMiss = table.GetCacheMissCount();
 				var sql       = db.LastQuery!;
 
 				sql.Should().Contain("@id");
@@ -1297,7 +1292,7 @@ namespace Tests.Linq
 					.Set(_ => _.String3, () => str3)
 					.Update();
 
-				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				table.GetCacheMissCount().Should().Be(cacheMiss);
 
 				sql = db.LastQuery!;
 
@@ -1448,7 +1443,7 @@ namespace Tests.Linq
 			List<Person> Query(ITestDataContext db)
 			{
 				return db.Person
-					.Where(_ => 
+					.Where(_ =>
 					 GetQuery1(db).Select(p => p.ID).Contains(_.ID) &&
 					(GetQuery2(db).Select(p => p.ID).Contains(_.ID) ||
 					 GetQuery3(db).Select(p => p.ID).Contains(_.ID)))
@@ -1710,7 +1705,6 @@ namespace Tests.Linq
 						  select c).ToList();
 		}
 
-
 		int GetId(int id, int increment)
 		{
 			return id + increment;
@@ -1747,8 +1741,7 @@ namespace Tests.Linq
 				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
 		}
 
-
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Table]
 		public sealed class Issue4371Table2
 		{
@@ -1861,6 +1854,143 @@ namespace Tests.Linq
 			{
 				return db.Person.Where(p => p.FirstName == Parameter).SingleOrDefault();
 			}
+		}
+
+		sealed class TestBool
+		{
+			public int Id { get; set; }
+			[Column(Configuration = ProviderName.Sybase, CanBeNull = false)]
+			public bool? Value { get; set; }
+		}
+
+		[Test]
+		public void Issue_BooleanNullPreserved([DataSources] string context, [Values] bool inline, [Values] bool? value)
+		{
+			if (value == null && context.IsAnyOf(TestProvName.AllAccess, TestProvName.AllSybase))
+				Assert.Ignore("Database doesn't support NULL as boolean");
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TestBool>();
+
+			db.InlineParameters = inline;
+
+			// test parameter
+			tb.Insert(() => new TestBool()
+			{
+				Id = 1,
+				Value = !value
+			});
+
+			var record = tb.Single();
+
+			Assert.That(record.Value, Is.EqualTo(!value));
+
+			// test field
+			tb.Update(r => new TestBool()
+			{
+				Id = 1,
+				Value = !r.Value
+			});
+
+			record = tb.Single();
+
+			Assert.That(record.Value, Is.EqualTo(value));
+
+			// disabled temporary due to
+			// https://github.com/ClickHouse/ClickHouse/issues/73934
+			if (!context.IsAnyOf(TestProvName.AllClickHouse))
+			{
+				// test parameter in update
+				tb.Update(r => new TestBool()
+				{
+					Id = 1,
+					Value = !value
+				});
+
+				record = tb.Single();
+
+				Assert.That(record.Value, Is.EqualTo(!value));
+			}
+		}
+
+		[ActiveIssue]
+		[Test]
+		public void Issue_NRE_InAccessor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Assert.That(db.Select(() => Sql.AsSql(Sql.PadLeft(null, 1, '.'))), Is.Null);
+		}
+
+		sealed class IssueDedup
+		{
+			public int Id { get; set; }
+			public bool? Value1 { get; set; }
+			public bool? Value2 { get; set; }
+			public bool? Value3 { get; set; }
+			public bool? Value4 { get; set; }
+			public bool? Value5 { get; set; }
+		}
+
+		[Test]
+		public void DedupOfParameters([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable([new IssueDedup()]);
+
+			Test(new Wrap<bool>(true), new Wrap<bool>(false), new Wrap<bool>(true), new Wrap<bool>(false), new Wrap<bool>(false));
+			Test(new Wrap<bool>(true), new Wrap<bool>(false), new Wrap<bool>(false), new Wrap<bool>(true), new Wrap<bool>(false));
+			Test(new Wrap<bool>(false), new Wrap<bool>(true), new Wrap<bool>(false), new Wrap<bool>(true), new Wrap<bool>(false));
+			Test(new Wrap<bool>(true), new Wrap<bool>(true), new Wrap<bool>(false), new Wrap<bool>(true), new Wrap<bool>(true));
+
+			void Test(Wrap<bool> f1, Wrap<bool> f2, Wrap<bool> f3, Wrap<bool> f4, Wrap<bool> f5)
+			{
+				var cacheMissCount = tb.GetCacheMissCount();
+
+				tb
+					.Set(r => r.Value1, r => f1.Value)
+					.Set(r => r.Value2, r => f2.Value)
+					.Set(r => r.Value3, r => f3.Value)
+					.Set(r => r.Value4, r => f4.Value)
+					.Set(r => r.Value5, r => f5.Value)
+					.Update();
+
+				if (iteration > 1)
+				{
+					Assert.That(tb.GetCacheMissCount(), Is.EqualTo(cacheMissCount));
+				}
+
+				var record = tb.Single();
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.Value1, Is.EqualTo(f1.Value));
+					Assert.That(record.Value2, Is.EqualTo(f2.Value));
+					Assert.That(record.Value3, Is.EqualTo(f3.Value));
+					Assert.That(record.Value4, Is.EqualTo(f4.Value));
+					Assert.That(record.Value5, Is.EqualTo(f5.Value));
+				});
+			}
+		}
+
+		readonly struct Wrap<TValue>
+		{
+			public Wrap(TValue? value)
+			{
+				Value = value;
+			}
+
+			public TValue? Value { get; }
+		}
+
+		[Test]
+		public void LambdaParameterTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var valueGetter = () => 1;
+
+			AssertQuery(db.Parent.Where(r => r.ParentID == valueGetter()));
 		}
 	}
 }

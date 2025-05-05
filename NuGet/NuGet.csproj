@@ -1,0 +1,54 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net462</TargetFramework>
+		<PlatformTarget>x64</PlatformTarget>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Source\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
+
+		<PackageReference Include="System.Data.OleDb" />
+		<PackageReference Include="System.Data.Odbc" />
+		<PackageReference Include="MySqlConnector" />
+		<PackageReference Include="ClickHouse.Client" />
+		<PackageReference Include="AdoNetCore.AseClient" />
+		<PackageReference Include="Humanizer.Core" />
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+		<PackageReference Include="Oracle.ManagedDataAccess" />
+		<PackageReference Include="Npgsql" />
+		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="Microsoft.SqlServer.Types" />
+
+		<None Include="..\Data\*">
+			<Link>Database/%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
+		<Reference Include="System.Data.SqlServerCe">
+			<HintPath>$(SolutionDir)\Redist\SqlCe\System.Data.SqlServerCe.dll</HintPath>
+		</Reference>
+		<SqlCeNativeLibs64 Include="$(SolutionDir)\Redist\SqlCe\amd64\**" Condition=" $(PlatformTarget) != 'x86' " />
+		<None Include="@(SqlCeNativeLibs64)" Condition=" $(PlatformTarget) != 'x86' ">
+			<Link>amd64\%(RecursiveDir)%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<SqlCeNativeLibs86 Include="$(SolutionDir)\Redist\SqlCe\x86\**" Condition=" $(PlatformTarget) == 'x86' " />
+		<None Include="@(SqlCeNativeLibs86)" Condition=" $(PlatformTarget) == 'x86' ">
+			<Link>x86\%(RecursiveDir)%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="empty/empty.csproj" />
+
+		<Reference Include="Sap.Data.Hana.v4.5">
+			<HintPath>$(SolutionDir)\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>
+		</Reference>
+
+		<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />
+		<Reference Include="IBM.Data.DB2" Condition=" $(PlatformTarget) != 'x86' ">
+			<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll</HintPath>
+		</Reference>
+		<Reference Include="IBM.Data.DB2" Condition=" $(PlatformTarget) == 'x86' ">
+			<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+</Project>

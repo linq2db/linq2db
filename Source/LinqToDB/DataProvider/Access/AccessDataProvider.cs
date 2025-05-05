@@ -5,19 +5,19 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.Access.Translation;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
+
 using OdbcType = LinqToDB.DataProvider.OdbcProviderAdapter.OdbcType;
 using OleDbType = LinqToDB.DataProvider.OleDbProviderAdapter.OleDbType;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Common;
-	using Data;
-	using Linq.Translation;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
-	using Translation;
-
 	sealed class AccessJetOleDbDataProvider() : AccessDataProvider(ProviderName.AccessJetOleDb, AccessVersion.Jet, AccessProvider.OleDb);
 	sealed class AccessAceOleDbDataProvider() : AccessDataProvider(ProviderName.AccessAceOleDb, AccessVersion.Ace, AccessProvider.OleDb);
 	sealed class AccessJetODBCDataProvider()  : AccessDataProvider(ProviderName.AccessJetOdbc , AccessVersion.Jet, AccessProvider.ODBC );
@@ -117,7 +117,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (value is DateOnly d)
 				value = d.ToDateTime(TimeOnly.MinValue);
 #endif

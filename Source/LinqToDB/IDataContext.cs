@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Interceptors;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB
 {
-	using Common.Internal;
-	using Interceptors;
-	using Linq;
-	using Mapping;
-	using SqlProvider;
-
 	/// <summary>
 	/// Database connection abstraction interface.
 	/// </summary>
@@ -126,5 +126,11 @@ namespace LinqToDB
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
 		string?                       ConfigurationString         { get; }
+
+		/// <summary>
+		/// Adds mapping schema to current context.
+		/// </summary>
+		/// <param name="mappingSchema">Mapping schema to add.</param>
+		void AddMappingSchema(MappingSchema mappingSchema);
 	}
 }

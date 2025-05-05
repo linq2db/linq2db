@@ -3,11 +3,11 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	[BuildsMethodCall("OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending")]
 	sealed class OrderByBuilder : MethodCallBuilder
 	{
@@ -107,11 +107,11 @@ namespace LinqToDB.Linq.Builder
 			if (!SequenceHelper.IsSqlReady(sqlExpr))
 			{
 				if (sqlExpr is SqlErrorExpression errorExpr)
-					return BuildSequenceResult.Error(methodCall, errorExpr.Message);
+					return BuildSequenceResult.Error(sqlExpr, errorExpr.Message);
 				return BuildSequenceResult.Error(methodCall);
 			}
 
-			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr, false);
 
 			foreach (var placeholder in placeholders)
 			{

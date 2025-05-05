@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Data.Common;
-using System.Linq;
 using System.Linq.Expressions;
+
+using LinqToDB.DataProvider;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Data
 {
-	using DataProvider;
-	using SqlProvider;
-	using SqlQuery;
-
 	public partial class DataConnection
 	{
 		protected virtual SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 		{
+			CheckAndThrowOnDisposed();
+
 			return statement;
 		}
 
@@ -26,6 +27,8 @@ namespace LinqToDB.Data
 
 		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
+			CheckAndThrowOnDisposed();
+
 			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 
@@ -38,12 +41,7 @@ namespace LinqToDB.Data
 
 		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema, Options);
 
-		static Func<DataOptions,ISqlOptimizer> GetGetSqlOptimizer(IDataProvider dp)
-		{
-			return dp.GetSqlOptimizer;
-		}
-
-		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer => GetGetSqlOptimizer(DataProvider);
+		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer => DataProvider.GetSqlOptimizer;
 
 		#endregion
 	}

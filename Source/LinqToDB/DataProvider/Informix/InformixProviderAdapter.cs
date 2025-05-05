@@ -2,15 +2,17 @@
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
+
+using LinqToDB.Common;
+using LinqToDB.DataProvider.DB2;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
-	using DB2;
-	using Expressions;
-	using Extensions;
-	using Mapping;
-
 	// Note on informix providers: there are actually 3 providers:
 	// - SQLI Provider(IBM.Data.Informix) : netfx only, no bulk copy
 	// - IDS Provider (IBM.Data.Informix) : netfx only, has bulk copy. Basically it is IBM.Data.DB2 with Ifx type names
@@ -24,8 +26,8 @@ namespace LinqToDB.DataProvider.Informix
 		public const string IfxProviderFactoryName = "IBM.Data.Informix";
 		public const string IfxTypesNamespace      = "IBM.Data.Informix";
 
-		private static readonly object _ifxSyncRoot = new ();
-		private static readonly object _db2SyncRoot = new ();
+		private static readonly Lock _ifxSyncRoot = new ();
+		private static readonly Lock _db2SyncRoot = new ();
 
 		private static InformixProviderAdapter? _ifxAdapter;
 		private static InformixProviderAdapter? _db2Adapter;
@@ -205,7 +207,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		private static InformixProviderAdapter CreateIfxAdapter()
 		{
-			var assembly = Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
+			var assembly = Common.Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {IfxAssemblyName}");
 

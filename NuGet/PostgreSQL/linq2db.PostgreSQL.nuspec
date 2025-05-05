@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!-- %T4% -->
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata minClientVersion="3.3.0">
+		<id>linq2db.PostgreSQL</id>
+		<title>LINQ to DB T4 Scaffold Templates for PostgreSQL</title>
+		<tags>PostgreSQL Npgsql</tags>
+	</metadata>
+	<files>
+		<file src="t4bin\Npgsql.dll"                                    target="tools" />
+		<file src="t4bin\Microsoft.Bcl.HashCode.dll"                    target="tools" />
+		<file src="t4bin\Microsoft.Extensions.Logging.Abstractions.dll" target="tools" />
+		<file src="t4bin\System.Collections.Immutable.dll"              target="tools" />
+		<file src="t4bin\System.Diagnostics.DiagnosticSource.dll"       target="tools" />
+		<file src="t4bin\System.Runtime.CompilerServices.Unsafe.dll"    target="tools" />
+		<file src="t4bin\System.Text.Json.dll"                          target="tools" />
+		<file src="t4bin\System.Threading.Channels.dll"                 target="tools" />
+	</files>
+</package>

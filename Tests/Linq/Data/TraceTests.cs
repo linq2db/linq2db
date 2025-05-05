@@ -10,22 +10,15 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Data
 {
-	using System.Collections;
-
-	using Model;
-
-	using Tests.DataProvider;
-
-	using Tools;
-
 	[TestFixture]
 	public class TraceTests : TestBase
 	{
 		private TraceLevel                           OriginalTraceLevel { get; set; }
-		private Action<string?, string?, TraceLevel> OriginalWrite      { get; set; } = null!;
-
+		private Action<string,string,TraceLevel> OriginalWrite      { get; set; } = null!;
 
 		[OneTimeSetUp]
 		public void SetTraceInfoLevel()
@@ -64,7 +57,7 @@ namespace Tests.Data
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
 			using (var db0 = (TestDataConnection)GetDataContext(context))
-			using (var db  = new DataContext(db0.DataProvider.Name, "BAD"))
+			using (var db  = new DataContext(new DataOptions().UseConnectionString(db0.DataProvider.Name, "BAD")))
 			{
 				db.OnTraceConnection = e =>
 				{
@@ -98,7 +91,7 @@ namespace Tests.Data
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
 			using (var db0 = (TestDataConnection)GetDataContext(context))
-			using (var db  = new DataContext(db0.DataProvider.Name, "BAD"))
+			using (var db  = new DataContext(new DataOptions().UseConnectionString(db0.DataProvider.Name, "BAD")))
 			{
 				db.OnTraceConnection = e =>
 				{
@@ -130,14 +123,12 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataConnection(context, o => o.UseTracing(e =>
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
-
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
+			{
 				var _ = db.GetTable<Northwind.Category>().ToList();
 
 				// the same command is reported on each step
@@ -166,14 +157,16 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataConnection(context, o => o.UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				using (var reader = db.ExecuteReader(sql))
 				{
@@ -206,14 +199,16 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataConnection(context, o => o.UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				await using (var reader = await new CommandInfo(db, sql).ExecuteReaderAsync())
 				{
@@ -246,14 +241,16 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				db.SetCommand(sql).Query<Northwind.Category>().ToArray();
 
@@ -277,21 +274,22 @@ namespace Tests.Data
 			}
 		}
 
-
 		[Test]
 		public void TraceInfoStepsAreReportedForDataReaderQuery([NorthwindDataContext] string context)
 		{
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				using (var reader = db.SetCommand(sql).ExecuteReader())
 				{
@@ -324,14 +322,16 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			using (db.BeginTransaction())
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				db.GetTable<Northwind.Category>()
 					.Set(c => c.CategoryName, c => c.CategoryName)
@@ -365,14 +365,16 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			using (db.BeginTransaction())
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 
@@ -404,14 +406,16 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			using (db.BeginTransaction())
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				db.SetCommand(@"INSERT INTO Categories(CategoryID, CategoryName) VALUES(1024, '1024')").Execute();
 
@@ -443,14 +447,16 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			using (db.BeginTransaction())
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				db.SetCommand(@"DELETE FROM Categories WHERE CategoryID = 1024").Execute();
 
@@ -482,14 +488,17 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				db.SetCommand(sql).Execute<Northwind.Category>();
 
@@ -519,13 +528,12 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
+			{
 				using (db.BeginTransaction())
 				{
 					Assert.Multiple(() =>
@@ -566,13 +574,12 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
+			{
 				using (await db.BeginTransactionAsync())
 				{
 					Assert.Multiple(() =>
@@ -612,13 +619,12 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
+			{
 				using (db.BeginTransaction())
 				{
 					Assert.Multiple(() =>
@@ -658,13 +664,12 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
+			{
 				using (await db.BeginTransactionAsync())
 				{
 					Assert.Multiple(() =>
@@ -708,13 +713,12 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
+			{
 				using (db.BeginTransaction(IsolationLevel.ReadCommitted))
 				{
 					Assert.Multiple(() =>
@@ -759,13 +763,12 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
+			{
 				using (await db.BeginTransactionAsync(IsolationLevel.ReadCommitted))
 				{
 					Assert.Multiple(() =>
@@ -841,20 +844,26 @@ namespace Tests.Data
 		[Test]
 		public void WriteTraceInstanceShouldUseDefault()
 		{
+			var wtl = DataConnection.WriteTraceLine;
+
 			var staticWriteCalled = false;
 			DataConnection.WriteTraceLine = (s, s1, arg3) => staticWriteCalled = true;
 
 			using (var db = new DataConnection())
 			{
-				db.WriteTraceLineConnection(null, null, TraceLevel.Info);
+				db.WriteTraceLineConnection("", "", TraceLevel.Info);
 			}
 
 			Assert.That(staticWriteCalled, Is.True, "because the data connection should have used the static version by default");
+
+			DataConnection.WriteTraceLine = wtl;
 		}
 
 		[Test]
 		public void WriteTraceInstanceShouldUseFromBuilder()
 		{
+			var wtl = DataConnection.WriteTraceLine;
+
 			var staticWriteCalled = false;
 			DataConnection.WriteTraceLine = (s, s1, arg3) => staticWriteCalled = true;
 
@@ -864,7 +873,7 @@ namespace Tests.Data
 
 			using (var db = new DataConnection(builder))
 			{
-				db.WriteTraceLineConnection(null, null, TraceLevel.Info);
+				db.WriteTraceLineConnection("", "", TraceLevel.Info);
 			}
 
 			Assert.Multiple(() =>
@@ -872,6 +881,8 @@ namespace Tests.Data
 				Assert.That(builderWriteCalled, Is.True, "because the data connection should have used the action from the builder");
 				Assert.That(staticWriteCalled, Is.False, "because the data connection should have used the action from the builder");
 			});
+
+			DataConnection.WriteTraceLine = wtl;
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3663")]

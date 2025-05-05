@@ -1,3 +1,4 @@
-<#@ assembly name="$(LinqToDBT4SQLiteClientPath)System.Data.SQLite.dll" #>
-<#@ include file="LinqToDB.Tools.ttinclude"  once="true"                #>
-<#@ include file="LinqToDB.SQLite.ttinclude" once="true"                #>
+<#@ include file="$(LinqToDBT4SQLiteTemplatesPath)LinqToDB.SQLite.ttinclude" once="true" #>
+<#+
+#warning 'LinqToDB.SQLite.Tools.ttinclude' is obsolete. Use 'LinqToDB.SQLite.ttinclude' instead.
+#>

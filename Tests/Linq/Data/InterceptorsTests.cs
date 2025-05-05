@@ -14,10 +14,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Data
 {
-	using Model;
-
 	[TestFixture]
 	public class InterceptorsTests : TestBase
 	{
@@ -92,7 +92,7 @@ namespace Tests.Data
 			var interceptor2 = new TestCommandInterceptor();
 
 			var builder = new DataOptions()
-				.UseConfigurationString(context)
+				.UseConfiguration(context)
 				.UseInterceptor(interceptor1)
 				.UseInterceptor(interceptor2);
 
@@ -153,7 +153,7 @@ namespace Tests.Data
 			var interceptor2 = new TestCommandInterceptor();
 
 			var builder = new DataOptions()
-				.UseConfigurationString(context)
+				.UseConfiguration(context)
 				.UseInterceptor(interceptor1)
 				.UseInterceptor(interceptor2);
 
@@ -1003,6 +1003,7 @@ namespace Tests.Data
 		#region IDataContextInterceptor
 
 		#region EntityCreated
+
 		[Test]
 		public void EntityCreated_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -1038,6 +1039,7 @@ namespace Tests.Data
 		}
 
 		#endregion
+
 		#region OnClosing/OnClosed
 
 		[Test]
@@ -1463,7 +1465,7 @@ namespace Tests.Data
 			IDataContext main;
 			using (var db = main = new DataContext(context))
 			{
-				((DataContext)db).KeepConnectionAlive = false;
+				((DataContext)db).SetKeepConnectionAlive(false);
 				db.CloseAfterUse = closeAfterUse;
 				db.AddInterceptor(closeInterceptor);
 				db.AddInterceptor(openInterceptor);
@@ -1521,7 +1523,7 @@ namespace Tests.Data
 			IDataContext main;
 			using (var db = main = new DataContext(context))
 			{
-				((DataContext)db).KeepConnectionAlive = true;
+				((DataContext)db).SetKeepConnectionAlive(true);
 				db.CloseAfterUse = closeAfterUse;
 				db.AddInterceptor(closeInterceptor);
 				db.AddInterceptor(openInterceptor);

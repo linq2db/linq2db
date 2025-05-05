@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Linq.Builder;
+using LinqToDB.SqlQuery;
+
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
-	using Expressions;
-	using Linq.Builder;
-	using SqlQuery;
-
 	partial class Sql
 	{
 		/// <summary>
@@ -80,7 +80,7 @@ namespace LinqToDB
 					throw new LinqToDBException($"Cannot retrieve property name for expression '{expression}'.");
 
 				var sqlExpr = new SqlExpression(expression.Type, name!, SqlQuery.Precedence.Primary, SqlFlags.IsPure,
-					ToParametersNullabilityType(IsNullable), _canBeNull);
+					ToParametersNullabilityType(IsNullable), СonfiguredCanBeNull);
 
 				return ExpressionBuilder.CreatePlaceholder(query, sqlExpr, expression);
 			}

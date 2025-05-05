@@ -6,10 +6,14 @@
 
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 
-		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net462;netstandard2.0;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net9.0</TargetFrameworks>
 
-		<IsAotCompatible Condition="$(TargetFramework) == 'net8.0' OR $(TargetFramework) == 'net9.0'">true</IsAotCompatible>
+		<IsAotCompatible Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">true</IsAotCompatible>
 
+		<Title>Linq to DB GRPC Remote</Title>
+		<Description>Linq to DB support for querying remote data contexts over GRPC</Description>
+		<Product>$(Title)</Product>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -25,5 +29,4 @@
 		<PackageReference Include="protobuf-net.Grpc" />
 		<PackageReference Include="protobuf-net" />
 	</ItemGroup>
-
 </Project>

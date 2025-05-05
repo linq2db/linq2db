@@ -2,9 +2,9 @@
 using System.Data.Linq;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -15,10 +15,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class SapHanaTests : DataProviderTestBase
 	{
@@ -267,7 +267,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Binary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", null)), Is.Null);
 					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", DataParameter.Image("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 					Assert.That(conn.Execute<byte[]>("SELECT :p from dummy", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
@@ -276,7 +276,6 @@ namespace Tests.DataProvider
 				});
 			}
 		}
-
 
 		[Test]
 		public void TestXml([IncludeDataSources(CurrentProvider)] string context)

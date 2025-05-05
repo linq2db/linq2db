@@ -2,16 +2,14 @@
 	<PropertyGroup>
 		<Version>6.0.0.0</Version>
 		<EF3Version>3.0.0.0</EF3Version>
-		<EF6Version>6.0.0.0</EF6Version>
 		<EF8Version>8.0.0.0</EF8Version>
 		<EF9Version>9.0.0.0</EF9Version>
 
-		<Configurations>Debug;Release;Azure</Configurations>
+		<Configurations>Testing;Debug;Release;Azure</Configurations>
 
-		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
-		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</Authors>
+		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko, and others</Authors>
 		<Company>linq2db.net</Company>
-		<Copyright>2002-2024 linq2db.net</Copyright>
+		<Copyright>2002-2025 linq2db.net</Copyright>
 		<RepositoryUrl>https://github.com/linq2db/linq2db</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 
@@ -32,10 +30,10 @@
 		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)/Build/linq2db.snk</AssemblyOriginatorKeyFile>
 		<DelaySign>False</DelaySign>
 
-		<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-		<GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
-		<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-		<GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+		<GenerateAssemblyTitleAttribute>true</GenerateAssemblyTitleAttribute>
+		<GenerateAssemblyDescriptionAttribute>true</GenerateAssemblyDescriptionAttribute>
+		<GenerateAssemblyProductAttribute>true</GenerateAssemblyProductAttribute>
+		<GenerateAssemblyCopyrightAttribute>true</GenerateAssemblyCopyrightAttribute>
 		<GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
 		<GenerateAssemblyFileVersionAttribute>true</GenerateAssemblyFileVersionAttribute>
 		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
@@ -52,7 +50,7 @@
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_COMPOSITE_FORMAT;$(DefineConstants)</DefineConstants>
 
 		<ArtifactsPath>$(MSBuildThisFileDirectory).build</ArtifactsPath>
-		<ArtifactsPivots>$(Configuration)\$(TargetFramework)</ArtifactsPivots>
+		<ArtifactsPivots>$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)</ArtifactsPivots>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Code Analysis Setup">
@@ -69,18 +67,20 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net6.0' ">
-		<PackageReference Include="PolySharp" />
-	</ItemGroup>
-
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" />
-		<PackageReference Include="Meziantou.Analyzer" />
+		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" PrivateAssets="All" />
+		<PackageReference Include="Meziantou.Analyzer" PrivateAssets="All" />
 
-		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" />
+		<PackageReference Include="PolySharp" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Language)'=='C#'">
 		<Compile Include="$(MSBuildThisFileDirectory)/Source/Shared/*.cs" LinkBase="Compatibility" />
 	</ItemGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Testing'">
+		<TargetFrameworks>net9.0</TargetFrameworks>
+		<DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
 </Project>

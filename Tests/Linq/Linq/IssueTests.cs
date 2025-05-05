@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -13,10 +12,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class IssueTests : TestBase
 	{
@@ -190,7 +189,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void Issue424Test1([DataSources] string context)
 		{
@@ -247,7 +245,6 @@ namespace Tests.Linq
 				Assert.That(sql, Does.Contain("INNER"));
 			}
 		}
-
 
 		[Test]
 		public void Issue528Test1([DataSources] string context)
@@ -447,7 +444,6 @@ namespace Tests.Linq
 			[NotNull] public string LastName = null!;
 			[Nullable] public string? MiddleName;
 
-
 			[Association(ThisKey = nameof(ID), OtherKey = nameof(Model.Doctor.PersonID), CanBeNull = true)]
 			public Doctor? Doctor { get; set; }
 		}
@@ -517,7 +513,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Table("Person", IsColumnAttributeRequired = false)]
 		public class Person88
 		{
@@ -561,7 +556,6 @@ namespace Tests.Linq
 			}
 
 		}
-
 
 		[Test]
 		public void Issue173([DataSources] string context)
@@ -767,5 +761,82 @@ namespace Tests.Linq
 			[Column(DataType = DataType.Guid) ] public Guid? BinaryN  { get; set; }
 			[Column(DataType = DataType.NChar)] public Guid? StringN  { get; set; }
 		}
+
+		#region StackOverflow in ExpressionBuilder
+
+		public class StackOverflowTable1
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public int FK { get; set; }
+
+			[Association(ThisKey = nameof(FK), OtherKey = nameof(StackOverflowTable2.Id), CanBeNull = false)]
+			public StackOverflowTable2 Table2 { get; } = null!;
+		}
+
+		public class StackOverflowTable2
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+		}
+
+		public class StackOverflowTable3
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public int Value2 { get; set; }
+			public int Value { get; set; }
+		}
+
+		public class StackOverflowTable4
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public int? Value { get; set; }
+		}
+
+		public class StackOverflowTable5
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public int Value { get; set; }
+		}
+
+		private sealed record StackOverflowCteRecord(int Id);
+
+		[Test]
+		public void ExpressionBuilder_StackOverflow([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<StackOverflowTable1>();
+			using var t2 = db.CreateLocalTable<StackOverflowTable2>();
+			using var t3 = db.CreateLocalTable<StackOverflowTable3>();
+			using var t4 = db.CreateLocalTable<StackOverflowTable4>();
+			using var t5 = db.CreateLocalTable<StackOverflowTable5>();
+
+			var cte = db.GetCte<StackOverflowCteRecord>(cte =>
+			{
+				return t1.Select(s => new StackOverflowCteRecord(s.Table2.Id))
+					.Concat(
+						from c in cte
+						join r3 in t3 on c.Id equals r3.Value2
+						select new StackOverflowCteRecord(r3.Value));
+			});
+
+			var query =
+				from c in cte
+				join r4 in t4 on c.Id equals r4.Id into records4
+				from r3 in records4.DefaultIfEmpty()
+				where r3.Value != null
+				select new
+				{
+					Values = t5
+						.Where(a => a.Value == c.Id)
+						.ToArray()
+				};
+
+			query.ToArray();
+		}
+		#endregion
 	}
 }

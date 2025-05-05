@@ -26,11 +26,6 @@
 		"DefaultConfiguration": "SQLite.MS"
 	},
 
-	"NET60": {
-		"BasedOn": "LocalConnectionStrings",
-		"DefaultConfiguration": "SQLite.MS"
-	},
-
 	"NET80": {
 		"BasedOn": "LocalConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS"
@@ -42,12 +37,6 @@
 	},
 
 	"NETFX.Azure": {
-		"BasedOn": "AzureConnectionStrings",
-		"DefaultConfiguration": "SQLite.MS",
-		"TraceLevel": "Info"
-	},
-
-	"NET60.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"TraceLevel": "Info"
@@ -145,6 +134,8 @@
 			"SqlServer.Northwind.MS"    : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=localhost,1419;Database=NorthwindMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                 },
 			"SqlServer.Azure"           : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"                      },
 			"SqlServer.Azure.MS"        : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"                      },
+			"SqlServer.Azure.MI"        : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"                      },
+			"SqlServer.Azure.MI.MS"     : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"                      },
 			"Sybase"                    : { "Provider": "Sybase.Data.AseClient",            "ConnectionString": "Data Source=DBHost;Port=5000;Database=TestData;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;"      },
 			"Sybase.Managed"            : { "Provider": "AdoNetCore.AseClient",             "ConnectionString": "Data Source=localhost;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;" }
 		}
@@ -261,6 +252,8 @@
 			"SqlServer.Northwind.MS",
 			"SqlServer.Azure",
 			"SqlServer.Azure.MS",
+			"SqlServer.Azure.MI",
+			"SqlServer.Azure.MI.MS",
 			"Access.Jet.OleDb",
 			"Access.Ace.OleDb",
 			"Access.Jet.Odbc",

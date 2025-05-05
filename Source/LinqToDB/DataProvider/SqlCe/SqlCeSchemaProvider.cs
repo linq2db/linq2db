@@ -5,6 +5,10 @@ using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 /*
 
 	https://blog.sqlauthority.com/2011/10/02/sql-server-ce-list-of-information_schema-system-tables/
@@ -33,17 +37,13 @@ FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
 */
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	sealed class SqlCeSchemaProvider : SchemaProviderBase
 	{
 		private static readonly IReadOnlyList<string> _tableTypes = new[] { "TABLE", "VIEW" };
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = dataConnection.Connection.GetSchema("Tables");
+			var tables = dataConnection.OpenDbConnection().GetSchema("Tables");
 
 			return
 			(
@@ -82,7 +82,7 @@ WHERE PRIMARY_KEY = 1");
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = dataConnection.Connection.GetSchema("Columns");
+			var cs = dataConnection.OpenDbConnection().GetSchema("Columns");
 
 			return
 			(
@@ -127,7 +127,7 @@ FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			return Path.GetFileNameWithoutExtension(dbConnection.Connection.Database);
+			return Path.GetFileNameWithoutExtension(dbConnection.OpenDbConnection().Database);
 		}
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)

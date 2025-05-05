@@ -5,11 +5,12 @@ using LinqToDB;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
+using Tests.VisualBasic;
+
 namespace Tests.Linq
 {
-	using Model;
-	using VisualBasic;
-
 	[TestFixture]
 	public class VisualBasicTests : TestBase
 	{

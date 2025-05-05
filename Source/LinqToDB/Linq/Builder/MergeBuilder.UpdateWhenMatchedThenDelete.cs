@@ -2,13 +2,13 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
+using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
-	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
-
 	internal partial class MergeBuilder
 	{
 		[BuildsMethodCall(nameof(LinqExtensions.UpdateWhenMatchedAndThenDelete))]
@@ -39,8 +39,10 @@ namespace LinqToDB.Linq.Builder
 					mergeContext.SourceContext.SourceContextRef.Alias = setterLambda.Parameters[1].Name;
 
 					var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
+					var targetRef         = mergeContext.SourceContext.TargetContextRef.WithType(setterExpression.Type);
 					UpdateBuilder.ParseSetter(builder,
-						mergeContext.SourceContext.TargetContextRef.WithType(setterExpression.Type), setterExpression,
+						targetRef, targetRef, 
+						setterExpression,
 						setterExpressions);
 					UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, createColumns : false);
 				}

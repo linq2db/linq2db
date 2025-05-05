@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
@@ -12,18 +13,18 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using Expressions;
-	using Infrastructure;
-	using Linq.Translation;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
-
 	public abstract class DataProviderBase : IDataProvider, IInfrastructure<IServiceProvider>
 	{
 		#region .ctor
@@ -60,7 +61,6 @@ namespace LinqToDB.DataProvider
 				OutputUpdateUseSpecialTables         = false,
 				IsCrossJoinSupported                 = true,
 				IsCommonTableExpressionsSupported    = false,
-				IsOrderByAggregateFunctionsSupported = true,
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
 				IsCountDistinctSupported             = true,
@@ -71,6 +71,7 @@ namespace LinqToDB.DataProvider
 				RowConstructorSupport                = RowFeature.None,
 				IsWindowFunctionsSupported           = true,
 				IsDerivedTableOrderBySupported       = true,
+				IsOrderByAggregateFunctionSupported  = true,
 			};
 
 			SetField<DbDataReader, bool>    ((r,i) => r.GetBoolean (i));
@@ -158,7 +159,7 @@ namespace LinqToDB.DataProvider
 			command.Dispose();
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		public virtual ValueTask DisposeCommandAsync(DbCommand command)
 		{
 			ClearCommandParameters(command);
@@ -166,6 +167,8 @@ namespace LinqToDB.DataProvider
 		}
 #endif
 
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public virtual object? GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
 			return null;
@@ -386,6 +389,7 @@ namespace LinqToDB.DataProvider
 									: "hh\\:mm\\:ss",
 							DateTimeFormatInfo.InvariantInfo);
 					}
+
 					break;
 				case DataType.Image     :
 				case DataType.Binary    :
@@ -471,6 +475,8 @@ namespace LinqToDB.DataProvider
 				case DataType.DateTimeOffset : dbType = DbType.DateTimeOffset;        break;
 				case DataType.Variant        : dbType = DbType.Object;                break;
 				case DataType.VarNumeric     : dbType = DbType.VarNumeric;            break;
+				case DataType.SmallDecFloat  : dbType = DbType.Decimal;               break;
+				case DataType.DecFloat       : dbType = DbType.Decimal;               break;
 				default                      : return;
 			}
 
@@ -515,7 +521,7 @@ namespace LinqToDB.DataProvider
 		}
 
 		SimpleServiceProvider? _serviceProvider;
-		readonly object        _guard = new();
+		readonly Lock          _guard = new();
 
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance
 		{

@@ -1,10 +1,10 @@
 ﻿using System;
 
+using LinqToDB.SqlQuery;
+using LinqToDB.SqlQuery.Visitors;
+
 namespace LinqToDB.DataProvider
 {
-	using SqlQuery;
-	using SqlQuery.Visitors;
-
 	public class WrapParametersVisitor : SqlQueryVisitor
 	{
 		bool      _needCast;

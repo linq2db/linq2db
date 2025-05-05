@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
 using System.Reflection;
 using System.Text;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Data;
-	using Common.Internal;
-
 	[PublicAPI]
 	public static partial class SqlServerTools
 	{
@@ -85,7 +84,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 			SqlServerProvider provider = SqlServerProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version), connectionString);
+			return new DataConnection(new DataOptions()
+				.UseConnectionString(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version), connectionString));
 		}
 
 		public static DataConnection CreateDataConnection(
@@ -93,7 +93,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 			SqlServerProvider provider = SqlServerProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, version), connection);
+			return new DataConnection(new DataOptions()
+				.UseConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, version), connection));
 		}
 
 		public static DataConnection CreateDataConnection(
@@ -101,18 +102,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 			SqlServerProvider provider = SqlServerProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, version), transaction);
-		}
-
-		#endregion
-
-		#region BulkCopy
-
-		[Obsolete("Use SqlServerOptions.Default.BulkCopyType instead.")]
-		public static BulkCopyType DefaultBulkCopyType
-		{
-			get => SqlServerOptions.Default.BulkCopyType;
-			set => SqlServerOptions.Default = SqlServerOptions.Default with { BulkCopyType = value };
+			return new DataConnection(new DataOptions()
+				.UseTransaction(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, version), transaction));
 		}
 
 		#endregion

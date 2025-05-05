@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -11,16 +12,16 @@ using LinqToDB.DataProvider.Firebird;
 
 using NUnit.Framework;
 
-namespace Tests
-{
-	using Model;
-#if NETFRAMEWORK
-	using Model.Remote.Wcf;
+using Tests.Model;
 
+#if NETFRAMEWORK
+using Tests.Model.Remote.Wcf;
 #else
-	using Model.Remote.Grpc;
+using Tests.Model.Remote.Grpc;
 #endif
 
+namespace Tests
+{
 	public static class TestUtils
 	{
 		private static int _cnt;
@@ -175,7 +176,7 @@ namespace Tests
 			return fix ? new DateTime(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second) : value;
 		}
 
-		sealed class FirebirdTempTable<T> : TempTable<T>
+		sealed class FirebirdTempTable<T> : TestTempTable<T>
 			where T : notnull
 		{
 			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
@@ -194,13 +195,46 @@ namespace Tests
 				FirebirdTools.ClearAllPools();
 				base.Dispose();
 			}
+
+			public override ValueTask DisposeAsync()
+			{
+				if (DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird))
+				{
+					FirebirdTools.ClearAllPools();
+				}
+
+				DataContext.CloseAsync();
+				FirebirdTools.ClearAllPools();
+
+				return base.DisposeAsync();
+			}
+		}
+		class TestTempTable<T> : TempTable<T>
+			where T : notnull
+		{
+			public TestTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
+				: base(db, tableName, databaseName, schemaName, tableOptions: tableOptions)
+			{
+			}
+
+			public override void Dispose()
+			{
+				using var _ = new DisableBaseline("Test setup");
+				base.Dispose();
+			}
+
+			public override ValueTask DisposeAsync()
+			{
+				using var _ = new DisableBaseline("Test setup");
+				return base.DisposeAsync();
+			}
 		}
 
 		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet)
 			where T : notnull =>
 			db.CreateSqlProvider() is FirebirdSqlBuilder ?
 				new FirebirdTempTable<T>(db, tableName, tableOptions : tableOptions) :
-				new         TempTable<T>(db, tableName, tableOptions : tableOptions);
+				new     TestTempTable<T>(db, tableName, tableOptions : tableOptions);
 
 		static void ClearDataContext(IDataContext db)
 		{
@@ -213,18 +247,14 @@ namespace Tests
 
 		public static Version GetSqliteVersion(DataConnection db)
 		{
-			using (var cmd = db.CreateCommand())
-			{
-				cmd.CommandText = "select sqlite_version();";
-				var version     = (string)cmd.ExecuteScalar()!;
-
-				return new Version(version);
-			}
+			var version = db.Execute<string>("select sqlite_version();");
+			return new Version(version);
 		}
 
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.CheckExistence)
 			where T : notnull
 		{
+			using var _ = new DisableBaseline("Test setup");
 			try
 			{
 				if ((tableOptions & TableOptions.CheckExistence) == TableOptions.CheckExistence)
@@ -242,6 +272,7 @@ namespace Tests
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items, bool insertInTransaction = false)
 			where T : notnull
 		{
+			using var _ = new DisableBaseline("Test setup");
 			using (new DisableLogging())
 			{
 				var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
@@ -268,6 +299,7 @@ namespace Tests
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items, bool insertInTransaction = false)
 			where T : notnull
 		{
+			using var _ = new DisableBaseline("Test setup");
 			return CreateLocalTable(db, null, items, insertInTransaction);
 		}
 
@@ -282,7 +314,7 @@ namespace Tests
 				string when providerName.IsAnyOf(TestProvName.AllFirebird)     => "UNICODE_FSS",
 				string when providerName.IsAnyOf(TestProvName.AllMySql)        => "utf8_bin",
 				string when providerName.IsAnyOf(TestProvName.AllSqlServer)    => "Albanian_CI_AS",
-				_                                                              => "whatever"
+				_                                                              => "what-ever"
 			};
 		}
 
@@ -299,14 +331,12 @@ namespace Tests
 
 		internal static string GetConfigName()
 		{
-#if NET6_0
-			return "NET60";
+#if NETFRAMEWORK
+			return "NETFX";
 #elif NET8_0
 			return "NET80";
 #elif NET9_0
 			return "NET90";
-#elif NETFRAMEWORK
-			return "NETFX";
 #else
 #error Unknown framework
 #endif

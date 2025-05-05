@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using Data;
-	using Common;
-
-	using DB2BulkCopyOptions = DB2ProviderAdapter.DB2BulkCopyOptions;
-
 	sealed class DB2BulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
@@ -35,7 +31,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.OpenDbConnection());
 
 				if (connection != null)
 					return DB2BulkCopyShared.ProviderSpecificCopyImpl(
@@ -51,31 +47,31 @@ namespace LinqToDB.DataProvider.DB2
 			return MultipleRowsCopy(table, options, source);
 		}
 
-		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+				var connection = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 				if (connection != null)
 					// call the synchronous provider-specific implementation
-					return Task.FromResult(DB2BulkCopyShared.ProviderSpecificCopyImpl(
+					return DB2BulkCopyShared.ProviderSpecificCopyImpl(
 						table,
 						options.BulkCopyOptions,
 						source,
 						dataConnection,
 						connection,
 						_provider.Adapter.BulkCopy,
-						TraceAction));
+						TraceAction);
 			}
 
-			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+			return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
 		}
 
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+				var connection = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 
 				if (connection != null)
 				{

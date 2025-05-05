@@ -1,0 +1,146 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<PackageReference Include="linq2db.t4models" />
+		
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+		<PackageReference Include="Npgsql" />
+		<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\Templates\Access.Odbc.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>Access.Odbc.generated.cs</LastGenOutput>
+		</None>
+		<Compile Include="..\Templates\Access.Odbc.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Access.Odbc.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\Access.OleDb.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Access.OleDb.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\ClickHouse.Client.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>ClickHouse.Client.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\ClickHouse.MySql.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>ClickHouse.MySql.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\DB2.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>DB2.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\Firebird.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Firebird.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\Hana.Native.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Hana.Native.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\Hana.ODBC.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Hana.ODBC.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\Informix.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Informix.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\MariaDB.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>MariaDB.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\Oracle.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Oracle.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\PostgreSQL.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>PostgreSQL.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\SQLCE.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SQLCE.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\SQLite.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SQLite.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\SqlServer.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlServer.tt</DependentUpon>
+		</Compile>
+		<Compile Include="..\Templates\Sybase.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Sybase.tt</DependentUpon>
+		</Compile>
+		<None Include="..\Templates\Access.OleDb.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>Access.OleDb.generated.cs</LastGenOutput>
+		</None>
+		<None Include="..\Templates\ClickHouse.Client.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>ClickHouse.Client.generated.cs</LastGenOutput>
+		</None>
+		<None Include="..\Templates\ClickHouse.MySql.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>ClickHouse.MySql.generated.cs</LastGenOutput>
+		</None>
+		<None Include="..\Templates\DB2.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>DB2.generated.cs</LastGenOutput>
+		</None>
+		<None Include="..\Templates\Firebird.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>Firebird.generated.cs</LastGenOutput>
+		</None>
+		<None Include="..\Templates\Hana.Native.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>Hana.Native.generated.cs</LastGenOutput>
+		</None>
+		<None Include="..\Templates\Hana.ODBC.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>Hana.ODBC.generated.cs</LastGenOutput>
+		</None>
+		<None Include="..\Templates\Informix.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>Informix.generated.cs</LastGenOutput>
+		</None>
+		<None Include="..\Templates\MariaDB.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>MariaDB.generated.cs</LastGenOutput>
+		</None>
+		<None Include="..\Templates\Oracle.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>Oracle.generated.cs</LastGenOutput>
+		</None>
+		<None Include="..\Templates\PostgreSQL.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>PostgreSQL.generated.cs</LastGenOutput>
+		</None>
+		<None Include="..\Templates\SQLCE.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>SQLCE.generated.cs</LastGenOutput>
+		</None>
+		<None Include="..\Templates\SQLite.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>SQLite.generated.cs</LastGenOutput>
+		</None>
+		<None Include="..\Templates\SqlServer.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>SqlServer.generated.cs</LastGenOutput>
+		</None>
+		<None Include="..\Templates\Sybase.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>Sybase.generated.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+</Project>

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Data.Linq;
-using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,12 +15,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using System.Globalization;
-
-	using Model;
-
 	[TestFixture]
 	public class SQLiteTests : TestBase
 	{
@@ -357,7 +355,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText("p", "123")), Is.EqualTo("123"));
 					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", "123")), Is.EqualTo("123"));
 
-					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string?)null)), Is.Null);
 					Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 				});
 			}
@@ -382,12 +380,12 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<byte[]>("SELECT    binaryDataType FROM AllTypes WHERE ID = 2"), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<Binary>("SELECT varbinaryDataType FROM AllTypes WHERE ID = 2"), Is.EqualTo(new Binary(arr2)));
 
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"), Is.Null);
 
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)), Is.Null);
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
@@ -541,7 +539,7 @@ namespace Tests.DataProvider
 			Assert.That(File.Exists ("TestDatabase.sqlite"), Is.True);
 
 			var provider = context.IsAnyOf(TestProvName.AllSQLiteClassic) ? SQLiteProvider.System : SQLiteProvider.Microsoft;
-			using (var db = new DataConnection(SQLiteTools.GetDataProvider(provider), "Data Source=TestDatabase.sqlite"))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(SQLiteTools.GetDataProvider(provider), "Data Source=TestDatabase.sqlite")))
 			{
 				db.CreateTable<CreateTableTest>();
 				db.DropTable  <CreateTableTest>();
@@ -674,7 +672,7 @@ namespace Tests.DataProvider
 			if (context.Contains("Classic") && columnType != "TEXT")
 				Assert.Inconclusive("System.Data.SQLite doesn't supports only ISO8601 dates as of v1.0.108");
 
-			using var db    = new DataConnection(context, ConfigureMapping(columnType));
+			using var db    = new DataConnection(new DataOptions().UseConfiguration(context, ConfigureMapping(columnType)));
 			using var table = db.CreateLocalTable<DateTimeTable>();
 
 			db.InlineParameters = inline;
@@ -723,7 +721,7 @@ namespace Tests.DataProvider
 			if (context.Contains("Classic") && columnType != "TEXT")
 				Assert.Inconclusive("System.Data.SQLite doesn't supports only ISO8601 dates as of v1.0.108");
 
-			using var db    = new DataConnection(context, ConfigureMapping(columnType));
+			using var db    = new DataConnection(new DataOptions().UseConfiguration(context, ConfigureMapping(columnType)));
 			using var table = db.CreateLocalTable<DateTimeTable>();
 
 			db.InlineParameters = inline;
@@ -935,5 +933,54 @@ namespace Tests.DataProvider
 		{
 			[PrimaryKey, Identity] public long Id { get; set; }
 		}
+
+		#region issue 4808
+		[Table(nameof(Issue4808Table))]
+		sealed class Issue4808TableRaw
+		{
+			[Column(DataType = DataType.Text)  ] public Guid? ValueText { get; set; }
+			[Column(DataType = DataType.Binary)] public Guid? ValueBinary { get; set; }
+
+			public static readonly Issue4808TableRaw[] Data =
+			[
+				new Issue4808TableRaw()
+				{
+					ValueText = TestData.Guid1,
+					ValueBinary = TestData.Guid2,
+				}
+			];
+		}
+
+		[Table]
+		sealed class Issue4808Table
+		{
+			[Column(DbType = "TEXT")] public Guid? ValueText { get; set; }
+			[Column(DbType = "BINARY")] public Guid? ValueBinary { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4808")]
+		public void Issue4808Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue4808TableRaw.Data);
+			db.InlineParameters = inline;
+
+			var listText = new Guid[] { TestData.Guid1 };
+			var listBinary = new Guid[] {TestData.Guid2 };
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.GetTable<Issue4808TableRaw>().Where(r => listText.Contains(r.ValueText.GetValueOrDefault())).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<Issue4808TableRaw>().Where(r => listBinary.Contains(r.ValueBinary.GetValueOrDefault())).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<Issue4808TableRaw>().Where(r => r.ValueText.HasValue && listText.Contains(r.ValueText.Value)).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<Issue4808TableRaw>().Where(r => r.ValueBinary.HasValue && listBinary.Contains(r.ValueBinary.Value)).Count(), Is.EqualTo(1));
+
+				Assert.That(db.GetTable<Issue4808Table>().Where(r => listText.Contains(r.ValueText.GetValueOrDefault())).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<Issue4808Table>().Where(r => listBinary.Contains(r.ValueBinary.GetValueOrDefault())).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<Issue4808Table>().Where(r => r.ValueText.HasValue && listText.Contains(r.ValueText.Value)).Count(), Is.EqualTo(1));
+				Assert.That(db.GetTable<Issue4808Table>().Where(r => r.ValueBinary.HasValue && listBinary.Contains(r.ValueBinary.Value)).Count(), Is.EqualTo(1));
+			}
+		}
+		#endregion
 	}
 }

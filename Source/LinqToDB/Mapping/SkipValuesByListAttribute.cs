@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 
 namespace LinqToDB.Mapping
 {
@@ -25,7 +24,7 @@ namespace LinqToDB.Mapping
 			if (values == null)
 				throw new ArgumentNullException(nameof(values));
 
-			Values = new HashSet<object?>(values);
+			Values = [.. values];
 		}
 
 		/// <summary>

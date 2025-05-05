@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	public class SqlInsertOrUpdateStatement: SqlStatementWithQueryBase
 	{
@@ -33,7 +31,10 @@ namespace LinqToDB.SqlQuery
 			writer
 				.AppendLine("/* insert or update */")
 				.AppendElement(Insert)
-				.AppendElement(Update);
+				.AppendElement(Update)
+				.AppendLine("--- query ---")
+				.AppendElement(SelectQuery);
+
 			return writer;
 		}
 

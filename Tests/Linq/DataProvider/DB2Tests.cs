@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Linq;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Xml;
@@ -10,12 +9,10 @@ using System.Data;
 using System.Globalization;
 using System.Reflection;
 using System.Threading.Tasks;
-using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools.Comparers;
@@ -30,10 +27,10 @@ using IBM.Data.DB2Types;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class DB2Tests : DataProviderTestBase
 	{
@@ -323,7 +320,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as nchar(3))    FROM SYSIBM.SYSDUMMY1", DataParameter.NText("p", "123")), Is.EqualTo("123"));
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as char(3))     FROM SYSIBM.SYSDUMMY1", DataParameter.Create("p", "123")), Is.EqualTo("123"));
 
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", DataParameter.Create("p", (string?)null)), Is.Null);
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 				});
 			}
@@ -694,8 +691,9 @@ namespace Tests.DataProvider
 
 				Assert.Multiple(() =>
 				{
-					Assert.That(new DB2Clob((DB2Connection)conn.Connection).IsNull, Is.True);
-					Assert.That(new DB2Blob((DB2Connection)conn.Connection).IsNull, Is.True);
+					var connection = (DB2Connection)conn.OpenDbConnection();
+					Assert.That(new DB2Clob(connection).IsNull, Is.True);
+					Assert.That(new DB2Blob(connection).IsNull, Is.True);
 				});
 			}
 

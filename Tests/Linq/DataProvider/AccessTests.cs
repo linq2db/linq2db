@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Linq;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -16,12 +15,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using System.Runtime.Serialization;
-
-	using Model;
-
 	[TestFixture]
 	public class AccessTests : DataProviderTestBase
 	{
@@ -67,7 +64,7 @@ namespace Tests.DataProvider
 				var isODBC = conn.DataProvider.Name.IsAnyOf(TestProvName.AllAccessOdbc);
 				Assert.Multiple(() =>
 				{
-					Assert.That(TestType<bool>(conn, "bitDataType", DataType.Boolean, skipDefaultNull: isODBC), Is.EqualTo(true));
+					Assert.That(TestType<bool>(conn, "bitDataType", DataType.Boolean, skipDefaultNull: isODBC), Is.True);
 					Assert.That(TestType<short?>(conn, "smallintDataType", DataType.Int16, skipDefaultNull: isODBC), Is.EqualTo(25555));
 					Assert.That(TestType<decimal?>(conn, "decimalDataType", DataType.Decimal, skipDefaultNull: isODBC), Is.EqualTo(2222222m));
 					Assert.That(TestType<int?>(conn, "intDataType", DataType.Int32, skipDefaultNull: isODBC), Is.EqualTo(7777777));
@@ -278,9 +275,9 @@ namespace Tests.DataProvider
 				});
 
 				if (isODBC) // ODBC provider doesn't return type for NULL value
-					Assert.That(conn.Execute<string>($"SELECT CVar({param})", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<string>($"SELECT CVar({param})", DataParameter.Create("p", (string?)null)), Is.Null);
 				else
-					Assert.That(conn.Execute<string>($"SELECT {param}", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<string>($"SELECT {param}", DataParameter.Create("p", (string?)null)), Is.Null);
 
 				Assert.That(conn.Execute<string>($"SELECT {param}", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
@@ -303,9 +300,9 @@ namespace Tests.DataProvider
 				});
 
 				if (isODBC) // ODBC provider doesn't return type for NULL value
-					Assert.That(conn.Execute<byte[]>($"SELECT CVar({param})", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>($"SELECT CVar({param})", DataParameter.VarBinary("p", null)), Is.Null);
 				else
-					Assert.That(conn.Execute<byte[]>($"SELECT {param}", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>($"SELECT {param}", DataParameter.VarBinary("p", null)), Is.Null);
 
 				Assert.Multiple(() =>
 				{
@@ -458,7 +455,7 @@ namespace Tests.DataProvider
 			Assert.That(File.Exists(expectedName), Is.True);
 
 			var connectionString = $"Provider={providerName};Data Source={expectedName};Locale Identifier=1033;Persist Security Info=True";
-			using (var db = new DataConnection(AccessTools.GetDataProvider(version, AccessProvider.AutoDetect, connectionString), connectionString))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(AccessTools.GetDataProvider(version, AccessProvider.AutoDetect, connectionString), connectionString)))
 			{
 				db.CreateTable<SqlCeTests.CreateTableTest>();
 				db.DropTable<SqlCeTests.CreateTableTest>();
@@ -766,6 +763,34 @@ namespace Tests.DataProvider
 		{
 			public int Id { get; set; }
 		}
+		#endregion
+
+		#region Type Convert With Null
+
+		[Table("AllTypes")]
+		public class AllTypesTable
+		{
+			// nullable in db with null values
+			[Column("datetimeDataType")] public DateTime? DateTime { get; set; }
+		}
+
+		[Test]
+		public void TestConvertToDate_Nullable([IncludeDataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.GetTable<AllTypesTable>().Select(r => Sql.AsSql(r.DateTime!.Value.Date)).ToArray();
+		}
+
+		[Test]
+		public void TestConvertToDate_WithNull([IncludeDataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			Assert.That(() => db.GetTable<AllTypesTable>().Select(r => Sql.AsSql(Sql.AsNotNull(r.DateTime!.Value).Date)).ToArray(),
+				Throws.Exception);
+		}
+
 		#endregion
 	}
 }

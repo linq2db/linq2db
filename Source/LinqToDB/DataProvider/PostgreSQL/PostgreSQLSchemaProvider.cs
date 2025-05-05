@@ -6,17 +6,16 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Text;
 using System.Text.RegularExpressions;
+
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using SchemaProvider;
-	using SqlQuery;
-
 	public class PostgreSQLSchemaProvider : SchemaProviderBase
 	{
 		const int v93 = 90300;
@@ -148,7 +147,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var defaultSchema = ToDatabaseLiteral(dataConnection, options?.DefaultSchema ?? "public");
+			var defaultSchema = ToDatabaseLiteral(dataConnection, options.DefaultSchema ?? "public");
 
 			var sql = $@"
 				SELECT
@@ -209,8 +208,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			return
-				dataConnection.Query<PrimaryKeyInfo>($@"
+			return dataConnection.Query<PrimaryKeyInfo>(
+				$"""
 					SELECT
 						current_database() || '.' || pg_namespace.nspname || '.' || pg_class.relname as TableID,
 						pg_constraint.conname                                                        as PrimaryKeyName,
@@ -223,7 +222,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							JOIN pg_namespace  ON pg_class.relnamespace = pg_namespace.oid
 					WHERE
 						pg_constraint.contype = 'p'
-						AND {GenerateSchemaFilter(dataConnection, "pg_namespace.nspname")}")
+					AND {GenerateSchemaFilter(dataConnection, "pg_namespace.nspname")}
+				""")
 				.ToList();
 		}
 

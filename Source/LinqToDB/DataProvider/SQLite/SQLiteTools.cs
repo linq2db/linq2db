@@ -3,10 +3,10 @@ using System.Data.Common;
 using System.IO;
 using System.Reflection;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Data;
-
 	public static partial class SQLiteTools
 	{
 		internal static SQLiteProviderDetector ProviderDetector = new();
@@ -36,17 +36,20 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public static DataConnection CreateDataConnection(string connectionString, SQLiteProvider provider = SQLiteProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString);
+			return new DataConnection(new DataOptions()
+				.UseConnectionString(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString));
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, SQLiteProvider provider = SQLiteProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection);
+			return new DataConnection(new DataOptions()
+				.UseConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection));
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction, SQLiteProvider provider = SQLiteProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction);
+			return new DataConnection(new DataOptions()
+				.UseTransaction(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction));
 		}
 
 		#endregion

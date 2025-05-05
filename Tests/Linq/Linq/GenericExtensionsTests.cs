@@ -9,10 +9,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 	public class ExtensionChoiceAttribute : MappingAttribute
 	{
@@ -127,7 +127,7 @@ namespace Tests.Linq
 				{
 					Assert.That(result.R1, Is.EqualTo("T5=(CHAR: X, STRING: some string)"));
 					Assert.That(result.R2, Is.EqualTo("T5=(CHAR: null, STRING: another string)"));
-					Assert.That(result.R3, Is.EqualTo(null));
+					Assert.That(result.R3, Is.Null);
 					Assert.That(result.R4, Is.EqualTo("T3=(BYTE: 123, INT: 456)"));
 					Assert.That(result.R5, Is.EqualTo("T3=(BYTE: 123, INT: null)"));
 					Assert.That(result.R6, Is.EqualTo("T4=(BYTE: 123, INT: 456)"));

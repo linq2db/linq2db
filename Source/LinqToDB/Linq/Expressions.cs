@@ -6,8 +6,16 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 using JetBrains.Annotations;
+
+using LinqToDB.Common.Internal;
+using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 #region ReSharper disables
 // ReSharper disable RedundantTypeArgumentsOfMethod
@@ -20,13 +28,6 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
 {
-	using Common.Internal;
-	using DataProvider.Firebird;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	[PublicAPI]
 	public static class Expressions
 	{
@@ -243,7 +244,7 @@ namespace LinqToDB.Linq
 							continue;
 
 						var gtype    = type.Key.MakeGenericType(types);
-						var provider = (IGenericInfoProvider)Activator.CreateInstance(gtype)!;
+						var provider = ActivatorExt.CreateInstance<IGenericInfoProvider>(gtype);
 
 						provider.SetInfo(mappingSchema);
 
@@ -501,7 +502,7 @@ namespace LinqToDB.Linq
 		#region Mapping
 
 		private static          Dictionary<string, Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>? _members;
-		private static readonly object _memberSync = new();
+		private static readonly Lock _memberSync = new();
 
 		static readonly Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>> _binaries =
 			new Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>>(() => new Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>());
@@ -540,7 +541,7 @@ namespace LinqToDB.Linq
 			{ M(() => "".PadRight   (0,' ')   ), N(() => L<string?,int,char,string?>       ((string? obj,int  p0,char   p1)           => Sql.PadRight (obj, p0, p1))) },
 			{ M(() => "".Trim       ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Trim     (obj))) },
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			{ M(() => "".TrimEnd    ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimRight(obj)))     },
 			{ M(() => "".TrimEnd    (' ')     ), N(() => L<string,char,string?>            ((string obj,char ch)                      =>     TrimRight(obj, ch))) },
 			{ M(() => "".TrimStart  ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimLeft (obj)))     },
@@ -595,6 +596,12 @@ namespace LinqToDB.Linq
 
 			#endregion
 
+			#region ConvertTo
+
+			{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => p.ToString())) },
+
+			#endregion
+
 			#region Parse
 
 			{ M(() => bool.    Parse("")), N(() => L<string,bool>    ((string p0) => Sql.ConvertTo<bool>.    From(p0))) },
@@ -616,7 +623,7 @@ namespace LinqToDB.Linq
 			{ M(() => ulong.   Parse("")), N(() => L<string,ulong>   ((string p0) => Sql.ConvertTo<ulong>.   From(p0))) },
 #pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 #pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => DateOnly.Parse("")), N(() => L<string,DateOnly>((string p0) => Sql.ConvertTo<DateOnly>.From(p0))) },
 #pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
@@ -998,7 +1005,6 @@ namespace LinqToDB.Linq
 
 			{ M(() => Math.Pow        (0,0) ), N(() => L<double,double,double>    ((double x,double y) => Sql.Power(x, y)!.Value )) },
 
-
 			{ M(() => Math.Sign  ((decimal)0)), N(() => L<decimal,int>(p => Sql.Sign(p)!.Value )) },
 			{ M(() => Math.Sign  ((double) 0)), N(() => L<double, int>(p => Sql.Sign(p)!.Value )) },
 			{ M(() => Math.Sign  ((short)  0)), N(() => L<short,  int>(p => Sql.Sign(p)!.Value )) },
@@ -1079,12 +1085,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>  ((p0,p1,p2)    => p0.Length > p1 ? p0 : VarChar(Replicate(p2, p1 - p0.Length)!, 1000) + p0)) },
 
 					{ M(() => Sql.ConvertTo<string>.From((decimal)0)), N(() => L<decimal,string?>((decimal p) => Sql.TrimLeft(Sql.Convert<string,decimal>(p), '0'))) },
-					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,   string?>((Guid    p) => Sql.Lower(
-						Sql.Substring(Hex(p),  7,  2) + Sql.Substring(Hex(p),  5, 2) + Sql.Substring(Hex(p), 3, 2) + Sql.Substring(Hex(p), 1, 2) + "-" +
-						Sql.Substring(Hex(p), 11,  2) + Sql.Substring(Hex(p),  9, 2) + "-" +
-						Sql.Substring(Hex(p), 15,  2) + Sql.Substring(Hex(p), 13, 2) + "-" +
-						Sql.Substring(Hex(p), 17,  4) + "-" +
-						Sql.Substring(Hex(p), 21, 12)))) },
 
 					{ M(() => Sql.Log(0m, 0)), N(() => L<decimal?,decimal?,decimal?>((m,n) => Sql.Log(n) / Sql.Log(m))) },
 					{ M(() => Sql.Log(0.0,0)), N(() => L<double?,double?,double?>   ((m,n) => Sql.Log(n) / Sql.Log(m))) },
@@ -1136,13 +1136,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((string? p0,int? p1,int? p2,string? p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.Space(0)        ), N(() => L<int?,string?>       ((int? p0)                 => Sql.PadRight(" ", p0, ' '))) },
 
-					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => Sql.Lower(
-						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p),  7,  2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p),  5, 2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 3, 2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 1, 2) + "-" +
-						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 11,  2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p),  9, 2) + "-" +
-						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 15,  2) + Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 13, 2) + "-" +
-						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 17,  4) + "-" +
-						Sql.Substring(Sql.Convert(Sql.Types.Char(36), p), 21, 12)))) },
-
 					{ M(() => Sql.Cot  (0)),   N(() => L<double?,double?>(v => Sql.Cos(v) / Sql.Sin(v) )) },
 					{ M(() => Sql.Log10(0.0)), N(() => L<double?,double?>(v => Sql.Log(10, v)          )) },
 
@@ -1173,8 +1166,6 @@ namespace LinqToDB.Linq
 
 					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?,double?>     ((double? v)        => (double?)Sql.RoundToEven((decimal)v!)))    },
 					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?,int?,double?>((double? v,int? p) => (double?)Sql.RoundToEven((decimal)v!, p))) },
-
-					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>((Guid p) => Sql.Lower(Sql.Ext.Firebird().UuidToChar(p)))) },
 				}},
 
 				#endregion
@@ -1219,13 +1210,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
-
-					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>((Guid p) => Sql.Lower(
-						Sql.Substring(Hex(p),  7,  2) + Sql.Substring(Hex(p),  5, 2) + Sql.Substring(Hex(p), 3, 2) + Sql.Substring(Hex(p), 1, 2) + "-" +
-						Sql.Substring(Hex(p), 11,  2) + Sql.Substring(Hex(p),  9, 2) + "-" +
-						Sql.Substring(Hex(p), 15,  2) + Sql.Substring(Hex(p), 13, 2) + "-" +
-						Sql.Substring(Hex(p), 17,  4) + "-" +
-						Sql.Substring(Hex(p), 21, 12)))) },
 
 					{ M(() => Sql.Log (0m, 0)), N(() => L<decimal?,decimal?,decimal?>((m,n) => Sql.Log(n) / Sql.Log(m))) },
 					{ M(() => Sql.Log (0.0,0)), N(() => L<double?,double?,double?>   ((m,n) => Sql.Log(n) / Sql.Log(m))) },
@@ -1275,8 +1259,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
 					{ M(() => Sql.PadLeft ("",0,' ') ), N(() => L<string,int?,char?,string>         ((p0,p1,p2)    => p0.Length > p1 ? p0 : Replicate(p2, p1 - p0.Length) + p0)) },
-
-					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>(p => Sql.Lower(Sql.Substring(p.ToString(), 2, 36)))) },
 
 					{ M(() => Sql.Ceiling((decimal)0)), N(() => L<decimal?,decimal?>(p => -Sql.Floor(-p) )) },
 					{ M(() => Sql.Ceiling((double) 0)), N(() => L<double?, double?> (p => -Sql.Floor(-p) )) },
@@ -1437,7 +1419,7 @@ namespace LinqToDB.Linq
 		[Sql.Extension(ProviderName.SqlServer2022 , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.DB2           , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Informix      , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Oracle        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Oracle        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder), IsNullable = Sql.IsNullableType.Nullable)]
 		[Sql.Extension(ProviderName.PostgreSQL    , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SapHana       , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SQLite        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
@@ -1457,7 +1439,7 @@ namespace LinqToDB.Linq
 		[Sql.Extension(ProviderName.SqlServer2022 , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.DB2           , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Informix      , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Oracle        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Oracle        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder), IsNullable = Sql.IsNullableType.Nullable)]
 		[Sql.Extension(ProviderName.PostgreSQL    , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SapHana       , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SQLite        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]

@@ -3,20 +3,20 @@ using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Mapping;
-	using Metadata;
-	using SqlQuery;
-
 	sealed class SqlServerMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
@@ -258,6 +258,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetValueToSqlConverter(typeof(Binary), (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
+			// in SQL Server DECIMAL=DECIMAL(18,0)
+			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 18, 10));
 
 			if (SystemDataSqlServerAttributeReader.SystemDataSqlClientProvider != null)
 				AddMetadataReader(SystemDataSqlServerAttributeReader.SystemDataSqlClientProvider);
@@ -298,7 +300,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			stringBuilder.Append(CultureInfo.InvariantCulture, $"char({value})");
 		}
 
-		static void ConvertStringToSql(StringBuilder stringBuilder, DataType dataType, string value)
+		internal static void ConvertStringToSql(StringBuilder stringBuilder, DataType dataType, string value)
 		{
 			string? startPrefix;
 
@@ -490,7 +492,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static long GetFractionalSecondFromTicks(long ticks, int precision) => (ticks % ValueExtensions.TICKS_DIVIDERS[0]) / ValueExtensions.TICKS_DIVIDERS[precision];
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		static void ConvertDateToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, DateOnly value, bool v2008plus, bool supportsFromParts)
 		{
 			switch (sqlDataType.Type.DataType, v2008plus, supportsFromParts)
@@ -580,7 +582,16 @@ namespace LinqToDB.DataProvider.SqlServer
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
-		public sealed class SqlServer2005MappingSchema : LockedMappingSchema
+		static MappingSchema Instance2005 = new SqlServer2005MappingSchema();
+		static MappingSchema Instance2008 = new SqlServer2008MappingSchema();
+		static MappingSchema Instance2012 = new SqlServer2012MappingSchema();
+		static MappingSchema Instance2014 = new SqlServer2014MappingSchema();
+		static MappingSchema Instance2016 = new SqlServer2016MappingSchema();
+		static MappingSchema Instance2017 = new SqlServer2017MappingSchema();
+		static MappingSchema Instance2019 = new SqlServer2019MappingSchema();
+		static MappingSchema Instance2022 = new SqlServer2022MappingSchema();
+
+		sealed class SqlServer2005MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2005MappingSchema() : base(ProviderName.SqlServer2005, Instance)
 			{
@@ -592,7 +603,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, false, false));
 				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , false, false));
 				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , false, false));
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , false, false));
 #endif
 			}
@@ -603,7 +614,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public sealed class SqlServer2008MappingSchema : LockedMappingSchema
+		sealed class SqlServer2008MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2008MappingSchema() : base(ProviderName.SqlServer2008, Instance)
 			{
@@ -614,7 +625,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, false));
 				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, false));
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, false));
 #endif
 			}
@@ -625,7 +636,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public sealed class SqlServer2012MappingSchema : LockedMappingSchema
+		sealed class SqlServer2012MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2012MappingSchema() : base(ProviderName.SqlServer2012, Instance)
 			{
@@ -636,7 +647,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
 				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
 #endif
 			}
@@ -647,7 +658,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public sealed class SqlServer2014MappingSchema : LockedMappingSchema
+		sealed class SqlServer2014MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2014MappingSchema() : base(ProviderName.SqlServer2014, Instance)
 			{
@@ -658,7 +669,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
 				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
 #endif
 			}
@@ -669,7 +680,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public sealed class SqlServer2016MappingSchema : LockedMappingSchema
+		sealed class SqlServer2016MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2016MappingSchema() : base(ProviderName.SqlServer2016, Instance)
 			{
@@ -680,7 +691,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
 				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
 #endif
 			}
@@ -691,7 +702,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public sealed class SqlServer2017MappingSchema : LockedMappingSchema
+		sealed class SqlServer2017MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2017MappingSchema() : base(ProviderName.SqlServer2017, Instance)
 			{
@@ -702,7 +713,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
 				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
 #endif
 			}
@@ -713,7 +724,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public sealed class SqlServer2019MappingSchema : LockedMappingSchema
+		sealed class SqlServer2019MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2019MappingSchema() : base(ProviderName.SqlServer2019, Instance)
 			{
@@ -724,7 +735,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
 				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
 #endif
 			}
@@ -735,7 +746,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public sealed class SqlServer2022MappingSchema : LockedMappingSchema
+		sealed class SqlServer2022MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2022MappingSchema() : base(ProviderName.SqlServer2022, Instance)
 			{
@@ -746,7 +757,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
 				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
 #endif
 			}
@@ -756,5 +767,25 @@ namespace LinqToDB.DataProvider.SqlServer
 				return Instance.TryGetConvertExpression(@from, to);
 			}
 		}
+
+		const string SDS = ".System";
+		const string MDS = ".Microsoft";
+
+		public sealed class SqlServer2005MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2005 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2005 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2005MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2005 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2005 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2008MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2008 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2008 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2008MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2008 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2008 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2012MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2012 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2012 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2012MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2012 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2012 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2014MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2014 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2014 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2014MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2014 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2014 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2016MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2016 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2016 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2016MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2016 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2016 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2017MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2017 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2017 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2017MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2017 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2017 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2019MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2019 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2019 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2019MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2019 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2019 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2022MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2022 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2022 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2022MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2022 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2022 }.Where(ms => ms != null).ToArray()!);
 	}
 }

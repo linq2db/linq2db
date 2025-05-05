@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
+using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
-	using Methods = Reflection.Methods.LinqToDB.MultiInsert;
-
 	[BuildsMethodCall(
 		nameof(MultiInsertExtensions.MultiInsert),
 		nameof(MultiInsertExtensions.Into),
@@ -67,7 +67,7 @@ namespace LinqToDB.Linq.Builder
 
 			var sourceContextRef = new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sourceContext);
 
-			var source = new TableLikeQueryContext(sourceContextRef, sourceContextRef);
+			var source = new TableLikeQueryContext(sourceContext.TranslationModifier, sourceContextRef, sourceContextRef);
 			return new MultiInsertContext(source);
 		}
 
@@ -105,10 +105,11 @@ namespace LinqToDB.Linq.Builder
 
 			var setterExpression = source.PrepareSourceBody(setterLambda);
 
-			var targetRef        = new ContextRefExpression(setterExpression.Type, into);
+			var targetRef = new ContextRefExpression(setterExpression.Type, into);
+			var sourceRef = SequenceHelper.CreateRef(source);
 
 			var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
-			UpdateBuilder.ParseSetter(builder, targetRef, setterExpression, setterExpressions);
+			UpdateBuilder.ParseSetter(builder, targetRef, sourceRef, setterExpression, setterExpressions);
 			UpdateBuilder.InitializeSetExpressions(builder, into, source, setterExpressions, insert.Items, false);
 
 			return multiInsertContext;
@@ -201,7 +202,7 @@ namespace LinqToDB.Linq.Builder
 		sealed class MultiInsertContext : BuildContextBase
 		{
 			public MultiInsertContext(TableLikeQueryContext source)
-				: base(source.Builder, source.ElementType, source.SelectQuery)
+				: base(source.TranslationModifier, source.Builder, source.ElementType, source.SelectQuery)
 			{
 				MultiInsertStatement = new SqlMultiInsertStatement(source.Source);
 				QuerySource          = source;

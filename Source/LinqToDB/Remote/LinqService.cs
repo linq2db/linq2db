@@ -5,20 +5,20 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Interceptors;
+using LinqToDB.Linq;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 namespace LinqToDB.Remote
 {
-	using Common;
-	using Data;
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Mapping;
-	using SqlQuery;
-	using Tools;
-	using Infrastructure;
-	using Linq.Translation;
-	using Interceptors;
-
 	public class LinqService : ILinqService
 	{
 		private MappingSchema? _serializationMappingSchema;
@@ -72,7 +72,7 @@ namespace LinqToDB.Remote
 		{
 		}
 
-#region ILinqService Members
+		#region ILinqService Members
 
 		public virtual LinqServiceInfo GetInfo(string? configuration)
 		{
@@ -427,7 +427,7 @@ namespace LinqToDB.Remote
 			var columnReaders = new ConvertFromDataReaderExpression.ColumnReader[rd.DataReader!.FieldCount];
 
 			for (var i = 0; i < ret.FieldCount; i++)
-				columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema,
+				columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db.MappingSchema,
 					// converter must be null, see notes above
 					ret.FieldTypes[i], i, converter: null, true);
 
@@ -441,7 +441,7 @@ namespace LinqToDB.Remote
 				{
 					if (!reader.IsDBNull(i))
 					{
-						var value = columnReaders[i].GetValue(reader);
+						var value = columnReaders[i].GetValue(db, reader);
 
 						if (value != null)
 							data[i] = SerializationConverter.Serialize(SerializationMappingSchema, value);

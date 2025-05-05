@@ -1,18 +1,16 @@
 ﻿using System;
-using System.Data.Linq;
-using System.Diagnostics;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Linq;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Numerics;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 
-using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Types;
 
 using FluentAssertions;
@@ -22,16 +20,14 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Mapping;
-using LinqToDB.Linq;
 using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using LinqToDB.Expressions;
-	using Model;
-
 	[TestFixture]
 	public class FirebirdTests : DataProviderTestBase
 	{
@@ -282,7 +278,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.NText("p", "123")), Is.EqualTo("123"));
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.Create("p", "123")), Is.EqualTo("123"));
 
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.Create("p", (string?)null)), Is.Null);
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 				});
 			}
@@ -305,8 +301,8 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Blob("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Blob("p", null)), Is.EqualTo(null));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Blob("p", null)), Is.Null);
+					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.VarBinary("p", null)), Is.Null);
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Binary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Blob("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
@@ -572,7 +568,6 @@ namespace Tests.DataProvider
 					where folder2.Caption == "dewde"
 					select folder;
 
-
 				Assert.DoesNotThrow(() => folders.ToList());
 			}
 		}
@@ -620,7 +615,6 @@ namespace Tests.DataProvider
 					{
 					}
 
-
 					db.CreateTable<TTable>();
 					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
 				}
@@ -643,8 +637,7 @@ namespace Tests.DataProvider
 			[IncludeDataSources(TestProvName.AllFirebird)] string context,
 			[Values(FirebirdIdentifierQuoteMode.Auto, FirebirdIdentifierQuoteMode.Quote)] FirebirdIdentifierQuoteMode quoteMode)
 		{
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode })))
+			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode }).UseDisableQueryCache(true)))
 			{
 				try
 				{
@@ -674,7 +667,6 @@ namespace Tests.DataProvider
 				finally
 				{
 					db.GetTable<CamelCaseName>().Delete();
-					Query.ClearCaches();
 				}
 			}
 		}
@@ -785,8 +777,7 @@ namespace Tests.DataProvider
 			[IncludeDataSources(false, TestProvName.AllFirebird)] string context,
 			[Values] FirebirdIdentifierQuoteMode quoteMode)
 		{
-			Query.ClearCaches();
-			using (var db      = GetDataConnection(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode })))
+			using (var db      = GetDataConnection(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode }).UseDisableQueryCache(true)))
 			using (var cards   = db.CreateLocalTable<Card>())
 			using (var clients = db.CreateLocalTable<Client>())
 			{
@@ -803,7 +794,6 @@ namespace Tests.DataProvider
 					sql.Should().Contain("\"Client\" \"a_Owner\"");
 				}
 			}
-			Query.ClearCaches();
 		}
 		#endregion
 
@@ -936,32 +926,32 @@ namespace Tests.DataProvider
 				Assert.Multiple(() =>
 				{
 					Assert.That(t.Where(_ => _.DecFloat16 == TestFbTypesTable.Data[0].DecFloat16).Count(), Is.EqualTo(1));
-					Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(true));
+					Assert.That(db.LastQuery!, Does.Contain("@"));
 					Assert.That(t.Where(_ => _.DecFloat30 == TestFbTypesTable.Data[0].DecFloat30).Count(), Is.EqualTo(1));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(true));
+					Assert.That(db.LastQuery!, Does.Contain("@"));
 					Assert.That(t.Where(_ => _.DecFloat34 == TestFbTypesTable.Data[0].DecFloat34).Count(), Is.EqualTo(1));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(true));
+					Assert.That(db.LastQuery!, Does.Contain("@"));
 					Assert.That(t.Where(_ => _.DecFloat == TestFbTypesTable.Data[0].DecFloat).Count(), Is.EqualTo(1));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(true));
+					Assert.That(db.LastQuery!, Does.Contain("@"));
 					Assert.That(t.Where(_ => _.DateTimeTZ == TestFbTypesTable.Data[0].DateTimeTZ).Count(), Is.EqualTo(1));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(true));
+					Assert.That(db.LastQuery!, Does.Contain("@"));
 					Assert.That(t.Where(_ => _.TimeTZ == TestFbTypesTable.Data[0].TimeTZ).Count(), Is.EqualTo(1));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(true));
+					Assert.That(db.LastQuery!, Does.Contain("@"));
 					Assert.That(t.Where(_ => _.Int128 == TestFbTypesTable.Data[0].Int128).Count(), Is.EqualTo(1));
 				});
 				Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(!inline));

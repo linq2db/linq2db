@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using LinqToDB.Common;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using SqlQuery;
-
 	public abstract partial class BasicSqlBuilder
 	{
 		/// <summary>
@@ -435,10 +435,32 @@ namespace LinqToDB.SqlProvider
 		{
 			StringBuilder.Append("USING ");
 
-			if (merge.Source.SourceQuery != null)
-				BuildMergeSourceQuery(nullability, merge.Source);
-			else
+			var buildAsEnumerable = merge.Source.SourceEnumerable != null;
+			if (buildAsEnumerable)
+			{
+				if (merge.Source.SourceQuery != null)
+				{
+					if (!merge.Source.SourceQuery.IsSimple || merge.Source.SourceQuery.Select.Columns.Count != merge.Source.SourceFields.Count)
+						buildAsEnumerable = false;
+					else
+					{
+						for (var i = 0; i < merge.Source.SourceQuery.Select.Columns.Count; i++)
+						{
+							var columnExp = merge.Source.SourceQuery.Select.Columns[i].Expression;
+							if (columnExp is not SqlField)
+							{
+								buildAsEnumerable = false;
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			if (buildAsEnumerable)
 				BuildMergeSourceEnumerable(nullability, merge);
+			else
+				BuildMergeSourceQuery(nullability, merge.Source);
 
 			StringBuilder.AppendLine();
 		}

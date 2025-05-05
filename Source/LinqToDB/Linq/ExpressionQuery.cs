@@ -4,20 +4,21 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Async;
+using LinqToDB.Common.Internal;
+using LinqToDB.Compatibility.System;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Internal;
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 namespace LinqToDB.Linq
 {
-	using Async;
-	using Data;
-	using Extensions;
-	using Tools;
-	using Internal;
-	using LinqToDB.Expressions;
-	using LinqToDB.SqlQuery;
-
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{
 		#region Init
@@ -70,12 +71,14 @@ namespace LinqToDB.Linq
 			return sqlText;
 		}
 
+#if DEBUG
 		public virtual QueryDebugView DebugView
 			=> new(
 				() => new ExpressionPrinter().PrintExpression(Expression),
 				() => ((IExpressionQuery)this).GetSqlQueries(null)[0].Sql,
 				() => ((IExpressionQuery)this).GetSqlQueries(new () { InlineParameters = true })[0].Sql
 				);
+#endif
 
 		#endregion
 
@@ -139,8 +142,6 @@ namespace LinqToDB.Linq
 			if (TransactionScopeHelper.IsInsideTransactionScope)
 				return null;
 
-			dc.EnsureConnection();
-
 			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
 				return null;
 
@@ -172,16 +173,14 @@ namespace LinqToDB.Linq
 			if (TransactionScopeHelper.IsInsideTransactionScope)
 				return null;
 
-			await dc.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
-
 			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
 				return null;
 
 			if (DataContext is DataContext ctx)
-				return await ctx!.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!
+				return await ctx.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!
 					.ConfigureAwait(false);
 
-			return await dc!.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!
+			return await dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!
 				.ConfigureAwait(false);
 		}
 
@@ -307,16 +306,11 @@ namespace LinqToDB.Linq
 
 			var elementType = expression.Type.GetItemType() ?? expression.Type;
 
-			try
-			{
-				return (IQueryable)Activator.CreateInstance(
-					typeof(ExpressionQueryImpl<>).MakeGenericType(elementType),
-					DataContext, expression)!;
-			}
-			catch (TargetInvocationException ex)
-			{
-				throw ex.InnerException ?? ex;
-			}
+			return ActivatorExt.CreateInstance<IQueryable>(
+				typeof(ExpressionQueryImpl<>).MakeGenericType(elementType),
+				DataContext,
+				expression
+			);
 		}
 
 		TResult IQueryProvider.Execute<TResult>(Expression expression)

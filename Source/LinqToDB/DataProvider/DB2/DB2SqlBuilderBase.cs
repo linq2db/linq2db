@@ -7,13 +7,13 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
 	{
 		public override bool CteFirst => false;
@@ -179,13 +179,6 @@ namespace LinqToDB.DataProvider.DB2
 				return;
 
 			base.BuildCreateTableNullAttribute(field, defaultNullable);
-		}
-
-		[Obsolete("Use DB2Options.Default.IdentifierQuoteMode instead.")]
-		public static DB2IdentifierQuoteMode IdentifierQuoteMode
-		{
-			get => DB2Options.Default.IdentifierQuoteMode;
-			set => DB2Options.Default = DB2Options.Default with { IdentifierQuoteMode = value };
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -458,6 +451,7 @@ END");
 				{
 					base.BuildParameter(parameter);
 				}
+
 				BuildStep = saveStep;
 
 				return;

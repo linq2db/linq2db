@@ -1,4 +1,4 @@
-﻿#if NET6_0_OR_GREATER
+﻿#if NET8_0_OR_GREATER
 using System;
 #endif
 using System.Linq;
@@ -9,10 +9,10 @@ using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class ArrayTests : TestBase
 	{
@@ -164,7 +164,7 @@ namespace Tests.Linq
 			Assert.That(result, Is.Null);
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3929")]
 		public void TestDateOnly([DataSources] string context)

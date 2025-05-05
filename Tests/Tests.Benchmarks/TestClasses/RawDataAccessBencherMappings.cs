@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
@@ -9,18 +10,18 @@ namespace LinqToDB.Benchmarks.Mappings
 {
 	public class Db : Data.DataConnection
 	{
-		public Db(string connectionString) : base(ProviderName.SqlServer2008, connectionString)
+		public Db(string connectionString) : base(new DataOptions().UseConnectionString(ProviderName.SqlServer2008, connectionString))
 		{
 		}
 
 #pragma warning disable CA2000 // Dispose objects before losing scope
-		public Db(IDataProvider provider, QueryResult result) : base(provider, new MockDbConnection(result, ConnectionState.Open))
+		public Db(IDataProvider provider, QueryResult result) : base(new DataOptions().UseConnection(provider, new MockDbConnection(result, ConnectionState.Open)))
 #pragma warning restore CA2000 // Dispose objects before losing scope
 		{
 		}
 
 #pragma warning disable CA2000 // Dispose objects before losing scope
-		public Db(IDataProvider provider, QueryResult[] results) : base(provider, new MockDbConnection(results, ConnectionState.Open))
+		public Db(IDataProvider provider, QueryResult[] results) : base(new DataOptions().UseConnection(provider, new MockDbConnection(results, ConnectionState.Open)))
 #pragma warning restore CA2000 // Dispose objects before losing scope
 		{
 		}

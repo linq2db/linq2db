@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	sealed class DB2zOSSchemaProvider : DB2LUWSchemaProvider
 	{
 		public DB2zOSSchemaProvider(DB2DataProvider provider) : base(provider)
@@ -53,11 +53,13 @@ namespace LinqToDB.DataProvider.DB2
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
+			var database = dataConnection.OpenDbConnection().Database;
+
 			return _primaryKeys = dataConnection.Query(
 				rd => new PrimaryKeyInfo
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					TableID        = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1),
+					TableID        = database + "." + rd.ToString(0) + "." + rd.ToString(1),
 					PrimaryKeyName = rd.ToString(2)!,
 					ColumnName     = rd.ToString(3)!,
 					Ordinal        = Converter.ChangeTypeTo<int>(rd[4])
@@ -99,10 +101,12 @@ namespace LinqToDB.DataProvider.DB2
 				WHERE
 					" + GetSchemaFilter("TBCREATOR");
 
+			var database = dataConnection.OpenDbConnection().Database;
+
 			return dataConnection.Query(rd =>
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var tableId = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1);
+					var tableId = database + "." + rd.ToString(0) + "." + rd.ToString(1);
 					var name    = rd.ToString(2)!;
 					var size    = rd[3];
 					var scale   = rd[4];
@@ -158,16 +162,18 @@ namespace LinqToDB.DataProvider.DB2
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
+			var database = dataConnection.OpenDbConnection().Database;
+
 			return
 			(
 				from fk in dataConnection.Query(rd => new
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					name        = rd.ToString(0),
-					thisTable   = dataConnection.Connection.Database + "." + rd.ToString(1)  + "." + rd.ToString(2),
+					thisTable   = database + "." + rd.ToString(1)  + "." + rd.ToString(2),
 					thisColumn  = rd.ToString(3),
 					ordinal     = Converter.ChangeTypeTo<int>(rd[4]),
-					otherTable  = dataConnection.Connection.Database + "." + rd.ToString(5)  + "." + rd.ToString(6),
+					otherTable  = database + "." + rd.ToString(5)  + "." + rd.ToString(6),
 				},@"
 					SELECT
 						A.RELNAME,
@@ -205,7 +211,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			LoadCurrentSchema(dataConnection);
+			var database = dataConnection.OpenDbConnection().Database;
 
 			return dataConnection
 				.Query(rd =>
@@ -217,8 +223,8 @@ namespace LinqToDB.DataProvider.DB2
 
 					return new ProcedureInfo
 					{
-						ProcedureID   = dataConnection.Connection.Database + "." + schema + "." + name,
-						CatalogName   = dataConnection.Connection.Database,
+						ProcedureID   = database + "." + schema + "." + name,
+						CatalogName   = database,
 						SchemaName    = schema,
 						ProcedureName = name,
 						IsFunction    = isFunction,
@@ -232,12 +238,13 @@ namespace LinqToDB.DataProvider.DB2
 						SYSIBM.SYSROUTINES
 					WHERE
 						" + GetSchemaFilter("SCHEMA"))
-				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == CurrentSchema)
+				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == DefaultSchema)
 				.ToList();
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
+			var database = dataConnection.OpenDbConnection().Database;
 			return dataConnection
 				.Query(rd =>
 				{
@@ -253,7 +260,7 @@ namespace LinqToDB.DataProvider.DB2
 
 					var ppi = new ProcedureParameterInfo
 					{
-						ProcedureID   = dataConnection.Connection.Database + "." + schema + "." + procname,
+						ProcedureID   = database + "." + schema + "." + procname,
 						ParameterName = pName,
 						DataType      = dataType,
 						Ordinal       = ConvertTo<int>.From(ordinal),

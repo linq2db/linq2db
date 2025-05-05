@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.Expressions;
 
 namespace LinqToDB
 {
-	using Data;
-	using DataProvider;
-	using Expressions;
-
 	/// <summary>
 	/// Contains extension methods for LINQ queries.
 	/// </summary>
@@ -99,10 +100,8 @@ namespace LinqToDB
 		internal static DataConnection GetDataConnection<T>(this ITable<T> table)
 			where T : notnull
 		{
-			if (table.DataContext is DataConnection dataConnection)
-				return dataConnection;
-			if (table.DataContext is DataContext dataContext)
-				return dataContext.GetDataConnection();
+			if (table.TryGetDataConnection(out var connection))
+				return connection;
 
 			throw new ArgumentException($"Data context must be of {nameof(DataConnection)} or {nameof(DataContext)} type.", nameof(table));
 		}

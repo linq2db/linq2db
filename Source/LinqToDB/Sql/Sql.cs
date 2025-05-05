@@ -6,6 +6,13 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
+
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Linq;
+using LinqToDB.SqlQuery;
+
 using PN = LinqToDB.ProviderName;
 
 // ReSharper disable CheckNamespace
@@ -13,12 +20,6 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using Mapping;
-	using Expressions;
-	using Linq;
-	using SqlQuery;
-	using LinqToDB.Common;
-
 	[PublicAPI]
 	public static partial class Sql
 	{
@@ -594,7 +595,7 @@ namespace LinqToDB
 
 				var startExpr = new SqlBinaryExpression(lengthExpr.SystemType!,
 					new SqlFunction(lengthExpr.SystemType!, "LEN", stringExpr), "-",
-					new SqlBinaryExpression(lengthExpr.SystemType!, lengthExpr, "-", new SqlValue(1), Precedence.Subtraction), 
+					new SqlBinaryExpression(lengthExpr.SystemType!, lengthExpr, "-", new SqlValue(1), Precedence.Subtraction),
 					Precedence.Subtraction);
 
 				builder.ResultExpression = new SqlFunction(stringExpr.SystemType!, "SUBSTRING", false, true, stringExpr, startExpr, lengthExpr);
@@ -906,7 +907,7 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str")!;
 
-				var predicate = new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)), false);
+				var predicate = new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", ParametersNullabilityType.Nullable, str, new SqlValue(typeof(string), WHITESPACES)), false);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
@@ -1217,7 +1218,7 @@ namespace LinqToDB
 		[Property(PN.ClickHouse, "1", CanBeNull = false)]
 		public static int DateFirst => 7;
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		public static DateOnly? MakeDateOnly(int? year, int? month, int? day)
 		{
 			return year == null || month == null || day == null ?

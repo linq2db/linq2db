@@ -2,13 +2,13 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
+using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
-	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
-
 	internal partial class MergeBuilder
 	{
 		[BuildsMethodCall(nameof(LinqExtensions.MergeInto))]
@@ -37,10 +37,10 @@ namespace LinqToDB.Linq.Builder
 
 				var genericArguments = methodCall.Method.GetGenericArguments();
 
-				var source = new TableLikeQueryContext(new ContextRefExpression(genericArguments[0], target, "t"),
+				var source = new TableLikeQueryContext(sourceContext.TranslationModifier, new ContextRefExpression(genericArguments[0], target, "t"),
 					new ContextRefExpression(genericArguments[1], sourceContext, "s"));
 
-				return BuildSequenceResult.FromContext(new MergeContext(merge, target, source));
+				return BuildSequenceResult.FromContext(new MergeContext(sourceContext.TranslationModifier, merge, target, source));
 			}
 		}
 	}

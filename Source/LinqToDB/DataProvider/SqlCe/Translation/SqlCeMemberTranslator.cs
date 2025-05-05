@@ -2,14 +2,34 @@
 using System.Globalization;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlCe.Translation
 {
-	using Common;
-	using SqlQuery;
-	using Linq.Translation;
-
 	public class SqlCeMemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new SqlCeMathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertSmallMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -62,7 +82,7 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 				var factory = translationContext.ExpressionFactory;
 				var intDbType = factory.GetDbDataType(typeof(int));
 
-				var resultExpression = factory.Function(intDbType, "DatePart", factory.Fragment(intDbType, partStr), dateTimeExpression);
+				var resultExpression = factory.Function(intDbType, "DatePart", ParametersNullabilityType.SameAsSecondParameter, factory.NotNullFragment(intDbType, partStr), dateTimeExpression);
 
 				return resultExpression;
 			}
@@ -119,6 +139,7 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 					return
 						factory.Concat(
 							factory.Function(stringDataType, "REPLICATE",
+								ParametersNullabilityType.SameAsSecondParameter,
 								factory.Value(stringDataType, "0"),
 								factory.Sub(intDataType, factory.Value(intDataType, padSize), factory.Function(intDataType, "LEN", castToLength))
 							),
@@ -169,7 +190,7 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 					return null;
 				}
 
-				var resultExpression = factory.Function(dateType, "DateAdd", factory.Fragment(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
+				var resultExpression = factory.Function(dateType, "DateAdd", factory.NotNullFragment(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
 				return resultExpression;
 			}
 
@@ -180,7 +201,7 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 				var factory    = translationContext.ExpressionFactory;
 				var stringType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.NVarChar).WithLength(10);
 
-				var convert = factory.Function(stringType, "CONVERT", new SqlDataType(stringType), dateExpression, factory.Value(101));
+				var convert = factory.Function(stringType, "CONVERT", ParametersNullabilityType.SameAsSecondParameter, new SqlDataType(stringType), dateExpression, factory.Value(101));
 				var cast    = factory.Cast(convert, translationContext.GetDbDataType(dateExpression));
 
 				return cast;
@@ -190,7 +211,7 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 			{
 				var factory = translationContext.ExpressionFactory;
 
-				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "GetDate");
+				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "GetDate", ParametersNullabilityType.NotNullable);
 			}
 		}
 
@@ -207,21 +228,6 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 			}
 		}
 
-		protected override IMemberTranslator CreateSqlTypesTranslator()
-		{
-			return new SqlTypesTranslation();
-		}
-
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new DateFunctionsTranslator();
-		}
-
-		protected override IMemberTranslator CreateMathMemberTranslator()
-		{
-			return new SqlCeMathMemberTranslator();
-		}
-
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			var factory  = translationContext.ExpressionFactory;
@@ -230,5 +236,20 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 			return timePart;
 		}
 
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				//"LOWER(CAST({0} AS char(36)))"
+
+				var factory        = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(36);
+
+				var cast  = factory.Cast(guidExpr, stringDataType);
+				var lower = factory.ToLower(cast);
+
+				return lower;
+			}
+		}
 	}
 }

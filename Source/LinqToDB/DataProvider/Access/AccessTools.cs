@@ -1,12 +1,14 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data.Common;
 using System.IO;
 using System.Security;
 
+using LinqToDB.Compatibility;
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Data;
-
 	/// <summary>
 	/// Contains Access provider management tools.
 	/// </summary>
@@ -32,17 +34,20 @@ namespace LinqToDB.DataProvider.Access
 
 		public static DataConnection CreateDataConnection(string connectionString, AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version), connectionString);
+			return new DataConnection(new DataOptions()
+				.UseConnectionString(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version), connectionString));
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, version), connection);
+			return new DataConnection(new DataOptions()
+				.UseConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, version), connection));
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction, AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, version), transaction);
+			return new DataConnection(new DataOptions()
+				.UseTransaction(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, version), transaction));
 		}
 
 		#endregion
@@ -91,8 +96,8 @@ namespace LinqToDB.DataProvider.Access
 		/// <remarks>
 		/// Provider value examples: Microsoft.Jet.OLEDB.4.0 (for JET database), Microsoft.ACE.OLEDB.12.0, Microsoft.ACE.OLEDB.15.0 (for ACE database).
 		/// </remarks>
-		// TODO: return in v7
-		[Obsolete("Use overload with 'AccessVersion version' argument")]
+		// TODO: Remove in v7
+		[Obsolete("Use overload with 'AccessVersion version' argument. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, string provider = "Microsoft.Jet.OLEDB.4.0")
 		{
 			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));

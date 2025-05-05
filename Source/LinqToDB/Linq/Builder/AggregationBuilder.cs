@@ -4,13 +4,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	[BuildsMethodCall("Average", "Min", "Max", "Sum", "Count", "LongCount")]
 	[BuildsMethodCall("AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync", 
 		CanBuildName = nameof(CanBuildAsyncMethod))]
@@ -290,14 +289,14 @@ namespace LinqToDB.Linq.Builder
 					valueExpression = new ContextRefExpression(returnType, groupByContext);
 				}
 
-				var convertedExpr = builder.BuildSqlExpression(groupByContext.SubQuery, valueExpression);
+				var convertedExpr = builder.BuildSqlExpression(groupByContext.SubQuery, valueExpression, BuildFlags.ForKeys | BuildFlags.ResetPrevious);
 
 				if (!SequenceHelper.IsSqlReady(convertedExpr))
 				{
 					return false;
 				}
 
-				var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(convertedExpr);
+				var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(convertedExpr, false);
 
 				if (placeholders.Count != 1)
 				{
@@ -579,7 +578,7 @@ namespace LinqToDB.Linq.Builder
 							if (!SequenceHelper.IsSqlReady(sqlExpr))
 								return BuildSequenceResult.Error(valueExpression);
 
-							var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
+							var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr, false);
 							if (placeholders.Count != 1)
 								return BuildSequenceResult.Error(valueExpression);
 
@@ -587,6 +586,7 @@ namespace LinqToDB.Linq.Builder
 
 							sql = valueSqlExpression;
 						}
+
 						break;
 					}
 					case AggregationType.Custom:

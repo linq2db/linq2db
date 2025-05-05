@@ -6,16 +6,16 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Async;
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Async;
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Reflection;
-	using SqlQuery;
-
 	partial class ExpressionBuilder
 	{
 		public static readonly ParameterExpression PreambleParam =
@@ -60,6 +60,7 @@ namespace LinqToDB.Linq.Builder
 						ctx.dependencies.Add(binary.Left);
 						return false;
 					}
+
 					if (binary.Right is ContextRefExpression)
 					{
 						ctx.dependencies.Add(binary.Right);
@@ -232,7 +233,8 @@ namespace LinqToDB.Linq.Builder
 			List<Preamble>         preambles,
 			Expression[]           previousKeys)
 		{
-			var cloningContext       = new CloningContext();
+			var cloningContext = new CloningContext();
+			cloningContext.CloneElements(buildContext.Builder.GetCteClauses());
 
 			var itemType = eagerLoad.Type.GetItemType();
 
@@ -279,9 +281,9 @@ namespace LinqToDB.Linq.Builder
 
 				var parameters = new object[] { detailSequence, queryParameter, preambles };
 
-				resultExpression = (Expression)_buildPreambleQueryDetachedMethodInfo
+				resultExpression = _buildPreambleQueryDetachedMethodInfo
 					.MakeGenericMethod(detailType)
-					.Invoke(this, parameters)!;
+					.InvokeExt<Expression>(this, parameters);
 			}
 			else
 			{
@@ -325,8 +327,9 @@ namespace LinqToDB.Linq.Builder
 
 				var detailSelectorBody = correctedSequence;
 
-				var detailSelector = (LambdaExpression)_buildSelectManyDetailSelectorInfo
-					.MakeGenericMethod(mainType, detailType).Invoke(null, new object[] { detailSelectorBody, mainParameter })!;
+				var detailSelector = _buildSelectManyDetailSelectorInfo
+					.MakeGenericMethod(mainType, detailType)
+					.InvokeExt<LambdaExpression>(null, new object[] { detailSelectorBody, mainParameter });
 
 				var selectManyCall =
 					Expression.Call(
@@ -343,9 +346,9 @@ namespace LinqToDB.Linq.Builder
 
 				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, preambles, orderByToApply, detailKeys };
 
-				resultExpression = (Expression)_buildPreambleQueryAttachedMethodInfo
+				resultExpression = _buildPreambleQueryAttachedMethodInfo
 					.MakeGenericMethod(mainKeyExpression.Type, detailType)
-					.Invoke(this, parameters)!;
+					.InvokeExt<Expression>(this, parameters);
 
 				_buildVisitor = saveVisitor;
 			}
@@ -470,7 +473,7 @@ namespace LinqToDB.Linq.Builder
 					eagerLoadingCache ??= new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 					if (!eagerLoadingCache.TryGetValue(eagerLoad.SequenceExpression, out var preambleExpression))
 					{
-						preamblesLocal     ??= new List<Preamble>();
+						preamblesLocal ??= [];
 
 						preambleExpression = ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
 						eagerLoadingCache.Add(eagerLoad.SequenceExpression, preambleExpression);

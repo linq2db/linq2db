@@ -6,6 +6,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
 
 namespace Tests.Extensions

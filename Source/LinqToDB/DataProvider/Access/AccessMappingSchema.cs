@@ -3,12 +3,12 @@ using System.Data.Linq;
 using System.Globalization;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
-
 	sealed class AccessMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
@@ -22,11 +22,13 @@ namespace LinqToDB.DataProvider.Access
 		AccessMappingSchema() : base(ProviderName.Access)
 		{
 			SetDataType(typeof(DateTime),  DataType.DateTime);
+			// in Access DECIMAL=DECIMAL(18,0)
+			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 18, 10));
 
 			SetValueToSqlConverter(typeof(bool),     (sb,_,_,v) => sb.Append((bool)v));
 			SetValueToSqlConverter(typeof(Guid),     (sb,_,_,v) => sb.Append(CultureInfo.InvariantCulture, $"'{(Guid)v:B}'"));
 			SetValueToSqlConverter(typeof(DateTime), (sb,_,_,v) => ConvertDateTimeToSql(sb, (DateTime)v));
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 #endif
 
@@ -79,7 +81,7 @@ namespace LinqToDB.DataProvider.Access
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
 		{
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
@@ -93,7 +95,12 @@ namespace LinqToDB.DataProvider.Access
 				// ODBC provider cannot handle this literal as:
 				// https://ftp.zx.net.nz/pub/archive/ftp.microsoft.com/MISC/KB/en-us/170/117.HTM
 				// Because ODBC defines the curly brace as an escape code for vendor specific escape clauses, you must turn off escape clause scanning when you use literal GUIDs in SQL statements with the Microsoft Access ODBC driver. Note that this functionality is not supported in the Microsoft Access ODBC driver that ships with MDAC 2.1 or later.
+#if NETFRAMEWORK
+				// NETFX format parser fails to digest format string (even v4.8)
+				SetValueToSqlConverter(typeof(Guid), (sb, _, _, v) => sb.Append('{').Append(CultureInfo.InvariantCulture, $"guid {(Guid)v:B}").Append('}'));
+#else
 				SetValueToSqlConverter(typeof(Guid), (sb, _, _, v) => sb.Append(CultureInfo.InvariantCulture, $"{{guid {(Guid)v:B}}}"));
+#endif
 			}
 		}
 

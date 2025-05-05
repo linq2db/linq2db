@@ -5,16 +5,16 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.Informix.Translation;
+using LinqToDB.Linq.Internal;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
-	using Data;
-	using Linq.Internal;
-	using Linq.Translation;
-	using Mapping;
-	using SqlProvider;
-	using Translation;
-
 	sealed class InformixDataProviderInformix : InformixDataProvider { public InformixDataProviderInformix() : base(ProviderName.Informix,    InformixProvider.Informix) {} }
 	sealed class InformixDataProviderDB2      : InformixDataProvider { public InformixDataProviderDB2()      : base(ProviderName.InformixDB2, InformixProvider.DB2     ) {} }
 
@@ -140,7 +140,7 @@ namespace LinqToDB.DataProvider.Informix
 					dataType = dataType.WithDataType(DataType.Char);
 				}
 			}
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			else if (value is DateOnly d)
 			{
 				value = d.ToDateTime(TimeOnly.MinValue);

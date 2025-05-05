@@ -4,18 +4,17 @@ using System.Linq;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
 
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class OrderByTests : TestBase
 	{
@@ -461,6 +460,33 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void OrderByAndGroupByConstant([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+
+				var qry =
+					from ch in db.Child
+					orderby ch.ChildID
+					select ch;
+
+				var query =
+					from ch in qry
+					group ch by 1 into g
+					select new
+					{
+						Count = g.Count(),
+						Expr  = 1 + g.Min(c => c.ChildID),
+						Max   = g.Max(c => c.ChildID),
+					};
+
+				query = query.Take(1);
+
+				AssertQuery(query);
+			}
+		}
+
+		[Test]
 		public void Min1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -515,7 +541,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void OrderByConstant([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -549,7 +574,6 @@ namespace Tests.Linq
 				Assert.That(db.LastQuery, Does.Not.Contain("ORDER BY"));
 			}
 		}
-
 
 		[Test]
 		public void OrderByIndex([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -708,6 +732,19 @@ namespace Tests.Linq
 			{
 				var ids = new int[]{ 1, 3 };
 				db.Person.Select(_ => new { _.ID, _.LastName, flag = ids.Contains(_.ID) }).OrderBy(_ => _.flag).ToList();
+			}
+		}
+
+		[Test]
+		public void OrderByBoolean([DataSources] string context, [Values] bool offlineBool)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person
+					.OrderBy(i => offlineBool && i.FirstName.Length > 1)
+					.ThenBy(i => !offlineBool && i.FirstName.Length > 4);
+
+				AssertQuery(query);
 			}
 		}
 

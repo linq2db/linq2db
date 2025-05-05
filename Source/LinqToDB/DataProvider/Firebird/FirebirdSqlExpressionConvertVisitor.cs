@@ -1,12 +1,12 @@
 ﻿using System;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Extensions;
-	using LinqToDB.Common;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class FirebirdSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public FirebirdSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
@@ -138,6 +138,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 						return ConvertSearchStringPredicateViaLike(predicate);
 					}
+
 					break;
 				}
 				default:
@@ -163,7 +164,8 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 			else if (cast.SystemType.ToUnderlying() == typeof(string) && cast.Expression.SystemType?.ToUnderlying() == typeof(Guid))
 			{
-				return new SqlFunction(cast.SystemType, "UUID_TO_CHAR", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, cast.Expression);
+				// TODO: think how to use FirebirdMemberTranslator.GuidMemberTranslator.TranslateGuildToString instead of code duplication here
+				return PseudoFunctions.MakeToLower(new SqlFunction(cast.SystemType, "UUID_TO_CHAR", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, cast.Expression));
 			}
 			else if (cast.SystemType.ToUnderlying() == typeof(Guid) && cast.Expression.SystemType?.ToUnderlying() == typeof(string))
 			{

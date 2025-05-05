@@ -4,13 +4,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Common;
-	using LinqToDB.Expressions;
-	using LinqToDB.Extensions;
-	using LinqToDB.SqlQuery;
-
 	static class TableLikeHelpers
 	{
 		public static string? GenerateColumnAlias(ISqlExpression sqlExpression)
@@ -158,7 +158,7 @@ namespace LinqToDB.Linq.Builder
 					var index = ctx.placeholders.IndexOf(placeholder);
 					if (index >= 0)
 					{
-						return ctx.newPlaceholders[index];
+						return ctx.newPlaceholders[index].WithType(e.Type);
 					}
 				}
 

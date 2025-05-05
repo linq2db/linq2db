@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.DataProvider;
+using LinqToDB.Interceptors;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using DataProvider;
-	using Interceptors;
-
 	/// <summary>
 	/// Linq To DB EF.Core data context.
 	/// </summary>
@@ -31,7 +31,7 @@ namespace LinqToDB.EntityFrameworkCore
 			IDataProvider                                                         dataProvider,
 			string                                                                connectionString,
 			IModel                                                                model,
-			Func<Expression, IDataContext, DbContext?, IModel, bool, Expression>? transformFunc) : base(dataProvider, connectionString)
+			Func<Expression, IDataContext, DbContext?, IModel, bool, Expression>? transformFunc) : base(new DataOptions().UseConnectionString(dataProvider, connectionString))
 		{
 			_context       = context;
 			_model         = model;

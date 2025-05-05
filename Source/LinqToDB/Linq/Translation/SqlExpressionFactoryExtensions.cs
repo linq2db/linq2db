@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Translation
 	{
 		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] parameters)
 		{
-			return factory.Fragment(dataType, Precedence.Primary, fragmentText, parameters);
+			return factory.Fragment(dataType, Precedence.Primary, fragmentText, null, parameters);
 		}
 
 		public static ISqlExpression NotNullFragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] parameters)
@@ -25,6 +25,11 @@ namespace LinqToDB.Linq.Translation
 		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, params ISqlExpression[] parameters)
 		{
 			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.Undefined, null, parameters);
+		}
+
+		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, bool? canBeNull, params ISqlExpression[] parameters)
+		{
+			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.Undefined, canBeNull, parameters);
 		}
 
 		public static ISqlExpression NotNullFragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, params ISqlExpression[] parameters)
@@ -47,6 +52,11 @@ namespace LinqToDB.Linq.Translation
 			return new SqlPredicate.Expr(expression);
 		}
 
+		public static ISqlPredicate IsNullPredicate(this ISqlExpressionFactory factory, ISqlExpression expression, bool isNot = false)
+		{
+			return new SqlPredicate.IsNull(expression, isNot);
+		}
+
 		public static SqlSearchCondition SearchCondition(this ISqlExpressionFactory factory, bool isOr = false)
 		{
 			return new SqlSearchCondition(isOr);
@@ -65,6 +75,11 @@ namespace LinqToDB.Linq.Translation
 		public static ISqlExpression Value<T>(this ISqlExpressionFactory factory, T value)
 		{
 			return factory.Value(factory.GetDbDataType(typeof(T)), value);
+		}
+
+		public static ISqlExpression NotNull(this ISqlExpressionFactory factory, ISqlExpression expression)
+		{
+			return new SqlNullabilityExpression(expression, false);
 		}
 
 		public static ISqlExpression Cast(this ISqlExpressionFactory factory, ISqlExpression expression, DbDataType toDbDataType, bool isMandatory = false)
@@ -108,7 +123,7 @@ namespace LinqToDB.Linq.Translation
 
 		public static ISqlExpression Sub(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
-			return new SqlBinaryExpression(dbDataType, x, "-", y, Precedence.Additive);
+			return new SqlBinaryExpression(dbDataType, x, "-", y, Precedence.Subtraction);
 		}
 
 		public static ISqlExpression Add(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
@@ -150,7 +165,7 @@ namespace LinqToDB.Linq.Translation
 
 		public static ISqlExpression Concat(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
-			return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Additive);
+			return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Concatenate);
 		}
 
 		public static ISqlExpression Concat(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string value)
@@ -161,7 +176,7 @@ namespace LinqToDB.Linq.Translation
 		public static ISqlExpression Concat(this ISqlExpressionFactory factory, ISqlExpression x, string value)
 		{
 			var dbDataType = factory.GetDbDataType(x);
-			return new SqlBinaryExpression(dbDataType, x, "+", factory.Value(dbDataType, value), Precedence.Additive);
+			return new SqlBinaryExpression(dbDataType, x, "+", factory.Value(dbDataType, value), Precedence.Concatenate);
 		}
 
 		public static ISqlExpression Increment<T>(this ISqlExpressionFactory factory, ISqlExpression x, T value)
@@ -213,6 +228,20 @@ namespace LinqToDB.Linq.Translation
 
 			return factory.Cast(expression, dbDataType);
 		}
+
+		#region String functions
+
+		public static ISqlExpression ToLower(this ISqlExpressionFactory factory, ISqlExpression expression)
+		{
+			return factory.Function(factory.GetDbDataType(expression), PseudoFunctions.TO_LOWER, expression);
+		}
+
+		public static ISqlExpression ToUpper(this ISqlExpressionFactory factory, ISqlExpression expression)
+		{
+			return factory.Function(factory.GetDbDataType(expression), PseudoFunctions.TO_UPPER, expression);
+		}
+
+		#endregion
 
 		#region Predicates
 

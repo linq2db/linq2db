@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
+using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Data;
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
-	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
-
 	internal partial class MergeBuilder
 	{
 		[BuildsMethodCall(nameof(LinqExtensions.InsertWhenNotMatchedAnd))]
@@ -47,9 +47,11 @@ namespace LinqToDB.Linq.Builder
 						EntityConstructorBase.FullEntityPurpose.Insert);
 				}
 
-				var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
+				var setterExpressions    = new List<UpdateBuilder.SetExpressionEnvelope>();
+				var targetRef = mergeContext.SourceContext.TargetContextRef.WithType(setterExpression.Type);
+				var sourceRef = mergeContext.SourceContext.SourceContextRef.WithType(setterExpression.Type);
 				UpdateBuilder.ParseSetter(builder,
-					mergeContext.SourceContext.TargetContextRef.WithType(setterExpression.Type), setterExpression,
+					targetRef, sourceRef, setterExpression,
 					setterExpressions);
 				UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, createColumns : false);
 

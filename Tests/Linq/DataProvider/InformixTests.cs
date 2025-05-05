@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Data.Linq;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -11,13 +10,14 @@ using LinqToDB.Mapping;
 
 #if NETFRAMEWORK
 using IBM.Data.Informix;
+
 #endif
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class InformixTests : DataProviderTestBase
 	{
@@ -50,7 +50,7 @@ namespace Tests.DataProvider
 					Assert.That(TestType<float?>(conn, "realDataType", DataType.Single), Is.EqualTo(20.31f));
 					Assert.That(TestType<double?>(conn, "floatDataType", DataType.Double), Is.EqualTo(16.2d));
 
-					Assert.That(TestType<bool?>(conn, "boolDataType", DataType.Boolean), Is.EqualTo(true));
+					Assert.That(TestType<bool?>(conn, "boolDataType", DataType.Boolean), Is.True);
 
 					Assert.That(TestType<string>(conn, "charDataType", DataType.Char), Is.EqualTo("1"));
 					Assert.That(TestType<string>(conn, "varcharDataType", DataType.VarChar), Is.EqualTo("234"));

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq.Expressions;
+
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SQLite.Translation
 {
-	using Common;
-	using SqlQuery;
-	using Linq.Translation;
-
 	public class SQLiteMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		class SqlTypesTranslation : SqlTypesTranslationDefault
@@ -21,6 +22,11 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
 		}
 
 		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
@@ -148,6 +154,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 					var formatStr = "%0" + padSize.ToString(CultureInfo.InvariantCulture) + "d";
 
 					return factory.Function(stringDataType, "printf",
+						ParametersNullabilityType.NotNullable,
 						factory.Value(stringDataType, formatStr),
 						expression);
 				}
@@ -192,6 +199,48 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 				var resultExpression = factory.Function(factory.GetDbDataType(typeof(TimeSpan)), StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(TimeFormat), dateExpression);
 
 				return resultExpression;
+			}
+		}
+
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// 	lower((substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12)))
+
+				var factory      = translationContext.ExpressionFactory;
+				var stringDbType = factory.GetDbDataType(typeof(string));
+				var hexExpr      = factory.Function(stringDbType, "hex", guidExpr);
+
+				var dividerExpr = factory.Value(stringDbType, "-");
+
+				var resultExpression = factory.ToLower(
+					factory.Concat(
+						SubString(hexExpr, 7, 2),
+						SubString(hexExpr, 5, 2),
+						SubString(hexExpr, 3, 2),
+						SubString(hexExpr, 1, 2),
+						dividerExpr,
+						SubString(hexExpr, 11, 2),
+						SubString(hexExpr, 9,  2),
+						dividerExpr,
+						SubString(hexExpr, 15, 2),
+						SubString(hexExpr, 13, 2),
+						dividerExpr,
+						SubString(hexExpr, 17, 4),
+						dividerExpr,
+						SubString(hexExpr, 21, 12)
+					)
+				);
+
+				resultExpression = factory.Condition(factory.IsNullPredicate(guidExpr), factory.Value<string?>(stringDbType, null), factory.NotNull(resultExpression));
+
+				return resultExpression; 
+
+				ISqlExpression SubString(ISqlExpression expression, int pos, int length)
+				{
+					return factory.Function(stringDbType, "substr", expression, factory.Value(pos), factory.Value(length));
+				}
 			}
 		}
 	}

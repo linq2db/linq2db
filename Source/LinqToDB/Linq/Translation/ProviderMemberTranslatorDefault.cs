@@ -2,14 +2,13 @@
 using System.Globalization;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Translation
 {
-	using Common;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	public abstract class ProviderMemberTranslatorDefault : MemberTranslatorBase
 	{
 		protected virtual IMemberTranslator CreateSqlTypesTranslator()
@@ -27,6 +26,11 @@ namespace LinqToDB.Linq.Translation
 		protected virtual IMemberTranslator CreateStringMemberTranslator()
 		{
 			return new StringMemberTranslatorBase();
+		}
+
+		protected virtual IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslatorBase();
 		}
 
 		protected ProviderMemberTranslatorDefault()
@@ -52,6 +56,7 @@ namespace LinqToDB.Linq.Translation
 			CombinedMemberTranslator.Add(CreateDateMemberTranslator());
 			CombinedMemberTranslator.Add(CreateMathMemberTranslator());
 			CombinedMemberTranslator.Add(CreateStringMemberTranslator());
+			CombinedMemberTranslator.Add(CreateGuidMemberTranslator());
 		}
 
 		protected SqlPlaceholderExpression? TranslateNoRequiredObjectExpression(ITranslationContext translationContext, Expression? objExpression, TranslationFlags translationFlags)

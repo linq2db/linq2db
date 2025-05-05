@@ -1,59 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
+
+using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
+
 using NUnit.Framework;
-using FluentAssertions;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using Model;
-
 	public class CteTests : TestBase
 	{
-		public static string[] CteSupportedProviders = new[]
-		{
-			TestProvName.AllSqlServer,
-			TestProvName.AllFirebird,
-			TestProvName.AllPostgreSQL,
-			ProviderName.DB2,
-			TestProvName.AllSQLite,
-			TestProvName.AllOracle,
-			TestProvName.AllClickHouse,
-			TestProvName.AllMySqlWithCTE,
-			TestProvName.AllInformix,
-			TestProvName.AllSapHana,
-		}.SelectMany(_ => _.Split(',')).ToArray();
-
-		public class CteContextSourceAttribute : IncludeDataSourcesAttribute
-		{
-			public CteContextSourceAttribute() : this(true)
-			{
-			}
-
-			public CteContextSourceAttribute(bool includeLinqService)
-				: base(includeLinqService, CteSupportedProviders)
-			{
-			}
-
-			public CteContextSourceAttribute(params string[] excludedProviders)
-				: base(CteSupportedProviders.Except(excludedProviders.SelectMany(_ => _.Split(','))).ToArray())
-			{
-			}
-
-			public CteContextSourceAttribute(bool includeLinqService, params string[] excludedProviders)
-				: base(includeLinqService, CteSupportedProviders.Except(excludedProviders.SelectMany(_ => _.Split(','))).ToArray())
-			{
-			}
-		}
-
 		[Test]
 		public void Test1([CteContextSource] string context)
 		{
@@ -163,18 +126,6 @@ namespace Tests.Linq
 
 				AreSame(expected, result);
 			}
-		}
-
-		static IQueryable<TSource> RemoveCte<TSource>(IQueryable<TSource> source)
-		{
-			var newExpr = source.Expression.Transform<object?>(null, static (_, e) =>
-			{
-				if (e is MethodCallExpression methodCall && methodCall.Method.Name == "AsCte")
-					return methodCall.Arguments[0];
-				return e;
-			});
-
-			return source.Provider.CreateQuery<TSource>(newExpr);
 		}
 
 		[Test]
@@ -291,7 +242,6 @@ namespace Tests.Linq
 				AreEqual(expected, result);
 			}
 		}
-
 
 		[Test]
 		public void EmployeeSubordinatesReport([NorthwindDataContext] string context)
@@ -473,7 +423,6 @@ namespace Tests.Linq
 						Count = Sql.Ext.Count().ToValue()
 					};
 
-
 				var expected = Child
 					.Where(c => c.ParentID > 1)
 					.Select(child => new
@@ -481,7 +430,6 @@ namespace Tests.Linq
 						child.ParentID,
 						child.ChildID
 					}).Distinct().Count();
-
 
 				var actual = query.AsEnumerable().Select(c => c.Count).First();
 
@@ -554,7 +502,7 @@ namespace Tests.Linq
 
 				query.ToArray();
 
-				Assert.That(str.Contains("WITH"), Is.EqualTo(true));
+				Assert.That(str, Does.Contain("WITH"));
 			}
 		}
 
@@ -989,7 +937,6 @@ namespace Tests.Linq
 				var query1_ = simpleQuery_.Union(cte1_);
 				var query2_ = cte1_.Union(simpleQuery_);
 
-
 				AreEqual(query1_, query1);
 				AreEqual(query2_, query2);
 			}
@@ -1098,7 +1045,6 @@ namespace Tests.Linq
 
 			}
 		}
-
 
 		class NestingA
 		{
@@ -1267,8 +1213,6 @@ namespace Tests.Linq
 			if (db is TestDataConnection cn)
 				cn.LastQuery!.Should().Contain("SELECT", Exactly.Times(4));
 		}
-
-
 
 		public record class  Issue3357RecordClass (int Id, string FirstName, string LastName);
 		public class Issue3357RecordLike
@@ -1626,6 +1570,34 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
+		[Sql.Expression("CAST({0} AS VARCHAR({1}))", ServerSideOnly = true, IsNullable = Sql.IsNullableType.Nullable, IgnoreGenericParameters = true)]
+		static T VarChar<T>(T value, int size)
+		{
+			throw new ServerSideOnlyException(nameof(VarChar));
+		}
+
+		private sealed record Issue3360_TypedNullEnumInAnchorProjection(int Id, StrEnum? Value);
+
+		[Test(Description = "Test CTE columns typing")]
+		public void Issue3360_TypedNullEnumInAnchor([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();
+
+			var query = from node in db.GetCte<Issue3360_TypedNullEnumInAnchorProjection>(cte =>
+			{
+				return db.GetTable<Issue3360NullInAnchor>().Select(p => new Issue3360_TypedNullEnumInAnchorProjection(p.Id, VarChar<StrEnum?>(null, 10)))
+				.Concat(
+					from p in db.GetTable<Issue3360NullInAnchor>()
+					select new Issue3360_TypedNullEnumInAnchorProjection(p.Id, VarChar(StrEnum.One, 10))
+					);
+			})
+				select new Issue3360_TypedNullEnumInAnchorProjection(node.Id, node.Value);
+			;
+
+			query.ToArray();
+		}
+
 		#region InvalidColumnIndexMapping issue
 		public enum InvalidColumnIndexMappingEnum1
 		{
@@ -1769,8 +1741,8 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid2));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(true));
-				Assert.That(data[1].BoolN, Is.EqualTo(false));
+				Assert.That(data[1].Bool, Is.True);
+				Assert.That(data[1].BoolN, Is.False);
 			});
 		}
 
@@ -1806,8 +1778,8 @@ namespace Tests.Linq
 				Assert.That(data[0].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[0].Enum, Is.Null);
 				Assert.That(data[0].EnumN, Is.Null);
-				Assert.That(data[0].Bool, Is.EqualTo(true));
-				Assert.That(data[0].BoolN, Is.EqualTo(true));
+				Assert.That(data[0].Bool, Is.True);
+				Assert.That(data[0].BoolN, Is.True);
 
 				Assert.That(data[1].Id, Is.EqualTo(4));
 				Assert.That(data[1].Byte, Is.EqualTo(3));
@@ -1816,8 +1788,8 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(false));
-				Assert.That(data[1].BoolN, Is.EqualTo(true));
+				Assert.That(data[1].Bool, Is.False);
+				Assert.That(data[1].BoolN, Is.True);
 			});
 		}
 
@@ -1853,8 +1825,8 @@ namespace Tests.Linq
 				Assert.That(data[0].GuidN, Is.EqualTo(new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE30")));
 				Assert.That(data[0].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[0].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[0].Bool, Is.EqualTo(true));
-				Assert.That(data[0].BoolN, Is.EqualTo(false));
+				Assert.That(data[0].Bool, Is.True);
+				Assert.That(data[0].BoolN, Is.False);
 
 				Assert.That(data[1].Id, Is.EqualTo(4));
 				Assert.That(data[1].Byte, Is.EqualTo(3));
@@ -1863,8 +1835,8 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(false));
-				Assert.That(data[1].BoolN, Is.EqualTo(true));
+				Assert.That(data[1].Bool, Is.False);
+				Assert.That(data[1].BoolN, Is.True);
 			});
 		}
 
@@ -2561,6 +2533,51 @@ namespace Tests.Linq
 			Assert.That(result, Has.Length.EqualTo(2));
 			Assert.That(result, Contains.Item(1));
 			Assert.That(result, Contains.Item(null));
+		}
+
+		sealed record SequenceBuildFailedRecord(int Id);
+
+		[Test]
+		public void Issue_SequenceBuildFailed_1([CteContextSource(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.GetCte<SequenceBuildFailedRecord>(cte =>
+			{
+				return db.Person.Select(s => new SequenceBuildFailedRecord(s.Patient!.PersonID))
+					.Concat(
+						from r in cte
+						join p in db.Patient on r.Id equals p.PersonID + 1
+						select new SequenceBuildFailedRecord(p.PersonID));
+			});
+
+			var query = 
+				from r in cte
+				join p in db.Patient on r.Id equals p.PersonID
+				select new
+				{
+					Values = db.Person.Where(a => a.ID == r.Id).ToArray()
+				};
+
+			var result = query.ToArray();
+		}
+
+		[Test]
+		public void Issue_SequenceBuildFailed_2([CteContextSource(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Person.Select(s => new { s.Patient!.PersonID }).AsCte();
+
+			var query = 
+				from r in cte
+				join p in db.Patient on r.PersonID equals p.PersonID
+				select new
+				{
+					Values = db.Person.Where(a => a.ID == r.PersonID).ToArray()
+				};
+
+			var result = query.ToArray();
 		}
 	}
 }

@@ -112,7 +112,6 @@
 			"PrintFmt", "IsComputed", "IsOutParam", "IsNullable", "TextType", "DepID", "Number", "Admin",
 			"SiteID", "ResultObj", "ReadObj", "Policy", "FKeyID", "RKeyID", "FKey", "RKey", "KeyNo", "FTCatID",
 			"MinLen", "KeyCnt", "RowCnt", "DPages", "Months", "IDUsed", "StopWord", "FileTable",
-
 		};
 
 		var columnReplacement = new[]

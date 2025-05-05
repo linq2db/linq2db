@@ -5,13 +5,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	[BuildsMethodCall("Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll")]
 	internal sealed class SetOperationBuilder : MethodCallBuilder
 	{
@@ -1203,7 +1202,6 @@ namespace LinqToDB.Linq.Builder
 
 					projected = Builder.BuildExtractExpression(context, projected);
 
-
 					var lambdaResolver = new LambdaResolveVisitor(context, BuildPurpose.Sql, true);
 					projected = lambdaResolver.Visit(projected);
 
@@ -1232,7 +1230,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				var cloned = new SetOperationContext(_setOperation, context.CloneElement(SelectQuery),
 					context.CloneContext(_sequence1), context.CloneContext(_sequence2),
-					context.CloneExpression(_methodCall));
+					context.CloneExpression(_methodCall))
+				{
+					LoadWithRoot = LoadWithRoot
+				};
 
 				// for correct updating self-references below
 				context.RegisterCloned(this, cloned);
@@ -1300,8 +1301,7 @@ namespace LinqToDB.Linq.Builder
 				return SubQuery;
 			}
 
-			public LoadWithInfo  LoadWithRoot { get; set; } = new();
-			public MemberInfo[]? LoadWithPath { get; set; }
+			public LoadWithEntity? LoadWithRoot { get; set; }
 		}
 
 		#endregion

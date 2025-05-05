@@ -1,12 +1,10 @@
-﻿using System;
+﻿using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class Oracle11SqlOptimizer : BasicSqlOptimizer
 	{
 		public Oracle11SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
@@ -55,6 +53,7 @@ namespace LinqToDB.DataProvider.Oracle
 						if (IsTextType(b, mappingSchema) && b.CanBeEvaluated(true))
 							return true;
 					}
+
 					break;
 				}
 			}
@@ -94,8 +93,12 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					if (query.Select.TakeValue == null && query.Select.SkipValue == null)
 						return 0;
+
 					if (query.Select.SkipValue != null)
 						return 2;
+
+					if (QueryHelper.IsAggregationQuery(query))
+						return 1;
 
 					if (query.Select.TakeValue != null && query.Select.OrderBy.IsEmpty && query.GroupBy.IsEmpty && !query.Select.IsDistinct)
 					{

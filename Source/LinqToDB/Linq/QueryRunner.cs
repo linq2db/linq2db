@@ -11,22 +11,22 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Common.Internal.Cache;
+using LinqToDB.Common.Logging;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Interceptors;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 namespace LinqToDB.Linq
 {
-	using Builder;
-	using Common;
-	using Common.Internal.Cache;
-	using Common.Logging;
-	using Data;
-	using Extensions;
-	using Infrastructure;
-	using Interceptors;
-	using LinqToDB.Common.Internal;
-	using LinqToDB.Expressions;
-	using Reflection;
-	using SqlQuery;
-	using Tools;
-
 	static partial class QueryRunner
 	{
 		public static class Cache<T>
@@ -80,7 +80,7 @@ namespace LinqToDB.Linq
 
 			public T Map(IDataContext context, IQueryRunner queryRunner, DbDataReader dataReader, ref ReaderMapperInfo mapperInfo)
 			{
-				var a = Configuration.TraceMaterializationActivity ? ActivityService.Start(ActivityID.Materialization) : null;
+				var a = Common.Configuration.TraceMaterializationActivity ? ActivityService.Start(ActivityID.Materialization) : null;
 
 				try
 				{
@@ -180,7 +180,6 @@ namespace LinqToDB.Linq
 						return e;
 					});
 
-
 				if (slowMode)
 				{
 					expression = expression.Transform(
@@ -188,7 +187,7 @@ namespace LinqToDB.Linq
 						static (context, e) =>
 						{
 							if (e is ConvertFromDataReaderExpression ex)
-								return new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, context.NewVariable!, context.Context).Reduce();
+								return new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, ex.DataContextParam, context.NewVariable!, context.Context).Reduce();
 
 							return ReplaceVariable(context, e);
 						});
@@ -206,7 +205,7 @@ namespace LinqToDB.Linq
 						});
 				}
 
-				if (Configuration.OptimizeForSequentialAccess)
+				if (Common.Configuration.OptimizeForSequentialAccess)
 					expression = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expression, dataReader.FieldCount, reduce: false);
 
 				return (Expression<Func<IQueryRunner, DbDataReader, T>>)expression;
@@ -512,7 +511,7 @@ namespace LinqToDB.Linq
 					}
 
 					var mapperInfo   = _mapper.GetMapperInfo(_dataContext, runner, origDataReader);
-					var traceMapping = Configuration.TraceMaterializationActivity;
+					var traceMapping = Common.Configuration.TraceMaterializationActivity;
 
 					do
 					{
@@ -577,7 +576,7 @@ namespace LinqToDB.Linq
 						}
 
 						var mapperInfo   = _mapper.GetMapperInfo(_dataContext, runner, origDataReader);
-						var traceMapping = Configuration.TraceMaterializationActivity;
+						var traceMapping = Common.Configuration.TraceMaterializationActivity;
 
 						do
 						{
@@ -651,6 +650,7 @@ namespace LinqToDB.Linq
 		static readonly PropertyInfo _preamblesInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.Preambles);
 
 		public static readonly PropertyInfo RowsCountInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.RowsCount);
+		public static readonly PropertyInfo DataContextInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.DataContext);
 
 		static Expression<Func<IQueryRunner, DbDataReader, T>> WrapMapper<T>(
 			Expression<Func<IQueryRunner,IDataContext, DbDataReader, IQueryExpressions, object?[]?,object?[]?,T>> expression)

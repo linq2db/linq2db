@@ -1,11 +1,9 @@
-﻿using System;
+﻿using LinqToDB.Extensions;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using LinqToDB.Extensions;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class SqlServerSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		readonly SqlServerVersion _sqlServerVersion;
@@ -75,7 +73,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				if (subStrPredicate != null)
 				{
-					var result = new SqlSearchCondition(predicate.IsNot, 
+					var result = new SqlSearchCondition(predicate.IsNot,
 						like,
 						subStrPredicate.MakeNot(predicate.IsNot));
 

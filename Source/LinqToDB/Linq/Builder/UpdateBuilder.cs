@@ -5,14 +5,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	[BuildsMethodCall(
 		nameof(LinqExtensions.Update), 
 		nameof(LinqExtensions.UpdateWithOutput), 
@@ -141,8 +141,9 @@ namespace LinqToDB.Linq.Builder
 					objectType                  = genericArguments[0];
 
 					var targetRef = new ContextRefExpression(objectType, updateContext.TargetTable);
+					var sourceRef = SequenceHelper.CreateRef(sequence);
 
-					ParseSetter(builder, targetRef, setterExpr, updateContext.SetExpressions);
+					ParseSetter(builder, targetRef, sourceRef, setterExpr, updateContext.SetExpressions);
 
 					outputExpression = RewriteOutputExpression(outputExpression);
 
@@ -233,8 +234,9 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					var targetRef = new ContextRefExpression(objectType, updateContext.TargetTable);
+					var sourceRef = SequenceHelper.CreateRef(sequence);
 
-					ParseSetter(builder, targetRef, setterExpr, updateContext.SetExpressions);
+					ParseSetter(builder, targetRef, sourceRef, setterExpr, updateContext.SetExpressions);
 
 					break;
 				}
@@ -289,8 +291,9 @@ namespace LinqToDB.Linq.Builder
 
 				var outputBody = SequenceHelper.PrepareBody(outputExpression, sequence, deletedContext, insertedContext);
 
+				var sourceRef         = SequenceHelper.CreateRef(sequence);
 				var outputExpressions = new List<SetExpressionEnvelope>();
-				ParseSetter(builder, destinationRef, outputBody, outputExpressions);
+				ParseSetter(builder, destinationRef, sourceRef, outputBody, outputExpressions);
 
 				InitializeSetExpressions(builder, destinationContext, sequence, outputExpressions, updateStatement.Output.OutputItems, false);
 
@@ -352,15 +355,15 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext insertedContext;
 			if (targetTableContext is CteTableContext cteTable)
 			{
-				insertedContext = new CteTableContext(builder, null,
+				insertedContext = new CteTableContext(builder.GetTranslationModifier(), builder, null,
 					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext);
-				deletedContext = new CteTableContext(builder, null,
+				deletedContext = new CteTableContext(builder.GetTranslationModifier(), builder, null,
 					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext);
 			}
 			else
 			{
-				insertedContext = new TableBuilder.TableContext(builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
-				deletedContext  = new TableBuilder.TableContext(builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
+				insertedContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
+				deletedContext  = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
 			}
 
 			outputContext = deletedContext;
@@ -539,6 +542,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal static void ParseSet(
 			ContextRefExpression        targetRef,
+			ContextRefExpression        sourceRef,
 			Expression                  fieldExpression,
 			Expression                  valueExpression,
 			List<SetExpressionEnvelope> envelopes,
@@ -550,6 +554,7 @@ namespace LinqToDB.Linq.Builder
 		internal static void ParseSetter(
 			ExpressionBuilder           builder,
 			ContextRefExpression        targetRef,
+			ContextRefExpression        sourceRef,
 			Expression                  setterExpression,
 			List<SetExpressionEnvelope> envelopes)
 		{
@@ -557,7 +562,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (correctedSetter is not SqlGenericConstructorExpression)
 			{
-				correctedSetter = builder.BuildSqlExpression(targetRef.BuildContext, correctedSetter);
+				correctedSetter = builder.BuildSqlExpression(sourceRef.BuildContext, correctedSetter);
 			}
 
 			if (correctedSetter is SqlGenericConstructorExpression generic)
@@ -566,7 +571,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var memberAccess = Expression.MakeMemberAccess(targetRef, assignment.MemberInfo);
 
-					ParseSet(builder, targetRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
+					ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
 				}
 			}
 			else
@@ -765,7 +770,7 @@ namespace LinqToDB.Linq.Builder
 						if (sqlExpr is SqlPlaceholderExpression)
 							outputExpressions.Add(new SetExpressionEnvelope(sqlExpr, sqlExpr, false));
 						else
-							ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
+							ParseSetter(Builder, outputRef, outputRef, sqlExpr, outputExpressions);
 
 						var setItems = new List<SqlSetExpression>();
 						InitializeSetExpressions(Builder, selectContext, selectContext, outputExpressions, setItems, false);

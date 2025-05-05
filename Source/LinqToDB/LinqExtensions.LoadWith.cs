@@ -9,12 +9,11 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
+
 namespace LinqToDB
 {
-	using Async;
-	using Linq;
-	using Linq.Builder;
-
 	public partial class LinqExtensions
 	{
 		/// <summary>
@@ -767,8 +766,7 @@ namespace LinqToDB
 		[Pure]
 		internal static TSource LoadWithInternal<TSource>(
 			this TSource             source,
-			LoadWithInfo             loadWith,
-			MemberInfo[]?            loadWithPath)
+			LoadWithEntity           loadWith)
 			where TSource : class
 		{
 			return source;

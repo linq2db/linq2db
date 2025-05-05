@@ -1,2 +1,4 @@
-<#@ include file="LinqToDB.Tools.ttinclude" once="true" #>
-<#@ include file="LinqToDB.DB2.ttinclude"   once="true" #>
+<#@ include file="$(LinqToDBT4DB2TemplatesPath)LinqToDB.DB2.ttinclude" once="true" #>
+<#+
+#warning 'LinqToDB.DB2.Tools.ttinclude' is obsolete. Use 'LinqToDB.DB2.ttinclude' instead.
+#>

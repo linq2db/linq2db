@@ -3,12 +3,11 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Access.Translation
 {
-	using Linq.Translation;
-
 	public class AccessMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		class SqlTypesTranslation : SqlTypesTranslationDefault
@@ -118,8 +117,9 @@ namespace LinqToDB.DataProvider.Access.Translation
 						}
 
 						return factory.Function(stringDataType, "Format",
+							ParametersNullabilityType.SameAsFirstParameter,
 							expression,
-							factory.Function(stringDataType, "String", factory.Value(stringDataType, "0"), factory.Value(intDataType, padSize))
+							factory.Function(stringDataType, "String", ParametersNullabilityType.NotNullable, factory.Value(stringDataType, "0"), factory.Value(intDataType, padSize))
 						);
 					}
 
@@ -245,6 +245,22 @@ namespace LinqToDB.DataProvider.Access.Translation
 
 		}
 
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// LCase(Mid(CStr({0}), 2, 36))
+
+				var factory      = translationContext.ExpressionFactory;
+				var stringDbType = factory.GetDbDataType(typeof(string));
+
+				var cStrExpression = factory.Function(stringDbType, "CStr", guidExpr);
+				var midExpression  = factory.Function(stringDbType, "Mid", cStrExpression, factory.Value(2), factory.Value(36));
+				var toLower        = factory.ToLower(midExpression);
+
+				return toLower;
+			}
+		}
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -259,6 +275,11 @@ namespace LinqToDB.DataProvider.Access.Translation
 		protected override IMemberTranslator CreateMathMemberTranslator()
 		{
 			return new MathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
 		}
 	}
 }

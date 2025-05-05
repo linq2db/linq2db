@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Data;
+using LinqToDB.Tools;
+
 using AsyncDisposableWrapper = LinqToDB.Tools.ActivityService.AsyncDisposableWrapper;
 
 namespace LinqToDB.Async
 {
-	using Data;
-	using Tools;
-
 	/// <summary>
 	/// Basic <see cref="IAsyncDbTransaction"/> implementation with fallback to synchronous operations if corresponding functionality
 	/// missing from <see cref="DbTransaction"/>.
@@ -42,7 +42,7 @@ namespace LinqToDB.Async
 
 		public virtual Task CommitAsync(CancellationToken cancellationToken)
 		{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionCommitAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 
 			if (a is null)
@@ -65,7 +65,7 @@ namespace LinqToDB.Async
 
 		public virtual Task RollbackAsync(CancellationToken cancellationToken)
 		{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionRollbackAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 
 			if (a is null)

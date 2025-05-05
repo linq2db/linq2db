@@ -5,12 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	sealed class FirebirdSchemaProvider : SchemaProviderBase
 	{
 		private readonly FirebirdDataProvider _provider;
@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = dataConnection.Connection.GetSchema("Tables");
+			var tables = dataConnection.OpenDbConnection().GetSchema("Tables");
 
 			return
 			(
@@ -52,7 +52,7 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var pks = dataConnection.Connection.GetSchema("PrimaryKeys");
+			var pks = dataConnection.OpenDbConnection().GetSchema("PrimaryKeys");
 
 			return
 			(
@@ -69,7 +69,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tcs  = dataConnection.Connection.GetSchema("Columns");
+			var tcs  = dataConnection.OpenDbConnection().GetSchema("Columns");
 
 			return
 			(
@@ -98,7 +98,7 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var cols = dataConnection.Connection.GetSchema("ForeignKeyColumns");
+			var cols = dataConnection.OpenDbConnection().GetSchema("ForeignKeyColumns");
 
 			return
 			(
@@ -416,6 +416,7 @@ FROM RDB$FUNCTION_ARGUMENTS p
 				// decfloat(34)
 				dataTypes.Add(new DataTypeInfo { ProviderSpecific = true, TypeName = "decfloat", DataType = $"{FirebirdProviderAdapter.TypesNamespace}.FbDecFloat", CreateFormat = null, ProviderDbType = 22 });
 			}
+
 			if (!knownTypes.Contains("timestamp with time zone"))
 			{
 				// tstz
@@ -423,6 +424,7 @@ FROM RDB$FUNCTION_ARGUMENTS p
 				// tstzEx
 				dataTypes.Add(new DataTypeInfo { ProviderSpecific = true, TypeName = "timestamp with time zone", DataType = $"{FirebirdProviderAdapter.TypesNamespace}.FbZonedDateTime", ProviderDbType = 18 });
 			}
+
 			if (!knownTypes.Contains("time with time zone"))
 			{
 				//ttz

@@ -5,14 +5,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	sealed class PostgreSQLBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
@@ -81,7 +80,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			DataConnection dataConnection, ITable<T> table, DataOptions options, IEnumerable<T> source)
 			where T : notnull
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.OpenDbConnection());
 
 			if (connection == null)
 				return MultipleRowsCopy(table, options, source);
@@ -169,6 +168,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							// reset date
 							value = new DateTimeOffset(1, 1, 1, 0, 0, 0, dto.Offset) + dto.TimeOfDay;
 						}
+
 						if (npgsqlTypes[i] != null)
 							writer.Write(value, npgsqlTypes[i]!.Value);
 						else
@@ -246,7 +246,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			CancellationToken cancellationToken)
 			where T : notnull
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+			var connection = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 
 			if (connection == null)
 				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
@@ -295,6 +295,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							// reset date
 							value = new DateTimeOffset(1, 1, 1, 0, 0, 0, dto.Offset) + dto.TimeOfDay;
 						}
+
 						if (npgsqlTypes[i] != null)
 							await writer.WriteAsync(value, npgsqlTypes[i]!.Value, cancellationToken).ConfigureAwait(false);
 						else
@@ -366,7 +367,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			CancellationToken   cancellationToken)
 		where T: notnull
 		{
-			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+			var connection = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 
 			if (connection == null)
 				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
@@ -417,6 +418,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							// reset date
 							value = new DateTimeOffset(1, 1, 1, 0, 0, 0, dto.Offset) + dto.TimeOfDay;
 						}
+
 						if (npgsqlTypes[i] != null)
 							await writer.WriteAsync(value, npgsqlTypes[i]!.Value, cancellationToken).ConfigureAwait(false);
 						else

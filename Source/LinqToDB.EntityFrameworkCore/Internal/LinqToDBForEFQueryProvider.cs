@@ -14,13 +14,13 @@ using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.EntityFrameworkCore.Query;
 #endif
 
+using LinqToDB.Async;
 using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.EntityFrameworkCore.Internal
 {
-	using Async;
-	using Linq;
-
 	/// <summary>
 	///     Adapter for <see cref="IAsyncQueryProvider" />
 	///		This is internal API and is not intended for use by Linq To DB applications.
@@ -39,7 +39,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 			ArgumentNullException.ThrowIfNull(expression);
 			ArgumentNullException.ThrowIfNull(dataContext);
 
-			QueryProvider = (IQueryProviderAsync) Internals.CreateExpressionQueryInstance<T>(dataContext, expression);
+			QueryProvider = (IQueryProviderAsync)Internals.CreateExpressionQueryInstance<T>(dataContext, expression);
 			QueryProviderAsQueryable = (IQueryable<T>) QueryProvider;
 		}
 
@@ -114,7 +114,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 		{
 			var item = typeof(TResult).GetGenericArguments()[0];
 			var method = _executeAsyncMethodInfo.MakeGenericMethod(item);
-			return (TResult)method.Invoke(QueryProvider, [expression, cancellationToken])!;
+			return method.InvokeExt<TResult>(QueryProvider, [expression, cancellationToken]);
 		}
 
 		/// <summary>

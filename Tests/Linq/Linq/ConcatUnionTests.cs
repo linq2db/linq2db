@@ -2,19 +2,18 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.Data;
-	using Model;
-
-
 	[TestFixture]
 	public class ConcatUnionTests : TestBase
 	{
@@ -647,7 +646,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		public void ObjectUnion5([DataSources] string context)
 		{
@@ -1225,6 +1223,33 @@ namespace Tests.Linq
 			query.Invoking(q => q.ToList()).Should().NotThrow();
 		}
 
+		[Test]
+		public void SelectWithToString([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = 
+				from x in db.Parent
+				select new
+				{
+					StrValue = x.Value1.ToString()
+				};
+
+			var query2 = 
+				from x in db.Parent
+				from c in x.Children
+				select new
+				{
+					StrValue = c.Parent1!.Value1!.ToString()
+				};
+
+			var query = query1.Concat(query2);
+
+			query = query.Where(x => x.StrValue != null);
+
+			query.Invoking(q => q.ToList()).Should().NotThrow();
+		}
+
 		[Test(Description = "Test that we generate plain UNION without sub-queries")]
 		public void Issue3359_MultipleSets([DataSources(false)] string context)
 		{
@@ -1625,8 +1650,8 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid2));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(true));
-				Assert.That(data[1].BoolN, Is.EqualTo(false));
+				Assert.That(data[1].Bool, Is.True);
+				Assert.That(data[1].BoolN, Is.False);
 			});
 		}
 
@@ -1657,8 +1682,8 @@ namespace Tests.Linq
 				Assert.That(data[0].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[0].Enum, Is.Null);
 				Assert.That(data[0].EnumN, Is.Null);
-				Assert.That(data[0].Bool, Is.EqualTo(true));
-				Assert.That(data[0].BoolN, Is.EqualTo(true));
+				Assert.That(data[0].Bool, Is.True);
+				Assert.That(data[0].BoolN, Is.True);
 
 				Assert.That(data[1].Id, Is.EqualTo(4));
 				Assert.That(data[1].Byte, Is.EqualTo(3));
@@ -1667,8 +1692,8 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(false));
-				Assert.That(data[1].BoolN, Is.EqualTo(true));
+				Assert.That(data[1].Bool, Is.False);
+				Assert.That(data[1].BoolN, Is.True);
 			});
 		}
 
@@ -1699,8 +1724,8 @@ namespace Tests.Linq
 				Assert.That(data[0].GuidN, Is.EqualTo(new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE30")));
 				Assert.That(data[0].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[0].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[0].Bool, Is.EqualTo(true));
-				Assert.That(data[0].BoolN, Is.EqualTo(false));
+				Assert.That(data[0].Bool, Is.True);
+				Assert.That(data[0].BoolN, Is.False);
 
 				Assert.That(data[1].Id, Is.EqualTo(4));
 				Assert.That(data[1].Byte, Is.EqualTo(3));
@@ -1709,11 +1734,10 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(false));
-				Assert.That(data[1].BoolN, Is.EqualTo(true));
+				Assert.That(data[1].Bool, Is.False);
+				Assert.That(data[1].BoolN, Is.True);
 			});
 		}
-
 
 		[Test(Description = "Test that we type non-field union column properly")]
 		public void Issue2451_ComplexColumn([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
@@ -2066,7 +2090,6 @@ namespace Tests.Linq
 				AssertQuery(query);
 			}
 		}
-
 
 		[InheritanceMapping(Code = 1, Type = typeof(SetEntityA))]
 		[InheritanceMapping(Code = 2, Type = typeof(SetEntityB))]

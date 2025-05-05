@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-
 	[BuildsMethodCall("HasUniqueKey")]
 	sealed class HasUniqueKeyBuilder : MethodCallBuilder
 	{
@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Builder
 			var keyExpr = SequenceHelper.PrepareBody(keySelector, sequence);
 			var keySql  = builder.BuildSqlExpression(sequence, keyExpr);
 
-			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(keySql);
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(keySql, false);
 
 			sequence.SelectQuery.UniqueKeys.Add(placeholders.Select(p => p.Sql).ToArray());
 

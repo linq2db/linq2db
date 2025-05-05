@@ -8,14 +8,14 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using Model;
-
 	public static class EnumerableExtensions
 	{
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TResult>(
@@ -95,6 +95,7 @@ namespace Tests.Linq
 							res.AddRange(pair1.Join(keys2[pair1.Key], outerKeySelector, innerKeySelector, resultSelector));
 							continue;
 						}
+
 						res.AddRange(pair1.Select(r => resultSelector(r, default!)));
 					}
 
@@ -104,6 +105,7 @@ namespace Tests.Linq
 						{
 							continue;
 						}
+
 						res.AddRange(pair2.Select(r => resultSelector(default!, r)));
 					}
 
@@ -1231,23 +1233,6 @@ namespace Tests.Linq
 			}
 		}
 
-		public class AllJoinsSourceAttribute : IncludeDataSourcesAttribute
-		{
-			private static readonly string[] SupportedProviders = new[]
-			{
-				TestProvName.AllSqlServer,
-				TestProvName.AllOracle,
-				TestProvName.AllFirebird,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllClickHouse
-			}.SelectMany(_ => _.Split(',')).ToArray();
-
-			public AllJoinsSourceAttribute(params string[] excludedProviders)
-				: base(SupportedProviders.Except(excludedProviders.SelectMany(_ => _.Split(','))).ToArray())
-			{
-			}
-		}
-
 		[Test]
 		public void SqlJoinSimple([AllJoinsSource] string context, [Values] SqlJoinType joinType)
 		{
@@ -2254,7 +2239,6 @@ namespace Tests.Linq
 			};
 		}
 
-
 		// https://github.com/linq2db/linq2db/issues/1773
 		[Test]
 		public void LeftJoinWithRecordSelection1([DataSources] string context)
@@ -3244,7 +3228,6 @@ namespace Tests.Linq
 				public override long     GetInt64   (int ordinal) => default;
 				public override string   GetString  (int ordinal) => default!;
 				public override object   GetValue   (int ordinal) => default!;
-
 
 				public override long GetBytes(int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length) => default;
 				public override long GetChars(int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length) => default;

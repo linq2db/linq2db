@@ -21,6 +21,7 @@ uid: contributing
 |.\Source\LinqToDB.FSharp | F# support extension for Linq To DB|
 |.\Source\LinqToDB.Remote.Grpc| LINQ to DB Remote Context GRPC client/server source code|
 |.\Source\LinqToDB.Remote.Wcf| LINQ to DB Remote Context WCF client/server source code|
+|.\Source\LinqToDB.Scaffold| LINQ to DB scaffold framework for cli and T4|
 |.\Source\LinqToDB.Templates| LINQ to DB t4models source code|
 |.\Source\LinqToDB.Tools| LINQ to DB Tools source code|
 |.\Tests| Unit test projects folder|
@@ -33,6 +34,7 @@ uid: contributing
 |.\Tests\Tests.Benchmarks| Benchmarks|
 |.\Tests\Tests.PLayground| Test project for use with linq2db.playground.sln lite test solution. Used for work on specific test without full solution load|
 |.\Tests\Tests.T4|T4 templates test project|
+|.\Tests\Tests.T4.Nugets|T4 nugets test project|
 |.\Tests\VisualBasic|Visual Basic models and tests support|
 
 #### Solutions
@@ -40,6 +42,7 @@ uid: contributing
 * `.\linq2db.sln` - full linq2db solution
 * `.\linq2db.playground.slnf` - ligthweight linq2db test solution. Used to work on specific test without loading of all payload of full solution
 * `.\linq2db.Benchmarks.slnf` - ligthweight linq2db benchmarks solution. Used to work on benchmarks without loading of all payload of full solution
+* `.\Tests\Tests.T4.Nugets\Tests.T4.Nugets.sln` - separate solution for T4 nugets testing
 
 #### Source projects
 
@@ -54,7 +57,7 @@ Custom debugging symbols:
 
 #### Test projects
 
-Tests targets: `net462`, `net6.0`, `net8.0`, `net9.0`. In general we test 3 configurations: lowest supported .NET Framework, lowest supported .NET version, highest supported .NET version.
+Tests targets: `net462`, `net8.0`, `net9.0`. In general we test 3 configurations: lowest supported .NET Framework, lowest supported .NET version, highest supported .NET version.
 
 Custom symbols:
 
@@ -67,12 +70,12 @@ You can use solution to build and run tests. Also you can build whole solution o
 * `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
 * `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
 * `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
-* `.\Test.cmd` - build `Debug` configuration and run tests for `net462`, `net6.0`, `net8.0` and `net9.0` targets. You can set other configuration by passing it as first parameter, disable test targets by passing 0 to second (for `net462`), third (for `net6.0`), fourth (for `net8.0`) or fifth (for `net9.0`) parameter and format (default:html) as 6th parameter.
+* `.\Test.cmd` - build `Debug` configuration and run tests for `net462`, `net8.0` and `net9.0` targets. You can set other configuration by passing it as first parameter, disable test targets by passing 0 to second (for `net462`), third (for `net8.0`) or fourth (for `net9.0`) parameter and format (default:html) as fifth parameter.
 
-Example of running `Release` build tests for `net6.0` only with `trx` as output:
+Example of running `Release` build tests for `net9.0` only with `trx` as output:
 
 ```cmd
-test.cmd Release 0 1 0 0 trx
+test.cmd Release 0 0 1 trx
 ```
 
 ### Different platforms support
@@ -192,28 +195,6 @@ The `[User]DataProviders.json` is a regular JSON file:
 
     },
 
-    // .net 6.0 test configuration
-    "NET60" :
-    {
-        "BasedOn"              : "LocalConnectionStrings",
-        "Providers"            :
-        [
-            "SQLite.MS",
-            "Northwind.SQLite.MS",
-            "SqlServer.2014",
-            "SqlServer.2012",
-            "SqlServer.2008",
-            "SqlServer.2005",
-            "SqlServer.Azure",
-            "Firebird.5",
-            "MySql.8.0",
-            "MariaDB.11",
-            "PostgreSQL",
-            "SqlServer.Northwind",
-            "TestNoopProvider"
-        ]
-    },
-
     // .net 8.0 test configuration
     "NET80" :
     {
@@ -289,7 +270,6 @@ We do run builds and tests with:
 * [Azure Pipelines](https://dev.azure.com/linq2db/linq2db/_build?definitionId=3) [pipelines/default.yml](https://github.com/linq2db/linq2db/blob/master/Build/Azure/pipelines/default.yml).
 It builds solution, generate and publish nugets and runs tests for:
   * .Net 4.6.2
-  * .Net 6.0 (Windows, Linux and MacOS)
   * .Net 8.0 (Windows, Linux and MacOS)
   * .Net 9.0 (Windows, Linux and MacOS)
 For more details check [readme](https://github.com/linq2db/linq2db/blob/master/Build/Azure/README.md)

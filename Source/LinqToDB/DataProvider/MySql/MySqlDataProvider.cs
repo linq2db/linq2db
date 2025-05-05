@@ -5,15 +5,15 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.MySql.Translation;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Common;
-	using Data;
-	using Linq.Translation;
-	using Mapping;
-	using SqlProvider;
-	using Translation;
-
 	sealed class MySql57DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql57MySqlData,        MySqlVersion.MySql57,   MySqlProvider.MySqlData     ) { }
 	sealed class MySql57DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql57MySqlConnector,   MySqlVersion.MySql57,   MySqlProvider.MySqlConnector) { }
 	sealed class MySql80DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql80MySqlData,        MySqlVersion.MySql80,   MySqlProvider.MySqlData     ) { }
@@ -74,7 +74,7 @@ namespace LinqToDB.DataProvider.MySql
 			if (Adapter.GetUInt16MethodName   != null) SetProviderField<ushort  >(Adapter.GetUInt16MethodName  , Adapter.DataReaderType);
 			if (Adapter.GetUInt32MethodName   != null) SetProviderField<uint    >(Adapter.GetUInt32MethodName  , Adapter.DataReaderType);
 			if (Adapter.GetUInt64MethodName   != null) SetProviderField<ulong   >(Adapter.GetUInt64MethodName  , Adapter.DataReaderType);
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (Adapter.GetTimeOnlyMethodName != null) SetProviderField<TimeOnly>(Adapter.GetTimeOnlyMethodName, Adapter.DataReaderType);
 			if (Adapter.GetDateOnlyMethodName != null) SetProviderField<DateOnly>(Adapter.GetDateOnlyMethodName, Adapter.DataReaderType);
 #endif
@@ -143,7 +143,7 @@ namespace LinqToDB.DataProvider.MySql
 				dataType = dataType.WithDataType(DataType.VarChar);
 			}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
 			{
 				value = d.ToDateTime(TimeOnly.MinValue);

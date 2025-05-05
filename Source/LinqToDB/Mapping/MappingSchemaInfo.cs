@@ -2,15 +2,16 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Metadata;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Common.Internal;
-	using Expressions;
-	using Metadata;
-	using SqlQuery;
-
 	class MappingSchemaInfo : IConfigurationID
 	{
 		public MappingSchemaInfo(string configuration)
@@ -23,7 +24,7 @@ namespace LinqToDB.Mapping
 
 		public  string           Configuration;
 		private MetadataReader? _metadataReader;
-		readonly object         _syncRoot = new();
+		readonly Lock           _syncRoot = new();
 
 		public MetadataReader? MetadataReader
 		{
@@ -112,11 +113,12 @@ namespace LinqToDB.Mapping
 									stop = true;
 									break;
 								}
+
 							if (stop)
 								continue;
 
 							var gtype    = type.Key.MakeGenericType(types);
-							var provider = (IGenericInfoProvider)Activator.CreateInstance(gtype)!;
+							var provider = ActivatorExt.CreateInstance<IGenericInfoProvider>(gtype);
 
 							provider.SetInfo(new MappingSchema(this));
 

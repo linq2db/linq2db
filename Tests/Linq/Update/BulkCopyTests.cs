@@ -14,11 +14,11 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.DataProvider;
+using Tests.Model;
+
 namespace Tests.xUpdate
 {
-	using Model;
-	using Tests.DataProvider;
-
 	[TestFixture]
 	[Order(10000)]
 	public class BulkCopyTests : TestBase
@@ -322,7 +322,7 @@ namespace Tests.xUpdate
 			[Column] public int Id { get; set; }
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Table]
 		public class DateOnlyTable
 		{
@@ -412,7 +412,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Test]
 		public void BulkCopyDateOnly(
 			[DataSources(false)] string context,
@@ -436,7 +436,7 @@ namespace Tests.xUpdate
 		)
 		{
 			// This makes use of array-bound parameters, which is a unique code-path in OracleBulkCopy (issue #4385)
-			using var db    = new DataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto }));
+			using var db    = new DataConnection(new DataOptions().UseConfiguration(context).UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto }));
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 			using var table = db.CreateLocalTable<DateOnlyTable>();
 			
@@ -940,7 +940,7 @@ namespace Tests.xUpdate
 			[Values(AlternativeBulkCopy.InsertDual, AlternativeBulkCopy.InsertInto)] AlternativeBulkCopy alternateCopyType)
 		{
 			var interceptor = new TestDataContextInterceptor();
-			using var db    = new DataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
+			using var db    = new DataConnection(new DataOptions().UseConfiguration(context).UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 
@@ -963,7 +963,7 @@ namespace Tests.xUpdate
 			[Values(AlternativeBulkCopy.InsertDual, AlternativeBulkCopy.InsertInto)] AlternativeBulkCopy alternateCopyType)
 		{
 			var interceptor = new TestDataContextInterceptor();
-			using var db    = new DataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
+			using var db    = new DataConnection(new DataOptions().UseConfiguration(context).UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 
@@ -1065,7 +1065,7 @@ namespace Tests.xUpdate
 				new Inherited3 { Id = 3, Value3 = "Str3", NullableBool = true },
 			};
 
-			using (var db = new DataConnection(context, ms))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context, ms)))
 			using (var table = db.CreateLocalTable<BaseClass>())
 			{
 				var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
@@ -1218,6 +1218,43 @@ namespace Tests.xUpdate
 			var item = table.Single();
 
 			Assert.That(item.Id, Is.Null);
+		}
+
+		// add more test cases
+		sealed class MultipleRowsTable
+		{
+			public int Id { get; set; }
+
+			public decimal? DecimalValue1 { get; set; }
+
+			public decimal? DecimalValue2 { get; set; }
+
+			public static readonly MultipleRowsTable[] Data =
+			[
+				new MultipleRowsTable() { Id = 1, DecimalValue1 = null, DecimalValue2 = 1M },
+				new MultipleRowsTable() { Id = 2, DecimalValue1 = 1.5M, DecimalValue2 = -2.6M },
+			];
+		}
+
+		[Test(Description = "Test we type first row values properly")]
+		public void MultipleRows_TestTyping([DataSources(false)] string context)
+		{
+			using var db = new DataConnection(context);
+			using var table = db.CreateLocalTable<MultipleRowsTable>();
+
+			var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
+			table.BulkCopy(options, MultipleRowsTable.Data);
+
+			var item = table.OrderBy(r => r.Id).ToArray();
+
+			using (Assert.EnterMultipleScope())
+			{
+				for (var i = 0; i < 2; i++)
+				{
+					Assert.That(item[i].DecimalValue1, Is.EqualTo(MultipleRowsTable.Data[i].DecimalValue1));
+					Assert.That(item[i].DecimalValue2, Is.EqualTo(MultipleRowsTable.Data[i].DecimalValue2));
+				}
+			}
 		}
 	}
 }

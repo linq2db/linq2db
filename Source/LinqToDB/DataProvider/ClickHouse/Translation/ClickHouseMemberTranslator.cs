@@ -1,14 +1,34 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.ClickHouse.Translation
 {
-	using Common;
-	using Linq.Translation;
-	using SqlQuery;
-
 	public class ClickHouseMemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new MathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -39,11 +59,11 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 					case Sql.DateParts.Month:       return factory.Function(intDataType, "toMonth", dateTimeExpression);
 					case Sql.DateParts.DayOfYear:   return factory.Function(intDataType, "toDayOfYear", dateTimeExpression);
 					case Sql.DateParts.Day:         return factory.Function(intDataType, "toDayOfMonth", dateTimeExpression);
-					case Sql.DateParts.Week:        return factory.Function(intDataType, "toISOWeek", factory.Function(longDataType, "toDateTime64", dateTimeExpression, factory.Value(intDataType, 1)));
+					case Sql.DateParts.Week:        return factory.Function(intDataType, "toISOWeek", factory.Function(longDataType, "toDateTime64", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(intDataType, 1)));
 					case Sql.DateParts.Hour:        return factory.Function(intDataType, "toHour", dateTimeExpression);
 					case Sql.DateParts.Minute:      return factory.Function(intDataType, "toMinute", dateTimeExpression);
 					case Sql.DateParts.Second:      return factory.Function(intDataType, "toSecond", dateTimeExpression);
-					case Sql.DateParts.WeekDay:     return factory.Function(intDataType, "toDayOfWeek", factory.Function(intDataType, "addDays", dateTimeExpression, factory.Value(intDataType, 1)));
+					case Sql.DateParts.WeekDay:     return factory.Function(intDataType, "toDayOfWeek", factory.Function(intDataType, "addDays", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(intDataType, 1)));
 					case Sql.DateParts.Millisecond: return factory.Mod(factory.Function(intDataType, "toUnixTimestamp64Milli", dateTimeExpression), 1000);
 					default:                        return null;
 				}
@@ -188,24 +208,9 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory     = translationContext.ExpressionFactory;
-				var nowFunction = factory.Function(factory.GetDbDataType(typeof(DateTime)), "now");
+				var nowFunction = factory.Function(factory.GetDbDataType(typeof(DateTime)), "now", ParametersNullabilityType.NotNullable);
 				return nowFunction;
 			}
-		}
-
-		protected override IMemberTranslator CreateSqlTypesTranslator()
-		{
-			return new SqlTypesTranslation();
-		}
-
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new DateFunctionsTranslator();
-		}
-
-		protected override IMemberTranslator CreateMathMemberTranslator()
-		{
-			return new MathMemberTranslator();
 		}
 
 		class MathMemberTranslator : MathMemberTranslatorBase
@@ -233,6 +238,21 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "generateUUIDv4");
 
 			return timePart;
+		}
+
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// lower(toString({0}))
+
+				var factory        = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string));
+				var toChar         = factory.Function(stringDataType, "toString", guidExpr);
+				var toLower        = factory.ToLower(toChar);
+
+				return toLower;
+			}
 		}
 	}
 }

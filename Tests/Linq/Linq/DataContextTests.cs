@@ -4,16 +4,15 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
+using LinqToDB.Data;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.Async;
-	using LinqToDB.Data;
-	using Model;
-	using Tools;
-
 	[TestFixture]
 	public class DataContextTests : TestBase
 	{
@@ -24,12 +23,11 @@ namespace Tests.Linq
 			{
 				ctx.GetTable<Person>().ToList();
 
-				ctx.KeepConnectionAlive = true;
-
-				ctx.GetTable<Person>().ToList();
-				ctx.GetTable<Person>().ToList();
-
-				ctx.KeepConnectionAlive = false;
+				using (var _ = new KeepConnectionAliveScope(ctx))
+				{
+					ctx.GetTable<Person>().ToList();
+					ctx.GetTable<Person>().ToList();
+				}
 
 				using (var tran = new DataContextTransaction(ctx))
 				{
@@ -65,8 +63,8 @@ namespace Tests.Linq
 		{
 			using (var ctx = new DataContext(context))
 			{
-				ctx.KeepConnectionAlive = true;
-				ctx.KeepConnectionAlive = false;
+				ctx.SetKeepConnectionAlive(true);
+				ctx.SetKeepConnectionAlive(false);
 			}
 		}
 
@@ -76,7 +74,7 @@ namespace Tests.Linq
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
-				Assert.Throws<LinqToDBException>(() => new DataContext("BAD", db.ConnectionString!));
+				Assert.Throws<LinqToDBException>(() => new DataContext(new DataOptions().UseConnectionString("BAD", db.ConnectionString!)));
 			}
 
 		}
@@ -84,7 +82,7 @@ namespace Tests.Linq
 		public void ProviderConnectionStringConstructorTest2([DataSources(false)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
-			using (var db1 = new DataContext(db.DataProvider.Name, "BAD"))
+			using (var db1 = new DataContext(new DataOptions().UseConnectionString(db.DataProvider.Name, "BAD")))
 			{
 				Assert.That(
 					() => db1.GetTable<Child>().ToList(),
@@ -97,7 +95,7 @@ namespace Tests.Linq
 		public void ProviderConnectionStringConstructorTest3([DataSources(false)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
-			using (var db1 = new DataContext(db.DataProvider.Name, db.ConnectionString!))
+			using (var db1 = new DataContext(new DataOptions().UseConnectionString(db.DataProvider.Name, db.ConnectionString!)))
 			{
 				Assert.Multiple(() =>
 				{
@@ -177,23 +175,24 @@ namespace Tests.Linq
 		[Test]
 		public void CommandTimeoutTests([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = new TestDataContext(context))
-			{
-				db.KeepConnectionAlive = true;
-				db.CommandTimeout = 10;
-				Assert.That(db.DataConnection, Is.Null);
-				db.GetTable<Person>().ToList();
-				Assert.That(db.DataConnection, Is.Not.Null);
-				Assert.That(db.DataConnection!.CommandTimeout, Is.EqualTo(10));
+			using var db = new TestDataContext(context);
+			using var _ = new KeepConnectionAliveScope(db);
 
-				db.CommandTimeout = -10;
-				Assert.That(db.DataConnection.CommandTimeout, Is.EqualTo(-1));
+			db.CommandTimeout = 10;
+			Assert.That(db.DataConnection, Is.Null);
+			db.GetTable<Person>().ToList();
+			Assert.That(db.DataConnection, Is.Not.Null);
+			Assert.That(db.DataConnection!.CommandTimeout, Is.EqualTo(10));
 
-				db.CommandTimeout = 11;
-				var record = db.GetTable<Child>().First();
+			Assert.That(() => db.CommandTimeout = -10, Throws.InstanceOf<ArgumentOutOfRangeException>());
 
-				Assert.That(db.DataConnection!.CommandTimeout, Is.EqualTo(11));
-			}
+			db.ResetCommandTimeout();
+			Assert.That(db.DataConnection.CommandTimeout, Is.EqualTo(-1));
+
+			db.CommandTimeout = 11;
+			var record = db.GetTable<Child>().First();
+
+			Assert.That(db.DataConnection!.CommandTimeout, Is.EqualTo(11));
 		}
 
 		[Test]
@@ -203,12 +202,14 @@ namespace Tests.Linq
 			{
 				Assert.That(db.CreateCalled, Is.EqualTo(0));
 
-				db.KeepConnectionAlive = true;
-				db.GetTable<Person>().ToList();
-				Assert.That(db.CreateCalled, Is.EqualTo(1));
-				db.GetTable<Person>().ToList();
-				Assert.That(db.CreateCalled, Is.EqualTo(1));
-				db.KeepConnectionAlive = false;
+				using (var _ = new KeepConnectionAliveScope(db))
+				{
+					db.GetTable<Person>().ToList();
+					Assert.That(db.CreateCalled, Is.EqualTo(1));
+					db.GetTable<Person>().ToList();
+					Assert.That(db.CreateCalled, Is.EqualTo(1));
+				}
+
 				db.GetTable<Person>().ToList();
 				Assert.That(db.CreateCalled, Is.EqualTo(2));
 			}

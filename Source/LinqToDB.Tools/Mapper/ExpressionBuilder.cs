@@ -7,16 +7,17 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Reflection;
+
 using static System.Linq.Expressions.Expression;
 
 // ReSharper disable TailRecursiveCall
 
 namespace LinqToDB.Tools.Mapper
 {
-	using Expressions;
-	using Extensions;
-	using Reflection;
-
 	sealed class ExpressionBuilder
 	{
 		sealed class BuilderData
@@ -628,7 +629,7 @@ namespace LinqToDB.Tools.Mapper
 				dic[key] = value;
 		}
 
-		static HashSet<T> ToHashSet<T>([InstantHandle] IEnumerable<T> source) => new (source);
+		static HashSet<T> ToHashSet<T>([InstantHandle] IEnumerable<T> source) => [.. source];
 
 		static void AddRange<T>(ICollection<T> source, [InstantHandle] IEnumerable<T> items)
 		{
@@ -702,9 +703,9 @@ namespace LinqToDB.Tools.Mapper
 			var getBuilderInfo = MemberHelper.MethodOf(() => GetBuilder<int,int>(null!)).               GetGenericMethodDefinition();
 			var selectInfo     = MemberHelper.MethodOf(() => Enumerable.Select<int,int>(null!, _ => _)).GetGenericMethodDefinition();
 			var itemBuilder    =
-				(IMapperBuilder)getBuilderInfo
+				getBuilderInfo
 					.MakeGenericMethod(fromItemType, toItemType)
-					.Invoke(null, new object[] { builder._mapperBuilder })!;
+					.InvokeExt<IMapperBuilder>(null, new object[] { builder._mapperBuilder });
 
 			var expr = getValue;
 

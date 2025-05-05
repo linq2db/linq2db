@@ -1,12 +1,15 @@
-﻿#if NETFRAMEWORK
-using System.Configuration;
+﻿#if NETFRAMEWORK && COMPAT
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(LinqToDB.Configuration.DataProviderElement))]
+#elif NETFRAMEWORK || COMPAT
+using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
+
+using LinqToDB.DataProvider;
 
 namespace LinqToDB.Configuration
 {
-	using DataProvider;
-
 	/// <summary>
 	/// Data provider configuration element.
 	/// </summary>
@@ -42,10 +45,8 @@ namespace LinqToDB.Configuration
 		/// </summary>
 		public bool Default => (bool)base[_propDefault];
 
-		IEnumerable<NamedValue> IDataProviderSettings.Attributes
-		{
-			get => Attributes.AllKeys.Select(e => new NamedValue() { Name = e, Value = Attributes[e] });
-		}
+		IEnumerable<NamedValue> IDataProviderSettings.Attributes =>
+			Attributes.AllKeys.Select(e => new NamedValue { Name = e ?? string.Empty, Value = Attributes[e ?? string.Empty] ?? string.Empty });
 	}
 }
 #endif

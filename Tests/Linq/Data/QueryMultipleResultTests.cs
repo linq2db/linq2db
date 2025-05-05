@@ -2,9 +2,12 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.Data
@@ -36,7 +39,7 @@ namespace Tests.Data
 					Assert.That(res.AllDoctors.Any(), Is.True);
 					Assert.That(res.AllPatients.Any(), Is.True);
 					Assert.That(res.AllPersons.Any(), Is.True);
-					Assert.That(res.FirstPatient, Is.Not.EqualTo(null));
+					Assert.That(res.FirstPatient, Is.Not.Null);
 				});
 				Assert.Multiple(() =>
 				{
@@ -62,7 +65,7 @@ namespace Tests.Data
 					Assert.That(res.AllDoctors.Any(), Is.True);
 					Assert.That(res.AllPatients.Any(), Is.True);
 					Assert.That(res.AllPersons.Any(), Is.True);
-					Assert.That(res.FirstPatient, Is.Not.EqualTo(null));
+					Assert.That(res.FirstPatient, Is.Not.Null);
 				});
 				Assert.Multiple(() =>
 				{
@@ -96,7 +99,7 @@ namespace Tests.Data
 					Assert.That(res.AllDoctors.Any(), Is.True);
 					Assert.That(res.AllPatients.Any(), Is.True);
 					Assert.That(res.AllPersons.Any(), Is.True);
-					Assert.That(res.FirstPatient, Is.Not.EqualTo(null));
+					Assert.That(res.FirstPatient, Is.Not.Null);
 				});
 				Assert.Multiple(() =>
 				{
@@ -122,7 +125,7 @@ namespace Tests.Data
 					Assert.That(res.AllDoctors.Any(), Is.True);
 					Assert.That(res.AllPatients.Any(), Is.True);
 					Assert.That(res.AllPersons.Any(), Is.True);
-					Assert.That(res.FirstPatient, Is.Not.EqualTo(null));
+					Assert.That(res.FirstPatient, Is.Not.Null);
 				});
 				Assert.Multiple(() =>
 				{
@@ -131,7 +134,6 @@ namespace Tests.Data
 				});
 			}
 		}
-
 
 		[Table]
 		sealed class ProcedureMultipleResultExample
@@ -319,7 +321,6 @@ namespace Tests.Data
 				});
 			}
 		}
-
 
 		[Table]
 		sealed class ProcedureMultipleResultExampleWithoutAttributes

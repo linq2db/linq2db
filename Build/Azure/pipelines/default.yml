@@ -24,6 +24,7 @@ stages:
       with_nugets: true
       with_examples: true
       with_tests: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
+      with_api_analyzers: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
       with_analyzers: true
 
 #############
@@ -40,6 +41,6 @@ stages:
     parameters:
       enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded())
       with_baselines: true
-      mac_enabled: true
+      mac_enabled: false
       full_run: true
       db_filter: '[all][metrics]'

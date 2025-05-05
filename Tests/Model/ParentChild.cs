@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Collections.Immutable;
 
 using LinqToDB;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 namespace Tests.Model
@@ -646,13 +644,11 @@ namespace Tests.Model
 			throw new InvalidOperationException();
 		}
 
-		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => WithTabLockOld<int>()).GetGenericMethodDefinition();
-
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
 		public static ITable<T> WithTabLockOld<T>(this IDataContext ctx)
 			where T : class
 		{
-			return ctx.GetTable<T>(null, _methodInfo.MakeGenericMethod(typeof(T)));
+			return ctx.TableFromExpression<T>(() => ctx.WithTabLockOld<T>());
 		}
 	}
 
@@ -689,13 +685,11 @@ namespace Tests.Model
 			throw new InvalidOperationException();
 		}
 
-		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => WithTabLock1<int>()).GetGenericMethodDefinition();
-
 		[Sql.TableExpression("{0} {1} WITH (TABLOCK)")]
 		public static ITable<T> WithTabLock1<T>(IDataContext ctx)
 			where T : class
 		{
-			return ctx.GetTable<T>(null, _methodInfo.MakeGenericMethod(typeof(T)));
+			return ctx.TableFromExpression<T>(() => WithTabLock1<T>(ctx));
 		}
 	}
 

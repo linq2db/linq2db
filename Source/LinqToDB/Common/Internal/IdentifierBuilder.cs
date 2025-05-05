@@ -10,11 +10,11 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+
 namespace LinqToDB.Common.Internal
 {
-	using Expressions;
-	using Linq;
-
 	/// <summary>
 	/// Internal infrastructure API.
 	/// Provides functionality for <see cref="IConfigurationID.ConfigurationID"/> generation.
@@ -116,6 +116,7 @@ namespace LinqToDB.Common.Internal
 				foreach (var item in items)
 					Add(GetObjectID(item));
 			}
+
 			return this;
 		}
 
@@ -139,7 +140,7 @@ namespace LinqToDB.Common.Internal
 			var id  = _identifiers.GetOrAdd(key, static _ => CreateNextID());
 
 #if DEBUG
-			Debug.WriteLine($"CreateID => ({id}) : '{key}'");
+			Debug.WriteLine(FormattableString.Invariant($"CreateID => ({id}) : '{key}'"));
 #endif
 
 			return id;
