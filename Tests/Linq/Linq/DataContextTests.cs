@@ -21,29 +21,41 @@ namespace Tests.Linq
 		sealed class EmptyDefaultSetingsScope : IDisposable
 		{
 			private readonly string? _oldValue;
+#if !NETFRAMEWORK
 			private readonly ILinqToDBSettings? _oldSettings;
+#endif
 
 			public EmptyDefaultSetingsScope()
 			{
-				_oldValue = DataConnection.DefaultConfiguration;
-				_oldSettings = DataConnection.DefaultSettings;
+				_oldValue                           = DataConnection.DefaultConfiguration;
 				DataConnection.DefaultConfiguration = null;
+
+#if !NETFRAMEWORK
+				// see TestConfiguration.cctor implementation:
+				// netfx adds connections to DataConnection one-by-one
+				// .net sets DefaultSettings instance
+				// if we reset DefaultSettings, netfx will loose connection strings
+				// We shouldn't reset it for netfx or change init implementation in TestConfiguration
+				_oldSettings                   = DataConnection.DefaultSettings;
 				DataConnection.DefaultSettings = null;
+#endif
 			}
 
 			void IDisposable.Dispose()
 			{
 				DataConnection.DefaultConfiguration = _oldValue;
-				DataConnection.DefaultSettings = _oldSettings;
+#if !NETFRAMEWORK
+				DataConnection.DefaultSettings      = _oldSettings;
+#endif
 			}
 		}
 
 		[Test, NonParallelizable]
 		public void TestNullConfiguration_Unset([Values] bool cleanDefault)
 		{
-			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
-
 			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
+
+			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
 
 			using var db = new DataConnection(new DataOptions().UseSQLite(connectionString, SQLiteProvider.System));
 
@@ -53,9 +65,9 @@ namespace Tests.Linq
 		[Test, NonParallelizable]
 		public void TestNullConfiguration_UnsetRemote([Values] bool cleanDefault)
 		{
-			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
-
 			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
+
+			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
 
 			using var db = GetServerContainer(DefaultTransport).CreateContext(
 				(s, o) => o,
@@ -67,9 +79,9 @@ namespace Tests.Linq
 		[Test, NonParallelizable]
 		public void TestNullConfiguration_SetNull([Values] bool cleanDefault)
 		{
-			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
-
 			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
+
+			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
 
 			using var db = new DataConnection(new DataOptions().UseConfiguration(null).UseSQLite(connectionString, SQLiteProvider.System));
 
@@ -79,9 +91,9 @@ namespace Tests.Linq
 		[Test, NonParallelizable]
 		public void TestNullConfiguration_SetNullRemote([Values] bool cleanDefault)
 		{
-			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
-
 			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
+
+			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
 
 			using var db = GetServerContainer(DefaultTransport).CreateContext(
 				(s, o) => o,
