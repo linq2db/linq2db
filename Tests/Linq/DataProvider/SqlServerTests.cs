@@ -1894,19 +1894,27 @@ AS
 
 		private void InitIssue1294(DataConnection db)
 		{
-			using var _ = new DisableBaseline("test setup");
+			CleanupIssue1294(db);
 
-			db.Execute(@"
-IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'Issue1294')
-	BEGIN DROP FUNCTION Issue1294
-END
-");
+			using var _ = new DisableBaseline("test setup");
 
 			db.Execute(@"
 CREATE FUNCTION dbo.Issue1294(@p1 int, @p2 int)
 RETURNS TABLE
 AS
 	RETURN SELECT @p1 + @p2 as Id
+");
+		}
+
+		private void CleanupIssue1294(DataConnection db)
+		{
+			using var _ = new DisableBaseline("test cleanup");
+
+			db.Execute(@"
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'Issue1294')
+BEGIN
+	DROP FUNCTION Issue1294
+END
 ");
 		}
 
@@ -1935,17 +1943,24 @@ AS
 
 			InitIssue1294(db);
 
-			var p1 = 1;
-			var p2 = 2;
-			var p11 = 3;
+			try
+			{
+				var p1 = 1;
+				var p2 = 2;
+				var p11 = 3;
 
-			var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, p1, p2)
+				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, p1, p2)
 					.Select(x => x.Id)
 					.Union(GetPermissions(db, p11, p2).Select(x => x.Id)).Contains(x.Id));
 
-			q.ToArray();
+				q.ToArray();
 
-			Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(5));
+				Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(5));
+			}
+			finally
+			{
+				CleanupIssue1294(db);
+			}
 		}
 
 		[Test]
@@ -1956,13 +1971,21 @@ AS
 
 			InitIssue1294(db);
 
-			var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, 1, 2)
+			try
+
+			{
+				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, 1, 2)
 					.Select(x => x.Id)
 					.Union(GetPermissions(db, 1, 3).Select(x => x.Id)).Contains(x.Id));
 
-			q.ToArray();
+				q.ToArray();
 
-			Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(1));
+				Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(1));
+			}
+			finally
+			{
+				CleanupIssue1294(db);
+			}
 		}
 
 		[Test]
@@ -1973,17 +1996,24 @@ AS
 
 			InitIssue1294(db);
 
-			var p1 = 1;
-			var p2 = 2;
-			var p11 = 3;
+			try
+			{
+				var p1 = 1;
+				var p2 = 2;
+				var p11 = 3;
 
-			var q = db.GetTable<Issue1294Table>().Where(x => GetPermissionsLiteral(db, p1, p2)
+				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissionsLiteral(db, p1, p2)
 					.Select(x => x.Id)
 					.Union(GetPermissionsLiteral(db, p11, p2).Select(x => x.Id)).Contains(x.Id));
 
-			q.ToArray();
+				q.ToArray();
 
-			Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(1));
+				Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(1));
+			}
+			finally
+			{
+				CleanupIssue1294(db);
+			}
 		}
 
 		[Test]
@@ -1994,17 +2024,24 @@ AS
 
 			InitIssue1294(db);
 
-			var p1 = 1;
-			var p2 = 2;
-			var p11 = 3;
+			try
+			{
+				var p1 = 1;
+				var p2 = 2;
+				var p11 = 3;
 
-			var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, Sql.Constant(p1), Sql.Constant(p2))
+				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, Sql.Constant(p1), Sql.Constant(p2))
 					.Select(x => x.Id)
 					.Union(GetPermissions(db, Sql.Constant(p11), Sql.Constant(p2)).Select(x => x.Id)).Contains(x.Id));
 
-			q.ToArray();
+				q.ToArray();
 
-			Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(1));
+				Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(1));
+			}
+			finally
+			{
+				CleanupIssue1294(db);
+			}
 		}
 
 		[Test]
@@ -2015,13 +2052,20 @@ AS
 
 			InitIssue1294(db);
 
-			var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, Sql.Parameter(2), Sql.Parameter(5))
+			try
+			{
+				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, Sql.Parameter(2), Sql.Parameter(5))
 					.Select(x => x.Id)
 					.Union(GetPermissions(db, Sql.Parameter(3), Sql.Parameter(4)).Select(x => x.Id)).Contains(x.Id));
 
-			q.ToArray();
+				q.ToArray();
 
-			Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(5));
+				Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(5));
+			}
+			finally
+			{
+				CleanupIssue1294(db);
+			}
 		}
 
 		#endregion
