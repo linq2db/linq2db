@@ -4087,10 +4087,19 @@ namespace LinqToDB.Linq.Builder
 							if (trueValue.ElementType == QueryElementType.SqlValue &&
 								falseValue.ElementType == QueryElementType.SqlValue)
 							{
-								var withNullValue = compareNullsAsValues
-								? withNull
-								: (bool?)null;
-								predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
+								if (expression is SqlExpression { IsPredicate: true } predicateExpr)
+								{
+									predicate = new SqlPredicate.Expr(predicateExpr);
+									if (isNot)
+										predicate = new SqlPredicate.Not(predicate);
+								}
+								else
+								{
+									var withNullValue = compareNullsAsValues
+										? withNull
+										: (bool?)null;
+									predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
+								}
 							}
 						}
 					}
