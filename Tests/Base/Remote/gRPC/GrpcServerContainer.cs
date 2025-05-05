@@ -41,9 +41,9 @@ namespace Tests.Remote.ServerContainer
 			return $"https://localhost:{port}";
 		}
 
-		private Func<string, MappingSchema?, DataConnection> _connectionFactory = null!;
+		private Func<string?, MappingSchema?, DataConnection> _connectionFactory = null!;
 
-		ITestDataContext IServerContainer.CreateContext(Func<ITestLinqService,DataOptions, DataOptions> optionBuilder, Func<string, MappingSchema?, DataConnection> connectionFactory)
+		ITestDataContext IServerContainer.CreateContext(Func<ITestLinqService,DataOptions, DataOptions> optionBuilder, Func<string?, MappingSchema?, DataConnection> connectionFactory)
 		{
 			_connectionFactory = connectionFactory;
 			var service = OpenHost();
@@ -51,8 +51,6 @@ namespace Tests.Remote.ServerContainer
 			var url = GetServiceUrl(GetPort());
 
 			var dx = new TestGrpcDataContext(url, o => optionBuilder(service, o));
-
-			Debug.WriteLine(((IDataContext) dx).ConfigurationID, "Provider ");
 
 			return dx;
 		}
@@ -72,7 +70,8 @@ namespace Tests.Remote.ServerContainer
 				service = new TestGrpcLinqService(
 					new TestLinqService((c, ms) => _connectionFactory(c, ms))
 					{
-						AllowUpdates = true
+						AllowUpdates     = true,
+						RemoteClientTag = "Grpc",
 					});
 
 				Startup.GrpcLinqService = service;

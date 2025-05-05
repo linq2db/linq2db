@@ -10,6 +10,12 @@ You can find working example [here](https://github.com/linq2db/linq2db/tree/mast
 
 ## Support and other transports
 
-Currently we support only .NET Framework client and server for WCF and recommend to use [linq2db.Remote.Grpc](https://www.nuget.org/packages/linq2db.Remote.Grpc) for modern code.
+We provide
+[gRPC support](https://www.nuget.org/packages/linq2db.Remote.gRPC),
+[Signal/R Client support](https://www.nuget.org/packages/linq2db.Remote.SignalR.Client) and
+[Signal/R Server support](https://www.nuget.org/packages/linq2db.Remote.SignalR.Server),
+[HttpClient.Client support](https://www.nuget.org/packages/linq2db.Remote.HttpClient.Client) and
+[HttpClient.Server support](https://www.nuget.org/packages/linq2db.Remote.HttpClient.Server),
+and [WCF support](https://www.nuget.org/packages/linq2db.Remote.Wcf) (.NET Framework only currently).
 
-If you need Remote Context support over WCF in .NET Core or other type of transport (not WCF or gRPC), you can create [feature request](https://github.com/linq2db/linq2db/issues/new) or send PR with transport implementation.
+If you need Remote Context support over WCF in .NET Core or other type of transport, you can create [feature request](https://github.com/linq2db/linq2db/issues/new) or send PR with transport implementation.

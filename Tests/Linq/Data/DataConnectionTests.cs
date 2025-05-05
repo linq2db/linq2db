@@ -16,6 +16,7 @@ using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
+using LinqToDB.Remote;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -40,7 +41,7 @@ namespace Tests.Data
 
 				Assert.Multiple(() =>
 				{
-					Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(connection.State,         Is.EqualTo(ConnectionState.Open));
 					Assert.That(conn.ConfigurationString, Is.Null);
 				});
 			}
@@ -348,7 +349,7 @@ namespace Tests.Data
 			var collection = new ServiceCollection();
 			collection.AddLinqToDB((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<IDataContext>()!;
+			var con = provider.GetRequiredService<IDataContext>();
 			Assert.Multiple(() =>
 			{
 				Assert.That(con is DataConnection, Is.True);
@@ -362,7 +363,7 @@ namespace Tests.Data
 			var collection = new ServiceCollection();
 			collection.AddLinqToDBContext<DataConnection>((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<DataConnection>()!;
+			var con = provider.GetRequiredService<DataConnection>();
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
 
@@ -373,7 +374,23 @@ namespace Tests.Data
 			collection.AddTransient<DummyService>();
 			collection.AddLinqToDBContext<DbConnection3>((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<DbConnection3>()!;
+			var con = provider.GetRequiredService<DbConnection3>();
+			Assert.That(con.ConfigurationString, Is.EqualTo(context));
+		}
+
+		[Test]
+		public void TestServiceCollection4([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var collection = new ServiceCollection();
+
+			collection
+				.AddTransient<DummyService>()
+				.AddLinqToDBContext<DbConnection4>(serviceProvider => new DbConnection4(new DataOptions<IDataContext>(new DataOptions().UseConfiguration(context))));
+
+			var provider = collection.BuildServiceProvider();
+			var con      = provider.GetRequiredService<DbConnection4>();
+			_            = provider.GetRequiredService<IDataContextFactory<DbConnection4>>();
+
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
 
@@ -383,7 +400,7 @@ namespace Tests.Data
 			var collection = new ServiceCollection();
 			collection.AddLinqToDBContext<IDataContext, DbConnection1>((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<IDataContext>()!;
+			var con = provider.GetRequiredService<IDataContext>();
 			Assert.That(con, Is.TypeOf<DbConnection1>());
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
@@ -394,7 +411,7 @@ namespace Tests.Data
 			var collection = new ServiceCollection();
 			collection.AddLinqToDBContext<IDataContext, DbConnection4>((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<IDataContext>()!;
+			var con = provider.GetRequiredService<IDataContext>();
 			Assert.That(con, Is.TypeOf<DbConnection4>());
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
@@ -449,7 +466,7 @@ namespace Tests.Data
 			collection.AddLinqToDBContext<DbConnection5>((_, options) => options.UseConfiguration(context).UseCommandTimeout(91));
 
 			var provider = collection.BuildServiceProvider();
-			var con      = provider.GetService<DbConnection5>()!;
+			var con      = provider.GetRequiredService<DbConnection5>();
 
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
@@ -462,8 +479,8 @@ namespace Tests.Data
 			collection.AddLinqToDBContext<DbConnection2>((provider, options) => options);
 
 			var serviceProvider = collection.BuildServiceProvider();
-			var c1 = serviceProvider.GetService<DbConnection1>()!;
-			var c2 = serviceProvider.GetService<DbConnection2>()!;
+			var c1 = serviceProvider.GetRequiredService<DbConnection1>();
+			var c2 = serviceProvider.GetRequiredService<DbConnection2>();
 			Assert.Multiple(() =>
 			{
 				Assert.That(c1.ConfigurationString, Is.EqualTo(context));
@@ -483,8 +500,8 @@ namespace Tests.Data
 			collection.AddLinqToDBContext<DbConnection2>((provider, options) => options.UseConnectionString(ProviderName.SqlServer2022, cs2));
 
 			var serviceProvider = collection.BuildServiceProvider();
-			var c1 = serviceProvider.GetService<DbConnection1>()!;
-			var c2 = serviceProvider.GetService<DbConnection2>()!;
+			var c1 = serviceProvider.GetRequiredService<DbConnection1>();
+			var c2 = serviceProvider.GetRequiredService<DbConnection2>();
 			Assert.Multiple(() =>
 			{
 				Assert.That(c1.ConnectionString, Is.EqualTo(cs1));
@@ -518,8 +535,8 @@ namespace Tests.Data
 			collection.AddLinqToDBContext<DbConnection12>((provider, options) => options.UseConnectionString(ProviderName.SqlServer2022, cs2));
 
 			var serviceProvider = collection.BuildServiceProvider();
-			var c1 = serviceProvider.GetService<DbConnection11>()!;
-			var c2 = serviceProvider.GetService<DbConnection12>()!;
+			var c1 = serviceProvider.GetRequiredService<DbConnection11>();
+			var c2 = serviceProvider.GetRequiredService<DbConnection12>();
 			Assert.Multiple(() =>
 			{
 				Assert.That(c1.ConnectionString, Is.EqualTo(cs1));
@@ -533,7 +550,7 @@ namespace Tests.Data
 		[Test]
 		public void MultipleConnectionsTest([DataSources(TestProvName.AllInformix)] string context)
 		{
-			using var psr = new Tests.Remote.ServerContainer.PortStatusRestorer(_serverContainer, false);
+			using var psr = new Tests.Remote.ServerContainer.PortStatusRestorer(GetServerContainer(), false);
 
 			using (new DisableBaseline("Multi-threading"))
 			{

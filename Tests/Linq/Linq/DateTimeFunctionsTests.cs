@@ -1631,7 +1631,7 @@ namespace Tests.Linq
 		public void DateTimeAddTimeSpan([DataSources(ProviderName.SQLiteMS)] string context, [ValueSource(nameof(TimespansForTest))] TimeSpan? ts)
 		{
 			// something wrong with retrieving DateTime values for SQLite
-			if (context.StartsWith("SQLite") && context.EndsWith(".LinqService"))
+			if (context.IsAnyOf(TestProvName.AllSQLite) && context.IsRemote())
 				return;
 
 			using (var db = GetDataContext(context))

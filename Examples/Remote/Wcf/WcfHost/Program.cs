@@ -2,17 +2,17 @@
 using System.ServiceModel;
 using System.ServiceModel.Description;
 
+using LinqToDB.Remote;
+using LinqToDB.Remote.Wcf;
+
 namespace Host
 {
-	using LinqToDB.Remote;
-	using LinqToDB.Remote.Wcf;
-
 	sealed class Program
 	{
 		static void Main(string[] args)
 		{
 			using var host = new ServiceHost(
-				new WcfLinqService(new LinqService() { AllowUpdates = true }, true),
+				new WcfLinqService(new LinqService() { AllowUpdates = true, RemoteClientTag = "Wcf" }, true),
 				new Uri("net.tcp://localhost:30304"));
 
 			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
