@@ -178,28 +178,32 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 		{
-			predicate = (SqlPredicate.InList)base.VisitInListPredicate(predicate);
+			var element = base.VisitInListPredicate(predicate);
 
-			// IFX doesn't support
-			// NULL [NOT] IN (...)
-			// but support typed NULL or parameter
-			// for non-query parameter same code exists in SqlBuilder
-			if (predicate.Expr1 is SqlValue { Value: null } value)
-				predicate.Expr1 = new SqlCastExpression(predicate.Expr1, value.ValueType, null, isMandatory: true);
+			if (element is SqlPredicate.InList p && p.Expr1 is SqlValue { Value: null } value)
+			{
+				// IFX doesn't support
+				// NULL [NOT] IN (...)
+				// but support typed NULL or parameter
+				// for non-query parameter same code exists in SqlBuilder
+				p.Expr1 = new SqlCastExpression(p.Expr1, value.ValueType, null, isMandatory: true);
+			}
 
 			return predicate;
 		}
 
 		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
-			predicate = (SqlPredicate.InSubQuery)base.VisitInSubQueryPredicate(predicate);
+			var element = base.VisitInSubQueryPredicate(predicate);
 
-			// IFX doesn't support
-			// NULL [NOT] IN (...)
-			// but support typed NULL or parameter
-			// for non-query parameter same code exists in SqlBuilder
-			if (predicate.Expr1 is SqlValue { Value: null } value)
-				predicate.Expr1 = new SqlCastExpression(predicate.Expr1, value.ValueType, null, isMandatory: true);
+			if (element is SqlPredicate.InSubQuery p && p.Expr1 is SqlValue { Value: null } value)
+			{
+				// IFX doesn't support
+				// NULL [NOT] IN (...)
+				// but support typed NULL or parameter
+				// for non-query parameter same code exists in SqlBuilder
+				p.Expr1 = new SqlCastExpression(p.Expr1, value.ValueType, null, isMandatory: true);
+			}
 
 			return predicate;
 		}
