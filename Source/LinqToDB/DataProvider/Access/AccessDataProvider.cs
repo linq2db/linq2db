@@ -50,6 +50,7 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.IsOuterJoinSupportsInnerJoin             = false;
 			SqlProviderFlags.IsMultiTablesSupportsJoins               = false;
 			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability = true;
+			SqlProviderFlags.SupportsPredicatesComparison             = true;
 
 			SqlProviderFlags.IsCountDistinctSupported                     = false;
 			SqlProviderFlags.IsAggregationDistinctSupported               = false;

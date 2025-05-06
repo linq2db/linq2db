@@ -380,7 +380,7 @@ namespace LinqToDB.SqlQuery
 								.Add(new IsNull(Expr2, false))
 							);
 
-						return search;
+							return search;
 					}
 					default:
 					{

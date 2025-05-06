@@ -14,12 +14,19 @@ namespace Tests
 		{
 			ParameterName     = parameterName;
 			ExpectedValue     = expectedValue;
+			ExpectedException = expectedException.FullName!;
+		}
+
+		public ThrowsWhenAttribute(string parameterName, string expectedException, object expectedValue)
+		{
+			ParameterName = parameterName;
+			ExpectedValue = expectedValue;
 			ExpectedException = expectedException;
 		}
 
 		public string  ParameterName     { get; }
 		public object  ExpectedValue     { get; }
-		public Type    ExpectedException { get; }
+		public string  ExpectedException { get; }
 		public string? ErrorMessage      { get; set; }
 
 		public void ApplyToTest(Test test)
@@ -113,11 +120,11 @@ namespace Tests
 					{
 						testResult.SetResult(ResultState.Failure, $"Expected a <{_attribute.ExpectedException}> to be thrown, but no exception was thrown");
 					}
-					else if (expectsFirst && !testResult.Message.StartsWith(_attribute.ExpectedException.FullName!))
+					else if (expectsFirst && !testResult.Message.StartsWith(_attribute.ExpectedException))
 					{
 						testResult.SetResult(ResultState.Failure, $"Expected a <{_attribute.ExpectedException}> to be thrown, but found: '{testResult.Message}'");
 					}
-					else if (!expectsFirst && !testResult.Message.Contains(_attribute.ExpectedException.FullName!))
+					else if (!expectsFirst && !testResult.Message.Contains(_attribute.ExpectedException))
 					{
 						testResult.SetResult(ResultState.Failure, $"Expected a <{_attribute.ExpectedException}> to be thrown, but found: '{testResult.Message}'");
 					}

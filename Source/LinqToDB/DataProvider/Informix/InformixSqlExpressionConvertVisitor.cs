@@ -176,6 +176,40 @@ namespace LinqToDB.DataProvider.Informix
 			return element;
 		}
 
+		protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		{
+			var element = base.VisitInListPredicate(predicate);
+
+			if (element is SqlPredicate.InList { Expr1: SqlValue { Value: null } value } p)
+			{
+				// IFX doesn't support
+				// NULL [NOT] IN (...)
+				// but support typed NULL or parameter
+				// for non-query parameter same code exists in SqlBuilder
+				var nullCast = new SqlCastExpression(value, value.ValueType, null, isMandatory: true);
+				element      = new SqlPredicate.InList(nullCast, p.WithNull, p.IsNot, p.Values);
+			}
+
+			return element;
+		}
+
+		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		{
+			var element = base.VisitInSubQueryPredicate(predicate);
+
+			if (element is SqlPredicate.InSubQuery { Expr1: SqlValue { Value: null } value } p)
+			{
+				// IFX doesn't support
+				// NULL [NOT] IN (...)
+				// but support typed NULL or parameter
+				// for non-query parameter same code exists in SqlBuilder
+				var nullCast = new SqlCastExpression(value, value.ValueType, null, isMandatory: true);
+				element      = new SqlPredicate.InSubQuery(nullCast, p.IsNot, p.SubQuery, p.DoNotConvert);
+			}
+
+			return element;
+		}
+
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
 			var columnExpression = base.WrapColumnExpression(expr);
