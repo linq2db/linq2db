@@ -74,12 +74,12 @@ namespace Tests.Linq
 
 		[Sql.Expression("({0} = {1})", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		static bool? Equal(int? left, int? right) => throw new InvalidOperationException();
-		[Sql.Expression("({0} != {1})", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		[Sql.Expression("({0} <> {1})", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		static bool? NotEqual(int? left, int? right) => throw new InvalidOperationException();
 
 		[Sql.Expression("{0} = {1}", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.NotNullable, Precedence = Precedence.Comparison)]
 		static bool Equal(bool left, bool right) => throw new InvalidOperationException();
-		[Sql.Expression("{0} != {1}", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.NotNullable, Precedence = Precedence.Comparison)]
+		[Sql.Expression("{0} <> {1}", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.NotNullable, Precedence = Precedence.Comparison)]
 		static bool NotEqual(bool left, bool right) => throw new InvalidOperationException();
 
 		[Sql.Expression("{0} IS DISTINCT FROM {1}", IsPredicate = true, ServerSideOnly = true)]
@@ -703,16 +703,15 @@ namespace Tests.Linq
 			}
 		}
 
-		// Supported: CH, DB2, FB3+, MYSQL, SQLITE, PGSQL
+		// Supported: Access, CH, DB2, FB3+, MYSQL, SQLITE, PGSQL
 		[Test(Description = "Equality: predicate vs predicate")]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
 		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
 		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
-		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
-		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc)]
 		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
 		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
 		public void Test_Feature_PredicateComparison([DataSources(false)] string context)
@@ -1000,32 +999,32 @@ namespace Tests.Linq
 		//	AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != Null));
 		//}
 
-		//[Test]
-		//public void Test_PredicateWithPredicate([DataSources] string context)
-		//{
-		//	using var db = GetDataContext(context);
-		//	using var tb = db.CreateLocalTable(BooleanTable.Data);
+		[Test]
+		public void Test_PredicateWithPredicate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
 
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == (r.Value4 == r.Value5)));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value5) == (r.Value4 == r.Value2)));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != (r.Value4 == r.Value5)));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value5) != (r.Value4 == r.Value2)));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == (r.Value4 == r.Value5)));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value5) == (r.Value4 == r.Value2)));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != (r.Value4 == r.Value5)));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value5) != (r.Value4 == r.Value2)));
 
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == (r.Value2 == r.Value1)));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != (r.Value2 == r.Value1)));
-		//	AssertQuery(tb.Where(r => (r.Value4 == r.Value5) == (r.Value5 == r.Value4)));
-		//	AssertQuery(tb.Where(r => (r.Value4 == r.Value5) != (r.Value5 == r.Value4)));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == (r.Value2 == r.Value1)));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != (r.Value2 == r.Value1)));
+			AssertQuery(tb.Where(r => (r.Value4 == r.Value5) == (r.Value5 == r.Value4)));
+			AssertQuery(tb.Where(r => (r.Value4 == r.Value5) != (r.Value5 == r.Value4)));
 
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == (r.Value4 != r.Value5)));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value5) == (r.Value4 != r.Value2)));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != (r.Value4 != r.Value5)));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value5) != (r.Value4 != r.Value2)));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == (r.Value4 != r.Value5)));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value5) == (r.Value4 != r.Value2)));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != (r.Value4 != r.Value5)));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value5) != (r.Value4 != r.Value2)));
 
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == (r.Value2 != r.Value1)));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != (r.Value2 != r.Value1)));
-		//	AssertQuery(tb.Where(r => (r.Value4 >= r.Value5) == (r.Value5 != r.Value4)));
-		//	AssertQuery(tb.Where(r => (r.Value4 >= r.Value5) != (r.Value5 != r.Value4)));
-		//}
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == (r.Value2 != r.Value1)));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != (r.Value2 != r.Value1)));
+			AssertQuery(tb.Where(r => (r.Value4 >= r.Value5) == (r.Value5 != r.Value4)));
+			AssertQuery(tb.Where(r => (r.Value4 >= r.Value5) != (r.Value5 != r.Value4)));
+		}
 
 		//[Test]
 		//public void Test_PredicateVsPredicate_TriStrate([DataSources] string context)

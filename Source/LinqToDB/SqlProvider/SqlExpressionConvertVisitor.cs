@@ -387,8 +387,8 @@ namespace LinqToDB.SqlProvider
 			{
 				if (QueryHelper.UnwrapNullablity(predicate.Expr2) is not (SqlValue or SqlParameter) && QueryHelper.UnwrapNullablity(predicate.Expr1) is not (SqlValue or SqlParameter))
 				{
-					var expr1 = WrapBooleanExpression(predicate.Expr1, includeFields : true, withNull: predicate.WithNull != null);
-					var expr2 = WrapBooleanExpression(predicate.Expr2, includeFields : true, withNull: predicate.WithNull != null);
+					var expr1 = WrapBooleanExpression(predicate.Expr1, includeFields : true, withNull: predicate.WithNull != null, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison && predicate.Expr1 is ISqlPredicate);
+					var expr2 = WrapBooleanExpression(predicate.Expr2, includeFields : true, withNull: predicate.WithNull != null, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison && predicate.Expr2 is ISqlPredicate);
 
 					if (!ReferenceEquals(expr1, predicate.Expr1) || !ReferenceEquals(expr2, predicate.Expr2))
 					{
