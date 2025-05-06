@@ -1,18 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Linq.Expressions;
-
-using AdoNetCore.AseClient;
 
 using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
-using LinqToDB.Tools;
-
-using Microsoft.Data.SqlClient;
 
 using NUnit.Framework;
 
@@ -84,6 +75,11 @@ namespace Tests.Linq
 		[Sql.Expression("({0} != {1})", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		static bool? NotEqual(int? left, int? right) => throw new InvalidOperationException();
 
+		[Sql.Expression("{0} = {1}", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.NotNullable, Precedence = Precedence.Comparison)]
+		static bool Equal(bool left, bool right) => throw new InvalidOperationException();
+		[Sql.Expression("{0} != {1}", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.NotNullable, Precedence = Precedence.Comparison)]
+		static bool NotEqual(bool left, bool right) => throw new InvalidOperationException();
+
 		[Sql.Expression("{0} IS DISTINCT FROM {1}", IsPredicate = true, ServerSideOnly = true)]
 		static bool IsDistinctFrom(int? left, int? right) => throw new InvalidOperationException();
 		[Sql.Expression("{0} IS NOT DISTINCT FROM {1}", IsPredicate = true, ServerSideOnly = true)]
@@ -129,17 +125,20 @@ namespace Tests.Linq
 
 		// Supported: DB2, FB3+, MySQL, PostgreSQL, SQLite
 		[Test(Description = "<PREDICATE> IS [NOT] TRUE")]
-		public void Test_Feature_IsTrue(
-			[DataSources(false,
-				TestProvName.AllAccess,
-				TestProvName.AllClickHouse,
-				ProviderName.Firebird25,
-				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllSapHana,
-				ProviderName.SqlCe,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase)] string context)
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
+		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
+		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
+		public void Test_Feature_IsTrue([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
@@ -164,17 +163,20 @@ namespace Tests.Linq
 
 		// Supported: DB2, FB3+, MySQL, PostgreSQL, SQLite
 		[Test(Description = "<PREDICATE> IS [NOT] FALSE")]
-		public void Test_Feature_IsFalse(
-			[DataSources(false,
-				TestProvName.AllAccess,
-				TestProvName.AllClickHouse,
-				ProviderName.Firebird25,
-				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllSapHana,
-				ProviderName.SqlCe,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase)] string context)
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
+		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
+		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
+		public void Test_Feature_IsFalse([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
@@ -199,19 +201,22 @@ namespace Tests.Linq
 
 		// Supported: Firebird3+, MySQL, PostgreSQL
 		[Test(Description = "<PREDICATE> IS [NOT] UNKNOWN")]
-		public void Test_Feature_IsUnknown(
-			[DataSources(false,
-				TestProvName.AllAccess,
-				TestProvName.AllClickHouse,
-				TestProvName.AllDB2,
-				ProviderName.Firebird25,
-				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllSapHana,
-				ProviderName.SqlCe,
-				TestProvName.AllSQLite,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase)] string context)
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2, TestProvName.AllDB2)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
+		[ThrowsForProvider("System.Data.SQLite.SQLiteException", TestProvName.AllSQLiteClassic)]
+		[ThrowsForProvider("Microsoft.Data.Sqlite.SqliteException", ProviderName.SQLiteMS)]
+		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
+		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
+		public void Test_Feature_IsUnknown([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
@@ -236,15 +241,16 @@ namespace Tests.Linq
 
 		// Supported: Access, ClickHouse, DB2, Firebird3+, MySql, PostgreSQL, SQLite
 		[Test(Description = "<PREDICATE> IS [NOT] NULL")]
-		public void Test_Feature_IsNull(
-			[DataSources(false,
-				ProviderName.Firebird25,
-				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllSapHana,
-				ProviderName.SqlCe,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase)] string context)
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
+		public void Test_Feature_IsNull([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
@@ -269,15 +275,16 @@ namespace Tests.Linq
 
 		// Supported: Access, ClickHouse, DB2, Firebird3+, MySQL, PostgreSQL, SQLite
 		[Test(Description = "<PREDICATE> <>/= TRUE")]
-		public void Test_Feature_True(
-			[DataSources(false,
-				ProviderName.Firebird25,
-				TestProvName.AllInformix,
-				ProviderName.SqlCe,
-				TestProvName.AllOracle,
-				TestProvName.AllSapHana,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase)] string context)
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
+		public void Test_Feature_True([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
@@ -302,15 +309,16 @@ namespace Tests.Linq
 
 		// Supported: Access, ClickHouse, DB2, Firebird3+, MySQL, PostgreSQL, SQLite
 		[Test(Description = "<PREDICATE> <>/= FALSE")]
-		public void Test_Feature_False(
-			[DataSources(false,
-				ProviderName.Firebird25,
-				TestProvName.AllInformix,
-				ProviderName.SqlCe,
-				TestProvName.AllOracle,
-				TestProvName.AllSapHana,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase)] string context)
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
+		public void Test_Feature_False([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
@@ -335,21 +343,24 @@ namespace Tests.Linq
 
 		// Supported: Firebird3+
 		[Test(Description = "<PREDICATE> <>/= UNKNOWN")]
-		public void Test_Feature_Unknown(
-			[DataSources(false,
-				TestProvName.AllAccess,
-				TestProvName.AllClickHouse,
-				TestProvName.AllDB2,
-				TestProvName.AllInformix,
-				TestProvName.AllMySql,
-				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllSapHana,
-				ProviderName.Firebird25,
-				ProviderName.SqlCe,
-				TestProvName.AllSQLite,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase)] string context)
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		[ThrowsForProvider("Npgsql.PostgresException", TestProvName.AllPostgreSQL)]
+		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql, TestProvName.AllMySqlConnector)]
+		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2, TestProvName.AllDB2)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
+		[ThrowsForProvider("System.Data.SQLite.SQLiteException", TestProvName.AllSQLiteClassic)]
+		[ThrowsForProvider("Microsoft.Data.Sqlite.SqliteException", ProviderName.SQLiteMS)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
+		[ThrowsForProvider("MySql.Data.MySqlException", TestProvName.AllMySqlData)]
+		public void Test_Feature_Unknown([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
@@ -373,16 +384,17 @@ namespace Tests.Linq
 		}
 
 		// Supported: ACCESS, CH, DB2, FB3+, MYSQL, PGSQL, SQLITE
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[Test(Description = "<PREDICATE> = (1=1)")]
-		public void Test_Feature_CalculatedTrue(
-			[DataSources(false,
-				ProviderName.Firebird25,
-				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllSapHana,
-				ProviderName.SqlCe,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase)] string context)
+		public void Test_Feature_CalculatedTrue([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
@@ -407,15 +419,16 @@ namespace Tests.Linq
 
 		// Supported: ACCESS, CH, DB2, FB3+, MYSQL, PGSQL, SQLITE
 		[Test(Description = "<PREDICATE> = (1=0)")]
-		public void Test_Feature_CalculatedFalse(
-			[DataSources(false,
-				ProviderName.Firebird25,
-				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllSapHana,
-				ProviderName.SqlCe,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase)] string context)
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
+		public void Test_Feature_CalculatedFalse([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
@@ -440,15 +453,16 @@ namespace Tests.Linq
 
 		// Supported: ACCESS, CH, DB2, FB3+, MYSQL, PGSQL, SQLITE
 		[Test(Description = "<PREDICATE> = (1=null)")]
-		public void Test_Feature_CalculatedUnknown(
-			[DataSources(false,
-				ProviderName.Firebird25,
-				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllSapHana,
-				ProviderName.SqlCe,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase)] string context)
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
+		public void Test_Feature_CalculatedUnknown([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
@@ -471,273 +485,301 @@ namespace Tests.Linq
 			});
 		}
 
-		//// Supported: DB2, Firebird, PostgreSQL, SQLite, SQLServer2022
-		//// ClickHouse: tracked by https://github.com/ClickHouse/ClickHouse/issues/58145
-		//[Test(Description = "IS [NOT] DISTICT FROM predicate")]
-		//public void Test_Feature_DistinctFrom(
-		//	[DataSources(false,
-		//		TestProvName.AllAccess,
-		//		ProviderName.SqlCe,
-		//		TestProvName.AllClickHouse,
-		//		TestProvName.AllInformix,
-		//		TestProvName.AllMySql,
-		//		TestProvName.AllOracle,
-		//		TestProvName.AllSapHana,
-		//		TestProvName.AllSqlServer2019Minus,
-		//		TestProvName.AllSybase)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+		// Supported: DB2, Firebird, PostgreSQL, SQLite, SQLServer2022
+		// ClickHouse: tracked by https://github.com/ClickHouse/ClickHouse/issues/58145
+		[Test(Description = "<A> IS [NOT] DISTICT FROM <B>")]
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServer2019MinusSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServer2019MinusMS)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
+		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql, TestProvName.AllMySqlConnector)]
+		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
+		[ThrowsForProvider("MySql.Data.MySqlException", TestProvName.AllMySqlData)]
+		public void Test_Feature_DistinctFrom([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-		//	Assert.Multiple(() =>
-		//	{
-		//		Assert.That(tb.Where(r => IsDistinctFrom(r.One, r.One)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsDistinctFrom(r.Zero, r.Zero)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsDistinctFrom(r.Null, r.Null)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsDistinctFrom(r.One, r.Zero)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsDistinctFrom(r.One, r.Null)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsDistinctFrom(r.Zero, r.Null)).Count(), Is.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Where(r => IsDistinctFrom(r.One, r.One)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsDistinctFrom(r.Zero, r.Zero)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsDistinctFrom(r.Null, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsDistinctFrom(r.One, r.Zero)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsDistinctFrom(r.One, r.Null)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsDistinctFrom(r.Zero, r.Null)).Count(), Is.EqualTo(1));
 
-		//		Assert.That(tb.Where(r => IsNotDistinctFrom(r.One, r.One)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsNotDistinctFrom(r.Zero, r.Zero)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsNotDistinctFrom(r.Null, r.Null)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsNotDistinctFrom(r.One, r.Zero)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsNotDistinctFrom(r.One, r.Null)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsNotDistinctFrom(r.Zero, r.Null)).Count(), Is.EqualTo(0));
-		//	});
-		//}
+				Assert.That(tb.Where(r => IsNotDistinctFrom(r.One, r.One)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsNotDistinctFrom(r.Zero, r.Zero)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsNotDistinctFrom(r.Null, r.Null)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsNotDistinctFrom(r.One, r.Zero)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNotDistinctFrom(r.One, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNotDistinctFrom(r.Zero, r.Null)).Count(), Is.EqualTo(0));
+			});
+		}
 
-		//// Supported: MySQL
-		//// ClickHouse: tracked by https://github.com/ClickHouse/ClickHouse/issues/58145
-		//[Test(Description = "<=> predicate")]
-		//public void Test_Feature_NullSaveEqual(
-		//	[DataSources(false,
-		//		TestProvName.AllAccess,
-		//		TestProvName.AllClickHouse,
-		//		TestProvName.AllDB2,
-		//		TestProvName.AllFirebird,
-		//		TestProvName.AllInformix,
-		//		TestProvName.AllOracle,
-		//		TestProvName.AllPostgreSQL,
-		//		TestProvName.AllSapHana,
-		//		ProviderName.SqlCe,
-		//		TestProvName.AllSQLite,
-		//		TestProvName.AllSqlServer,
-		//		TestProvName.AllSybase)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+		// Supported: MySQL
+		// ClickHouse: tracked by https://github.com/ClickHouse/ClickHouse/issues/58145
+		[Test(Description = "<A> <=> <B>")]
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		[ThrowsForProvider("Npgsql.PostgresException", TestProvName.AllPostgreSQL)]
+		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
+		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2, TestProvName.AllDB2)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
+		[ThrowsForProvider("System.Data.SQLite.SQLiteException", TestProvName.AllSQLiteClassic)]
+		[ThrowsForProvider("Microsoft.Data.Sqlite.SqliteException", ProviderName.SQLiteMS)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", TestProvName.AllFirebird)]
+		public void Test_Feature_NullSaveEqual([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-		//	Assert.Multiple(() =>
-		//	{
-		//		Assert.That(tb.Where(r => NullSaveEqual(r.One, r.One)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => NullSaveEqual(r.Zero, r.Zero)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => NullSaveEqual(r.Null, r.Null)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => NullSaveEqual(r.One, r.Zero)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => NullSaveEqual(r.One, r.Null)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => NullSaveEqual(r.Zero, r.Null)).Count(), Is.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Where(r => NullSaveEqual(r.One, r.One)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => NullSaveEqual(r.Zero, r.Zero)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => NullSaveEqual(r.Null, r.Null)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => NullSaveEqual(r.One, r.Zero)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => NullSaveEqual(r.One, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => NullSaveEqual(r.Zero, r.Null)).Count(), Is.EqualTo(0));
 
-		//		Assert.That(tb.Where(r => NotNullSaveEqual(r.One, r.One)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => NotNullSaveEqual(r.Zero, r.Zero)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => NotNullSaveEqual(r.Null, r.Null)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => NotNullSaveEqual(r.One, r.Zero)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => NotNullSaveEqual(r.One, r.Null)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => NotNullSaveEqual(r.Zero, r.Null)).Count(), Is.EqualTo(1));
-		//	});
-		//}
+				Assert.That(tb.Where(r => NotNullSaveEqual(r.One, r.One)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => NotNullSaveEqual(r.Zero, r.Zero)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => NotNullSaveEqual(r.Null, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => NotNullSaveEqual(r.One, r.Zero)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => NotNullSaveEqual(r.One, r.Null)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => NotNullSaveEqual(r.Zero, r.Null)).Count(), Is.EqualTo(1));
+			});
+		}
 
-		//// Supported: SQLite
-		//[Test(Description = "IS predicate")]
-		//public void Test_Feature_Is(
-		//	[DataSources(false,
-		//		TestProvName.AllAccess,
-		//		TestProvName.AllClickHouse,
-		//		TestProvName.AllDB2,
-		//		TestProvName.AllFirebird,
-		//		TestProvName.AllInformix,
-		//		TestProvName.AllMySql,
-		//		TestProvName.AllOracle,
-		//		TestProvName.AllPostgreSQL,
-		//		TestProvName.AllSapHana,
-		//		ProviderName.SqlCe,
-		//		TestProvName.AllSQLite,
-		//		TestProvName.AllSqlServer,
-		//		TestProvName.AllSybase)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+		// Supported: SQLite
+		[Test(Description = "<A> IS <B>")]
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", TestProvName.AllFirebird)]
+		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql, TestProvName.AllMySqlConnector)]
+		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
+		[ThrowsForProvider("MySql.Data.MySqlException", TestProvName.AllMySqlData)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		[ThrowsForProvider("Npgsql.PostgresException", TestProvName.AllPostgreSQL)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2, TestProvName.AllDB2)]
+		public void Test_Feature_Is([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-		//	Assert.Multiple(() =>
-		//	{
-		//		Assert.That(tb.Where(r => IsPredicate(r.One, r.One)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsPredicate(r.Zero, r.Zero)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsPredicate(r.Null, r.Null)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsPredicate(r.One, r.Zero)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsPredicate(r.One, r.Null)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsPredicate(r.Zero, r.Null)).Count(), Is.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Where(r => IsPredicate(r.One, r.One)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsPredicate(r.Zero, r.Zero)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsPredicate(r.Null, r.Null)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsPredicate(r.One, r.Zero)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsPredicate(r.One, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsPredicate(r.Zero, r.Null)).Count(), Is.EqualTo(0));
 
-		//		Assert.That(tb.Where(r => IsNotPredicate(r.One, r.One)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsNotPredicate(r.Zero, r.Zero)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsNotPredicate(r.Null, r.Null)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsNotPredicate(r.One, r.Zero)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsNotPredicate(r.One, r.Null)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsNotPredicate(r.Zero, r.Null)).Count(), Is.EqualTo(1));
-		//	});
-		//}
+				Assert.That(tb.Where(r => IsNotPredicate(r.One, r.One)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNotPredicate(r.Zero, r.Zero)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNotPredicate(r.Null, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNotPredicate(r.One, r.Zero)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsNotPredicate(r.One, r.Null)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsNotPredicate(r.Zero, r.Null)).Count(), Is.EqualTo(1));
+			});
+		}
 
-		//// Supported: DB2, Oracle
-		//// Firebird: doesn't work for NULLs
-		//[Test(Description = "DECODE function")]
-		//public void Test_Feature_Decode(
-		//	[DataSources(false,
-		//		TestProvName.AllAccess,
-		//		ProviderName.SqlCe,
-		//		TestProvName.AllClickHouse,
-		//		TestProvName.AllFirebird,
-		//		TestProvName.AllMySql,
-		//		TestProvName.AllSapHana,
-		//		TestProvName.AllPostgreSQL,
-		//		TestProvName.AllSqlServer,
-		//		TestProvName.AllSQLite,
-		//		TestProvName.AllSybase)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+		// Supported: DB2, Oracle
+		// Firebird: doesn't work for NULLs
+		[Test(Description = "DECODE function")]
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
+		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql, TestProvName.AllMySqlConnector)]
+		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
+		[ThrowsForProvider("MySql.Data.MySqlException", TestProvName.AllMySqlData)]
+		[ThrowsForProvider("Npgsql.PostgresException", TestProvName.AllPostgreSQL)]
+		[ThrowsForProvider("System.Data.SQLite.SQLiteException", TestProvName.AllSQLiteClassic)]
+		[ThrowsForProvider("Microsoft.Data.Sqlite.SqliteException", ProviderName.SQLiteMS)]
+		public void Test_Feature_Decode([DataSources(false, TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-		//	Assert.Multiple(() =>
-		//	{
-		//		Assert.That(tb.Where(r => IsDistinctByDecode(r.One, r.One)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsDistinctByDecode(r.Zero, r.Zero)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsDistinctByDecode(r.Null, r.Null)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsDistinctByDecode(r.One, r.Zero)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsDistinctByDecode(r.One, r.Null)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsDistinctByDecode(r.Zero, r.Null)).Count(), Is.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Where(r => IsDistinctByDecode(r.One, r.One)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsDistinctByDecode(r.Zero, r.Zero)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsDistinctByDecode(r.Null, r.Null)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsDistinctByDecode(r.One, r.Zero)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsDistinctByDecode(r.One, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsDistinctByDecode(r.Zero, r.Null)).Count(), Is.EqualTo(0));
 
-		//		Assert.That(tb.Where(r => IsNotDistinctByDecode(r.One, r.One)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsNotDistinctByDecode(r.Zero, r.Zero)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsNotDistinctByDecode(r.Null, r.Null)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsNotDistinctByDecode(r.One, r.Zero)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsNotDistinctByDecode(r.One, r.Null)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsNotDistinctByDecode(r.Zero, r.Null)).Count(), Is.EqualTo(1));
-		//	});
-		//}
+				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.One, r.One)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.Zero, r.Zero)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.Null, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.One, r.Zero)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.One, r.Null)).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.Zero, r.Null)).Count(), Is.EqualTo(1));
+			});
+		}
 
-		//// While test itself works for almost all databases, approach makes sense only for
-		//// databases with INTERSECT support:
-		//// DB2, Informix, MySql8, MariaDB, Oracle, PostgreSQL, SAP HANA, SQLite, SQL Server
-		//// Not for:
-		//// Firebird, MySql 5.7, SQL CE,
-		//// ASE (added in 16SP3)
-		//[Test(Description = "EXISTS INTERSECT")]
-		//public void Test_Feature_Intersect(
-		//	[DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+		// While test itself works for almost all databases, approach makes sense only for
+		// databases with INTERSECT support:
+		// DB2, Informix, MySql8, MariaDB, Oracle, PostgreSQL, SAP HANA, SQLite, SQL Server
+		// Not for:
+		// Firebird, MySql 5.7, SQL CE,
+		// ASE (added in 16SP3)
+		[Test(Description = "EXISTS INTERSECT")]
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", TestProvName.AllAccessOdbc)]
+		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
+		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
+		public void Test_Feature_Intersect([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-		//	Assert.Multiple(() =>
-		//	{
-		//		Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.One)))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.Zero).Intersect(db.SelectQuery(() => r.Zero)))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.Null).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.Zero)))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.Zero).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.One)))).Count(), Is.EqualTo(1));
+				AssertIntersect();
+				Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.Zero).Intersect(db.SelectQuery(() => r.Zero)))).Count(), Is.EqualTo(1));
+				AssertIntersect();
+				Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.Null).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(1));
+				AssertIntersect();
+				Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.Zero)))).Count(), Is.EqualTo(0));
+				AssertIntersect();
+				Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(0));
+				AssertIntersect();
+				Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.Zero).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(0));
+				AssertIntersect();
 
-		//		Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.One)))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.Zero).Intersect(db.SelectQuery(() => r.Zero)))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.Null).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.Zero)))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.Zero).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(1));
-		//	});
-		//}
+				Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.One)))).Count(), Is.EqualTo(0));
+				AssertIntersect();
+				Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.Zero).Intersect(db.SelectQuery(() => r.Zero)))).Count(), Is.EqualTo(0));
+				AssertIntersect();
+				Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.Null).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(0));
+				AssertIntersect();
+				Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.Zero)))).Count(), Is.EqualTo(1));
+				AssertIntersect();
+				Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(1));
+				AssertIntersect();
+				Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.Zero).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(1));
+				AssertIntersect();
+			});
 
-		//// Supported: CH, DB2, FB3+, MYSQL, SQLITE
-		//[Test(Description = "Equality: predicate vs predicate")]
-		//public void Test_Feature_PredicateComparison(
-		//	[DataSources(false,
-		//		TestProvName.AllAccess,
-		//		ProviderName.Firebird25,
-		//		TestProvName.AllInformix,
-		//		TestProvName.AllOracle,
-		//		TestProvName.AllPostgreSQL,
-		//		TestProvName.AllSapHana,
-		//		ProviderName.SqlCe,
-		//		TestProvName.AllSqlServer,
-		//		TestProvName.AllSybase)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+			void AssertIntersect()
+			{
+				if (context.IsAnyOf(TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySql8Plus, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllSqlServer))
+					Assert.That(db.LastQuery!.ToUpperInvariant(), Does.Contain("INTERSECT"));
+				else
+					Assert.That(db.LastQuery!.ToUpperInvariant(), Does.Not.Contain("INTERSECT"));
+			}
+		}
 
-		//	Assert.Multiple(() =>
-		//	{
-		//		Assert.That(tb.Where(r => IsNull(r.One) == IsNull(r.One)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsNull(r.One) == IsNull(r.Zero)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsNull(r.One) == IsNull(r.Null)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsNull(r.Zero) == IsNull(r.Null)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsNull(r.Zero) == IsNull(r.Zero)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsNull(r.Null) == IsNull(r.Null)).Count(), Is.EqualTo(1));
+		// Supported: CH, DB2, FB3+, MYSQL, SQLITE, PGSQL
+		[Test(Description = "Equality: predicate vs predicate")]
+		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
+		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
+		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
+		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
+		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
+		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
+		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		public void Test_Feature_PredicateComparison([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-		//		Assert.That(tb.Where(r => IsNull(r.One) != IsNull(r.One)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsNull(r.One) != IsNull(r.Zero)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsNull(r.One) != IsNull(r.Null)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsNull(r.Zero) != IsNull(r.Null)).Count(), Is.EqualTo(1));
-		//		Assert.That(tb.Where(r => IsNull(r.Zero) != IsNull(r.Zero)).Count(), Is.EqualTo(0));
-		//		Assert.That(tb.Where(r => IsNull(r.Null) != IsNull(r.Null)).Count(), Is.EqualTo(0));
-		//	});
-		//}
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Where(r => Equal(IsNull(r.One), IsNull(r.One))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => Equal(IsNull(r.One), IsNull(r.Zero))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => Equal(IsNull(r.One), IsNull(r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => Equal(IsNull(r.Zero), IsNull(r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => Equal(IsNull(r.Zero), IsNull(r.Zero))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => Equal(IsNull(r.Null), IsNull(r.Null))).Count(), Is.EqualTo(1));
 
-		//// Supported: Access, ClickHouse, DB2, FB3+, IFX, MYSQL, PGSQL, SQLITE
-		//[Test(Description = "Boolean value as predicate")]
-		//public void Test_Feature_BooleanAsPredicate_True(
-		//	[DataSources(false,
-		//		ProviderName.Firebird25,
-		//		TestProvName.AllOracle,
-		//		TestProvName.AllSapHana,
-		//		ProviderName.SqlCe,
-		//		TestProvName.AllSqlServer,
-		//		TestProvName.AllSybase)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+				Assert.That(tb.Where(r => NotEqual(IsNull(r.One), IsNull(r.One))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => NotEqual(IsNull(r.One), IsNull(r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => NotEqual(IsNull(r.One), IsNull(r.Null))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => NotEqual(IsNull(r.Zero), IsNull(r.Null))).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(r => NotEqual(IsNull(r.Zero), IsNull(r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => NotEqual(IsNull(r.Null), IsNull(r.Null))).Count(), Is.EqualTo(0));
+			});
+		}
 
-		//	Assert.That(tb.Where(r => AsIs(r.True)).Count(), Is.EqualTo(1));
-		//}
+		// Supported: Access, ClickHouse, DB2, FB3+, IFX, MYSQL, PGSQL, SQLITE
+		[Test(Description = "Boolean value as predicate")]
+		public void Test_Feature_BooleanAsPredicate_True([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-		//// Supported: Access, ClickHouse, DB2, FB3+, IFX, MYSQL, PGSQL, SQLITE
-		//[Test(Description = "Boolean value as predicate")]
-		//public void Test_Feature_BooleanAsPredicate_False(
-		//	[DataSources(false,
-		//		ProviderName.Firebird25,
-		//		TestProvName.AllOracle,
-		//		TestProvName.AllSapHana,
-		//		ProviderName.SqlCe,
-		//		TestProvName.AllSqlServer,
-		//		TestProvName.AllSybase)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+			Assert.That(tb.Where(r => AsIs(r.True)).Count(), Is.EqualTo(1));
 
-		//	Assert.That(tb.Where(r => AsIs(r.False)).Count(), Is.EqualTo(0));
-		//}
+			if (context.IsAnyOf(ProviderName.Firebird25, TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase))
+				Assert.That(db.LastQuery, Does.Contain(" = "));
+			else
+				Assert.That(db.LastQuery, Does.Not.Contain(" = "));
+		}
 
-		//// Supported: Access, ClickHouse, DB2, FB3+, IFX, MYSQL, PGSQL, SQLITE
-		//[Test(Description = "Boolean value as predicate")]
-		//public void Test_Feature_BooleanAsPredicate_Null(
-		//	[DataSources(false,
-		//		ProviderName.Firebird25,
-		//		TestProvName.AllOracle,
-		//		TestProvName.AllSapHana,
-		//		ProviderName.SqlCe,
-		//		TestProvName.AllSqlServer,
-		//		TestProvName.AllSybase)] string context)
-		//{
-		//	using var db = GetDataConnection(context);
-		//	using var tb = db.CreateLocalTable(FeatureTable.Data);
+		// Supported: Access, ClickHouse, DB2, FB3+, IFX, MYSQL, PGSQL, SQLITE
+		[Test(Description = "Boolean value as predicate")]
+		public void Test_Feature_BooleanAsPredicate_False([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-		//	Assert.That(tb.Where(r => AsIs(r.BoolNull)).Count(), Is.EqualTo(0));
-		//}
+			Assert.That(tb.Where(r => AsIs(r.False)).Count(), Is.EqualTo(0));
+
+			if (context.IsAnyOf(ProviderName.Firebird25, TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase))
+				Assert.That(db.LastQuery, Does.Contain(" = "));
+			else
+				Assert.That(db.LastQuery, Does.Not.Contain(" = "));
+		}
+
+		// Supported: Access, ClickHouse, DB2, FB3+, IFX, MYSQL, PGSQL, SQLITE
+		[Test(Description = "Boolean value as predicate")]
+		public void Test_Feature_BooleanAsPredicate_Null([DataSources(false, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(FeatureTable.Data);
+
+			Assert.That(tb.Where(r => AsIs(r.BoolNull)).Count(), Is.EqualTo(0));
+
+			if (context.IsAnyOf(ProviderName.Firebird25, TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase))
+				Assert.That(db.LastQuery, Does.Contain(" = "));
+			else
+				Assert.That(db.LastQuery, Does.Not.Contain(" = "));
+		}
 
 		#endregion
 
