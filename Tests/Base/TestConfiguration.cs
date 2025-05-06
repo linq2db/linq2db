@@ -191,7 +191,8 @@ namespace Tests
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllMySql,
 			TestProvName.AllSapHana,
-			TestProvName.AllClickHouse
+			TestProvName.AllClickHouse,
+			TestProvName.AllYdb,
 		}.SplitAll()).ToList();
 
 		public static readonly IReadOnlyList<string> EFProviders = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
