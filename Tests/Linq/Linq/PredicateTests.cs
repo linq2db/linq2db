@@ -73,9 +73,9 @@ namespace Tests.Linq
 		static bool? NotEqualUnknown(bool? value) => throw new InvalidOperationException();
 
 		[Sql.Expression("({0} = {1})", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		static bool? Equal(int? left, int? right) => throw new InvalidOperationException();
+		static bool? Equal(int? left, int? right) => left is null || right is null ? null : left == right;
 		[Sql.Expression("({0} <> {1})", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		static bool? NotEqual(int? left, int? right) => throw new InvalidOperationException();
+		static bool? NotEqual(int? left, int? right) => left is null || right is null ? null : left != right;
 
 		[Sql.Expression("{0} = {1}", IsPredicate = true, ServerSideOnly = true, IsNullable = Sql.IsNullableType.NotNullable, Precedence = Precedence.Comparison)]
 		static bool Equal(bool left, bool right) => throw new InvalidOperationException();
@@ -361,7 +361,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
-		[ThrowsForProvider("MySql.Data.MySqlException", TestProvName.AllMySqlData)]
+		[ThrowsForProvider("MySql.Data.MySqlClient.MySqlException", TestProvName.AllMySqlData)]
 		public void Test_Feature_Unknown([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -502,7 +502,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql, TestProvName.AllMySqlConnector)]
 		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
-		[ThrowsForProvider("MySql.Data.MySqlException", TestProvName.AllMySqlData)]
+		[ThrowsForProvider("MySql.Data.MySqlClient.MySqlException", TestProvName.AllMySqlData)]
 		public void Test_Feature_DistinctFrom([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -577,7 +577,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
-		[ThrowsForProvider("MySql.Data.MySqlException", TestProvName.AllMySqlData)]
+		[ThrowsForProvider("MySql.Data.MySqlClient.MySqlException", TestProvName.AllMySqlData)]
 		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
 		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
 		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
@@ -621,7 +621,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
 		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql, TestProvName.AllMySqlConnector)]
 		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
-		[ThrowsForProvider("MySql.Data.MySqlException", TestProvName.AllMySqlData)]
+		[ThrowsForProvider("MySql.Data.MySqlClient.MySqlException", TestProvName.AllMySqlData)]
 		[ThrowsForProvider("Npgsql.PostgresException", TestProvName.AllPostgreSQL)]
 		[ThrowsForProvider("System.Data.SQLite.SQLiteException", TestProvName.AllSQLiteClassic)]
 		[ThrowsForProvider("Microsoft.Data.Sqlite.SqliteException", ProviderName.SQLiteMS)]
