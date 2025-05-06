@@ -180,13 +180,13 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			var element = base.VisitInListPredicate(predicate);
 
-			if (element is SqlPredicate.InList p && p.Expr1 is SqlValue { Value: null } value)
+			if (element is SqlPredicate.InList { Expr1: SqlValue { Value: null } value } p)
 			{
 				// IFX doesn't support
 				// NULL [NOT] IN (...)
 				// but support typed NULL or parameter
 				// for non-query parameter same code exists in SqlBuilder
-				var nullCast = new SqlCastExpression(p.Expr1, value.ValueType, null, isMandatory: true);
+				var nullCast = new SqlCastExpression(value, value.ValueType, null, isMandatory: true);
 				element      = new SqlPredicate.InList(nullCast, p.WithNull, p.IsNot, p.Values);
 			}
 
@@ -197,13 +197,13 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			var element = base.VisitInSubQueryPredicate(predicate);
 
-			if (element is SqlPredicate.InSubQuery p && p.Expr1 is SqlValue { Value: null } value)
+			if (element is SqlPredicate.InSubQuery { Expr1: SqlValue { Value: null } value } p)
 			{
 				// IFX doesn't support
 				// NULL [NOT] IN (...)
 				// but support typed NULL or parameter
 				// for non-query parameter same code exists in SqlBuilder
-				var nullCast = new SqlCastExpression(p.Expr1, value.ValueType, null, isMandatory: true);
+				var nullCast = new SqlCastExpression(value, value.ValueType, null, isMandatory: true);
 				element      = new SqlPredicate.InSubQuery(nullCast, p.IsNot, p.SubQuery, p.DoNotConvert);
 			}
 

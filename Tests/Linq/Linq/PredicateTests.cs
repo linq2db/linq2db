@@ -1087,7 +1087,6 @@ namespace Tests.Linq
 			int? ZeroN = 0;
 			int? Null = null;
 
-
 			AssertQuery(tb.Where(r => tb.Where(s => s.Id > r.Id).Select(s => s.Value1).Contains(One)));
 			AssertQuery(tb.Where(r => tb.Where(s => s.Id > r.Id).Select(s => s.Value1).Contains(Zero)));
 			AssertQuery(tb.Where(r => tb.Where(s => s.Id > r.Id).Select(s => (int?)s.Value1).Contains(OneN)));
