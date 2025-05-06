@@ -183,14 +183,9 @@ namespace LinqToDB.DataProvider.Informix
 			// IFX doesn't support
 			// NULL [NOT] IN (...)
 			// but support typed NULL or parameter
+			// for non-query parameter same code exists in SqlBuilder
 			if (predicate.Expr1 is SqlValue { Value: null } value)
 				predicate.Expr1 = new SqlCastExpression(predicate.Expr1, value.ValueType, null, isMandatory: true);
-			else if (predicate.Expr1 is SqlParameter { IsQueryParameter: false } parameter)
-			{
-				var paramValue = parameter.GetParameterValue(EvaluationContext.ParameterValues);
-				if (paramValue.ProviderValue == null)
-					predicate.Expr1 = new SqlCastExpression(predicate.Expr1, paramValue.DbDataType, null, isMandatory: true);
-			}
 
 			return predicate;
 		}
@@ -202,14 +197,9 @@ namespace LinqToDB.DataProvider.Informix
 			// IFX doesn't support
 			// NULL [NOT] IN (...)
 			// but support typed NULL or parameter
+			// for non-query parameter same code exists in SqlBuilder
 			if (predicate.Expr1 is SqlValue { Value: null } value)
 				predicate.Expr1 = new SqlCastExpression(predicate.Expr1, value.ValueType, null, isMandatory: true);
-			else if (predicate.Expr1 is SqlParameter { IsQueryParameter: false } parameter)
-			{
-				var paramValue = parameter.GetParameterValue(EvaluationContext.ParameterValues);
-				if (paramValue.ProviderValue == null)
-					predicate.Expr1 = new SqlCastExpression(predicate.Expr1, paramValue.DbDataType, null, isMandatory: true);
-			}
 
 			return predicate;
 		}
