@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
 
 using NUnit.Framework;
 
@@ -783,45 +785,45 @@ namespace Tests.Linq
 
 		#endregion
 
-		//#region Translation Tests
-		//sealed class BooleanTable
-		//{
-		//	public int Id { get; set; }
+		#region Translation Tests
+		sealed class BooleanTable
+		{
+			public int Id { get; set; }
 
-		//	public int Value1 { get; set; }
-		//	public int Value2 { get; set; }
-		//	public int? Value4 { get; set; }
-		//	public int? Value5 { get; set; }
+			public int Value1 { get; set; }
+			public int Value2 { get; set; }
+			public int? Value4 { get; set; }
+			public int? Value5 { get; set; }
 
-		//	static BooleanTable()
-		//	{
-		//		var testData = new List<BooleanTable>();
-		//		var smallTestData = new List<BooleanTable>();
+			static BooleanTable()
+			{
+				var testData = new List<BooleanTable>();
+				var smallTestData = new List<BooleanTable>();
 
-		//		var values1 = new int[] { 0, 1 };
-		//		var values2 = new int?[] { null, 0, 1 };
+				var values1 = new int[] { 0, 1 };
+				var values2 = new int?[] { null, 0, 1 };
 
-		//		var id = 1;
-		//		foreach (var v1 in values1)
-		//			foreach (var v2 in values1)
-		//				foreach (var v4 in values2)
-		//					foreach (var v5 in values2)
-		//					{
-		//						testData.Add(new BooleanTable()
-		//						{
-		//							Id = id++,
-		//							Value1 = v1,
-		//							Value2 = v2,
-		//							Value4 = v4,
-		//							Value5 = v5,
-		//						});
-		//					}
+				var id = 1;
+				foreach (var v1 in values1)
+					foreach (var v2 in values1)
+						foreach (var v4 in values2)
+							foreach (var v5 in values2)
+							{
+								testData.Add(new BooleanTable()
+								{
+									Id = id++,
+									Value1 = v1,
+									Value2 = v2,
+									Value4 = v4,
+									Value5 = v5,
+								});
+							}
 
-		//		Data = testData;
-		//	}
+				Data = testData;
+			}
 
-		//	public static readonly IReadOnlyCollection<BooleanTable> Data;
-		//}
+			public static readonly IReadOnlyCollection<BooleanTable> Data;
+		}
 
 		//[Test]
 		//public void Test_PredicateWithBoolean([DataSources] string context, [Values] bool inline)
@@ -1052,75 +1054,75 @@ namespace Tests.Linq
 		//	AssertQuery(tb.Where(r => (r.Value4 >= r.Value5) != NotEqual(r.Value5, r.Value4)));
 		//}
 
-		//[Test]
-		//public void Test_FieldInSubquery([DataSources] string context)
-		//{
-		//	using var db = GetDataContext(context);
-		//	using var tb = db.CreateLocalTable(BooleanTable.Data);
+		[Test]
+		public void Test_FieldInSubquery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
 
-		//	var sub = tb.Select(r => r.Value1);
-		//	var subN = tb.Select(r => r.Value4);
+			var sub = tb.Select(r => r.Value1);
+			var subN = tb.Select(r => r.Value4);
 
-		//	AssertQuery(tb.Where(r => r.Value2.In(sub)));
-		//	AssertQuery(tb.Where(r => subN.Contains(r.Value2)));
-		//	AssertQuery(tb.Where(r => sub.Select(v => (int?)v).Contains(r.Value5)));
-		//	AssertQuery(tb.Where(r => subN.Contains(r.Value5)));
+			AssertQuery(tb.Where(r => r.Value2.In(sub)));
+			AssertQuery(tb.Where(r => subN.Contains(r.Value2)));
+			AssertQuery(tb.Where(r => sub.Select(v => (int?)v).Contains(r.Value5)));
+			AssertQuery(tb.Where(r => subN.Contains(r.Value5)));
 
-		//	AssertQuery(tb.Where(r => !r.Value2.In(sub)));
-		//	AssertQuery(tb.Where(r => !subN.Contains(r.Value2)));
-		//	AssertQuery(tb.Where(r => !sub.Select(v => (int?)v).Contains(r.Value5)));
-		//	AssertQuery(tb.Where(r => !subN.Contains(r.Value5)));
-		//}
+			AssertQuery(tb.Where(r => !r.Value2.In(sub)));
+			AssertQuery(tb.Where(r => !subN.Contains(r.Value2)));
+			AssertQuery(tb.Where(r => !sub.Select(v => (int?)v).Contains(r.Value5)));
+			AssertQuery(tb.Where(r => !subN.Contains(r.Value5)));
+		}
 
-		//[Test]
-		//public void Test_VariableInSubquery([DataSources(TestProvName.AllClickHouse)] string context, [Values] bool inline)
-		//{
-		//	using var db = GetDataContext(context);
-		//	using var tb = db.CreateLocalTable(BooleanTable.Data);
+		[Test]
+		public void Test_VariableInSubquery([DataSources(TestProvName.AllClickHouse)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
 
-		//	db.InlineParameters = inline;
+			db.InlineParameters = inline;
 
-		//	var One = 1;
-		//	var Zero = 0;
-		//	int? OneN = 1;
-		//	int? ZeroN = 0;
-		//	int? Null = null;
+			var One = 1;
+			var Zero = 0;
+			int? OneN = 1;
+			int? ZeroN = 0;
+			int? Null = null;
 
 
-		//	AssertQuery(tb.Where(r => tb.Where(s => s.Id > r.Id).Select(s => s.Value1).Contains(One)));
-		//	AssertQuery(tb.Where(r => tb.Where(s => s.Id > r.Id).Select(s => s.Value1).Contains(Zero)));
-		//	AssertQuery(tb.Where(r => tb.Where(s => s.Id > r.Id).Select(s => (int?)s.Value1).Contains(OneN)));
-		//	AssertQuery(tb.Where(r => tb.Where(s => s.Id > r.Id).Select(s => (int?)s.Value1).Contains(ZeroN)));
-		//	AssertQuery(tb.Where(r => tb.Where(s => s.Id > r.Id).Select(s => (int?)s.Value1).Contains(Null)));
+			AssertQuery(tb.Where(r => tb.Where(s => s.Id > r.Id).Select(s => s.Value1).Contains(One)));
+			AssertQuery(tb.Where(r => tb.Where(s => s.Id > r.Id).Select(s => s.Value1).Contains(Zero)));
+			AssertQuery(tb.Where(r => tb.Where(s => s.Id > r.Id).Select(s => (int?)s.Value1).Contains(OneN)));
+			AssertQuery(tb.Where(r => tb.Where(s => s.Id > r.Id).Select(s => (int?)s.Value1).Contains(ZeroN)));
+			AssertQuery(tb.Where(r => tb.Where(s => s.Id > r.Id).Select(s => (int?)s.Value1).Contains(Null)));
 
-		//	AssertQuery(tb.Where(r => !tb.Where(s => s.Id > r.Id).Select(s => s.Value1).Contains(One)));
-		//	AssertQuery(tb.Where(r => !tb.Where(s => s.Id > r.Id).Select(s => s.Value1).Contains(Zero)));
-		//	AssertQuery(tb.Where(r => !tb.Where(s => s.Id > r.Id).Select(s => (int?)s.Value1).Contains(OneN)));
-		//	AssertQuery(tb.Where(r => !tb.Where(s => s.Id > r.Id).Select(s => (int?)s.Value1).Contains(ZeroN)));
-		//	AssertQuery(tb.Where(r => !tb.Where(s => s.Id > r.Id).Select(s => (int?)s.Value1).Contains(Null)));
-		//}
+			AssertQuery(tb.Where(r => !tb.Where(s => s.Id > r.Id).Select(s => s.Value1).Contains(One)));
+			AssertQuery(tb.Where(r => !tb.Where(s => s.Id > r.Id).Select(s => s.Value1).Contains(Zero)));
+			AssertQuery(tb.Where(r => !tb.Where(s => s.Id > r.Id).Select(s => (int?)s.Value1).Contains(OneN)));
+			AssertQuery(tb.Where(r => !tb.Where(s => s.Id > r.Id).Select(s => (int?)s.Value1).Contains(ZeroN)));
+			AssertQuery(tb.Where(r => !tb.Where(s => s.Id > r.Id).Select(s => (int?)s.Value1).Contains(Null)));
+		}
 
-		//[Test]
-		//public void Test_FieldInList([DataSources] string context, [Values] bool inline)
-		//{
-		//	using var db = GetDataContext(context);
-		//	using var tb = db.CreateLocalTable(BooleanTable.Data);
+		[Test]
+		public void Test_FieldInList([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
 
-		//	db.InlineParameters = inline;
+			db.InlineParameters = inline;
 
-		//	var list = new int[] {0, 1 };
-		//	var listN = new int?[]{ 0, null, 1 };
+			var list = new int[] {0, 1 };
+			var listN = new int?[]{ 0, null, 1 };
 
-		//	AssertQuery(tb.Where(r => r.Value2.In(list)));
-		//	AssertQuery(tb.Where(r => listN.Contains(r.Value2)));
-		//	AssertQuery(tb.Where(r => list.Select(v => (int?)v).Contains(r.Value5)));
-		//	AssertQuery(tb.Where(r => listN.Contains(r.Value5)));
+			AssertQuery(tb.Where(r => r.Value2.In(list)));
+			AssertQuery(tb.Where(r => listN.Contains(r.Value2)));
+			AssertQuery(tb.Where(r => list.Select(v => (int?)v).Contains(r.Value5)));
+			AssertQuery(tb.Where(r => listN.Contains(r.Value5)));
 
-		//	AssertQuery(tb.Where(r => !r.Value2.In(list)));
-		//	AssertQuery(tb.Where(r => !listN.Contains(r.Value2)));
-		//	AssertQuery(tb.Where(r => !list.Select(v => (int?)v).Contains(r.Value5)));
-		//	AssertQuery(tb.Where(r => !listN.Contains(r.Value5)));
-		//}
+			AssertQuery(tb.Where(r => !r.Value2.In(list)));
+			AssertQuery(tb.Where(r => !listN.Contains(r.Value2)));
+			AssertQuery(tb.Where(r => !list.Select(v => (int?)v).Contains(r.Value5)));
+			AssertQuery(tb.Where(r => !listN.Contains(r.Value5)));
+		}
 
 		//[Test]
 		//public void Test_VariableInList([DataSources] string context, [Values] bool inline)
@@ -1161,6 +1163,6 @@ namespace Tests.Linq
 		//	AssertQuery(tb.Where(r => !listN.Contains(ZeroN)));
 		//	AssertQuery(tb.Where(r => !listN.Contains(Null)));
 		//}
-		//#endregion
+		#endregion
 	}
 }
