@@ -176,6 +176,44 @@ namespace LinqToDB.DataProvider.Informix
 			return element;
 		}
 
+		protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		{
+			predicate = (SqlPredicate.InList)base.VisitInListPredicate(predicate);
+
+			// IFX doesn't support
+			// NULL [NOT] IN (...)
+			// but support typed NULL or parameter
+			if (predicate.Expr1 is SqlValue { Value: null } value)
+				predicate.Expr1 = new SqlCastExpression(predicate.Expr1, value.ValueType, null, isMandatory: true);
+			else if (predicate.Expr1 is SqlParameter { IsQueryParameter: false } parameter)
+			{
+				var paramValue = parameter.GetParameterValue(EvaluationContext.ParameterValues);
+				if (paramValue.ProviderValue == null)
+					predicate.Expr1 = new SqlCastExpression(predicate.Expr1, paramValue.DbDataType, null, isMandatory: true);
+			}
+
+			return predicate;
+		}
+
+		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		{
+			predicate = (SqlPredicate.InSubQuery)base.VisitInSubQueryPredicate(predicate);
+
+			// IFX doesn't support
+			// NULL [NOT] IN (...)
+			// but support typed NULL or parameter
+			if (predicate.Expr1 is SqlValue { Value: null } value)
+				predicate.Expr1 = new SqlCastExpression(predicate.Expr1, value.ValueType, null, isMandatory: true);
+			else if (predicate.Expr1 is SqlParameter { IsQueryParameter: false } parameter)
+			{
+				var paramValue = parameter.GetParameterValue(EvaluationContext.ParameterValues);
+				if (paramValue.ProviderValue == null)
+					predicate.Expr1 = new SqlCastExpression(predicate.Expr1, paramValue.DbDataType, null, isMandatory: true);
+			}
+
+			return predicate;
+		}
+
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
 			var columnExpression = base.WrapColumnExpression(expr);

@@ -1124,45 +1124,45 @@ namespace Tests.Linq
 			AssertQuery(tb.Where(r => !listN.Contains(r.Value5)));
 		}
 
-		//[Test]
-		//public void Test_VariableInList([DataSources] string context, [Values] bool inline)
-		//{
-		//	using var db = GetDataContext(context);
-		//	using var tb = db.CreateLocalTable(BooleanTable.Data);
+		[Test]
+		public void Test_VariableInList([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
 
-		//	db.InlineParameters = inline;
+			db.InlineParameters = inline;
 
-		//	var One = 1;
-		//	var Zero = 0;
-		//	int? OneN = 1;
-		//	int? ZeroN = 0;
-		//	int? Null = null;
+			var One = 1;
+			var Zero = 0;
+			int? OneN = 1;
+			int? ZeroN = 0;
+			int? Null = null;
 
-		//	var list = new int[] {0, 1 };
-		//	var listN = new int?[]{ 0, null, 1 };
+			var list = new int[] {0, 1 };
+			var listN = new int?[]{ 0, null, 1 };
 
-		//	AssertQuery(tb.Where(r => list.Contains(One)));
-		//	AssertQuery(tb.Where(r => list.Contains(Zero)));
-		//	AssertQuery(tb.Where(r => list.Select(i => (int?)i).Contains(OneN)));
-		//	AssertQuery(tb.Where(r => list.Select(i => (int?)i).Contains(ZeroN)));
-		//	AssertQuery(tb.Where(r => list.Select(i => (int?)i).Contains(Null)));
-		//	AssertQuery(tb.Where(r => listN.Contains(One)));
-		//	AssertQuery(tb.Where(r => listN.Contains(Zero)));
-		//	AssertQuery(tb.Where(r => listN.Contains(OneN)));
-		//	AssertQuery(tb.Where(r => listN.Contains(ZeroN)));
-		//	AssertQuery(tb.Where(r => listN.Contains(Null)));
+			AssertQuery(tb.Where(r => list.Contains(One)));
+			AssertQuery(tb.Where(r => list.Contains(Zero)));
+			AssertQuery(tb.Where(r => list.Select(i => (int?)i).Contains(OneN)));
+			AssertQuery(tb.Where(r => list.Select(i => (int?)i).Contains(ZeroN)));
+			AssertQuery(tb.Where(r => list.Select(i => (int?)i).Contains(Null)));
+			AssertQuery(tb.Where(r => listN.Contains(One)));
+			AssertQuery(tb.Where(r => listN.Contains(Zero)));
+			AssertQuery(tb.Where(r => listN.Contains(OneN)));
+			AssertQuery(tb.Where(r => listN.Contains(ZeroN)));
+			AssertQuery(tb.Where(r => listN.Contains(Null)));
 
-		//	AssertQuery(tb.Where(r => !list.Contains(One)));
-		//	AssertQuery(tb.Where(r => !list.Contains(Zero)));
-		//	AssertQuery(tb.Where(r => !list.Select(i => (int?)i).Contains(OneN)));
-		//	AssertQuery(tb.Where(r => !list.Select(i => (int?)i).Contains(ZeroN)));
-		//	AssertQuery(tb.Where(r => !list.Select(i => (int?)i).Contains(Null)));
-		//	AssertQuery(tb.Where(r => !listN.Contains(One)));
-		//	AssertQuery(tb.Where(r => !listN.Contains(Zero)));
-		//	AssertQuery(tb.Where(r => !listN.Contains(OneN)));
-		//	AssertQuery(tb.Where(r => !listN.Contains(ZeroN)));
-		//	AssertQuery(tb.Where(r => !listN.Contains(Null)));
-		//}
+			AssertQuery(tb.Where(r => !list.Contains(One)));
+			AssertQuery(tb.Where(r => !list.Contains(Zero)));
+			AssertQuery(tb.Where(r => !list.Select(i => (int?)i).Contains(OneN)));
+			AssertQuery(tb.Where(r => !list.Select(i => (int?)i).Contains(ZeroN)));
+			AssertQuery(tb.Where(r => !list.Select(i => (int?)i).Contains(Null)));
+			AssertQuery(tb.Where(r => !listN.Contains(One)));
+			AssertQuery(tb.Where(r => !listN.Contains(Zero)));
+			AssertQuery(tb.Where(r => !listN.Contains(OneN)));
+			AssertQuery(tb.Where(r => !listN.Contains(ZeroN)));
+			AssertQuery(tb.Where(r => !listN.Contains(Null)));
+		}
 		#endregion
 	}
 }
