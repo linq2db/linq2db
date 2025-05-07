@@ -16,13 +16,15 @@ namespace LinqToDB.Linq.Builder
 		readonly Expression[] _expressionRows;
 		Expression[]?         _expandedExpressionRows;
 		SqlErrorExpression?   _expandedErrorExpression;
-		Expression? _rowIndexExpression;
+		Expression?           _rowIndexExpression;
 
-		readonly Dictionary<SqlPathExpression, List<(int rowIndex, SqlPlaceholderExpression)>>  ByPathExpressions = new (ExpressionEqualityComparer.Instance);
+		readonly Dictionary<SqlPathExpression, List<(int rowIndex, SqlPlaceholderExpression)>>  _byPathExpressions = new (ExpressionEqualityComparer.Instance);
 
 		public override Expression?    Expression    { get; }
 		public override MappingSchema  MappingSchema => Builder.MappingSchema;
 		public          SqlValuesTable Table         { get; }
+
+		public override bool AutomaticAssociations => false;
 
 		public EnumerableContextDynamic(TranslationModifier translationModifier, IBuildContext parent, ExpressionBuilder builder, Expression[] expressionRows, SelectQuery query, Type elementType)
 			: base(translationModifier, builder, elementType, query)
@@ -78,7 +80,6 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (_expressionRows.Length == 0)
 					{
-						//var result = Builder.BuildEntityExpression(MappingSchema, path, ElementType, membersOrdered.ToList());
 						return ExpressionBuilder.CreateSqlError(path);
 					}
 
@@ -197,10 +198,10 @@ namespace LinqToDB.Linq.Builder
 				foreach (var (placeholder, path) in placeholders)
 				{
 					var pathExpr = new SqlPathExpression(path, placeholder.Type);
-					if (!ByPathExpressions.TryGetValue(pathExpr, out var list))
+					if (!_byPathExpressions.TryGetValue(pathExpr, out var list))
 					{
 						list = [];
-						ByPathExpressions.Add(pathExpr, list);
+						_byPathExpressions.Add(pathExpr, list);
 					}
 					
 					list.Add((i, placeholder));
@@ -258,7 +259,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else if (pathExpression != null)
 			{
-				if (!ByPathExpressions.TryGetValue(pathExpression, out var list))
+				if (!_byPathExpressions.TryGetValue(pathExpression, out var list))
 				{
 					return null;
 				}

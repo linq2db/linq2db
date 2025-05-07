@@ -14,7 +14,6 @@ namespace LinqToDB.SqlQuery
 		internal SqlValuesTable()
 		{
 			Source       = null;
-			FieldsLookup = new();
 
 			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 		}
@@ -26,7 +25,6 @@ namespace LinqToDB.SqlQuery
 		internal SqlValuesTable(ISqlExpression source)
 		{
 			Source        = source;
-			FieldsLookup  = new();
 
 			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 		}
@@ -53,29 +51,15 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Constructor for remote context.
 		/// </summary>
-		internal SqlValuesTable(SqlField[] fields, MemberInfo?[]? members, List<List<ISqlExpression>> rows)
+		internal SqlValuesTable(SqlField[] fields, List<List<ISqlExpression>> rows)
 		{
-			Rows         = rows;
-			FieldsLookup = new();
+			Rows = rows;
 
 			foreach (var field in fields)
 			{
 				if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
 				_fields.Add(field);
 				field.Table = this;
-			}
-
-			if (members != null)
-			{
-				for (var index = 0; index < fields.Length; index++)
-				{
-					var member = members[index];
-					if (member != null)
-					{
-						var field = fields[index];
-						FieldsLookup.Add(member, field);
-					}
-				}
 			}
 
 			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
@@ -86,11 +70,6 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		internal ISqlExpression? Source { get; private set; }
 
-		/// <summary>
-		/// Used only during build.
-		/// </summary>
-		internal Dictionary<MemberInfo, SqlField>? FieldsLookup { get; set; }
-
 		private readonly List<SqlField> _fields = new ();
 
 		// Fields from source, used in query. Columns in rows should have same order.
@@ -98,15 +77,12 @@ namespace LinqToDB.SqlQuery
 
 		internal List<Func<object, ISqlExpression>>? ValueBuilders { get; set; }
 
-		internal void Add(SqlField field, MemberInfo? memberInfo, Func<object, ISqlExpression> valueBuilder)
+		internal void Add(SqlField field, Func<object, ISqlExpression> valueBuilder)
 		{
 			if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
 
 			field.Table = this;
 			_fields.Add(field);
-
-			if (memberInfo != null)
-				FieldsLookup!.Add(memberInfo, field);
 
 			ValueBuilders ??= new List<Func<object, ISqlExpression>>();
 			ValueBuilders.Add(valueBuilder);

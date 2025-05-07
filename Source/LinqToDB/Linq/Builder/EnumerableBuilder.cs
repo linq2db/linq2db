@@ -64,9 +64,17 @@ namespace LinqToDB.Linq.Builder
 				return BuildSequenceResult.FromContext(dynamicContext);
 			}
 
-			var enumerableContext = new EnumerableContext(builder.GetTranslationModifier(), builder, buildInfo, buildInfo.SelectQuery, collectionType.GetGenericArguments()[0]);
+			var param = builder.ParametersContext.BuildParameter(buildInfo.Parent, buildInfo.Expression, null,
+				buildParameterType : ParametersContext.BuildParameterType.InPredicate);
 
-			return BuildSequenceResult.FromContext(enumerableContext);
+			if (param != null)
+			{
+				var enumerableContext = new EnumerableContext(builder.GetTranslationModifier(), builder, param, buildInfo.SelectQuery, collectionType.GetGenericArguments()[0]);
+
+				return BuildSequenceResult.FromContext(enumerableContext);
+			}
+
+			return BuildSequenceResult.Error(buildInfo.Expression);
 		}
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)

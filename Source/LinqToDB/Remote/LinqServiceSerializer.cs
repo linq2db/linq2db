@@ -2652,7 +2652,7 @@ namespace LinqToDB.Remote
 							for (var i = 0; i < rowsCount; i++)
 								rows.Add(ReadList<ISqlExpression>()!);
 
-							obj = new SqlValuesTable(fields, null, rows);
+							obj = new SqlValuesTable(fields, rows);
 
 							break;
 						}

@@ -1167,11 +1167,6 @@ namespace LinqToDB.SqlQuery
 						var newFields = CopyFields(element.Fields);
 
 						var sqlValuesTable = new SqlValuesTable(source, element.ValueBuilders, newFields, rows);
-						if (element.FieldsLookup != null)
-						{
-							sqlValuesTable.FieldsLookup =
-								element.FieldsLookup.ToDictionary(e => e.Key, e => (SqlField)Visit(e.Value));
-						}
 
 						return NotifyReplaced(sqlValuesTable, element);
 					}
