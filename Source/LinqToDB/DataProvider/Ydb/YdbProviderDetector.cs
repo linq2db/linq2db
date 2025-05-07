@@ -6,29 +6,29 @@ using LinqToDB.Data;
 namespace LinqToDB.DataProvider.Ydb
 {
 	/// <summary>
-	/// Определяет, какой DataProvider использовать для YDB.
-	/// Пока существует только один вариант <see cref="YdbDataProvider"/>,
-	/// но структура сделана «на вырост» – по аналогии с другими провайдерами Linq to DB.
+	/// Determines which DataProvider to use for YDB.
+	/// Currently, there is only one implementation available: <see cref="YdbDataProvider"/>.
+	/// However, the structure is designed to be future-proof—modeled after other Linq To DB providers.
 	/// </summary>
 	sealed class YdbProviderDetector
 		: ProviderDetectorBase<YdbProviderDetector.Provider, YdbProviderDetector.Version>
 	{
 		/// <summary>
-		/// Перечисление подвариантов ADO-провайдера.
-		/// Сейчас единственное значение (зарезервировано для будущего).
+		/// Enumerates subtypes of the ADO provider.
+		/// Currently, it contains a single value reserved for future expansion.
 		/// </summary>
 		internal enum Provider { }
 
 		/// <summary>
-		/// Версия сервера YDB, если когда-нибудь появятся различия
-		/// (например, 23.1, 24.2 и т. п.). Пока всегда <see cref="Default"/>.
+		/// YDB server version enumeration, in case version-based behavior becomes relevant in the future
+		/// (e.g., versions like 23.1, 24.2, etc.). For now, always returns <see cref="Default"/>.
 		/// </summary>
 		internal enum Version
 		{
-			/// <summary>Использовать значение по умолчанию.</summary>
+			/// <summary>Use the default version.</summary>
 			Default,
 
-			/// <summary>Определить автоматически (тот же <see cref="Default"/>).</summary>
+			/// <summary>Auto-detect the version (equivalent to <see cref="Default"/>).</summary>
 			AutoDetect = Default
 		}
 
@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.Ydb
 		}
 
 		// ---------------------------------------------------------------------
-		// Единичный экземпляр YdbDataProvider (создаётся лениво).
+		// Singleton instance of YdbDataProvider (lazily created).
 		// ---------------------------------------------------------------------
 		static readonly Lazy<IDataProvider> _ydbDataProvider =
 			CreateDataProvider<YdbDataProvider>();
@@ -50,11 +50,11 @@ namespace LinqToDB.DataProvider.Ydb
 		{
 			switch (options.ProviderName)
 			{
-				// явное указание имени провайдера
+				// Explicit provider name specified
 				case "YDB":
 					return _ydbDataProvider.Value;
 
-				// если в конфиге было указано только "YDB"
+				// Configuration specified only "YDB"
 				case "":
 				case null:
 					if (options.ConfigurationString == "YDB")
@@ -69,8 +69,8 @@ namespace LinqToDB.DataProvider.Ydb
 					return _ydbDataProvider.Value;
 			}
 
-			// если включён AutoDetectProvider, просто отдаём дефолтный DataProvider
-			// (в YDB пока нет разных диалектов/версий SQL)
+			// If AutoDetectProvider is enabled, return the default DataProvider
+			// (YDB currently does not support multiple SQL dialects or versions)
 			if (AutoDetectProvider)
 				return _ydbDataProvider.Value;
 
@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.Ydb
 		public override IDataProvider GetDataProvider(
 			ConnectionOptions options, Provider provider, Version version)
 		{
-			// Версий пока нет – всегда один DataProvider
+			// No version distinctions yet – always return the same DataProvider
 			return _ydbDataProvider.Value;
 		}
 
@@ -92,8 +92,8 @@ namespace LinqToDB.DataProvider.Ydb
 		// ---------------------------------------------------------------------
 		public override Version? DetectServerVersion(DbConnection connection)
 		{
-			// YDB сейчас имеет единый диалект,
-			// поэтому детекция версии не требуется.
+			// YDB currently has a single SQL dialect,
+			// so version detection is unnecessary.
 			return Version.Default;
 		}
 

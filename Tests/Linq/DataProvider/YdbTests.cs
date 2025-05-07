@@ -17,13 +17,12 @@ namespace Tests.DataProvider
 {
 	[TestFixture]
 	public class YdbTests : DataProviderTestBase
-
 	{
-		private const string Ctx = "YDB";           // имя контекста из DataProviders.json
+		private const string Ctx = "YDB";           // context name from DataProviders.json
 		private const string PingSql = "SELECT 1";
 
 		//------------------------------------------------------------------
-		// 2.  Явная проверка YdbTools + round-trip строки подключения.
+		// 2. Explicit check of YdbTools + round-trip of the connection string.
 		//------------------------------------------------------------------
 		[Test]
 		public void ConnectionStringRoundtrip()
@@ -40,7 +39,7 @@ namespace Tests.DataProvider
 		}
 
 		//------------------------------------------------------------------
-		// 3.  Строка берётся из DataProviders.json, когда указан только контекст.
+		// 3. The connection string is taken from DataProviders.json when only the context is specified.
 		//------------------------------------------------------------------
 		[Test]
 		public void ConnectionStringFromConfiguration()
@@ -53,7 +52,7 @@ namespace Tests.DataProvider
 		}
 
 		//------------------------------------------------------------------
-		// 4. Ping sync / async (пример использования wrappers).
+		// 4. Ping sync / async (example usage of wrappers).
 		//------------------------------------------------------------------
 		[Test]
 		public void Can_Open_Connection_And_Ping([IncludeDataSources(Ctx)] string context)
@@ -70,8 +69,9 @@ namespace Tests.DataProvider
 		}
 
 		#region MappingSchemaTests
+
 		//------------------------------------------------------------------
-		//  ADAPTER
+		// ADAPTER
 		//------------------------------------------------------------------
 		[Test]
 		public void GetInstance_ShouldCreateAdapterSuccessfully()
@@ -93,8 +93,9 @@ namespace Tests.DataProvider
 		#endregion
 
 		#region MappingSchemaTests
+
 		//------------------------------------------------------------------
-		//  SCALAR-TYPES
+		// SCALAR-TYPES
 		//------------------------------------------------------------------
 		[Test]
 		public void MappingSchema_ShouldMapBasicDotNetTypes()
@@ -113,7 +114,7 @@ namespace Tests.DataProvider
 		}
 
 		//------------------------------------------------------------------
-		//  DECIMAL-LITERAL
+		// DECIMAL-LITERAL
 		//------------------------------------------------------------------
 		[Test]
 		public void DecimalLiteralBuilder_ShouldRespectSqlDataTypeDefaults()
@@ -124,7 +125,7 @@ namespace Tests.DataProvider
 			var sb  = new StringBuilder();
 			var val = 123.45m;
 
-			// SqlDataType by default Precision=29, Scale=10.
+			// SqlDataType default: Precision = 29, Scale = 10
 			var sqlType = new SqlDataType(DataType.Decimal, typeof(decimal));
 
 			mi.Invoke(null, new object[] { sb, val, sqlType });
@@ -163,7 +164,7 @@ namespace Tests.DataProvider
 		}
 
 		//------------------------------------------------------------------
-		//  SYNC BulkCopy
+		// SYNC BulkCopy
 		//------------------------------------------------------------------
 		[Test]
 		public void BulkCopySimple(
@@ -195,7 +196,7 @@ namespace Tests.DataProvider
 		}
 
 		//------------------------------------------------------------------
-		//  ASYNC BulkCopy
+		// ASYNC BulkCopy
 		//------------------------------------------------------------------
 		[Test]
 		public async Task BulkCopySimpleAsync(
@@ -226,6 +227,5 @@ namespace Tests.DataProvider
 			}
 		}
 		#endregion
-
 	}
 }
