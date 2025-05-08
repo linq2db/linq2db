@@ -247,13 +247,22 @@ namespace LinqToDB.Linq.Builder
 				var isSpecial = SequenceHelper.IsSpecialProperty(memberExpression, memberExpression.Type, "item");
 				var isRowIndex = SequenceHelper.IsSpecialProperty(memberExpression, memberExpression.Type, "index");
 
+				var columDescriptor = isSpecial || isRowIndex || memberExpression.Expression?.Type == null
+					? null
+					: MappingSchema.GetEntityDescriptor(memberExpression.Expression.Type).FindColumnDescriptor(memberExpression.Member);
+
+				var descriptor = columDescriptor ?? currentDescriptor;
+
 				for (var index = 0; index < _expressionRows.Length; index++)
 				{
 					var rowProjection = _expressionRows[index];
 					var projected = isSpecial ? rowProjection
 						: isRowIndex ? ExpressionInstances.Int32(index)
 						: Builder.Project(Parent!, memberExpression, null, 0, flags, rowProjection, false);
+
+					using var saveDescriptor = Builder.UsingColumnDescriptor(descriptor);
 					var translated = Builder.BuildSqlExpression(Parent, projected);
+
 					translations.Add(translated);
 				}
 			}

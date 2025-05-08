@@ -77,7 +77,7 @@ namespace LinqToDB.SqlQuery
 
 		internal List<Func<object, ISqlExpression>>? ValueBuilders { get; set; }
 
-		internal void Add(SqlField field, Func<object, ISqlExpression> valueBuilder)
+		internal void AddFieldWithValueBuilder(SqlField field, Func<object, ISqlExpression> valueBuilder)
 		{
 			if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
 
@@ -227,6 +227,24 @@ namespace LinqToDB.SqlQuery
 		public void AddField(SqlField field)
 		{
 			Fields.Add(field);
+			field.Table = this;
+		}
+
+		public void RemoveField(int fieldIndex)
+		{
+			if (fieldIndex < 0 || fieldIndex >= Fields.Count)
+				throw new ArgumentOutOfRangeException(nameof(fieldIndex));
+
+			Fields.RemoveAt(fieldIndex);
+			ValueBuilders?.RemoveAt(fieldIndex);
+
+			if (Rows != null)
+			{
+				foreach (var row in Rows)
+				{
+					row.RemoveAt(fieldIndex);
+				}
+			}
 		}
 	}
 }

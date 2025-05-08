@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Common;
+using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -34,6 +35,9 @@ namespace LinqToDB.Linq.Builder
 			Table      = table;
 			Expression = expression;
 		}
+
+		static ConstructorInfo _parameterConstructor =
+			MemberHelper.ConstructorOf(() => new SqlParameter(new DbDataType(typeof(object)), "", null));
 
 		static ConstructorInfo _sqlValueconstructor =
 			MemberHelper.ConstructorOf(() => new SqlValue(new DbDataType(typeof(object)), null));
@@ -101,10 +105,9 @@ namespace LinqToDB.Linq.Builder
 			var field = new SqlField(dbDataType, fieldName, true);
 			var fieldPlaceholder = ExpressionBuilder.CreatePlaceholder(this, field, memberExpression);
 
-
 			_fieldsMap.Add((memberExpression, currentDescriptor, fieldPlaceholder));
 
-			Table.Add(field, valueGetter);
+			Table.AddFieldWithValueBuilder(field, valueGetter);
 
 			return fieldPlaceholder;
 		}
@@ -154,46 +157,82 @@ namespace LinqToDB.Linq.Builder
 			var generator = new ExpressionGenerator();
 			var objParam  = Expression.Parameter(typeof(object), "obj");
 
-			var resultVariable = generator.AssignToVariable(Expression.Constant(null, typeof(ISqlExpression)), "result");
 			var objectVariable = generator.DeclareVariable(objParam.Type, "currentObj");
 			generator.Assign(objectVariable, objParam);
 
-			var contextExpression = (Expression)me;
-			List<MemberInfo> members = [];
-			while (contextExpression?.UnwrapConvert() is MemberExpression memberExpression)
-			{
-				if (memberExpression.Member.DeclaringType == null)
-					return null;
-				members.Add(memberExpression.Member);
-				contextExpression = memberExpression.Expression;
-			}
-
-			if (contextExpression?.UnwrapConvert() is not ContextRefExpression)
-			{
-				return null;
-			}
-
-			members.Reverse();
-
 			var descriptor = column ?? typeDescriptor;
+			var isSpecial  = SequenceHelper.IsSpecialProperty(me, me.Type, "item");
 
-			var ifThenExpression = BuildNullPropagationGetter(objectVariable, resultVariable, members, 0, accessor =>
+			if (isSpecial)
 			{
-				if (descriptor != null) 
-					accessor = descriptor.ApplyConversions(accessor, dbDataType, true);
+				var prepared = (Expression)Expression.Convert(objectVariable, me.Type);
+				if (descriptor != null)
+					prepared = descriptor.ApplyConversions(prepared, dbDataType, true);
 
-				return Expression.New(_sqlValueconstructor,
-					Expression.Constant(dbDataType),
-					Expression.Convert(accessor, typeof(object)));
-			});
+				prepared = prepared.EnsureType<object>();
 
-			generator.AddExpression(ifThenExpression);
+				var valueExpr = Expression.New(
+					_sqlValueconstructor,
+						Expression.Constant(dbDataType),
+						prepared);
 
-			generator.IfThen(Expression.Equal(resultVariable, Expression.Constant(null, resultVariable.Type)), Expression.Assign(resultVariable, Expression.New(_sqlValueconstructor,
-				Expression.Constant(dbDataType),
-				Expression.Constant(null, typeof(object)))));
+				generator.AddExpression(valueExpr);
+			}
+			else
+			{
+				var resultVariable    = generator.AssignToVariable(Expression.Constant(null, typeof(ISqlExpression)), "result");
 
-			generator.AddExpression(resultVariable);
+				var contextExpression = (Expression)me;
+				var members           = new List<MemberInfo>();
+				while (contextExpression?.UnwrapConvert() is MemberExpression memberExpression)
+				{
+					if (memberExpression.Member.DeclaringType == null)
+						return null;
+					members.Add(memberExpression.Member);
+					contextExpression = memberExpression.Expression;
+				}
+
+				if (contextExpression?.UnwrapConvert() is not ContextRefExpression)
+				{
+					return null;
+				}
+
+				members.Reverse();
+
+				var ifThenExpression = BuildNullPropagationGetter(objectVariable, resultVariable, members, 0, accessor =>
+				{
+					if (descriptor != null)
+						accessor = descriptor.ApplyConversions(accessor, dbDataType, true);
+
+					if (accessor.Type == typeof(DataParameter))
+					{
+						var localGenerator = new ExpressionGenerator();
+						var variable = localGenerator.AssignToVariable(accessor);
+						localGenerator.AddExpression(
+							Expression.New(
+								_parameterConstructor,
+								Expression.Property(variable, LinqToDB.Reflection.Methods.LinqToDB.DataParameter.DbDataType),
+								Expression.Constant(me.Member.Name),
+								Expression.Property(variable, LinqToDB.Reflection.Methods.LinqToDB.DataParameter.Value)
+							));
+
+						return localGenerator.Build();
+					}
+
+					return Expression.New(_sqlValueconstructor,
+						Expression.Constant(dbDataType),
+						Expression.Convert(accessor, typeof(object)));
+				});
+
+				generator.AddExpression(ifThenExpression);
+
+				generator.IfThen(Expression.Equal(resultVariable, Expression.Constant(null, resultVariable.Type)), Expression.Assign(resultVariable,
+					Expression.New(_sqlValueconstructor,
+						Expression.Constant(dbDataType),
+						Expression.Constant(null, typeof(object)))));
+
+				generator.AddExpression(resultVariable);
+			}
 
 			var body = generator.Build();
 
