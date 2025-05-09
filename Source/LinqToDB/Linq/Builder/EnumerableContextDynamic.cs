@@ -226,9 +226,14 @@ namespace LinqToDB.Linq.Builder
 			var currentDescriptor = Builder.CurrentDescriptor;
 			SqlPlaceholderExpression? foundPlaceholder = null;
 
+			var isSpecial  = memberExpression != null && SequenceHelper.IsSpecialProperty(memberExpression, memberExpression.Type, "item");
+			var isRowIndex = memberExpression != null && SequenceHelper.IsSpecialProperty(memberExpression, memberExpression.Type, "index");
+
+			var checkDescriptor = currentDescriptor != null && !isSpecial && !isRowIndex;
+
 			foreach (var (path, descriptor, placeholder) in _fieldsMap)
 			{
-				if (descriptor == currentDescriptor && (ExpressionEqualityComparer.Instance.Equals(path, memberExpression) || ExpressionEqualityComparer.Instance.Equals(path, pathExpression)))
+				if ((!checkDescriptor || descriptor == currentDescriptor) && (ExpressionEqualityComparer.Instance.Equals(path, memberExpression) || ExpressionEqualityComparer.Instance.Equals(path, pathExpression)))
 				{
 					foundPlaceholder = placeholder;
 					break;
@@ -244,9 +249,6 @@ namespace LinqToDB.Linq.Builder
 
 			if (memberExpression != null)
 			{
-				var isSpecial = SequenceHelper.IsSpecialProperty(memberExpression, memberExpression.Type, "item");
-				var isRowIndex = SequenceHelper.IsSpecialProperty(memberExpression, memberExpression.Type, "index");
-
 				var columDescriptor = isSpecial || isRowIndex || memberExpression.Expression?.Type == null
 					? null
 					: MappingSchema.GetEntityDescriptor(memberExpression.Expression.Type).FindColumnDescriptor(memberExpression.Member);

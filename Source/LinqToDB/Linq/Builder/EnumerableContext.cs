@@ -67,11 +67,15 @@ namespace LinqToDB.Linq.Builder
 
 			var currentDescriptor = Builder.CurrentDescriptor;
 
+			var isSpecial = SequenceHelper.IsSpecialProperty(memberExpression, memberExpression.Type, "item");
+
+			var checkDescriptor = currentDescriptor != null && isSpecial;
+
 			SqlPlaceholderExpression? foundPlaceholder = null;
 
 			foreach (var (path, descriptor, placeholder) in _fieldsMap)
 			{
-				if (descriptor == currentDescriptor && (ExpressionEqualityComparer.Instance.Equals(path, memberExpression)))
+				if ((!checkDescriptor || descriptor == currentDescriptor) && (ExpressionEqualityComparer.Instance.Equals(path, memberExpression)))
 				{
 					foundPlaceholder = placeholder;
 					break;
