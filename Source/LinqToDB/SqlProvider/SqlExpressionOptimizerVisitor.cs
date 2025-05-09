@@ -21,8 +21,8 @@ namespace LinqToDB.SqlProvider
 		ICollection<ISqlPredicate>? _allowOptimizeList;
 		ISqlPredicate?              _allowOptimize;
 		bool                        _visitQueries;
-		bool                        _isInsideNot;
-		bool                        _reduceBinary;
+		bool                        _isInsidePredicate;
+		bool                        _reducePredicates;
 
 		public SqlExpressionOptimizerVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
 		{
@@ -36,8 +36,7 @@ namespace LinqToDB.SqlProvider
 			MappingSchema               mappingSchema,
 			IQueryElement               element,
 			bool                        visitQueries,
-			bool                        isInsideNot,
-			bool                        reduceBinary)
+			bool                        reducePredicates)
 		{
 			Cleanup();
 			_evaluationContext = evaluationContext;
@@ -46,8 +45,8 @@ namespace LinqToDB.SqlProvider
 			_allowOptimize     = default;
 			_allowOptimizeList = default;
 			_visitQueries      = visitQueries;
-			_isInsideNot       = isInsideNot;
-			_reduceBinary      = reduceBinary;
+			_isInsidePredicate = default;
+			_reducePredicates  = reducePredicates;
 			SetTransformationInfo(transformationInfo);
 
 			_nullabilityContext = nullabilityContext.WithTransformationInfo(GetTransformationInfo());
@@ -59,7 +58,8 @@ namespace LinqToDB.SqlProvider
 		{
 			base.Cleanup();
 			_visitQueries       = default;
-			_isInsideNot        = default;
+			_isInsidePredicate  = default;
+			_reducePredicates   = default;
 			_evaluationContext  = default!;
 			_nullabilityContext = default!;
 			_dataOptions        = default!;
@@ -380,7 +380,7 @@ namespace LinqToDB.SqlProvider
 						}
 						else if (value is null)
 						{
-							return new SqlSearchCondition(element.IsOr, new SqlPredicate.Expr(new SqlValue(typeof(bool?), null)));
+							return new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, new SqlPredicate.Expr(new SqlValue(typeof(bool?), null)));
 						}
 					}
 				}
@@ -478,7 +478,7 @@ namespace LinqToDB.SqlProvider
 
 				if (newPredicates != null)
 				{
-					newElement = new SqlSearchCondition(element.IsOr, newPredicates);
+					newElement = new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, newPredicates);
 					NotifyReplaced(newElement, element);
 
 					return newElement;
@@ -519,12 +519,12 @@ namespace LinqToDB.SqlProvider
 
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			var saveInsideNot = _isInsideNot;
-			_isInsideNot = false;
+			var saveInsidePredicate = _isInsidePredicate;
+			_isInsidePredicate = false;
 
 			var result = base.VisitSqlQuery(selectQuery);
 
-			_isInsideNot = saveInsideNot;
+			_isInsidePredicate = saveInsidePredicate;
 
 			return result;
 		}
@@ -544,14 +544,14 @@ namespace LinqToDB.SqlProvider
 				return Visit(predicate.Predicate.Invert(_nullabilityContext));
 			}
 
-			var saveInsideNot = _isInsideNot;
+			var saveInsidePredicate = _isInsidePredicate;
 			var saveAllow     = _allowOptimize;
 
-			_isInsideNot     = true;
-			_allowOptimize = predicate.Predicate;
+			_isInsidePredicate    = true;
+			_allowOptimize        = predicate.Predicate;
 			var newInnerPredicate = (ISqlPredicate)Visit(predicate.Predicate);
-			_isInsideNot     = saveInsideNot;
-			_allowOptimize = saveAllow;
+			_isInsidePredicate    = saveInsidePredicate;
+			_allowOptimize        = saveAllow;
 
 			if (newInnerPredicate.CanInvert(_nullabilityContext))
 			{
@@ -973,98 +973,13 @@ namespace LinqToDB.SqlProvider
 				return SqlPredicate.MakeBool((value == null) != predicate.IsNot);
 			}
 
-			var unwrapped = QueryHelper.UnwrapNullablity(predicate.Expr1);
-			if (unwrapped is SqlBinaryExpression binaryExpression)
+			using (var reducer = ReduceIsNullExpressionVisitor.Pool.Allocate())
 			{
-				ISqlPredicate? result = null;
-
-				if (binaryExpression.Operation is "+" or "-" or "*" or "/" or "%" or "&")
-				{
-					if (binaryExpression.Expr1.CanBeNullable(_nullabilityContext) && !binaryExpression.Expr2.CanBeNullable(_nullabilityContext))
-					{
-						result = new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(binaryExpression.Expr1, true), predicate.IsNot);
-					}
-					else if (binaryExpression.Expr2.CanBeNullable(_nullabilityContext) && !binaryExpression.Expr1.CanBeNullable(_nullabilityContext))
-					{
-						result = new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(binaryExpression.Expr2, true), predicate.IsNot);
-					}
-				}
-
-				if (result != null)
-					return Visit(result);
+				newPredicate = reducer.Value.Reduce(_nullabilityContext, predicate);
 			}
 
-			if (ReferenceEquals(unwrapped, predicate.Expr1) || predicate.Expr1 is SqlNullabilityExpression sqlNullabilityExpression &&
-			    sqlNullabilityExpression.CanBeNullable(_nullabilityContext) == unwrapped.CanBeNullable(_nullabilityContext))
-			{
-				if (unwrapped is SqlConditionExpression condition)
-				{
-					if (condition.TrueValue.IsNullValue())
-					{
-						var sc = new SqlSearchCondition(true);
-						sc.Add(condition.Condition);
-						sc.AddIsNull(condition.FalseValue);
-						return Visit(sc.MakeNot(predicate.IsNot));
-					}
-
-					if (condition.FalseValue.IsNullValue())
-					{
-						var sc = new SqlSearchCondition(true);
-						sc.Add(condition.Condition.MakeNot());
-						sc.AddIsNull(condition.TrueValue);
-						return Visit(sc.MakeNot(predicate.IsNot));
-					}
-				}
-				else if (unwrapped is SqlCastExpression cast)
-				{
-					var newIsNull = new SqlPredicate.IsNull(cast.Expression, predicate.IsNot);
-					return Visit(newIsNull);
-				}
-				else if (unwrapped is SqlFunction func)
-				{
-					// We can extend to more parameters, but it's not clear if it's needed
-					if (func is { IsAggregate: false, IsPure: true })
-					{
-						if (func.NullabilityType == ParametersNullabilityType.IfAnyParameterNullable)
-						{
-							var sc = new SqlSearchCondition(true);
-							sc.AddRange(func.Parameters.Select(p => new SqlPredicate.IsNull(p, false)));
-							return Visit(sc.MakeNot(predicate.IsNot));
-						}
-
-						if (func.NullabilityType == ParametersNullabilityType.IfAllParametersNullable)
-						{
-							var sc = new SqlSearchCondition(false);
-							sc.AddRange(func.Parameters.Select(p => new SqlPredicate.IsNull(p, false)));
-							return Visit(sc.MakeNot(predicate.IsNot));
-						}
-
-						if (func.NullabilityType == ParametersNullabilityType.SameAsFirstParameter)
-						{
-							var newIsNull = new SqlPredicate.IsNull(func.Parameters[0], predicate.IsNot);
-							return Visit(newIsNull);
-						}
-
-						if (func.NullabilityType == ParametersNullabilityType.SameAsSecondParameter)
-						{
-							var newIsNull = new SqlPredicate.IsNull(func.Parameters[1], predicate.IsNot);
-							return Visit(newIsNull);
-						}
-
-						if (func.NullabilityType == ParametersNullabilityType.SameAsThirdParameter)
-						{
-							var newIsNull = new SqlPredicate.IsNull(func.Parameters[2], predicate.IsNot);
-							return Visit(newIsNull);
-						}
-
-						if (func.NullabilityType == ParametersNullabilityType.SameAsLastParameter)
-						{
-							var newIsNull = new SqlPredicate.IsNull(func.Parameters[^1], predicate.IsNot);
-							return Visit(newIsNull);
-						}
-					}
-				}
-			}
+			if (!ReferenceEquals(newPredicate, predicate))
+				return Visit(newPredicate);
 
 			return predicate;
 		}
@@ -1109,7 +1024,10 @@ namespace LinqToDB.SqlProvider
 
 		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
+			var saveInsidePredicate = _isInsidePredicate;
+			_isInsidePredicate      = true;
 			var newElement = base.VisitExprExprPredicate(predicate);
+			_isInsidePredicate      = saveInsidePredicate;
 
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
@@ -1119,9 +1037,9 @@ namespace LinqToDB.SqlProvider
 				return SqlPredicate.MakeBool(boolValue);
 			}
 
-			if (_reduceBinary)
+			if (_reducePredicates)
 			{
-				var reduced = predicate.Reduce(_nullabilityContext, _evaluationContext, _isInsideNot, _dataOptions.LinqOptions);
+				var reduced = predicate.Reduce(_nullabilityContext, _evaluationContext, _isInsidePredicate, _dataOptions.LinqOptions);
 
 				if (!ReferenceEquals(reduced, predicate))
 				{
@@ -1133,7 +1051,7 @@ namespace LinqToDB.SqlProvider
 
 			if (expr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
-				if (expr.WithNull == null)
+				if (expr.UnknownAsValue == null)
 				{
 					if (expr.Expr2 is ISqlPredicate expr2Predicate)
 					{
@@ -1145,6 +1063,10 @@ namespace LinqToDB.SqlProvider
 
 							return transformed;
 						}
+						else if (expr.Expr1 is not ISqlPredicate)
+						{
+							return new SqlPredicate.ExprExpr(new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Expr(expr.Expr1)), expr.Operator, expr.Expr2, expr.UnknownAsValue);
+						}
 					}
 
 					if (expr.Expr1 is ISqlPredicate expr1Predicate)
@@ -1155,6 +1077,10 @@ namespace LinqToDB.SqlProvider
 							var isNot       = boolValue2.Value != (expr.Operator == SqlPredicate.Operator.Equal);
 							var transformed = expr1Predicate.MakeNot(isNot);
 							return transformed;
+						}
+						else if (expr.Expr2 is not ISqlPredicate)
+						{
+							return new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Expr(expr.Expr2)), expr.UnknownAsValue);
 						}
 					}
 				}
@@ -1204,9 +1130,9 @@ namespace LinqToDB.SqlProvider
 			{
 				SqlSearchCondition newSearchCondition = element.SearchCondition.Predicates switch
 				{
-					[]       => new SqlSearchCondition(false),
-					[var p0] => new SqlSearchCondition(false, p0),
-					_        => new SqlSearchCondition(false, element.SearchCondition),
+					[]       => new SqlSearchCondition(false, canBeUnknown: null),
+					[var p0] => new SqlSearchCondition(false, canBeUnknown: null, p0),
+					_        => new SqlSearchCondition(false, canBeUnknown: null, element.SearchCondition),
 				};
 
 				if (GetVisitMode(element) == VisitMode.Modify)
@@ -1473,7 +1399,7 @@ namespace LinqToDB.SqlProvider
 									.Add(sqlCaseExpression._cases[index].Condition);
 
 								if (notMatches.Count > 0)
-									condition.Add(new SqlSearchCondition(true, notMatches).MakeNot());
+									condition.Add(new SqlSearchCondition(true, canBeUnknown: null, notMatches).MakeNot());
 
 								resultCondition.Add(condition);
 							}
@@ -1488,7 +1414,7 @@ namespace LinqToDB.SqlProvider
 							if (notMatches.Count == 0)
 								return SqlPredicate.True;
 
-							resultCondition.Add(new SqlSearchCondition(true, notMatches).MakeNot());
+							resultCondition.Add(new SqlSearchCondition(true, canBeUnknown: null, notMatches).MakeNot());
 						}
 
 						return resultCondition;
@@ -1517,9 +1443,9 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			if (_reduceBinary)
+			if (_reducePredicates)
 			{
-				var reduced = isTrue.Reduce(_nullabilityContext, _isInsideNot);
+				var reduced = isTrue.Reduce(_nullabilityContext, _isInsidePredicate);
 
 				if (!ReferenceEquals(reduced, isTrue))
 				{
@@ -1676,6 +1602,5 @@ namespace LinqToDB.SqlProvider
 		}
 
 		#endregion
-
 	}
 }

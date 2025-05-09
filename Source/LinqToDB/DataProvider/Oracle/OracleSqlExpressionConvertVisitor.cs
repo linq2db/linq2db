@@ -75,10 +75,10 @@ namespace LinqToDB.DataProvider.Oracle
 					SqlPredicate.Operator.NotEqual       => new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(x, true), isNot: true),
 					SqlPredicate.Operator.GreaterOrEqual => new SqlPredicate.ExprExpr(
 						// Always true
-						new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(1), withNull: null),
+						new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(1), unknownAsValue: null),
 					SqlPredicate.Operator.Less           => new SqlPredicate.ExprExpr(
 						// Always false
-						new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(0), withNull: null),
+						new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(0), unknownAsValue: null),
 					// Overlaps doesn't operate on strings
 					_ => throw new InvalidOperationException(),
 				};

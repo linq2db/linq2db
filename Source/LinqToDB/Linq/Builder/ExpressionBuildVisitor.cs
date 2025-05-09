@@ -2979,7 +2979,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (predicateSql is not ISqlExpression sqlExpr)
 						{
-							sqlExpr = new SqlSearchCondition(false, predicateSql);
+							sqlExpr = new SqlSearchCondition(false, canBeUnknown: null, predicateSql);
 						}
 
 						var placeholder = CreatePlaceholder(sqlExpr, itemNode);
@@ -2998,7 +2998,7 @@ namespace LinqToDB.Linq.Builder
 				return true;
 			}
 
-			var condition = new SqlSearchCondition(node.NodeType is ExpressionType.OrElse or ExpressionType.Or, predicates!);
+			var condition = new SqlSearchCondition(node.NodeType is ExpressionType.OrElse or ExpressionType.Or, canBeUnknown: null, predicates!);
 			translated = CreatePlaceholder(condition, node);
 
 			return true;
@@ -3924,9 +3924,9 @@ namespace LinqToDB.Linq.Builder
 								if (rightPredicate is SqlPredicate.IsNull isnull)
 								{
 									if (isnull.IsNot == localIsNot)
-										return CreatePlaceholder(new SqlSearchCondition(false, isnull), GetOriginalExpression());
+										return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, isnull), GetOriginalExpression());
 
-									return CreatePlaceholder(new SqlSearchCondition(false, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
+									return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
 								}
 							}
 
@@ -3945,9 +3945,9 @@ namespace LinqToDB.Linq.Builder
 								if (leftPredicate is SqlPredicate.IsNull isnull)
 								{
 									if (isnull.IsNot == localIsNot)
-										return CreatePlaceholder(new SqlSearchCondition(false, isnull), GetOriginalExpression());
+										return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, isnull), GetOriginalExpression());
 
-									return CreatePlaceholder(new SqlSearchCondition(false, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
+									return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
 								}
 							}
 
@@ -3979,7 +3979,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var p = ConvertEnumConversion(left, op, right);
 					if (p != null)
-						return CreatePlaceholder(new SqlSearchCondition(false, p), GetOriginalExpression());
+						return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, p), GetOriginalExpression());
 				}
 
 				if (l is null)
@@ -4109,14 +4109,11 @@ namespace LinqToDB.Linq.Builder
 						lOriginal = ApplyExpressionNullability(lOriginal, nullability);
 						rOriginal = ApplyExpressionNullability(rOriginal, nullability);
 
-						predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-							compareNullsAsValues && (lOriginal.CanBeNullable(nullability) || rOriginal.CanBeNullable(nullability))
-								? true
-								: null);
+						predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal, compareNullsAsValues ? false : null);
 					}
 				}
 
-				return CreatePlaceholder(new SqlSearchCondition(false, predicate), GetOriginalExpression());
+				return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, predicate), GetOriginalExpression());
 
 			}
 			finally

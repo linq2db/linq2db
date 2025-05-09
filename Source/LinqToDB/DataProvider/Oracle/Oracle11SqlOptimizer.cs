@@ -40,11 +40,11 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				case QueryElementType.ExprExprPredicate:
 				{
-					var (a, op, b, withNull) = (SqlPredicate.ExprExpr)element;
+					var (a, op, b, unknownAsValue) = (SqlPredicate.ExprExpr)element;
 
-					// This condition matches OracleSqlExpressionConvertVisitor.ConvertExprExprPredicate, 
+					// This condition matches OracleSqlExpressionConvertVisitor.ConvertExprExprPredicate,
 					// where we transform empty strings "" into null-handling expressions.
-					if (withNull != null ||
+					if (unknownAsValue != null ||
 						(dataOptions.LinqOptions.CompareNulls != CompareNulls.LikeSql &&
 							op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
 					{

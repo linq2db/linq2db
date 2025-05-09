@@ -824,180 +824,180 @@ namespace Tests.Linq
 			public static readonly IReadOnlyCollection<BooleanTable> Data;
 		}
 
-		//[Test]
-		//public void Test_PredicateWithBoolean([DataSources] string context, [Values] bool inline)
-		//{
-		//	using var db = GetDataContext(context);
-		//	using var tb = db.CreateLocalTable(BooleanTable.Data);
+		[Test]
+		public void Test_PredicateWithBoolean([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
 
-		//	db.InlineParameters = inline;
+			db.InlineParameters = inline;
 
-		//	var True = true;
-		//	var False = false;
-		//	bool? TrueN = true;
-		//	bool? FalseN = false;
-		//	bool? Null = null;
+			var True = true;
+			var False = false;
+			bool? TrueN = true;
+			bool? FalseN = false;
+			bool? Null = null;
 
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == True));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value4) == False));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == Null));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value4) == True));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value4) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value4) == False));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value4) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value4) == Null));
-		//	AssertQuery(tb.Where(r => (r.Value5 == r.Value4) == True));
-		//	AssertQuery(tb.Where(r => (r.Value5 == r.Value4) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value5 == r.Value4) == False));
-		//	AssertQuery(tb.Where(r => (r.Value5 == r.Value4) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value5 == r.Value4) == Null));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == True));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value4) == False));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == Null));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value4) == True));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value4) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value4) == False));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value4) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value4) == Null));
+			AssertQuery(tb.Where(r => (r.Value5 == r.Value4) == True));
+			AssertQuery(tb.Where(r => (r.Value5 == r.Value4) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value5 == r.Value4) == False));
+			AssertQuery(tb.Where(r => (r.Value5 == r.Value4) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value5 == r.Value4) == Null));
 
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != True));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != False));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != Null));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value4) != True));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value4) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value4) != False));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value4) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 == r.Value4) != Null));
-		//	AssertQuery(tb.Where(r => (r.Value5 == r.Value4) != True));
-		//	AssertQuery(tb.Where(r => (r.Value5 == r.Value4) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value5 == r.Value4) != False));
-		//	AssertQuery(tb.Where(r => (r.Value5 == r.Value4) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value5 == r.Value4) != Null));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != True));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != False));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != Null));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value4) != True));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value4) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value4) != False));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value4) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value4) != Null));
+			AssertQuery(tb.Where(r => (r.Value5 == r.Value4) != True));
+			AssertQuery(tb.Where(r => (r.Value5 == r.Value4) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value5 == r.Value4) != False));
+			AssertQuery(tb.Where(r => (r.Value5 == r.Value4) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value5 == r.Value4) != Null));
 
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value2) == True));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value2) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value2) == False));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value2) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value2) == Null));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value4) == True));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value4) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value4) == False));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value4) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value4) == Null));
-		//	AssertQuery(tb.Where(r => (r.Value5 > r.Value4) == True));
-		//	AssertQuery(tb.Where(r => (r.Value5 > r.Value4) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value5 > r.Value4) == False));
-		//	AssertQuery(tb.Where(r => (r.Value5 > r.Value4) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value5 > r.Value4) == Null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value2) == True));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value2) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value2) == False));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value2) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value2) == Null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4) == True));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4) == False));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4) == Null));
+			AssertQuery(tb.Where(r => (r.Value5 > r.Value4) == True));
+			AssertQuery(tb.Where(r => (r.Value5 > r.Value4) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value5 > r.Value4) == False));
+			AssertQuery(tb.Where(r => (r.Value5 > r.Value4) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value5 > r.Value4) == Null));
 
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value2) != True));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value2) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value2) != False));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value2) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value2) != Null));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value4) != True));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value4) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value4) != False));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value4) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 > r.Value4) != Null));
-		//	AssertQuery(tb.Where(r => (r.Value5 > r.Value4) != True));
-		//	AssertQuery(tb.Where(r => (r.Value5 > r.Value4) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value5 > r.Value4) != False));
-		//	AssertQuery(tb.Where(r => (r.Value5 > r.Value4) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value5 > r.Value4) != Null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value2) != True));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value2) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value2) != False));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value2) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value2) != Null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4) != True));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4) != False));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4) != Null));
+			AssertQuery(tb.Where(r => (r.Value5 > r.Value4) != True));
+			AssertQuery(tb.Where(r => (r.Value5 > r.Value4) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value5 > r.Value4) != False));
+			AssertQuery(tb.Where(r => (r.Value5 > r.Value4) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value5 > r.Value4) != Null));
 
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == True));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == False));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == Null));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) == True));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) == False));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) == Null));
-		//	AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) == True));
-		//	AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) == False));
-		//	AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) == Null));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == True));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == False));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == Null));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) == True));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) == False));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) == Null));
+			AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) == True));
+			AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) == False));
+			AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) == Null));
 
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != True));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != False));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != Null));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) != True));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) != False));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) != Null));
-		//	AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) != True));
-		//	AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) != False));
-		//	AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) != Null));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != True));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != False));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != Null));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) != True));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) != False));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value4) != Null));
+			AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) != True));
+			AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) != False));
+			AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value5 >= r.Value4) != Null));
 
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value2) == True));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value2) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value2) == False));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value2) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value2) == Null));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value4) == True));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value4) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value4) == False));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value4) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value4) == Null));
-		//	AssertQuery(tb.Where(r => (r.Value5 < r.Value4) == True));
-		//	AssertQuery(tb.Where(r => (r.Value5 < r.Value4) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value5 < r.Value4) == False));
-		//	AssertQuery(tb.Where(r => (r.Value5 < r.Value4) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value5 < r.Value4) == Null));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value2) == True));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value2) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value2) == False));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value2) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value2) == Null));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value4) == True));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value4) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value4) == False));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value4) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value4) == Null));
+			AssertQuery(tb.Where(r => (r.Value5 < r.Value4) == True));
+			AssertQuery(tb.Where(r => (r.Value5 < r.Value4) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value5 < r.Value4) == False));
+			AssertQuery(tb.Where(r => (r.Value5 < r.Value4) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value5 < r.Value4) == Null));
 
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value2) != True));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value2) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value2) != False));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value2) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value2) != Null));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value4) != True));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value4) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value4) != False));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value4) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 < r.Value4) != Null));
-		//	AssertQuery(tb.Where(r => (r.Value5 < r.Value4) != True));
-		//	AssertQuery(tb.Where(r => (r.Value5 < r.Value4) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value5 < r.Value4) != False));
-		//	AssertQuery(tb.Where(r => (r.Value5 < r.Value4) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value5 < r.Value4) != Null));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value2) != True));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value2) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value2) != False));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value2) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value2) != Null));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value4) != True));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value4) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value4) != False));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value4) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 < r.Value4) != Null));
+			AssertQuery(tb.Where(r => (r.Value5 < r.Value4) != True));
+			AssertQuery(tb.Where(r => (r.Value5 < r.Value4) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value5 < r.Value4) != False));
+			AssertQuery(tb.Where(r => (r.Value5 < r.Value4) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value5 < r.Value4) != Null));
 
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) == True));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) == False));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) == Null));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) == True));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) == False));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) == Null));
-		//	AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) == True));
-		//	AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) == TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) == False));
-		//	AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) == FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) == Null));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) == True));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) == False));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) == Null));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) == True));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) == False));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) == Null));
+			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) == True));
+			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) == TrueN));
+			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) == False));
+			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) == FalseN));
+			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) == Null));
 
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) != True));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) != False));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) != Null));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) != True));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) != False));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) != Null));
-		//	AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != True));
-		//	AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != TrueN));
-		//	AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != False));
-		//	AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != FalseN));
-		//	AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != Null));
-		//}
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) != True));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) != False));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value2) != Null));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) != True));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) != False));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value1 <= r.Value4) != Null));
+			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != True));
+			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != TrueN));
+			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != False));
+			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != FalseN));
+			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != Null));
+		}
 
 		[Test]
 		public void Test_PredicateWithPredicate([DataSources] string context)
@@ -1026,32 +1026,44 @@ namespace Tests.Linq
 			AssertQuery(tb.Where(r => (r.Value4 >= r.Value5) != (r.Value5 != r.Value4)));
 		}
 
-		//[Test]
-		//public void Test_PredicateVsPredicate_TriStrate([DataSources] string context)
-		//{
-		//	using var db = GetDataContext(context);
-		//	using var tb = db.CreateLocalTable(BooleanTable.Data);
+		[Test]
+		public void Test_PredicateVsPredicate_TriStrate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
 
-		//	AssertQuery(tb.Where(r => Equal(r.Value1, r.Value2) == Equal(r.Value4, r.Value5)));
-		//	AssertQuery(tb.Where(r => Equal(r.Value1, r.Value5) == Equal(r.Value4, r.Value2)));
-		//	AssertQuery(tb.Where(r => Equal(r.Value1, r.Value2) != Equal(r.Value4, r.Value5)));
-		//	AssertQuery(tb.Where(r => Equal(r.Value1, r.Value5) != Equal(r.Value4, r.Value2)));
+			AssertQuery(tb.Where(r => Equal(r.Value1, r.Value2) == Equal(r.Value4, r.Value5)));
+			AssertQuery(tb.Where(r => Equal(r.Value1, r.Value5) == Equal(r.Value4, r.Value2)));
+			AssertQuery(tb.Where(r => Equal(r.Value1, r.Value2) != Equal(r.Value4, r.Value5)));
+			AssertQuery(tb.Where(r => Equal(r.Value1, r.Value5) != Equal(r.Value4, r.Value2)));
 
-		//	AssertQuery(tb.Where(r => Equal(r.Value1, r.Value2) == Equal(r.Value2, r.Value1)));
-		//	AssertQuery(tb.Where(r => Equal(r.Value1, r.Value2) != Equal(r.Value2, r.Value1)));
-		//	AssertQuery(tb.Where(r => Equal(r.Value4, r.Value5) == Equal(r.Value5, r.Value4)));
-		//	AssertQuery(tb.Where(r => Equal(r.Value4, r.Value5) != Equal(r.Value5, r.Value4)));
+			AssertQuery(tb.Where(r => Equal(r.Value1, r.Value2) == Equal(r.Value2, r.Value1)));
+			AssertQuery(tb.Where(r => Equal(r.Value1, r.Value2) != Equal(r.Value2, r.Value1)));
+			AssertQuery(tb.Where(r => Equal(r.Value4, r.Value5) == Equal(r.Value5, r.Value4)));
+			AssertQuery(tb.Where(r => Equal(r.Value4, r.Value5) != Equal(r.Value5, r.Value4)));
 
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == NotEqual(r.Value4, r.Value5)));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value5) == NotEqual(r.Value4, r.Value2)));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != NotEqual(r.Value4, r.Value5)));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value5) != NotEqual(r.Value4, r.Value2)));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == NotEqual(r.Value4, r.Value5)));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value5) == NotEqual(r.Value4, r.Value2)));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != NotEqual(r.Value4, r.Value5)));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value5) != NotEqual(r.Value4, r.Value2)));
 
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == NotEqual(r.Value2, r.Value1)));
-		//	AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != NotEqual(r.Value2, r.Value1)));
-		//	AssertQuery(tb.Where(r => (r.Value4 >= r.Value5) == NotEqual(r.Value5, r.Value4)));
-		//	AssertQuery(tb.Where(r => (r.Value4 >= r.Value5) != NotEqual(r.Value5, r.Value4)));
-		//}
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) == NotEqual(r.Value2, r.Value1)));
+			AssertQuery(tb.Where(r => (r.Value1 >= r.Value2) != NotEqual(r.Value2, r.Value1)));
+			AssertQuery(tb.Where(r => (r.Value4 >= r.Value5) == NotEqual(r.Value5, r.Value4)));
+			AssertQuery(tb.Where(r => (r.Value4 >= r.Value5) != NotEqual(r.Value5, r.Value4)));
+		}
+
+		[Test]
+		public void Test_PredicateVsPredicate_ThreePlusNestingLevels([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			AssertQuery(tb.Where(r => ((r.Value1 != r.Value2) == (r.Value1 == r.Value4)) == ((r.Value4 == r.Value5) == (r.Value2 != r.Value4))));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != ((r.Value4 == r.Value1) == ((r.Value4 != r.Value5) != (r.Value4 != r.Value5)))));
+			AssertQuery(tb.Where(r => (((r.Value1 == r.Value2) == (r.Value2 != r.Value4)) != (r.Value1 == r.Value4)) != ((r.Value4 != r.Value5) == (r.Value4 != r.Value5))));
+			AssertQuery(tb.Where(r => ((r.Value1 != r.Value2) != (r.Value2 == r.Value5)) != ((r.Value4 != r.Value1) == (r.Value4 == r.Value5))));
+		}
 
 		[Test]
 		public void Test_FieldInSubquery([DataSources] string context)

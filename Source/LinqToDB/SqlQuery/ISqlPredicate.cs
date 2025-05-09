@@ -6,8 +6,8 @@ namespace LinqToDB.SqlQuery
 	{
 		int  Precedence { get; }
 
-		bool          CanInvert(NullabilityContext nullability);
-		ISqlPredicate Invert(NullabilityContext    nullability);
+		bool           CanInvert(NullabilityContext nullability);
+		ISqlPredicate  Invert   (NullabilityContext nullability);
 
 		/// <summary>
 		/// Returns <c>true</c> if predicate could be evaluated to UNKNOWN.

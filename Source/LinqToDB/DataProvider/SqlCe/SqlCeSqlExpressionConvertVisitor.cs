@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 				if (subStrPredicate != null)
 				{
-					var result = new SqlSearchCondition(predicate.IsNot, subStrPredicate.MakeNot(predicate.IsNot));
+					var result = new SqlSearchCondition(predicate.IsNot, canBeUnknown: null, subStrPredicate.MakeNot(predicate.IsNot));
 
 					return result;
 				}
