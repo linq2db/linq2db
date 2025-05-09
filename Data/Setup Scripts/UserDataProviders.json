@@ -52,6 +52,7 @@
 			"- SapHana.Odbc",
 			"- SqlServer.Azure*",
 			"- Sybase",
+			"- YDB",
 
 			// not available as a docker image
 			"- SqlServer.2005*",

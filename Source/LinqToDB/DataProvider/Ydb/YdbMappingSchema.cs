@@ -10,26 +10,41 @@ using LinqToDB.SqlQuery;
 namespace LinqToDB.DataProvider.Ydb
 {
 	/// <summary>
-	/// Locked (read-only) <see cref="MappingSchema"/> for YDB.
+	/// Provides a read-only <see cref="MappingSchema"/> implementation for YDB (Yandex Database),
+	/// used by the LINQ to DB framework for type mapping and SQL literal generation.
 	/// 
-	/// * Based on the previously used implementation (all custom builders preserved).
-	/// * Enhanced with minor fixes and comments from the new schema, but without
-	///   calls to <c>DataTools.ConvertStringToSql</c> (they're not needed – custom escaping logic is used here).
-	/// * Only primitive types are supported; complex/UDT types are not required yet.
+	/// This schema:
+	/// - Is immutable and optimized for thread-safe reuse.
+	/// - Is derived from a legacy implementation, preserving all custom behaviors.
+	/// - Has been refined with fixes and insights from newer versions but deliberately avoids
+	///   <c>DataTools.ConvertStringToSql</c>, since escaping is handled internally.
+	/// - Only supports primitive .NET types. Complex types (UDTs) are currently not supported.
 	/// </summary>
 	sealed class YdbMappingSchema : LockedMappingSchema
 	{
 		// --------------------------------------------------------------------
-		// Defaults for parametric Decimal(<precision>, <scale>)
+		// Default settings for SQL Decimal(p, s) types in YDB
 		// --------------------------------------------------------------------
+
+		/// <summary>
+		/// Default precision used for SQL <c>Decimal</c> values when not explicitly specified.
+		/// </summary>
 		internal const int DEFAULT_DECIMAL_PRECISION = 22;
+
+		/// <summary>
+		/// Default scale used for SQL <c>Decimal</c> values when not explicitly specified.
+		/// </summary>
 		internal const int DEFAULT_DECIMAL_SCALE     = 9;
 
+		/// <summary>
+		/// Initializes the mapping schema with .NET to YDB type mappings and
+		/// custom converters for SQL literal formatting.
+		/// </summary>
 		private YdbMappingSchema() : base(ProviderName.Ydb)
 		{
-			//----------------------------------------------------------------
-			// .NET-type  ⇢  YDB DataType
-			//----------------------------------------------------------------
+			// ----------------------------------------------------------------
+			// .NET types mapped to YDB DataType enums
+			// ----------------------------------------------------------------
 			AddScalarType(typeof(string), DataType.VarChar);
 			AddScalarType(typeof(bool), DataType.Boolean);
 			AddScalarType(typeof(Guid), DataType.Guid);
@@ -39,9 +54,9 @@ namespace LinqToDB.DataProvider.Ydb
 			AddScalarType(typeof(DateOnly), DataType.Date);
 #endif
 
-			//----------------------------------------------------------------
-			// Value ⇒ SQL-literal builders
-			//----------------------------------------------------------------
+			// ----------------------------------------------------------------
+			// SQL literal converters
+			// ----------------------------------------------------------------
 			SetValueToSqlConverter(typeof(string), (sb, dt, _, v) => BuildStringLiteral(sb, (string)v, dt.Type.DataType));
 			SetValueToSqlConverter(typeof(char), (sb, _, _, v) => BuildCharLiteral(sb, (char)v));
 			SetValueToSqlConverter(typeof(bool), (sb, dt, _, v) => BuildBoolLiteral(sb, (bool)v, dt.Type.DataType));
@@ -50,7 +65,7 @@ namespace LinqToDB.DataProvider.Ydb
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, _, v) => BuildDateTimeLiteral(sb, (DateTime)v, dt.Type.DataType));
 			SetValueToSqlConverter(typeof(TimeSpan), (sb, _, _, v) => BuildIntervalLiteral(sb, (TimeSpan)v));
 
-			// Integer types
+			// Integers
 			SetValueToSqlConverter(typeof(byte), (sb, dt, _, v) => BuildUIntLiteral(sb, (byte)v, dt.Type.DataType, "Uint8"));
 			SetValueToSqlConverter(typeof(sbyte), (sb, dt, _, v) => BuildIntLiteral(sb, (sbyte)v, dt.Type.DataType, "Int8"));
 			SetValueToSqlConverter(typeof(short), (sb, dt, _, v) => BuildIntLiteral(sb, (short)v, dt.Type.DataType, "Int16"));
@@ -60,17 +75,21 @@ namespace LinqToDB.DataProvider.Ydb
 			SetValueToSqlConverter(typeof(long), (sb, dt, _, v) => BuildIntLiteral(sb, (long)v, dt.Type.DataType, "Int64"));
 			SetValueToSqlConverter(typeof(ulong), (sb, dt, _, v) => BuildUIntLiteral(sb, (ulong)v, dt.Type.DataType, "Uint64"));
 
-			// Floating point
+			// Floating point types
 			SetValueToSqlConverter(typeof(float), (sb, _, _, v) => sb.AppendFormat(CultureInfo.InvariantCulture, "Float(\"{0:G9}\")", (float)v));
 			SetValueToSqlConverter(typeof(double), (sb, _, _, v) => sb.AppendFormat(CultureInfo.InvariantCulture, "Double(\"{0:G17}\")", (double)v));
 
-			// Decimal(<p>,<s>)
+			// Decimal type with custom precision/scale
 			SetValueToSqlConverter(typeof(decimal), (sb, dt, _, v) => BuildDecimalLiteral(sb, (decimal)v, dt));
 		}
 
 		// --------------------------------------------------------------------
-		// Helper builders
+		// Helper methods for building SQL literals in YDB syntax
 		// --------------------------------------------------------------------
+
+		/// <summary>
+		/// Escapes quotes and backslashes in the input string and wraps it with the given quote character.
+		/// </summary>
 		private static void EscapeAndQuote(StringBuilder sb, string raw, char quote)
 		{
 			sb.Append(quote);
@@ -86,18 +105,19 @@ namespace LinqToDB.DataProvider.Ydb
 
 		private static void BuildStringLiteral(StringBuilder sb, string val, DataType dt)
 		{
-			EscapeAndQuote(sb, val, '"'); // "abc"
-
-			// Json / Yson / JsonDocument can be wrapped in Json("...") if needed
+			EscapeAndQuote(sb, val, '"');
 			if (dt == DataType.Json || dt == DataType.BinaryJson)
 				sb.Insert(0, "Json(").Append(')');
 		}
 
-		private static void BuildCharLiteral(StringBuilder sb, char c) => EscapeAndQuote(sb, c.ToString(), '"');
+		private static void BuildCharLiteral(StringBuilder sb, char c) =>
+			EscapeAndQuote(sb, c.ToString(), '"');
 
-		private static void BuildBoolLiteral(StringBuilder sb, bool v, DataType _) => sb.Append("Bool(\"").Append(v ? "true" : "false").Append("\")");
+		private static void BuildBoolLiteral(StringBuilder sb, bool v, DataType _) =>
+			sb.Append("Bool(\"").Append(v ? "true" : "false").Append("\")");
 
-		private static void BuildUuidLiteral(StringBuilder sb, Guid g) => sb.AppendFormat(CultureInfo.InvariantCulture, "Uuid(\"{0:D}\")", g);
+		private static void BuildUuidLiteral(StringBuilder sb, Guid g) =>
+			sb.AppendFormat(CultureInfo.InvariantCulture, "Uuid(\"{0:D}\")", g);
 
 		private static void BuildBinaryLiteral(StringBuilder sb, byte[] bytes)
 		{
@@ -113,17 +133,29 @@ namespace LinqToDB.DataProvider.Ydb
 
 		private static void BuildDateTimeLiteral(StringBuilder sb, DateTime dt, DataType target)
 		{
-			// YDB expects UTC strings with Z
-			if (dt.Kind != DateTimeKind.Utc)
-				dt = dt.ToUniversalTime();
+			var isSecondPrecision =
+				target == DataType.DateTime &&
+				dt.Millisecond == 0 &&
+				dt.Ticks % TimeSpan.TicksPerSecond == 0;
 
-			if (dt.Millisecond == 0 && dt.Ticks % TimeSpan.TicksPerSecond == 0 && target == DataType.DateTime)
-				sb.AppendFormat(CultureInfo.InvariantCulture, "Datetime(\"{0:yyyy-MM-ddTHH:mm:ssZ}\")", dt);
+			if (isSecondPrecision)
+			{
+				sb.AppendFormat(
+					CultureInfo.InvariantCulture,
+					"Datetime(\"{0:yyyy-MM-ddTHH:mm:ssZ}\")",
+					dt);
+			}
 			else
-				sb.AppendFormat(CultureInfo.InvariantCulture, "Timestamp(\"{0:yyyy-MM-ddTHH:mm:ss.ffffffZ}\")", dt);
+			{
+				sb.AppendFormat(
+					CultureInfo.InvariantCulture,
+					"Timestamp(\"{0:yyyy-MM-ddTHH:mm:ss.ffffffZ}\")",
+					dt);
+			}
 		}
 
-		private static void BuildIntervalLiteral(StringBuilder sb, TimeSpan ts) => sb.AppendFormat(CultureInfo.InvariantCulture, "Interval(\"{0}\")", System.Xml.XmlConvert.ToString(ts));
+		private static void BuildIntervalLiteral(StringBuilder sb, TimeSpan ts) =>
+			sb.AppendFormat(CultureInfo.InvariantCulture, "Interval(\"{0}\")", System.Xml.XmlConvert.ToString(ts));
 
 		private static void BuildIntLiteral(StringBuilder sb, long v, DataType dt, string ydbFn)
 		{
@@ -151,16 +183,25 @@ namespace LinqToDB.DataProvider.Ydb
 		// --------------------------------------------------------------------
 		// Singleton instance
 		// --------------------------------------------------------------------
+
+		/// <summary>
+		/// Globally shared instance of <see cref="YdbMappingSchema"/>.
+		/// </summary>
 		internal static MappingSchema Instance { get; } = new YdbMappingSchema();
 
 		/// <summary>
-		/// Variant that includes the built-in (reflection-based) schema from the YDB client -
-		/// allows using types like <c>YdbDate</c>, <c>YdbDateTime</c>, etc.,
-		/// if they are connected (see <see cref="YdbProviderAdapter"/>).
+		/// An extended variant of the mapping schema that includes reflection-based type support
+		/// from the native YDB client. Useful when using custom client types like YdbDate, YdbDateTime, etc.
 		/// </summary>
 		public sealed class YdbClientMappingSchema : LockedMappingSchema
 		{
-			public YdbClientMappingSchema() : base(ProviderName.Ydb, YdbProviderAdapter.GetInstance().MappingSchema, Instance) { }
+			/// <summary>
+			/// Constructs the extended mapping schema using the provider adapter and base instance.
+			/// </summary>
+			public YdbClientMappingSchema()
+				: base(ProviderName.Ydb, YdbProviderAdapter.GetInstance().MappingSchema, Instance)
+			{
+			}
 		}
 	}
 }

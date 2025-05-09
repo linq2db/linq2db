@@ -110,6 +110,7 @@ namespace Tests
 				|| provider.IsAnyOf(TestProvName.AllInformix)
 				|| provider.IsAnyOf(TestProvName.AllOracle)
 				|| provider.IsAnyOf(TestProvName.AllPostgreSQL)
+				|| provider.IsAnyOf(TestProvName.AllYdb)
 				|| provider.IsAnyOf(TestProvName.AllSapHana)
 				|| provider.IsAnyOf(TestProvName.AllSybase)
 				|| CustomizationSupport.Interceptor.IsCaseSensitiveComparison(provider)
