@@ -74,7 +74,16 @@ namespace LinqToDB.SqlProvider
 			if (element == null)
 				return element;
 
+			var saveIsInsidePredicate = _isInsidePredicate;
+
+			if (element is not SqlNullabilityExpression and not ISqlPredicate)
+			{
+				_isInsidePredicate = false;
+			}
+
 			var newElement = base.Visit(element);
+
+			_isInsidePredicate = saveIsInsidePredicate;
 
 			return newElement;
 		}
@@ -515,18 +524,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return predicate;
-		}
-
-		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
-		{
-			var saveInsidePredicate = _isInsidePredicate;
-			_isInsidePredicate = false;
-
-			var result = base.VisitSqlQuery(selectQuery);
-
-			_isInsidePredicate = saveInsidePredicate;
-
-			return result;
 		}
 
 		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
