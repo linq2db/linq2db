@@ -430,7 +430,7 @@ namespace LinqToDB.SqlQuery
 					}
 					default:
 					{
-						if (!isInsidePredicate)
+						if (!isInsidePredicate && UnknownAsValue != true)
 							return MakeWithoutNulls();
 
 						// eliminate UNKNOWN for nested conditions
