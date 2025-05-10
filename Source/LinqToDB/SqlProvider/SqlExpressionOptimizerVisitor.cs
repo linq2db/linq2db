@@ -1478,7 +1478,7 @@ namespace LinqToDB.SqlProvider
 					if (current == null)
 						return SqlPredicate.False;
 
-					return new SqlPredicate.ExprExpr(compareTo1.Expression1, current.Value, compareTo1.Expression2, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
+					return ConvertStringCompare(compareTo1, current.Value);
 				}
 			}
 
@@ -1502,7 +1502,7 @@ namespace LinqToDB.SqlProvider
 					if (current == null)
 						return SqlPredicate.False;
 
-					return new SqlPredicate.ExprExpr(compareTo2.Expression1, current.Value, compareTo2.Expression2, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
+					return ConvertStringCompare(compareTo2, current.Value);
 				}
 			}
 
@@ -1599,6 +1599,76 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return exprExpr;
+
+			ISqlPredicate ConvertStringCompare(SqlCompareToExpression compare, SqlPredicate.Operator @operator)
+			{
+				var expr1Nullable = _nullabilityContext.CanBeNull(compare.Expression1);
+				var expr2Nullable = _nullabilityContext.CanBeNull(compare.Expression2);
+
+				var expr1IsNull = TryEvaluateNoParameters(compare.Expression1, out var result) && result is null;
+				var expr2IsNull = TryEvaluateNoParameters(compare.Expression2, out     result) && result is null;
+
+				ISqlPredicate? predicate = null;
+
+				if (expr1IsNull && expr2IsNull)
+				{
+					return @operator is SqlPredicate.Operator.LessOrEqual or SqlPredicate.Operator.GreaterOrEqual or SqlPredicate.Operator.Equal
+						? SqlPredicate.True
+						: SqlPredicate.False;
+				}
+				else if (expr1IsNull)
+				{
+					if (@operator is SqlPredicate.Operator.Less)
+						return SqlPredicate.True;
+					if (@operator is SqlPredicate.Operator.GreaterOrEqual)
+						return SqlPredicate.False;
+
+					predicate = new SqlPredicate.IsNull(compare.Expression2, @operator is SqlPredicate.Operator.NotEqual or SqlPredicate.Operator.Greater);
+				}
+				else if (expr2IsNull)
+				{
+					if (@operator is SqlPredicate.Operator.Less)
+						return SqlPredicate.False;
+					if (@operator is SqlPredicate.Operator.GreaterOrEqual)
+						return SqlPredicate.True;
+
+					predicate = new SqlPredicate.IsNull(compare.Expression1, @operator is SqlPredicate.Operator.NotEqual or SqlPredicate.Operator.Greater);
+				}
+
+				if (predicate == null)
+				{
+					bool? unknownValue =  null;
+					if (expr1Nullable && expr2Nullable)
+					{
+						// corrected by additional checks
+						unknownValue = false;
+					}
+					else if (expr1Nullable)
+					{
+						unknownValue = @operator is SqlPredicate.Operator.Less or SqlPredicate.Operator.LessOrEqual;
+					}
+					else if (expr2Nullable)
+					{
+						unknownValue = @operator is SqlPredicate.Operator.Greater or SqlPredicate.Operator.GreaterOrEqual;
+					}
+
+					predicate = new SqlPredicate.ExprExpr(compare.Expression1, @operator, compare.Expression2, unknownValue);
+				}
+
+				if (expr1Nullable && expr2Nullable)
+				{
+					predicate = @operator switch
+					{
+						SqlPredicate.Operator.Less           => new SqlSearchCondition(true, true, predicate, new SqlSearchCondition(false, false, new SqlPredicate.IsNull(compare.Expression1, false), new SqlPredicate.IsNull(compare.Expression2, true))),
+						SqlPredicate.Operator.Greater        => new SqlSearchCondition(true, true, predicate, new SqlSearchCondition(false, false, new SqlPredicate.IsNull(compare.Expression1, true), new SqlPredicate.IsNull(compare.Expression2, false))),
+						SqlPredicate.Operator.LessOrEqual    => new SqlSearchCondition(true, true, predicate, new SqlPredicate.IsNull(compare.Expression1, false)),
+						SqlPredicate.Operator.GreaterOrEqual => new SqlSearchCondition(true, true, predicate, new SqlPredicate.IsNull(compare.Expression2, false)),
+						_ => predicate
+					};
+				}
+
+				return predicate;
+			}
 		}
 
 		#endregion
