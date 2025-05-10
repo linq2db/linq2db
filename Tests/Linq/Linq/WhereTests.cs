@@ -1886,80 +1886,142 @@ namespace Tests.Linq
 		}
 
 		#region issue 2424
+		// TODO: add test case with non-constant expected result
 		sealed class Isue2424Table
 		{
-			[Column] public int    Id;
-			[Column] public string StrValue = null!;
+			[Column                   ] public int     Id;
+			[Column(CanBeNull = false)] public string  StrValue = null!;
+			[Column                   ] public string? StrValueNullable;
 
 			public static readonly Isue2424Table[] Data = new[]
 			{
-				new Isue2424Table(){ Id = 1, StrValue = "1" },
-				new Isue2424Table(){ Id = 3, StrValue = "3" },
-				new Isue2424Table(){ Id = 5, StrValue = "5" }
+				new Isue2424Table(){ Id = 0, StrValue = "0", StrValueNullable = null },
+				new Isue2424Table(){ Id = 1, StrValue = "1", StrValueNullable = "1" },
+				new Isue2424Table(){ Id = 2, StrValue = "2", StrValueNullable = "2" },
+				new Isue2424Table(){ Id = 2, StrValue = "3", StrValueNullable = "3" },
+				new Isue2424Table(){ Id = 2, StrValue = "4", StrValueNullable = "4" },
+				new Isue2424Table(){ Id = 2, StrValue = "5", StrValueNullable = "5" },
 			};
 		}
 
 		[Test]
-		public void Issue2424([DataSources(false)] string context)
+		public void Issue2424([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Isue2424Table.Data))
-			{
-				var record = db.GetTable<Isue2424Table>().Single(i => 0 <= i.StrValue.CompareTo("4"));
-				Assert.That(record.Id, Is.EqualTo(5));
-				record = db.GetTable<Isue2424Table>().Single(i => i.StrValue.CompareTo("4") >= 0);
-				Assert.That(record.Id, Is.EqualTo(5));
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Isue2424Table.Data);
 
-				record = db.GetTable<Isue2424Table>().Single(i => 0 >= i.StrValue.CompareTo("2"));
-				Assert.That(record.Id, Is.EqualTo(1));
-				record = db.GetTable<Isue2424Table>().Single(i => i.StrValue.CompareTo("2") <= 0);
-				Assert.That(record.Id, Is.EqualTo(1));
+			AssertQuery(tb.Where(i => 0 <= i.StrValue.CompareTo("0")));
+			AssertQuery(tb.Where(i => 0 <= i.StrValue.CompareTo("1")));
+			AssertQuery(tb.Where(i => 0 <= i.StrValue.CompareTo("3")));
+			AssertQuery(tb.Where(i => 0 <= i.StrValue.CompareTo("5")));
 
-				record = db.GetTable<Isue2424Table>().Single(i => 0 < i.StrValue.CompareTo("3"));
-				Assert.That(record.Id, Is.EqualTo(5));
-				record = db.GetTable<Isue2424Table>().Single(i => i.StrValue.CompareTo("3") > 0);
-				Assert.That(record.Id, Is.EqualTo(5));
+			AssertQuery(tb.Where(i => 0 >= i.StrValue.CompareTo("0")));
+			AssertQuery(tb.Where(i => 0 >= i.StrValue.CompareTo("1")));
+			AssertQuery(tb.Where(i => 0 >= i.StrValue.CompareTo("3")));
+			AssertQuery(tb.Where(i => 0 >= i.StrValue.CompareTo("5")));
 
-				record = db.GetTable<Isue2424Table>().Single(i => 0 > i.StrValue.CompareTo("3"));
-				Assert.That(record.Id, Is.EqualTo(1));
-				record = db.GetTable<Isue2424Table>().Single(i => i.StrValue.CompareTo("3") < 0);
-				Assert.That(record.Id, Is.EqualTo(1));
+			AssertQuery(tb.Where(i => 0 < i.StrValue.CompareTo("0")));
+			AssertQuery(tb.Where(i => 0 < i.StrValue.CompareTo("1")));
+			AssertQuery(tb.Where(i => 0 < i.StrValue.CompareTo("3")));
+			AssertQuery(tb.Where(i => 0 < i.StrValue.CompareTo("5")));
 
-				record = db.GetTable<Isue2424Table>().Single(i => 0 == i.StrValue.CompareTo("3"));
-				Assert.That(record.Id, Is.EqualTo(3));
-				record = db.GetTable<Isue2424Table>().Single(i => i.StrValue.CompareTo("3") == 0);
-				Assert.That(record.Id, Is.EqualTo(3));
+			AssertQuery(tb.Where(i => 0 > i.StrValue.CompareTo("0")));
+			AssertQuery(tb.Where(i => 0 > i.StrValue.CompareTo("1")));
+			AssertQuery(tb.Where(i => 0 > i.StrValue.CompareTo("3")));
+			AssertQuery(tb.Where(i => 0 > i.StrValue.CompareTo("5")));
 
-				record = db.GetTable<Isue2424Table>().Single(i => 0 >= i.StrValue.CompareTo("2"));
-				Assert.That(record.Id, Is.EqualTo(1));
-				record = db.GetTable<Isue2424Table>().Single(i => i.StrValue.CompareTo("2") <= 0);
-				Assert.That(record.Id, Is.EqualTo(1));
+			AssertQuery(tb.Where(i => 0 == i.StrValue.CompareTo("0")));
+			AssertQuery(tb.Where(i => 0 == i.StrValue.CompareTo("1")));
+			AssertQuery(tb.Where(i => 0 == i.StrValue.CompareTo("3")));
+			AssertQuery(tb.Where(i => 0 == i.StrValue.CompareTo("5")));
 
-				record = db.GetTable<Isue2424Table>().Single(i => 0 <= i.StrValue.CompareTo("4"));
-				Assert.That(record.Id, Is.EqualTo(5));
-				record = db.GetTable<Isue2424Table>().Single(i => i.StrValue.CompareTo("4") >= 0);
-				Assert.That(record.Id, Is.EqualTo(5));
+			AssertQuery(tb.Where(i => 0 != i.StrValue.CompareTo("0")));
+			AssertQuery(tb.Where(i => 0 != i.StrValue.CompareTo("1")));
+			AssertQuery(tb.Where(i => 0 != i.StrValue.CompareTo("3")));
+			AssertQuery(tb.Where(i => 0 != i.StrValue.CompareTo("5")));
+		}
 
-				record = db.GetTable<Isue2424Table>().Single(i => 0 > i.StrValue.CompareTo("3"));
-				Assert.That(record.Id, Is.EqualTo(1));
-				record = db.GetTable<Isue2424Table>().Single(i => i.StrValue.CompareTo("3") < 0);
-				Assert.That(record.Id, Is.EqualTo(1));
+		[Test]
+		public void Issue2424Nullable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Isue2424Table.Data);
 
-				record = db.GetTable<Isue2424Table>().Single(i => 0 < i.StrValue.CompareTo("3"));
-				Assert.That(record.Id, Is.EqualTo(5));
-				record = db.GetTable<Isue2424Table>().Single(i => i.StrValue.CompareTo("3") > 0);
-				Assert.That(record.Id, Is.EqualTo(5));
+			AssertQuery(tb.Where(i => 0 <= string.Compare(i.StrValueNullable, null)));
+			AssertQuery(tb.Where(i => 0 <= string.Compare(i.StrValueNullable, "1")));
+			AssertQuery(tb.Where(i => 0 <= string.Compare(i.StrValueNullable, "3")));
+			AssertQuery(tb.Where(i => 0 <= string.Compare(i.StrValueNullable, "5")));
 
-				record = db.GetTable<Isue2424Table>().Single(i => 0 <= i.StrValue.CompareTo("5"));
-				Assert.That(record.Id, Is.EqualTo(5));
-				record = db.GetTable<Isue2424Table>().Single(i => i.StrValue.CompareTo("5") >= 0);
-				Assert.That(record.Id, Is.EqualTo(5));
+			AssertQuery(tb.Where(i => 0 >= string.Compare(i.StrValueNullable, null)));
+			AssertQuery(tb.Where(i => 0 >= string.Compare(i.StrValueNullable, "1")));
+			AssertQuery(tb.Where(i => 0 >= string.Compare(i.StrValueNullable, "3")));
+			AssertQuery(tb.Where(i => 0 >= string.Compare(i.StrValueNullable, "5")));
 
-				record = db.GetTable<Isue2424Table>().Single(i => 0 >= i.StrValue.CompareTo("1"));
-				Assert.That(record.Id, Is.EqualTo(1));
-				record = db.GetTable<Isue2424Table>().Single(i => i.StrValue.CompareTo("1") <= 0);
-				Assert.That(record.Id, Is.EqualTo(1));
-			}
+			AssertQuery(tb.Where(i => 0 < string.Compare(i.StrValueNullable, null)));
+			AssertQuery(tb.Where(i => 0 < string.Compare(i.StrValueNullable, "1")));
+			AssertQuery(tb.Where(i => 0 < string.Compare(i.StrValueNullable, "3")));
+			AssertQuery(tb.Where(i => 0 < string.Compare(i.StrValueNullable, "5")));
+
+			AssertQuery(tb.Where(i => 0 > string.Compare(i.StrValueNullable, null)));
+			AssertQuery(tb.Where(i => 0 > string.Compare(i.StrValueNullable, "1")));
+			AssertQuery(tb.Where(i => 0 > string.Compare(i.StrValueNullable, "3")));
+			AssertQuery(tb.Where(i => 0 > string.Compare(i.StrValueNullable, "5")));
+
+#pragma warning disable CA2251 // Use 'string.Equals'
+			AssertQuery(tb.Where(i => 0 == string.Compare(i.StrValueNullable, null)));
+			AssertQuery(tb.Where(i => 0 == string.Compare(i.StrValueNullable, "1")));
+			AssertQuery(tb.Where(i => 0 == string.Compare(i.StrValueNullable, "3")));
+			AssertQuery(tb.Where(i => 0 == string.Compare(i.StrValueNullable, "5")));
+
+			AssertQuery(tb.Where(i => 0 != string.Compare(i.StrValueNullable, null)));
+			AssertQuery(tb.Where(i => 0 != string.Compare(i.StrValueNullable, "1")));
+			AssertQuery(tb.Where(i => 0 != string.Compare(i.StrValueNullable, "3")));
+			AssertQuery(tb.Where(i => 0 != string.Compare(i.StrValueNullable, "5")));
+#pragma warning restore CA2251 // Use 'string.Equals'
+		}
+
+		[Test]
+		public void Issue2424Fields([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Isue2424Table.Data);
+			var src = from left in tb
+					  from right in tb
+					  select new
+					  {
+						  LeftId = left.Id,
+						  LeftString = left.StrValue,
+						  LeftStringN = left.StrValueNullable,
+						  RightId = right.Id,
+						  RightString = right.StrValue,
+						  RightStringN = right.StrValueNullable,
+					  };
+
+#pragma warning disable CA2251 // Use 'string.Equals'
+			// NonNullable vs NonNullable
+			AssertQuery(src.Where(i => 0 <= string.Compare(i.LeftString, i.RightString)));
+			AssertQuery(src.Where(i => 0 >= string.Compare(i.LeftString, i.RightString)));
+			AssertQuery(src.Where(i => 0 < string.Compare(i.LeftString, i.RightString)));
+			AssertQuery(src.Where(i => 0 > string.Compare(i.LeftString, i.RightString)));
+			AssertQuery(src.Where(i => 0 == string.Compare(i.LeftString, i.RightString)));
+			AssertQuery(src.Where(i => 0 != string.Compare(i.LeftString, i.RightString)));
+
+			// NonNullable vs Nullable
+			AssertQuery(src.Where(i => 0 <= string.Compare(i.LeftString, i.RightStringN)));
+			AssertQuery(src.Where(i => 0 >= string.Compare(i.LeftString, i.RightStringN)));
+			AssertQuery(src.Where(i => 0 < string.Compare(i.LeftString, i.RightStringN)));
+			AssertQuery(src.Where(i => 0 > string.Compare(i.LeftString, i.RightStringN)));
+			AssertQuery(src.Where(i => 0 == string.Compare(i.LeftString, i.RightStringN)));
+			AssertQuery(src.Where(i => 0 != string.Compare(i.LeftString, i.RightStringN)));
+
+			// Nullable vs Nullable
+			AssertQuery(src.Where(i => 0 <= string.Compare(i.LeftStringN, i.RightStringN)));
+			AssertQuery(src.Where(i => 0 >= string.Compare(i.LeftStringN, i.RightStringN)));
+			AssertQuery(src.Where(i => 0 < string.Compare(i.LeftStringN, i.RightStringN)));
+			AssertQuery(src.Where(i => 0 > string.Compare(i.LeftStringN, i.RightStringN)));
+			AssertQuery(src.Where(i => 0 == string.Compare(i.LeftStringN, i.RightStringN)));
+			AssertQuery(src.Where(i => 0 != string.Compare(i.LeftStringN, i.RightStringN)));
+#pragma warning restore CA2251 // Use 'string.Equals'
 		}
 		#endregion
 
