@@ -447,6 +447,22 @@ namespace LinqToDB.EntityFrameworkCore
 						DbType = columnAttribute.TypeName,
 					});
 			}
+			
+			//PostgreSQL enums mapping
+			if (memberInfo is PropertyInfo pi &&
+			    pi.PropertyType.IsEnum && 
+			    MappingSchema.Default.GetDataType(pi.PropertyType).Type == DbDataType.Undefined)
+			{
+				var mapping = _mappingSource!.FindMapping(pi.PropertyType);
+				if (mapping?.GetType().Name == "NpgsqlEnumTypeMapping")
+				{
+					var labels = (Dictionary<object, string>) mapping.GetType().GetProperty("Labels")!.GetValue(mapping)!;
+					var typedLabels = labels.ToDictionary(kv => kv.Key, kv => $"'{kv.Value}'::{mapping.StoreType}");
+
+					MappingSchema.Default.SetDataType(pi.PropertyType, new SqlDataType(new DbDataType(pi.PropertyType, DataType.Enum, mapping.StoreType)));
+					MappingSchema.Default.SetValueToSqlConverter(pi.PropertyType, (sb, _, v) => sb.Append(typedLabels[v]));
+				}
+			}
 
 			// Search for translator first
 			// Sql.ExpressionAttribute
