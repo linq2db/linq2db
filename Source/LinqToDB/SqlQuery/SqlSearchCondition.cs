@@ -113,6 +113,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanInvert(NullabilityContext nullability)
 		{
+			// TODO: review logic of this method
 			var maxCount = Math.Max(Predicates.Count / 2, 2);
 			if (Predicates.Count > maxCount)
 				return false;
@@ -125,10 +126,11 @@ namespace LinqToDB.SqlQuery
 				if (p is not SqlSearchCondition)
 					return false;
 
-				if (p is SqlPredicate.ExprExpr exprExpr && (exprExpr.UnknownAsValue != null || exprExpr.UnknownAsValue == true))
-				{
-					return false;
-				}
+				// commented, as check disabled by previous condition
+				//if (p is SqlPredicate.ExprExpr exprExpr && (exprExpr.UnknownAsValue != null || exprExpr.UnknownAsValue == true))
+				//{
+				//	return false;
+				//}
 
 				return p.CanInvert(nullability);
 			});

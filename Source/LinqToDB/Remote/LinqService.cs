@@ -297,7 +297,7 @@ namespace LinqToDB.Remote
 				await using var rd = await DataConnection.QueryRunner.ExecuteReaderAsync(
 					db,
 					new QueryContext(query.Statement, query.DataOptions),
-					SqlParameterValues.Empty,
+					null,
 					cancellationToken
 					).ConfigureAwait(false);
 
@@ -328,7 +328,7 @@ namespace LinqToDB.Remote
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
-				using var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext(query.Statement, query.DataOptions), SqlParameterValues.Empty);
+				using var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext(query.Statement, query.DataOptions), null);
 
 				var ret = ProcessDataReaderWrapper(query, db, rd);
 
