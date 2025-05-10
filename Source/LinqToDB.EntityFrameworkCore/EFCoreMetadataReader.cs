@@ -343,20 +343,6 @@ namespace LinqToDB.EntityFrameworkCore
 						{
 							dataType = DbTypeToDataType(typeMapping.DbType.Value);
 						}
-						else if (typeMapping.GetType().Name == "NpgsqlEnumTypeMapping")
-						{
-							dataType = DataType.Enum;
-							
-							var labels = (Dictionary<object, string>)typeMapping.GetType().GetProperty("Labels")!.GetValue(typeMapping)!;
-							var enumDbType = prop.GetColumnType();
-							var typedLabels = labels.ToDictionary(kv => kv.Key, kv => $"'{kv.Value}'::{enumDbType}");
-							
-							MappingSchema.Default.SetDataType(prop.ClrType, new SqlDataType(new DbDataType(prop.ClrType, DataType.Enum, enumDbType)));
-							MappingSchema.Default.SetValueToSqlConverter(prop.ClrType, (sb, _, v) =>
-							{
-								sb.Append(typedLabels[v]);
-							});
-						}
 						else
 						{
 							var ms = _model != null ? LinqToDBForEFTools.GetMappingSchema(_model, null, null) : MappingSchema.Default;
@@ -455,23 +441,26 @@ namespace LinqToDB.EntityFrameworkCore
 				var columnAttribute = memberInfo.GetAttribute<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>();
 
 				if (columnAttribute != null)
-				{
 					(result ??= new()).Add(new ColumnAttribute()
 					{
 						Name = columnAttribute.Name,
 						DbType = columnAttribute.TypeName,
 					});
-				}
-				else if (memberInfo is PropertyInfo pi && pi.PropertyType.IsEnum)
+			}
+			
+			//PostgreSQL enums mapping
+			if (memberInfo is PropertyInfo pi && pi.PropertyType.IsEnum)
+			{
+				var mapping = _mappingSource!.FindMapping(pi.PropertyType);
+
+				if (mapping != null && mapping.GetType().Name == "NpgsqlEnumTypeMapping")
 				{
-					var mapping = _mappingSource!.FindMapping(pi.PropertyType);
+					var labels = (Dictionary<object, string>) mapping.GetType().GetProperty("Labels")!.GetValue(mapping)!;
+					var enumDbType = mapping.StoreType;
+					var typedLabels = labels.ToDictionary(kv => kv.Key, kv => $"'{kv.Value}'::{enumDbType}");
 
-					if (mapping != null && mapping.GetType().Name == "NpgsqlEnumTypeMapping")
+					if (MappingSchema.Default.GetDataType(pi.PropertyType).Type == DbDataType.Undefined)
 					{
-						var labels = (Dictionary<object, string>) mapping.GetType().GetProperty("Labels")!.GetValue(mapping)!;
-						var enumDbType = mapping.StoreType;
-						var typedLabels = labels.ToDictionary(kv => kv.Key, kv => $"'{kv.Value}'::{enumDbType}");
-
 						MappingSchema.Default.SetDataType(pi.PropertyType, new SqlDataType(new DbDataType(pi.PropertyType, DataType.Enum, enumDbType)));
 						MappingSchema.Default.SetValueToSqlConverter(pi.PropertyType, (sb, _, v) =>
 						{
