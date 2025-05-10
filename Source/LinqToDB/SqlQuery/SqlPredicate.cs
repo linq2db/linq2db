@@ -714,7 +714,8 @@ namespace LinqToDB.SqlQuery
 
 				var predicate = new ExprExpr(Expr1, Operator.Equal, IsNot ? FalseValue : TrueValue, null);
 
-				if (WithNull == null || !Expr1.ShouldCheckForNull(nullability) || !Expr1.CanBeNullableOrUnknown(nullability) || !isInsidePredicate)
+				// IsNot=true should always have null check as it is a part of predicate logic, not a UNKNOWN erasure
+				if (!IsNot && (WithNull == null || !Expr1.ShouldCheckForNull(nullability) || !Expr1.CanBeNullableOrUnknown(nullability) || !isInsidePredicate))
 					return predicate;
 
 				// Expr1 could return UNKNOW, which should be converted to FALSE
