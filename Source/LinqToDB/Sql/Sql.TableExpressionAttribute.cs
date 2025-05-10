@@ -45,7 +45,7 @@ namespace LinqToDB
 				set => base.Name = value;
 			}
 
-			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, ExpressionAttribute.ConvertFunc<TContext> converter)
+			public override void SetTable<TContext>(DataOptions options, TContext context, SqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, ExpressionAttribute.ConvertFunc<TContext> converter)
 			{
 				table.SqlTableType = SqlTableType.Expression;
 				var expressionStr  = table.Expression = Expression ?? methodCall.Method.Name!;

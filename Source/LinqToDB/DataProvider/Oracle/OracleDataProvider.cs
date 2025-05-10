@@ -111,7 +111,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return new IdentifierServiceSimple(Version <= OracleVersion.v11 ? 30 : 128);
 		}
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
+		public override SqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return Version switch
 			{

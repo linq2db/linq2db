@@ -11,18 +11,18 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	partial class SapHanaSqlBuilder : BasicSqlBuilder
+	partial class SapHanaSqlBuilder : SqlBuilder
 	{
 		public SapHanaSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		protected SapHanaSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected SapHanaSqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new SapHanaSqlBuilder(this);
 		}

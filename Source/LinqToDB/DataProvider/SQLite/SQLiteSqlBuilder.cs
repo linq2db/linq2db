@@ -10,18 +10,18 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	public class SQLiteSqlBuilder : BasicSqlBuilder
+	public class SQLiteSqlBuilder : SqlBuilder
 	{
 		public SQLiteSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		SQLiteSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		SQLiteSqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new SQLiteSqlBuilder(this);
 		}

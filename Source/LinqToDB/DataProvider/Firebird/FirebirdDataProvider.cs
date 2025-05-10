@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return new IdentifierServiceSimple(Version <= FirebirdVersion.v3 ? 31 : 63);
 		}
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
+		public override SqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			if (Version == FirebirdVersion.v3)
 				return new Firebird3SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);

@@ -14,7 +14,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
+	abstract partial class DB2SqlBuilderBase : SqlBuilder<DB2Options>
 	{
 		public override bool CteFirst => false;
 
@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 		}
 
-		protected DB2SqlBuilderBase(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected DB2SqlBuilderBase(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 

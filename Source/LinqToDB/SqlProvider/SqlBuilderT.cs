@@ -4,15 +4,15 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlProvider
 {
-	public abstract class BasicSqlBuilder<T> : BasicSqlBuilder
+	public abstract class SqlBuilder<T> : SqlBuilder
 	where T : DataProviderOptions<T>, IOptionSet, new()
 	{
-		protected BasicSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		protected BasicSqlBuilder(BasicSqlBuilder parentBuilder)
+		protected SqlBuilder(SqlBuilder parentBuilder)
 			: base(parentBuilder)
 		{
 		}

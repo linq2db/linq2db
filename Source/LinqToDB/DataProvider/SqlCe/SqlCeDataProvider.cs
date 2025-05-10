@@ -59,7 +59,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return new SqlCeMemberTranslator();
 		}
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
+		public override SqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return new SqlCeSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}

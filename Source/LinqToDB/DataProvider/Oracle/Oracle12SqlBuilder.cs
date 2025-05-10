@@ -11,11 +11,11 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		Oracle12SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		Oracle12SqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new Oracle12SqlBuilder(this) { HintBuilder = HintBuilder };
 		}

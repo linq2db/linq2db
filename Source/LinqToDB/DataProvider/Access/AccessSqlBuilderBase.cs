@@ -10,14 +10,14 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Access
 {
-	abstract class AccessSqlBuilderBase : BasicSqlBuilder
+	abstract class AccessSqlBuilderBase : SqlBuilder
 	{
 		protected AccessSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		protected AccessSqlBuilderBase(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected AccessSqlBuilderBase(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 

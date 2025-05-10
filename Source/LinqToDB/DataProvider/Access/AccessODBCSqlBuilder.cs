@@ -16,11 +16,11 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		AccessODBCSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		AccessODBCSqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new AccessODBCSqlBuilder(this);
 		}

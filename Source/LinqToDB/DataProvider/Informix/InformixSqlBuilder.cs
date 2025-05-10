@@ -12,18 +12,18 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	sealed partial class InformixSqlBuilder : BasicSqlBuilder
+	sealed partial class InformixSqlBuilder : SqlBuilder
 	{
 		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		InformixSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		InformixSqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new InformixSqlBuilder(this);
 		}

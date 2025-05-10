@@ -11,7 +11,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	sealed class ClickHouseSqlBuilder : BasicSqlBuilder
+	sealed class ClickHouseSqlBuilder : SqlBuilder
 	{
 		public ClickHouseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder() => new ClickHouseSqlBuilder(this);
+		protected override SqlBuilder CreateSqlBuilder() => new ClickHouseSqlBuilder(this);
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)     => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		protected override void BuildParameter(SqlParameter parameter) => throw new LinqToDBException($"Parameters not supported for {Name} provider");
@@ -599,7 +599,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 		}
 
-		protected override void MergeSqlBuilderData(BasicSqlBuilder sqlBuilder)
+		protected override void MergeSqlBuilderData(SqlBuilder sqlBuilder)
 		{
 			if (sqlBuilder is ClickHouseSqlBuilder { _finalHints: {} fh } )
 				(_finalHints ??= new()).AddRange(fh);

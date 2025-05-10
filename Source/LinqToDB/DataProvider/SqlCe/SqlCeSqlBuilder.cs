@@ -10,18 +10,18 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	sealed class SqlCeSqlBuilder : BasicSqlBuilder
+	sealed class SqlCeSqlBuilder : SqlBuilder
 	{
 		public SqlCeSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		SqlCeSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		SqlCeSqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new SqlCeSqlBuilder(this);
 		}

@@ -215,7 +215,7 @@ namespace LinqToDB.DataProvider
 			return rowsCopied;
 		}
 
-		protected internal static string GetTableName<T>(ISqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table, bool escaped = true)
+		protected internal static string GetTableName<T>(SqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table, bool escaped = true)
 			where T : notnull
 		{
 			var tableName = new SqlObjectName(

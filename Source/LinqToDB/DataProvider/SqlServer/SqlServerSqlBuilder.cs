@@ -12,14 +12,14 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	abstract class SqlServerSqlBuilder : BasicSqlBuilder<SqlServerOptions>
+	abstract class SqlServerSqlBuilder : SqlBuilder<SqlServerOptions>
 	{
 		protected SqlServerSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		protected SqlServerSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected SqlServerSqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 

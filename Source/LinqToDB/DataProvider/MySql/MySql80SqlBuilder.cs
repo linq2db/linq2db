@@ -13,11 +13,11 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
-		MySql80SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		MySql80SqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new MySql80SqlBuilder(this) { HintBuilder = HintBuilder };
 		}

@@ -6,7 +6,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.SqlProvider
 {
-	public abstract partial class BasicSqlBuilder
+	public abstract partial class SqlBuilder
 	{
 		/// <summary>
 		/// If true, provider supports column aliases specification after table alias.

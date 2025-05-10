@@ -17,11 +17,11 @@ namespace LinqToDB.DataProvider.DB2
 		{
 		}
 
-		DB2zOSSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		DB2zOSSqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new DB2zOSSqlBuilder(this);
 		}

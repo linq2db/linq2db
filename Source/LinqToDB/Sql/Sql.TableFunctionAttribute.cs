@@ -51,7 +51,7 @@ namespace LinqToDB
 			public string? Package       { get; set; }
 			public int[]?  ArgIndices    { get; set; }
 
-			public virtual void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, ExpressionAttribute.ConvertFunc<TContext> converter)
+			public virtual void SetTable<TContext>(DataOptions options, TContext context, SqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, ExpressionAttribute.ConvertFunc<TContext> converter)
 			{
 				table.SqlTableType = SqlTableType.Function;
 				var expressionStr  = table.Expression = Name ?? methodCall.Method.Name!;

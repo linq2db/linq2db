@@ -8,7 +8,7 @@ namespace LinqToDB.SqlProvider
 {
 	sealed class HintWithFormatParametersExtensionBuilder : ISqlQueryExtensionBuilder
 	{
-		void ISqlQueryExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+		void ISqlQueryExtensionBuilder.Build(NullabilityContext nullability, SqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 		{
 			var args      = sqlQueryExtension.Arguments;
 			var hint      = ((SqlValue)        args["hint"]).                Value;

@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.Access
 				: new AccessMemberTranslator();
 		}
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
+		public override SqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return Provider == AccessProvider.OleDb
 				? new AccessOleDbSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags)

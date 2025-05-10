@@ -12,11 +12,11 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
-		MySql57SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		MySql57SqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new MySql57SqlBuilder(this) { HintBuilder = HintBuilder };
 		}

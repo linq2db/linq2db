@@ -15,11 +15,11 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		Firebird4SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		Firebird4SqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new Firebird4SqlBuilder(this);
 		}

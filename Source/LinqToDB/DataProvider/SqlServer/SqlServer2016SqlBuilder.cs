@@ -13,11 +13,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		protected SqlServer2016SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected SqlServer2016SqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new SqlServer2016SqlBuilder(this);
 		}

@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.Oracle
 				return o => ValueConverter(converters, o);
 			}
 
-			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Sql.ExpressionAttribute.ConvertFunc<TContext> converter)
+			public override void SetTable<TContext>(DataOptions options, TContext context, SqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Sql.ExpressionAttribute.ConvertFunc<TContext> converter)
 			{
 				var exp = methodCall.Arguments[1];
 

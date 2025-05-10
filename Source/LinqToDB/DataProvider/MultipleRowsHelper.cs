@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider
 			BatchSize     = Math.Max(10, Options.BulkCopyOptions.MaxBatchSize ?? 1000);
 		}
 
-		public readonly ISqlBuilder         SqlBuilder;
+		public readonly SqlBuilder         SqlBuilder;
 		public readonly IDataContext        OriginalContext;
 		public readonly DataConnection      DataConnection;
 		public readonly MappingSchema       MappingSchema;

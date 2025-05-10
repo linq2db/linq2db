@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.DB2
 			return new DB2MemberTranslator();
 		}
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
+		public override SqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return Version == DB2Version.zOS ?
 				new DB2zOSSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags) :

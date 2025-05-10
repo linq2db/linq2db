@@ -13,12 +13,12 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new SapHanaOdbcSqlBuilder(this);
 		}
 
-		private SapHanaOdbcSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		private SapHanaOdbcSqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 

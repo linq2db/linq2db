@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider
 {
 	sealed class TableSpecHintExtensionBuilder : ISqlTableExtensionBuilder
 	{
-		void ISqlTableExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias)
+		void ISqlTableExtensionBuilder.Build(NullabilityContext nullability, SqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias)
 		{
 			if (stringBuilder.Length > 0 && stringBuilder[^1] != ' ')
 				stringBuilder.Append(' ');

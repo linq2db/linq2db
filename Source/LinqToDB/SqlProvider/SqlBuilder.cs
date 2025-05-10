@@ -22,11 +22,11 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.SqlProvider
 {
-	public abstract partial class BasicSqlBuilder : ISqlBuilder
+	public abstract partial class SqlBuilder
 	{
 		#region Init
 
-		protected BasicSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 		{
 			DataProvider       = provider;
 			MappingSchema      = mappingSchema;
@@ -36,7 +36,7 @@ namespace LinqToDB.SqlProvider
 			NullabilityContext = NullabilityContext.NonQuery;
 		}
 
-		protected BasicSqlBuilder(BasicSqlBuilder parentBuilder)
+		protected SqlBuilder(SqlBuilder parentBuilder)
 		{
 			DataProvider       = parentBuilder.DataProvider;
 			MappingSchema      = parentBuilder.MappingSchema;
@@ -203,7 +203,7 @@ namespace LinqToDB.SqlProvider
 						BuildSetOperation(union.Operation, sb);
 						sb.AppendLine();
 
-						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
+						var sqlBuilder = ((SqlBuilder)CreateSqlBuilder());
 						sqlBuilder.BuildSql(commandNumber,
 							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
 							optimizationContext, indent,
@@ -231,7 +231,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected virtual void MergeSqlBuilderData(BasicSqlBuilder sqlBuilder)
+		protected virtual void MergeSqlBuilderData(SqlBuilder sqlBuilder)
 		{
 		}
 
@@ -263,13 +263,13 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsTakeSupported && takeExpr != null)
 				throw new LinqToDBException($"Take for subqueries is not supported by the '{Name}' provider.");
 
-			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			var sqlBuilder = (SqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0,
 				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, skipAlias);
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
-		protected abstract ISqlBuilder CreateSqlBuilder();
+		protected abstract SqlBuilder CreateSqlBuilder();
 
 		protected string WithStringBuilderBuildExpression(ISqlExpression expr)
 		{
@@ -407,7 +407,7 @@ namespace LinqToDB.SqlProvider
 			var selectStatement = new SqlSelectStatement(deleteStatement.SelectQuery)
 			{ ParentStatement = deleteStatement, With = deleteStatement.GetWithClause() };
 
-			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			var sqlBuilder = (SqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, OptimizationContext, AliasesContext, Indent);
 			MergeSqlBuilderData(sqlBuilder);
 
@@ -464,7 +464,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
-			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			var sqlBuilder = (SqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, SkipAlias);
 			MergeSqlBuilderData(sqlBuilder);
 		}
@@ -535,8 +535,26 @@ namespace LinqToDB.SqlProvider
 			throw new LinqToDBException($"Unknown query type '{Statement.QueryType}'.");
 		}
 
-		// Default implementation. Doesn't generate linked server and package name components.
-		public virtual StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
+		/// <summary>
+		/// Writes database object name into provided <see cref="StringBuilder"/> instance.
+		/// </summary>
+		/// <remarks>
+		/// Default implementation. Doesn't generate linked server and package name components.
+		/// </remarks>
+		/// <param name="sb">String builder for generated object name.</param>
+		/// <param name="name">Name of database object (e.g. table, view, procedure or function).</param>
+		/// <param name="objectType">Type of database object, used to select proper name converter.</param>
+		/// <param name="escape">If <c>true</c>, apply required escaping to name components. Must be <c>true</c> except rare cases when escaping is not needed.</param>
+		/// <param name="tableOptions">Table options if called for table. Used to properly generate names for temporary tables.</param>
+		/// <param name="withoutSuffix">If object name have suffix, which could be detached from main name, this parameter disables suffix generation (enables generation of only main name part).</param>
+		/// <returns><paramref name="sb"/> parameter value.</returns>
+		public virtual StringBuilder BuildObjectName(
+			StringBuilder sb, 
+			SqlObjectName name, 
+			ConvertType objectType = ConvertType.NameToQueryTable, 
+			bool escape = true, 
+			TableOptions tableOptions = TableOptions.NotSet, 
+			bool withoutSuffix = false)
 		{
 			if (name.Database != null)
 			{
@@ -3482,7 +3500,7 @@ namespace LinqToDB.SqlProvider
 
 		protected object? BuildExpressionContext;
 
-		void ISqlBuilder.BuildExpression(StringBuilder sb, ISqlExpression expr, bool buildTableName, object? context)
+		public void BuildExpression(StringBuilder sb, ISqlExpression expr, bool buildTableName, object? context = null)
 		{
 			WithStringBuilder(sb, static ctx => ctx.this_.BuildExpression(ctx.expr, ctx.buildTableName, true), (this_: this, expr, buildTableName));
 			BuildExpressionContext = null;

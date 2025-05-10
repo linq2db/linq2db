@@ -27,7 +27,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets SQL builder service factory method for current context data provider.
 		/// </summary>
-		Func<ISqlBuilder>   CreateSqlProvider     { get; }
+		Func<SqlBuilder>   CreateSqlProvider     { get; }
 		/// <summary>
 		/// Gets SQL optimizer service factory method for current context data provider.
 		/// </summary>

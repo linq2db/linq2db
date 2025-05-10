@@ -12,18 +12,18 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
+	class MySqlSqlBuilder : SqlBuilder<MySqlOptions>
 	{
 		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		protected MySqlSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected MySqlSqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
 		}

@@ -11,11 +11,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 		}
 
-		PostgreSQLSql15Builder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		PostgreSQLSql15Builder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new PostgreSQLSql15Builder(this);
 		}

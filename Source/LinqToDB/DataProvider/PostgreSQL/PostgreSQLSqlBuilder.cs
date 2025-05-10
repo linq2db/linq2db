@@ -16,18 +16,18 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	public partial class PostgreSQLSqlBuilder : BasicSqlBuilder<PostgreSQLOptions>
+	public partial class PostgreSQLSqlBuilder : SqlBuilder<PostgreSQLOptions>
 	{
 		public PostgreSQLSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		protected PostgreSQLSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected PostgreSQLSqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new PostgreSQLSqlBuilder(this);
 		}

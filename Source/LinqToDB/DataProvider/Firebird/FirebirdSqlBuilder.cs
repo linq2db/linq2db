@@ -17,7 +17,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	public partial class FirebirdSqlBuilder : BasicSqlBuilder<FirebirdOptions>
+	public partial class FirebirdSqlBuilder : SqlBuilder<FirebirdOptions>
 	{
 		public override bool CteFirst => false;
 
@@ -26,11 +26,11 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		protected FirebirdSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected FirebirdSqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new FirebirdSqlBuilder(this);
 		}

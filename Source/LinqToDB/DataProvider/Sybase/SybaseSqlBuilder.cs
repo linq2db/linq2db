@@ -11,18 +11,18 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	sealed partial class SybaseSqlBuilder : BasicSqlBuilder
+	sealed partial class SybaseSqlBuilder : SqlBuilder
 	{
 		public SybaseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		SybaseSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		SybaseSqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new SybaseSqlBuilder(this) { _skipAliases = _isSelect };
 		}

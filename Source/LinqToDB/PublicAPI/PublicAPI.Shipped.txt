@@ -8,7 +8,7 @@ abstract LinqToDB.DataProvider.BulkCopyReader.MoveNextAsync() -> System.Threadin
 abstract LinqToDB.DataProvider.DataProviderBase.ConnectionNamespace.get -> string?
 abstract LinqToDB.DataProvider.DataProviderBase.CreateConnectionInternal(string! connectionString) -> System.Data.Common.DbConnection!
 abstract LinqToDB.DataProvider.DataProviderBase.CreateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
-abstract LinqToDB.DataProvider.DataProviderBase.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+abstract LinqToDB.DataProvider.DataProviderBase.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 abstract LinqToDB.DataProvider.DataProviderBase.DataReaderType.get -> System.Type!
 abstract LinqToDB.DataProvider.DataProviderBase.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
 abstract LinqToDB.DataProvider.DataProviderBase.GetSqlOptimizer(LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlOptimizer!
@@ -30,7 +30,7 @@ abstract LinqToDB.SchemaProvider.SchemaProviderBase.GetForeignKeys(LinqToDB.Data
 abstract LinqToDB.SchemaProvider.SchemaProviderBase.GetPrimaryKeys(LinqToDB.Data.DataConnection! dataConnection, System.Collections.Generic.IEnumerable<LinqToDB.SchemaProvider.TableSchema!>! tables, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Collections.Generic.IReadOnlyCollection<LinqToDB.SchemaProvider.PrimaryKeyInfo!>!
 abstract LinqToDB.SchemaProvider.SchemaProviderBase.GetProviderSpecificTypeNamespace() -> string?
 abstract LinqToDB.SchemaProvider.SchemaProviderBase.GetTables(LinqToDB.Data.DataConnection! dataConnection, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Collections.Generic.List<LinqToDB.SchemaProvider.TableInfo!>!
-abstract LinqToDB.SqlProvider.BasicSqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.ISqlBuilder!
+abstract LinqToDB.SqlProvider.BasicSqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.SqlBuilder!
 abstract LinqToDB.SqlQuery.QueryElement.ElementType.get -> LinqToDB.SqlQuery.QueryElementType
 abstract LinqToDB.SqlQuery.QueryElement.ToString(LinqToDB.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.SqlQuery.QueryElementTextWriter!
 abstract LinqToDB.SqlQuery.SqlExpressionBase.CanBeNullable(LinqToDB.SqlQuery.NullabilityContext! nullability) -> bool
@@ -1787,7 +1787,7 @@ LinqToDB.DataProvider.IDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! optio
 LinqToDB.DataProvider.IDataProvider.ConnectionNamespace.get -> string?
 LinqToDB.DataProvider.IDataProvider.ConvertParameterType(System.Type! type, LinqToDB.Common.DbDataType dataType) -> System.Type!
 LinqToDB.DataProvider.IDataProvider.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
-LinqToDB.DataProvider.IDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+LinqToDB.DataProvider.IDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 LinqToDB.DataProvider.IDataProvider.DataReaderType.get -> System.Type!
 LinqToDB.DataProvider.IDataProvider.DisposeCommand(System.Data.Common.DbCommand! command) -> void
 LinqToDB.DataProvider.IDataProvider.ExecuteScope(LinqToDB.Data.DataConnection! dataConnection) -> IExecutionScope?
@@ -3690,7 +3690,7 @@ LinqToDB.IDataContext.CloseAfterUse.set -> void
 LinqToDB.IDataContext.CloseAsync() -> System.Threading.Tasks.Task!
 LinqToDB.IDataContext.ConfigurationString.get -> string?
 LinqToDB.IDataContext.ContextName.get -> string!
-LinqToDB.IDataContext.CreateSqlProvider.get -> System.Func<LinqToDB.SqlProvider.ISqlBuilder!>!
+LinqToDB.IDataContext.CreateSqlProvider.get -> System.Func<LinqToDB.SqlProvider.SqlBuilder!>!
 LinqToDB.IDataContext.DataReaderType.get -> System.Type!
 LinqToDB.IDataContext.GetQueryRunner(LinqToDB.Linq.Query! query, LinqToDB.IDataContext! parametersContext, int queryNumber, LinqToDB.Linq.IQueryExpressions! expressions, object?[]? parameters, object?[]? preambles) -> LinqToDB.Linq.IQueryRunner!
 LinqToDB.IDataContext.GetReaderExpression(System.Data.Common.DbDataReader! reader, int idx, System.Linq.Expressions.Expression! readerExpression, System.Type! toType) -> System.Linq.Expressions.Expression!
@@ -5670,27 +5670,27 @@ LinqToDB.SqlProvider.ConvertType.NameToSprocParameter = 2 -> LinqToDB.SqlProvide
 LinqToDB.SqlProvider.ConvertType.SequenceName = 15 -> LinqToDB.SqlProvider.ConvertType
 LinqToDB.SqlProvider.ConvertType.SprocParameterToName = 12 -> LinqToDB.SqlProvider.ConvertType
 LinqToDB.SqlProvider.ConvertType.TriggerName = 16 -> LinqToDB.SqlProvider.ConvertType
-LinqToDB.SqlProvider.ISqlBuilder
-LinqToDB.SqlProvider.ISqlBuilder.ApplyQueryHints(string! sqlText, System.Collections.Generic.IReadOnlyCollection<string!>! queryHints) -> string!
-LinqToDB.SqlProvider.ISqlBuilder.BuildDataType(System.Text.StringBuilder! sb, LinqToDB.Common.DbDataType dataType) -> System.Text.StringBuilder!
-LinqToDB.SqlProvider.ISqlBuilder.BuildExpression(System.Text.StringBuilder! sb, LinqToDB.SqlQuery.ISqlExpression! expr, bool buildTableName, object? context = null) -> void
-LinqToDB.SqlProvider.ISqlBuilder.BuildObjectName(System.Text.StringBuilder! sb, LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.SqlProvider.ConvertType objectType = LinqToDB.SqlProvider.ConvertType.NameToQueryTable, bool escape = true, LinqToDB.TableOptions tableOptions = LinqToDB.TableOptions.NotSet, bool withoutSuffix = false) -> System.Text.StringBuilder!
-LinqToDB.SqlProvider.ISqlBuilder.BuildSql(int commandNumber, LinqToDB.SqlQuery.SqlStatement! statement, System.Text.StringBuilder! sb, LinqToDB.SqlProvider.OptimizationContext! optimizationContext, LinqToDB.SqlQuery.AliasesContext! aliases, int startIndent = 0) -> void
-LinqToDB.SqlProvider.ISqlBuilder.BuildSqlID(LinqToDB.Sql.SqlID id) -> string?
-LinqToDB.SqlProvider.ISqlBuilder.CommandCount(LinqToDB.SqlQuery.SqlStatement! statement) -> int
-LinqToDB.SqlProvider.ISqlBuilder.Convert(System.Text.StringBuilder! sb, string! value, LinqToDB.SqlProvider.ConvertType convertType) -> System.Text.StringBuilder!
-LinqToDB.SqlProvider.ISqlBuilder.ConvertInline(string! value, LinqToDB.SqlProvider.ConvertType convertType) -> string!
-LinqToDB.SqlProvider.ISqlBuilder.GetIdentityExpression(LinqToDB.SqlQuery.SqlTable! table) -> LinqToDB.SqlQuery.ISqlExpression?
-LinqToDB.SqlProvider.ISqlBuilder.GetMaxValueSql(LinqToDB.Mapping.EntityDescriptor! entity, LinqToDB.Mapping.ColumnDescriptor! column) -> string!
-LinqToDB.SqlProvider.ISqlBuilder.GetReserveSequenceValuesSql(int count, string! sequenceName) -> string!
-LinqToDB.SqlProvider.ISqlBuilder.MappingSchema.get -> LinqToDB.Mapping.MappingSchema!
-LinqToDB.SqlProvider.ISqlBuilder.Name.get -> string!
-LinqToDB.SqlProvider.ISqlBuilder.PrintParameters(LinqToDB.IDataContext! dataContext, System.Text.StringBuilder! sb, System.Collections.Generic.IEnumerable<System.Data.Common.DbParameter!>? parameters) -> System.Text.StringBuilder!
-LinqToDB.SqlProvider.ISqlBuilder.QueryName.get -> string?
-LinqToDB.SqlProvider.ISqlBuilder.SqlProviderFlags.get -> LinqToDB.SqlProvider.SqlProviderFlags!
-LinqToDB.SqlProvider.ISqlBuilder.StringBuilder.get -> System.Text.StringBuilder!
-LinqToDB.SqlProvider.ISqlBuilder.TableIDs.get -> System.Collections.Generic.Dictionary<string!, LinqToDB.SqlProvider.TableIDInfo!>?
-LinqToDB.SqlProvider.ISqlBuilder.TablePath.get -> string?
+LinqToDB.SqlProvider.SqlBuilder
+LinqToDB.SqlProvider.SqlBuilder.ApplyQueryHints(string! sqlText, System.Collections.Generic.IReadOnlyCollection<string!>! queryHints) -> string!
+LinqToDB.SqlProvider.SqlBuilder.BuildDataType(System.Text.StringBuilder! sb, LinqToDB.Common.DbDataType dataType) -> System.Text.StringBuilder!
+LinqToDB.SqlProvider.SqlBuilder.BuildExpression(System.Text.StringBuilder! sb, LinqToDB.SqlQuery.ISqlExpression! expr, bool buildTableName, object? context = null) -> void
+LinqToDB.SqlProvider.SqlBuilder.BuildObjectName(System.Text.StringBuilder! sb, LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.SqlProvider.ConvertType objectType = LinqToDB.SqlProvider.ConvertType.NameToQueryTable, bool escape = true, LinqToDB.TableOptions tableOptions = LinqToDB.TableOptions.NotSet, bool withoutSuffix = false) -> System.Text.StringBuilder!
+LinqToDB.SqlProvider.SqlBuilder.BuildSql(int commandNumber, LinqToDB.SqlQuery.SqlStatement! statement, System.Text.StringBuilder! sb, LinqToDB.SqlProvider.OptimizationContext! optimizationContext, LinqToDB.SqlQuery.AliasesContext! aliases, int startIndent = 0) -> void
+LinqToDB.SqlProvider.SqlBuilder.BuildSqlID(LinqToDB.Sql.SqlID id) -> string?
+LinqToDB.SqlProvider.SqlBuilder.CommandCount(LinqToDB.SqlQuery.SqlStatement! statement) -> int
+LinqToDB.SqlProvider.SqlBuilder.Convert(System.Text.StringBuilder! sb, string! value, LinqToDB.SqlProvider.ConvertType convertType) -> System.Text.StringBuilder!
+LinqToDB.SqlProvider.SqlBuilder.ConvertInline(string! value, LinqToDB.SqlProvider.ConvertType convertType) -> string!
+LinqToDB.SqlProvider.SqlBuilder.GetIdentityExpression(LinqToDB.SqlQuery.SqlTable! table) -> LinqToDB.SqlQuery.ISqlExpression?
+LinqToDB.SqlProvider.SqlBuilder.GetMaxValueSql(LinqToDB.Mapping.EntityDescriptor! entity, LinqToDB.Mapping.ColumnDescriptor! column) -> string!
+LinqToDB.SqlProvider.SqlBuilder.GetReserveSequenceValuesSql(int count, string! sequenceName) -> string!
+LinqToDB.SqlProvider.SqlBuilder.MappingSchema.get -> LinqToDB.Mapping.MappingSchema!
+LinqToDB.SqlProvider.SqlBuilder.Name.get -> string!
+LinqToDB.SqlProvider.SqlBuilder.PrintParameters(LinqToDB.IDataContext! dataContext, System.Text.StringBuilder! sb, System.Collections.Generic.IEnumerable<System.Data.Common.DbParameter!>? parameters) -> System.Text.StringBuilder!
+LinqToDB.SqlProvider.SqlBuilder.QueryName.get -> string?
+LinqToDB.SqlProvider.SqlBuilder.SqlProviderFlags.get -> LinqToDB.SqlProvider.SqlProviderFlags!
+LinqToDB.SqlProvider.SqlBuilder.StringBuilder.get -> System.Text.StringBuilder!
+LinqToDB.SqlProvider.SqlBuilder.TableIDs.get -> System.Collections.Generic.Dictionary<string!, LinqToDB.SqlProvider.TableIDInfo!>?
+LinqToDB.SqlProvider.SqlBuilder.TablePath.get -> string?
 LinqToDB.SqlProvider.ISqlOptimizer
 LinqToDB.SqlProvider.ISqlOptimizer.ConvertSkipTake(LinqToDB.SqlQuery.NullabilityContext! nullability, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions, LinqToDB.SqlQuery.SelectQuery! selectQuery, LinqToDB.SqlProvider.OptimizationContext! optimizationContext, out LinqToDB.SqlQuery.ISqlExpression? takeExpr, out LinqToDB.SqlQuery.ISqlExpression? skipExpr) -> void
 LinqToDB.SqlProvider.ISqlOptimizer.CreateConvertVisitor(bool allowModify) -> LinqToDB.SqlProvider.SqlExpressionConvertVisitor!
@@ -5983,9 +5983,9 @@ LinqToDB.SqlQuery.ISqlPredicate.Equals(LinqToDB.SqlQuery.ISqlPredicate! other, S
 LinqToDB.SqlQuery.ISqlPredicate.Invert(LinqToDB.SqlQuery.NullabilityContext! nullability) -> LinqToDB.SqlQuery.ISqlPredicate!
 LinqToDB.SqlQuery.ISqlPredicate.Precedence.get -> int
 LinqToDB.SqlQuery.ISqlQueryExtensionBuilder
-LinqToDB.SqlQuery.ISqlQueryExtensionBuilder.Build(LinqToDB.SqlQuery.NullabilityContext! nullability, LinqToDB.SqlProvider.ISqlBuilder! sqlBuilder, System.Text.StringBuilder! stringBuilder, LinqToDB.SqlQuery.SqlQueryExtension! sqlQueryExtension) -> void
+LinqToDB.SqlQuery.ISqlQueryExtensionBuilder.Build(LinqToDB.SqlQuery.NullabilityContext! nullability, LinqToDB.SqlProvider.SqlBuilder! sqlBuilder, System.Text.StringBuilder! stringBuilder, LinqToDB.SqlQuery.SqlQueryExtension! sqlQueryExtension) -> void
 LinqToDB.SqlQuery.ISqlTableExtensionBuilder
-LinqToDB.SqlQuery.ISqlTableExtensionBuilder.Build(LinqToDB.SqlQuery.NullabilityContext! nullability, LinqToDB.SqlProvider.ISqlBuilder! sqlBuilder, System.Text.StringBuilder! stringBuilder, LinqToDB.SqlQuery.SqlQueryExtension! sqlQueryExtension, LinqToDB.SqlQuery.SqlTable! table, string! alias) -> void
+LinqToDB.SqlQuery.ISqlTableExtensionBuilder.Build(LinqToDB.SqlQuery.NullabilityContext! nullability, LinqToDB.SqlProvider.SqlBuilder! sqlBuilder, System.Text.StringBuilder! stringBuilder, LinqToDB.SqlQuery.SqlQueryExtension! sqlQueryExtension, LinqToDB.SqlQuery.SqlTable! table, string! alias) -> void
 LinqToDB.SqlQuery.ISqlTableSource
 LinqToDB.SqlQuery.ISqlTableSource.All.get -> LinqToDB.SqlQuery.SqlField!
 LinqToDB.SqlQuery.ISqlTableSource.GetKeys(bool allIfEmpty) -> System.Collections.Generic.IList<LinqToDB.SqlQuery.ISqlExpression!>?
@@ -7314,7 +7314,7 @@ override LinqToDB.DataProvider.Access.AccessDataProvider.BulkCopy<T>(LinqToDB.Da
 override LinqToDB.DataProvider.Access.AccessDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.Access.AccessDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.Access.AccessDataProvider.CreateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
-override LinqToDB.DataProvider.Access.AccessDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.Access.AccessDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.Access.AccessDataProvider.GetQueryParameterNormalizer() -> LinqToDB.DataProvider.IQueryParametersNormalizer!
 override LinqToDB.DataProvider.Access.AccessDataProvider.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
 override LinqToDB.DataProvider.Access.AccessDataProvider.GetSqlOptimizer(LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlOptimizer!
@@ -7404,7 +7404,7 @@ override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.BulkCopy<T>(Lin
 override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.CreateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
-override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.GetQueryParameterNormalizer() -> LinqToDB.DataProvider.IQueryParametersNormalizer!
 override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
 override LinqToDB.DataProvider.ClickHouse.ClickHouseDataProvider.GetSqlOptimizer(LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlOptimizer!
@@ -7445,7 +7445,7 @@ override LinqToDB.DataProvider.DB2.DB2DataProvider.BulkCopy<T>(LinqToDB.DataOpti
 override LinqToDB.DataProvider.DB2.DB2DataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.DB2.DB2DataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.DB2.DB2DataProvider.CreateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
-override LinqToDB.DataProvider.DB2.DB2DataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.DB2.DB2DataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.DB2.DB2DataProvider.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
 override LinqToDB.DataProvider.DB2.DB2DataProvider.GetSqlOptimizer(LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlOptimizer!
 override LinqToDB.DataProvider.DB2.DB2DataProvider.SetParameter(LinqToDB.Data.DataConnection! dataConnection, System.Data.Common.DbParameter! parameter, string! name, LinqToDB.Common.DbDataType dataType, object? value) -> void
@@ -7474,7 +7474,7 @@ override LinqToDB.DataProvider.DynamicDataProviderBase<TProviderMappings>.Create
 override LinqToDB.DataProvider.DynamicDataProviderBase<TProviderMappings>.DataReaderType.get -> System.Type!
 override LinqToDB.DataProvider.DynamicDataProviderBase<TProviderMappings>.TransactionsSupported.get -> bool
 override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.BuildSkipFirst(LinqToDB.SqlQuery.SelectQuery! selectQuery) -> void
-override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.LimitFormat(LinqToDB.SqlQuery.SelectQuery! selectQuery) -> string?
 override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.OffsetFirst.get -> bool
 override LinqToDB.DataProvider.Firebird.Firebird3SqlBuilder.OffsetFormat(LinqToDB.SqlQuery.SelectQuery! selectQuery) -> string!
@@ -7483,13 +7483,13 @@ override LinqToDB.DataProvider.Firebird.Firebird3SqlExpressionConvertVisitor.Get
 override LinqToDB.DataProvider.Firebird.Firebird3SqlOptimizer.CreateConvertVisitor(bool allowModify) -> LinqToDB.SqlProvider.SqlExpressionConvertVisitor!
 override LinqToDB.DataProvider.Firebird.Firebird4SqlBuilder.BuildDataTypeFromDataType(LinqToDB.Common.DbDataType type, bool forCreateTable, bool canBeNull) -> void
 override LinqToDB.DataProvider.Firebird.Firebird4SqlBuilder.BuildJoinType(LinqToDB.SqlQuery.SqlJoinedTable! join, LinqToDB.SqlQuery.SqlSearchCondition! condition) -> bool
-override LinqToDB.DataProvider.Firebird.Firebird4SqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.Firebird.Firebird4SqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.Firebird.FirebirdDataProvider.BulkCopy<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source) -> LinqToDB.Data.BulkCopyRowsCopied!
 override LinqToDB.DataProvider.Firebird.FirebirdDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.Firebird.FirebirdDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.Firebird.FirebirdDataProvider.CreateIdentifierService() -> LinqToDB.DataProvider.IIdentifierService!
 override LinqToDB.DataProvider.Firebird.FirebirdDataProvider.CreateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
-override LinqToDB.DataProvider.Firebird.FirebirdDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.Firebird.FirebirdDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.Firebird.FirebirdDataProvider.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
 override LinqToDB.DataProvider.Firebird.FirebirdDataProvider.GetSqlOptimizer(LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlOptimizer!
 override LinqToDB.DataProvider.Firebird.FirebirdDataProvider.IsDBNullAllowed(LinqToDB.DataOptions! options, System.Data.Common.DbDataReader! reader, int idx) -> bool?
@@ -7519,7 +7519,7 @@ override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.BuildStartCreateTable
 override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.BuildTypedExpression(LinqToDB.Common.DbDataType dataType, LinqToDB.SqlQuery.ISqlExpression! value) -> void
 override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.CommandCount(LinqToDB.SqlQuery.SqlStatement! statement) -> int
 override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.Convert(System.Text.StringBuilder! sb, string! value, LinqToDB.SqlProvider.ConvertType convertType) -> System.Text.StringBuilder!
-override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.CteFirst.get -> bool
 override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.FakeTable.get -> string!
 override LinqToDB.DataProvider.Firebird.FirebirdSqlBuilder.FirstFormat(LinqToDB.SqlQuery.SelectQuery! selectQuery) -> string!
@@ -7556,7 +7556,7 @@ override LinqToDB.DataProvider.Informix.InformixDataProvider.BulkCopy<T>(LinqToD
 override LinqToDB.DataProvider.Informix.InformixDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.Informix.InformixDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.Informix.InformixDataProvider.CreateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
-override LinqToDB.DataProvider.Informix.InformixDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.Informix.InformixDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.Informix.InformixDataProvider.ExecuteScope(LinqToDB.Data.DataConnection! dataConnection) -> IExecutionScope!
 override LinqToDB.DataProvider.Informix.InformixDataProvider.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
 override LinqToDB.DataProvider.Informix.InformixDataProvider.GetSqlOptimizer(LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlOptimizer!
@@ -7590,7 +7590,7 @@ override LinqToDB.DataProvider.MySql.MySqlDataProvider.BulkCopy<T>(LinqToDB.Data
 override LinqToDB.DataProvider.MySql.MySqlDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.MySql.MySqlDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.MySql.MySqlDataProvider.CreateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
-override LinqToDB.DataProvider.MySql.MySqlDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.MySql.MySqlDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.MySql.MySqlDataProvider.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
 override LinqToDB.DataProvider.MySql.MySqlDataProvider.GetSqlOptimizer(LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlOptimizer!
 override LinqToDB.DataProvider.MySql.MySqlDataProvider.SetParameter(LinqToDB.Data.DataConnection! dataConnection, System.Data.Common.DbParameter! parameter, string! name, LinqToDB.Common.DbDataType dataType, object? value) -> void
@@ -7623,7 +7623,7 @@ override LinqToDB.DataProvider.Oracle.OracleDataProvider.ClearCommandParameters(
 override LinqToDB.DataProvider.Oracle.OracleDataProvider.ConvertParameterType(System.Type! type, LinqToDB.Common.DbDataType dataType) -> System.Type!
 override LinqToDB.DataProvider.Oracle.OracleDataProvider.CreateIdentifierService() -> LinqToDB.DataProvider.IIdentifierService!
 override LinqToDB.DataProvider.Oracle.OracleDataProvider.CreateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
-override LinqToDB.DataProvider.Oracle.OracleDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.Oracle.OracleDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.Oracle.OracleDataProvider.GetQueryParameterNormalizer() -> LinqToDB.DataProvider.IQueryParametersNormalizer!
 override LinqToDB.DataProvider.Oracle.OracleDataProvider.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
 override LinqToDB.DataProvider.Oracle.OracleDataProvider.GetSqlOptimizer(LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlOptimizer!
@@ -7656,7 +7656,7 @@ override LinqToDB.DataProvider.PostgreSQL.PostgreSQLDataProvider.BulkCopy<T>(Lin
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLDataProvider.CreateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
-override LinqToDB.DataProvider.PostgreSQL.PostgreSQLDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.PostgreSQL.PostgreSQLDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLDataProvider.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLDataProvider.GetSqlOptimizer(LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlOptimizer!
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLDataProvider.NormalizeTypeName(string? typeName) -> string?
@@ -7682,7 +7682,7 @@ override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSchemaProvider.GetSchema(Lin
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSchemaProvider.GetSystemType(string? dataType, string? columnType, LinqToDB.SchemaProvider.DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Type?
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSchemaProvider.GetTables(LinqToDB.Data.DataConnection! dataConnection, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Collections.Generic.List<LinqToDB.SchemaProvider.TableInfo!>!
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSql15Builder.BuildInsertOrUpdateQuery(LinqToDB.SqlQuery.SqlInsertOrUpdateStatement! insertOrUpdate) -> void
-override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSql15Builder.CreateSqlBuilder() -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSql15Builder.CreateSqlBuilder() -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSqlBuilder.BuildCreateTableCommand(LinqToDB.SqlQuery.SqlTable! table) -> void
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSqlBuilder.BuildCreateTableFieldType(LinqToDB.SqlQuery.SqlField! field) -> void
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSqlBuilder.BuildDataTypeFromDataType(LinqToDB.Common.DbDataType type, bool forCreateTable, bool canBeNull) -> void
@@ -7700,7 +7700,7 @@ override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSqlBuilder.BuildSubQueryExte
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSqlBuilder.BuildTruncateTableStatement(LinqToDB.SqlQuery.SqlTruncateTableStatement! truncateTable) -> void
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSqlBuilder.BuildTypedExpression(LinqToDB.Common.DbDataType dataType, LinqToDB.SqlQuery.ISqlExpression! value) -> void
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSqlBuilder.Convert(System.Text.StringBuilder! sb, string! value, LinqToDB.SqlProvider.ConvertType convertType) -> System.Text.StringBuilder!
-override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSqlBuilder.GetIdentityExpression(LinqToDB.SqlQuery.SqlTable! table) -> LinqToDB.SqlQuery.ISqlExpression?
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSqlBuilder.GetProviderTypeName(LinqToDB.IDataContext! dataContext, System.Data.Common.DbParameter! parameter) -> string?
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLSqlBuilder.GetReserveSequenceValuesSql(int count, string! sequenceName) -> string!
@@ -7725,13 +7725,13 @@ override LinqToDB.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator
 override LinqToDB.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.DateFunctionsTranslator.TranslateMakeDateTime(LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Common.DbDataType resulType, LinqToDB.SqlQuery.ISqlExpression! year, LinqToDB.SqlQuery.ISqlExpression! month, LinqToDB.SqlQuery.ISqlExpression! day, LinqToDB.SqlQuery.ISqlExpression? hour, LinqToDB.SqlQuery.ISqlExpression? minute, LinqToDB.SqlQuery.ISqlExpression? second, LinqToDB.SqlQuery.ISqlExpression? millisecond) -> LinqToDB.SqlQuery.ISqlExpression?
 override LinqToDB.DataProvider.ReaderInfo.Equals(object? obj) -> bool
 override LinqToDB.DataProvider.ReaderInfo.GetHashCode() -> int
-override LinqToDB.DataProvider.SapHana.CalculationViewInputParametersExpressionAttribute.SetTable<TContext>(LinqToDB.DataOptions! options, TContext context, LinqToDB.SqlProvider.ISqlBuilder! sqlBuilder, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.SqlQuery.SqlTable! table, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter) -> void
+override LinqToDB.DataProvider.SapHana.CalculationViewInputParametersExpressionAttribute.SetTable<TContext>(LinqToDB.DataOptions! options, TContext context, LinqToDB.SqlProvider.SqlBuilder! sqlBuilder, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.SqlQuery.SqlTable! table, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter) -> void
 override LinqToDB.DataProvider.SapHana.SapHanaDataProvider.BulkCopy<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source) -> LinqToDB.Data.BulkCopyRowsCopied!
 override LinqToDB.DataProvider.SapHana.SapHanaDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.SapHana.SapHanaDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.SapHana.SapHanaDataProvider.ConvertParameterType(System.Type! type, LinqToDB.Common.DbDataType dataType) -> System.Type!
 override LinqToDB.DataProvider.SapHana.SapHanaDataProvider.CreateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
-override LinqToDB.DataProvider.SapHana.SapHanaDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.SapHana.SapHanaDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.SapHana.SapHanaDataProvider.ExecuteScope(LinqToDB.Data.DataConnection! dataConnection) -> IExecutionScope?
 override LinqToDB.DataProvider.SapHana.SapHanaDataProvider.GetQueryParameterNormalizer() -> LinqToDB.DataProvider.IQueryParametersNormalizer!
 override LinqToDB.DataProvider.SapHana.SapHanaDataProvider.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
@@ -7762,7 +7762,7 @@ override LinqToDB.DataProvider.SqlCe.SqlCeDataProvider.BulkCopy<T>(LinqToDB.Data
 override LinqToDB.DataProvider.SqlCe.SqlCeDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.SqlCe.SqlCeDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.SqlCe.SqlCeDataProvider.CreateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
-override LinqToDB.DataProvider.SqlCe.SqlCeDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.SqlCe.SqlCeDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.SqlCe.SqlCeDataProvider.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
 override LinqToDB.DataProvider.SqlCe.SqlCeDataProvider.GetSqlOptimizer(LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlOptimizer!
 override LinqToDB.DataProvider.SqlCe.SqlCeDataProvider.IsDBNullAllowed(LinqToDB.DataOptions! options, System.Data.Common.DbDataReader! reader, int idx) -> bool?
@@ -7792,7 +7792,7 @@ override LinqToDB.DataProvider.SQLite.SQLiteDataProvider.BulkCopy<T>(LinqToDB.Da
 override LinqToDB.DataProvider.SQLite.SQLiteDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.SQLite.SQLiteDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.SQLite.SQLiteDataProvider.CreateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
-override LinqToDB.DataProvider.SQLite.SQLiteDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.SQLite.SQLiteDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.SQLite.SQLiteDataProvider.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
 override LinqToDB.DataProvider.SQLite.SQLiteDataProvider.GetSqlOptimizer(LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlOptimizer!
 override LinqToDB.DataProvider.SQLite.SQLiteDataProvider.IsDBNullAllowed(LinqToDB.DataOptions! options, System.Data.Common.DbDataReader! reader, int idx) -> bool?
@@ -7819,7 +7819,7 @@ override LinqToDB.DataProvider.SQLite.SQLiteSqlBuilder.BuildUpdateQuery(LinqToDB
 override LinqToDB.DataProvider.SQLite.SQLiteSqlBuilder.BuildUpdateTableName(LinqToDB.SqlQuery.SelectQuery! selectQuery, LinqToDB.SqlQuery.SqlUpdateClause! updateClause) -> void
 override LinqToDB.DataProvider.SQLite.SQLiteSqlBuilder.CommandCount(LinqToDB.SqlQuery.SqlStatement! statement) -> int
 override LinqToDB.DataProvider.SQLite.SQLiteSqlBuilder.Convert(System.Text.StringBuilder! sb, string! value, LinqToDB.SqlProvider.ConvertType convertType) -> System.Text.StringBuilder!
-override LinqToDB.DataProvider.SQLite.SQLiteSqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.SQLite.SQLiteSqlBuilder.CreateSqlBuilder() -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.SQLite.SQLiteSqlBuilder.IsNestedJoinParenthesisRequired.get -> bool
 override LinqToDB.DataProvider.SQLite.SQLiteSqlBuilder.LimitFormat(LinqToDB.SqlQuery.SelectQuery! selectQuery) -> string!
 override LinqToDB.DataProvider.SQLite.SQLiteSqlBuilder.OffsetFormat(LinqToDB.SqlQuery.SelectQuery! selectQuery) -> string!
@@ -7846,7 +7846,7 @@ override LinqToDB.DataProvider.SqlServer.SqlServerDataProvider.BulkCopy<T>(LinqT
 override LinqToDB.DataProvider.SqlServer.SqlServerDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IAsyncEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.SqlServer.SqlServerDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.SqlServer.SqlServerDataProvider.CreateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
-override LinqToDB.DataProvider.SqlServer.SqlServerDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.SqlServer.SqlServerDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.SqlServer.SqlServerDataProvider.GetConnectionInfo(LinqToDB.Data.DataConnection! dataConnection, string! parameterName) -> object?
 override LinqToDB.DataProvider.SqlServer.SqlServerDataProvider.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
 override LinqToDB.DataProvider.SqlServer.SqlServerDataProvider.GetSqlOptimizer(LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlOptimizer!
@@ -7888,7 +7888,7 @@ override LinqToDB.DataProvider.Sybase.SybaseDataProvider.BulkCopyAsync<T>(LinqTo
 override LinqToDB.DataProvider.Sybase.SybaseDataProvider.BulkCopyAsync<T>(LinqToDB.DataOptions! options, LinqToDB.ITable<T>! table, System.Collections.Generic.IEnumerable<T>! source, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 override LinqToDB.DataProvider.Sybase.SybaseDataProvider.ConvertParameterType(System.Type! type, LinqToDB.Common.DbDataType dataType) -> System.Type!
 override LinqToDB.DataProvider.Sybase.SybaseDataProvider.CreateMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
-override LinqToDB.DataProvider.Sybase.SybaseDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlBuilder!
+override LinqToDB.DataProvider.Sybase.SybaseDataProvider.CreateSqlBuilder(LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.SqlBuilder!
 override LinqToDB.DataProvider.Sybase.SybaseDataProvider.GetQueryParameterNormalizer() -> LinqToDB.DataProvider.IQueryParametersNormalizer!
 override LinqToDB.DataProvider.Sybase.SybaseDataProvider.GetSchemaProvider() -> LinqToDB.SchemaProvider.ISchemaProvider!
 override LinqToDB.DataProvider.Sybase.SybaseDataProvider.GetSqlOptimizer(LinqToDB.DataOptions! dataOptions) -> LinqToDB.SqlProvider.ISqlOptimizer!
@@ -8149,7 +8149,7 @@ override LinqToDB.Sql.SqlRow<T1, T2, T3, T4>.GetHashCode() -> int
 override LinqToDB.Sql.SqlRow<T1, T2, T3>.GetHashCode() -> int
 override LinqToDB.Sql.SqlRow<T1, T2>.GetHashCode() -> int
 override LinqToDB.Sql.SqlRow<T1>.GetHashCode() -> int
-override LinqToDB.Sql.TableExpressionAttribute.SetTable<TContext>(LinqToDB.DataOptions! options, TContext context, LinqToDB.SqlProvider.ISqlBuilder! sqlBuilder, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.SqlQuery.SqlTable! table, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter) -> void
+override LinqToDB.Sql.TableExpressionAttribute.SetTable<TContext>(LinqToDB.DataOptions! options, TContext context, LinqToDB.SqlProvider.SqlBuilder! sqlBuilder, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.SqlQuery.SqlTable! table, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter) -> void
 override LinqToDB.Sql.TableFunctionAttribute.GetObjectID() -> string!
 override LinqToDB.SqlOptions.Equals(object? obj) -> bool
 override LinqToDB.SqlOptions.GetHashCode() -> int
@@ -8641,7 +8641,7 @@ readonly LinqToDB.DataProvider.MultipleRowsHelper.OriginalContext -> LinqToDB.ID
 readonly LinqToDB.DataProvider.MultipleRowsHelper.ParameterName -> string!
 readonly LinqToDB.DataProvider.MultipleRowsHelper.Parameters -> System.Collections.Generic.List<LinqToDB.Data.DataParameter!>!
 readonly LinqToDB.DataProvider.MultipleRowsHelper.RowsCopied -> LinqToDB.Data.BulkCopyRowsCopied!
-readonly LinqToDB.DataProvider.MultipleRowsHelper.SqlBuilder -> LinqToDB.SqlProvider.ISqlBuilder!
+readonly LinqToDB.DataProvider.MultipleRowsHelper.SqlBuilder -> LinqToDB.SqlProvider.SqlBuilder!
 readonly LinqToDB.DataProvider.MultipleRowsHelper.StringBuilder -> System.Text.StringBuilder!
 static LinqToDB.AnalyticFunctions.Average<T>(this LinqToDB.Sql.ISqlExtension? ext, object? expr) -> LinqToDB.AnalyticFunctions.IAggregateFunctionSelfContained<T>!
 static LinqToDB.AnalyticFunctions.Average<T>(this LinqToDB.Sql.ISqlExtension? ext, object? expr, LinqToDB.Sql.AggregateModifier modifier) -> LinqToDB.AnalyticFunctions.IAggregateFunctionSelfContained<T>!
@@ -9558,7 +9558,7 @@ static LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(System.Data
 static LinqToDB.DataProvider.Access.AccessTools.DropDatabase(string! databaseName, string? extension = null) -> void
 static LinqToDB.DataProvider.Access.AccessTools.GetDataProvider(LinqToDB.DataProvider.Access.AccessVersion version = LinqToDB.DataProvider.Access.AccessVersion.AutoDetect, LinqToDB.DataProvider.Access.AccessProvider provider = LinqToDB.DataProvider.Access.AccessProvider.AutoDetect, string? connectionString = null) -> LinqToDB.DataProvider.IDataProvider!
 static LinqToDB.DataProvider.AliasesHelper.PrepareQueryAndAliases(LinqToDB.DataProvider.IIdentifierService! identifierService, LinqToDB.SqlQuery.SqlStatement! statement, LinqToDB.SqlQuery.AliasesContext? prevAliasContext, out LinqToDB.SqlQuery.AliasesContext! newAliasContext) -> void
-static LinqToDB.DataProvider.BasicBulkCopy.GetTableName<T>(LinqToDB.SqlProvider.ISqlBuilder! sqlBuilder, LinqToDB.Data.BulkCopyOptions! options, LinqToDB.ITable<T>! table, bool escaped = true) -> string!
+static LinqToDB.DataProvider.BasicBulkCopy.GetTableName<T>(LinqToDB.SqlProvider.SqlBuilder! sqlBuilder, LinqToDB.Data.BulkCopyOptions! options, LinqToDB.ITable<T>! table, bool escaped = true) -> string!
 static LinqToDB.DataProvider.BasicBulkCopy.MultipleRowsCopyHelper(LinqToDB.DataProvider.MultipleRowsHelper! helper, System.Collections.IEnumerable! source, string? from, System.Action<LinqToDB.DataProvider.MultipleRowsHelper!>! prepFunction, System.Action<LinqToDB.DataProvider.MultipleRowsHelper!, object!, string?>! addFunction, System.Action<LinqToDB.DataProvider.MultipleRowsHelper!>! finishFunction, int maxParameters, int maxSqlLength) -> LinqToDB.Data.BulkCopyRowsCopied!
 static LinqToDB.DataProvider.BasicBulkCopy.MultipleRowsCopyHelperAsync(LinqToDB.DataProvider.MultipleRowsHelper! helper, System.Collections.IEnumerable! source, string? from, System.Action<LinqToDB.DataProvider.MultipleRowsHelper!>! prepFunction, System.Action<LinqToDB.DataProvider.MultipleRowsHelper!, object!, string?>! addFunction, System.Action<LinqToDB.DataProvider.MultipleRowsHelper!>! finishFunction, System.Threading.CancellationToken cancellationToken, int maxParameters, int maxSqlLength) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
 static LinqToDB.DataProvider.BasicBulkCopy.MultipleRowsCopyHelperAsync<T>(LinqToDB.DataProvider.MultipleRowsHelper! helper, System.Collections.Generic.IAsyncEnumerable<T>! source, string? from, System.Action<LinqToDB.DataProvider.MultipleRowsHelper!>! prepFunction, System.Action<LinqToDB.DataProvider.MultipleRowsHelper!, object!, string?>! addFunction, System.Action<LinqToDB.DataProvider.MultipleRowsHelper!>! finishFunction, System.Threading.CancellationToken cancellationToken, int maxParameters, int maxSqlLength) -> System.Threading.Tasks.Task<LinqToDB.Data.BulkCopyRowsCopied!>!
@@ -12334,7 +12334,7 @@ virtual LinqToDB.Sql.QueryExtensionAttribute.ExtendQuery(System.Collections.Gene
 virtual LinqToDB.Sql.QueryExtensionAttribute.ExtendSubQuery(System.Collections.Generic.List<LinqToDB.SqlQuery.SqlQueryExtension!>! extensions, System.Collections.Generic.List<LinqToDB.Linq.Builder.SqlQueryExtensionData!>! parameters) -> void
 virtual LinqToDB.Sql.QueryExtensionAttribute.ExtendTable(LinqToDB.SqlQuery.SqlTable! table, System.Collections.Generic.List<LinqToDB.Linq.Builder.SqlQueryExtensionData!>! parameters) -> void
 virtual LinqToDB.Sql.QueryExtensionAttribute.GetExtension(System.Collections.Generic.List<LinqToDB.Linq.Builder.SqlQueryExtensionData!>! parameters) -> LinqToDB.SqlQuery.SqlQueryExtension!
-virtual LinqToDB.Sql.TableFunctionAttribute.SetTable<TContext>(LinqToDB.DataOptions! options, TContext context, LinqToDB.SqlProvider.ISqlBuilder! sqlBuilder, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.SqlQuery.SqlTable! table, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter) -> void
+virtual LinqToDB.Sql.TableFunctionAttribute.SetTable<TContext>(LinqToDB.DataOptions! options, TContext context, LinqToDB.SqlProvider.SqlBuilder! sqlBuilder, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.SqlQuery.SqlTable! table, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter) -> void
 virtual LinqToDB.SqlProvider.BasicSqlBuilder.BuildAlterDeleteClause(LinqToDB.SqlQuery.SqlDeleteStatement! deleteStatement) -> void
 virtual LinqToDB.SqlProvider.BasicSqlBuilder.BuildAnchor(LinqToDB.SqlQuery.SqlAnchor! anchor) -> void
 virtual LinqToDB.SqlProvider.BasicSqlBuilder.BuildBinaryExpression(LinqToDB.SqlQuery.SqlBinaryExpression! expr) -> void

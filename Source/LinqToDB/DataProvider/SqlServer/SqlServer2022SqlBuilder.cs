@@ -11,11 +11,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		SqlServer2022SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		SqlServer2022SqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new SqlServer2022SqlBuilder(this);
 		}

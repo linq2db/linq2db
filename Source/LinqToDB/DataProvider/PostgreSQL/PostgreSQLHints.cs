@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		sealed class SubQueryTableHintExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			void ISqlQueryExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			void ISqlQueryExtensionBuilder.Build(NullabilityContext nullability, SqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
 				var hint = (string)((SqlValue)sqlQueryExtension.Arguments["hint"]).Value!;
 

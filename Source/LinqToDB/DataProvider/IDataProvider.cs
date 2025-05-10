@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider
 		bool             TransactionsSupported { get; }
 		void             InitContext           (IDataContext dataContext);
 		DbConnection     CreateConnection      (string       connectionString);
-		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema, DataOptions dataOptions);
+		SqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema, DataOptions dataOptions);
 		ISqlOptimizer    GetSqlOptimizer       (DataOptions  dataOptions);
 		/// <summary>
 		/// Initializes <see cref="DataConnection"/> command object.

@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return string.Format(CultureInfo.InvariantCulture, "{0}", value);
 		}
 
-		public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Sql.ExpressionAttribute.ConvertFunc<TContext> converter)
+		public override void SetTable<TContext>(DataOptions options, TContext context, SqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Sql.ExpressionAttribute.ConvertFunc<TContext> converter)
 		{
 			var paramsList = methodCall.Method.GetParameters();
 

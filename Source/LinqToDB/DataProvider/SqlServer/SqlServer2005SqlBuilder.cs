@@ -11,11 +11,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		SqlServer2005SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		SqlServer2005SqlBuilder(SqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override SqlBuilder CreateSqlBuilder()
 		{
 			return new SqlServer2005SqlBuilder(this);
 		}

@@ -374,11 +374,11 @@ namespace LinqToDB.Remote
 			return null;
 		}
 
-		static readonly ConcurrentDictionary<Tuple<Type,MappingSchema,Type,SqlProviderFlags,DataOptions>,Func<ISqlBuilder>> _sqlBuilders = new ();
+		static readonly ConcurrentDictionary<Tuple<Type,MappingSchema,Type,SqlProviderFlags,DataOptions>,Func<SqlBuilder>> _sqlBuilders = new ();
 
-		Func<ISqlBuilder>? _createSqlProvider;
+		Func<SqlBuilder>? _createSqlProvider;
 
-		Func<ISqlBuilder> IDataContext.CreateSqlProvider
+		Func<SqlBuilder> IDataContext.CreateSqlProvider
 		{
 			get
 			{
@@ -402,7 +402,7 @@ namespace LinqToDB.Remote
 					{
 						var (mappingSchema, sqlOptimizer) = args;
 #endif
-						return Expression.Lambda<Func<ISqlBuilder>>(
+						return Expression.Lambda<Func<SqlBuilder>>(
 							Expression.New(
 								key.Item1.GetConstructor(new[]
 								{

@@ -78,7 +78,7 @@ namespace LinqToDB.Tools
 			return sourceList ?? source;
 		}
 
-		private static void GetDefaultIdentityImpl<T>(DataConnection context, IList<T> sourceList, EntityDescriptor entityDescriptor, ColumnDescriptor column, ISqlBuilder sqlBuilder) where T : notnull
+		private static void GetDefaultIdentityImpl<T>(DataConnection context, IList<T> sourceList, EntityDescriptor entityDescriptor, ColumnDescriptor column, SqlBuilder sqlBuilder) where T : notnull
 		{
 			var sql      = sqlBuilder.GetMaxValueSql(entityDescriptor, column);
 			var maxValue = context.Execute<object?>(sql);
@@ -136,7 +136,7 @@ namespace LinqToDB.Tools
 			}
 		}
 
-		private static void GetColumnSequenceValues<T>(DataConnection context, IList<T> sourceList, ColumnDescriptor column, ISqlBuilder sqlBuilder, string sequenceName) where T : notnull
+		private static void GetColumnSequenceValues<T>(DataConnection context, IList<T> sourceList, ColumnDescriptor column, SqlBuilder sqlBuilder, string sequenceName) where T : notnull
 		{
 			var sql       = sqlBuilder.GetReserveSequenceValuesSql(sourceList.Count, sequenceName);
 			var sequences = context.Query<object>(sql).ToList();
