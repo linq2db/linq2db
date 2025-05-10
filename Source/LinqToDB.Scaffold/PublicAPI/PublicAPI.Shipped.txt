@@ -807,7 +807,7 @@ LinqToDB.DataModel.DataContextModel.HasUntypedOptionsConstructor.get -> bool
 LinqToDB.DataModel.DataContextModel.HasUntypedOptionsConstructor.set -> void
 LinqToDB.DataModel.DataModelGenerator
 LinqToDB.DataModel.DataModelGenerator.ConvertToCodeModel() -> LinqToDB.CodeModel.CodeFile![]!
-LinqToDB.DataModel.DataModelGenerator.DataModelGenerator(LinqToDB.CodeModel.ILanguageProvider! languageProvider, LinqToDB.DataModel.DatabaseModel! dataModel, LinqToDB.Metadata.IMetadataBuilder? metadataBuilder, System.Func<string!, string!>! findMethodParameterNameNormalizer, LinqToDB.SqlProvider.ISqlBuilder! sqlBuilder, LinqToDB.Scaffold.ScaffoldOptions! options) -> void
+LinqToDB.DataModel.DataModelGenerator.DataModelGenerator(LinqToDB.CodeModel.ILanguageProvider! languageProvider, LinqToDB.DataModel.DatabaseModel! dataModel, LinqToDB.Metadata.IMetadataBuilder? metadataBuilder, System.Func<string!, string!>! findMethodParameterNameNormalizer, LinqToDB.SqlProvider.SqlBuilder! sqlBuilder, LinqToDB.Scaffold.ScaffoldOptions! options) -> void
 LinqToDB.DataModel.EntityModel
 LinqToDB.DataModel.EntityModel.Class.get -> LinqToDB.DataModel.ClassModel!
 LinqToDB.DataModel.EntityModel.Class.set -> void
@@ -1338,7 +1338,7 @@ LinqToDB.Scaffold.FinalDataModel.StoredProcedures.get -> System.Collections.Gene
 LinqToDB.Scaffold.FinalDataModel.TableFunctions.get -> System.Collections.Generic.List<LinqToDB.DataModel.TableFunctionModel!>!
 LinqToDB.Scaffold.Internal.NameGenerationServices
 LinqToDB.Scaffold.Scaffolder
-LinqToDB.Scaffold.Scaffolder.GenerateCodeModel(LinqToDB.SqlProvider.ISqlBuilder! sqlBuilder, LinqToDB.DataModel.DatabaseModel! dataModel, LinqToDB.Metadata.IMetadataBuilder? metadataBuilder, params LinqToDB.CodeModel.ConvertCodeModelVisitor![]! modelConverters) -> LinqToDB.CodeModel.CodeFile![]!
+LinqToDB.Scaffold.Scaffolder.GenerateCodeModel(LinqToDB.SqlProvider.SqlBuilder! sqlBuilder, LinqToDB.DataModel.DatabaseModel! dataModel, LinqToDB.Metadata.IMetadataBuilder? metadataBuilder, params LinqToDB.CodeModel.ConvertCodeModelVisitor![]! modelConverters) -> LinqToDB.CodeModel.CodeFile![]!
 LinqToDB.Scaffold.Scaffolder.GenerateSourceCode(LinqToDB.DataModel.DatabaseModel! dataModel, params LinqToDB.CodeModel.CodeFile![]! files) -> LinqToDB.Scaffold.SourceCodeFile![]!
 LinqToDB.Scaffold.Scaffolder.Language.get -> LinqToDB.CodeModel.ILanguageProvider!
 LinqToDB.Scaffold.Scaffolder.LoadDataModel(LinqToDB.Schema.ISchemaProvider! schemaProvider, LinqToDB.Schema.ITypeMappingProvider! typeMappingsProvider) -> LinqToDB.DataModel.DatabaseModel!
@@ -2243,7 +2243,7 @@ LinqToDB.Tools.ModelGeneration.ModelGenerator.SingularizeForeignKeyNames.set -> 
 LinqToDB.Tools.ModelGeneration.ModelGenerator.SkipNotifyPropertyChangedImplementation.get -> bool
 LinqToDB.Tools.ModelGeneration.ModelGenerator.SkipNotifyPropertyChangedImplementation.set -> void
 LinqToDB.Tools.ModelGeneration.ModelGenerator.SkipSpacesAndInsert(string! value) -> void
-LinqToDB.Tools.ModelGeneration.ModelGenerator.SqlBuilder -> LinqToDB.SqlProvider.ISqlBuilder?
+LinqToDB.Tools.ModelGeneration.ModelGenerator.SqlBuilder -> LinqToDB.SqlProvider.SqlBuilder?
 LinqToDB.Tools.ModelGeneration.ModelGenerator.SuggestNoDuplicate(System.Collections.Generic.IEnumerable<string!>! currentNames, string! newName, string? prefix) -> string!
 LinqToDB.Tools.ModelGeneration.ModelGenerator.ToCamelCase(string! name) -> string!
 LinqToDB.Tools.ModelGeneration.ModelGenerator.ToDictionary<T, TR>(System.Collections.Generic.IEnumerable<T>! source, System.Func<T, string!>! keyGetter, System.Func<T, TR>! objGetter, System.Func<TR, int, string!>! getKeyName) -> System.Collections.Generic.Dictionary<string!, TR>!

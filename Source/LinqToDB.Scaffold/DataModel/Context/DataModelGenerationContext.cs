@@ -16,7 +16,7 @@ namespace LinqToDB.DataModel
 	{
 		private readonly DataModelOptions                                               _options;
 		private readonly ILanguageProvider                                              _languageProvider;
-		private readonly ISqlBuilder                                                    _sqlBuilder;
+		private readonly SqlBuilder                                                    _sqlBuilder;
 		private readonly DatabaseModel                                                  _model;
 		private readonly ClassBuilder                                                   _dataContextClass;
 		private readonly PropertyGroup                                                  _staticProperties;
@@ -49,7 +49,7 @@ namespace LinqToDB.DataModel
 			DataModelOptions     options,
 			ILanguageProvider    languageProvider,
 			DatabaseModel        model,
-			ISqlBuilder          sqlBuilder,
+			SqlBuilder          sqlBuilder,
 			IMetadataBuilder?    metadataBuilder,
 			Func<string, string> parameterNameNormalizer)
 		{

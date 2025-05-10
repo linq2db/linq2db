@@ -26,7 +26,7 @@ namespace LinqToDB.DataModel
 		// data model metadata generator
 		private readonly IMetadataBuilder?           _metadataBuilder;
 		// used for full function name generation
-		private readonly ISqlBuilder                 _sqlBuilder;
+		private readonly SqlBuilder                 _sqlBuilder;
 		// adjust parameter name according to naming rules for parameter
 		private readonly Func<string, string>        _findMethodParameterNameNormalizer;
 		// scaffolding options
@@ -46,7 +46,7 @@ namespace LinqToDB.DataModel
 			DatabaseModel        dataModel,
 			IMetadataBuilder?    metadataBuilder,
 			Func<string, string> findMethodParameterNameNormalizer,
-			ISqlBuilder          sqlBuilder,
+			SqlBuilder          sqlBuilder,
 			ScaffoldOptions      options)
 		{
 			_languageProvider                  = languageProvider;

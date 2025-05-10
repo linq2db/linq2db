@@ -320,7 +320,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			return ToSingular(key.Name!);
 		}
 
-		public SqlProvider.ISqlBuilder? SqlBuilder;
+		public SqlProvider.SqlBuilder? SqlBuilder;
 		bool                            _generateModelOnly;
 		bool                            _generateModelInterface;
 

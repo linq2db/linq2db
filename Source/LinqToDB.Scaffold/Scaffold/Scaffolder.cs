@@ -63,13 +63,13 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Converts database model to code model (AST).
 		/// </summary>
-		/// <param name="sqlBuilder">Database-specific <see cref="ISqlBuilder"/> instance.</param>
+		/// <param name="sqlBuilder">Database-specific <see cref="SqlBuilder"/> instance.</param>
 		/// <param name="dataModel">Database model.</param>
 		/// <param name="metadataBuilder">Data model metadata builder.</param>
 		/// <param name="modelConverters">Optional AST post-processing converters.</param>
 		/// <returns>Code model as collection of code file models.</returns>
 		public CodeFile[] GenerateCodeModel(
-			       ISqlBuilder               sqlBuilder,
+			       SqlBuilder               sqlBuilder,
 			       DatabaseModel             dataModel,
 			       IMetadataBuilder?         metadataBuilder,
 			params ConvertCodeModelVisitor[] modelConverters)
