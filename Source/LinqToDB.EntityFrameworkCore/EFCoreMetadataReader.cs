@@ -343,6 +343,20 @@ namespace LinqToDB.EntityFrameworkCore
 						{
 							dataType = DbTypeToDataType(typeMapping.DbType.Value);
 						}
+						else if (typeMapping.GetType().Name == "NpgsqlEnumTypeMapping")
+						{
+							dataType = DataType.Enum;
+							
+							var labels = (Dictionary<object, string>)typeMapping.GetType().GetProperty("Labels")!.GetValue(typeMapping)!;
+							var enumDbType = prop.GetColumnType();
+							var typedLabels = labels.ToDictionary(kv => kv.Key, kv => $"'{kv.Value}'::{enumDbType}");
+							
+							//TODO add ValueToSqlConverter to result as attribute
+							// ms.SetValueToSqlConverter(prop.ClrType, (sb, _, v) =>
+							// {
+							// 	sb.Append(typedLabels[v]);
+							// });
+						}
 						else
 						{
 							var ms = _model != null ? LinqToDBForEFTools.GetMappingSchema(_model, null, null) : MappingSchema.Default;
