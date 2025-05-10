@@ -719,9 +719,9 @@ namespace LinqToDB.SqlQuery
 					return predicate;
 
 				// Expr1 could return UNKNOW, which should be converted to FALSE
-				var search = new SqlSearchCondition(IsNot, false)
+				var search = new SqlSearchCondition(WithNull == true, false)
 					.Add(predicate)
-					.Add(new IsNull(Expr1, !IsNot));
+					.Add(new IsNull(Expr1, WithNull != true));
 
 				return search;
 			}
