@@ -714,11 +714,12 @@ namespace LinqToDB.SqlQuery
 
 				var predicate = new ExprExpr(Expr1, Operator.Equal, IsNot ? FalseValue : TrueValue, null);
 
-				// IsNot=true should always have null check as it is a part of predicate logic, not a UNKNOWN erasure
-				if (!IsNot && (WithNull == null || !Expr1.ShouldCheckForNull(nullability) || !Expr1.CanBeNullableOrUnknown(nullability) || !isInsidePredicate))
+				// IS [NOT] NULL check needed for nullable predicate when it:
+				// - part of logic - evaluates predicate to true (WithNull == true)
+				// - when predicate is nested and expected to not return UNKNOWN (WithNull != null && isInsidePredicate)
+				if (WithNull == null || !Expr1.CanBeNullableOrUnknown(nullability) || (!isInsidePredicate && WithNull == false))
 					return predicate;
 
-				// Expr1 could return UNKNOW, which should be converted to FALSE
 				var search = new SqlSearchCondition(WithNull == true, false)
 					.Add(predicate)
 					.Add(new IsNull(Expr1, WithNull != true));
