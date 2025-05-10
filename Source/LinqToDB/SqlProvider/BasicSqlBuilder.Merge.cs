@@ -292,14 +292,14 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append("\tSELECT ");
 
 				var row = rows[i];
-				for (var j = 0; j < row.Count; j++)
+				for (var fieldIndex = 0; fieldIndex < row.Count; fieldIndex++)
 				{
-					var value = row[j];
-					if (j > 0)
+					var value = row[fieldIndex];
+					if (fieldIndex > 0)
 						StringBuilder.Append(InlineComma);
 
-					if (IsSqlValuesTableValueTypeRequired(source, rows, i, j))
-						BuildTypedExpression(columnTypes[j], value);
+					if (IsSqlValuesTableValueTypeRequired(source, rows, i, fieldIndex))
+						BuildTypedExpression(columnTypes[fieldIndex], value);
 					else
 						BuildExpression(value);
 
@@ -307,7 +307,7 @@ namespace LinqToDB.SqlProvider
 					if (RequiresConstantColumnAliases || i == 0)
 					{
 						StringBuilder.Append(" AS ");
-						Convert(StringBuilder, sourceFields[j].PhysicalName, ConvertType.NameToQueryField);
+						Convert(StringBuilder, sourceFields[fieldIndex].PhysicalName, ConvertType.NameToQueryField);
 					}
 				}
 

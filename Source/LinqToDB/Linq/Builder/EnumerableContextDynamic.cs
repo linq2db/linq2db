@@ -18,7 +18,8 @@ namespace LinqToDB.Linq.Builder
 		SqlErrorExpression?   _expandedErrorExpression;
 		Expression?           _rowIndexExpression;
 
-		readonly Dictionary<SqlPathExpression, List<(int rowIndex, SqlPlaceholderExpression)>>  _byPathExpressions = new (ExpressionEqualityComparer.Instance);
+		Dictionary<SqlPathExpression, List<(int rowIndex, SqlPlaceholderExpression placeholder)>>   _byPathExpressions = new (ExpressionEqualityComparer.Instance);
+		List<(Expression path, ColumnDescriptor? descriptor, SqlPlaceholderExpression placeholder)> _fieldsMap         = new();
 
 		public override Expression?    Expression    { get; }
 		public override MappingSchema  MappingSchema => Builder.MappingSchema;
@@ -216,8 +217,6 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		List<(Expression path, ColumnDescriptor? descriptor, SqlPlaceholderExpression placeholder)> _fieldsMap = new ();
-
 		SqlPlaceholderExpression? BuildFieldPlaceholder(MemberExpression? memberExpression, SqlPathExpression? pathExpression, ProjectFlags flags)
 		{
 			if (memberExpression == null && pathExpression == null)
@@ -360,9 +359,23 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			return new EnumerableContextDynamic(TranslationModifier, context.CloneContext(Parent)!, Builder, _expressionRows.Select(e => context.CloneExpression(e)).ToArray(), 
+			var result = new EnumerableContextDynamic(TranslationModifier, context.CloneContext(Parent)!, Builder, _expressionRows.Select(e => context.CloneExpression(e)).ToArray(), 
 				context.CloneElement(SelectQuery),
 				ElementType);
+
+			context.RegisterCloned(this, result);
+
+			result._byPathExpressions = _byPathExpressions
+				.ToDictionary(
+					x => context.CloneExpression(x.Key),
+					x => x.Value.Select(y => (y.rowIndex, context.CloneExpression(y.placeholder))).ToList());
+
+			result._fieldsMap = _fieldsMap
+				.Select(x => (context.CloneExpression(x.path), x.descriptor, context.CloneExpression(x.placeholder)))
+				.ToList();
+
+			return result;
+
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)

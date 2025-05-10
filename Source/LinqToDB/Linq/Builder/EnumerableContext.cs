@@ -98,7 +98,9 @@ namespace LinqToDB.Linq.Builder
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(memberExpression.Expression.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			var entityColumnDescriptor = entityDescriptor.FindColumnDescriptor(memberExpression.Member);
 
-			var dbDataType = currentDescriptor?.GetDbDataType(true) ?? entityColumnDescriptor?.GetDbDataType(true) ?? MappingSchema.GetDbDataType(memberExpression.Type);
+			var dbDataType = currentDescriptor?.GetDbDataType(true) 
+			                 ?? entityColumnDescriptor?.GetDbDataType(true) 
+			                 ?? ColumnDescriptor.CalculateDbDataType(MappingSchema, memberExpression.Type);
 
 			var valueGetter = BuildValueGetter(entityColumnDescriptor, memberExpression, currentDescriptor, dbDataType);
 			if (valueGetter == null)
@@ -288,8 +290,16 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			return new EnumerableContext(TranslationModifier, Builder, Expression!, context.CloneElement(SelectQuery),
+			var result = new EnumerableContext(TranslationModifier, Builder, Expression!, context.CloneElement(SelectQuery),
 				context.CloneElement(Table), ElementType);
+
+			context.RegisterCloned(this, result);
+
+			result._fieldsMap = _fieldsMap
+				.Select(x => (context.CloneExpression(x.path), x.descriptor, context.CloneExpression(x.placeholder)))
+				.ToList();
+
+			return result;
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)
