@@ -139,27 +139,9 @@ namespace LinqToDB.SqlQuery
 			return new SqlSearchCondition(!IsOr, newPredicates);
 		}
 
-		public bool IsTrue()
-		{
-			if (Predicates.Count == 0)
-				return true;
+		public bool IsTrue() => Predicates is [] or [{ ElementType: QueryElementType.TruePredicate }];
 
-			if (Predicates is [{ ElementType: QueryElementType.TruePredicate }])
-				return true;
-
-			return false;
-		}
-
-		public bool IsFalse()
-		{
-			if (Predicates.Count == 0)
-				return false;
-
-			if (Predicates is [{ ElementType: QueryElementType.FalsePredicate }])
-				return true;
-
-			return false;
-		}
+		public bool IsFalse() => Predicates is [{ ElementType: QueryElementType.FalsePredicate }];
 
 		#endregion
 

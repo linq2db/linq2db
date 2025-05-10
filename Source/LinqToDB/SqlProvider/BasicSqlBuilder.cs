@@ -9,6 +9,7 @@ using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -136,7 +137,33 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.Length -= InlineComma.Length;
 			return StringBuilder;
 		}
+		
+		protected void Write([InterpolatedStringHandlerArgument("")] ref SqlBuilderStringHandler interpolated)
+		{
+			// Nothing to do as SqlBuilderStringHandler writes directly into our StringBuilder
+		}
 
+		protected void Write(string value) => StringBuilder.Append(value);
+
+		protected void WriteLine([InterpolatedStringHandlerArgument("")] ref SqlBuilderStringHandler interpolated)
+		{
+			// SqlBuilderStringHandler writes directly into our StringBuilder
+			StringBuilder.AppendLine();
+		}
+		
+		protected void WriteLine(string value) => StringBuilder.AppendLine(value);
+
+		protected void WriteLine() => StringBuilder.AppendLine();
+
+		// Would like to call this Ident but I am not renaming existing Indent to IndentLevel just yet
+		protected FormatIndent Tab => new() { Level = Indent };
+
+		protected FormatPrecedence At(int precedence, ISqlExpression expr) 
+			=> new() { Precedence = precedence, Expr = expr };
+
+		protected FormatIdent Ident(string name, ConvertType type, string? schema = null)
+			=> new() { Name = name, Type = type, Schema = schema };
+		
 		#endregion
 
 		#region Helpers
@@ -673,28 +700,21 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSelectClause(SelectQuery selectQuery)
 		{
-			AppendIndent();
-			StringBuilder.Append("SELECT");
-
+			Write($"{Tab}SELECT");
 			StartStatementQueryExtensions(selectQuery);
 
 			if (selectQuery.Select.IsDistinct)
-				StringBuilder.Append(" DISTINCT");
+				Write(" DISTINCT");
 
 			BuildSkipFirst(selectQuery);
-
-			StringBuilder.AppendLine();
+			WriteLine();
 			BuildColumns(selectQuery);
 		}
 
 		protected virtual void StartStatementQueryExtensions(SelectQuery? selectQuery)
 		{
 			if (selectQuery?.QueryName is {} queryName)
-				StringBuilder
-					.Append(" /* ")
-					.Append(queryName)
-					.Append(" */")
-					;
+				Write($" /* {queryName} */");
 		}
 
 		protected virtual void BuildColumns(SelectQuery selectQuery)
@@ -726,11 +746,10 @@ namespace LinqToDB.SqlProvider
 			}
 
 			if (first)
-				AppendIndent().Append('*');
+				Write($"{Tab}*");
 
+			WriteLine();
 			Indent--;
-
-			StringBuilder.AppendLine();
 		}
 
 		protected virtual void BuildOutputColumnExpressions(IReadOnlyList<ISqlExpression> expressions)
@@ -1332,21 +1351,13 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildDropTableStatementIfExists(SqlDropTableStatement dropTable)
 		{
-			BuildTag(dropTable);
-			AppendIndent().Append("DROP TABLE ");
-
-			if (dropTable.Table.TableOptions.HasDropIfExists())
-				StringBuilder.Append("IF EXISTS ");
-
-			BuildPhysicalTable(dropTable.Table!, null);
-			StringBuilder.AppendLine();
+			var ifExists = dropTable.Table.TableOptions.HasDropIfExists() ? "IF EXISTS " : "";
+			
+			WriteLine($"{ dropTable.Tag }{ Tab }DROP TABLE { ifExists }{ dropTable.Table }");
 		}
 
-		protected virtual void BuildCreateTableCommand(SqlTable table)
-		{
-			StringBuilder
-				.Append("CREATE TABLE ");
-		}
+		protected virtual void BuildCreateTableCommand(SqlTable table) 
+			=> Write("CREATE TABLE ");
 
 		protected virtual void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
@@ -1370,8 +1381,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementFooter != null)
-				AppendIndent().Append(createTable.StatementFooter);
+			if (createTable.StatementFooter is { } footer)
+				Write($"{Tab}{footer}");
 		}
 
 		sealed class CreateFieldInfo
@@ -2319,7 +2330,7 @@ namespace LinqToDB.SqlProvider
 
 		protected bool NeedTake(ISqlExpression? takeExpression)
 			=> takeExpression != null && SqlProviderFlags.IsTakeSupported;
-
+		
 		protected virtual void BuildSkipFirst(SelectQuery selectQuery)
 		{
 			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
@@ -2578,29 +2589,27 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected virtual void BuildExprExprPredicateOperator(SqlPredicate.ExprExpr expr)
+		protected virtual string GetOperator(SqlPredicate.ExprExpr expr)
 		{
-			switch (expr.Operator)
+			return expr.Operator switch
 			{
-				case SqlPredicate.Operator.Equal          : StringBuilder.Append(" = ");  break;
-				case SqlPredicate.Operator.NotEqual       : StringBuilder.Append(" <> "); break;
-				case SqlPredicate.Operator.Greater        : StringBuilder.Append(" > ");  break;
-				case SqlPredicate.Operator.GreaterOrEqual : StringBuilder.Append(" >= "); break;
-				case SqlPredicate.Operator.NotGreater     : StringBuilder.Append(" !> "); break;
-				case SqlPredicate.Operator.Less           : StringBuilder.Append(" < ");  break;
-				case SqlPredicate.Operator.LessOrEqual    : StringBuilder.Append(" <= "); break;
-				case SqlPredicate.Operator.NotLess        : StringBuilder.Append(" !< "); break;
-				case SqlPredicate.Operator.Overlaps       : StringBuilder.Append(" OVERLAPS "); break;
-			}
+				SqlPredicate.Operator.Equal => " = ",
+				SqlPredicate.Operator.NotEqual => " <> ",
+				SqlPredicate.Operator.Greater => " > ",
+				SqlPredicate.Operator.GreaterOrEqual => " >= ",
+				SqlPredicate.Operator.NotGreater => " !> ",
+				SqlPredicate.Operator.Less => " < ",
+				SqlPredicate.Operator.LessOrEqual => " <= ",
+				SqlPredicate.Operator.NotLess => " !< ",
+				SqlPredicate.Operator.Overlaps => " OVERLAPS ",
+				_ => throw new InvalidOperationException(), // UnreachableException if targeting .net 7+
+			};
 		}
 
 		protected virtual void BuildExprExprPredicate(SqlPredicate.ExprExpr expr)
 		{
-			BuildExpression(GetPrecedence(expr), expr.Expr1);
-
-			BuildExprExprPredicateOperator(expr);
-
-			BuildExpression(GetPrecedence(expr), expr.Expr2);
+			var precedence = GetPrecedence(expr);
+			Write($"{ At(precedence, expr.Expr1) }{ GetOperator(expr) }{ At(precedence, expr.Expr2) }");
 		}
 
 		protected virtual void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
@@ -3772,9 +3781,7 @@ namespace LinqToDB.SqlProvider
 				/* maybe it will be no harm to put "<=" here? */
 				precedence < parentPrecedence ||
 				(precedence == parentPrecedence &&
-					(parentPrecedence == Precedence.Subtraction ||
-					 parentPrecedence == Precedence.Multiplicative ||
-					 parentPrecedence == Precedence.LogicalNegation));
+					precedence is Precedence.Subtraction or Precedence.Multiplicative or Precedence.LogicalNegation);
 		}
 
 		protected string? GetTableAlias(ISqlTableSource table)
@@ -4168,9 +4175,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		public virtual string GetReserveSequenceValuesSql(int count, string sequenceName)
-		{
-			throw new NotImplementedException();
-		}
+			=> throw new NotImplementedException();
 
 		public virtual string GetMaxValueSql(EntityDescriptor entity, ColumnDescriptor column)
 		{
