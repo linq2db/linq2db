@@ -351,11 +351,13 @@ namespace LinqToDB.EntityFrameworkCore
 							var enumDbType = prop.GetColumnType();
 							var typedLabels = labels.ToDictionary(kv => kv.Key, kv => $"'{kv.Value}'::{enumDbType}");
 							
-							//TODO add ValueToSqlConverter to result as attribute
-							// ms.SetValueToSqlConverter(prop.ClrType, (sb, _, v) =>
-							// {
-							// 	sb.Append(typedLabels[v]);
-							// });
+							//TODO it will work when temp table for dto created after temp table for entity
+							//TODO it not work when temp table for dto created before temp table for entity
+							MappingSchema.Default.SetDataType(prop.ClrType, new SqlDataType(new DbDataType(prop.ClrType, DataType.Enum, enumDbType)));
+							MappingSchema.Default.SetValueToSqlConverter(prop.ClrType, (sb, _, v) =>
+							{
+								sb.Append(typedLabels[v]);
+							});
 						}
 						else
 						{
