@@ -279,7 +279,7 @@ namespace LinqToDB.Linq.Builder
 					var foundIndex = list.FindIndex(tuple => tuple.rowIndex == i);
 					if (foundIndex >= 0)
 					{
-						translations.Add(list[foundIndex].Item2);
+						translations.Add(list[foundIndex].placeholder);
 					}
 					else
 					{
@@ -321,6 +321,9 @@ namespace LinqToDB.Linq.Builder
 				Table.Rows.AddRange(Enumerable.Range(0, translations.Count).Select(_ => new List<ISqlExpression>()));
 			}
 
+			var canBeNull   = false;
+			var nullability = NullabilityContext.GetContext(SelectQuery);
+
 			for (var i = 0; i < translations.Count; i++)
 			{
 				var translated = translations[i];
@@ -328,11 +331,13 @@ namespace LinqToDB.Linq.Builder
 				ISqlExpression sql;
 				if (translated is SqlPlaceholderExpression sqlPlaceholder)
 				{
-					sql = sqlPlaceholder.Sql;
+					sql       = sqlPlaceholder.Sql;
+					canBeNull = canBeNull || nullability.CanBeNull(sql);
 				}
 				else
 				{
-					sql = new SqlValue(dbDataType, null);
+					sql       = new SqlValue(dbDataType, null);
+					canBeNull = true;
 				}
 
 				Table.Rows[i].Add(sql);

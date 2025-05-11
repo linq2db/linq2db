@@ -102,13 +102,14 @@ namespace LinqToDB.Linq.Builder
 			                 ?? entityColumnDescriptor?.GetDbDataType(true) 
 			                 ?? ColumnDescriptor.CalculateDbDataType(MappingSchema, memberExpression.Type);
 
-			var valueGetter = BuildValueGetter(entityColumnDescriptor, memberExpression, currentDescriptor, dbDataType);
+			var valueGetter = BuildValueGetter(entityColumnDescriptor, memberExpression, currentDescriptor, dbDataType, out var possibleNull);
 			if (valueGetter == null)
 			{
 				return null;
 			}
 
-			var field = new SqlField(dbDataType, fieldName, true);
+			var canBeNull        = possibleNull || entityColumnDescriptor?.CanBeNull != false;
+			var field            = new SqlField(dbDataType, fieldName, canBeNull);
 			var fieldPlaceholder = ExpressionBuilder.CreatePlaceholder(this, field, memberExpression);
 
 			_fieldsMap.Add((memberExpression, currentDescriptor, fieldPlaceholder));
@@ -158,8 +159,9 @@ namespace LinqToDB.Linq.Builder
 			 */
 		}
 
-		Func<object, ISqlExpression>? BuildValueGetter(ColumnDescriptor? column, MemberExpression me, ColumnDescriptor? typeDescriptor, DbDataType dbDataType)
+		Func<object, ISqlExpression>? BuildValueGetter(ColumnDescriptor? column, MemberExpression me, ColumnDescriptor? typeDescriptor, DbDataType dbDataType, out bool canBeNull)
 		{
+			canBeNull = false;
 			var generator = new ExpressionGenerator();
 			var objParam  = Expression.Parameter(typeof(object), "obj");
 
@@ -205,6 +207,8 @@ namespace LinqToDB.Linq.Builder
 
 				members.Reverse();
 
+				canBeNull = members.Count > 1;
+
 				var ifThenExpression = BuildNullPropagationGetter(objectVariable, resultVariable, members, 0, accessor =>
 				{
 					if (descriptor != null)
@@ -217,9 +221,9 @@ namespace LinqToDB.Linq.Builder
 						localGenerator.AddExpression(
 							Expression.New(
 								_parameterConstructor,
-								Expression.Property(variable, LinqToDB.Reflection.Methods.LinqToDB.DataParameter.DbDataType),
+								Expression.Property(variable, Reflection.Methods.LinqToDB.DataParameter.DbDataType),
 								Expression.Constant(me.Member.Name),
-								Expression.Property(variable, LinqToDB.Reflection.Methods.LinqToDB.DataParameter.Value)
+								Expression.Property(variable, Reflection.Methods.LinqToDB.DataParameter.Value)
 							));
 
 						return localGenerator.Build();
