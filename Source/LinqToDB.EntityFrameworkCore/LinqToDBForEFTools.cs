@@ -222,8 +222,9 @@ namespace LinqToDB.EntityFrameworkCore
 			DataOptions? dataOptions)
 		{
 			var converterSelector = accessor?.GetService<IValueConverterSelector>();
-
-			return Implementation.GetMappingSchema(model, accessor, GetMetadataReader(model, accessor), converterSelector, dataOptions);
+			var mappingSource = accessor?.GetService<IRelationalTypeMappingSource>();
+			
+			return Implementation.GetMappingSchema(model, mappingSource, GetMetadataReader(model, accessor), converterSelector, dataOptions);
 		}
 
 		/// <summary>

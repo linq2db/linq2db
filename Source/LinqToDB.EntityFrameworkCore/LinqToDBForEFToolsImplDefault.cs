@@ -326,14 +326,14 @@ namespace LinqToDB.EntityFrameworkCore
 		/// Creates mapping schema using provided EF Core data model and metadata provider.
 		/// </summary>
 		/// <param name="model">EF Core data model.</param>
-		/// <param name="accessor">EF Core infrastructure accessor.</param>
+		/// <param name="mappingSource">EF Core mapping source.</param>
 		/// <param name="metadataReader">Additional optional LINQ To DB database metadata provider.</param>
 		/// <param name="convertorSelector"></param>
 		/// <param name="dataOptions">Linq To DB context options.</param>
 		/// <returns>Mapping schema for provided EF.Core model.</returns>
 		public virtual MappingSchema CreateMappingSchema(
 			IModel model,
-			IInfrastructure<IServiceProvider>? accessor,
+			IRelationalTypeMappingSource? mappingSource,
 			IMetadataReader? metadataReader,
 			IValueConverterSelector? convertorSelector,
 			DataOptions dataOptions)
@@ -342,7 +342,7 @@ namespace LinqToDB.EntityFrameworkCore
 			if (metadataReader != null)
 				schema.AddMetadataReader(metadataReader);
 
-			DefineConvertors(schema, model, accessor, convertorSelector, dataOptions);
+			DefineConvertors(schema, model, mappingSource, convertorSelector, dataOptions);
 
 			return schema;
 		}
@@ -352,13 +352,13 @@ namespace LinqToDB.EntityFrameworkCore
 		/// </summary>
 		/// <param name="mappingSchema">Linq To DB mapping schema.</param>
 		/// <param name="model">EF Core data mode.</param>
-		/// <param name="accessor">EF Core infrastructure accessor.</param>
+		/// <param name="mappingSource">EF Core mapping source.</param>
 		/// <param name="convertorSelector">Type filter.</param>
 		/// <param name="dataOptions">Linq To DB context options.</param>
 		public virtual void DefineConvertors(
 			MappingSchema mappingSchema,
 			IModel model,
-			IInfrastructure<IServiceProvider>? accessor,
+			IRelationalTypeMappingSource? mappingSource,
 			IValueConverterSelector? convertorSelector,
 			DataOptions dataOptions)
 		{
@@ -395,7 +395,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			void MapEnumType(Type type)
 			{
-				var mapping = accessor?.GetService<IRelationalTypeMappingSource>().FindMapping(type);
+				var mapping = mappingSource?.FindMapping(type);
 				if (mapping?.GetType().Name == "NpgsqlEnumTypeMapping")
 				{
 					var labels = (Dictionary<object, string>) mapping.GetType().GetProperty("Labels")!.GetValue(mapping)!;
@@ -464,14 +464,14 @@ namespace LinqToDB.EntityFrameworkCore
 		/// Returns mapping schema using provided EF Core data model and metadata provider.
 		/// </summary>
 		/// <param name="model">EF Core data model.</param>
-		/// <param name="accessor">EF Core infrastructure accessor.</param>
+		/// <param name="mappingSource">EF Core mapping source.</param>
 		/// <param name="metadataReader">Additional optional LINQ To DB database metadata provider.</param>
 		/// <param name="convertorSelector"></param>
 		/// <param name="dataOptions">Linq To DB context options.</param>
 		/// <returns>Mapping schema for provided EF.Core model.</returns>
 		public virtual MappingSchema GetMappingSchema(
 			IModel model,
-			IInfrastructure<IServiceProvider>? accessor,
+			IRelationalTypeMappingSource? mappingSource,
 			IMetadataReader? metadataReader,
 			IValueConverterSelector? convertorSelector,
 			DataOptions? dataOptions)
@@ -482,7 +482,7 @@ namespace LinqToDB.EntityFrameworkCore
 				(
 					dataOptions,
 					model,
-					accessor,
+					mappingSource,
 					metadataReader,
 					convertorSelector,
 					EnableChangeTracker
@@ -490,7 +490,7 @@ namespace LinqToDB.EntityFrameworkCore
 				e =>
 				{
 					e.SlidingExpiration = TimeSpan.FromHours(1);
-					return CreateMappingSchema(model, accessor, metadataReader, convertorSelector, dataOptions);
+					return CreateMappingSchema(model, mappingSource, metadataReader, convertorSelector, dataOptions);
 				})!;
 
 			return result;
