@@ -144,7 +144,7 @@ namespace LinqToDB.EntityFrameworkCore
 			//PostgreSQL enums mapping
 			if (type.IsEnum)
 			{
-				var mapping = _mappingSource!.FindMapping(type);
+				var mapping = _mappingSource?.FindMapping(type);
 				if (mapping?.GetType().Name == "NpgsqlEnumTypeMapping")
 				{
 					var labels = (Dictionary<object, string>) mapping.GetType().GetProperty("Labels")!.GetValue(mapping)!;
