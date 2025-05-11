@@ -142,7 +142,7 @@ namespace LinqToDB.EntityFrameworkCore
 				if (tableAttribute != null)
 					(result = new()).Add(new TableAttribute(tableAttribute.Name) { Schema = tableAttribute.Schema });
 			}
-			
+
 			return result == null ? [] : result.ToArray();
 		}
 
@@ -449,7 +449,7 @@ namespace LinqToDB.EntityFrameworkCore
 						DbType = columnAttribute.TypeName,
 					});
 			}
-			
+
 			// Search for translator first
 			// Sql.ExpressionAttribute
 			if (_dependencies != null)
