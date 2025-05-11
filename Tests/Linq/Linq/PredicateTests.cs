@@ -824,7 +824,6 @@ namespace Tests.Linq
 			public static readonly IReadOnlyCollection<BooleanTable> Data;
 		}
 
-		[ActiveIssue("Remote context refactoring required to properly support evaluation context", SkipForNonLinqService = true, Configuration = ProviderName.Firebird25)]
 		[Test]
 		public void Test_PredicateWithBoolean([DataSources] string context, [Values] bool inline)
 		{
