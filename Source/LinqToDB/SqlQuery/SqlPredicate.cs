@@ -318,15 +318,22 @@ namespace LinqToDB.SqlQuery
 				// always sniffs parameters to == and != (for backward compatibility).
 				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
 				{
-					if (Expr1.TryEvaluateExpression(context, out var value1))
+					if (this.TryEvaluateExpression(context, out var value))
 					{
-						if (value1 == null)
-							return new IsNull(Expr2, Operator != Operator.Equal);
+						if (value is null)
+						{
+							return new Expr(new SqlValue(typeof(bool?), null));
+						}
+
+						return value is true ? True : False;
 					}
-					else if (Expr2.TryEvaluateExpression(context, out var value2))
+					else if (Expr1.TryEvaluateExpression(context, out value) && value == null)
 					{
-						if (value2 == null)
-							return new IsNull(Expr1, Operator != Operator.Equal);
+						return new IsNull(Expr2, Operator != Operator.Equal);
+					}
+					else if (Expr2.TryEvaluateExpression(context, out value) && value == null)
+					{
+						return new IsNull(Expr1, Operator != Operator.Equal);
 					}
 
 					if (UnknownAsValue == null && Operator == Operator.NotEqual)
