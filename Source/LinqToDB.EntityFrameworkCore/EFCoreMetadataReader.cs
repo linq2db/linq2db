@@ -47,6 +47,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 		private readonly string                                                       _objectId;
 		private readonly IModel?                                                      _model;
+		private readonly IInfrastructure<IServiceProvider>?                           _accessor;
 		private readonly RelationalSqlTranslatingExpressionVisitorDependencies?       _dependencies;
 		private readonly IRelationalTypeMappingSource?                                _mappingSource;
 #if !EF31
@@ -65,6 +66,7 @@ namespace LinqToDB.EntityFrameworkCore
 		public EFCoreMetadataReader(IModel? model, IInfrastructure<IServiceProvider>? accessor)
 		{
 			_model    = model;
+			_accessor = accessor;
 
 			if (accessor != null)
 			{
@@ -141,20 +143,6 @@ namespace LinqToDB.EntityFrameworkCore
 					(result = new()).Add(new TableAttribute(tableAttribute.Name) { Schema = tableAttribute.Schema });
 			}
 			
-			//PostgreSQL enums mapping
-			if (type.IsEnum)
-			{
-				var mapping = _mappingSource?.FindMapping(type);
-				if (mapping?.GetType().Name == "NpgsqlEnumTypeMapping")
-				{
-					var labels = (Dictionary<object, string>) mapping.GetType().GetProperty("Labels")!.GetValue(mapping)!;
-					var typedLabels = labels.ToDictionary(kv => kv.Key, kv => $"'{kv.Value}'::{mapping.StoreType}");
-
-					MappingSchema.Default.SetDataType(type, new SqlDataType(new DbDataType(type, DataType.Enum, mapping.StoreType)));
-					MappingSchema.Default.SetValueToSqlConverter(type, (sb, _, v) => sb.Append(typedLabels[v]));
-				}
-			}
-
 			return result == null ? [] : result.ToArray();
 		}
 
@@ -359,7 +347,7 @@ namespace LinqToDB.EntityFrameworkCore
 						}
 						else
 						{
-							var ms = _model != null ? LinqToDBForEFTools.GetMappingSchema(_model, null, null) : MappingSchema.Default;
+							var ms = _model != null ? LinqToDBForEFTools.GetMappingSchema(_model, _accessor, null) : MappingSchema.Default;
 							dataType = ms.GetDataType(typeMapping.ClrType).Type.DataType;
 						}
 					}

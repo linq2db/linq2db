@@ -223,7 +223,7 @@ namespace LinqToDB.EntityFrameworkCore
 		{
 			var converterSelector = accessor?.GetService<IValueConverterSelector>();
 
-			return Implementation.GetMappingSchema(model, GetMetadataReader(model, accessor), converterSelector, dataOptions);
+			return Implementation.GetMappingSchema(model, accessor, GetMetadataReader(model, accessor), converterSelector, dataOptions);
 		}
 
 		/// <summary>

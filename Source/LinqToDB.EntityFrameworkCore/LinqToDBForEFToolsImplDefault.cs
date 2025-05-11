@@ -1,6 +1,7 @@
 ﻿#pragma warning disable CA1873 // Avoid potentially expensive logging
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -33,6 +34,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.Internal;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -324,12 +326,14 @@ namespace LinqToDB.EntityFrameworkCore
 		/// Creates mapping schema using provided EF Core data model and metadata provider.
 		/// </summary>
 		/// <param name="model">EF Core data model.</param>
+		/// <param name="accessor">EF Core infrastructure accessor.</param>
 		/// <param name="metadataReader">Additional optional LINQ To DB database metadata provider.</param>
 		/// <param name="convertorSelector"></param>
 		/// <param name="dataOptions">Linq To DB context options.</param>
 		/// <returns>Mapping schema for provided EF.Core model.</returns>
 		public virtual MappingSchema CreateMappingSchema(
 			IModel model,
+			IInfrastructure<IServiceProvider>? accessor,
 			IMetadataReader? metadataReader,
 			IValueConverterSelector? convertorSelector,
 			DataOptions dataOptions)
@@ -338,7 +342,7 @@ namespace LinqToDB.EntityFrameworkCore
 			if (metadataReader != null)
 				schema.AddMetadataReader(metadataReader);
 
-			DefineConvertors(schema, model, convertorSelector, dataOptions);
+			DefineConvertors(schema, model, accessor, convertorSelector, dataOptions);
 
 			return schema;
 		}
@@ -348,11 +352,13 @@ namespace LinqToDB.EntityFrameworkCore
 		/// </summary>
 		/// <param name="mappingSchema">Linq To DB mapping schema.</param>
 		/// <param name="model">EF Core data mode.</param>
+		/// <param name="accessor">EF Core infrastructure accessor.</param>
 		/// <param name="convertorSelector">Type filter.</param>
 		/// <param name="dataOptions">Linq To DB context options.</param>
 		public virtual void DefineConvertors(
 			MappingSchema mappingSchema,
 			IModel model,
+			IInfrastructure<IServiceProvider>? accessor,
 			IValueConverterSelector? convertorSelector,
 			DataOptions dataOptions)
 		{
@@ -372,9 +378,11 @@ namespace LinqToDB.EntityFrameworkCore
 			
 			foreach (var modelType in types)
 			{
-				// skipping enums
 				if (modelType.IsEnum)
+				{
+					MapEnumType(modelType);
 					continue;
+				}
 
 				// skipping arrays
 				if (modelType.IsArray)
@@ -383,6 +391,19 @@ namespace LinqToDB.EntityFrameworkCore
 				MapEFCoreType(modelType);
 				if (modelType.IsValueType && !typeof(Nullable<>).IsSameOrParentOf(modelType))
 					MapEFCoreType(typeof(Nullable<>).MakeGenericType(modelType));
+			}
+
+			void MapEnumType(Type type)
+			{
+				var mapping = accessor?.GetService<IRelationalTypeMappingSource>().FindMapping(type);
+				if (mapping?.GetType().Name == "NpgsqlEnumTypeMapping")
+				{
+					var labels = (Dictionary<object, string>) mapping.GetType().GetProperty("Labels")!.GetValue(mapping)!;
+					var typedLabels = labels.ToDictionary(kv => kv.Key, kv => $"'{kv.Value}'::{mapping.StoreType}");
+				
+					mappingSchema.SetDataType(type, new SqlDataType(new DbDataType(type, DataType.Enum, mapping.StoreType)));
+					mappingSchema.SetValueToSqlConverter(type, (sb, _, v) => sb.Append(typedLabels[v]));
+				}
 			}
 
 			void MapEFCoreType(Type modelType)
@@ -443,12 +464,14 @@ namespace LinqToDB.EntityFrameworkCore
 		/// Returns mapping schema using provided EF Core data model and metadata provider.
 		/// </summary>
 		/// <param name="model">EF Core data model.</param>
+		/// <param name="accessor">EF Core infrastructure accessor.</param>
 		/// <param name="metadataReader">Additional optional LINQ To DB database metadata provider.</param>
 		/// <param name="convertorSelector"></param>
 		/// <param name="dataOptions">Linq To DB context options.</param>
 		/// <returns>Mapping schema for provided EF.Core model.</returns>
 		public virtual MappingSchema GetMappingSchema(
 			IModel model,
+			IInfrastructure<IServiceProvider>? accessor,
 			IMetadataReader? metadataReader,
 			IValueConverterSelector? convertorSelector,
 			DataOptions? dataOptions)
@@ -459,6 +482,7 @@ namespace LinqToDB.EntityFrameworkCore
 				(
 					dataOptions,
 					model,
+					accessor,
 					metadataReader,
 					convertorSelector,
 					EnableChangeTracker
@@ -466,7 +490,7 @@ namespace LinqToDB.EntityFrameworkCore
 				e =>
 				{
 					e.SlidingExpiration = TimeSpan.FromHours(1);
-					return CreateMappingSchema(model, metadataReader, convertorSelector, dataOptions);
+					return CreateMappingSchema(model, accessor, metadataReader, convertorSelector, dataOptions);
 				})!;
 
 			return result;
