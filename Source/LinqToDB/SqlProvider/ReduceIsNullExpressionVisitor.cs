@@ -107,7 +107,6 @@ namespace LinqToDB.SqlProvider
 
 		protected override IQueryElement VisitSqlFunction(SqlFunction element)
 		{
-			// We can extend to more parameters, but it's not clear if it's needed
 			if (element is { IsAggregate: false, IsPure: true })
 			{
 				ReduceSqlExpressionBase(element, element.Parameters, element.NullabilityType);
@@ -118,7 +117,6 @@ namespace LinqToDB.SqlProvider
 
 		protected override IQueryElement VisitSqlExpression(SqlExpression element)
 		{
-			// We can extend to more parameters, but it's not clear if it's needed
 			if (element is { IsAggregate: false, IsPure: true })
 			{
 				ReduceSqlExpressionBase(element, element.Parameters, element.NullabilityType);

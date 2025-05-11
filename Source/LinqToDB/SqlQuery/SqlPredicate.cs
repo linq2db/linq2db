@@ -63,9 +63,9 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.NotPredicate;
 
-			public override bool           CanInvert(NullabilityContext    nullability) => true;
-			public override ISqlPredicate  Invert(NullabilityContext       nullability) => Predicate;
-			public override bool           CanBeUnknown(NullabilityContext nullability) => Predicate.CanBeUnknown(nullability);
+			public override bool          CanInvert(NullabilityContext    nullability) => true;
+			public override ISqlPredicate Invert(NullabilityContext       nullability) => Predicate;
+			public override bool          CanBeUnknown(NullabilityContext nullability) => Predicate.CanBeUnknown(nullability);
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -156,9 +156,9 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression Expr1 { get; set; }
 
-			public override bool           CanInvert(NullabilityContext    nullability) => false;
-			public override ISqlPredicate  Invert(NullabilityContext       nullability) => throw new InvalidOperationException();
-			public override bool           CanBeUnknown(NullabilityContext nullability) => Expr1.CanBeNullableOrUnknown(nullability);
+			public override bool          CanInvert(NullabilityContext    nullability) => false;
+			public override ISqlPredicate Invert(NullabilityContext       nullability) => throw new InvalidOperationException();
+			public override bool          CanBeUnknown(NullabilityContext nullability) => Expr1.CanBeNullableOrUnknown(nullability);
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
