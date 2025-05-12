@@ -46,10 +46,11 @@ namespace LinqToDB.EntityFrameworkCore
 		private const string PgBinaryExpressionName = "PgBinaryExpression";
 #endif
 
-		private readonly string                                                       _objectId;
-		private readonly IModel?                                                      _model;
-		private readonly RelationalSqlTranslatingExpressionVisitorDependencies?       _dependencies;
-		private readonly IRelationalTypeMappingSource?                                _mappingSource;
+		private readonly string                                                 _objectId;
+		private readonly IModel?                                                _model;
+		private readonly RelationalSqlTranslatingExpressionVisitorDependencies? _dependencies;
+		private readonly IRelationalTypeMappingSource?                          _mappingSource;
+		private readonly IValueConverterSelector?                               _valueConverterSelector;
 #if !EF31
 		private readonly IRelationalAnnotationProvider?                               _annotationProvider;
 #else
@@ -61,7 +62,6 @@ namespace LinqToDB.EntityFrameworkCore
 #endif
 #if !EF31
 		private readonly DatabaseDependencies?                                        _databaseDependencies;
-		private readonly IValueConverterSelector?                                     _valueConverterSelector;
 #endif
 
 		public EFCoreMetadataReader(IModel? model, IInfrastructure<IServiceProvider>? accessor)
@@ -70,15 +70,15 @@ namespace LinqToDB.EntityFrameworkCore
 
 			if (accessor != null)
 			{
-				_dependencies         = accessor.GetService<RelationalSqlTranslatingExpressionVisitorDependencies>();
-				_mappingSource        = accessor.GetService<IRelationalTypeMappingSource>();
+				_dependencies           = accessor.GetService<RelationalSqlTranslatingExpressionVisitorDependencies>();
+				_mappingSource          = accessor.GetService<IRelationalTypeMappingSource>();
+				_valueConverterSelector = accessor.GetService<IValueConverterSelector>();
 #if EF31
-				_annotationProvider   = accessor.GetService<IMigrationsAnnotationProvider>();
+				_annotationProvider     = accessor.GetService<IMigrationsAnnotationProvider>();
 #else
 				_annotationProvider     = accessor.GetService<IRelationalAnnotationProvider>();
 				_logger                 = accessor.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();
 				_databaseDependencies   = accessor.GetService<DatabaseDependencies>();
-				_valueConverterSelector = accessor.GetService<IValueConverterSelector>();
 #endif
 			}
 
