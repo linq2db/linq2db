@@ -582,31 +582,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestingProperties(
-			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context,
-			[Values(1, 2)]                                                                    int    iteration)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var records = new Person[]
-				{
-					new() { ID = 1 + iteration, FirstName = "Janet", Patient = new Patient() { PersonID = 1 }},
-					new() { ID = 2 + iteration, FirstName = "Doe" },
-				};
-
-				var cacheMiss = db.Person.GetCacheMissCount();
-
-				var result = records.AsQueryable(db).Where(x => x.Patient!.PersonID == 1).ToArray();
-
-				result.Should().HaveCount(1);
-
-				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
-
-			}
-		}
-
-		[Test]
 		public void ExpressionProjection(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context,
 			[Values(1, 2)] int iteration)

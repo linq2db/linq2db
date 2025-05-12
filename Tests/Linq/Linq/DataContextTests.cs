@@ -5,9 +5,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.SQLite;
 
 using NUnit.Framework;
 
@@ -18,94 +16,6 @@ namespace Tests.Linq
 	[TestFixture]
 	public class DataContextTests : TestBase
 	{
-		sealed class EmptyDefaultSetingsScope : IDisposable
-		{
-			private readonly string? _oldValue;
-#if !NETFRAMEWORK
-			private readonly ILinqToDBSettings? _oldSettings;
-#endif
-
-			public EmptyDefaultSetingsScope()
-			{
-				_oldValue                           = DataConnection.DefaultConfiguration;
-				DataConnection.DefaultConfiguration = null;
-
-#if !NETFRAMEWORK
-				// see TestConfiguration.cctor implementation:
-				// netfx adds connections to DataConnection one-by-one
-				// .net sets DefaultSettings instance
-				// if we reset DefaultSettings, netfx will loose connection strings
-				// We shouldn't reset it for netfx or change init implementation in TestConfiguration
-				_oldSettings                   = DataConnection.DefaultSettings;
-				DataConnection.DefaultSettings = null;
-#endif
-			}
-
-			void IDisposable.Dispose()
-			{
-				DataConnection.DefaultConfiguration = _oldValue;
-#if !NETFRAMEWORK
-				DataConnection.DefaultSettings      = _oldSettings;
-#endif
-			}
-		}
-
-		[Test, NonParallelizable]
-		public void TestNullConfiguration_Unset([Values] bool cleanDefault)
-		{
-			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
-
-			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
-
-			using var db = new DataConnection(new DataOptions().UseSQLite(connectionString, SQLiteProvider.System));
-
-			_ = db.GetTable<Person>().ToArray();
-		}
-
-		[Test, NonParallelizable]
-		public void TestNullConfiguration_UnsetRemote([Values] bool cleanDefault)
-		{
-			if (TestConfiguration.DisableRemoteContext) Assert.Ignore("Remote context disabled");
-
-			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
-
-			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
-
-			using var db = GetServerContainer(DefaultTransport).CreateContext(
-				(s, o) => o,
-				(conf, ms) => new DataConnection(new DataOptions().UseSQLite(connectionString, SQLiteProvider.System)));
-
-			_ = db.GetTable<Person>().ToArray();
-		}
-
-		[Test, NonParallelizable]
-		public void TestNullConfiguration_SetNull([Values] bool cleanDefault)
-		{
-			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
-
-			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
-
-			using var db = new DataConnection(new DataOptions().UseConfiguration(null).UseSQLite(connectionString, SQLiteProvider.System));
-
-			_ = db.GetTable<Person>().ToArray();
-		}
-
-		[Test, NonParallelizable]
-		public void TestNullConfiguration_SetNullRemote([Values] bool cleanDefault)
-		{
-			if (TestConfiguration.DisableRemoteContext) Assert.Ignore("Remote context disabled");
-
-			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
-
-			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
-
-			using var db = GetServerContainer(DefaultTransport).CreateContext(
-				(s, o) => o,
-				(conf, ms) => new DataConnection(new DataOptions().UseConfiguration(null).UseSQLite(connectionString, SQLiteProvider.System)));
-
-			_ = db.GetTable<Person>().ToArray();
-		}
-
 		[Test]
 		public void TestContext([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{

@@ -227,5 +227,172 @@ namespace Tests.DataProvider
 			}
 		}
 		#endregion
+
+		#region SpecificExtensionsTests
+		//------------------------------------------------------------------
+		// Validates AsYdb() for ITable<T> and IQueryable<T>
+		//------------------------------------------------------------------
+
+		[Test]
+		public void AsYdb_Table_ReturnsSpecificInterface([IncludeDataSources(Ctx)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var tbl = db.GetTable<SimpleEntity>().AsYdb();
+
+			Assert.That(tbl, Is.InstanceOf<IYdbSpecificTable<SimpleEntity>>());
+		}
+
+		[Test]
+		public void AsYdb_Queryable_ReturnsSpecificInterface([IncludeDataSources(Ctx)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var qry = db.GetTable<SimpleEntity>().Where(e => e.IntVal >= 0).AsYdb();
+
+			Assert.That(qry, Is.InstanceOf<IYdbSpecificQueryable<SimpleEntity>>());
+		}
+
+		//------------------------------------------------------------------
+		// ITable<T>.AsYdb — data remains unchanged (synchronous)
+		//------------------------------------------------------------------
+		[Test]
+		public void AsYdb_Table_DataRoundtrip([IncludeDataSources(Ctx)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<SimpleEntity>();
+
+			var data = BuildData();
+			db.BulkCopy(data);
+
+			var without = table.OrderBy(t => t.Id).ToArray();
+			var withYdb = table.AsYdb().OrderBy(t => t.Id).ToArray();
+
+			Assert.That(withYdb, Has.Length.EqualTo(without.Length));
+			for (var i = 0; i < without.Length; i++)
+			{
+				Assert.That(EntityEquals(without[i], withYdb[i]), Is.True, $"row {i} differs");
+			}
+		}
+
+		//------------------------------------------------------------------
+		// IQueryable<T>.AsYdb — data remains unchanged (asynchronous)
+		//------------------------------------------------------------------
+		[Test]
+		public async Task AsYdb_Queryable_DataRoundtrip_Async([IncludeDataSources(Ctx)] string context)
+		{
+			await using var db    = GetDataConnection(context);
+			await using var table = db.CreateLocalTable<SimpleEntity>();
+
+			var data = BuildData();
+			await db.BulkCopyAsync(data);
+
+			var filter  = 5;
+			var without = await table.Where(t => t.IntVal < filter).OrderBy(t => t.Id).ToArrayAsync();
+			var withYdb = await table.Where(t => t.IntVal < filter)
+							 .AsYdb()
+							 .OrderBy(t => t.Id)
+							 .ToArrayAsync();
+
+			Assert.That(withYdb, Has.Length.EqualTo(without.Length));
+			for (var i = 0; i < without.Length; i++)
+			{
+				Assert.That(EntityEquals(without[i], withYdb[i]), Is.True, $"row {i} differs");
+			}
+		}
+
+		// Helper method for comparing entity objects
+		private static bool EntityEquals(SimpleEntity a, SimpleEntity b) =>
+			   a.IntVal == b.IntVal
+			&& a.DecVal == b.DecVal
+			&& a.StrVal == b.StrVal
+			&& a.BoolVal == b.BoolVal
+			&& a.DtVal == b.DtVal;
+
+		#endregion
+
+		//#region HintsTests
+		////------------------------------------------------------------------
+		//// 1. WITH INLINE  (TableHint)
+		////------------------------------------------------------------------
+		//[Test]
+		//public void InlineHint_WritesWithInline([IncludeDataSources(Ctx)] string ctx)
+		//{
+		//	using var db    = GetDataConnection(ctx);
+		//	using var tbl   = db.CreateLocalTable<YdbTests.SimpleEntity>();
+
+		//	var _ = tbl.AsYdb()
+		//		   .InlineHint()
+		//		   .Select(t => t.Id)
+		//		   .ToArray();                // выполняем запрос → db.LastQuery
+
+		//	Assert.That(db.LastQuery, Does.Contain("WITH INLINE"));
+		//}
+
+		////------------------------------------------------------------------
+		//// 2. WITH UNORDERED (Tables‑in‑scope)
+		////------------------------------------------------------------------
+		//[Test]
+		//public void UnorderedInScopeHint_WritesWithUnordered([IncludeDataSources(Ctx)] string ctx)
+		//{
+		//	using var db  = GetDataConnection(ctx);
+		//	using var tbl = db.CreateLocalTable<YdbTests.SimpleEntity>();
+
+		//	var _ = tbl.Where(e => e.Id > 0)
+		//		   .AsYdb()
+		//		   .UnorderedInScopeHint()
+		//		   .Select(e => new { e.Id, e.StrVal })
+		//		   .ToArray();
+
+		//	var sql = db.LastQuery ?? string.Empty;
+		//	var cnt = sql.Split('\n')
+		//		 .Count(l => l.Contains("WITH UNORDERED",
+		//								StringComparison.OrdinalIgnoreCase));
+
+		//	Assert.That(cnt, Is.EqualTo(1));
+		//}
+
+		////------------------------------------------------------------------
+		//// 3. PRAGMA DisablePredicatePushdown
+		////------------------------------------------------------------------
+		//[Test]
+		//public void DisablePredicatePushdown_PrependsPragma([IncludeDataSources(Ctx)] string ctx)
+		//{
+		//	using var db  = GetDataConnection(ctx);
+		//	using var tbl = db.CreateLocalTable<YdbTests.SimpleEntity>();
+
+		//	var _ = tbl.Where(e => e.BoolVal)
+		//		   .AsYdb()
+		//		   .DisablePredicatePushdown()
+		//		   .ToArray();
+
+		//	var sql = db.LastQuery ?? string.Empty;
+		//	Assert.That(sql.TrimStart()
+		//				  .StartsWith("PRAGMA DisablePredicatePushdown",
+		//							  StringComparison.OrdinalIgnoreCase));
+		//}
+
+		////------------------------------------------------------------------
+		//// 4. PRAGMA UseFollowerRead (асинхронный пример)
+		////------------------------------------------------------------------
+		//[Test]
+		//public async Task UseFollowerRead_PrependsPragma_Async([IncludeDataSources(Ctx)] string ctx)
+		//{
+		//	await using var db  = GetDataConnection(ctx);
+		//	await using var tbl = db.CreateLocalTable<YdbTests.SimpleEntity>();
+
+		//	var _ = await tbl.Where(e => e.IntVal >= 0)
+		//				 .AsYdb()
+		//				 .UseFollowerRead()
+		//				 .Select(e => e.IntVal)
+		//				 .ToArrayAsync();
+
+		//	var sql = db.LastQuery ?? string.Empty;
+		//	Assert.That(sql.TrimStart()
+		//				  .StartsWith("PRAGMA UseFollowerRead",
+		//							  StringComparison.OrdinalIgnoreCase));
+		//}
+		//#endregion
+
 	}
 }

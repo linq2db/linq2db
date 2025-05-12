@@ -2,7 +2,6 @@
 
 using JetBrains.Annotations;
 
-using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.DataProvider.DB2;
@@ -22,31 +21,31 @@ namespace LinqToDB
 {
 	/*
 	 * To define database configuration overloads stick to those rules:
-	 *
+	 * 
 	 * 1. All overloads should have same name: "Use<Database>" (e.g. "Use<Database>Odbc" is not valid name as it contains specific provider name)
-	 *
+	 * 
 	 * 2. All overloads should accept "Func<*Options, *Options>[?] optionSetter[ = null]" parameter as last parameter
-	 *
+	 * 
 	 * 3. There should be only two or four overloads for each database:
-	 *
+	 * 
 	 * For database without multiple providers/dialects - two methods:
 	 *    - Use(optionSetter = null)
 	 *    - Use(connectionString, optionSetter = null)
-	 *
+	 * 
 	 * For database with multiple providers and/or dialects configuration - four methods:
 	 *    - Use(optionSetter) // note that setter is not optional to avoid overload conflicts
 	 *    - Use(connectionString, optionSetter) // note that setter is not optional to avoid overload conflicts
 	 *    - Use(dialect, provider, optionSetter = null)
 	 *    - Use(dialect, provider, connectionString, optionSetter = null)
-	 *
+	 * 
 	 * 4. if dialect/provider should have default AutoDetect value
-	 *
+	 * 
 	 * Examples.
-	 *
+	 * 
 	 * Database with single dialect/provider:
 	 * DataOptions UseDB(this DataOptions options,                          Func<DBOptions, DBOptions>? optionSetter = null);
 	 * DataOptions UseDB(this DataOptions options, string connectionString, Func<DBOptions, DBOptions>? optionSetter = null);
-	 *
+	 * 
 	 * Database with multiple dialects/providers:
 	 * DataOptions UseDB(this DataOptions options,                          Func<DBOptions, DBOptions> optionSetter);
 	 * DataOptions UseDB(this DataOptions options, string connectionString, Func<DBOptions, DBOptions> optionSetter);

@@ -16,7 +16,5 @@ namespace LinqToDB.Remote
 		Task<string?>         ExecuteScalarAsync  (string? configuration, string queryData, CancellationToken cancellationToken = default);
 		Task<string>          ExecuteReaderAsync  (string? configuration, string queryData, CancellationToken cancellationToken = default);
 		Task<int>             ExecuteBatchAsync   (string? configuration, string queryData, CancellationToken cancellationToken = default);
-
-		string? RemoteClientTag { get; set; }
 	}
 }

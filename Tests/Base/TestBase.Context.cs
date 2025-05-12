@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 using LinqToDB;
@@ -20,57 +19,32 @@ namespace Tests
 	{
 		static readonly MappingSchema _sequentialAccessSchema = new ("SequentialAccess");
 
-		private static readonly IReadOnlyDictionary<RemoteTransport, IServerContainer> _serverContainers = new Dictionary<RemoteTransport, IServerContainer>()
-		{
 #if NETFRAMEWORK
-			{ RemoteTransport.WCF,     new WcfServerContainer()     },
+		protected static          IServerContainer  _serverContainer  = new WcfServerContainer();
 #else
-			{ RemoteTransport.gRPC,    new GrpcServerContainer()    },
-			{ RemoteTransport.Http,    new HttpServerContainer()    },
+		protected static          IServerContainer  _serverContainer = new GrpcServerContainer();
 #endif
-			{ RemoteTransport.SignalR, new SignalRServerContainer() },
-		};
-
-		protected IServerContainer GetServerContainer(RemoteTransport transport = DefaultTransport) => _serverContainers[transport];
-
-#if NETFRAMEWORK
-		protected const RemoteTransport DefaultTransport = RemoteTransport.WCF;
-#else
-		protected const RemoteTransport DefaultTransport = RemoteTransport.gRPC;
-#endif
-
-		public enum RemoteTransport
-		{
-#if NETFRAMEWORK
-			WCF     = 1,
-#else
-			gRPC    = 2,
-			Http    = 3,
-#endif
-			SignalR = 4
-		}
 
 		protected ITestDataContext GetDataContext(
 			string configuration,
-			MappingSchema? mappingSchema  = null,
-			bool testLinqService          = true,
-			IInterceptor? interceptor     = null,
-			bool suppressSequentialAccess = false,
-			RemoteTransport transport     = DefaultTransport)
+			MappingSchema? ms = null,
+			bool testLinqService = true,
+			IInterceptor? interceptor = null,
+			bool suppressSequentialAccess = false)
 		{
 			if (!configuration.IsRemote())
 			{
-				return GetDataConnection(configuration, mappingSchema, interceptor, suppressSequentialAccess: suppressSequentialAccess);
+				return GetDataConnection(configuration, ms, interceptor, suppressSequentialAccess: suppressSequentialAccess);
 			}
 
 			var str = configuration.StripRemote();
-			return GetServerContainer(transport).CreateContext(
-				GetRemoteContextOptionsBuilder(mappingSchema, str, opt => opt.UseFSharp()),
+			return _serverContainer.CreateContext(
+				GetRemoteContextOptionsBuilder(ms, str, opt => opt.UseFSharp()),
 				(conf, ms) =>
 				{
 					var dc = new DataConnection(conf);
 
-					if (conf?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
+					if (conf.IsAnyOf(TestProvName.AllSqlServerSequentialAccess))
 					{
 						if (!suppressSequentialAccess)
 							dc.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
@@ -98,7 +72,7 @@ namespace Tests
 			return DataConnection.GetDataProvider(configuration.StripRemote());
 		}
 
-		protected ITestDataContext GetDataContext(string configuration, Func<DataOptions, DataOptions> dbOptionsBuilder, RemoteTransport transport = DefaultTransport)
+		protected ITestDataContext GetDataContext(string configuration, Func<DataOptions, DataOptions> dbOptionsBuilder)
 		{
 			if (!configuration.IsRemote())
 			{
@@ -106,7 +80,7 @@ namespace Tests
 			}
 
 			var str = configuration.StripRemote();
-			return GetServerContainer(transport).CreateContext(
+			return _serverContainer.CreateContext(
 				GetRemoteContextOptionsBuilder(null, str, opt => dbOptionsBuilder(opt).UseFSharp()),
 				(conf, ms) =>
 				{

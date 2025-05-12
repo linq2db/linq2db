@@ -2711,7 +2711,7 @@ namespace Tests.DataProvider
 			ms.SetConverter<OracleTimeStampTZ,MyDate>(OracleTimeStampTZToMyDate);
 			ms.SetConverter<MyDate,OracleTimeStampTZ>(MyDateToOracleTimeStampTZ);
 
-			using (var db = GetDataContext(context, mappingSchema: ms))
+			using (var db = GetDataContext(context, ms))
 			{
 				var table = db.GetTable<MappingTest>();
 				var list  = table.ToList();

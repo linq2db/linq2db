@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		// (e.g. to use non-merge insertorreplace implementation)
 
 		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,
-			IReadOnlyList<List<ISqlExpression>>                                      rows, int row, int column)
+			IReadOnlyList<ISqlExpression[]>                                      rows, int row, int column)
 		{
 			return row < 0
 				|| (row == 0

@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Ydb
 
 		#endregion
 
-		#region Бинарные операции
+		#region Binary operations
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{

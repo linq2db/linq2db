@@ -6,11 +6,11 @@ using LinqToDB.Remote;
 
 namespace Tests.Remote
 {
-	internal sealed class TestLinqService(Func<string?, MappingSchema?, DataConnection> connectionFactory) : LinqService(), ITestLinqService
+	internal sealed class TestLinqService(Func<string, MappingSchema?, DataConnection> connectionFactory) : LinqService()
 	{
 		public override DataConnection CreateDataContext(string? configuration)
 		{
-			return connectionFactory(configuration, MappingSchema);
+			return connectionFactory(configuration!, MappingSchema);
 		}
 	}
 }

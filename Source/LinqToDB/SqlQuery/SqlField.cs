@@ -95,8 +95,6 @@ namespace LinqToDB.SqlQuery
 		public string?           CreateFormat      { get; set; }
 		public int?              CreateOrder       { get; set; }
 
-		public SqlField? BasedOn { get; set; }
-
 		public ISqlTableSource?  Table             { get; set; }
 		public ColumnDescriptor  ColumnDescriptor  { get; set; } = null!; // TODO: not true, we probably should introduce something else for non-column fields
 
