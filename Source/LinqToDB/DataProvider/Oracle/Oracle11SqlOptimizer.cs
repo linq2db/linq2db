@@ -1,4 +1,6 @@
-﻿using LinqToDB.Common;
+﻿using System.Net;
+
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
@@ -9,6 +11,11 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 		public Oracle11SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
+		}
+
+		public override SqlExpressionOptimizerVisitor CreateOptimizerVisitor(bool allowModify)
+		{
+			return new OracleSqlExpressionOptimizerVisitor(allowModify);
 		}
 
 		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
