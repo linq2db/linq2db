@@ -137,7 +137,7 @@ namespace LinqToDB.Remote
 				Builder.Append(' ').Append(value.HasValue ? '1' : '0');
 
 				if (value.HasValue)
-					Builder.Append(CultureInfo.InvariantCulture, $"{value.Value}");
+					Builder.Append(value.Value);
 			}
 
 			protected void Append(Type? value)
