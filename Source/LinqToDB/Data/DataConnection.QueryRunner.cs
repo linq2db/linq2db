@@ -384,9 +384,8 @@ namespace LinqToDB.Data
 							await dataConnection.ExecuteNonQueryDataAsync(cancellationToken)
 								.ConfigureAwait(false);
 						}
-						catch
+						catch (Exception)
 						{
-							// ignore
 						}
 					}
 					else
@@ -424,9 +423,8 @@ namespace LinqToDB.Data
 						{
 							dataConnection.ExecuteNonQuery();
 						}
-						catch
+						catch (Exception)
 						{
-							// ignore
 						}
 					}
 					else
@@ -721,7 +719,6 @@ namespace LinqToDB.Data
 						}
 						catch
 						{
-							// ignore
 						}
 					}
 					else

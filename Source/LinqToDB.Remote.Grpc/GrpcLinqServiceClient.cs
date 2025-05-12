@@ -92,7 +92,7 @@ namespace LinqToDB.Remote.Grpc
 					Configuration = configuration,
 					QueryData     = queryData
 				}, cancellationToken)
-				.ConfigureAwait(false);
+				.ConfigureAwait(false); ;
 		}
 
 		async Task<string?> ILinqService.ExecuteScalarAsync(string? configuration, string queryData, CancellationToken cancellationToken)
@@ -129,8 +129,6 @@ namespace LinqToDB.Remote.Grpc
 				})
 				.ConfigureAwait(false);
 		}
-
-		string? ILinqService.RemoteClientTag { get; set; } = "Grpc";
 
 		void IDisposable.Dispose()
 		{

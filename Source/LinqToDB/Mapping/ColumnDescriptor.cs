@@ -691,12 +691,9 @@ namespace LinqToDB.Mapping
 				else
 				{
 					// For DataType.Enum we do not provide any additional conversion
-					if (valueConverter == null && includingEnum && dbDataType.DataType != DataType.Enum && getterExpr.Type.ToNullableUnderlying().IsEnum)
+					if (valueConverter == null && includingEnum && dbDataType.DataType != DataType.Enum)
 					{
-						var type = dbDataType.SystemType != typeof(object) && !dbDataType.SystemType.ToNullableUnderlying().IsEnum
-							? dbDataType.SystemType
-							: Converter.GetDefaultMappingFromEnumType(mappingSchema, getterExpr.Type);
-
+						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, getterExpr.Type);
 						if (type != null)
 						{
 							var enumConverter = mappingSchema.GetConvertExpression(getterExpr.Type, type, conversionType: ConversionType.ToDatabase)!;

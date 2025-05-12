@@ -3263,7 +3263,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertPredicateMethod(MethodCallExpression node)
 		{
-			ISqlExpression? IsCaseSensitive(MethodCallExpression mc)
+			ISqlExpression IsCaseSensitive(MethodCallExpression mc)
 			{
 				if (mc.Arguments.Count <= 1)
 					return new SqlValue(typeof(bool?), null);
@@ -3288,11 +3288,8 @@ namespace LinqToDB.Linq.Builder
 				expr = Expression.OrElse(expr, Expression.Equal(variable, Expression.Constant(StringComparison.Ordinal)));
 				expr = Expression.Block(new[] { variable }, assignment, expr);
 
-				var parameter = Builder.ParametersContext.BuildParameter(BuildContext, expr, columnDescriptor : null);
-				if (parameter != null)
-				{
-					parameter.IsQueryParameter = false;
-				}
+				var parameter = Builder.ParametersContext.BuildParameter(BuildContext, expr, columnDescriptor : null)!;
+				parameter.IsQueryParameter = false;
 
 				return parameter;
 			}
@@ -3310,9 +3307,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				switch (node.Method.Name)
 				{
-					case "Contains"  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.Contains,   IsCaseSensitive(node)); break;
+					case "Contains": predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.Contains, IsCaseSensitive(node)); break;
 					case "StartsWith": predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(node)); break;
-					case "EndsWith"  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.EndsWith,   IsCaseSensitive(node)); break;
+					case "EndsWith": predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.EndsWith, IsCaseSensitive(node)); break;
 				}
 			}
 			else if (node.Method.Name == "Contains")
@@ -4803,13 +4800,9 @@ namespace LinqToDB.Linq.Builder
 
 						if (Builder.CanBeEvaluatedOnClient(arr))
 						{
-							var parameter = Builder.ParametersContext.BuildParameter(BuildContext, arr, _columnDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate);
-
-							if (parameter != null)
-							{
-								parameter.IsQueryParameter = false;
-								return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, parameter);
-							}
+							var p = Builder.ParametersContext.BuildParameter(BuildContext, arr, _columnDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate)!;
+							p.IsQueryParameter = false;
+							return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, p);
 						}
 
 						break;
@@ -4828,11 +4821,11 @@ namespace LinqToDB.Linq.Builder
 
 		#region LIKE predicate
 
-		ISqlPredicate? CreateStringPredicate(MethodCallExpression expression, SqlPredicate.SearchString.SearchKind kind, ISqlExpression? caseSensitive)
+		ISqlPredicate? CreateStringPredicate(MethodCallExpression expression, SqlPredicate.SearchString.SearchKind kind, ISqlExpression caseSensitive)
 		{
 			var e = expression;
 
-			if (e.Object == null || caseSensitive == null)
+			if (e.Object == null)
 				return null;
 
 			var descriptor = SuggestColumnDescriptor(e.Object, e.Arguments[0]);

@@ -159,7 +159,7 @@ namespace LinqToDB.Remote
 					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
 					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
-					_configurations[ConfigurationString ?? ""] = _configurationInfo = new ConfigurationInfo
+					_configurationInfo = new ConfigurationInfo()
 					{
 						LinqServiceInfo  = info,
 						MappingSchema    = ms,
@@ -183,15 +183,16 @@ namespace LinqToDB.Remote
 
 				try
 				{
-					var info           = await client.GetInfoAsync(ConfigurationString, cancellationToken).ConfigureAwait(false);
+					var info = await client.GetInfoAsync(ConfigurationString, cancellationToken)
+						.ConfigureAwait(false);
 
-					var type           = Type.GetType(info.MappingSchemaType)!;
-					var ms             = RemoteMappingSchema.GetOrCreate(ContextIDPrefix, type);
+					var type = Type.GetType(info.MappingSchemaType)!;
+					var ms   = RemoteMappingSchema.GetOrCreate(ContextIDPrefix, type);
 
 					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
 					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
-					_configurations[ConfigurationString ?? ""] = _configurationInfo = new ConfigurationInfo
+					_configurationInfo = new ConfigurationInfo()
 					{
 						LinqServiceInfo  = info,
 						MappingSchema    = ms,
@@ -205,17 +206,6 @@ namespace LinqToDB.Remote
 			}
 
 			return _configurationInfo;
-		}
-
-		/// <summary>
-		/// Preload configuration info asynchronously.
-		/// </summary>
-		/// <param name="cancellationToken">Cancellation token to cancel operation.</param>
-		/// <returns>Task which completes when configuration info is loaded.</returns>
-		public Task ConfigureAsync(CancellationToken cancellationToken)
-		{
-			// preload _configurationInfo asynchronously if needed
-			return GetConfigurationInfoAsync(cancellationToken);
 		}
 
 		protected abstract ILinqService GetClient();

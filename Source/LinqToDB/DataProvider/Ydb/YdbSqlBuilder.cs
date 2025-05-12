@@ -1,11 +1,13 @@
-﻿using System;
+﻿// -----------------------------------------------------------------------------
+//  LinqToDB provider : YDB  ✧  SQL‑builder
+// -----------------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
 using System.Text;
 
 using LinqToDB.Common;
@@ -19,189 +21,114 @@ using LinqToDB.SqlQuery;
 namespace LinqToDB.DataProvider.Ydb
 {
 	/// <summary>
-	///     SQL builder implementation for the YDB (Yandex Database) data provider.
-	///     This builder translates LINQ to DB expressions into YQL-compliant SQL statements.
-	///     It respects YDB syntax conventions, limitations, and extended features such as UPSERT,
-	///     custom data types (e.g., Uuid, JsonDocument), and temporary table semantics.
+	///  Построитель SQL‑кода (YQL) для провайдера YDB.
+	///  Адаптирует выражения LINQ to DB к синтаксису YQL,
+	///  поддерживает UPSERT, спец‑типы, временные таблицы, хинты и т. д.
 	/// </summary>
 	public sealed class YdbSqlBuilder : BasicSqlBuilder<YdbOptions>
 	{
-		/// <summary>
-		///     Standard constructor for the YDB SQL builder.
-		/// </summary>
-		public YdbSqlBuilder(IDataProvider? provider,
-							 MappingSchema mappingSchema,
-							 DataOptions dataOptions,
-							 ISqlOptimizer sqlOptimizer,
-							 SqlProviderFlags sqlProviderFlags)
+		//--------------------------------------------------------------------- ctor
+		public YdbSqlBuilder(
+			IDataProvider? provider,
+			MappingSchema mappingSchema,
+			DataOptions dataOptions,
+			ISqlOptimizer sqlOptimizer,
+			SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		/// <summary>
-		///     Copy constructor used internally for cloning.
-		/// </summary>
+		// внутренний «copy‑ctor»
 		private YdbSqlBuilder(YdbSqlBuilder parent) : base(parent) { }
 
-		/// <inheritdoc />
 		protected override ISqlBuilder CreateSqlBuilder() => new YdbSqlBuilder(this);
 
-		#region General SQL Syntax
+		//--------------------------------------------------------------------- базовый синтаксис
 
-		/// <inheritdoc />
 		protected override string LimitFormat(SelectQuery selectQuery) => "LIMIT {0}";
-
-		/// <inheritdoc />
 		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
-
-		/// <summary>
-		///     Indicates whether the CTE keyword RECURSIVE is required.
-		///     For YQL, it is not needed.
-		/// </summary>
 		protected override bool IsRecursiveCteKeywordRequired => false;
 
-		#endregion
+		//--------------------------------------------------------------------- PRIMARY KEY :: CREATE TABLE
 
-		#region CREATE/DROP Table Adjustments
-
-		/// <summary>
-		///     Builds PRIMARY KEY clause for CREATE TABLE without constraint name,
-		///     as YQL doesn't support named constraints.
-		/// </summary>
-		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
+		protected override void BuildCreateTablePrimaryKey(
+			SqlCreateTableStatement createTable,
+			string pkName,
+			IEnumerable<string> fieldNames)
 		{
-			AppendIndent();
-			StringBuilder
+			AppendIndent()
 				.Append("PRIMARY KEY (")
 				.Append(string.Join(InlineComma, fieldNames))
 				.Append(')');
 		}
 
-		/// <summary>
-		///     Uses <c>IF EXISTS</c> for DROP TABLE by delegating to the base implementation.
-		/// </summary>
+		//--------------------------------------------------------------------- DROP TABLE / TRUNCATE
+
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
+			=> BuildDropTableStatementIfExists(dropTable);
+
+		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
 		{
-			BuildDropTableStatementIfExists(dropTable);
+			BuildTag(truncateTable);
+			AppendIndent().Append("TRUNCATE TABLE ");
+			BuildPhysicalTable(truncateTable.Table!, null);
+			StringBuilder.AppendLine();
 		}
 
-		/// <summary>
-		///     Outputs <c>NOT NULL</c> only when necessary, as YDB does not accept the <c>NULL</c> keyword explicitly.
-		/// </summary>
+		//--------------------------------------------------------------------- NULL / IDENTITY / RETURNING
+
 		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
 		{
 			if (!field.CanBeNull)
 				StringBuilder.Append("NOT NULL");
 		}
 
-		#endregion
-
-		#region Identity / Sequences
-
-		/// <summary>
-		///     Appends <c>RETURNING</c> clause for identity column retrieval after insert.
-		///     Assumes serial columns are used.
-		/// </summary>
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = insertClause.Into?.GetIdentityField();
-			if (identityField == null)
-				throw new LinqToDBException($"Identity field must be defined for '{insertClause.Into?.NameForLogging}'.");
+			var id = insertClause.Into?.GetIdentityField()
+					 ?? throw new LinqToDBException(
+						 $"Identity field must be defined for '{insertClause.Into?.NameForLogging}'.");
 
 			AppendIndent().AppendLine("RETURNING");
 			AppendIndent().Append('\t');
-			BuildExpression(identityField, false, true);
+			BuildExpression(id, false, true);
 			StringBuilder.AppendLine();
 		}
 
-		#endregion
+		//--------------------------------------------------------------------- CREATE TABLE helpers
 
-		#region TRUNCATE / CREATE TABLE
-
-		/// <summary>
-		///     Generates a TRUNCATE TABLE statement compatible with YQL (without identity resets).
-		/// </summary>
-		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
-		{
-			BuildTag(truncateTable);
-			AppendIndent();
-			StringBuilder.Append("TRUNCATE TABLE ");
-			BuildPhysicalTable(truncateTable.Table!, null);
-			StringBuilder.AppendLine();
-		}
-
-		/// <summary>
-		///     Emits type names for identity (serial) columns.
-		///     Falls back to base logic for other fields.
-		/// </summary>
 		protected override void BuildCreateTableFieldType(SqlField field)
 		{
 			if (field.IsIdentity)
 			{
-				switch (field.Type.DataType)
+				StringBuilder.Append(field.Type.DataType switch
 				{
-					case DataType.Int64: StringBuilder.Append("BigSerial"); break;
-					case DataType.Int16: StringBuilder.Append("SmallSerial"); break;
-					default: StringBuilder.Append("Serial"); break;
-				}
-
+					DataType.Int64 => "BigSerial",
+					DataType.Int16 => "SmallSerial",
+					_ => "Serial"
+				});
 				return;
 			}
 
 			base.BuildCreateTableFieldType(field);
 		}
 
-		/// <summary>
-		///     Constructs CREATE TABLE command with support for temporary tables.
-		/// </summary>
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
+			var cmd = table.TableOptions.IsTemporaryOptionSet()
+				? "CREATE TEMPORARY TABLE "
+				: "CREATE TABLE ";
 
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary:
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryData:
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure:
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData:
-					case TableOptions.IsLocalTemporaryData:
-					case TableOptions.IsLocalTemporaryStructure:
-						command = "CREATE TEMPORARY TABLE ";
-						break;
-					default:
-						throw new InvalidOperationException($"Incompatible table options '{table.TableOptions}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
-
-			StringBuilder.Append(command);
+			StringBuilder.Append(cmd);
 
 			if (table.TableOptions.HasCreateIfNotExists())
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
-		/// <summary>
-		///     Finalizes CREATE TABLE statement. No ON COMMIT support in YQL.
-		/// </summary>
-		protected override void BuildEndCreateTableStatement(SqlCreateTableStatement createTable)
-		{
-			base.BuildEndCreateTableStatement(createTable);
-		}
+		//--------------------------------------------------------------------- типы‑данных + quoting
 
-		#endregion
-
-		#region Type Mapping
-
-		/// <summary>
-		///     Maps .NET <see cref="DataType"/> values to YDB native SQL types.
-		///     Ensures compatibility with YQL type system.
-		/// </summary>
-		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(
+			DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.DataType)
 			{
@@ -228,106 +155,96 @@ namespace LinqToDB.DataProvider.Ydb
 				case DataType.DateTime2: StringBuilder.Append("Timestamp"); break;
 				case DataType.DateTimeOffset: StringBuilder.Append("TzTimestamp"); break;
 				case DataType.Interval: StringBuilder.Append("Interval"); break;
-				case DataType.Char:
-				case DataType.NChar:
-				case DataType.VarChar:
-				case DataType.NVarChar:
-				case DataType.Text:
-				case DataType.NText: StringBuilder.Append("Utf8"); break;
-				case DataType.Binary:
-				case DataType.VarBinary:
-				case DataType.Blob: StringBuilder.Append("Bytes"); break;
+
+				case DataType.Char or DataType.NChar or
+					 DataType.VarChar or DataType.NVarChar or
+					 DataType.Text or DataType.NText:
+					StringBuilder.Append("Utf8"); break;
+
+				case DataType.Binary or DataType.VarBinary or DataType.Blob:
+					StringBuilder.Append("Bytes"); break;
+
 				case DataType.Guid: StringBuilder.Append("Uuid"); break;
 				case DataType.Json: StringBuilder.Append("JsonDocument"); break;
-				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
+
+				default:
+					base.BuildDataTypeFromDataType(type, false, false);
+					break;
 			}
 		}
 
-		#endregion
+		protected override bool IsReserved(string word)
+			=> ReservedWords.IsReserved(word, ProviderName.Ydb);
 
-		#region Quoting and Reserved Words
-
-		/// <summary>
-		///     Determines whether the specified word is reserved in YQL.
-		/// </summary>
-		protected override bool IsReserved(string word) =>
-			ReservedWords.IsReserved(word, ProviderName.Ydb);
-
-		/// <inheritdoc />
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
-				case ConvertType.NameToQueryParameter:
-				case ConvertType.NameToCommandParameter:
-				case ConvertType.NameToSprocParameter:
+				case ConvertType.NameToQueryParameter
+				   or ConvertType.NameToCommandParameter
+				   or ConvertType.NameToSprocParameter:
 					return sb.Append('@').Append(value);
 
 				case ConvertType.SprocParameterToName:
 					return sb.Append(value.TrimStart('@', '$', ':'));
 
-				case ConvertType.NameToQueryField:
-				case ConvertType.NameToQueryFieldAlias:
-				case ConvertType.NameToQueryTable:
-				case ConvertType.NameToQueryTableAlias:
-				case ConvertType.NameToDatabase:
-				case ConvertType.NameToSchema:
-				case ConvertType.NameToProcedure:
+				case ConvertType.NameToQueryField
+				   or ConvertType.NameToQueryFieldAlias
+				   or ConvertType.NameToQueryTable
+				   or ConvertType.NameToQueryTableAlias
+				   or ConvertType.NameToDatabase
+				   or ConvertType.NameToSchema
+				   or ConvertType.NameToProcedure:
+				{
 					if (ProviderOptions.IdentifierQuoteMode != YdbIdentifierQuoteMode.None)
 					{
-						var shouldQuote =
+						var quote =
 							   ProviderOptions.IdentifierQuoteMode == YdbIdentifierQuoteMode.Quote
-							|| ProviderOptions.IdentifierQuoteMode == YdbIdentifierQuoteMode.Auto   && value.Any(char.IsUpper)
+							|| ProviderOptions.IdentifierQuoteMode == YdbIdentifierQuoteMode.Auto && value.Any(char.IsUpper)
 							|| IsReserved(value)
 							|| value.Length == 0 || value[0] is not '_' and not (>= 'a' and <= 'z')
 							|| value.Skip(1).Any(c => !(char.IsLetterOrDigit(c) || c is '_' or '$'));
 
-						if (shouldQuote)
+						if (quote)
 							return sb.Append('`').Append(value.Replace("`", "``")).Append('`');
 					}
 
 					return sb.Append(value);
+				}
 
-				default:
-					return sb.Append(value);
+				default: return sb.Append(value);
 			}
 		}
 
-		#endregion
+		//--------------------------------------------------------------------- MERGE → UPSERT
 
-		#region MERGE / UPSERT Support
-
-		/// <summary>
-		///     Implements YDB-style UPSERT logic.
-		///     Only handles simple INSERT-style operations from MERGE.
-		/// </summary>
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
-			var insertOp = merge.Operations
-				.FirstOrDefault(op => op.OperationType == MergeOperationType.Insert);
-			if (insertOp == null || insertOp.Items.Count == 0)
+			var ins = merge.Operations
+			   .FirstOrDefault(op => op.OperationType == MergeOperationType.Insert);
+			if (ins == null || ins.Items.Count == 0)
 				return;
 
 			AppendIndent().Append("UPSERT INTO ");
 			BuildPhysicalTable(merge.Target.Source, merge.Target.Alias);
 
 			StringBuilder.Append(" (");
-			for (int i = 0; i < insertOp.Items.Count; i++)
+			for (int i = 0; i < ins.Items.Count; i++)
 			{
 				if (i > 0) StringBuilder.Append(", ");
-				bool addAlias = false;
-				BuildExpression(insertOp.Items[i].Column, false, true, null, ref addAlias);
+				var addAlias = false;
+				BuildExpression(ins.Items[i].Column, false, true, null, ref addAlias);
 			}
 
 			StringBuilder.Append(')');
 
 			StringBuilder.AppendLine();
 			AppendIndent().Append("SELECT ");
-			for (int i = 0; i < insertOp.Items.Count; i++)
+			for (int i = 0; i < ins.Items.Count; i++)
 			{
 				if (i > 0) StringBuilder.Append(", ");
-				bool addAlias = false;
-				BuildExpression(insertOp.Items[i].Expression!, false, true, null, ref addAlias);
+				var addAlias = false;
+				BuildExpression(ins.Items[i].Expression!, false, true, null, ref addAlias);
 			}
 
 			StringBuilder.AppendLine();
@@ -337,17 +254,33 @@ namespace LinqToDB.DataProvider.Ydb
 			BuildMergeTerminator(NullabilityContext, merge);
 		}
 
-		#endregion
+		//--------------------------------------------------------------------- sequences (mock)
 
-		#region Sequences
+		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
+		{
+			return FormattableString.Invariant($"SELECT * FROM GENERATE_SERIES(1,{count}) AS id; -- YDB doesn’t support sequences");
+		}
 
-		/// <summary>
-		///     YDB does not support sequences. Returns a mock SELECT using <c>GENERATE_SERIES</c>.
-		/// </summary>
-		public override string GetReserveSequenceValuesSql(int count, string sequenceName) =>
-			FormattableString.Invariant(
-				$"SELECT * FROM GENERATE_SERIES(1,{count}) AS id; -- YDB doesn’t support sequences");
+		//---------------------------------------------------------------------  ✧ HINTS ✧
+		//
+		// После того, как базовый текст SELECT собран, добавляем Query‑level
+		// расширения (scope = QueryHint) — это:
+		//   • PRAGMA‑директивы   (PragmaQueryHintBuilder)
+		//   • WITH‑хинты «для всех таблиц»  (TablesInScopeHintBuilder)
+		//---------------------------------------------------------------------
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
+		{
+			var sqlExts = statement.SelectQuery?.SqlQueryExtensions;
+			if (sqlExts is null || sqlExts.Count == 0)
+				return;
 
-		#endregion
+			BuildQueryExtensions(
+				StringBuilder,
+				sqlExts,
+				prefix: null,     // PragmaQueryHintBuilder сам добавит перенос/PRAGMA
+				delimiter: "\n",
+				suffix: null,
+				Sql.QueryExtensionScope.QueryHint);
+		}
 	}
 }

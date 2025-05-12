@@ -98,9 +98,8 @@ namespace LinqToDB.Linq.Builder
 					var placeholderIndex = updatedPlaceholder.Index!.Value;
 					var field = RegisterFieldMapping(fields, placeholderIndex, () =>
 					{
-						var alias    = GenerateColumnAlias(updatedPlaceholder.TrackingPath!) ?? GenerateColumnAlias(updatedPlaceholder.Sql);
+						var alias = GenerateColumnAlias(updatedPlaceholder.TrackingPath!) ?? GenerateColumnAlias(updatedPlaceholder.Sql);
 						var dataType = QueryHelper.GetDbDataType(updatedPlaceholder.Sql, subQueryContext.MappingSchema);
-						var basedOn  = QueryHelper.GetUnderlyingField(updatedPlaceholder.Sql);
 
 						SqlField newField;
 						var      isNullable = updatedPlaceholder.Sql.CanBeNullable(nullabilityContext);
@@ -118,8 +117,7 @@ namespace LinqToDB.Linq.Builder
 							newField = new SqlField(dataType, alias, isNullable);
 						}
 
-						newField.Table   = parentTable;
-						newField.BasedOn = basedOn;
+						newField.Table = parentTable;
 						return newField;
 					});
 

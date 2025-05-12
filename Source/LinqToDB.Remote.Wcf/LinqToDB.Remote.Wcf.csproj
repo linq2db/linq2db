@@ -15,7 +15,7 @@
 	<ItemGroup>
 		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>
-
+	
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>
