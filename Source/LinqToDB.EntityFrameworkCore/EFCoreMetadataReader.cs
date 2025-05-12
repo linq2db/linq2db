@@ -60,8 +60,8 @@ namespace LinqToDB.EntityFrameworkCore
 		private readonly IDiagnosticsLogger<DbLoggerCategory.Query>?                  _logger;
 #endif
 #if !EF31
-		private readonly DatabaseDependencies?    _databaseDependencies;
-		private readonly IValueConverterSelector? _valueConverterSelector;
+		private readonly DatabaseDependencies?                                        _databaseDependencies;
+		private readonly IValueConverterSelector?                                     _valueConverterSelector;
 #endif
 
 		public EFCoreMetadataReader(IModel? model, IInfrastructure<IServiceProvider>? accessor)
