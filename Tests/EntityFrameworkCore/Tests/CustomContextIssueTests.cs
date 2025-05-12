@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
 using LinqToDB.Interceptors;
@@ -296,7 +297,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			int Id,
 			string Source,
 			Issue4783DBStatus Status,
-				Issue4783DBStatus? NullableStatus);
+			Issue4783DBStatus? NullableStatus);
 
 		[LinqToDB.Mapping.Table("Issue4783DBRecords", IsColumnAttributeRequired = false)]
 		public record Issue4783RecordDbRaw(
@@ -312,6 +313,110 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 #endif
 
+		#endregion
+		
+		#region Issue 4940
+		
+#if NET9_0_OR_GREATER
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4940")]
+		public async ValueTask Issue4940Test([EFIncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string provider)
+		{
+			var connectionString = GetConnectionString(provider);
+
+			var optionsBuilder = new DbContextOptionsBuilder();
+
+			var dataSource = new NpgsqlDataSourceBuilder(connectionString)
+				.MapEnum<Issue4940DBStatus>()
+				.Build();
+
+			optionsBuilder = optionsBuilder.UseNpgsql(
+					dataSource,
+					o => o.MapEnum<Issue4940DBStatus>());
+
+			using var ctx = new Issue4940Context(optionsBuilder.Options);
+			using var db  = ctx.CreateLinqToDBConnection();
+
+			using (new DisableBaseline("create db"))
+			{
+				ctx.Database.EnsureDeleted();
+				ctx.Database.EnsureCreated();
+			}
+
+			var notMappedEntitiesForTempTable = new List<Issue4940RecordNotMapped>()
+			{
+				new("TempTable", Issue4940DBStatus.Open, Issue4940DBStatus.Open),
+				new("TempTable", Issue4940DBStatus.Closed, null)
+			};
+			var tempTable = db.CreateTempTable(notMappedEntitiesForTempTable);
+			
+			var notMappedEntitiesForBulkCopy = new List<Issue4940RecordNotMapped>()
+			{
+				new("BulkCopy", Issue4940DBStatus.Closed, Issue4940DBStatus.Closed),
+				new("BulkCopy", Issue4940DBStatus.Open, null)
+			};
+			tempTable.BulkCopy(new BulkCopyOptions {BulkCopyType = BulkCopyType.ProviderSpecific}, notMappedEntitiesForBulkCopy);
+
+			var notMappedEntitiesForMerge = new List<Issue4940RecordNotMapped>()
+			{
+				new("Merge", Issue4940DBStatus.Open, Issue4940DBStatus.Closed),
+				new("Merge", Issue4940DBStatus.Open, null)
+			};
+			tempTable
+				.Merge()
+				.Using(notMappedEntitiesForMerge)
+				.On(s => s.Source, t => t.Source)
+				.InsertWhenNotMatched()
+				.UpdateWhenMatched()
+				.Merge();
+
+			var nullStatusItems = await tempTable.Where(x => x.NullableStatus == null).ToArrayAsync();
+			var openStatusItems = await tempTable.Where(x => x.NullableStatus == Issue4940DBStatus.Open).ToArrayAsync();
+			var allItems        = notMappedEntitiesForTempTable.Concat(notMappedEntitiesForBulkCopy).Concat(notMappedEntitiesForMerge).ToArray();
+			var results         = await tempTable.ToArrayAsync();
+
+			using (Assert.EnterMultipleScope())
+			{
+				foreach (var item in nullStatusItems)
+					Assert.That(item.NullableStatus, Is.Null);
+				
+				foreach (var item in openStatusItems)
+					Assert.That(item.NullableStatus, Is.EqualTo(Issue4940DBStatus.Open));
+				
+				for (var i = 0; i < results.Length; i++)
+				{
+					Assert.That(results[i].Status,         Is.EqualTo(allItems[i].Status),         $"{results[i].Source}");
+					Assert.That(results[i].NullableStatus, Is.EqualTo(allItems[i].NullableStatus), $"{results[i].Source}");
+				}
+			}
+		}
+		
+		public sealed class Issue4940Context(DbContextOptions options) : DbContext(options)
+		{
+			public DbSet<Issue4940RecordDb> Issue4940DBRecords { get; set; } = null!;
+
+			protected override void OnModelCreating(ModelBuilder modelBuilder)
+			{
+				modelBuilder.Entity<Issue4940RecordDb>();
+			}
+		}
+
+		public record Issue4940RecordDb(
+			int                Id,
+			string             Source,
+			Issue4940DBStatus  Status,
+			Issue4940DBStatus? NullableStatus);
+		
+		public record Issue4940RecordNotMapped(
+			string             Source,
+			Issue4940DBStatus  Status,
+			Issue4940DBStatus? NullableStatus);
+
+		public enum Issue4940DBStatus
+		{
+			Open,
+			Closed
+		}
+#endif
 		#endregion
 	}
 }
