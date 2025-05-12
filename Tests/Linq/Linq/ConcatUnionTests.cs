@@ -610,7 +610,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var query = 
+			var query =
 					(from p1 in db.Parent where p1.ParentID > 3 select Tuple.Create(p1.ParentID, p1.Value1))
 				.Union(
 					from p2 in db.Parent where p2.ParentID <= 3 select Tuple.Create(p2.ParentID, p2.Value1));
@@ -1228,14 +1228,14 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var query1 = 
+			var query1 =
 				from x in db.Parent
 				select new
 				{
 					StrValue = x.Value1.ToString()
 				};
 
-			var query2 = 
+			var query2 =
 				from x in db.Parent
 				from c in x.Children
 				select new
@@ -1363,7 +1363,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var query = 
+			var query =
 				db.Person.Select(p => new RecordClass(p.ID, p.FirstName, p.LastName))
 				.Concat(db.Person.Select(p => new RecordClass(p.ID, p.FirstName, p.LastName)));
 
@@ -1650,8 +1650,8 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid2));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(true));
-				Assert.That(data[1].BoolN, Is.EqualTo(false));
+				Assert.That(data[1].Bool, Is.True);
+				Assert.That(data[1].BoolN, Is.False);
 			});
 		}
 
@@ -1682,8 +1682,8 @@ namespace Tests.Linq
 				Assert.That(data[0].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[0].Enum, Is.Null);
 				Assert.That(data[0].EnumN, Is.Null);
-				Assert.That(data[0].Bool, Is.EqualTo(true));
-				Assert.That(data[0].BoolN, Is.EqualTo(true));
+				Assert.That(data[0].Bool, Is.True);
+				Assert.That(data[0].BoolN, Is.True);
 
 				Assert.That(data[1].Id, Is.EqualTo(4));
 				Assert.That(data[1].Byte, Is.EqualTo(3));
@@ -1692,8 +1692,8 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(false));
-				Assert.That(data[1].BoolN, Is.EqualTo(true));
+				Assert.That(data[1].Bool, Is.False);
+				Assert.That(data[1].BoolN, Is.True);
 			});
 		}
 
@@ -1724,8 +1724,8 @@ namespace Tests.Linq
 				Assert.That(data[0].GuidN, Is.EqualTo(new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE30")));
 				Assert.That(data[0].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[0].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[0].Bool, Is.EqualTo(true));
-				Assert.That(data[0].BoolN, Is.EqualTo(false));
+				Assert.That(data[0].Bool, Is.True);
+				Assert.That(data[0].BoolN, Is.False);
 
 				Assert.That(data[1].Id, Is.EqualTo(4));
 				Assert.That(data[1].Byte, Is.EqualTo(3));
@@ -1734,8 +1734,8 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(false));
-				Assert.That(data[1].BoolN, Is.EqualTo(true));
+				Assert.That(data[1].Bool, Is.False);
+				Assert.That(data[1].BoolN, Is.True);
 			});
 		}
 
@@ -2039,7 +2039,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var query = 
+				var query =
 					(from p in db.Parent where p.ParentID == 1 select p).Concat(
 					(from p in db.Parent where p.ParentID == 2 select p));
 
@@ -2074,7 +2074,7 @@ namespace Tests.Linq
 						Entity = new ConcatEntity.ConcatSubEntity
 						{
 							Id = p.ParentID
-						}, 
+						},
 					})
 					.Concat(
 					from p in db.Parent
@@ -2084,7 +2084,7 @@ namespace Tests.Linq
 						Entity = new ConcatEntity.ConcatSubEntity
 						{
 							Id = p.ParentID
-						}, 
+						},
 					});
 
 				AssertQuery(query);

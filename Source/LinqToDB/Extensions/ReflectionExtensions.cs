@@ -812,7 +812,7 @@ namespace LinqToDB.Extensions
 			if (type.IsNullableType())
 				return null;
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			return RuntimeHelpers.GetUninitializedObject(type);
 #else
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);

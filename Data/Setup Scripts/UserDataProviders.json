@@ -13,7 +13,7 @@
 		]
 	},
 
-	"NET60" :
+	"NETBASE" :
 	{
 		"BasedOn"              : "User.Providers",
 		"DefaultConfiguration" : "SQLite.MS",
@@ -25,12 +25,14 @@
 
 	"NET80" :
 	{
-		"BasedOn" : "NET60"
+		"BasedOn" : "NETBASE"
 	},
 
-	"NET90": {
-		"BasedOn": "NET60"
+	"NET90":
+	{
+		"BasedOn" : "NETBASE"
 	},
+
 	"User.Providers":
 	{
 		"BasedOn"   : "LocalConnectionStrings",

@@ -9,6 +9,26 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 {
 	public class PostgreSQLMemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new MathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertTinyInt(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -232,20 +252,19 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 			}
 		}
 
-		protected override IMemberTranslator CreateSqlTypesTranslator()
+		class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
-			return new SqlTypesTranslation();
-		}
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// Cast({0} as VarChar(36))
 
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new DateFunctionsTranslator();
-		}
+				var factory        = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.VarChar).WithLength(36);
 
-		protected override IMemberTranslator CreateMathMemberTranslator()
-		{
-			return new MathMemberTranslator();
+				var cast  = factory.Cast(guidExpr, stringDataType);
+				
+				return cast;
+			}
 		}
-
 	}
 }

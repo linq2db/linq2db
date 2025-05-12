@@ -12,7 +12,7 @@ jobs:
 ##############################################################################################
 - job: create_baselines_branch
   pool:
-    vmImage: 'windows-2022'
+    vmImage: 'windows-2025'
   displayName: 'Create Test Baselines Branch'
   dependsOn: build_job
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.with_baselines }}, 'true'))
@@ -128,11 +128,11 @@ jobs:
 
 ###################
 #  Tests: Windows #
-#  Windows 2022   #
+#  Windows 2025   #
 ###################
 - job: test_windows_job
   pool:
-    vmImage: 'windows-2022'
+    vmImage: 'windows-2025'
 
   displayName: 'Tests: Windows'
   dependsOn: create_baselines_branch
@@ -154,7 +154,6 @@ jobs:
             psscript_local: ${{ test_config.psscript_win_local }}
             extra: ${{ test_config.extra }}
             netfx: ${{ test_config.enable_fw_netfx }}
-            net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             x86: ${{ test_config.x86 }}
@@ -189,7 +188,6 @@ jobs:
             script_global: ${{ test_config.script_linux_global }}
             script_local: ${{ test_config.script_linux_local }}
             extra: ${{ test_config.extra }}
-            net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             retry: ${{ test_config.retry }}
@@ -224,7 +222,6 @@ jobs:
             script_local: ${{ test_config.script_macos_local }}
             docker: ${{ test_config.install_docker_macos }}
             extra: ${{ test_config.extra }}
-            net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             retry: ${{ test_config.retry }}
@@ -243,7 +240,7 @@ jobs:
 ################################################################
 - job: create_baselines_pr
   pool:
-    vmImage: 'windows-2022'
+    vmImage: 'windows-2025'
   displayName: 'Create Test Baselines Pull Request'
   dependsOn:
   - create_baselines_branch # for variables flow

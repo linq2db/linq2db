@@ -69,7 +69,7 @@ namespace Tests.UserTests
 			Assert.Multiple(() =>
 			{
 				Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
-				Assert.That(connection.IsDisposed, Is.EqualTo(false));
+				Assert.That(connection.IsDisposed, Is.False);
 			});
 		}
 	}

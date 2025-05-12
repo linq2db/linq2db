@@ -418,7 +418,7 @@ namespace LinqToDB.SqlProvider
 					if (predicate is SqlSearchCondition sc && (sc.IsOr == element.IsOr || sc.Predicates.Count <= 1))
 					{
 						EnsureCopied(i);
-						newPredicates!.InsertRange(i, sc.Predicates);
+						newPredicates!.AddRange(sc.Predicates);
 						continue;
 					}
 
@@ -877,7 +877,25 @@ namespace LinqToDB.SqlProvider
 				return QueryHelper.CreateSqlValue(value, QueryHelper.GetDbDataType(element, _mappingSchema), element.Parameters);
 			}
 
+			newElement = OptimizeFunction(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
 			return element;
+		}
+
+		protected virtual IQueryElement OptimizeFunction(SqlFunction function)
+		{
+			if (function.Parameters.Length == 1 && function.Name is PseudoFunctions.TO_LOWER or PseudoFunctions.TO_UPPER)
+			{
+				if (function.Parameters[0] is SqlFunction { Parameters.Length: 1, Name: PseudoFunctions.TO_LOWER or PseudoFunctions.TO_UPPER } func)
+				{
+					return new SqlFunction(function.SystemType, function.Name, func.Parameters[0]);
+				}
+			}
+
+			return function;
 		}
 
 		protected override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
@@ -983,7 +1001,7 @@ namespace LinqToDB.SqlProvider
 				{
 					if (condition.TrueValue.IsNullValue())
 					{
-						var sc = new SqlSearchCondition();
+						var sc = new SqlSearchCondition(true);
 						sc.Add(condition.Condition);
 						sc.AddIsNull(condition.FalseValue);
 						return Visit(sc.MakeNot(predicate.IsNot));
@@ -991,11 +1009,16 @@ namespace LinqToDB.SqlProvider
 
 					if (condition.FalseValue.IsNullValue())
 					{
-						var sc = new SqlSearchCondition();
+						var sc = new SqlSearchCondition(true);
 						sc.Add(condition.Condition.MakeNot());
 						sc.AddIsNull(condition.TrueValue);
 						return Visit(sc.MakeNot(predicate.IsNot));
 					}
+				}
+				else if (unwrapped is SqlCastExpression cast)
+				{
+					var newIsNull = new SqlPredicate.IsNull(cast.Expression, predicate.IsNot);
+					return Visit(newIsNull);
 				}
 				else if (unwrapped is SqlFunction func)
 				{
@@ -1018,26 +1041,26 @@ namespace LinqToDB.SqlProvider
 
 						if (func.NullabilityType == ParametersNullabilityType.SameAsFirstParameter)
 						{
-							var newIsNull = new SqlPredicate.IsNull(func.Parameters[0], false);
-							return Visit(newIsNull.MakeNot(predicate.IsNot));
+							var newIsNull = new SqlPredicate.IsNull(func.Parameters[0], predicate.IsNot);
+							return Visit(newIsNull);
 						}
 
 						if (func.NullabilityType == ParametersNullabilityType.SameAsSecondParameter)
 						{
-							var newIsNull = new SqlPredicate.IsNull(func.Parameters[1], false);
-							return Visit(newIsNull.MakeNot(predicate.IsNot));
+							var newIsNull = new SqlPredicate.IsNull(func.Parameters[1], predicate.IsNot);
+							return Visit(newIsNull);
 						}
 
 						if (func.NullabilityType == ParametersNullabilityType.SameAsThirdParameter)
 						{
-							var newIsNull = new SqlPredicate.IsNull(func.Parameters[2], false);
-							return Visit(newIsNull.MakeNot(predicate.IsNot));
+							var newIsNull = new SqlPredicate.IsNull(func.Parameters[2], predicate.IsNot);
+							return Visit(newIsNull);
 						}
 
 						if (func.NullabilityType == ParametersNullabilityType.SameAsLastParameter)
 						{
-							var newIsNull = new SqlPredicate.IsNull(func.Parameters[^1], false);
-							return Visit(newIsNull.MakeNot(predicate.IsNot));
+							var newIsNull = new SqlPredicate.IsNull(func.Parameters[^1], predicate.IsNot);
+							return Visit(newIsNull);
 						}
 					}
 				}

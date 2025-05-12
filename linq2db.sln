@@ -203,52 +203,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "templates", "templates", "{
 		Build\Azure\pipelines\templates\test-workflow-windows.yml = Build\Azure\pipelines\templates\test-workflow-windows.yml
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net60", "net60", "{AA850554-8CD1-4231-A3E3-804B62FF3622}"
-	ProjectSection(SolutionItems) = preProject
-		Build\Azure\net60\access.ace.json = Build\Azure\net60\access.ace.json
-		Build\Azure\net60\access.ace.x64.json = Build\Azure\net60\access.ace.x64.json
-		Build\Azure\net60\access.mdb.json = Build\Azure\net60\access.mdb.json
-		Build\Azure\net60\clickhouse.client.json = Build\Azure\net60\clickhouse.client.json
-		Build\Azure\net60\clickhouse.mysql.json = Build\Azure\net60\clickhouse.mysql.json
-		Build\Azure\net60\clickhouse.octonica.json = Build\Azure\net60\clickhouse.octonica.json
-		Build\Azure\net60\db2.json = Build\Azure\net60\db2.json
-		Build\Azure\net60\firebird25.json = Build\Azure\net60\firebird25.json
-		Build\Azure\net60\firebird3.json = Build\Azure\net60\firebird3.json
-		Build\Azure\net60\firebird4.json = Build\Azure\net60\firebird4.json
-		Build\Azure\net60\firebird5.json = Build\Azure\net60\firebird5.json
-		Build\Azure\net60\hana2.json = Build\Azure\net60\hana2.json
-		Build\Azure\net60\informix.json = Build\Azure\net60\informix.json
-		Build\Azure\net60\mariadb11.json = Build\Azure\net60\mariadb11.json
-		Build\Azure\net60\mysql.json = Build\Azure\net60\mysql.json
-		Build\Azure\net60\mysql57.json = Build\Azure\net60\mysql57.json
-		Build\Azure\net60\oracle11.json = Build\Azure\net60\oracle11.json
-		Build\Azure\net60\oracle12.json = Build\Azure\net60\oracle12.json
-		Build\Azure\net60\oracle18.json = Build\Azure\net60\oracle18.json
-		Build\Azure\net60\oracle19.json = Build\Azure\net60\oracle19.json
-		Build\Azure\net60\oracle21.json = Build\Azure\net60\oracle21.json
-		Build\Azure\net60\oracle23.json = Build\Azure\net60\oracle23.json
-		Build\Azure\net60\pgsql13.json = Build\Azure\net60\pgsql13.json
-		Build\Azure\net60\pgsql14.json = Build\Azure\net60\pgsql14.json
-		Build\Azure\net60\pgsql15.json = Build\Azure\net60\pgsql15.json
-		Build\Azure\net60\pgsql16.json = Build\Azure\net60\pgsql16.json
-		Build\Azure\net60\pgsql17.json = Build\Azure\net60\pgsql17.json
-		Build\Azure\net60\sqlce.json = Build\Azure\net60\sqlce.json
-		Build\Azure\net60\sqlite.extras.json = Build\Azure\net60\sqlite.extras.json
-		Build\Azure\net60\sqlite.json = Build\Azure\net60\sqlite.json
-		Build\Azure\net60\sqlserver.2005.json = Build\Azure\net60\sqlserver.2005.json
-		Build\Azure\net60\sqlserver.2008.json = Build\Azure\net60\sqlserver.2008.json
-		Build\Azure\net60\sqlserver.2012.json = Build\Azure\net60\sqlserver.2012.json
-		Build\Azure\net60\sqlserver.2014.json = Build\Azure\net60\sqlserver.2014.json
-		Build\Azure\net60\sqlserver.2016.json = Build\Azure\net60\sqlserver.2016.json
-		Build\Azure\net60\sqlserver.2017.json = Build\Azure\net60\sqlserver.2017.json
-		Build\Azure\net60\sqlserver.2019.json = Build\Azure\net60\sqlserver.2019.json
-		Build\Azure\net60\sqlserver.2022.json = Build\Azure\net60\sqlserver.2022.json
-		Build\Azure\net60\sqlserver.2022.metrics.json = Build\Azure\net60\sqlserver.2022.metrics.json
-		Build\Azure\net60\sqlserver.extras.json = Build\Azure\net60\sqlserver.extras.json
-		Build\Azure\net60\sqlserver.fts.2019.json = Build\Azure\net60\sqlserver.fts.2019.json
-		Build\Azure\net60\sybase.json = Build\Azure\net60\sybase.json
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Wcf", "Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj", "{CBFFC259-5165-4828-B9AC-15DFB769BFEC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Grpc", "Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj", "{130786F1-BAD8-4390-8B4E-3FD2DEF50D56}"
@@ -417,6 +371,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net90", "net90", "{B39B3628
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.EntityFrameworkCore.STS", "Tests\EntityFrameworkCore\Tests.EntityFrameworkCore.STS.csproj", "{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Remote.HttpClient.Client", "Source\LinqToDB.Remote.HttpClient.Client\LinqToDB.Remote.HttpClient.Client.csproj", "{73D3A1B3-4795-4ED2-8644-4F873743E991}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Remote.HttpClient.Server", "Source\LinqToDB.Remote.HttpClient.Server\LinqToDB.Remote.HttpClient.Server.csproj", "{E23B04B8-79B6-43ED-B4ED-D87BDB1D89BE}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Scaffold", "Source\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj", "{F56E060D-9A5B-4685-B834-7BD2E33B7559}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Redist", "Redist", "{5C6DF933-23D8-4AC5-AE70-D460DBF40485}"
@@ -440,6 +398,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ISSUE_TEMPLATE", "ISSUE_TEM
 		.github\ISSUE_TEMPLATE\15_feture_request_linq2db.other.yml = .github\ISSUE_TEMPLATE\15_feture_request_linq2db.other.yml
 		.github\ISSUE_TEMPLATE\config.yml = .github\ISSUE_TEMPLATE\config.yml
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Remote.SignalR.Client", "Source\LinqToDB.Remote.SignalR.Client\LinqToDB.Remote.SignalR.Client.csproj", "{01E403E6-2E83-76BC-BD6A-620E20C193A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Remote.SignalR.Server", "Source\LinqToDB.Remote.SignalR.Server\LinqToDB.Remote.SignalR.Server.csproj", "{C25E8CFD-36A5-6B75-45D0-495EE1F7BD3E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -614,6 +576,22 @@ Global
 		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}.Release|Any CPU.Build.0 = Release|Any CPU
 		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}.Testing|Any CPU.ActiveCfg = Testing|Any CPU
 		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}.Testing|Any CPU.Build.0 = Testing|Any CPU
+		{73D3A1B3-4795-4ED2-8644-4F873743E991}.Azure|Any CPU.ActiveCfg = Azure|Any CPU
+		{73D3A1B3-4795-4ED2-8644-4F873743E991}.Azure|Any CPU.Build.0 = Azure|Any CPU
+		{73D3A1B3-4795-4ED2-8644-4F873743E991}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73D3A1B3-4795-4ED2-8644-4F873743E991}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73D3A1B3-4795-4ED2-8644-4F873743E991}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73D3A1B3-4795-4ED2-8644-4F873743E991}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73D3A1B3-4795-4ED2-8644-4F873743E991}.Testing|Any CPU.ActiveCfg = Testing|Any CPU
+		{73D3A1B3-4795-4ED2-8644-4F873743E991}.Testing|Any CPU.Build.0 = Testing|Any CPU
+		{E23B04B8-79B6-43ED-B4ED-D87BDB1D89BE}.Azure|Any CPU.ActiveCfg = Azure|Any CPU
+		{E23B04B8-79B6-43ED-B4ED-D87BDB1D89BE}.Azure|Any CPU.Build.0 = Azure|Any CPU
+		{E23B04B8-79B6-43ED-B4ED-D87BDB1D89BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E23B04B8-79B6-43ED-B4ED-D87BDB1D89BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E23B04B8-79B6-43ED-B4ED-D87BDB1D89BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E23B04B8-79B6-43ED-B4ED-D87BDB1D89BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E23B04B8-79B6-43ED-B4ED-D87BDB1D89BE}.Testing|Any CPU.ActiveCfg = Testing|Any CPU
+		{E23B04B8-79B6-43ED-B4ED-D87BDB1D89BE}.Testing|Any CPU.Build.0 = Testing|Any CPU
 		{F56E060D-9A5B-4685-B834-7BD2E33B7559}.Azure|Any CPU.ActiveCfg = Azure|Any CPU
 		{F56E060D-9A5B-4685-B834-7BD2E33B7559}.Azure|Any CPU.Build.0 = Azure|Any CPU
 		{F56E060D-9A5B-4685-B834-7BD2E33B7559}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -629,6 +607,22 @@ Global
 		{CC51D26C-A57D-4572-A5B9-4D115F47EA76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC51D26C-A57D-4572-A5B9-4D115F47EA76}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CC51D26C-A57D-4572-A5B9-4D115F47EA76}.Testing|Any CPU.ActiveCfg = Testing|Any CPU
+		{01E403E6-2E83-76BC-BD6A-620E20C193A0}.Azure|Any CPU.ActiveCfg = Azure|Any CPU
+		{01E403E6-2E83-76BC-BD6A-620E20C193A0}.Azure|Any CPU.Build.0 = Azure|Any CPU
+		{01E403E6-2E83-76BC-BD6A-620E20C193A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01E403E6-2E83-76BC-BD6A-620E20C193A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01E403E6-2E83-76BC-BD6A-620E20C193A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01E403E6-2E83-76BC-BD6A-620E20C193A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01E403E6-2E83-76BC-BD6A-620E20C193A0}.Testing|Any CPU.ActiveCfg = Testing|Any CPU
+		{01E403E6-2E83-76BC-BD6A-620E20C193A0}.Testing|Any CPU.Build.0 = Testing|Any CPU
+		{C25E8CFD-36A5-6B75-45D0-495EE1F7BD3E}.Azure|Any CPU.ActiveCfg = Azure|Any CPU
+		{C25E8CFD-36A5-6B75-45D0-495EE1F7BD3E}.Azure|Any CPU.Build.0 = Azure|Any CPU
+		{C25E8CFD-36A5-6B75-45D0-495EE1F7BD3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C25E8CFD-36A5-6B75-45D0-495EE1F7BD3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C25E8CFD-36A5-6B75-45D0-495EE1F7BD3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C25E8CFD-36A5-6B75-45D0-495EE1F7BD3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C25E8CFD-36A5-6B75-45D0-495EE1F7BD3E}.Testing|Any CPU.ActiveCfg = Testing|Any CPU
+		{C25E8CFD-36A5-6B75-45D0-495EE1F7BD3E}.Testing|Any CPU.Build.0 = Testing|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -651,7 +645,6 @@ Global
 		{49A37E5A-A8A3-4C89-B11C-D700A9F52BAA} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{C937AC8E-2714-4850-A1EA-1710D980DF0B} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{DAD073A0-C4D2-4C92-AB6D-F8162DB2D5D3} = {C937AC8E-2714-4850-A1EA-1710D980DF0B}
-		{AA850554-8CD1-4231-A3E3-804B62FF3622} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{CBFFC259-5165-4828-B9AC-15DFB769BFEC} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{130786F1-BAD8-4390-8B4E-3FD2DEF50D56} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA} = {AF93451E-198C-4A94-8EB4-C330D886E102}
@@ -666,10 +659,14 @@ Global
 		{1F06A522-FE25-4E95-8834-0293A55BD2DA} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{B39B3628-49C1-4DCE-BB1B-2CC270FE7C52} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
+		{73D3A1B3-4795-4ED2-8644-4F873743E991} = {AF93451E-198C-4A94-8EB4-C330D886E102}
+		{E23B04B8-79B6-43ED-B4ED-D87BDB1D89BE} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{F56E060D-9A5B-4685-B834-7BD2E33B7559} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{5C6DF933-23D8-4AC5-AE70-D460DBF40485} = {885042E3-18EA-4927-B1CF-5E0E3DBD1C00}
 		{CC51D26C-A57D-4572-A5B9-4D115F47EA76} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {ED41F9D3-8E93-4D80-A45F-21A90428253F}
+		{01E403E6-2E83-76BC-BD6A-620E20C193A0} = {AF93451E-198C-4A94-8EB4-C330D886E102}
+		{C25E8CFD-36A5-6B75-45D0-495EE1F7BD3E} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}

@@ -495,11 +495,11 @@ namespace Tests.SchemaProvider
 					Assert.That(view.SchemaName, Is.EqualTo("public"));
 					Assert.That(view.TableName, Is.EqualTo("Issue2023"));
 					Assert.That(view.Description, Is.EqualTo("This is the Issue2023 matview"));
-					Assert.That(view.IsDefaultSchema, Is.EqualTo(true));
-					Assert.That(view.IsView, Is.EqualTo(true));
-					Assert.That(view.IsProcedureResult, Is.EqualTo(false));
+					Assert.That(view.IsDefaultSchema, Is.True);
+					Assert.That(view.IsView, Is.True);
+					Assert.That(view.IsProcedureResult, Is.False);
 					Assert.That(view.TypeName, Is.EqualTo("Issue2023"));
-					Assert.That(view.IsProviderSpecific, Is.EqualTo(false));
+					Assert.That(view.IsProviderSpecific, Is.False);
 					Assert.That(view.ForeignKeys, Is.Empty);
 					Assert.That(view.Columns, Has.Count.EqualTo(5));
 				});
@@ -508,19 +508,19 @@ namespace Tests.SchemaProvider
 				{
 					Assert.That(view.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 					Assert.That(view.Columns[0].ColumnType, Is.EqualTo("integer"));
-					Assert.That(view.Columns[0].IsNullable, Is.EqualTo(true));
-					Assert.That(view.Columns[0].IsIdentity, Is.EqualTo(false));
-					Assert.That(view.Columns[0].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(view.Columns[0].IsNullable, Is.True);
+					Assert.That(view.Columns[0].IsIdentity, Is.False);
+					Assert.That(view.Columns[0].IsPrimaryKey, Is.False);
 					Assert.That(view.Columns[0].PrimaryKeyOrder, Is.EqualTo(-1));
 					Assert.That(view.Columns[0].Description, Is.EqualTo("This is the Issue2023.PersonID column"));
 					Assert.That(view.Columns[0].MemberName, Is.EqualTo("PersonID"));
 					Assert.That(view.Columns[0].MemberType, Is.EqualTo("int?"));
-					Assert.That(view.Columns[0].ProviderSpecificType, Is.EqualTo(null));
+					Assert.That(view.Columns[0].ProviderSpecificType, Is.Null);
 					Assert.That(view.Columns[0].SystemType, Is.EqualTo(typeof(int)));
 					Assert.That(view.Columns[0].DataType, Is.EqualTo(DataType.Int32));
-					Assert.That(view.Columns[0].SkipOnInsert, Is.EqualTo(true));
-					Assert.That(view.Columns[0].SkipOnUpdate, Is.EqualTo(true));
-					Assert.That(view.Columns[0].Length, Is.EqualTo(null));
+					Assert.That(view.Columns[0].SkipOnInsert, Is.True);
+					Assert.That(view.Columns[0].SkipOnUpdate, Is.True);
+					Assert.That(view.Columns[0].Length, Is.Null);
 				});
 				Assert.Multiple(() =>
 				{
@@ -531,90 +531,90 @@ namespace Tests.SchemaProvider
 
 					Assert.That(view.Columns[1].ColumnName, Is.EqualTo("FirstName"));
 					Assert.That(view.Columns[1].ColumnType, Is.EqualTo("character varying(50)"));
-					Assert.That(view.Columns[1].IsNullable, Is.EqualTo(true));
-					Assert.That(view.Columns[1].IsIdentity, Is.EqualTo(false));
-					Assert.That(view.Columns[1].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(view.Columns[1].IsNullable, Is.True);
+					Assert.That(view.Columns[1].IsIdentity, Is.False);
+					Assert.That(view.Columns[1].IsPrimaryKey, Is.False);
 					Assert.That(view.Columns[1].PrimaryKeyOrder, Is.EqualTo(-1));
 					Assert.That(view.Columns[1].Description, Is.Null);
 					Assert.That(view.Columns[1].MemberName, Is.EqualTo("FirstName"));
 					Assert.That(view.Columns[1].MemberType, Is.EqualTo("string"));
-					Assert.That(view.Columns[1].ProviderSpecificType, Is.EqualTo(null));
+					Assert.That(view.Columns[1].ProviderSpecificType, Is.Null);
 					Assert.That(view.Columns[1].SystemType, Is.EqualTo(typeof(string)));
 					Assert.That(view.Columns[1].DataType, Is.EqualTo(DataType.NVarChar));
-					Assert.That(view.Columns[1].SkipOnInsert, Is.EqualTo(true));
-					Assert.That(view.Columns[1].SkipOnUpdate, Is.EqualTo(true));
+					Assert.That(view.Columns[1].SkipOnInsert, Is.True);
+					Assert.That(view.Columns[1].SkipOnUpdate, Is.True);
 					Assert.That(view.Columns[1].Length, Is.EqualTo(50));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(view.Columns[1].Precision, Is.EqualTo(null));
-					Assert.That(view.Columns[1].Scale, Is.EqualTo(null));
+					Assert.That(view.Columns[1].Precision, Is.Null);
+					Assert.That(view.Columns[1].Scale, Is.Null);
 					Assert.That(view.Columns[1].Table, Is.EqualTo(view));
 
 					Assert.That(view.Columns[2].ColumnName, Is.EqualTo("LastName"));
 					Assert.That(view.Columns[2].ColumnType, Is.EqualTo("character varying(50)"));
-					Assert.That(view.Columns[2].IsNullable, Is.EqualTo(true));
-					Assert.That(view.Columns[2].IsIdentity, Is.EqualTo(false));
-					Assert.That(view.Columns[2].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(view.Columns[2].IsNullable, Is.True);
+					Assert.That(view.Columns[2].IsIdentity, Is.False);
+					Assert.That(view.Columns[2].IsPrimaryKey, Is.False);
 					Assert.That(view.Columns[2].PrimaryKeyOrder, Is.EqualTo(-1));
 					Assert.That(view.Columns[2].Description, Is.Null);
 					Assert.That(view.Columns[2].MemberName, Is.EqualTo("LastName"));
 					Assert.That(view.Columns[2].MemberType, Is.EqualTo("string"));
-					Assert.That(view.Columns[2].ProviderSpecificType, Is.EqualTo(null));
+					Assert.That(view.Columns[2].ProviderSpecificType, Is.Null);
 					Assert.That(view.Columns[2].SystemType, Is.EqualTo(typeof(string)));
 					Assert.That(view.Columns[2].DataType, Is.EqualTo(DataType.NVarChar));
-					Assert.That(view.Columns[2].SkipOnInsert, Is.EqualTo(true));
-					Assert.That(view.Columns[2].SkipOnUpdate, Is.EqualTo(true));
+					Assert.That(view.Columns[2].SkipOnInsert, Is.True);
+					Assert.That(view.Columns[2].SkipOnUpdate, Is.True);
 					Assert.That(view.Columns[2].Length, Is.EqualTo(50));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(view.Columns[2].Precision, Is.EqualTo(null));
-					Assert.That(view.Columns[2].Scale, Is.EqualTo(null));
+					Assert.That(view.Columns[2].Precision, Is.Null);
+					Assert.That(view.Columns[2].Scale, Is.Null);
 					Assert.That(view.Columns[2].Table, Is.EqualTo(view));
 
 					Assert.That(view.Columns[3].ColumnName, Is.EqualTo("MiddleName"));
 					Assert.That(view.Columns[3].ColumnType, Is.EqualTo("character varying(50)"));
-					Assert.That(view.Columns[3].IsNullable, Is.EqualTo(true));
-					Assert.That(view.Columns[3].IsIdentity, Is.EqualTo(false));
-					Assert.That(view.Columns[3].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(view.Columns[3].IsNullable, Is.True);
+					Assert.That(view.Columns[3].IsIdentity, Is.False);
+					Assert.That(view.Columns[3].IsPrimaryKey, Is.False);
 					Assert.That(view.Columns[3].PrimaryKeyOrder, Is.EqualTo(-1));
 					Assert.That(view.Columns[3].Description, Is.Null);
 					Assert.That(view.Columns[3].MemberName, Is.EqualTo("MiddleName"));
 					Assert.That(view.Columns[3].MemberType, Is.EqualTo("string"));
-					Assert.That(view.Columns[3].ProviderSpecificType, Is.EqualTo(null));
+					Assert.That(view.Columns[3].ProviderSpecificType, Is.Null);
 					Assert.That(view.Columns[3].SystemType, Is.EqualTo(typeof(string)));
 					Assert.That(view.Columns[3].DataType, Is.EqualTo(DataType.NVarChar));
-					Assert.That(view.Columns[3].SkipOnInsert, Is.EqualTo(true));
-					Assert.That(view.Columns[3].SkipOnUpdate, Is.EqualTo(true));
+					Assert.That(view.Columns[3].SkipOnInsert, Is.True);
+					Assert.That(view.Columns[3].SkipOnUpdate, Is.True);
 					Assert.That(view.Columns[3].Length, Is.EqualTo(50));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(view.Columns[3].Precision, Is.EqualTo(null));
-					Assert.That(view.Columns[3].Scale, Is.EqualTo(null));
+					Assert.That(view.Columns[3].Precision, Is.Null);
+					Assert.That(view.Columns[3].Scale, Is.Null);
 					Assert.That(view.Columns[3].Table, Is.EqualTo(view));
 
 					Assert.That(view.Columns[4].ColumnName, Is.EqualTo("Gender"));
 					Assert.That(view.Columns[4].ColumnType, Is.EqualTo("character(1)"));
-					Assert.That(view.Columns[4].IsNullable, Is.EqualTo(true));
-					Assert.That(view.Columns[4].IsIdentity, Is.EqualTo(false));
-					Assert.That(view.Columns[4].IsPrimaryKey, Is.EqualTo(false));
+					Assert.That(view.Columns[4].IsNullable, Is.True);
+					Assert.That(view.Columns[4].IsIdentity, Is.False);
+					Assert.That(view.Columns[4].IsPrimaryKey, Is.False);
 					Assert.That(view.Columns[4].PrimaryKeyOrder, Is.EqualTo(-1));
 					Assert.That(view.Columns[4].Description, Is.Null);
 					Assert.That(view.Columns[4].MemberName, Is.EqualTo("Gender"));
 					Assert.That(view.Columns[4].MemberType, Is.EqualTo("char?"));
-					Assert.That(view.Columns[4].ProviderSpecificType, Is.EqualTo(null));
+					Assert.That(view.Columns[4].ProviderSpecificType, Is.Null);
 					Assert.That(view.Columns[4].SystemType, Is.EqualTo(typeof(char)));
 					Assert.That(view.Columns[4].DataType, Is.EqualTo(DataType.NChar));
-					Assert.That(view.Columns[4].SkipOnInsert, Is.EqualTo(true));
-					Assert.That(view.Columns[4].SkipOnUpdate, Is.EqualTo(true));
+					Assert.That(view.Columns[4].SkipOnInsert, Is.True);
+					Assert.That(view.Columns[4].SkipOnUpdate, Is.True);
 					Assert.That(view.Columns[4].Length, Is.EqualTo(1));
 				});
 				Assert.Multiple(() =>
 				{
-					Assert.That(view.Columns[4].Precision, Is.EqualTo(null));
-					Assert.That(view.Columns[4].Scale, Is.EqualTo(null));
+					Assert.That(view.Columns[4].Precision, Is.Null);
+					Assert.That(view.Columns[4].Scale, Is.Null);
 					Assert.That(view.Columns[4].Table, Is.EqualTo(view));
 				});
 			}

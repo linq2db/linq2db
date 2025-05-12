@@ -2820,7 +2820,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue4098WithCte([CteTests.CteContextSource] string context)
+		public void Issue4098WithCte([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 

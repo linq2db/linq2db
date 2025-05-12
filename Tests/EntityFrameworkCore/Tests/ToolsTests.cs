@@ -242,7 +242,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(customerPk, Is.Not.Null);
 			Assert.Multiple(() =>
 			{
-				Assert.That(customerPk!.IsPrimaryKey, Is.EqualTo(true));
+				Assert.That(customerPk!.IsPrimaryKey, Is.True);
 				Assert.That(customerPk.PrimaryKeyOrder, Is.EqualTo(0));
 			});
 		}

@@ -39,7 +39,7 @@ namespace LinqToDB.Expressions
 			{
 				unchecked
 				{
-					return ((Type != null ? Type.GetHashCode() : 0) * 397) ^ MemberInfo.GetHashCode();
+					return ((Type != null ? Type.GetHashCode() : 0) * 397) ^ (MemberInfo?.GetHashCode() ?? 0);
 				}
 			}
 		}
