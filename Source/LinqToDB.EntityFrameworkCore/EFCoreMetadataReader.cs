@@ -48,7 +48,6 @@ namespace LinqToDB.EntityFrameworkCore
 
 		private readonly string                                                       _objectId;
 		private readonly IModel?                                                      _model;
-		private readonly IInfrastructure<IServiceProvider>?                           _accessor;
 		private readonly RelationalSqlTranslatingExpressionVisitorDependencies?       _dependencies;
 		private readonly IRelationalTypeMappingSource?                                _mappingSource;
 #if !EF31
@@ -68,7 +67,6 @@ namespace LinqToDB.EntityFrameworkCore
 		public EFCoreMetadataReader(IModel? model, IInfrastructure<IServiceProvider>? accessor)
 		{
 			_model    = model;
-			_accessor = accessor;
 
 			if (accessor != null)
 			{
