@@ -1,8 +1,8 @@
 ﻿<#@ template debug="true" hostspecific="true" language="C#" #>
 <#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true" #>
 <#@ output extension=".generated.cs" #>
-<#@ include file="..\..\..\..\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"   once="true" #>
-<#@ include file="..\..\..\..\LinqToDB.Templates\PluralizationService.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.SqlServer.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"        once="true" #>
 <#@ assembly name="System.Xml" #>
 <#@ assembly name="System.Xml.Linq" #>
 <#@ assembly name="$(ArtifactsPath)\bin\LinqToDB\Debug\net462\linq2db.dll" #>
@@ -45,6 +45,7 @@
 			new { TablePref = "fulltext_",          TypePref = "Fulltext"         },
 			new { TablePref = "resource_governor_", TypePref = "ResourceGovernor" },
 		})
+
 		if (table.TableName.StartsWith(pref.TablePref))
 		{
 			table.DataContextPropertyName = table.DataContextPropertyName.Replace(pref.TypePref, "");
@@ -55,6 +56,21 @@
 		{
 			table.DataContextPropertyName = ToUpper(0, table.DataContextPropertyName.Substring(3, table.DataContextPropertyName.Length - 3));
 			table.TypeName                = ToUpper(0, table.TypeName.               Substring(3, table.TypeName.               Length - 3));
+		}
+
+		if (table.TableName is "http_endpoints" or "soap_endpoints" or "tcp_endpoints")
+		{
+			table.Interfaces.Add("Endpoint");
+		}
+
+		if (table.TableName is "tables")
+		{
+			table.Interfaces.Add("ObjectSchema.Object");
+		}
+
+		if (table.TableName is "table_types")
+		{
+			table.Interfaces.Add("ScalarTypesSchema.Type");
 		}
 
 		foreach (var suff in new[]
@@ -72,7 +88,6 @@
 			"Item",        "Items",
 			"Attachment",  "Attachments",
 			"StopWord",    "StopWords",
-
 		})
 		if (table.DataContextPropertyName.EndsWith(suff, StringComparison.OrdinalIgnoreCase))
 		{
@@ -89,6 +104,7 @@
 			"FullText",
 			"StopWord",
 		})
+
 		if (table.TypeName.StartsWith(pref, StringComparison.OrdinalIgnoreCase))
 		{
 			table.TypeName                = pref + table.TypeName.               Substring(pref.Length);
@@ -171,6 +187,7 @@
 		.Replace("<segment_id>",                         "&lt;segment_id&gt;")
 		.Replace("<value>",                              "&lt;value&gt;")
 		.Replace("<database>",                           "&lt;database&gt;")
+		.Replace("<view_name>",                          "&lt;view_name&gt;")
 		.Replace("<interval>",                           "&lt;interval&gt;")
 		.Replace("<size>",                               "&lt;size&gt;")
 		.Replace("<version><length>[<key>",              "&lt;version&gt;&lt;length&gt;[&lt;key&gt;")
@@ -180,6 +197,8 @@
 		.Replace("= <n>)",                               "= &lt;n&gt;")
 		.Replace("<c&gt;0.0.0.0</c>",                    "<c>0.0.0.0</c>")
 		.Replace(", one of:< LOW ",                      ", one of: LOW ")
+		.Replace("<c&gt;0</c>",                          "<c>0</c>")
+		.Replace("<major>.<minor>.<build>.<revision>",   "&lt;major&gt;.&lt;minor&gt;.&lt;build&gt;.&lt;revision&gt;")
 		;
 #>
 <#+
@@ -286,11 +305,7 @@ DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchema
 				from c in gs
 				let cn = doc?.Columns.ContainsKey(c.column_name) == true ? doc?.Columns[c.column_name] : null
 				orderby c.column_id
-				select new ColumnSchema
-				{
-					ColumnName           = c.column_name,
-					Description          = cn?.Content,
-					ColumnType           = cn?.Type ?? c.type_name switch
+				let columnType = cn?.Type ?? c.type_name switch
 					{
 						"int"              => "int",
 						"tinyint"          => "tinyint",
@@ -315,10 +330,15 @@ DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchema
 						"binary"           => $"binary({(   c.max_length == null ? "max" : c.max_length)})",
 						"image"            => $"image({(    c.max_length == null ? "max" : c.max_length)})",
 						var t              => throw new NotImplementedException($"Not implemented type {t}")
-					},
-					IsNullable           = c.is_nullable,
-					MemberName           = c.column_name,
-					MemberType           = c.type_name switch
+					}
+				select new ColumnSchema
+				{
+					ColumnName  = c.column_name,
+					Description = cn?.Content + $"\n<para>{c.column_name} {(c.is_nullable ? "NULL" : "NOT NULL")} {columnType}</para>",
+					ColumnType  = columnType,
+					IsNullable  = c.is_nullable,
+					MemberName  = c.column_name,
+					MemberType  = c.type_name switch
 					{
 						"int"              => "int",
 						"tinyint"          => "byte",
@@ -344,11 +364,11 @@ DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchema
 						"image"            => "byte[]",
 						var t              => throw new NotImplementedException($"Not implemented type {t}")
 					} + (c.is_nullable ? "?" : ""),
-					SystemType           = typeof(int),
-					DataType             = DataType.Char,
-					Length               = c.max_length / 2,
-					Precision            = c.precision,
-					Scale                = c.scale,
+					SystemType  = typeof(int),
+					DataType    = DataType.Char,
+					Length      = c.max_length / 2,
+					Precision   = c.precision,
+					Scale       = c.scale,
 				}
 			).ToList(),
 			ForeignKeys = new(),
@@ -379,14 +399,15 @@ DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchema
 			(
 				from cn in c.Columns.Values
 				let c = table?.Columns.FirstOrDefault(cc => cc.ColumnName.ToLower() == cn.Name.ToLower())
+				let columnType = (cn.Type.Length > 0 ? cn.Type : c?.ColumnType) ?? "object"
 				select new ColumnSchema
 				{
-					ColumnName           = c?.ColumnName ?? cn.Name,
-					Description          = cn.Content,// + (c != null ? "<br/>+" : null),
-					ColumnType           = (cn.Type.Length > 0 ? cn.Type : c?.ColumnType) ?? "object",
-					IsNullable           = c?.IsNullable == true,
-					MemberName           = cn.Name,
-					MemberType           = ((cn.Type.Length > 0 ? cn.Type : c?.ColumnType) ?? "").Split('(')[0] switch
+					ColumnName  = c?.ColumnName ?? cn.Name,
+					Description = $"<para><strong>{c?.ColumnName ?? cn.Name}</strong> {(c?.IsNullable == true ? "NULL" : "NOT NULL")} <strong>{columnType}</strong></para>\n{cn.Content}",
+					ColumnType  = columnType,
+					IsNullable  = c?.IsNullable == true,
+					MemberName  = cn.Name,
+					MemberType  = ((cn.Type.Length > 0 ? cn.Type : c?.ColumnType) ?? "").Split('(')[0] switch
 					{
 						"int"              => "int",
 						"tinyint"          => "byte",
@@ -412,16 +433,24 @@ DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchema
 						"image"            => "byte[]",
 						var t              => "object" //throw new NotImplementedException($"Not implemented type {t}")
 					} + (c?.IsNullable == true ? "?" : ""),
-					SystemType           = typeof(int),
-					DataType             = DataType.Char,
-					Length               = c?.Length / 2,
-					Precision            = c?.Precision,
-					Scale                = c?.Scale,
+					SystemType  = typeof(int),
+					DataType    = DataType.Char,
+					Length      = c?.Length / 2,
+					Precision   = c?.Precision,
+					Scale       = c?.Scale,
 				}
 			).ToList(),
 			ForeignKeys = new(),
 		}
 	).ToList();
+
+	foreach (var t in tables)
+	{
+		if (t.TableName is "http_endpoints" or "soap_endpoints" or "tcp_endpoints" or "tables" or "table_types")
+		{
+			t.Columns = t.Columns.Where(c => !c.ColumnName.Contains("inherited columns>")).ToList();
+		}
+	}
 
 	SetForeignKeys("sys.all_objects",    "object_id", "AllObject",    t => t.TableName!.StartsWith("all_"),    "all_views");
 	SetForeignKeys("sys.system_objects", "object_id", "SystemObject", t => t.TableName!.StartsWith("system_"), "system_views");
@@ -487,7 +516,7 @@ DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchema
 		}
 	}
 
-	var dbc = (System.Data.Common.DbConnection)dataConnection.Connection;
+	var dbc = (System.Data.Common.DbConnection)dataConnection.OpenDbConnection();
 
 	return new()
 	{
