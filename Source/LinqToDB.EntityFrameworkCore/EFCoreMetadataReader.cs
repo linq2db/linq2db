@@ -46,11 +46,11 @@ namespace LinqToDB.EntityFrameworkCore
 		private const string PgBinaryExpressionName = "PgBinaryExpression";
 #endif
 
-		private readonly string                                                 _objectId;
-		private readonly IModel?                                                _model;
-		private readonly RelationalSqlTranslatingExpressionVisitorDependencies? _dependencies;
-		private readonly IRelationalTypeMappingSource?                          _mappingSource;
-		private readonly IValueConverterSelector?                               _valueConverterSelector;
+		private readonly string                                                       _objectId;
+		private readonly IModel?                                                      _model;
+		private readonly RelationalSqlTranslatingExpressionVisitorDependencies?       _dependencies;
+		private readonly IRelationalTypeMappingSource?                                _mappingSource;
+		private readonly IValueConverterSelector?                                     _valueConverterSelector;
 #if !EF31
 		private readonly IRelationalAnnotationProvider?                               _annotationProvider;
 #else
