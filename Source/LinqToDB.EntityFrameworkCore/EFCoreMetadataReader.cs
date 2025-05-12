@@ -21,6 +21,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
@@ -60,7 +61,8 @@ namespace LinqToDB.EntityFrameworkCore
 		private readonly IDiagnosticsLogger<DbLoggerCategory.Query>?                  _logger;
 #endif
 #if !EF31
-		private readonly DatabaseDependencies?                                        _databaseDependencies;
+		private readonly DatabaseDependencies?    _databaseDependencies;
+		private readonly IValueConverterSelector? _valueConverterSelector;
 #endif
 
 		public EFCoreMetadataReader(IModel? model, IInfrastructure<IServiceProvider>? accessor)
@@ -75,9 +77,10 @@ namespace LinqToDB.EntityFrameworkCore
 #if EF31
 				_annotationProvider   = accessor.GetService<IMigrationsAnnotationProvider>();
 #else
-				_annotationProvider   = accessor.GetService<IRelationalAnnotationProvider>();
-				_logger               = accessor.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();
-				_databaseDependencies = accessor.GetService<DatabaseDependencies>();
+				_annotationProvider     = accessor.GetService<IRelationalAnnotationProvider>();
+				_logger                 = accessor.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();
+				_databaseDependencies   = accessor.GetService<DatabaseDependencies>();
+				_valueConverterSelector = accessor.GetService<IValueConverterSelector>();
 #endif
 			}
 
@@ -347,7 +350,7 @@ namespace LinqToDB.EntityFrameworkCore
 						}
 						else
 						{
-							var ms = _model != null ? LinqToDBForEFTools.GetMappingSchema(_model, _accessor, null) : MappingSchema.Default;
+							var ms = _model != null ? LinqToDBForEFTools.GetMappingSchema(_model, _mappingSource, _valueConverterSelector, null) : MappingSchema.Default;
 							dataType = ms.GetDataType(typeMapping.ClrType).Type.DataType;
 						}
 					}

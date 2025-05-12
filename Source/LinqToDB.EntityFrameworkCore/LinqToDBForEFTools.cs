@@ -226,6 +226,23 @@ namespace LinqToDB.EntityFrameworkCore
 			
 			return Implementation.GetMappingSchema(model, mappingSource, GetMetadataReader(model, accessor), converterSelector, dataOptions);
 		}
+		
+		/// <summary>
+		/// Creates mapping schema using provided EF Core data model.
+		/// </summary>
+		/// <param name="model">EF Core data model.</param>
+		/// <param name="mappingSource">EF Core mapping source.</param>
+		/// <param name="converterSelector">EF Core converter selector.</param>
+		/// <param name="dataOptions">Linq To DB context options.</param>
+		/// <returns>Mapping schema for provided EF Core model.</returns>
+		public static MappingSchema GetMappingSchema(
+			IModel                        model,
+			IRelationalTypeMappingSource? mappingSource,
+			IValueConverterSelector?      converterSelector,
+			DataOptions?                  dataOptions)
+		{
+			return Implementation.GetMappingSchema(model, mappingSource, GetMetadataReader(model, null), converterSelector, dataOptions);
+		}
 
 		/// <summary>
 		/// Transforms EF Core expression tree to LINQ To DB expression.
