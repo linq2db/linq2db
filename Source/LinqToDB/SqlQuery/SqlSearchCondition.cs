@@ -1,28 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+
+using LinqToDB.Common.Internal;
+using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
 	public sealed class SqlSearchCondition : SqlExpressionBase, ISqlPredicate
 	{
-		public SqlSearchCondition(bool isOr = false)
+		public SqlSearchCondition(bool isOr = false, bool? canBeUnknown = null)
 		{
 			IsOr = isOr;
+			CanReturnUnknown = canBeUnknown;
 		}
 
-		public SqlSearchCondition(bool isOr, ISqlPredicate predicate) : this(isOr)
+		public SqlSearchCondition(bool isOr, bool? canBeUnknown, ISqlPredicate predicate) : this(isOr, canBeUnknown)
 		{
 			Predicates.Add(predicate);
 		}
 
-		public SqlSearchCondition(bool isOr, ISqlPredicate predicate1, ISqlPredicate predicate2) : this(isOr)
+		public SqlSearchCondition(bool isOr, bool? canBeUnknown, ISqlPredicate predicate1, ISqlPredicate predicate2) : this(isOr, canBeUnknown)
 		{
 			Predicates.Add(predicate1);
 			Predicates.Add(predicate2);
 		}
 
-		public SqlSearchCondition(bool isOr, IEnumerable<ISqlPredicate> predicates) : this(isOr)
+		public SqlSearchCondition(bool isOr, bool? canBeUnknown, IEnumerable<ISqlPredicate> predicates) : this(isOr, canBeUnknown)
 		{
 			Predicates.AddRange(predicates);
 		}
@@ -43,6 +48,8 @@ namespace LinqToDB.SqlQuery
 
 		public bool IsOr  { get; set; }
 		public bool IsAnd { get => !IsOr; set => IsOr = !value; }
+
+		public bool? CanReturnUnknown { get; }
 
 		#region Overrides
 
@@ -106,6 +113,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanInvert(NullabilityContext nullability)
 		{
+			// TODO: review logic of this method
 			var maxCount = Math.Max(Predicates.Count / 2, 2);
 			if (Predicates.Count > maxCount)
 				return false;
@@ -118,10 +126,11 @@ namespace LinqToDB.SqlQuery
 				if (p is not SqlSearchCondition)
 					return false;
 
-				if (p is SqlPredicate.ExprExpr exprExpr && (exprExpr.WithNull != null || exprExpr.WithNull == true))
-				{
-					return false;
-				}
+				// commented, as check disabled by previous condition
+				//if (p is SqlPredicate.ExprExpr exprExpr && (exprExpr.UnknownAsValue != null || exprExpr.UnknownAsValue == true))
+				//{
+				//	return false;
+				//}
 
 				return p.CanInvert(nullability);
 			});
@@ -136,7 +145,7 @@ namespace LinqToDB.SqlQuery
 
 			var newPredicates = Predicates.Select(p => new SqlPredicate.Not(p));
 
-			return new SqlSearchCondition(!IsOr, newPredicates);
+			return new SqlSearchCondition(!IsOr, CanReturnUnknown, newPredicates);
 		}
 
 		public bool IsTrue()
@@ -169,6 +178,17 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanBeUnknown(NullabilityContext nullability)
 		{
+			if (CanReturnUnknown != null)
+				return CanReturnUnknown.Value;
+
+			using var visitor = _notNullVisitorPool.Allocate();
+			visitor.Value.Collect(this);
+
+			if (visitor.Value.NotNullOverrides?.Count > 0)
+			{
+				nullability = new NullabilityContext(nullability, visitor.Value.NotNullOverrides);
+			}
+
 			return Predicates.Any(predicate => predicate.CanBeUnknown(nullability));
 		}
 
@@ -198,6 +218,59 @@ namespace LinqToDB.SqlQuery
 		public void Deconstruct(out List<ISqlPredicate> predicates)
 		{
 			predicates = Predicates;
+		}
+
+		static readonly ObjectPool<CollectNotNullExpressionsVisitor> _notNullVisitorPool = new(() => new CollectNotNullExpressionsVisitor(), v => v.Cleanup(), 100);
+
+		// AND: when AND contains "expr is not null" predicate, this EXPR will not contribute NULL to result
+		// OR: when OR contains "expr is null" predicate, this EXPR will not contribute NULL to result
+		sealed class CollectNotNullExpressionsVisitor() : SqlQueryVisitor(VisitMode.ReadOnly, null)
+		{
+			private bool _isOr;
+			public Dictionary<ISqlExpression, bool>? NotNullOverrides;
+
+			public override void Cleanup()
+			{
+				NotNullOverrides?.Clear();
+
+				base.Cleanup();
+			}
+
+			public void Collect(SqlSearchCondition search)
+			{
+				_isOr = search.IsOr;
+				Visit(search);
+			}
+
+			[return: NotNullIfNotNull(nameof(element))]
+			public override IQueryElement? Visit(IQueryElement? element)
+			{
+				if (element is not ISqlPredicate)
+					return element;
+
+				return base.Visit(element);
+			}
+
+			protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+			{
+				if (predicate.IsNot != _isOr)
+#if NET8_0_OR_GREATER
+					(NotNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).TryAdd(predicate.Expr1, false);
+#else
+					if (NotNullOverrides?.ContainsKey(predicate.Expr1) != true)
+						(NotNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).Add(predicate.Expr1, false);
+#endif
+
+				return predicate;
+			}
+
+			protected override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
+			{
+				if (element.IsOr != _isOr)
+					return element;
+
+				return base.VisitSqlSearchCondition(element);
+			}
 		}
 	}
 }

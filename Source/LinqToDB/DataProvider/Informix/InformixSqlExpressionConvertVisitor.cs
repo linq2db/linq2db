@@ -256,5 +256,15 @@ namespace LinqToDB.DataProvider.Informix
 
 			return newElement;
 		}
+
+		protected override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
+		{
+			var newElement = base.VisitExprPredicate(predicate);
+
+			if (newElement is SqlPredicate.Expr { Expr1: SqlParameter { IsQueryParameter: true, NeedsCast: false, Type.DataType: DataType.Boolean } p })
+				p.NeedsCast = true;
+
+			return newElement;
+		}
 	}
 }

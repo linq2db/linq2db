@@ -70,7 +70,6 @@ namespace LinqToDB.SqlProvider
 		#region Build Flags
 
 		bool _disableAlias;
-		bool _isInsideNot;
 		int  _binaryOptimized;
 
 		#endregion
@@ -145,7 +144,7 @@ namespace LinqToDB.SqlProvider
 		public T? ConvertElement<T>(T? element)
 			where T : class, IQueryElement
 		{
-			return OptimizationContext.OptimizeAndConvert(element, NullabilityContext, _isInsideNot);
+			return OptimizationContext.OptimizeAndConvert(element, NullabilityContext);
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -154,7 +153,7 @@ namespace LinqToDB.SqlProvider
 			if (element == null)
 				return null;
 
-			return OptimizationContext.Optimize(element, NullabilityContext, _isInsideNot, reduceBinary);
+			return OptimizationContext.Optimize(element, NullabilityContext, reduceBinary);
 		}
 
 		#endregion
@@ -2507,10 +2506,6 @@ namespace LinqToDB.SqlProvider
 					BuildInListPredicate((SqlPredicate.InList)predicate);
 					break;
 
-				case QueryElementType.IsTruePredicate:
-					BuildPredicate(((SqlPredicate.IsTrue)predicate).Reduce(NullabilityContext, _isInsideNot));
-					break;
-
 				case QueryElementType.ExistsPredicate:
 					StringBuilder.Append(((SqlPredicate.Exists)predicate).IsNot ? "NOT EXISTS" : "EXISTS");
 					BuildExpression(GetPrecedence((SqlPredicate.Exists)predicate), ((SqlPredicate.Exists)predicate).SubQuery);
@@ -2526,12 +2521,7 @@ namespace LinqToDB.SqlProvider
 
 						StringBuilder.Append("NOT ");
 
-						var saveIsInsideNot = _isInsideNot;
-						_isInsideNot = true;
-
 						BuildPredicate(p.Precedence, GetPrecedence(p.Predicate), p.Predicate);
-
-						_isInsideNot = saveIsInsideNot;
 
 						break;
 					}
