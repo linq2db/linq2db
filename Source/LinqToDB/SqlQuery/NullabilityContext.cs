@@ -49,6 +49,7 @@ namespace LinqToDB.SqlQuery
 		{
 			_parentContext        = parentContext;
 			_nullabilityOverrides = nullabilityOverrides;
+			InQuery               = parentContext.InQuery;
 		}
 
 		/// <summary>

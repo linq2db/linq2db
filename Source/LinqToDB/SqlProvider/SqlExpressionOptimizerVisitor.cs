@@ -495,6 +495,65 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
+			// propagade IS [NOT] NULL checks to nullability context to get rid of unnecessary nested null checks
+			if (element.Predicates.Count > 1)
+			{
+				Dictionary<ISqlExpression, bool>? notNullOverrides = null;
+
+				foreach (var predicate in element.Predicates)
+				{
+					if (predicate is SqlPredicate.IsNull isNull && isNull.IsNot != element.IsOr)
+					{
+						(notNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).Add(isNull.Expr1, false);
+					}
+				}
+
+				if (notNullOverrides != null && notNullOverrides.Count < element.Predicates.Count)
+				{
+					List<ISqlPredicate>? newPredicates = null;
+
+					var modify = GetVisitMode(element) == VisitMode.Modify;
+
+					var oldContext      = _nullabilityContext;
+					_nullabilityContext = new NullabilityContext(_nullabilityContext, notNullOverrides);
+
+					for (var i = 0; i < element.Predicates.Count; i++)
+					{
+						var predicate = element.Predicates[i];
+
+						if (predicate is SqlPredicate.IsNull isNull && isNull.IsNot != element.IsOr)
+						{
+							newPredicates?.Add(predicate);
+							continue;
+						}
+
+						var newPredicate = (ISqlPredicate)Visit(predicate);
+
+						if (!ReferenceEquals(newPredicate, predicate))
+						{
+							if (modify)
+							{
+								element.Predicates[i] = newPredicate;
+							}
+							else
+							{
+								newPredicates ??= [.. element.Predicates[..i]];
+							}
+						}
+
+						if (newPredicates != null)
+						{
+							newPredicates.Add(newPredicate);
+						}
+					}
+
+					_nullabilityContext = oldContext;
+
+					if (!modify && newPredicates != null)
+						return new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, newPredicates);
+				}
+			}
+
 			return element;
 		}
 
