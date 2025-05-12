@@ -4,7 +4,8 @@
 <#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.SqlServer.ttinclude" once="true" #>
 <#@ include file="..\Shared.ttinclude"                                             once="true" #>
 <#
-	NamespaceName = "Default.SqlServer"; // DataContext class namespace name
+	NamespaceName     = "Default.SqlServer"; // DataContext class namespace name
+	GenerateDataTypes = true;
 
 	LoadSqlServerMetadata(GetConnectionString("SqlServer.2019"));
 

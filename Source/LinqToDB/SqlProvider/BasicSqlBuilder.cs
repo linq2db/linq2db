@@ -259,9 +259,6 @@ namespace LinqToDB.SqlProvider
 				&& skipExpr != null)
 				throw new LinqToDBException(ErrorHelper.Error_Skip_in_Subquery);
 
-			if (!SqlProviderFlags.IsTakeSupported && takeExpr != null)
-				throw new LinqToDBException($"Take for subqueries is not supported by the '{Name}' provider.");
-
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0,
 				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, skipAlias);
@@ -2317,7 +2314,7 @@ namespace LinqToDB.SqlProvider
 			=> skipExpression != null && SqlProviderFlags.GetIsSkipSupportedFlag(takeExpression, skipExpression);
 
 		protected bool NeedTake(ISqlExpression? takeExpression)
-			=> takeExpression != null && SqlProviderFlags.IsTakeSupported;
+			=> takeExpression != null;
 
 		protected virtual void BuildSkipFirst(SelectQuery selectQuery)
 		{
