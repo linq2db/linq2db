@@ -582,17 +582,17 @@ namespace Tests.Linq
 		public void StartsWith1IgnoreCase([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				{
-				db.Person.Count(p => p.FirstName.StartsWith("joH", StringComparison.OrdinalIgnoreCase) && p.ID == 1).Should().Be(1);
+			{
+				db.Person.Count(p => p.FirstName.StartsWith("joH", StringComparison.OrdinalIgnoreCase)  && p.ID == 1).Should().Be(1);
 				db.Person.Count(p => !p.FirstName.StartsWith("joH", StringComparison.OrdinalIgnoreCase) && p.ID == 1).Should().Be(0);
-				}
-				}
+			}
+		}
 
 		[Test]
 		public void StartsWith1Case([DataSources] string context)
-				{
+		{
 			using (var db = GetDataContext(context))
-				{
+			{
 				db.Person.Count(p => p.FirstName.StartsWith("Jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(1);
 				db.Person.Count(p => p.FirstName.StartsWith("jo", StringComparison.Ordinal) && p.ID == 1).Should().Be(0);
 
@@ -632,7 +632,7 @@ namespace Tests.Linq
 					from p1 in db.Person
 					from p2 in db.Person
 					where p1.ID == p2.ID &&
-						Sql.Like(p1.FirstName, p2.FirstName.Replace("%", "~%"), '~')
+					      Sql.Like(p1.FirstName, p2.FirstName.Replace("%", "~%"), '~')
 					select p1);
 		}
 
@@ -656,7 +656,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.Person.Count(p => p.FirstName.EndsWith("JOHN") && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 0 : 1);
+				db.Person.Count(p => p.FirstName.EndsWith("JOHN")  && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 0 : 1);
 				db.Person.Count(p => !p.FirstName.EndsWith("JOHN") && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 1 : 0);
 			}
 		}
@@ -801,11 +801,11 @@ namespace Tests.Linq
 				var str   = "some";
 
 				var result = table.Where(t =>
-						t.CharColumn.StartsWith(str)  &&
-						t.NCharColumn.StartsWith(str) &&
-						t.VarCharColumn.StartsWith(str) &&
-						t.NVarCharColumn.StartsWith(str)
-					);
+					t.CharColumn.StartsWith(str)    &&
+					t.NCharColumn.StartsWith(str)   &&
+					t.VarCharColumn.StartsWith(str) &&
+					t.NVarCharColumn.StartsWith(str)
+				);
 
 				result.Should().HaveCount(1);
 			}
@@ -921,11 +921,11 @@ namespace Tests.Linq
 			])]
 		[Test]
 		public void IndexOf3([DataSources(
-			ProviderName.DB2, TestProvName.AllFirebird,
-			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.SQLiteMS)]
+				ProviderName.DB2, TestProvName.AllFirebird,
+				ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.SQLiteMS)]
 			string context)
 		{
-			var s = "e";
+			var s  = "e";
 			var n1 = 2;
 			var n2 = 5;
 
@@ -938,8 +938,8 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf1([DataSources(
-			ProviderName.DB2,
-			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+				ProviderName.DB2,
+				ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -951,8 +951,8 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf2([DataSources(
-			ProviderName.DB2, ProviderName.SqlCe,
-			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+				ProviderName.DB2, ProviderName.SqlCe,
+				TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -965,8 +965,8 @@ namespace Tests.Linq
 
 		[Test]
 		public void LastIndexOf3([DataSources(
-			ProviderName.DB2, ProviderName.SqlCe,
-			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+				ProviderName.DB2, ProviderName.SqlCe,
+				TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1049,8 +1049,8 @@ namespace Tests.Linq
 
 		[Test]
 		public void Reverse([DataSources(
-			ProviderName.DB2, ProviderName.SqlCe,
-			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+				ProviderName.DB2, ProviderName.SqlCe,
+				TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1098,18 +1098,18 @@ namespace Tests.Linq
 			using var t3 = db.CreateLocalTable<Category>();
 
 			var q =
-					from t in db.GetTable<Task>()
-					join tc in db.GetTable<TaskCategory>() on t.Id equals tc.TaskId into g
-					from tc in g.DefaultIfEmpty()
-					select new
-					{
-						t.Id,
-						t.Name,
-						Categories = Sql.Stuff(
-							from c in db.GetTable<Category>()
-							where c.Id == tc.CategoryId
-							select "," + c.Name, 1, 1, "")
-					};
+				from t in db.GetTable<Task>()
+				join tc in db.GetTable<TaskCategory>() on t.Id equals tc.TaskId into g
+				from tc in g.DefaultIfEmpty()
+				select new
+				{
+					t.Id,
+					t.Name,
+					Categories = Sql.Stuff(
+						from c in db.GetTable<Category>()
+						where c.Id == tc.CategoryId
+						select "," + c.Name, 1, 1, "")
+				};
 
 			_ = q.ToArray();
 		}
@@ -1270,7 +1270,11 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.FirstName.Replace("hn", "lie") == "Jolie" && p.ID == 1 select p;
+				var q = 
+					from p in db.Person 
+					where p.FirstName.Replace("hn", "lie") == "Jolie" && p.ID == 1 
+					select p;
+
 				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
@@ -1281,8 +1285,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Person where p.ID == 1 select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+					from p in db.Person 
+					where p.ID == 1 
+					select new { p.ID, Name = "  " + p.FirstName + " " } into pp
 					where pp.Name.Trim() == "John" select pp;
+
 				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
@@ -1407,7 +1414,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var param = "JOHN";
-				var q = from p in db.Person where p.FirstName.ToLower() == param.ToLower() && p.ID == 1 select p;
+				var q     = from p in db.Person where p.FirstName.ToLower() == param.ToLower() && p.ID == 1 select p;
 				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
@@ -1428,7 +1435,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var param = "john";
-				var q = from p in db.Person where p.FirstName.ToUpper() == param.ToUpper() && p.ID == 1 select p;
+				var q     = from p in db.Person where p.FirstName.ToUpper() == param.ToUpper() && p.ID == 1 select p;
 				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
@@ -1899,7 +1906,7 @@ namespace Tests.Linq
 			public object ToType(Type conversionType, IFormatProvider? provider)
 			{
 				if (conversionType.IsSubclassOf(typeof(MySpecialBaseClass))
-					|| conversionType == typeof(MySpecialBaseClass))
+				    || conversionType == typeof(MySpecialBaseClass))
 					return this;
 
 				return Value;
@@ -1943,9 +1950,9 @@ namespace Tests.Linq
 		[Table]
 		sealed class SampleClass
 		{
-			[Column] public int Id { get; set; }
-			[Column(DataType = DataType.NVarChar, Length = 50)] public MyClass? Value { get; set; }
-			[Column] public string? Value2 { get; set; }
+			[Column]                                            public int      Id     { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 50)] public MyClass? Value  { get; set; }
+			[Column]                                            public string?  Value2 { get; set; }
 		}
 
 		[Test]
@@ -1964,9 +1971,9 @@ namespace Tests.Linq
 			{
 				table.Insert(() => new SampleClass()
 				{
-					Id          = 1,
-					Value       = "Test",
-					Value2      = "SampleClass"
+					Id     = 1,
+					Value  = "Test",
+					Value2 = "SampleClass"
 				});
 				table.Insert(() => new SampleClass()
 				{
@@ -1979,21 +1986,21 @@ namespace Tests.Linq
 
 				Assert.Multiple(() =>
 				{
-					Assert.That(table.Any(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.True);
+					Assert.That(table.Any(sampleClass => sampleClass.Value   == test || sampleClass.Value2!.Contains(test)), Is.True);
 					Assert.That(table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.EqualTo(2));
 				});
 
 				test = "Value";
 				Assert.Multiple(() =>
 				{
-					Assert.That(table.Any(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.True);
+					Assert.That(table.Any(sampleClass => sampleClass.Value   == test || sampleClass.Value2!.Contains(test)), Is.True);
 					Assert.That(table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.EqualTo(1));
 				});
 
 				test = "Class";
 				Assert.Multiple(() =>
 				{
-					Assert.That(table.Any(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.True);
+					Assert.That(table.Any(sampleClass => sampleClass.Value   == test || sampleClass.Value2!.Contains(test)), Is.True);
 					Assert.That(table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.EqualTo(1));
 				});
 			}

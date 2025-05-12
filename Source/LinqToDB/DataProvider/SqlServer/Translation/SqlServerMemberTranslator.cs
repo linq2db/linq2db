@@ -208,7 +208,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 				 */
 
 				var valueString = factory.Add(valueTypeString, value, factory.Value(valueTypeString, "."));
-				var valueLength = factory.Function(valueTypeInt, "LEN", valueString);
+				var valueLength = factory.Length(valueString);
 
 				return factory.Sub(valueTypeInt, valueLength, factory.Value(valueTypeInt, 1));
 			}

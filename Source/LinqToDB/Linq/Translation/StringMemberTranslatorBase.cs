@@ -159,10 +159,7 @@ namespace LinqToDB.Linq.Translation
 		public virtual ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue, ISqlExpression newValue)
 		{
 			var factory = translationContext.ExpressionFactory;
-
-			var valueType = factory.GetDbDataType(value);
-			
-			return factory.Function(valueType, "REPLACE", value, factory.EnsureType(oldValue, valueType), factory.EnsureType(newValue, valueType));
+			return factory.Replace(value, oldValue, newValue);
 		}
 
 		public virtual ISqlExpression? TranslateStringFormat(ITranslationContext translationContext, MethodCallExpression methodCall, string format, IList<ISqlExpression> arguments, TranslationFlags translationFlags)
@@ -173,7 +170,7 @@ namespace LinqToDB.Linq.Translation
 		public virtual ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
 		{
 			var factory = translationContext.ExpressionFactory;
-			return factory.Function(factory.GetDbDataType(typeof(int)), "LENGTH", value);
+			return factory.Length(value);
 		}
 
 		public virtual ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)

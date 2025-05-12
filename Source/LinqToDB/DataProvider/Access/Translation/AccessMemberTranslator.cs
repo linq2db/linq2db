@@ -247,12 +247,6 @@ namespace LinqToDB.DataProvider.Access.Translation
 
 		public class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
-			{
-				var factory = translationContext.ExpressionFactory;
-				return factory.Function(factory.GetDbDataType(typeof(int)), "LEN", value);
-			}
-
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
 				var factory = translationContext.ExpressionFactory;

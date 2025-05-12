@@ -76,8 +76,8 @@ namespace LinqToDB.DataProvider.Access
 					{
 						var indexExpr = new SqlBinaryExpression(typeof(int),
 							new SqlBinaryExpression(typeof(int),
-								new SqlFunction(typeof(int), "Length", predicate.Expr1), "-",
-								new SqlFunction(typeof(int), "Length", predicate.Expr2)), "+",
+								PseudoFunctions.MakeLength(predicate.Expr1), "-",
+								PseudoFunctions.MakeLength(predicate.Expr2)), "+",
 							new SqlValue(1));
 
 						subStrPredicate =
@@ -150,7 +150,7 @@ namespace LinqToDB.DataProvider.Access
 					return func.WithName("LCase");
 				case { Name: PseudoFunctions.TO_UPPER }:
 					return func.WithName("UCase");
-				case { Name: "Length" }:
+				case { Name: PseudoFunctions.LENGTH }:
 					return func.WithName("Len");
 
 				case {

@@ -1035,7 +1035,8 @@ namespace LinqToDB.SqlProvider
 
 				case PseudoFunctions.TO_LOWER: return func.WithName("Lower");
 				case PseudoFunctions.TO_UPPER: return func.WithName("Upper");
-				case PseudoFunctions.REPLACE:  return func.WithName("Replace");
+				case PseudoFunctions.REPLACE : return func.WithName("Replace");
+				case PseudoFunctions.LENGTH  : return func.WithName("Length");
 			}
 
 			return func;

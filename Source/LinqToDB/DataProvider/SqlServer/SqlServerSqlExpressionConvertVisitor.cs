@@ -122,5 +122,18 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return base.ConvertConversion(cast);
 		}
+
+		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
+		{
+			switch (func)
+			{
+				case { Name: PseudoFunctions.LENGTH }:
+					return func.WithName("LEN");
+
+				default:
+					return base.ConvertSqlFunction(func);
+			}
+		}
+
 	}
 }
