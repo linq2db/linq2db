@@ -231,7 +231,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		#region Issue 4783
 
 #if NET9_0_OR_GREATER
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4783")]
 		public async ValueTask Issue4783Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
 		{
@@ -344,22 +343,25 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var notMappedEntitiesForTempTable = new List<Issue4940RecordNotMapped>
 			{
-				new("TempTable", Issue4940DBStatus.Open, Issue4940DBStatus.Open),
-				new("TempTable", Issue4940DBStatus.Closed, null)
+				new(1, "TempTable", Issue4940DBStatus.Open, Issue4940DBStatus.Open),
+				new(2, "TempTable", Issue4940DBStatus.Closed, null)
 			};
-			var tempTable = db.CreateTempTable(notMappedEntitiesForTempTable);
+			var tempTable = db.CreateTempTable(notMappedEntitiesForTempTable);//check valid sql for temp table and insert without parameters
+
+			var notMappedEntityForInsert = new Issue4940RecordNotMapped(3, "Insert", Issue4940DBStatus.Open, null);
+			db.Insert(notMappedEntityForInsert, tableName: tempTable.TableName, tableOptions: tempTable.TableOptions); //check enum as parameter
 			
 			var notMappedEntitiesForBulkCopy = new List<Issue4940RecordNotMapped>
 			{
-				new("BulkCopy", Issue4940DBStatus.Closed, Issue4940DBStatus.Closed),
-				new("BulkCopy", Issue4940DBStatus.Open, null)
+				new(4, "BulkCopy", Issue4940DBStatus.Closed, Issue4940DBStatus.Closed),
+				new(5, "BulkCopy", Issue4940DBStatus.Open, null)
 			};
-			tempTable.BulkCopy(new BulkCopyOptions {BulkCopyType = BulkCopyType.ProviderSpecific}, notMappedEntitiesForBulkCopy);
+			tempTable.BulkCopy(new BulkCopyOptions {BulkCopyType = BulkCopyType.ProviderSpecific}, notMappedEntitiesForBulkCopy); //check bulk copy
 
 			var notMappedEntitiesForMerge = new List<Issue4940RecordNotMapped>
 			{
-				new("Merge", Issue4940DBStatus.Open, Issue4940DBStatus.Closed),
-				new("Merge", Issue4940DBStatus.Open, null)
+				new(6, "Merge", Issue4940DBStatus.Open, Issue4940DBStatus.Closed),
+				new(7, "Merge", Issue4940DBStatus.Open, null)
 			};
 			tempTable
 				.Merge()
@@ -367,21 +369,18 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.On(s => s.Source, t => t.Source)
 				.InsertWhenNotMatched()
 				.UpdateWhenMatched()
-				.Merge();
+				.Merge(); // check merge
 
-			var nullStatusItems = await tempTable.Where(x => x.NullableStatus == null).ToArrayAsync();
-			var openStatusItems = await tempTable.Where(x => x.NullableStatus == Issue4940DBStatus.Open).ToArrayAsync();
-			var allItems        = notMappedEntitiesForTempTable.Concat(notMappedEntitiesForBulkCopy).Concat(notMappedEntitiesForMerge).ToArray();
-			var results         = await tempTable.ToArrayAsync();
-
+			//it is impossible to select raw data from temp table
+			var results = await tempTable.OrderBy(x => x.Id).ToArrayAsync();
+			var allItems = notMappedEntitiesForTempTable
+				.Concat([notMappedEntityForInsert])
+				.Concat(notMappedEntitiesForBulkCopy)
+				.Concat(notMappedEntitiesForMerge)
+				.ToArray();
+			
 			using (Assert.EnterMultipleScope())
 			{
-				foreach (var item in nullStatusItems)
-					Assert.That(item.NullableStatus, Is.Null);
-				
-				foreach (var item in openStatusItems)
-					Assert.That(item.NullableStatus, Is.EqualTo(Issue4940DBStatus.Open));
-				
 				for (var i = 0; i < results.Length; i++)
 				{
 					Assert.That(results[i].Status,         Is.EqualTo(allItems[i].Status),         $"{results[i].Source}");
@@ -414,15 +413,19 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				ctx.Database.EnsureCreated();
 			}
 
-			db.CreateTempTable<Issue4940RecordDb>(tableName: "issue_4940_temp_table");
+			var entitiesForTempTable = new List<Issue4940RecordDb>
+			{
+				new(1, "TempTable", Issue4940DBStatus.Open, Issue4940DBStatus.Closed),
+				new(2, "TempTable", Issue4940DBStatus.Closed, null)
+			};
+			var tempTable = db.CreateTempTable(entitiesForTempTable, tableName: "issue_4940_temp_table");
 			
 			var entitiesForInsert = new List<Issue4940RecordDb>
 			{
 				new(1, "Insert", Issue4940DBStatus.Open, Issue4940DBStatus.Closed),
 				new(2, "Insert", Issue4940DBStatus.Closed, null)
 			};
-			foreach (var entity in entitiesForInsert)
-				db.Insert(entity);
+			entitiesForInsert.ForEach(x => db.Insert(x));
 			
 			var entitiesForBulkCopy = new List<Issue4940RecordDb>
 			{
@@ -444,23 +447,22 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.UpdateWhenMatched()
 				.Merge();
 
-			var nullStatusItems = await db.GetTable<Issue4940RecordDb>().Where(x => x.NullableStatus == null).ToArrayAsync();
-			var openStatusItems = await db.GetTable<Issue4940RecordDb>().Where(x => x.NullableStatus == Issue4940DBStatus.Open).ToArrayAsync();
-			var allItems        = entitiesForInsert.Concat(entitiesForBulkCopy).Concat(entitiesForMerge).ToArray();
-			var results         = await db.GetTable<Issue4940RecordDb>().ToArrayAsync();
+			var inMemoryRecords = entitiesForInsert.Concat(entitiesForBulkCopy).Concat(entitiesForMerge).ToArray();
+			var rawDbRecords  = await db.GetTable<Issue4940RecordDbRaw>().OrderBy(x => x.Id).ToArrayAsync();
+			var tempTableRecords = await tempTable.OrderBy(x => x.Id).ToArrayAsync();
 
 			using (Assert.EnterMultipleScope())
 			{
-				foreach (var item in nullStatusItems)
-					Assert.That(item.NullableStatus, Is.Null);
-				
-				foreach (var item in openStatusItems)
-					Assert.That(item.NullableStatus, Is.EqualTo(Issue4940DBStatus.Open));
-				
-				for (var i = 0; i < results.Length; i++)
+				for (var i = 0; i < tempTableRecords.Length; i++)
 				{
-					Assert.That(results[i].Status,         Is.EqualTo(allItems[i].Status),         $"{results[i].Source}");
-					Assert.That(results[i].NullableStatus, Is.EqualTo(allItems[i].NullableStatus), $"{results[i].Source}");
+					Assert.That(tempTableRecords[i].Status,         Is.EqualTo(entitiesForTempTable[i].Status),         $"{tempTableRecords[i].Source}");
+					Assert.That(tempTableRecords[i].NullableStatus, Is.EqualTo(entitiesForTempTable[i].NullableStatus), $"{tempTableRecords[i].Source}");
+				}
+				
+				for (var i = 0; i < rawDbRecords.Length; i++)
+				{
+					Assert.That(rawDbRecords[i].Status,         Is.EqualTo(inMemoryRecords[i].Status),         $"{rawDbRecords[i].Source}");
+					Assert.That(rawDbRecords[i].NullableStatus, Is.EqualTo(inMemoryRecords[i].NullableStatus), $"{rawDbRecords[i].Source}");
 				}
 			}
 		}
@@ -471,7 +473,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			protected override void OnModelCreating(ModelBuilder modelBuilder)
 			{
-				modelBuilder.Entity<Issue4940RecordDb>();
+				modelBuilder.Entity<Issue4940RecordDb>().HasNoKey();
 			}
 		}
 
@@ -480,8 +482,16 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			string             Source,
 			Issue4940DBStatus  Status,
 			Issue4940DBStatus? NullableStatus);
-		
+
+		[LinqToDB.Mapping.Table("Issue4940DBRecords", IsColumnAttributeRequired = false)]
+		public record Issue4940RecordDbRaw(
+			int     Id,
+			string  Source,
+			object  Status,
+			object? NullableStatus);
+
 		public record Issue4940RecordNotMapped(
+			int                Id,
 			string             Source,
 			Issue4940DBStatus  Status,
 			Issue4940DBStatus? NullableStatus);
