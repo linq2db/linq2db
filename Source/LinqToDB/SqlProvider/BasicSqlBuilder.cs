@@ -1566,7 +1566,7 @@ namespace LinqToDB.SqlProvider
 				}
 				else
 				{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					StringBuilder.Append(field.StringBuilder);
 #else
 					StringBuilder.Append(field.StringBuilder.ToString());
@@ -2252,17 +2252,25 @@ namespace LinqToDB.SqlProvider
 
 			var orderBy = ConvertElement(selectQuery.OrderBy);
 
+			IReadOnlyList<SqlOrderByItem> nonConstant = orderBy.Items.All(i => !QueryHelper.IsConstantFast(i.Expression))
+				? orderBy.Items
+				: orderBy.Items.Where(i => !QueryHelper.IsConstantFast(i.Expression))
+					.ToList();
+
+			if (nonConstant.Count == 0)
+				return;
+
 			AppendIndent();
 
 			StringBuilder.Append("ORDER BY").AppendLine();
 
 			Indent++;
 
-			for (var i = 0; i < orderBy.Items.Count; i++)
+			for (var i = 0; i < nonConstant.Count; i++)
 			{
 				AppendIndent();
 
-				var item            = orderBy.Items[i];
+				var item            = nonConstant[i];
 				var orderExpression = item.Expression;
 
 				if (item.IsPositioned)
@@ -2279,7 +2287,7 @@ namespace LinqToDB.SqlProvider
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");
 
-				if (i + 1 < orderBy.Items.Count)
+				if (i + 1 < nonConstant.Count)
 					StringBuilder.AppendLine(Comma);
 				else
 					StringBuilder.AppendLine();

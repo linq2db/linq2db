@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
@@ -158,7 +159,7 @@ namespace LinqToDB.DataProvider
 			command.Dispose();
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		public virtual ValueTask DisposeCommandAsync(DbCommand command)
 		{
 			ClearCommandParameters(command);
@@ -166,6 +167,8 @@ namespace LinqToDB.DataProvider
 		}
 #endif
 
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public virtual object? GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
 			return null;
@@ -472,6 +475,8 @@ namespace LinqToDB.DataProvider
 				case DataType.DateTimeOffset : dbType = DbType.DateTimeOffset;        break;
 				case DataType.Variant        : dbType = DbType.Object;                break;
 				case DataType.VarNumeric     : dbType = DbType.VarNumeric;            break;
+				case DataType.SmallDecFloat  : dbType = DbType.Decimal;               break;
+				case DataType.DecFloat       : dbType = DbType.Decimal;               break;
 				default                      : return;
 			}
 

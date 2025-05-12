@@ -49,7 +49,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			InitializeMapping();
 
-			var instantiator = MemberHelper.MethodOf(() => Linq.Internals.CreateExpressionQueryInstance<int>(null!, null!))
+			var instantiator = MemberHelper.MethodOf(() => Internals.CreateExpressionQueryInstance<int>(null!, null!))
 				.GetGenericMethodDefinition();
 
 			LinqExtensions.ProcessSourceQueryable = queryable =>
@@ -255,7 +255,8 @@ namespace LinqToDB.EntityFrameworkCore
 
 			var info    = GetEFProviderInfo(context);
 			var options = context.GetLinqToDBOptions() ?? new DataOptions();
-			options     = AddMappingSchema(options, GetMappingSchema(context.Model, context, options));
+			options     = options.UseAdditionalMappingSchema(GetMappingSchema(context.Model, context, options));
+			options     = EnableTracing(options, CreateLogger(info.Options));
 
 			DataConnection? dc = null;
 
@@ -286,20 +287,19 @@ namespace LinqToDB.EntityFrameworkCore
 				}
 			}
 
-			var logger = CreateLogger(info.Options);
-			if (logger != null)
-				EnableTracing(dc, logger);
-
 			return dc;
 		}
 
 		private static readonly TraceSwitch _defaultTraceSwitch =
 			new("DataConnection", "DataConnection trace switch", TraceLevel.Info.ToString());
 
-		static void EnableTracing(DataConnection dc, ILogger logger)
+		static DataOptions EnableTracing(DataOptions options, ILogger? logger)
 		{
-			dc.OnTraceConnection = t => Implementation.LogConnectionTrace(t, logger);
-			dc.TraceSwitchConnection = _defaultTraceSwitch;
+			return logger == null
+				? options
+				: options
+					.UseTracing(t => Implementation.LogConnectionTrace(t, logger))
+					.UseTraceSwitch(_defaultTraceSwitch);
 		}
 
 		/// <summary>
@@ -325,7 +325,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			var info    = GetEFProviderInfo(context);
 			var options = context.GetLinqToDBOptions() ?? new DataOptions();
-			options     = AddMappingSchema(options, GetMappingSchema(context.Model, context, options));
+			options     = options.UseAdditionalMappingSchema(GetMappingSchema(context.Model, context, options));
 
 			DataConnection? dc = null;
 
@@ -334,6 +334,7 @@ namespace LinqToDB.EntityFrameworkCore
 			var connectionInfo = GetConnectionInfo(info);
 			var provider       = GetDataProvider(options, info, connectionInfo);
 			var logger         = CreateLogger(info.Options);
+			options            = EnableTracing(options, logger);
 
 			if (transaction != null)
 			{
@@ -360,17 +361,14 @@ namespace LinqToDB.EntityFrameworkCore
 
 					if (mappingSchema != null)
 						dataContext.MappingSchema = mappingSchema;
-					
+
 					if (logger != null)
 						dataContext.OnTraceConnection = t => Implementation.LogConnectionTrace(t, logger);
-						
+
 					return dataContext;
 					*/
 				}
 			}
-
-			if (logger != null)
-				EnableTracing(dc, logger);
 
 			return dc;
 		}
@@ -390,15 +388,14 @@ namespace LinqToDB.EntityFrameworkCore
 			var options        = context.GetLinqToDBOptions() ?? new DataOptions();
 			var dataProvider   = GetDataProvider(options, info, connectionInfo);
 
-			options = AddMappingSchema(options, GetMappingSchema(context.Model, context, options))
+			options = options
+				.UseAdditionalMappingSchema(GetMappingSchema(context.Model, context, options))
 				.UseDataProvider(dataProvider)
 				.UseConnectionString(connectionInfo.ConnectionString!);
 
-			var dc = new LinqToDBForEFToolsDataConnection(context, options, context.Model, TransformExpression);
-			var logger = CreateLogger(info.Options);
+			options = EnableTracing(options, CreateLogger(info.Options));
 
-			if (logger != null)
-				EnableTracing(dc, logger);
+			var dc = new LinqToDBForEFToolsDataConnection(context, options, context.Model, TransformExpression);
 
 			return dc;
 		}
@@ -453,9 +450,10 @@ namespace LinqToDB.EntityFrameworkCore
 			var model          = GetModel(options);
 
 			if (model != null)
-				dataOptions = AddMappingSchema(dataOptions, GetMappingSchema(model, null, dataOptions));
+				dataOptions = dataOptions.UseAdditionalMappingSchema(GetMappingSchema(model, null, dataOptions));
 
 			dataOptions = dataOptions.UseDataProvider(dataProvider);
+			dataOptions = EnableTracing(dataOptions, CreateLogger(info.Options));
 
 			if (connectionInfo.Connection != null)
 			{
@@ -470,10 +468,6 @@ namespace LinqToDB.EntityFrameworkCore
 
 			if (dc == null)
 				throw new LinqToDBForEFToolsException($"Can not extract connection information from {nameof(DbContextOptions)}");
-
-			var logger = CreateLogger(info.Options);
-			if (logger != null)
-				EnableTracing(dc, logger);
 
 			return dc;
 		}
@@ -543,20 +537,12 @@ namespace LinqToDB.EntityFrameworkCore
 
 		/// <summary>
 		/// Enables attaching entities to change tracker.
-		/// Entities will be attached only if AsNoTracking() is not used in query and DbContext is configured to track entities. 
+		/// Entities will be attached only if AsNoTracking() is not used in query and DbContext is configured to track entities.
 		/// </summary>
 		public static bool EnableChangeTracker
-		{ 
+		{
 			get => Implementation.EnableChangeTracker;
 			set => Implementation.EnableChangeTracker = value;
-		}
-
-		private static DataOptions AddMappingSchema(DataOptions dataOptions, MappingSchema mappingSchema)
-		{
-			if (dataOptions.ConnectionOptions.MappingSchema != null)
-				return dataOptions.UseMappingSchema(MappingSchema.CombineSchemas(dataOptions.ConnectionOptions.MappingSchema, mappingSchema));
-
-			return dataOptions.UseMappingSchema(mappingSchema);
 		}
 	}
 }

@@ -30,7 +30,7 @@ namespace LinqToDB.Linq.Builder
 			var contextRef       = new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sequence);
 			var insertSetterExpr = SequenceHelper.PrepareBody(methodCall.Arguments[1].UnwrapLambda(), sequence);
 
-			UpdateBuilder.ParseSetter(builder, contextRef, insertSetterExpr, insertExpressions);
+			UpdateBuilder.ParseSetter(builder, contextRef, contextRef, insertSetterExpr, insertExpressions);
 
 			var updateExpr = methodCall.Arguments[2].Unwrap();
 			if (!updateExpr.IsNullValue())
@@ -38,7 +38,7 @@ namespace LinqToDB.Linq.Builder
 				updateExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 				var updateSetterExpr = SequenceHelper.PrepareBody(updateExpr.UnwrapLambda(), sequence);
 
-				UpdateBuilder.ParseSetter(builder, contextRef, updateSetterExpr, updateExpressions);
+				UpdateBuilder.ParseSetter(builder, contextRef, contextRef, updateSetterExpr, updateExpressions);
 			}
 
 			var tableContext = SequenceHelper.GetTableContext(sequence);
@@ -89,7 +89,7 @@ namespace LinqToDB.Linq.Builder
 
 				var keysExpr = SequenceHelper.PrepareBody(methodCall.Arguments[3].UnwrapLambda(), sequence);
 
-				UpdateBuilder.ParseSetter(builder, contextRef, keysExpr, keysExpressions);
+				UpdateBuilder.ParseSetter(builder, contextRef, contextRef, keysExpr, keysExpressions);
 
 				UpdateBuilder.InitializeSetExpressions(builder, tableContext, sequence,
 					keysExpressions, insertOrUpdateStatement.Update.Keys, false);

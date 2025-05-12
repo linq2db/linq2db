@@ -67,7 +67,7 @@ public class a_CreateData : TestBase
 			}
 			//db.CommandTimeout = 20;
 
-			var database = databaseName ?? db.Connection.Database;
+			var database = databaseName ?? db.OpenDbConnection().Database;
 
 			var cmds = text
 				.Replace("{DBNAME}", database)
@@ -238,7 +238,7 @@ public class a_CreateData : TestBase
 					new InheritanceChild2() {InheritanceChildId = 3, TypeDiscriminator = 2,    InheritanceParentId = 3, Name = "InheritanceParent2" }
 				});
 
-			action?.Invoke(db.Connection);
+			action?.Invoke(db.OpenDbConnection());
 
 			if (exception != null)
 				throw exception;

@@ -5,7 +5,9 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if !NET6_0_OR_GREATER
+using LinqToDB.Async;
+
+#if !NET8_0_OR_GREATER
 using System.Text;
 #endif
 
@@ -24,6 +26,7 @@ namespace LinqToDB.Remote
 		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 		{
 			ThrowOnDisposed();
+
 			return new QueryRunner(query, queryNumber, this, parametersContext, expressions, parameters, preambles);
 		}
 
@@ -52,7 +55,11 @@ namespace LinqToDB.Remote
 			public override IReadOnlyList<QuerySql> GetSqlText()
 			{
 				SetCommand(true);
+				return GetSqlTextImpl();
+			}
 
+			private IReadOnlyList<QuerySql> GetSqlTextImpl()
+			{
 				var query                  = Query.Queries[QueryNumber];
 				var sqlBuilder             = DataContext.CreateSqlProvider();
 				var sqlOptimizer           = DataContext.GetSqlOptimizer(DataContext.Options);
@@ -101,13 +108,13 @@ namespace LinqToDB.Remote
 					if (optimizationContext.HasParameters())
 					{
 						var sqlParameters = optimizationContext.GetParameters();
-						parameters        = new DataParameter[sqlParameters.Count];
+						parameters = new DataParameter[sqlParameters.Count];
 
 						for (var pIdx = 0; pIdx < sqlParameters.Count; pIdx++)
 						{
 							var p              = sqlParameters[pIdx];
 							var parameterValue = p.GetParameterValue(_evaluationContext.ParameterValues);
-							parameters[pIdx]   = new DataParameter(p.Name, parameterValue.ProviderValue, parameterValue.DbDataType);
+							parameters[pIdx] = new DataParameter(p.Name, parameterValue.ProviderValue, parameterValue.DbDataType);
 						}
 					}
 
@@ -117,22 +124,20 @@ namespace LinqToDB.Remote
 				return queries;
 			}
 
-#endregion
+			#endregion
 
 			public override void Dispose()
 			{
-				if (_client is IDisposable disposable)
-					disposable.Dispose();
+				if (_client != null)
+					DisposeClient(_client);
 
 				base.Dispose();
 			}
 
 			public override async ValueTask DisposeAsync()
 			{
-				if (_client is IAsyncDisposable asyncDisposable)
-					await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-				else if (_client is IDisposable disposable)
-					disposable.Dispose();
+				if (_client != null)
+					await DisposeClientAsync(_client).ConfigureAwait(false);
 
 				await base.DisposeAsync().ConfigureAwait(false);
 			}
@@ -242,18 +247,7 @@ namespace LinqToDB.Remote
 
 				public Task<bool> ReadAsync(CancellationToken cancellationToken)
 				{
-					cancellationToken.ThrowIfCancellationRequested();
-
-					try
-					{
-						return DataReader.Read() ? TaskCache.True : TaskCache.False;
-					}
-					catch (Exception ex)
-					{
-						var task = new TaskCompletionSource<bool>();
-						task.SetException(ex);
-						return task.Task;
-					}
+					return DataReader.ReadAsync(cancellationToken);
 				}
 
 				public void Dispose()
@@ -263,8 +257,12 @@ namespace LinqToDB.Remote
 
 				public ValueTask DisposeAsync()
 				{
+#if NET8_0_OR_GREATER
+					return DataReader.DisposeAsync();
+#else
 					DataReader.Dispose();
 					return default;
+#endif
 				}
 			}
 

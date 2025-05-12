@@ -2350,11 +2350,17 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		static int CountUsage(SelectQuery rootQuery, SqlColumn column)
+		int CountUsage(SelectQuery rootQuery, SqlColumn column)
 		{
-			int counter = 0;
+			IQueryElement root = rootQuery;
+			if (_rootElement is not SqlSelectStatement)
+			{
+				root = _rootElement;
+			}
 
-			rootQuery.VisitParentFirstAll(e =>
+			var counter = 0;
+
+			root.VisitParentFirstAll(e =>
 			{
 				// do not search in the same query
 				if (e is SelectQuery sq && sq == column.Parent)
@@ -2963,6 +2969,54 @@ namespace LinqToDB.SqlQuery
 					ProcessSelectClause(element, null);
 
 				return base.VisitSqlSelectClause(element);
+			}
+
+			protected override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+			{
+				var newElement = base.VisitSqlTableLikeSource(element);
+
+				if (!ReferenceEquals(newElement, element))
+				{
+					return Visit(newElement);
+				}
+
+				if (element.SourceEnumerable != null)
+				{
+					// Synchronizing Enumerable table
+
+					var enumerableSource = element.SourceEnumerable;
+					
+					for(var i = enumerableSource.Fields.Count - 1; i >= 0; i--)
+					{
+						var enumerableSourceField = enumerableSource.Fields[i];
+
+						if (element.SourceFields.All(f => f.BasedOn != enumerableSourceField))
+						{
+							enumerableSource.RemoveField(i);
+						}
+					}
+
+					if (element.SourceFields.All(x => x.BasedOn != null))
+					{
+						var newIndexes = element.SourceFields
+							.Select((field, currentIndex) => (field, currentIndex))
+							.OrderBy(t => enumerableSource.Fields.IndexOf(t.field.BasedOn!))
+							.Select((r, newIndex) => (r.field, r.currentIndex, idx : newIndex))
+							.ToList();
+
+						for (var i = 0; i < newIndexes.Count; i++)
+						{
+							var (field, currentIndex, newIndex) = newIndexes[i];
+							if (currentIndex != newIndex)
+							{
+								element.SourceFields.Remove(field);
+								element.SourceFields.Insert(newIndex, field);
+							}
+						}
+					}
+				}
+
+				return element;
 			}
 
 			private void ProcessSelectClause(SqlSelectClause element, CteClause? cte)

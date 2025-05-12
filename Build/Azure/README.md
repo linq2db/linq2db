@@ -3,7 +3,6 @@
 This directory contains test configs and setup scripts for test jobs on Azure Pipelines.
 
 - `netfx` folder stores test job configs for .NET 4.6.2 Windows tests
-- `net60` folder stores test job configs for `net6.0` test runs for Windows, Linux and MacOS
 - `net80` folder stores test job configs for `net8.0` test runs for Windows, Linux and MacOS
 - `net90` folder stores test job configs for `net9.0` test runs for Windows, Linux and MacOS
 - `scripts` folder stores test job setup scripts (`*.cmd` for Windows jobs, `*.sh` for Linux and MacOS, `*.ps1` for PowerShell scripts)
@@ -63,7 +62,7 @@ Legend:
 - :heavy_check_mark: - test job implemented
 - :x: - test job not implemented yet
 - `netfx`: .NET Framework (4.6.2)
-- `netcore`: .NET 6 OR .NET 8
+- `netcore`: .NET 8 OR .NET 9
 - :door: - Windows 2022
 - :penguin: - Linux (Ununtu 24.04)
 - :green_apple: - MacOS 13 (MacOS testing currently disabled)

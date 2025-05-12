@@ -535,7 +535,7 @@ namespace Tests.xUpdate
 				Assert.Multiple(() =>
 				{
 					Assert.That(iTable.TableName, Is.EqualTo(tableName));
-					Assert.That(iTable.SchemaName, Is.EqualTo(null));
+					Assert.That(iTable.SchemaName, Is.Null);
 				});
 
 				var person = new Person()

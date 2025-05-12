@@ -4164,6 +4164,7 @@ namespace LinqToDB
 
 			return expressionQuery.GetSqlQueries(options)[0];
 		}
+
 		#endregion
 	}
 }

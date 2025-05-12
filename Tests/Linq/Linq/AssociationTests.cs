@@ -1409,7 +1409,7 @@ namespace Tests.Linq
 					Assert.That(res[0].t.TargetName, Is.EqualTo("bda.Requests"));
 					Assert.That(res[0].ActualStage.Id, Is.EqualTo(1));
 					Assert.That(res[0].ActualStage.TaskId, Is.EqualTo(1));
-					Assert.That(res[0].ActualStage.Actual, Is.EqualTo(true));
+					Assert.That(res[0].ActualStage.Actual, Is.True);
 				});
 			}
 		}

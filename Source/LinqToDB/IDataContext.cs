@@ -126,5 +126,11 @@ namespace LinqToDB
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
 		string?                       ConfigurationString         { get; }
+
+		/// <summary>
+		/// Adds mapping schema to current context.
+		/// </summary>
+		/// <param name="mappingSchema">Mapping schema to add.</param>
+		void AddMappingSchema(MappingSchema mappingSchema);
 	}
 }

@@ -40,9 +40,7 @@ namespace LinqToDB.EntityFrameworkCore
 	/// </summary>
 	internal sealed class EFCoreMetadataReader : IMetadataReader
 	{
-#if EF6
-		private const string PgBinaryExpressionName = "PostgresBinaryExpression";
-#elif !EF31
+#if !EF31
 		// renamed in 8.0.0
 		private const string PgBinaryExpressionName = "PgBinaryExpression";
 #endif
@@ -60,7 +58,7 @@ namespace LinqToDB.EntityFrameworkCore
 #if !EF31
 		private readonly IDiagnosticsLogger<DbLoggerCategory.Query>?                  _logger;
 #endif
-#if !EF6 && !EF31
+#if !EF31
 		private readonly DatabaseDependencies?                                        _databaseDependencies;
 #endif
 
@@ -77,9 +75,7 @@ namespace LinqToDB.EntityFrameworkCore
 #else
 				_annotationProvider   = accessor.GetService<IRelationalAnnotationProvider>();
 				_logger               = accessor.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();
-#if !EF6
 				_databaseDependencies = accessor.GetService<DatabaseDependencies>();
-#endif
 #endif
 			}
 
@@ -296,7 +292,6 @@ namespace LinqToDB.EntityFrameworkCore
 					{
 						if (prop.FindColumn(storeObjectId.Value) is IColumn column)
 							annotations = annotations.Concat(_annotationProvider.For(column, false));
-#if !EF6
 
 						if (_annotationProvider.GetType().Name == "SqliteAnnotationProvider")
 						{
@@ -312,11 +307,10 @@ namespace LinqToDB.EntityFrameworkCore
 								isIdentity = true;
 							}
 						}
-#endif
 					}
 #endif
 
-#if !EF6 && !EF31
+#if !EF31
 					isIdentity = isIdentity || annotations
 #else
 					isIdentity = annotations
@@ -530,14 +524,14 @@ namespace LinqToDB.EntityFrameworkCore
 			public override void Print(EfExpressionPrinter expressionPrinter)
 #endif
 			{
-#if !EF6 && !EF31
+#if !EF31
 				expressionPrinter.PrintExpression(Expression);
 #else
 				expressionPrinter.Print(Expression);
 #endif
 			}
 
-#if !EF31 && !EF6 && !EF8
+#if !EF31 && !EF8
 			private static readonly ConstructorInfo _ctor = typeof(SqlTransparentExpression).GetConstructor([typeof(ExceptExpression), typeof(RelationalTypeMapping)])
 				?? throw new InvalidOperationException();
 
@@ -613,7 +607,7 @@ namespace LinqToDB.EntityFrameworkCore
 							ctx.this_._mappingSource?.FindMapping(p.ParameterType));
 					}
 
-#if !EF6 && !EF31
+#if !EF31
 					// https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/issues/1801
 					if (ctx.this_._dependencies!.MethodCallTranslatorProvider.GetType().Name == "MySqlMethodCallTranslatorProvider")
 					{
