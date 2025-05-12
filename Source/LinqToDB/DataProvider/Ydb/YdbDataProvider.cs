@@ -172,7 +172,7 @@ namespace LinqToDB.DataProvider.Ydb
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			throw new NotImplementedException();
+			return new YdbSchemaProvider();
 		}
 
 		protected override IMemberTranslator CreateMemberTranslator()
