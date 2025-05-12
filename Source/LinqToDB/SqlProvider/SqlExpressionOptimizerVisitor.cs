@@ -545,7 +545,7 @@ namespace LinqToDB.SqlProvider
 							}
 							else
 							{
-								newPredicates ??= [.. element.Predicates[..i]];
+								newPredicates ??= [.. element.Predicates.Take(i)];
 								continue;
 							}
 						}
@@ -568,7 +568,7 @@ namespace LinqToDB.SqlProvider
 							}
 							else
 							{
-								newPredicates ??= [.. element.Predicates[..i]];
+								newPredicates ??= [.. element.Predicates.Take(i)];
 							}
 						}
 

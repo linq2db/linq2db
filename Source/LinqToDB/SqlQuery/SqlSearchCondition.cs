@@ -257,10 +257,9 @@ namespace LinqToDB.SqlQuery
 #if NET8_0_OR_GREATER
 					(NotNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).TryAdd(predicate.Expr1, false);
 #else
-					if (NotNullOverrides?.ContainsKey(isNull.Expr1) != true)
-						(NotNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).TryAdd(predicate.Expr1, false);
+					if (NotNullOverrides?.ContainsKey(predicate.Expr1) != true)
+						(NotNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).Add(predicate.Expr1, false);
 #endif
-
 
 				return predicate;
 			}
