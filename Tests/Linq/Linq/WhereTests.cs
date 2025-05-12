@@ -2025,7 +2025,6 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		[ActiveIssue(1767)]
 		[Test]
 		public void Issue1767Test1([DataSources(false)] string context)
 		{
@@ -2046,7 +2045,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1767)]
 		[Test]
 		public void Issue1767Test2([DataSources(false)] string context)
 		{

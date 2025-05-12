@@ -499,12 +499,28 @@ namespace LinqToDB.SqlProvider
 			if (element.Predicates.Count > 1)
 			{
 				Dictionary<ISqlExpression, bool>? notNullOverrides = null;
+				bool[]? duplicates = null;
 
-				foreach (var predicate in element.Predicates)
+				for (var i = 0; i < element.Predicates.Count; i++)
 				{
+					var predicate = element.Predicates[i];
+
 					if (predicate is SqlPredicate.IsNull isNull && isNull.IsNot != element.IsOr)
 					{
-						(notNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).Add(isNull.Expr1, false);
+						var isDuplicate = false;
+#if NET8_0_OR_GREATER
+						isDuplicate = !(notNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).TryAdd(isNull.Expr1, false);
+#else
+						if (notNullOverrides?.ContainsKey(isNull.Expr1) != true)
+							(notNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).Add(isNull.Expr1, false);
+						else
+							isDuplicate = true;
+#endif
+
+						// limited duplicates detection for some IsNull predicates only
+						// TODO: for full implementation we need ISqlPredicate comparer
+						if (isDuplicate)
+							(duplicates ??= new bool[element.Predicates.Count])[i] = true;
 					}
 				}
 
@@ -519,6 +535,21 @@ namespace LinqToDB.SqlProvider
 
 					for (var i = 0; i < element.Predicates.Count; i++)
 					{
+						if (duplicates?[i] == true)
+						{
+							if (modify)
+							{
+								element.Predicates.RemoveAt(i);
+								i--;
+								continue;
+							}
+							else
+							{
+								newPredicates ??= [.. element.Predicates[..i]];
+								continue;
+							}
+						}
+
 						var predicate = element.Predicates[i];
 
 						if (predicate is SqlPredicate.IsNull isNull && isNull.IsNot != element.IsOr)

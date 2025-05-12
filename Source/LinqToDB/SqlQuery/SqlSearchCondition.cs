@@ -254,7 +254,13 @@ namespace LinqToDB.SqlQuery
 			protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 			{
 				if (predicate.IsNot != _isOr)
-					(NotNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).Add(predicate.Expr1, false);
+#if NET8_0_OR_GREATER
+					(NotNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).TryAdd(predicate.Expr1, false);
+#else
+					if (NotNullOverrides?.ContainsKey(isNull.Expr1) != true)
+						(NotNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).TryAdd(predicate.Expr1, false);
+#endif
+
 
 				return predicate;
 			}
