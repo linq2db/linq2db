@@ -28,18 +28,12 @@
 
 		<PackageReference Update="MySql.Data" Aliases="" />
 		<PackageReference Update="MySqlConnector" Aliases="" />
-		<None Update="Cli\NewCliFeatures.tt">
-		  <LastGenOutput>NewCliFeatures.generated.cs</LastGenOutput>
-		  <Generator>TextTemplatingFileGenerator</Generator>
-		</None>
+
+		<None Update="Cli\NewCliFeatures.tt" LastGenOutput="NewCliFeatures.generated.cs" Generator="TextTemplatingFileGenerator" />
+		<Compile Update="Cli\NewCliFeatures.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="NewCliFeatures.tt" />
 
 		<None Update="Cli\Fluent.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Fluent.generated.cs" />
 		<Compile Update="Cli\Fluent.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Fluent.tt" />
-		<Compile Update="Cli\NewCliFeatures.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>NewCliFeatures.tt</DependentUpon>
-		</Compile>
 
 		<None Update="Cli\NoMetadata.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="NoMetadata.generated.cs" />
 		<Compile Update="Cli\NoMetadata.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="NoMetadata.tt" />

@@ -392,6 +392,10 @@ namespace LinqToDB.Data
 			await CloseAsync().ConfigureAwait(false);
 
 			Disposed = true;
+
+#if DEBUG
+			Interlocked.Decrement(ref _dataConnectionCount);
+#endif
 		}
 
 		protected static async Task<TResult> TraceActionAsync<TContext, TResult>(
