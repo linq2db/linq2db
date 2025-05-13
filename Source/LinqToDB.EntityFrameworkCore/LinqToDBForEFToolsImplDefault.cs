@@ -625,11 +625,20 @@ namespace LinqToDB.EntityFrameworkCore
 		public virtual EFConnectionInfo ExtractConnectionInfo(IDbContextOptions? options)
 		{
 			var relational = options?.Extensions.OfType<RelationalOptionsExtension>().FirstOrDefault();
-			return new  EFConnectionInfo
+			var result = new EFConnectionInfo
 			{
 				ConnectionString = relational?.ConnectionString,
 				Connection = relational?.Connection
 			};
+
+			if (result.Connection == null && result.ConnectionString == null && relational?.GetType().Name == "NpgsqlOptionsExtension")
+			{
+				var dataSource = relational?.GetType().GetProperty("DataSource")?.GetValue(relational);
+				var settings = dataSource?.GetType().GetProperty("Settings", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(dataSource);
+				result.ConnectionString = (string?) settings?.GetType().GetProperty("ConnectionString")?.GetValue(settings);
+			}
+
+			return result;
 		}
 
 		/// <summary>
