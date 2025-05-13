@@ -631,9 +631,9 @@ namespace LinqToDB.EntityFrameworkCore
 				Connection = relational?.Connection
 			};
 
-			if (result.Connection == null && result.ConnectionString == null && relational?.GetType().Name == "NpgsqlOptionsExtension")
+			if (result.ConnectionString == null && relational?.GetType().Name == "NpgsqlOptionsExtension")
 			{
-				var dataSource = relational?.GetType().GetProperty("DataSource")?.GetValue(relational);
+				var dataSource = relational.GetType().GetProperty("DataSource")?.GetValue(relational);
 				var settings = dataSource?.GetType().GetProperty("Settings", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(dataSource);
 				result.ConnectionString = (string?) settings?.GetType().GetProperty("ConnectionString")?.GetValue(settings);
 			}
