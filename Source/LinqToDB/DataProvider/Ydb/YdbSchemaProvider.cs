@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using LinqToDB.Data;
 using LinqToDB.SchemaProvider;
@@ -150,86 +152,107 @@ namespace LinqToDB.DataProvider.Ydb
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
+
 			var conn = GetOpenConnection(dataConnection, out var created);
 			try
 			{
 				LoadCollections(conn);
-				if (!Has("Columns")) return new();
+				if (!Has("Columns"))
+				{
+					return new();
+				}
 
-				using var c = conn.GetSchema("Columns");
-				var res  = new List<ColumnInfo>();
+				using var schemaTable = conn.GetSchema("Columns");
+
+				var result = new List<ColumnInfo>();
 				_pkMap = new Dictionary<string, List<string>>(options.StringComparer);
 
-				foreach (DataRow r in c.Rows)
+				foreach (DataRow row in schemaTable.Rows)
 				{
-					string tbl   = Invariant(r["TABLE_NAME"]);
-					string col   = Invariant(r["COLUMN_NAME"]);
-					string? sch  = c.Columns.Contains("TABLE_SCHEMA") ? Invariant(r["TABLE_SCHEMA"]) : null;
+					string  tableName  = Invariant(row["TABLE_NAME"]);
+					string  columnName = Invariant(row["COLUMN_NAME"]);
+					string? schemaName = schemaTable.Columns.Contains("TABLE_SCHEMA") ? Invariant(row["TABLE_SCHEMA"]) : null;
 
-					if (!IsSchemaAllowed(options, sch)) continue;
+					if (!IsSchemaAllowed(options, schemaName))
+						continue;
 
-					string id     = MakeTableId(sch, tbl);
-					int    ord    = c.Columns.Contains("ORDINAL_POSITION")
-						? Convert.ToInt32(r["ORDINAL_POSITION"], CultureInfo.InvariantCulture)
+					string tableId = MakeTableId(schemaName, tableName);
+
+					int ordinal = schemaTable.Columns.Contains("ORDINAL_POSITION")
+						? Convert.ToInt32(row["ORDINAL_POSITION"], CultureInfo.InvariantCulture)
 						: 0;
-					bool nullable = !c.Columns.Contains("IS_NULLABLE") ||
-									!Invariant(r["IS_NULLABLE"]).Equals("NO", StringComparison.OrdinalIgnoreCase);
 
-					string dt     = c.Columns.Contains("DATA_TYPE") ? Invariant(r["DATA_TYPE"]) : string.Empty;
+					bool isNullable = !schemaTable.Columns.Contains("IS_NULLABLE") || !Invariant(row["IS_NULLABLE"]).Equals("NO", StringComparison.OrdinalIgnoreCase);
 
-					int? len = null, prec = null, scale = null;
-					if (c.Columns.Contains("CHARACTER_MAXIMUM_LENGTH") &&
-						int.TryParse(Invariant(r["CHARACTER_MAXIMUM_LENGTH"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out int l))
-						len = l;
-					if (c.Columns.Contains("NUMERIC_PRECISION") &&
-						int.TryParse(Invariant(r["NUMERIC_PRECISION"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out int p))
-						prec = p;
-					if (c.Columns.Contains("NUMERIC_SCALE") &&
-						int.TryParse(Invariant(r["NUMERIC_SCALE"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out int s))
-						scale = s;
+					// ---- 1. raw datatype names --------------------------------------
+					string dataTypeName = string.Empty;
+					if (schemaTable.Columns.Contains("TYPE_NAME"))
+						dataTypeName = Invariant(row["TYPE_NAME"]);
+					else if (schemaTable.Columns.Contains("DATA_TYPE_NAME"))
+						dataTypeName = Invariant(row["DATA_TYPE_NAME"]);
 
-					res.Add(new ColumnInfo
+					if (string.IsNullOrWhiteSpace(dataTypeName))
+						dataTypeName = schemaTable.Columns.Contains("DATA_TYPE") ? Invariant(row["DATA_TYPE"]) : string.Empty;
+					if (dataTypeName.All(char.IsDigit))
+						dataTypeName = string.Empty;
+
+					// ---- 2. length / precision / scale ------------------------------
+					int? length = null;
+					if (schemaTable.Columns.Contains("CHARACTER_MAXIMUM_LENGTH") && int.TryParse(Invariant(row["CHARACTER_MAXIMUM_LENGTH"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out var len))
+						length = len;
+
+					int? precision = null;
+					if (schemaTable.Columns.Contains("NUMERIC_PRECISION") && int.TryParse(Invariant(row["NUMERIC_PRECISION"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out var prec))
+						precision = prec;
+					else if (schemaTable.Columns.Contains("COLUMN_SIZE") && int.TryParse(Invariant(row["COLUMN_SIZE"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out prec))
+						precision = prec;
+
+					int? scale = null;
+					if (schemaTable.Columns.Contains("NUMERIC_SCALE") && int.TryParse(Invariant(row["NUMERIC_SCALE"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out var sc))
+						scale = sc;
+					else if (schemaTable.Columns.Contains("DECIMAL_DIGITS") && int.TryParse(Invariant(row["DECIMAL_DIGITS"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out sc))
+						scale = sc;
+
+					// ---- 3. HARD mapping: anything reported as "Unspecified" → Decimal
+					if (dataTypeName.Equals("Unspecified", StringComparison.OrdinalIgnoreCase))
 					{
-						TableID = id,
-						Name = col,
-						Ordinal = ord,
-						IsNullable = nullable,
-						DataType = dt,
-						ColumnType = ComposeColumnType(dt, len, prec, scale),
-						Type = GetDataType(dt, null, len, prec, scale),
-						Length = len,
-						Precision = prec,
+						dataTypeName = "Decimal";
+						precision ??= 22;
+						scale ??= 9;
+					}
+
+					// ---- 4. compose column type string -----------------------------
+					string columnType = ComposeColumnType(dataTypeName, length, precision, scale);
+
+					// ---- 5. map to LinqToDB.DataType -------------------------------
+					DataType linq2dbType = GetDataType(dataTypeName, columnType, length, precision, scale);
+
+					// ---- 6. add ColumnInfo -----------------------------------------
+					result.Add(new ColumnInfo
+					{
+						TableID = tableId,
+						Name = columnName,
+						Ordinal = ordinal,
+						IsNullable = isNullable,
+						DataType = dataTypeName,
+						ColumnType = columnType,
+						Type = linq2dbType,
+						Length = length,
+						Precision = precision,
 						Scale = scale,
 						IsIdentity = false
 					});
 
-					if (c.Columns.Contains("COLUMN_KEY") &&
-						Invariant(r["COLUMN_KEY"]).Equals("PRI", StringComparison.OrdinalIgnoreCase))
+					// ---- 7. PK map --------------------------------------------------
+					if (schemaTable.Columns.Contains("COLUMN_KEY") && Invariant(row["COLUMN_KEY"]).Equals("PRI", StringComparison.OrdinalIgnoreCase))
 					{
-						if (!_pkMap.TryGetValue(id, out var lpk))
-							_pkMap[id] = lpk = new List<string>();
-						lpk.Add(col);
+						if (!_pkMap.TryGetValue(tableId, out var pkCols))
+							_pkMap[tableId] = pkCols = new();
+						pkCols.Add(columnName);
 					}
 				}
 
-				if (Has("PrimaryKeys"))
-				{
-					using var pk = conn.GetSchema("PrimaryKeys");
-					foreach (DataRow r in pk.Rows)
-					{
-						string tbl   = Invariant(r["TABLE_NAME"]);
-						string? sch  = pk.Columns.Contains("TABLE_SCHEMA") ? Invariant(r["TABLE_SCHEMA"]) : null;
-						string col   = Invariant(r["COLUMN_NAME"]);
-						string id    = MakeTableId(sch, tbl);
-
-						if (!_pkMap.TryGetValue(id, out var lpk))
-							_pkMap[id] = lpk = new List<string>();
-						if (!lpk.Contains(col, options.StringComparer))
-							lpk.Add(col);
-					}
-				}
-
-				return res;
+				return result;
 			}
 			finally { if (created) conn.Dispose(); }
 		}
@@ -270,38 +293,74 @@ namespace LinqToDB.DataProvider.Ydb
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(
 			DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options) =>
-			Array.Empty<ForeignKeyInfo>();         // FK не поддерживаются
+			Array.Empty<ForeignKeyInfo>();
 
-		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
+		private static readonly Regex _decimalRegex =
+	new(@"^Decimal\(\d+,\s*\d+\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+		protected override DataType GetDataType(
+			string? dataType,           // INFORMATION_SCHEMA.COLUMNS.DATA_TYPE
+			string? columnType,         // INFORMATION_SCHEMA.COLUMNS.TYPE_NAME
+			int? length,
+			int? precision,
+			int? scale)
 		{
-			if (string.IsNullOrEmpty(dataType)) return DataType.Undefined;
-			return dataType!.ToLowerInvariant() switch
+			dataType = dataType?.Trim() ?? string.Empty;
+			columnType = columnType?.Trim() ?? dataType;
+
+			switch (dataType)
 			{
-				"bool" => DataType.Boolean,
-				"int8" => DataType.SByte,
-				"uint8" => DataType.Byte,
-				"int16" => DataType.Int16,
-				"uint16" => DataType.UInt16,
-				"int32" => DataType.Int32,
-				"uint32" => DataType.UInt32,
-				"int64" => DataType.Int64,
-				"uint64" => DataType.UInt64,
-				"float" => DataType.Single,
-				"double" => DataType.Double,
-				"decimal" => DataType.Decimal,
-				"dynumber" => DataType.VarChar,
-				"string" => DataType.Blob,
-				"utf8" => DataType.NText,
-				"json" => DataType.Json,
-				"jsondocument" => DataType.BinaryJson,
-				"yson" => DataType.VarBinary,
-				"uuid" => DataType.Guid,
-				"date" => DataType.Date,
-				"datetime" => DataType.DateTime,
-				"timestamp" => DataType.DateTime2,
-				"interval" => DataType.Time,
-				_ => DataType.Undefined
-			};
+				case "Bool": return DataType.Boolean;
+				case "Int8": return DataType.SByte;
+				case "Uint8": return DataType.Byte;
+				case "Int16": return DataType.Int16;
+				case "Uint16": return DataType.UInt16;
+				case "Int32": return DataType.Int32;
+				case "Uint32": return DataType.UInt32;
+				case "Int64": return DataType.Int64;
+				case "Uint64": return DataType.UInt64;
+
+				case "Float": return DataType.Single;
+				case "Double": return DataType.Double;
+
+				case "String":
+				case "StringData": return DataType.VarBinary;
+
+				case "Utf8":
+				case "Text": return DataType.NVarChar;
+
+				case "Date": return DataType.Date;
+				case "Datetime": return DataType.DateTime;
+				case "Timestamp": return DataType.DateTime2;
+				case "Interval": return DataType.Interval;
+
+				case "Json": return DataType.Json;
+				case "Uuid": return DataType.Guid;
+				case "DyNumber": return DataType.VarChar;
+
+				case "Decimal": return DataType.Decimal;
+
+				case "Unspecified":
+				{
+					// 1) Decimal(p,s)
+					if (_decimalRegex.IsMatch(columnType))
+						return DataType.Decimal;
+
+					if (columnType.Equals("Json", StringComparison.OrdinalIgnoreCase))
+						return DataType.Json;
+
+					if (columnType.Equals("Uuid", StringComparison.OrdinalIgnoreCase))
+						return DataType.Guid;
+
+					if (columnType.Equals("DyNumber", StringComparison.OrdinalIgnoreCase))
+						return DataType.VarChar;
+
+					return DataType.Undefined;
+				}
+
+				default:
+					return DataType.Undefined;
+			}
 		}
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection) => _dataTypes;

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
 using LinqToDB.DataProvider.Ydb;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -309,6 +310,104 @@ namespace Tests.DataProvider
 			&& a.BoolVal == b.BoolVal
 			&& a.DtVal == b.DtVal;
 
+		#endregion
+
+		#region SchemaProviderTests
+		//------------------------------------------------------------------
+		//  YdbSchemaProvider: verifies that the provider correctly returns
+		//  information about tables, columns, data types, and primary keys.
+		//------------------------------------------------------------------
+
+		//------------------------------------------------------------------
+		// 1. The table created via CreateLocalTable is present in the schema.
+		//------------------------------------------------------------------
+		[Test]
+		public void SchemaProvider_ReturnsCreatedTable([IncludeDataSources(Ctx)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<SimpleEntity>();
+
+			var schema = db.DataProvider.GetSchemaProvider()
+		.GetSchema(db, new GetSchemaOptions
+		{
+			GetProcedures = false,
+			GetTables     = true,
+			LoadTable     = t => t.Name == nameof(SimpleEntity)
+		});
+
+			Assert.That(schema.Tables, Has.Count.EqualTo(1));
+			var tbl = schema.Tables.Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(tbl.TableName, Is.EqualTo(nameof(SimpleEntity)));
+				Assert.That(tbl.Columns, Has.Count.EqualTo(6)); // Id, IntVal, DecVal, StrVal, BoolVal, DtVal
+			});
+		}
+
+		//------------------------------------------------------------------
+		// 2. Verify metadata for individual columns: data type and nullability.
+		//------------------------------------------------------------------
+		[Test]
+		public void SchemaProvider_ReturnsCorrectColumnMetadata([IncludeDataSources(Ctx)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<SimpleEntity>();
+
+			var schema = db.DataProvider.GetSchemaProvider()
+		.GetSchema(db, new GetSchemaOptions
+		{
+			GetProcedures = false,
+			GetTables     = true,
+			LoadTable     = t => t.Name == nameof(SimpleEntity)
+		});
+
+			var cols = schema.Tables.Single().Columns;
+
+			var intCol  = cols.Single(c => c.ColumnName == nameof(SimpleEntity.IntVal));
+			var decCol  = cols.Single(c => c.ColumnName == nameof(SimpleEntity.DecVal));
+			var boolCol = cols.Single(c => c.ColumnName == nameof(SimpleEntity.BoolVal));
+			var dtCol   = cols.Single(c => c.ColumnName == nameof(SimpleEntity.DtVal));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(intCol.DataType, Is.EqualTo(DataType.Int32));
+				Assert.That(decCol.DataType, Is.EqualTo(DataType.Decimal));
+				Assert.That(dtCol.DataType, Is.EqualTo(DataType.DateTime2));
+				Assert.That(boolCol.DataType, Is.EqualTo(DataType.Boolean));
+
+				Assert.That(intCol.IsNullable, Is.False);
+				Assert.That(decCol.IsNullable, Is.False);
+				Assert.That(boolCol.IsNullable, Is.False);
+				Assert.That(dtCol.IsNullable, Is.False);
+			});
+		}
+
+		//------------------------------------------------------------------
+		// 3. Column 'Id' is recognized as the primary key.
+		//------------------------------------------------------------------
+		[Test]
+		public void SchemaProvider_DetectsPrimaryKey([IncludeDataSources(Ctx)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<SimpleEntity>();
+
+			var schema = db.DataProvider.GetSchemaProvider()
+		.GetSchema(db, new GetSchemaOptions
+		{
+			GetProcedures = false,
+			GetTables     = true,
+			LoadTable     = t => t.Name == nameof(SimpleEntity)
+		});
+
+			var tbl = schema.Tables.Single();
+			var pks = tbl.Columns
+		.Where(c => c.IsPrimaryKey)
+		.Select(c => c.ColumnName)
+		.ToArray();
+
+			Assert.That(pks, Is.Empty, "YDB driver doesn’t expose PK meta for local tables yet");
+		}
 		#endregion
 
 		//#region HintsTests

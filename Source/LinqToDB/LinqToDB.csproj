@@ -153,5 +153,15 @@
 		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
 		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
 	</ItemGroup>
+	
+	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+	  <PackageReference Include="Ydb.Sdk" />
+	  <PackageReference Include="Ydb.Sdk.Yc.Auth" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+	  <PackageReference Include="Ydb.Sdk" />
+	  <PackageReference Include="Ydb.Sdk.Yc.Auth" />
+	</ItemGroup>
 
 </Project>
