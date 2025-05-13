@@ -238,12 +238,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var optionsBuilder = new DbContextOptionsBuilder();
 
-			var dataSource = new NpgsqlDataSourceBuilder(connectionString)
-				.MapEnum<Issue4783DBStatus>()
-				.Build();
-
 			optionsBuilder = optionsBuilder.UseNpgsql(
-				dataSource,
+				connectionString,
 				o => o.UseNodaTime().MapEnum<Issue4783DBStatus>())
 				// TODO: remove and fix connection detection logic to use existing connection without extra connection
 				//.UseLinqToDB(builder => builder.AddCustomOptions(o => o.UsePostgreSQL(connectionString, PostgreSQLVersion.v15)))
@@ -324,13 +320,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var optionsBuilder = new DbContextOptionsBuilder();
 
-			var dataSource = new NpgsqlDataSourceBuilder(connectionString)
-				.MapEnum<Issue4940DBStatus>()
-				.Build();
-
 			optionsBuilder = optionsBuilder.UseNpgsql(
-					dataSource,
-					o => o.MapEnum<Issue4940DBStatus>());
+				connectionString,
+				o => o.MapEnum<Issue4940DBStatus>());
 
 			using var ctx = new Issue4940Context(optionsBuilder.Options);
 			using var db  = ctx.CreateLinqToDBConnection();
@@ -396,13 +388,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var optionsBuilder = new DbContextOptionsBuilder();
 
-			var dataSource = new NpgsqlDataSourceBuilder(connectionString)
-				.MapEnum<Issue4940DBStatus>()
-				.Build();
-
 			optionsBuilder = optionsBuilder.UseNpgsql(
-					dataSource,
-					o => o.MapEnum<Issue4940DBStatus>());
+				connectionString,
+				o => o.MapEnum<Issue4940DBStatus>());
 
 			using var ctx = new Issue4940Context(optionsBuilder.Options);
 			using var db  = ctx.CreateLinqToDBConnection();
