@@ -15,7 +15,7 @@
 <#@ import namespace="LinqToDB.Reflection" #>
 <#
 	NamespaceName                     = "LinqToDB.Tools.DataProvider.SqlServer.Schemas";
-	DataContextName                   = "SystemDB";
+	DataContextName                   = "SystemSchemaModel";
 	EnableNullableReferenceTypes      = true;
 	GenerateSchemaAsType              = true;
 	GenerateDatabaseNameFromTable     = true;
@@ -25,6 +25,7 @@
 	NormalizeNamesWithoutUnderscores  = true;
 	PluralizeForeignKeyNames          = false;
 	SingularizeForeignKeyNames        = true;
+	GenerateModelOnly                 = true;
 	LoadDatabaseSchema                = LoadSystemDatabaseSchema;
 
 	LoadSqlServerMetadata(".", "master", SqlServerVersion.v2012);
@@ -32,6 +33,10 @@
 	GetTable("sys.events").  TypeName = "Event";
 	GetTable("sys.objects"). TypeName = "Object";
 	GetTable("sys.systypes").TypeName = "TypeTable";
+
+	SetTable("sys.objects")
+		.Column("type", MemberName : "Type")
+		;
 
 	foreach (var table in Tables.Values)
 	{
@@ -133,7 +138,7 @@
 		var columnReplacement = new[]
 		{
 			new[] { "class",     "Class"              }, new[] { "uid",       "UID"          }, new[] { "setopts",     "SetOptions" },
-			new[] { "colid",     "ColumnID"           }, new[] { "constid",   "ConstraintID" }, new[] { "type",        "TypeColumn" },
+			new[] { "colid",     "ColumnID"           }, new[] { "constid",   "ConstraintID" }, //new[] { "type",        "TypeColumn" },
 			new[] { "cmptlevel", "CompatibilityLevel" }, new[] { "deptype",   "DepType"      }, new[] { "selall",      "SelectAll"  },
 			new[] { "cntrltype", "ControllerType"     }, new[] { "phyname",   "PhysicalName" }, new[] { "groupname",   "GroupName"  },
 			new[] { "indid",     "IndexID"            }, new[] { "rowmodctr", "RowModCtr"    }, new[] { "xmaxlen",     "XMaxLen"    },

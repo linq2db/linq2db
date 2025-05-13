@@ -22,7 +22,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 	/// Data Source    : .
 	/// Server Version : 16.00.1135
 	/// </summary>
-	public partial class SystemDB : LinqToDB.Data.DataConnection
+	public partial class SystemSchemaModel
 	{
 		#region Tables
 
@@ -63,75 +63,49 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		public void InitSchemas()
 		{
-			Availability            = new AvailabilitySchema.           DataContext(this);
-			AzureSQLDatabase        = new AzureSQLDatabaseSchema.       DataContext(this);
-			AzureSynapseAnalytics   = new AzureSynapseAnalyticsSchema.  DataContext(this);
-			ChangeTracking          = new ChangeTrackingSchema.         DataContext(this);
-			CLRAssembly             = new CLRAssemblySchema.            DataContext(this);
-			Compatibility           = new CompatibilitySchema.          DataContext(this);
-			DatabaseMail            = new DatabaseMailSchema.           DataContext(this);
-			DatabaseMirroring       = new DatabaseMirroringSchema.      DataContext(this);
-			DatabasesAndFiles       = new DatabasesAndFilesSchema.      DataContext(this);
-			DataCollector           = new DataCollectorSchema.          DataContext(this);
-			DataSpaces              = new DataSpacesSchema.             DataContext(this);
-			DataTierApplications    = new DataTierApplicationsSchema.   DataContext(this);
-			Endpoints               = new EndpointsSchema.              DataContext(this);
-			ExtendedEvents          = new ExtendedEventsSchema.         DataContext(this);
-			ExternalOperations      = new ExternalOperationsSchema.     DataContext(this);
-			FilestreamAndFileTable  = new FilestreamAndFileTableSchema. DataContext(this);
-			FullTextSearch          = new FullTextSearchSchema.         DataContext(this);
-			Information             = new InformationSchema.            DataContext(this);
-			LinkedServers           = new LinkedServersSchema.          DataContext(this);
-			Object                  = new ObjectSchema.                 DataContext(this);
-			PartitionFunction       = new PartitionFunctionSchema.      DataContext(this);
-			PolicyBasedManagement   = new PolicyBasedManagementSchema.  DataContext(this);
-			QueryStore              = new QueryStoreSchema.             DataContext(this);
-			ResourceGovernor        = new ResourceGovernorSchema.       DataContext(this);
-			ScalarTypes             = new ScalarTypesSchema.            DataContext(this);
-			Security                = new SecuritySchema.               DataContext(this);
-			ServerWideConfiguration = new ServerWideConfigurationSchema.DataContext(this);
-			ServiceBroker           = new ServiceBrokerSchema.          DataContext(this);
-			SpatialData             = new SpatialDataSchema.            DataContext(this);
-			Xml                     = new XmlSchema.                    DataContext(this);
+			Availability            = new AvailabilitySchema.           DataContext(_dataContext);
+			AzureSQLDatabase        = new AzureSQLDatabaseSchema.       DataContext(_dataContext);
+			AzureSynapseAnalytics   = new AzureSynapseAnalyticsSchema.  DataContext(_dataContext);
+			ChangeTracking          = new ChangeTrackingSchema.         DataContext(_dataContext);
+			CLRAssembly             = new CLRAssemblySchema.            DataContext(_dataContext);
+			Compatibility           = new CompatibilitySchema.          DataContext(_dataContext);
+			DatabaseMail            = new DatabaseMailSchema.           DataContext(_dataContext);
+			DatabaseMirroring       = new DatabaseMirroringSchema.      DataContext(_dataContext);
+			DatabasesAndFiles       = new DatabasesAndFilesSchema.      DataContext(_dataContext);
+			DataCollector           = new DataCollectorSchema.          DataContext(_dataContext);
+			DataSpaces              = new DataSpacesSchema.             DataContext(_dataContext);
+			DataTierApplications    = new DataTierApplicationsSchema.   DataContext(_dataContext);
+			Endpoints               = new EndpointsSchema.              DataContext(_dataContext);
+			ExtendedEvents          = new ExtendedEventsSchema.         DataContext(_dataContext);
+			ExternalOperations      = new ExternalOperationsSchema.     DataContext(_dataContext);
+			FilestreamAndFileTable  = new FilestreamAndFileTableSchema. DataContext(_dataContext);
+			FullTextSearch          = new FullTextSearchSchema.         DataContext(_dataContext);
+			Information             = new InformationSchema.            DataContext(_dataContext);
+			LinkedServers           = new LinkedServersSchema.          DataContext(_dataContext);
+			Object                  = new ObjectSchema.                 DataContext(_dataContext);
+			PartitionFunction       = new PartitionFunctionSchema.      DataContext(_dataContext);
+			PolicyBasedManagement   = new PolicyBasedManagementSchema.  DataContext(_dataContext);
+			QueryStore              = new QueryStoreSchema.             DataContext(_dataContext);
+			ResourceGovernor        = new ResourceGovernorSchema.       DataContext(_dataContext);
+			ScalarTypes             = new ScalarTypesSchema.            DataContext(_dataContext);
+			Security                = new SecuritySchema.               DataContext(_dataContext);
+			ServerWideConfiguration = new ServerWideConfigurationSchema.DataContext(_dataContext);
+			ServiceBroker           = new ServiceBrokerSchema.          DataContext(_dataContext);
+			SpatialData             = new SpatialDataSchema.            DataContext(_dataContext);
+			Xml                     = new XmlSchema.                    DataContext(_dataContext);
 		}
 
 		#endregion
 
 		#region .ctor
 
-		public SystemDB()
+		public SystemSchemaModel(IDataContext dataContext)
 		{
+			_dataContext = dataContext;
 			InitSchemas();
-			InitDataContext();
-			InitMappingSchema();
 		}
 
-		public SystemDB(string configuration)
-			: base(configuration)
-		{
-			InitSchemas();
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public SystemDB(DataOptions options)
-			: base(options)
-		{
-			InitSchemas();
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public SystemDB(DataOptions<SystemDB> options)
-			: base(options.Options)
-		{
-			InitSchemas();
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		partial void InitDataContext  ();
-		partial void InitMappingSchema();
+		private readonly IDataContext _dataContext;
 
 		#endregion
 	}
@@ -2080,7 +2054,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// Type of alert.<br/>
 			/// Range: NOT NULL<br/><br/> Possible values:<br/><br/> StatusChange - The device status has changed.<br/><br/> Threshold - A value has exceeded the threshold value.
 			/// </summary>
-			[Column("type"),            NotNull] public string TypeColumn     { get; set; } = null!; // nvarchar(32)
+			[Column("type"),            NotNull] public string Type           { get; set; } = null!; // nvarchar(32)
 			/// <summary>
 			/// <para><strong>description</strong> NOT NULL <strong>nvarchar(4000)</strong></para>
 			/// Description of the alert.<br/>
@@ -2794,7 +2768,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>int</strong></para>
 			/// Dictionary type:<br/><br/> 1 - Hash dictionary containing <strong>int</strong> values<br/><br/> 2 - Not used<br/><br/> 3 - Hash dictionary containing string values<br/><br/> 4 - Hash dictionary containing <strong>float</strong> values
 			/// </summary>
-			[Column("type"),          NotNull] public int  TypeColumn   { get; set; } // int
+			[Column("type"),          NotNull] public int  Type         { get; set; } // int
 			/// <summary>
 			/// <para><strong>last_id</strong> NOT NULL <strong>int</strong></para>
 			/// The last data id in the dictionary.
@@ -3022,7 +2996,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// Type of index:<br/><br/> 0 = Heap<br/><br/> 1 = Clustered<br/><br/> 2 = Nonclustered<br/><br/> 5 = Clustered xVelocity memory optimized columnstore index
 			/// </summary>
-			[Column("type"),                 NotNull] public byte   TypeColumn         { get; set; } // tinyint
+			[Column("type"),                 NotNull] public byte   Type               { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>type_desc</strong> NOT NULL <strong>nvarchar(60)</strong></para>
 			/// Description of index type:<br/><br/> HEAP<br/><br/> CLUSTERED<br/><br/> NONCLUSTERED<br/><br/> CLUSTERED   COLUMNSTORE
@@ -3252,7 +3226,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                         NotNull] public string   TypeColumn               { get; set; } = null!; // char(2)
+			[Column("type"),                         NotNull] public string   Type                     { get; set; } = null!; // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NOT NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -4502,7 +4476,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>smallint</strong></para>
 			/// Type of entity this row represents:<br/><br/> 1001 = Character set.<br/><br/> 2001 = Sort order.
 			/// </summary>
-			[Column("type"),             NotNull    ] public short   TypeColumn       { get; set; } // smallint
+			[Column("type"),             NotNull    ] public short   Type             { get; set; } // smallint
 			/// <summary>
 			/// <para><strong>id</strong> NOT NULL <strong>tinyint</strong></para>
 			/// Unique ID for the character set or sort order. Note sort orders and character sets cannot share the same ID number. The ID range of 1 through 240 is reserved for use by the Database Engine.
@@ -4661,7 +4635,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// Physical storage type from <strong>sys</strong>.<strong>types</strong>.
 			/// </summary>
-			[Column("type"),        NotNull    ] public byte    TypeColumn  { get; set; } // tinyint
+			[Column("type"),        NotNull    ] public byte    Type        { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>usertype</strong> NULL <strong>smallint</strong></para>
 			/// ID of user-defined data type from <strong>sys.types</strong>. Overflows or returns NULL if the number of data types exceeds 32,767.
@@ -5168,7 +5142,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// Physical storage data type.
 			/// </summary>
-			[Column("type"),        NotNull    ] public byte    TypeColumn  { get; set; } // tinyint
+			[Column("type"),        NotNull    ] public byte    Type        { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>printfmt</strong> NULL <strong>varchar(255)</strong></para>
 			/// Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.
@@ -6027,7 +6001,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>char(2)</strong></para>
 			/// Object type. Can be one of the following values:<br/><br/>AF = Aggregate function (CLR)<br/>C = CHECK constraint<br/>D = Default or DEFAULT constraint<br/>F = FOREIGN KEY constraint<br/>FN = Scalar function<br/>FS = Assembly (CLR) scalar-function<br/>FT = Assembly (CLR) table-valued functionIF = In-lined table-function<br/>IT - Internal table<br/>K = PRIMARY KEY or UNIQUE constraint<br/>L = Log<br/>P = Stored procedure<br/>PC = Assembly (CLR) stored-procedure<br/>R = Rule<br/>RF = Replication filter stored procedure<br/>S = System table<br/>SN = Synonym<br/>SQ = Service queue<br/>TA = Assembly (CLR) DML trigger<br/>TF = Table function<br/>TR = SQL DML Trigger<br/>TT = Table type<br/>U = User table<br/>V = View<br/>X = Extended stored procedure
 			/// </summary>
-			[Column("type"),                Nullable] public string?  TypeColumn     { get; set; } // char(2)
+			[Column("type"),                Nullable] public string?  Type           { get; set; } // char(2)
 			/// <summary>
 			/// <para><strong>userstat</strong> NULL <strong>smallint</strong></para>
 			/// Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.
@@ -7968,7 +7942,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>tinyint</strong></para>
 			/// Type of backup device:<br/><br/> 2 = Disk<br/><br/> 3 = Diskette (obsolete)<br/><br/> 5 = Tape<br/><br/> 6 = Pipe (obsolete)<br/><br/> 7 = Virtual device (for optional use by third-party backup vendors)<br/><br/> 9 = URL<br/><br/>Typically, only disk (2) and URL (9) are used.
 			/// </summary>
-			[Column("type"),             Nullable] public byte?   TypeColumn   { get; set; } // tinyint
+			[Column("type"),             Nullable] public byte?   Type         { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of backup device type:<br/><br/> DISK<br/><br/> DISKETTE (obsolete)<br/><br/> TAPE<br/><br/> PIPE (obsolete)<br/><br/> VIRTUAL_DEVICE (for optional use by third party backup vendors)<br/><br/> URL <br/><br/> Typically, only DISK and URL are used.
@@ -8466,7 +8440,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Describes the automatic tuning configuration target type.
 			/// </summary>
-			[Column("type"),            Nullable] public string? TypeColumn  { get; set; } // nvarchar(60)
+			[Column("type"),            Nullable] public string? Type        { get; set; } // nvarchar(60)
 			/// <summary>
 			/// <para><strong>type_value</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Indicates the query ID from Query Store that the automatic tuning configuration option is operating on.
@@ -8584,7 +8558,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// File type:<br/><br/>0 = Rows<br/>1 = Log<br/>2 = FILESTREAM<br/>3 = Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.<br/>4 = Full-text
 			/// </summary>
-			[Column("type"),                     NotNull    ] public byte      TypeColumn            { get; set; } // tinyint
+			[Column("type"),                     NotNull    ] public byte      Type                  { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the file type:<br/><br/><c>ROWS</c><br/><c>LOG</c><br/><c>FILESTREAM</c><br/><c>FULLTEXT</c>
@@ -8956,7 +8930,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// File type:<br/><br/><c>0</c> = Rows<br/><br/><c>1</c> = Log<br/><br/><c>2</c> = FILESTREAM<br/><br/><c>3</c> = Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.<br/><br/><c>4</c> = Full-text (Full-text catalogs earlier than SQL Server 2008 (10.0.x); full-text catalogs that are upgraded to or created in SQL Server 2008 (10.0.x) and later versions report a file type <c>0</c>.)
 			/// </summary>
-			[Column("type"),                     NotNull    ] public byte      TypeColumn            { get; set; } // tinyint
+			[Column("type"),                     NotNull    ] public byte      Type                  { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the file type:<br/><br/><c>ROWS</c><br/><c>LOG</c><br/><c>FILESTREAM</c><br/><c>FULLTEXT</c> (Full-text catalogs earlier than SQL Server 2008 (10.0.x).)
@@ -9649,7 +9623,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(2)</strong></para>
 			/// Data space type:<br/><br/> FG = Filegroup<br/><br/> FD = FILESTREAM data filegroup<br/><br/> FX = Memory-optimized tables filegroup<br/><br/> <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.<br/><br/> PS = Partition scheme
 			/// </summary>
-			[Column("type"),          NotNull    ] public string  TypeColumn  { get; set; } = null!; // char(2)
+			[Column("type"),          NotNull    ] public string  Type        { get; set; } = null!; // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of data space type:<br/><br/> FILESTREAM_DATA_FILEGROUP<br/><br/> MEMORY_OPTIMIZED_DATA_FILEGROUP<br/><br/> <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.<br/><br/> PARTITION_SCHEME<br/><br/> ROWS_FILEGROUP
@@ -9716,7 +9690,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(2)</strong></para>
 			/// Data space type:<br/><br/> FG = Filegroup<br/><br/> FD = FILESTREAM data filegroup<br/><br/> FX = Memory-optimized tables filegroup<br/><br/> <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.<br/><br/> PS = Partition scheme
 			/// </summary>
-			[Column("type"),                  NotNull    ] public string  TypeColumn         { get; set; } = null!; // char(2)
+			[Column("type"),                  NotNull    ] public string  Type               { get; set; } = null!; // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of data space type:<br/><br/> FILESTREAM_DATA_FILEGROUP<br/><br/> MEMORY_OPTIMIZED_DATA_FILEGROUP<br/><br/> <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.<br/><br/> PARTITION_SCHEME<br/><br/> ROWS_FILEGROUP
@@ -9777,7 +9751,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(2)</strong></para>
 			/// Data space type:<br/><br/> FG = Filegroup<br/><br/> FD = FILESTREAM data filegroup<br/><br/> FX = Memory-optimized tables filegroup<br/><br/> <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.<br/><br/> PS = Partition scheme
 			/// </summary>
-			[Column("type"),          NotNull    ] public string  TypeColumn  { get; set; } = null!; // char(2)
+			[Column("type"),          NotNull    ] public string  Type        { get; set; } = null!; // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of data space type:<br/><br/> FILESTREAM_DATA_FILEGROUP<br/><br/> MEMORY_OPTIMIZED_DATA_FILEGROUP<br/><br/> <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.<br/><br/> PARTITION_SCHEME<br/><br/> ROWS_FILEGROUP
@@ -9987,7 +9961,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// Endpoint payload type.<br/><br/> 1 = SOAP<br/><br/> 2 = TSQL<br/><br/> 3 = SERVICE_BROKER<br/><br/> 4 = DATABASE_MIRRORING<br/><br/> Is not nullable.
 			/// </summary>
-			[Column("type"),                      NotNull    ] public byte    TypeColumn              { get; set; } // tinyint
+			[Column("type"),                      NotNull    ] public byte    Type                    { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the endpoint payload type. Is nullable. One of the following values:<br/><br/> <strong>SOAP</strong><br/><br/> <strong>TSQL</strong><br/><br/> <strong>SERVICE_BROKER</strong><br/><br/> <strong>DATABASE_MIRRORING</strong>
@@ -10088,7 +10062,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// Endpoint payload type.<br/><br/> 1 = SOAP<br/><br/> 2 = TSQL<br/><br/> 3 = SERVICE_BROKER<br/><br/> 4 = DATABASE_MIRRORING<br/><br/> Is not nullable.
 			/// </summary>
-			[Column("type"),              NotNull    ] public byte    TypeColumn      { get; set; } // tinyint
+			[Column("type"),              NotNull    ] public byte    Type            { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the endpoint payload type. Is nullable. One of the following values:<br/><br/> <strong>SOAP</strong><br/><br/> <strong>TSQL</strong><br/><br/> <strong>SERVICE_BROKER</strong><br/><br/> <strong>DATABASE_MIRRORING</strong>
@@ -10288,7 +10262,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// Endpoint payload type.<br/><br/> 1 = SOAP<br/><br/> 2 = TSQL<br/><br/> 3 = SERVICE_BROKER<br/><br/> 4 = DATABASE_MIRRORING<br/><br/> Is not nullable.
 			/// </summary>
-			[Column("type"),                          NotNull    ] public byte    TypeColumn                 { get; set; } // tinyint
+			[Column("type"),                          NotNull    ] public byte    Type                       { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the endpoint payload type. Is nullable. One of the following values:<br/><br/> <strong>SOAP</strong><br/><br/> <strong>TSQL</strong><br/><br/> <strong>SERVICE_BROKER</strong><br/><br/> <strong>DATABASE_MIRRORING</strong>
@@ -11062,7 +11036,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// Data source type displayed as a number.<br/>
 			/// Range: 0 - HADOOP<br/><br/> 1 - RDBMS<br/><br/> 2 - SHARD_MAP_MANAGER<br/><br/> 3 - REMOTE_DATA_ARCHIVE<br/><br/> 4 - *internal use only*<br/><br/> 5 - BLOB_STORAGE<br/><br/> 6 - NONE
 			/// </summary>
-			[Column("type"),                      NotNull    ] public byte    TypeColumn              { get; set; } // tinyint
+			[Column("type"),                      NotNull    ] public byte    Type                    { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>resource_manager_location</strong> NULL <strong>nvarchar(4000)</strong></para>
 			/// For type HADOOP, the IP and port location of the Hadoop Resource Manager. The <c>resource_manager_location</c> is used for submitting a job on a Hadoop data source.<br/><br/> <c>NULL</c> for other types of external data sources.
@@ -11206,7 +11180,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                   Nullable] public string?  TypeColumn        { get; set; } // char(2)
+			[Column("type"),                   Nullable] public string?  Type              { get; set; } // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -14880,7 +14854,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/> AF = Aggregate function (CLR)<br/><br/> C = CHECK constraint<br/><br/> D = DEFAULT (constraint or stand-alone)<br/><br/> F = FOREIGN KEY constraint<br/><br/> FN = SQL scalar function<br/><br/> FS = Assembly (CLR) scalar-function<br/><br/> FT = Assembly (CLR) table-valued function<br/><br/> IF = SQL inline table-valued function<br/><br/> IT = Internal table<br/><br/> P = SQL Stored Procedure<br/><br/> PC = Assembly (CLR) stored-procedure<br/><br/> PG = Plan guide<br/><br/> PK = PRIMARY KEY constraint<br/><br/> R = Rule (old-style, stand-alone)<br/><br/> RF = Replication-filter-procedure<br/><br/> S = System base table<br/><br/> SN = Synonym<br/><br/> SO = Sequence object<br/><br/> SQ = Service queue<br/><br/> TA = Assembly (CLR) DML trigger<br/><br/> TF = SQL table-valued-function<br/><br/> TR = SQL DML trigger<br/><br/> TT = Table type<br/><br/> U = Table (user-defined)<br/><br/> UQ = UNIQUE constraint<br/><br/> V = View<br/><br/> X = Extended stored procedure
 			/// </summary>
-			[Column("type"),                   Nullable] public string?  TypeColumn        { get; set; } // char(2)
+			[Column("type"),                   Nullable] public string?  Type              { get; set; } // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type. AGGREGATE_FUNCTION<br/><br/> CHECK_CONSTRAINT<br/><br/> DEFAULT_CONSTRAINT<br/><br/> FOREIGN_KEY_CONSTRAINT<br/><br/> SQL_SCALAR_FUNCTION<br/><br/> CLR_SCALAR_FUNCTION<br/><br/> CLR_TABLE_VALUED_FUNCTION<br/><br/> SQL_INLINE_TABLE_VALUED_FUNCTION<br/><br/> INTERNAL_TABLE<br/><br/> SQL_STORED_PROCEDURE<br/><br/> CLR_STORED_PROCEDURE<br/><br/> PLAN_GUIDE<br/><br/> PRIMARY_KEY_CONSTRAINT<br/><br/> RULE<br/><br/> REPLICATION_FILTER_PROCEDURE<br/><br/> SYSTEM_TABLE<br/><br/> SYNONYM<br/><br/> SERVICE_QUEUE<br/><br/> CLR_TRIGGER<br/><br/> SQL_TABLE_VALUED_FUNCTION<br/><br/> SQL_TRIGGER<br/><br/> TABLE_TYPE<br/><br/> USER_TABLE<br/><br/> UNIQUE_CONSTRAINT<br/><br/> VIEW<br/><br/> EXTENDED_STORED_PROCEDURE
@@ -14959,7 +14933,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// Type of allocation unit:<br/><br/> 0 = Dropped<br/><br/> 1 = In-row data (all data types, except LOB data types)<br/><br/> 2 = Large object (LOB) data (<strong>text</strong>, <strong>ntext</strong>, <strong>image</strong>, <strong>xml</strong>, large value types, and CLR user-defined types)<br/><br/> 3 = Row-overflow data
 			/// </summary>
-			[Column("type"),               NotNull    ] public byte    TypeColumn       { get; set; } // tinyint
+			[Column("type"),               NotNull    ] public byte    Type             { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the allocation unit type:<br/><br/> <strong>DROPPED</strong><br/><br/> <strong>IN_ROW_DATA</strong><br/><br/> <strong>LOB_DATA</strong><br/><br/> <strong>ROW_OVERFLOW_DATA</strong>
@@ -15228,7 +15202,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                        NotNull    ] public string   TypeColumn               { get; set; } = null!; // char(2)
+			[Column("type"),                        NotNull    ] public string   Type                     { get; set; } = null!; // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -15390,7 +15364,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                       Nullable] public string?  TypeColumn            { get; set; } // char(2)
+			[Column("type"),                       Nullable] public string?  Type                  { get; set; } // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -15729,7 +15703,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>int</strong></para>
 			/// Dictionary type:<br/><br/> 1 - Hash dictionary containing <strong>int</strong> values<br/><br/> 2 - Not used<br/><br/> 3 - Hash dictionary containing string values<br/><br/> 4 - Hash dictionary containing <strong>float</strong> values<br/><br/> For more information about dictionaries, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/~/relational-databases/indexes/columnstore-indexes-overview'>Columnstore Indexes Guide</a>.
 			/// </summary>
-			[Column("type"),          Nullable] public int?  TypeColumn   { get; set; } // int
+			[Column("type"),          Nullable] public int?  Type         { get; set; } // int
 			/// <summary>
 			/// <para><strong>last_id</strong> NULL <strong>int</strong></para>
 			/// The last data ID in the dictionary.
@@ -16203,7 +16177,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                   Nullable] public string?  TypeColumn        { get; set; } // char(2)
+			[Column("type"),                   Nullable] public string?  Type              { get; set; } // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -16279,7 +16253,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>int</strong></para>
 			/// Event that causes the trigger to fire.
 			/// </summary>
-			[Column("type"),                  NotNull    ] public int     TypeColumn         { get; set; } // int
+			[Column("type"),                  NotNull    ] public int     Type               { get; set; } // int
 			/// <summary>
 			/// <para><strong>type_desc</strong> NOT NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the event that causes the trigger to fire.
@@ -16401,7 +16375,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>int</strong></para>
 			/// Type of event or event group that causes an event notification to fire.
 			/// </summary>
-			[Column("type"),        NotNull    ] public int     TypeColumn { get; set; } // int
+			[Column("type"),        NotNull    ] public int     Type       { get; set; } // int
 			/// <summary>
 			/// <para><strong>type_name</strong> NULL <strong>nvarchar(128)</strong></para>
 			/// Name of an event or event group. This can be specified in the FOR clause of a <a href='https://docs.microsoft.com/en-us/sql/t-sql/statements/create-event-notification-transact-sql'>CREATE EVENT NOTIFICATION</a> statement.
@@ -16633,7 +16607,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                              Nullable] public string?  TypeColumn                  { get; set; } // char(2)
+			[Column("type"),                              Nullable] public string?  Type                        { get; set; } // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -16837,7 +16811,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// Type of index:<br/><br/> 0 = Heap<br/><br/> 1 = Clustered rowstore (B-tree)<br/><br/> 2 = Nonclustered rowstore (B-tree)<br/><br/> 3 = XML<br/><br/> 4 = Spatial<br/><br/> 5 = Clustered columnstore index. <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.<br/><br/> 6 = Nonclustered columnstore index. <strong>Applies to</strong>: SQL Server 2012 (11.x) and later.<br/><br/> 7 = Nonclustered hash index. <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.
 			/// </summary>
-			[Column("type"),                        NotNull    ] public byte    TypeColumn               { get; set; } // tinyint
+			[Column("type"),                        NotNull    ] public byte    Type                     { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of index type:<br/><br/> HEAP<br/><br/> CLUSTERED<br/><br/> NONCLUSTERED<br/><br/> XML<br/><br/> SPATIAL<br/><br/> CLUSTERED COLUMNSTORE - <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.<br/><br/> NONCLUSTERED COLUMNSTORE - <strong>Applies to</strong>: SQL Server 2012 (11.x) and later.<br/><br/> NONCLUSTERED HASH : NONCLUSTERED HASH indexes are supported only on memory-optimized tables. The <c>sys.hash_indexes</c> view shows the current hash indexes and the hash properties. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-hash-indexes-transact-sql'>sys.hash_indexes (Transact-SQL)</a>. <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.
@@ -17215,7 +17189,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// Type of index:<br/><br/> 0 = Heap<br/><br/> 1 = Clustered rowstore (B-tree)<br/><br/> 2 = Nonclustered rowstore (B-tree)<br/><br/> 3 = XML<br/><br/> 4 = Spatial<br/><br/> 5 = Clustered columnstore index. <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.<br/><br/> 6 = Nonclustered columnstore index. <strong>Applies to</strong>: SQL Server 2012 (11.x) and later.<br/><br/> 7 = Nonclustered hash index. <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.
 			/// </summary>
-			[Column("type"),                        NotNull    ] public byte    TypeColumn               { get; set; } // tinyint
+			[Column("type"),                        NotNull    ] public byte    Type                     { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of index type:<br/><br/> HEAP<br/><br/> CLUSTERED<br/><br/> NONCLUSTERED<br/><br/> XML<br/><br/> SPATIAL<br/><br/> CLUSTERED COLUMNSTORE - <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.<br/><br/> NONCLUSTERED COLUMNSTORE - <strong>Applies to</strong>: SQL Server 2012 (11.x) and later.<br/><br/> NONCLUSTERED HASH : NONCLUSTERED HASH indexes are supported only on memory-optimized tables. The <c>sys.hash_indexes</c> view shows the current hash indexes and the hash properties. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-hash-indexes-transact-sql'>sys.hash_indexes (Transact-SQL)</a>. <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.
@@ -17591,7 +17565,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                     NotNull    ] public string   TypeColumn            { get; set; } = null!; // char(2)
+			[Column("type"),                     NotNull    ] public string   Type                  { get; set; } = null!; // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -17702,7 +17676,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                   Nullable] public string?  TypeColumn        { get; set; } // char(2)
+			[Column("type"),                   Nullable] public string?  Type              { get; set; } // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -17834,7 +17808,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>int</strong></para>
 			/// Type of internal table.<br/><br/> 0 => DELETED_ROWS_TABLE <br/> 1 => USER_TABLE <br/> 2 => DICTIONARIES_TABLE<br/>3 => SEGMENTS_TABLE<br/>4 => ROW_GROUPS_INFO_TABLE<br/>5 => INTERNAL OFF-ROW DATA TABLE<br/>252 => INTERNAL_TEMPORAL_HISTORY_TABLE
 			/// </summary>
-			[Column("type"),             Nullable] public int?   TypeColumn  { get; set; } // int
+			[Column("type"),             Nullable] public int?   Type        { get; set; } // int
 			/// <summary>
 			/// <para><strong>type_desc</strong> NOT NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the type<br/><br/>DELETED_ROWS_TABLE -> Internal table tracking deleted rows for a columnstore index<br/>USER_TABLE -> Table containing the in-row user data<br/>DICTIONARIES_TABLE -> Dictionaries for a columnstore index<br/>SEGMENTS_TABLE -> Compressed segments for a columnstore index<br/>ROW_GROUPS_INFO_TABLE -> Metadata about compressed row groups of a columnstore index<br/>INTERNAL OFF-ROW DATA TABLE -> Internal table used for storage of an off-row column. In this case, minor_id reflects the column_id.<br/>INTERNAL_TEMPORAL_HISTORY_TABLE -> Hot tail of the disk-based history table. Rows inserted into the history are inserted into this internal memory-optimized table first. There is a background task that asynchronously moves rows from this internal table to the disk-based history table.
@@ -18052,7 +18026,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                   Nullable] public string?  TypeColumn        { get; set; } // char(2)
+			[Column("type"),                   Nullable] public string?  Type              { get; set; } // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -18922,7 +18896,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                         Nullable] public string?  TypeColumn             { get; set; } // char(2)
+			[Column("type"),                         Nullable] public string?  Type                   { get; set; } // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -19023,7 +18997,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                   Nullable] public string?  TypeColumn        { get; set; } // char(2)
+			[Column("type"),                   Nullable] public string?  Type              { get; set; } // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -19200,7 +19174,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>int</strong></para>
 			/// Type of the event that causes the event notification or DDL trigger to fire.
 			/// </summary>
-			[Column("type"),                  NotNull    ] public int     TypeColumn         { get; set; } // int
+			[Column("type"),                  NotNull    ] public int     Type               { get; set; } // int
 			/// <summary>
 			/// <para><strong>type_desc</strong> NOT NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the event that causes the DDL trigger or event notification to fire.
@@ -19388,7 +19362,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/> TA = Assembly (CLR) trigger<br/><br/> TR = SQL trigger
 			/// </summary>
-			[Column("type"),              NotNull    ] public string   TypeColumn      { get; set; } = null!; // char(2)
+			[Column("type"),              NotNull    ] public string   Type            { get; set; } = null!; // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the class of the object type.<br/><br/> CLR_TRIGGER<br/><br/> SQL_TRIGGER
@@ -19874,7 +19848,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                   Nullable] public string?  TypeColumn        { get; set; } // char(2)
+			[Column("type"),                   Nullable] public string?  Type              { get; set; } // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -20126,7 +20100,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/> AF = Aggregate function (CLR)<br/><br/> C = CHECK constraint<br/><br/> D = DEFAULT (constraint or stand-alone)<br/><br/> F = FOREIGN KEY constraint<br/><br/> FN = SQL scalar function<br/><br/> FS = Assembly (CLR) scalar-function<br/><br/> FT = Assembly (CLR) table-valued function<br/><br/> IF = SQL inline table-valued function<br/><br/> IT = Internal table<br/><br/> P = SQL Stored Procedure<br/><br/> PC = Assembly (CLR) stored-procedure<br/><br/> PG = Plan guide<br/><br/> PK = PRIMARY KEY constraint<br/><br/> R = Rule (old-style, stand-alone)<br/><br/> RF = Replication-filter-procedure<br/><br/> S = System base table<br/><br/> SN = Synonym<br/><br/> SQ = Service queue<br/><br/> TA = Assembly (CLR) DML trigger<br/><br/> TF = SQL table-valued-function<br/><br/> TR = SQL DML trigger<br/><br/> TT = Table type<br/><br/> U = Table (user-defined)<br/><br/> UQ = UNIQUE constraint<br/><br/> V = View<br/><br/> X = Extended stored procedure
 			/// </summary>
-			[Column("type"),                NotNull    ] public string   TypeColumn        { get; set; } = null!; // char(2)
+			[Column("type"),                NotNull    ] public string   Type              { get; set; } = null!; // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type. AGGREGATE_FUNCTION<br/><br/> CHECK_CONSTRAINT<br/><br/> DEFAULT_CONSTRAINT<br/><br/> FOREIGN_KEY_CONSTRAINT<br/><br/> SQL_SCALAR_FUNCTION<br/><br/> CLR_SCALAR_FUNCTION<br/><br/> CLR_TABLE_VALUED_FUNCTION<br/><br/> SQL_INLINE_TABLE_VALUED_FUNCTION<br/><br/> INTERNAL_TABLE<br/><br/> SQL_STORED_PROCEDURE<br/><br/> CLR_STORED_PROCEDURE<br/><br/> PLAN_GUIDE<br/><br/> PRIMARY_KEY_CONSTRAINT<br/><br/> RULE<br/><br/> REPLICATION_FILTER_PROCEDURE<br/><br/> SYSTEM_TABLE<br/><br/> SYNONYM<br/><br/> SERVICE_QUEUE<br/><br/> CLR_TRIGGER<br/><br/> SQL_TABLE_VALUED_FUNCTION<br/><br/> SQL_TRIGGER<br/><br/> TABLE_TYPE<br/><br/> USER_TABLE<br/><br/> UNIQUE_CONSTRAINT<br/><br/> VIEW<br/><br/> EXTENDED_STORED_PROCEDURE
@@ -20417,7 +20391,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                        NotNull    ] public string   TypeColumn               { get; set; } = null!; // char(2)
+			[Column("type"),                        NotNull    ] public string   Type                     { get; set; } = null!; // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -20741,7 +20715,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/> TA = Assembly (CLR) trigger<br/><br/> TR = SQL trigger
 			/// </summary>
-			[Column("type"),                   NotNull    ] public string   TypeColumn          { get; set; } = null!; // char(2)
+			[Column("type"),                   NotNull    ] public string   Type                { get; set; } = null!; // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of object type.<br/><br/> CLR_TRIGGER<br/><br/> SQL_TRIGGER
@@ -20810,7 +20784,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>int</strong></para>
 			/// Event that causes the trigger to fire.
 			/// </summary>
-			[Column("type"),                  NotNull    ] public int     TypeColumn         { get; set; } // int
+			[Column("type"),                  NotNull    ] public int     Type               { get; set; } // int
 			/// <summary>
 			/// <para><strong>type_desc</strong> NOT NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the event that causes the trigger to fire.
@@ -20866,7 +20840,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>int</strong></para>
 			/// Type of event or event group that causes a trigger to fire.
 			/// </summary>
-			[Column("type"),        NotNull    ] public int     TypeColumn { get; set; } // int
+			[Column("type"),        NotNull    ] public int     Type       { get; set; } // int
 			/// <summary>
 			/// <para><strong>type_name</strong> NULL <strong>nvarchar(64)</strong></para>
 			/// Name of an event or event group. This can be specified in the FOR clause of a <a href='https://docs.microsoft.com/en-us/sql/t-sql/statements/create-trigger-transact-sql'>CREATE TRIGGER</a> statement.
@@ -20917,7 +20891,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                           Nullable] public string?  TypeColumn               { get; set; } // char(2)
+			[Column("type"),                           Nullable] public string?  Type                     { get; set; } // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -21063,7 +21037,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(2)</strong></para>
 			/// Function type.<br/><br/> R = Range
 			/// </summary>
-			[Column("type"),                    NotNull    ] public string   TypeColumn           { get; set; } = null!; // char(2)
+			[Column("type"),                    NotNull    ] public string   Type                 { get; set; } = null!; // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Function type.<br/><br/> RANGE
@@ -24512,7 +24486,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(4)</strong></para>
 			/// Database permission type. For a list of permission types, see the next table.
 			/// </summary>
-			[Column("type"),                 NotNull    ] public string  TypeColumn         { get; set; } = null!; // char(4)
+			[Column("type"),                 NotNull    ] public string  Type               { get; set; } = null!; // char(4)
 			/// <summary>
 			/// <para><strong>permission_name</strong> NULL <strong>nvarchar(128)</strong></para>
 			/// Permission name.
@@ -24558,7 +24532,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(1)</strong></para>
 			/// Principal type:<br/><br/> A = Application role<br/><br/> C = User mapped to a certificate<br/><br/> E = External user from Microsoft Entra ID<br/><br/> G = Windows group<br/><br/> K = User mapped to an asymmetric key<br/><br/> R = Database role<br/><br/> S = SQL user<br/><br/> U = Windows user<br/><br/> X = External group from Microsoft Entra group or applications
 			/// </summary>
-			[Column("type"),                                NotNull    ] public string   TypeColumn                       { get; set; } = null!; // char(1)
+			[Column("type"),                                NotNull    ] public string   Type                             { get; set; } = null!; // char(1)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of principal type.<br/><br/> APPLICATION_ROLE<br/><br/> CERTIFICATE_MAPPED_USER<br/><br/> EXTERNAL_USER<br/><br/> WINDOWS_GROUP<br/><br/> ASYMMETRIC_KEY_MAPPED_USER<br/><br/> DATABASE_ROLE<br/><br/> SQL_USER<br/><br/> WINDOWS_USER<br/><br/> EXTERNAL_GROUPS
@@ -24877,7 +24851,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>nvarchar(128)</strong></para>
 			/// Description of principal type. All types are mapped to <strong>sid</strong>. The value can be one of the following:<br/><br/> <c>SQL LOGIN</c> <br/><br/> <c>WINDOWS LOGIN</c> <br/><br/> <c>WINDOWS GROUP</c> <br/><br/> <c>SERVER ROLE</c> <br/><br/> <c>LOGIN MAPPED TO CERTIFICATE</c> <br/><br/> <c>LOGIN MAPPED TO ASYMMETRIC KEY</c> <br/><br/> <c>CERTIFICATE</c> <br/><br/> <c>ASYMMETRIC KEY</c>
 			/// </summary>
-			[Column("type"),         Nullable] public string? TypeColumn  { get; set; } // nvarchar(128)
+			[Column("type"),         Nullable] public string? Type        { get; set; } // nvarchar(128)
 			/// <summary>
 			/// <para><strong>usage</strong> NULL <strong>nvarchar(128)</strong></para>
 			/// Indicates the principal participates in the evaluation of GRANT or DENY permissions, or serves as an authenticator.<br/><br/> This value can be one of the following:<br/><br/> <c>GRANT OR DENY</c> <br/><br/> <c>DENY ONLY</c> <br/><br/> <c>AUTHENTICATOR</c>
@@ -25012,7 +24986,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>vachar(2)</strong></para>
 			/// Must be <strong>SP</strong>.
 			/// </summary>
-			[Column("type"),                        Nullable] public object?  TypeColumn             { get; set; } // vachar(2)
+			[Column("type"),                        Nullable] public object?  Type                   { get; set; } // vachar(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// <strong>SECURITY_POLICY</strong>.
@@ -25230,7 +25204,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(2)</strong></para>
 			/// Audit type:<br/><br/> SL - NT Security event log<br/><br/> AL - NT Application event log<br/><br/> FL - File on file system
 			/// </summary>
-			[Column("type"),             NotNull    ] public string   TypeColumn     { get; set; } = null!; // char(2)
+			[Column("type"),             NotNull    ] public string   Type           { get; set; } = null!; // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// SECURITY LOG<br/><br/> APPLICATION LOG<br/><br/> FILE
@@ -25408,7 +25382,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(2)</strong></para>
 			/// Audit type:<br/><br/> SL = NT Security event log<br/><br/> AL = NT Application event log<br/><br/> FL = File on file system
 			/// </summary>
-			[Column("type"),                NotNull    ] public string   TypeColumn        { get; set; } = null!; // char(2)
+			[Column("type"),                NotNull    ] public string   Type              { get; set; } = null!; // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Audit type description.
@@ -25514,7 +25488,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(4)</strong></para>
 			/// Server permission type. For a list of permission types, see the next table.
 			/// </summary>
-			[Column("type"),                 NotNull    ] public string  TypeColumn         { get; set; } = null!; // char(4)
+			[Column("type"),                 NotNull    ] public string  Type               { get; set; } = null!; // char(4)
 			/// <summary>
 			/// <para><strong>permission_name</strong> NULL <strong>nvarchar(128)</strong></para>
 			/// Permission name.
@@ -25564,7 +25538,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(1)</strong></para>
 			/// Principal type:<br/><br/> S = SQL login<br/> R = Server role<br/><br/>Available in SQL Server, Azure SQL Managed Instance, and PDW (In preview in Azure SQL Database):<br/>E = External login or application from Microsoft Entra ID<br/>X = External group from Microsoft Entra ID<br/><br/>Available in SQL Server, Azure SQL Managed Instance, and PDW (not Azure SQL Database):<br/>U = Windows login<br/>G = Windows group<br/> C = Login mapped to a certificate<br/>K = Login mapped to an asymmetric key
 			/// </summary>
-			[Column("type"),                  NotNull    ] public string   TypeColumn          { get; set; } = null!; // char(1)
+			[Column("type"),                  NotNull    ] public string   Type                { get; set; } = null!; // char(1)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the principal type:<br/><br/> SQL_LOGIN<br/>SERVER_ROLE<br/><br/>Available in SQL Server, Azure SQL Managed Instance, and PDW (In preview in Azure SQL Database):<br/>EXTERNAL_LOGIN<br/>EXTERNAL_GROUP<br/><br/> Available in SQL Server, Azure SQL Managed Instance, and PDW (not Azure SQL Database):<br/>WINDOWS_LOGIN<br/> WINDOWS_GROUP<br/> CERTIFICATE_MAPPED_LOGIN<br/>ASYMMETRIC_KEY_MAPPED_LOGIN
@@ -25661,7 +25635,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(1)</strong></para>
 			/// Principal type:<br/><br/> S = SQL login<br/> R = Server role<br/><br/>Available in SQL Server, Azure SQL Managed Instance, and PDW (In preview in Azure SQL Database):<br/>E = External login or application from Microsoft Entra ID<br/>X = External group from Microsoft Entra ID<br/><br/>Available in SQL Server, Azure SQL Managed Instance, and PDW (not Azure SQL Database):<br/>U = Windows login<br/>G = Windows group<br/> C = Login mapped to a certificate<br/>K = Login mapped to an asymmetric key
 			/// </summary>
-			[Column("type"),                  NotNull    ] public string   TypeColumn          { get; set; } = null!; // char(1)
+			[Column("type"),                  NotNull    ] public string   Type                { get; set; } = null!; // char(1)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the principal type:<br/><br/> SQL_LOGIN<br/>SERVER_ROLE<br/><br/>Available in SQL Server, Azure SQL Managed Instance, and PDW (In preview in Azure SQL Database):<br/>EXTERNAL_LOGIN<br/>EXTERNAL_GROUP<br/><br/> Available in SQL Server, Azure SQL Managed Instance, and PDW (not Azure SQL Database):<br/>WINDOWS_LOGIN<br/> WINDOWS_GROUP<br/> CERTIFICATE_MAPPED_LOGIN<br/>ASYMMETRIC_KEY_MAPPED_LOGIN
@@ -25838,7 +25812,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>char(2)</strong></para>
 			/// Object type. Can be one of the following:<br/><br/> P = SQL_STORED_PROCEDURE<br/><br/> PC = CLR_STORED_PROCEDURE<br/><br/> FN = SQL_SCALAR_FUNCTION<br/><br/> FS = CLR_SCALAR_FUNCTION<br/><br/> FT = CLR_TABLE_VALUED_FUNCTION<br/><br/> IF = SQL_INLINE_TABLE_VALUED_FUNCTION<br/><br/> TF = SQL_TABLE_VALUED_FUNCTION<br/><br/> X = EXTENDED_STORED_PROCEDURE
 			/// </summary>
-			[Column("type"),           NotNull    ] public string  TypeColumn    { get; set; } = null!; // char(2)
+			[Column("type"),           NotNull    ] public string  Type          { get; set; } = null!; // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Friendly name description of the object type.
@@ -25874,7 +25848,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>nvarchar (128)</strong></para>
 			/// Description of principal type. All types are mapped to <strong>sid</strong>. The value can be one of the following:<br/><br/> <c>SQL USER</c> <br/><br/> <c>WINDOWS LOGIN</c> <br/><br/> <c>WINDOWS GROUP</c> <br/><br/> <c>ROLE</c> <br/><br/> <c>APPLICATION ROLE</c> <br/><br/> <c>DATABASE ROLE</c> <br/><br/> <c>USER MAPPED TO CERTIFICATE</c> <br/><br/> <c>USER MAPPED TO ASYMMETRIC KEY</c> <br/><br/> <c>CERTIFICATE</c> <br/><br/> <c>ASYMMETRIC KEY</c>
 			/// </summary>
-			[Column("type"),         Nullable] public object? TypeColumn  { get; set; } // nvarchar (128)
+			[Column("type"),         Nullable] public object? Type        { get; set; } // nvarchar (128)
 			/// <summary>
 			/// <para><strong>usage</strong> NULL <strong>nvarchar (128)</strong></para>
 			/// Indicates the principal participates in the evaluation of GRANT or DENY permissions, or serves as an authenticator.<br/><br/> This value can be one of the following:<br/><br/> <c>GRANT OR DENY</c> <br/><br/> <c>DENY ONLY</c> <br/><br/> <c>AUTHENTICATOR</c>
@@ -26191,7 +26165,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// Category type:<br/><br/> 0 = Normal<br/><br/> 1 = Connection<br/><br/> 2 = Error
 			/// </summary>
-			[Column("type"),        NotNull    ] public byte    TypeColumn { get; set; } // tinyint
+			[Column("type"),        NotNull    ] public byte    Type       { get; set; } // tinyint
 		}
 
 		/// <summary>
@@ -26971,7 +26945,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NULL <strong>char(2)</strong></para>
 			/// Object type:<br/><br/><c>AF</c> = Aggregate function (CLR)<br/><c>C</c> = Check constraint<br/><c>D</c> = Default (constraint or stand-alone)<br/><c>F</c> = Foreign key constraint<br/><c>FN</c> = SQL scalar function<br/><c>FS</c> = Assembly (CLR) scalar-function<br/><c>FT</c> = Assembly (CLR) table-valued function<br/><c>IF</c> = SQL inline table-valued function (TVF)<br/><c>IT</c> = Internal table<br/><c>P</c> = SQL stored procedure<br/><c>PC</c> = Assembly (CLR) stored-procedure<br/><c>PG</c> = Plan guide<br/><c>PK</c> = Primary key constraint<br/><c>R</c> = Rule (old-style, stand-alone)<br/><c>RF</c> = Replication-filter-procedure<br/><c>S</c> = System base table<br/><c>SN</c> = Synonym<br/><c>SO</c> = Sequence object<br/><c>U</c> = Table (user-defined)<br/><c>V</c> = View<br/><br/><strong>Applies to</strong>: SQL Server 2012 (11.x) and later versions<br/><br/><c>SQ</c> = Service queue<br/><c>TA</c> = Assembly (CLR) DML trigger<br/><c>TF</c> = SQL table-valued-function (TVF)<br/><c>TR</c> = SQL DML trigger<br/><c>TT</c> = Table type<br/><c>UQ</c> = unique constraint<br/><c>X</c> = Extended stored procedure<br/><br/><strong>Applies to</strong>: SQL Server 2014 (12.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ST</c> = Statistics tree<br/><br/><strong>Applies to</strong>: SQL Server 2016 (13.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>ET</c> = External table<br/><br/><strong>Applies to</strong>: SQL Server 2017 (14.x) and later versions, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW)<br/><br/><c>EC</c> = Edge constraint
 			/// </summary>
-			[Column("type"),                                  Nullable] public string?  TypeColumn                     { get; set; } // char(2)
+			[Column("type"),                                  Nullable] public string?  Type                           { get; set; } // char(2)
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the object type:<br/><br/><c>AGGREGATE_FUNCTION</c><br/><c>CHECK_CONSTRAINT</c><br/><c>CLR_SCALAR_FUNCTION</c><br/><c>CLR_STORED_PROCEDURE</c><br/><c>CLR_TABLE_VALUED_FUNCTION</c><br/><c>CLR_TRIGGER</c><br/><c>DEFAULT_CONSTRAINT</c><br/><c>EDGE_CONSTRAINT</c><br/><c>EXTENDED_STORED_PROCEDURE</c><br/><c>FOREIGN_KEY_CONSTRAINT</c><br/><c>INTERNAL_TABLE</c><br/><c>PLAN_GUIDE</c><br/><c>PRIMARY_KEY_CONSTRAINT</c><br/><c>REPLICATION_FILTER_PROCEDURE</c><br/><c>RULE</c><br/><c>SEQUENCE_OBJECT</c><br/><c>SERVICE_QUEUE</c><br/><c>SQL_INLINE_TABLE_VALUED_FUNCTION</c><br/><c>SQL_SCALAR_FUNCTION</c><br/><c>SQL_STORED_PROCEDURE</c><br/><c>SQL_TABLE_VALUED_FUNCTION</c><br/><c>SQL_TRIGGER</c><br/><c>SYNONYM</c><br/><c>SYSTEM_TABLE</c><br/><c>TYPE_TABLE</c><br/><c>UNIQUE_CONSTRAINT</c><br/><c>USER_TABLE</c><br/><c>VIEW</c>
@@ -27217,7 +27191,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// Type of index:<br/><br/> 0 = Heap<br/><br/> 1 = Clustered rowstore (B-tree)<br/><br/> 2 = Nonclustered rowstore (B-tree)<br/><br/> 3 = XML<br/><br/> 4 = Spatial<br/><br/> 5 = Clustered columnstore index. <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.<br/><br/> 6 = Nonclustered columnstore index. <strong>Applies to</strong>: SQL Server 2012 (11.x) and later.<br/><br/> 7 = Nonclustered hash index. <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.
 			/// </summary>
-			[Column("type"),                        NotNull    ] public byte    TypeColumn               { get; set; } // tinyint
+			[Column("type"),                        NotNull    ] public byte    Type                     { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of index type:<br/><br/> HEAP<br/><br/> CLUSTERED<br/><br/> NONCLUSTERED<br/><br/> XML<br/><br/> SPATIAL<br/><br/> CLUSTERED COLUMNSTORE - <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.<br/><br/> NONCLUSTERED COLUMNSTORE - <strong>Applies to</strong>: SQL Server 2012 (11.x) and later.<br/><br/> NONCLUSTERED HASH : NONCLUSTERED HASH indexes are supported only on memory-optimized tables. The <c>sys.hash_indexes</c> view shows the current hash indexes and the hash properties. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-hash-indexes-transact-sql'>sys.hash_indexes (Transact-SQL)</a>. <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.
@@ -27836,7 +27810,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// Type of index:<br/><br/> 0 = Heap<br/><br/> 1 = Clustered rowstore (B-tree)<br/><br/> 2 = Nonclustered rowstore (B-tree)<br/><br/> 3 = XML<br/><br/> 4 = Spatial<br/><br/> 5 = Clustered columnstore index. <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.<br/><br/> 6 = Nonclustered columnstore index. <strong>Applies to</strong>: SQL Server 2012 (11.x) and later.<br/><br/> 7 = Nonclustered hash index. <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.
 			/// </summary>
-			[Column("type"),                        NotNull    ] public byte    TypeColumn               { get; set; } // tinyint
+			[Column("type"),                        NotNull    ] public byte    Type                     { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of index type:<br/><br/> HEAP<br/><br/> CLUSTERED<br/><br/> NONCLUSTERED<br/><br/> XML<br/><br/> SPATIAL<br/><br/> CLUSTERED COLUMNSTORE - <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.<br/><br/> NONCLUSTERED COLUMNSTORE - <strong>Applies to</strong>: SQL Server 2012 (11.x) and later.<br/><br/> NONCLUSTERED HASH : NONCLUSTERED HASH indexes are supported only on memory-optimized tables. The <c>sys.hash_indexes</c> view shows the current hash indexes and the hash properties. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-hash-indexes-transact-sql'>sys.hash_indexes (Transact-SQL)</a>. <strong>Applies to</strong>: SQL Server 2014 (12.x) and later.
