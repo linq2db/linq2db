@@ -38,6 +38,8 @@
 		.Column("type", MemberName : "Type")
 		;
 
+	var actions = new List<Action>();
+
 	foreach (var table in Tables.Values)
 	{
 		foreach (var pref in new[]
@@ -166,6 +168,22 @@
 				col.MemberName += "Column";
 		}
 	}
+
+	SetConfiguration("sys.database_files", "is_persistent_log_buffer", "ProviderName.SqlServer2017");
+
+	void SetConfiguration(string tableName, string columnName, string configuration)
+	{
+		var col = GetColumn(tableName, columnName);
+		actions.Add(() => col.Attributes.First(a => a.Name == "Column").Parameters.Add($"Configuration={configuration}"));
+	}
+
+	var bgm = BeforeGenerateModel;
+	BeforeGenerateModel = () =>
+	{
+		bgm();
+		foreach (var a in actions)
+			a();
+	};
 
 	GenerateModel();
 

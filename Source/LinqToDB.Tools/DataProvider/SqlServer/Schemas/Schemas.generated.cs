@@ -8548,152 +8548,152 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para><strong>file_id</strong> NOT NULL <strong>int</strong></para>
 			/// ID of the file within database.
 			/// </summary>
-			[Column("file_id"),                  NotNull    ] public int       FileID                { get; set; } // int
+			[Column("file_id"),                                                            NotNull    ] public int       FileID                { get; set; } // int
 			/// <summary>
 			/// <para><strong>file_guid</strong> NULL <strong>uniqueidentifier</strong></para>
 			/// GUID for the file.<br/><br/><c>NULL</c> = Database was upgraded from an earlier version of SQL Server (Valid for SQL Server 2005 and earlier versions).
 			/// </summary>
-			[Column("file_guid"),                   Nullable] public Guid?     FileGuid              { get; set; } // uniqueidentifier
+			[Column("file_guid"),                                                             Nullable] public Guid?     FileGuid              { get; set; } // uniqueidentifier
 			/// <summary>
 			/// <para><strong>type</strong> NOT NULL <strong>tinyint</strong></para>
 			/// File type:<br/><br/>0 = Rows<br/>1 = Log<br/>2 = FILESTREAM<br/>3 = Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.<br/>4 = Full-text
 			/// </summary>
-			[Column("type"),                     NotNull    ] public byte      Type                  { get; set; } // tinyint
+			[Column("type"),                                                               NotNull    ] public byte      Type                  { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>type_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the file type:<br/><br/><c>ROWS</c><br/><c>LOG</c><br/><c>FILESTREAM</c><br/><c>FULLTEXT</c>
 			/// </summary>
-			[Column("type_desc"),                   Nullable] public string?   TypeDesc              { get; set; } // nvarchar(60)
+			[Column("type_desc"),                                                             Nullable] public string?   TypeDesc              { get; set; } // nvarchar(60)
 			/// <summary>
 			/// <para><strong>data_space_id</strong> NOT NULL <strong>int</strong></para>
 			/// Value can be zero or greater than zero. A value of <c>0</c> represents the database log file, and a value greater than zero represents the ID of the filegroup where this data file is stored.
 			/// </summary>
-			[Column("data_space_id"),            NotNull    ] public int       DataSpaceID           { get; set; } // int
+			[Column("data_space_id"),                                                      NotNull    ] public int       DataSpaceID           { get; set; } // int
 			/// <summary>
 			/// <para><strong>name</strong> NULL <strong>sysname</strong></para>
 			/// Logical name of the file in the database.
 			/// </summary>
-			[Column("name"),                        Nullable] public string?   Name                  { get; set; } // sysname
+			[Column("name"),                                                                  Nullable] public string?   Name                  { get; set; } // sysname
 			/// <summary>
 			/// <para><strong>physical_name</strong> NULL <strong>nvarchar(260)</strong></para>
 			/// Operating-system file name. If the database is hosted by an availability group <a href='https://docs.microsoft.com/en-us/sql/database-engine/availability-groups/windows/active-secondaries-readable-secondary-replicas-always-on-availability-groups'>readable secondary replica</a>, <c>physical_name</c> indicates the file location of the primary replica database. For the correct file location of a readable secondary database, query <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-sysaltfiles-transact-sql'>sys.sysaltfiles</a>.
 			/// </summary>
-			[Column("physical_name"),               Nullable] public string?   PhysicalName          { get; set; } // nvarchar(260)
+			[Column("physical_name"),                                                         Nullable] public string?   PhysicalName          { get; set; } // nvarchar(260)
 			/// <summary>
 			/// <para><strong>state</strong> NULL <strong>tinyint</strong></para>
 			/// File state:<br/><br/>0 = <c>ONLINE</c><br/>1 = <c>RESTORING</c><br/>2 = <c>RECOVERING</c><br/>3 = <c>RECOVERY_PENDING</c><br/>4 = <c>SUSPECT</c><br/>5 = Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.<br/>6 = <c>OFFLINE</c><br/>7 = <c>DEFUNCT</c>
 			/// </summary>
-			[Column("state"),                       Nullable] public byte?     State                 { get; set; } // tinyint
+			[Column("state"),                                                                 Nullable] public byte?     State                 { get; set; } // tinyint
 			/// <summary>
 			/// <para><strong>state_desc</strong> NULL <strong>nvarchar(60)</strong></para>
 			/// Description of the file state:<br/><br/><c>ONLINE</c><br/><c>RESTORING</c><br/><c>RECOVERING</c><br/><c>RECOVERY_PENDING</c><br/><c>SUSPECT</c><br/><c>OFFLINE</c><br/><c>DEFUNCT</c><br/>For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/databases/file-states'>File States</a>.
 			/// </summary>
-			[Column("state_desc"),                  Nullable] public string?   StateDesc             { get; set; } // nvarchar(60)
+			[Column("state_desc"),                                                            Nullable] public string?   StateDesc             { get; set; } // nvarchar(60)
 			/// <summary>
 			/// <para><strong>size</strong> NOT NULL <strong>int</strong></para>
 			/// Current size of the file, in 8-KB pages.<br/><br/>0 = Not applicable<br/>For a database snapshot, size reflects the maximum space that the snapshot can ever use for the file.<br/>For FILESTREAM filegroup containers, size reflects the current used size of the container.
 			/// </summary>
-			[Column("size"),                     NotNull    ] public int       Size                  { get; set; } // int
+			[Column("size"),                                                               NotNull    ] public int       Size                  { get; set; } // int
 			/// <summary>
 			/// <para><strong>max_size</strong> NOT NULL <strong>int</strong></para>
 			/// Maximum file size, in 8-KB pages:<br/><br/>0 = No growth is allowed.<br/>-1 = File can grow until the disk is full.<br/>268435456 = Log file can grow to a maximum size of 2 TB.<br/>For FILESTREAM filegroup containers, <c>max_size</c> reflects the maximum size of the container.<br/>Databases that are upgraded with an unlimited log file size report <c>-1</c> for the maximum size of the log file.<br/>In Azure SQL Database, the sum of <c>max_size</c> values for all data files can be less than the maximum data size for the database. Use <c>DATABASEPROPERTYEX(DB_NAME(), 'MaxSizeInBytes')</c> to determine maximum data size.
 			/// </summary>
-			[Column("max_size"),                 NotNull    ] public int       MaxSize               { get; set; } // int
+			[Column("max_size"),                                                           NotNull    ] public int       MaxSize               { get; set; } // int
 			/// <summary>
 			/// <para><strong>growth</strong> NOT NULL <strong>int</strong></para>
 			/// 0 = File is fixed size and does not grow.<br/><br/> Greater than 0 = File grows automatically.<br/>If <c>is_percent_growth</c> = 0, growth increment is in units of 8-KB pages, rounded to the nearest 64 KB.<br/>If <c>is_percent_growth</c> = 1, growth increment is expressed as a whole number percentage.
 			/// </summary>
-			[Column("growth"),                   NotNull    ] public int       Growth                { get; set; } // int
+			[Column("growth"),                                                             NotNull    ] public int       Growth                { get; set; } // int
 			/// <summary>
 			/// <para><strong>is_media_read_only</strong> NOT NULL <strong>bit</strong></para>
 			/// 1 = File is on read-only media.<br/><br/>0 = File is on read-write media.
 			/// </summary>
-			[Column("is_media_read_only"),       NotNull    ] public bool      IsMediaReadOnly       { get; set; } // bit
+			[Column("is_media_read_only"),                                                 NotNull    ] public bool      IsMediaReadOnly       { get; set; } // bit
 			/// <summary>
 			/// <para><strong>is_read_only</strong> NOT NULL <strong>bit</strong></para>
 			/// 1 = File is marked read-only.<br/><br/>0 = File is marked read/write.
 			/// </summary>
-			[Column("is_read_only"),             NotNull    ] public bool      IsReadOnly            { get; set; } // bit
+			[Column("is_read_only"),                                                       NotNull    ] public bool      IsReadOnly            { get; set; } // bit
 			/// <summary>
 			/// <para><strong>is_sparse</strong> NOT NULL <strong>bit</strong></para>
 			/// 1 = File is a sparse file.<br/><br/>0 = File is not a sparse file.<br/>For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/databases/view-the-size-of-the-sparse-file-of-a-database-snapshot-transact-sql'>View the Size of the Sparse File of a Database Snapshot (Transact-SQL)</a>.
 			/// </summary>
-			[Column("is_sparse"),                NotNull    ] public bool      IsSparse              { get; set; } // bit
+			[Column("is_sparse"),                                                          NotNull    ] public bool      IsSparse              { get; set; } // bit
 			/// <summary>
 			/// <para><strong>is_percent_growth</strong> NOT NULL <strong>bit</strong></para>
 			/// 1 = Growth of the file is a percentage.<br/><br/>0 = Absolute growth size in pages.
 			/// </summary>
-			[Column("is_percent_growth"),        NotNull    ] public bool      IsPercentGrowth       { get; set; } // bit
+			[Column("is_percent_growth"),                                                  NotNull    ] public bool      IsPercentGrowth       { get; set; } // bit
 			/// <summary>
 			/// <para><strong>is_name_reserved</strong> NOT NULL <strong>bit</strong></para>
 			/// 1 = Dropped file name (<c>name</c> or <c>physical_name</c>) is reusable only after the next log backup. When files are dropped from a database, the logical names stay in a reserved state until the next log backup. This column is relevant only under the full recovery model and the bulk-logged recovery model.
 			/// </summary>
-			[Column("is_name_reserved"),         NotNull    ] public bool      IsNameReserved        { get; set; } // bit
+			[Column("is_name_reserved"),                                                   NotNull    ] public bool      IsNameReserved        { get; set; } // bit
 			/// <summary>
 			/// <para><strong>is_persistent_log_buffer</strong> NOT NULL <strong>bit</strong></para>
 			/// <c>1</c> = The log file is a persistent log buffer.<br/><br/><c>0</c> = The file is not a persistent log buffer.<br/><br/>For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/databases/add-persisted-log-buffer'>Add persistent log buffer to a database</a>.
 			/// </summary>
-			[Column("is_persistent_log_buffer"), NotNull    ] public bool      IsPersistentLogBuffer { get; set; } // bit
+			[Column("is_persistent_log_buffer", Configuration=ProviderName.SqlServer2017), NotNull    ] public bool      IsPersistentLogBuffer { get; set; } // bit
 			/// <summary>
 			/// <para><strong>create_lsn</strong> NULL <strong>numeric(25,0)</strong></para>
 			/// Log sequence number (LSN) at which the file was created.
 			/// </summary>
-			[Column("create_lsn"),                  Nullable] public decimal?  CreateLsn             { get; set; } // numeric(25,0)
+			[Column("create_lsn"),                                                            Nullable] public decimal?  CreateLsn             { get; set; } // numeric(25,0)
 			/// <summary>
 			/// <para><strong>drop_lsn</strong> NULL <strong>numeric(25,0)</strong></para>
 			/// LSN at which the file was dropped.<br/><br/>0 = The file name is unavailable for reuse.
 			/// </summary>
-			[Column("drop_lsn"),                    Nullable] public decimal?  DropLsn               { get; set; } // numeric(25,0)
+			[Column("drop_lsn"),                                                              Nullable] public decimal?  DropLsn               { get; set; } // numeric(25,0)
 			/// <summary>
 			/// <para><strong>read_only_lsn</strong> NULL <strong>numeric(25,0)</strong></para>
 			/// LSN at which the filegroup that contains the file changed from read/write to read-only (most recent change).
 			/// </summary>
-			[Column("read_only_lsn"),               Nullable] public decimal?  ReadOnlyLsn           { get; set; } // numeric(25,0)
+			[Column("read_only_lsn"),                                                         Nullable] public decimal?  ReadOnlyLsn           { get; set; } // numeric(25,0)
 			/// <summary>
 			/// <para><strong>read_write_lsn</strong> NULL <strong>numeric(25,0)</strong></para>
 			/// LSN at which the filegroup that contains the file changed from read-only to read/write (most recent change).
 			/// </summary>
-			[Column("read_write_lsn"),              Nullable] public decimal?  ReadWriteLsn          { get; set; } // numeric(25,0)
+			[Column("read_write_lsn"),                                                        Nullable] public decimal?  ReadWriteLsn          { get; set; } // numeric(25,0)
 			/// <summary>
 			/// <para><strong>differential_base_lsn</strong> NULL <strong>numeric(25,0)</strong></para>
 			/// Base for differential backups. Data extents changed after this LSN are included in a differential backup.
 			/// </summary>
-			[Column("differential_base_lsn"),       Nullable] public decimal?  DifferentialBaseLsn   { get; set; } // numeric(25,0)
+			[Column("differential_base_lsn"),                                                 Nullable] public decimal?  DifferentialBaseLsn   { get; set; } // numeric(25,0)
 			/// <summary>
 			/// <para><strong>differential_base_guid</strong> NULL <strong>uniqueidentifier</strong></para>
 			/// Unique identifier of the base backup on which a differential backup is based.
 			/// </summary>
-			[Column("differential_base_guid"),      Nullable] public Guid?     DifferentialBaseGuid  { get; set; } // uniqueidentifier
+			[Column("differential_base_guid"),                                                Nullable] public Guid?     DifferentialBaseGuid  { get; set; } // uniqueidentifier
 			/// <summary>
 			/// <para><strong>differential_base_time</strong> NULL <strong>datetime</strong></para>
 			/// Time corresponding to <c>differential_base_lsn</c>.
 			/// </summary>
-			[Column("differential_base_time"),      Nullable] public DateTime? DifferentialBaseTime  { get; set; } // datetime
+			[Column("differential_base_time"),                                                Nullable] public DateTime? DifferentialBaseTime  { get; set; } // datetime
 			/// <summary>
 			/// <para><strong>redo_start_lsn</strong> NULL <strong>numeric(25,0)</strong></para>
 			/// LSN at which the next roll-forward must start.<br/><br/>Is <c>NULL</c> unless <c>state</c> = <c>RESTORING</c> or <c>state</c> = <c>RECOVERY_PENDING</c>.
 			/// </summary>
-			[Column("redo_start_lsn"),              Nullable] public decimal?  RedoStartLsn          { get; set; } // numeric(25,0)
+			[Column("redo_start_lsn"),                                                        Nullable] public decimal?  RedoStartLsn          { get; set; } // numeric(25,0)
 			/// <summary>
 			/// <para><strong>redo_start_fork_guid</strong> NULL <strong>uniqueidentifier</strong></para>
 			/// Unique identifier of the recovery fork. The <c>first_fork_guid</c> of the next log backup restored must match this value. This represents the current state of the file.
 			/// </summary>
-			[Column("redo_start_fork_guid"),        Nullable] public Guid?     RedoStartForkGuid     { get; set; } // uniqueidentifier
+			[Column("redo_start_fork_guid"),                                                  Nullable] public Guid?     RedoStartForkGuid     { get; set; } // uniqueidentifier
 			/// <summary>
 			/// <para><strong>redo_target_lsn</strong> NULL <strong>numeric(25,0)</strong></para>
 			/// LSN at which the online roll-forward on this file can stop.<br/><br/>Is <c>NULL</c> unless <c>state</c> = <c>RESTORING</c> or <c>state</c> = <c>RECOVERY_PENDING</c>.
 			/// </summary>
-			[Column("redo_target_lsn"),             Nullable] public decimal?  RedoTargetLsn         { get; set; } // numeric(25,0)
+			[Column("redo_target_lsn"),                                                       Nullable] public decimal?  RedoTargetLsn         { get; set; } // numeric(25,0)
 			/// <summary>
 			/// <para><strong>redo_target_fork_guid</strong> NULL <strong>uniqueidentifier</strong></para>
 			/// The recovery fork on which the file can be recovered. Paired with <c>redo_target_lsn</c>.
 			/// </summary>
-			[Column("redo_target_fork_guid"),       Nullable] public Guid?     RedoTargetForkGuid    { get; set; } // uniqueidentifier
+			[Column("redo_target_fork_guid"),                                                 Nullable] public Guid?     RedoTargetForkGuid    { get; set; } // uniqueidentifier
 			/// <summary>
 			/// <para><strong>backup_lsn</strong> NULL <strong>numeric(25,0)</strong></para>
 			/// The LSN of the most recent data or differential backup of the file.
 			/// </summary>
-			[Column("backup_lsn"),                  Nullable] public decimal?  BackupLsn             { get; set; } // numeric(25,0)
+			[Column("backup_lsn"),                                                            Nullable] public decimal?  BackupLsn             { get; set; } // numeric(25,0)
 		}
 
 		/// <summary>
