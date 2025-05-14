@@ -12,6 +12,6 @@ namespace Tests.Remote.ServerContainer
 	{
 		bool KeepSamePortBetweenThreads { get; set; }
 
-		ITestDataContext CreateContext(Func<ITestLinqService,DataOptions, DataOptions> optionBuilder, Func<string, MappingSchema?, DataConnection> connectionFactory);
+		ITestDataContext CreateContext(Func<ITestLinqService,DataOptions, DataOptions> optionBuilder, Func<string?, MappingSchema?, DataConnection> connectionFactory);
 	}
 }

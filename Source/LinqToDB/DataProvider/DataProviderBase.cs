@@ -39,7 +39,6 @@ namespace LinqToDB.DataProvider
 				IsParameterOrderDependent            = false,
 				AcceptsTakeAsParameter               = true,
 				AcceptsTakeAsParameterIfSkip         = false,
-				IsTakeSupported                      = true,
 				IsSkipSupported                      = true,
 				IsSkipSupportedIfTake                = false,
 				TakeHintsSupported                   = null,

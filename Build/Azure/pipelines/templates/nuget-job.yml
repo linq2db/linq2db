@@ -64,6 +64,30 @@ jobs:
       targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.Grpc/Release'
 
   - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.Remote.SignalR.Client files
+    inputs:
+      artifactName: '$(artifact_linq2db_remote_signalr_client_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.SignalR.Client/Release'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.Remote.SignalR.Server files
+    inputs:
+      artifactName: '$(artifact_linq2db_remote_signalr_server_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.SignalR.Server/Release'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.Remote.HttpClient.Client files
+    inputs:
+      artifactName: '$(artifact_linq2db_remote_httpclient_client_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.HttpClient.Client/Release'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.Remote.HttpClient.Server files
+    inputs:
+      artifactName: '$(artifact_linq2db_remote_httpclient_server_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.HttpClient.Server/Release'
+
+  - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB.CLI files
     inputs:
       artifactName: '$(artifact_linq2db_cli_binaries)'

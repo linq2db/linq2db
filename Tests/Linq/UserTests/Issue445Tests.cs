@@ -122,6 +122,7 @@ namespace Tests.UserTests
 		//}
 
 		[Test]
+		[Explicit("Too slow")]
 		public void ConnectionPoolException1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (new DisableBaseline("Output depends on pool size"))

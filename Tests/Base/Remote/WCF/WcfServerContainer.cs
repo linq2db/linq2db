@@ -28,17 +28,15 @@ namespace Tests.Remote.ServerContainer
 
 		private ConcurrentDictionary<int, TestWcfLinqService> _openHosts = new();
 
-		private Func<string, MappingSchema?, DataConnection> _connectionFactory = null!;
+		private Func<string?, MappingSchema?, DataConnection> _connectionFactory = null!;
 
-		ITestDataContext IServerContainer.CreateContext(Func<ITestLinqService,DataOptions, DataOptions> optionBuilder, Func<string, MappingSchema?, DataConnection> connectionFactory)
+		ITestDataContext IServerContainer.CreateContext(Func<ITestLinqService,DataOptions, DataOptions> optionBuilder, Func<string?, MappingSchema?, DataConnection> connectionFactory)
 		{
 			_connectionFactory = connectionFactory;
 
 			var service = OpenHost();
 
 			var dx = new TestWcfDataContext(GetPort(), o => optionBuilder(service, o));
-
-			Debug.WriteLine(((IDataContext)dx).ConfigurationID, "Provider ");
 
 			return dx;
 		}
@@ -58,9 +56,12 @@ namespace Tests.Remote.ServerContainer
 #pragma warning disable CA2000 // Dispose objects before losing scope
 				var host = new ServiceHost(
 					service = new TestWcfLinqService(
-						new TestLinqService((c, ms) => _connectionFactory(c, ms)))
+						new TestLinqService((c, ms) => _connectionFactory(c, ms))
 						{
-							AllowUpdates = true
+							RemoteClientTag = "Wcf",
+						})
+						{
+							AllowUpdates = true,
 						},
 					new Uri($"net.tcp://localhost:{GetPort()}"));
 #pragma warning restore CA2000 // Dispose objects before losing scope
