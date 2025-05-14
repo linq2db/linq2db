@@ -108,42 +108,57 @@ namespace LinqToDB.DataProvider.Ydb
 			try
 			{
 				LoadCollections(conn);
-				if (!Has("Tables")) return new();
+				if (!Has("Tables"))
+					return new List<TableInfo>();
 
-				using var t = conn.GetSchema("Tables");
-				var res = new List<TableInfo>();
+				using var schema = conn.GetSchema("Tables");
+				var result = new List<TableInfo>();
 
-				foreach (DataRow r in t.Rows)
+				foreach (DataRow row in schema.Rows)
 				{
-					string name    = Invariant(r["TABLE_NAME"]);
-					string? schema = t.Columns.Contains("TABLE_SCHEMA")  ? Invariant(r["TABLE_SCHEMA"])  : null;
-					string? cat    = t.Columns.Contains("TABLE_CATALOG") ? Invariant(r["TABLE_CATALOG"]) : null;
-					string? type   = t.Columns.Contains("TABLE_TYPE")    ? Invariant(r["TABLE_TYPE"])    : null;
+					string type = schema.Columns.Contains("TABLE_TYPE")
+				? Invariant(row["TABLE_TYPE"])
+				: string.Empty;
+					if (!type.Equals("TABLE", StringComparison.OrdinalIgnoreCase))
+						continue;
 
-					if (!string.IsNullOrEmpty(schema) && schema!.StartsWith(".sys", StringComparison.OrdinalIgnoreCase))
+					string name      = Invariant(row["TABLE_NAME"]);
+					string? schemaName = schema.Columns.Contains("TABLE_SCHEMA")
+				? Invariant(row["TABLE_SCHEMA"])
+				: null;
+					string? catalog  = schema.Columns.Contains("TABLE_CATALOG")
+				? Invariant(row["TABLE_CATALOG"])
+				: null;
+
+					if (schemaName?.StartsWith(".sys", StringComparison.OrdinalIgnoreCase) == true)
 						continue;
 					if (name.StartsWith(".sys", StringComparison.OrdinalIgnoreCase))
 						continue;
 
-					if (!IsSchemaAllowed(options, schema) || !IsCatalogAllowed(options, cat)) continue;
+					if (!IsSchemaAllowed(options, schemaName) || !IsCatalogAllowed(options, catalog))
+						continue;
 
-					res.Add(new TableInfo
+					result.Add(new TableInfo
 					{
-						TableID = MakeTableId(schema, name),
-						CatalogName = cat,
-						SchemaName = schema,
+						TableID = MakeTableId(schemaName, name),
+						CatalogName = catalog,
+						SchemaName = schemaName,
 						TableName = name,
-						IsView = type != null && type.Equals("VIEW", StringComparison.OrdinalIgnoreCase),
-						IsDefaultSchema = string.IsNullOrEmpty(schema) ||
+						IsView = false,
+						IsDefaultSchema = string.IsNullOrEmpty(schemaName) ||
 											 (!string.IsNullOrEmpty(options.DefaultSchema) &&
-											  options.StringComparer.Equals(schema, options.DefaultSchema)),
+											  options.StringComparer.Equals(schemaName, options.DefaultSchema)),
 						IsProviderSpecific = false
 					});
 				}
 
-				return res;
+				return result;
 			}
-			finally { if (created) conn.Dispose(); }
+			finally
+			{
+				if (created)
+					conn.Dispose();
+			}
 		}
 
 		#endregion
