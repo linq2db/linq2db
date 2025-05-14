@@ -172,20 +172,20 @@ namespace LinqToDB.EntityFrameworkCore
 
 			return provInfo.ProviderName switch
 			{
-				ProviderName.SqlServer                                                    => CreateSqlServerProvider(SqlServerDefaultVersion, connectionInfo.ConnectionString),
-				ProviderName.SqlServer2005                                                => CreateSqlServerProvider(SqlServerVersion.v2005, connectionInfo.ConnectionString),
-				ProviderName.SqlServer2008                                                => CreateSqlServerProvider(SqlServerVersion.v2008, connectionInfo.ConnectionString),
-				ProviderName.SqlServer2012                                                => CreateSqlServerProvider(SqlServerVersion.v2012, connectionInfo.ConnectionString),
-				ProviderName.SqlServer2014                                                => CreateSqlServerProvider(SqlServerVersion.v2014, connectionInfo.ConnectionString),
-				ProviderName.SqlServer2016                                                => CreateSqlServerProvider(SqlServerVersion.v2016, connectionInfo.ConnectionString),
-				ProviderName.SqlServer2017                                                => CreateSqlServerProvider(SqlServerVersion.v2017, connectionInfo.ConnectionString),
-				ProviderName.SqlServer2019                                                => CreateSqlServerProvider(SqlServerVersion.v2019, connectionInfo.ConnectionString),
-				ProviderName.SqlServer2022                                                => CreateSqlServerProvider(SqlServerVersion.v2022, connectionInfo.ConnectionString),
+				ProviderName.SqlServer                                                    => CreateSqlServerProvider(SqlServerDefaultVersion, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.SqlServer2005                                                => CreateSqlServerProvider(SqlServerVersion.v2005, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.SqlServer2008                                                => CreateSqlServerProvider(SqlServerVersion.v2008, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.SqlServer2012                                                => CreateSqlServerProvider(SqlServerVersion.v2012, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.SqlServer2014                                                => CreateSqlServerProvider(SqlServerVersion.v2014, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.SqlServer2016                                                => CreateSqlServerProvider(SqlServerVersion.v2016, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.SqlServer2017                                                => CreateSqlServerProvider(SqlServerVersion.v2017, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.SqlServer2019                                                => CreateSqlServerProvider(SqlServerVersion.v2019, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.SqlServer2022                                                => CreateSqlServerProvider(SqlServerVersion.v2022, connectionInfo.ConnectionString, connectionInfo.Connection),
 
-				ProviderName.MySql                                                        => MySqlTools.GetDataProvider(MySqlVersion.AutoDetect, MySqlProvider.AutoDetect, connectionInfo.ConnectionString),
-				ProviderName.MySql57                                                      => MySqlTools.GetDataProvider(MySqlVersion.MySql57, MySqlProvider.AutoDetect, connectionInfo.ConnectionString),
-				ProviderName.MySql80                                                      => MySqlTools.GetDataProvider(MySqlVersion.MySql80, MySqlProvider.AutoDetect, connectionInfo.ConnectionString),
-				ProviderName.MariaDB10                                                    => MySqlTools.GetDataProvider(MySqlVersion.MariaDB10, MySqlProvider.MySqlConnector, connectionInfo.ConnectionString),
+				ProviderName.MySql                                                        => MySqlTools.GetDataProvider(MySqlVersion.AutoDetect, MySqlProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.MySql57                                                      => MySqlTools.GetDataProvider(MySqlVersion.MySql57, MySqlProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.MySql80                                                      => MySqlTools.GetDataProvider(MySqlVersion.MySql80, MySqlProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.MariaDB10                                                    => MySqlTools.GetDataProvider(MySqlVersion.MariaDB10, MySqlProvider.MySqlConnector, connectionInfo.ConnectionString, connectionInfo.Connection),
 
 				ProviderName.PostgreSQL                                                   => CreatePostgreSqlProvider(PostgreSqlDefaultVersion, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.PostgreSQL92                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v92, connectionInfo.ConnectionString, connectionInfo.Connection),
@@ -193,24 +193,24 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.PostgreSQL95                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v95, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.PostgreSQL15                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v15, connectionInfo.ConnectionString, connectionInfo.Connection),
 
-				ProviderName.SQLite or ProviderName.SQLiteMS                              => SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft, connectionInfo.ConnectionString),
+				ProviderName.SQLite or ProviderName.SQLiteMS                              => SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft, connectionInfo.ConnectionString, connectionInfo.Connection),
 
-				ProviderName.Firebird                                                     => FirebirdTools.GetDataProvider(FirebirdVersion.AutoDetect, connectionInfo.ConnectionString),
-				ProviderName.Firebird25                                                   => FirebirdTools.GetDataProvider(FirebirdVersion.v25, connectionInfo.ConnectionString),
-				ProviderName.Firebird3                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v3, connectionInfo.ConnectionString),
-				ProviderName.Firebird4                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v4, connectionInfo.ConnectionString),
-				ProviderName.Firebird5                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v5, connectionInfo.ConnectionString),
+				ProviderName.Firebird                                                     => FirebirdTools.GetDataProvider(FirebirdVersion.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.Firebird25                                                   => FirebirdTools.GetDataProvider(FirebirdVersion.v25, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.Firebird3                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v3, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.Firebird4                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v4, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.Firebird5                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v5, connectionInfo.ConnectionString, connectionInfo.Connection),
 
-				ProviderName.DB2 or ProviderName.DB2LUW                                   => DB2Tools.GetDataProvider(DB2Version.LUW, connectionInfo.ConnectionString),
-				ProviderName.DB2zOS                                                       => DB2Tools.GetDataProvider(DB2Version.zOS, connectionInfo.ConnectionString),
+				ProviderName.DB2 or ProviderName.DB2LUW                                   => DB2Tools.GetDataProvider(DB2Version.LUW, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.DB2zOS                                                       => DB2Tools.GetDataProvider(DB2Version.zOS, connectionInfo.ConnectionString, connectionInfo.Connection),
 
-				ProviderName.Oracle                                                       => OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.AutoDetect, connectionInfo.ConnectionString),
-				ProviderName.Oracle11Native                                               => OracleTools.GetDataProvider(OracleVersion.v11       , OracleProvider.Native    , connectionInfo.ConnectionString),
-				ProviderName.OracleNative                                                 => OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.Native    , connectionInfo.ConnectionString),
-				ProviderName.Oracle11Managed                                              => OracleTools.GetDataProvider(OracleVersion.v11       , OracleProvider.Managed   , connectionInfo.ConnectionString),
-				ProviderName.OracleManaged                                                => OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.Managed   , connectionInfo.ConnectionString),
-				ProviderName.Oracle11Devart                                               => OracleTools.GetDataProvider(OracleVersion.v11       , OracleProvider.Devart    , connectionInfo.ConnectionString),
-				ProviderName.OracleDevart                                                 => OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.Devart    , connectionInfo.ConnectionString),
+				ProviderName.Oracle                                                       => OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.Oracle11Native                                               => OracleTools.GetDataProvider(OracleVersion.v11       , OracleProvider.Native    , connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.OracleNative                                                 => OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.Native    , connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.Oracle11Managed                                              => OracleTools.GetDataProvider(OracleVersion.v11       , OracleProvider.Managed   , connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.OracleManaged                                                => OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.Managed   , connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.Oracle11Devart                                               => OracleTools.GetDataProvider(OracleVersion.v11       , OracleProvider.Devart    , connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.OracleDevart                                                 => OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.Devart    , connectionInfo.ConnectionString, connectionInfo.Connection),
 
 				ProviderName.SqlCe                                                        => SqlCeTools.GetDataProvider(),
 
@@ -291,10 +291,11 @@ namespace LinqToDB.EntityFrameworkCore
 		/// </summary>
 		/// <param name="version">SQL Server dialect.</param>
 		/// <param name="connectionString">Connection string.</param>
+		/// <param name="connection">Connection.</param>
 		/// <returns>Linq To DB SQL Server provider instance.</returns>
-		protected virtual IDataProvider CreateSqlServerProvider(SqlServerVersion version, string? connectionString)
+		protected virtual IDataProvider CreateSqlServerProvider(SqlServerVersion version, string? connectionString, DbConnection? connection)
 		{
-			return DataProvider.SqlServer.SqlServerTools.GetDataProvider(version, SqlServerProvider.MicrosoftDataSqlClient, connectionString);
+			return DataProvider.SqlServer.SqlServerTools.GetDataProvider(version, SqlServerProvider.MicrosoftDataSqlClient, connectionString, connection);
 		}
 
 		/// <summary>
