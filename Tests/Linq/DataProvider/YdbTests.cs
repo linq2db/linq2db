@@ -493,6 +493,53 @@ namespace Tests.DataProvider
 			});
 		}
 
+		[Test]
+		public void UpdateSimpleEntity_ByPk([IncludeDataSources(Ctx)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<SimpleEntity>();
+
+			// 1. Insert the initial record
+			var now    = DateTime.UtcNow;
+			var entity = new SimpleEntity
+			{
+				IntVal  = 1,
+				DecVal  = 1.23m,
+				StrVal  = "old",
+				BoolVal = false,
+				DtVal   = now
+			};
+
+			// Retrieve the generated identifier
+			var newId = Convert.ToInt32(db.InsertWithIdentity(entity));
+
+			// 2. Modify the fields
+			entity.Id = newId;
+			entity.IntVal = 42;
+			entity.DecVal = 3.14m;
+			entity.StrVal = "updated";
+			entity.BoolVal = true;
+			entity.DtVal = now.AddDays(1);
+
+			// 3. Perform the update — should not throw exceptions
+			Assert.DoesNotThrow(() => db.Update(entity), "Update method should not throw exceptions");
+
+			// 4. Read it back and verify
+			var result = table.Single(e => e.Id == newId);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.IntVal, Is.EqualTo(42), "IntVal was not updated");
+				Assert.That(result.DecVal, Is.EqualTo(3.14m), "DecVal was not updated");
+				Assert.That(result.StrVal, Is.EqualTo("updated"), "StrVal was not updated");
+				Assert.That(result.BoolVal, Is.True, "BoolVal was not updated");
+				Assert.That(result.DtVal,
+							Is.EqualTo(now.AddDays(1))
+							  .Within(TimeSpan.FromSeconds(1)),
+							"DtVal was not updated or is outside the 1-second tolerance");
+			});
+		}
+
 		#endregion
 
 		//#region HintsTests
