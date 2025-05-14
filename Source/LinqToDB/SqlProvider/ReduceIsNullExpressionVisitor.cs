@@ -177,8 +177,7 @@ namespace LinqToDB.SqlProvider
 
 		protected override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
-			// passthrough
-			Visit(element.Expression);
+			ReduceOrAdd(element.Expression);
 
 			return element;
 		}
