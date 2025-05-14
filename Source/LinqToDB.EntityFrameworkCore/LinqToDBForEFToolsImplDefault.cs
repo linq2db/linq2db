@@ -93,9 +93,6 @@ namespace LinqToDB.EntityFrameworkCore
 				ExpirationScanFrequency = TimeSpan.FromHours(1.0)
 			});
 
-		private readonly ConcurrentDictionary<Type, Func<RelationalOptionsExtension, string>>
-			_connectionStringExtractors = new();
-
 		/// <summary>
 		/// Force clear of internal caches.
 		/// </summary>
