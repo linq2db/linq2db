@@ -16,7 +16,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.12.0-beta1.25155.1" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning" Version="3.1.0-beta" />
-    <PackageVersion Include="Ydb.Sdk" Version="0.16.1" />
+    <PackageVersion Include="Ydb.Sdk" Version="0.16.2" />
 	<PackageVersion Include="Ydb.Sdk.Yc.Auth" Version="0.2.0" />
   </ItemGroup>
   <ItemGroup Label="Polyfills">
