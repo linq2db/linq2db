@@ -22,6 +22,17 @@ namespace Tests.DataProvider
 		private const string Ctx = "YDB";           // context name from DataProviders.json
 		private const string PingSql = "SELECT 1";
 
+		[Table]
+		public class SimpleEntity
+		{
+			[Column, PrimaryKey, Identity] public int Id { get; set; }
+			[Column] public int IntVal { get; set; }
+			[Column] public decimal DecVal { get; set; }
+			[Column] public string? StrVal { get; set; }
+			[Column] public bool BoolVal { get; set; }
+			[Column] public DateTime DtVal { get; set; }
+		}
+
 		//------------------------------------------------------------------
 		// 2. Explicit check of YdbTools + round-trip of the connection string.
 		//------------------------------------------------------------------
@@ -138,17 +149,6 @@ namespace Tests.DataProvider
 		#endregion
 
 		#region BulkCopyTests
-
-		[Table]
-		public class SimpleEntity
-		{
-			[Column, PrimaryKey, Identity] public int Id { get; set; }
-			[Column] public int IntVal { get; set; }
-			[Column] public decimal DecVal { get; set; }
-			[Column] public string? StrVal { get; set; }
-			[Column] public bool BoolVal { get; set; }
-			[Column] public DateTime DtVal { get; set; }
-		}
 
 		private static SimpleEntity[] BuildData(int count = 10)
 		{
@@ -408,6 +408,91 @@ namespace Tests.DataProvider
 
 			Assert.That(pks, Is.Empty, "YDB driver doesn’t expose PK meta for local tables yet");
 		}
+		#endregion
+
+		#region SimpleEntityCrudTests
+
+		[Test]
+		public void CreateSimpleEntityTable([IncludeDataSources(Ctx)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<SimpleEntity>();
+
+			var schema = db.DataProvider
+		.GetSchemaProvider()
+		.GetSchema(db, new GetSchemaOptions
+		{
+			GetTables = true,
+			LoadTable = t => t.Name == nameof(SimpleEntity)
+		});
+
+			Assert.That(schema.Tables, Has.Count.EqualTo(1), "The 'SimpleEntity' table should exist in the schema.");
+		}
+
+		[Test]
+		public void InsertSimpleEntity([IncludeDataSources(Ctx)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<SimpleEntity>();
+
+			var now    = DateTime.UtcNow;
+			var entity = new SimpleEntity
+			{
+				IntVal  = 42,
+				DecVal  = 3.14m,
+				StrVal  = "hello",
+				BoolVal = true,
+				DtVal   = now
+			};
+
+			// Ensure that Insert does not throw (e.g. YDB provider returns -1 on success)
+			Assert.DoesNotThrow(() => db.Insert(entity), "Insert should not throw any exceptions.");
+
+			// Verify the record was inserted
+			var result = table.SingleOrDefault(e => e.IntVal == 42);
+			Assert.That(result, Is.Not.Null, "A record with IntVal = 42 should exist in the table.");
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(result!.DecVal, Is.EqualTo(3.14m), "Decimal value should be 3.14.");
+				Assert.That(result.StrVal, Is.EqualTo("hello"), "String value should be 'hello'.");
+				Assert.That(result.BoolVal, Is.True, "Boolean value should be true.");
+				Assert.That(result.DtVal, Is.EqualTo(now).Within(TimeSpan.FromSeconds(1)), "DateTime value should match the inserted time (with 1s tolerance).");
+			});
+		}
+
+		[Test]
+		public void DeleteSimpleEntity_ByPk([IncludeDataSources(Ctx)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<SimpleEntity>();
+
+			var now    = DateTime.UtcNow;
+			var entity = new SimpleEntity
+			{
+				IntVal  = 99,
+				DecVal  = 1.23m,
+				StrVal  = "to_delete",
+				BoolVal = false,
+				DtVal   = now
+			};
+
+			var newId      = (int)db.InsertWithIdentity(entity);
+			var beforeRows = table.Count();
+
+			Assert.That(table.Any(e => e.Id == newId), Is.True, "The inserted record should be present in the table.");
+
+			_ = db.Delete(new SimpleEntity { Id = newId });
+
+			var afterRows = table.Count();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(table.Any(e => e.Id == newId), Is.False, "The record should not exist after deletion.");
+				Assert.That(afterRows, Is.EqualTo(beforeRows - 1), "Row count should decrease by 1 after deletion.");
+			});
+		}
+
 		#endregion
 
 		//#region HintsTests

@@ -9,6 +9,7 @@ using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
@@ -254,19 +255,99 @@ namespace LinqToDB.DataProvider.Ydb
 			BuildMergeTerminator(NullabilityContext, merge);
 		}
 
-		//--------------------------------------------------------------------- sequences (mock)
+		/// <summary>
+		/// Constructs a DELETE statement **without** using the alias "t1".
+		/// For more complex cases (e.g., involving JOINs or subqueries in ON clauses),
+		/// we fall back to the base <see cref="BasicSqlBuilder"/> logic.
+		/// </summary>
+		protected override void BuildDeleteQuery(SqlDeleteStatement deleteStatement)
+		{
+			if (deleteStatement.SelectQuery.From.Tables.Count == 1)
+			{
+				var ts = deleteStatement.SelectQuery.From.Tables[0];
+				ts.Alias = null;
+				if (ts.Source is SqlTable tbl)
+					tbl.Alias = null;
+
+				// -----------------------------------------------------------------
+				// WITH / TAG Clauses
+				// -----------------------------------------------------------------
+				BuildStep = Step.Tag;
+				BuildTag(deleteStatement);
+
+				BuildStep = Step.WithClause;
+				BuildWithClause(deleteStatement.With);
+
+				// -----------------------------------------------------------------
+				// DELETE FROM <Table>        — without alias
+				// -----------------------------------------------------------------
+				BuildStep = Step.DeleteClause;
+				AppendIndent();
+				StringBuilder.Append("DELETE");
+				StartStatementQueryExtensions(deleteStatement.SelectQuery);
+				BuildSkipFirst(deleteStatement.SelectQuery);
+				StringBuilder.AppendLine();
+
+				AppendIndent().Append("FROM ");
+				BuildPhysicalTable(deleteStatement.SelectQuery.From.Tables[0].Source, null);
+				StringBuilder.AppendLine();
+
+				// -----------------------------------------------------------------
+				// WHERE / GROUP BY / HAVING / ORDER BY / LIMIT
+				// (all rendered **without** aliases)
+				// -----------------------------------------------------------------
+				var savedSkipAlias = SkipAlias;
+				SkipAlias = true;
+
+				BuildStep = Step.WhereClause;
+				BuildWhereClause(deleteStatement.SelectQuery);
+
+				BuildStep = Step.GroupByClause;
+				BuildGroupByClause(deleteStatement.SelectQuery);
+
+				BuildStep = Step.HavingClause;
+				BuildHavingClause(deleteStatement.SelectQuery);
+
+				BuildStep = Step.OrderByClause;
+				BuildOrderByClause(deleteStatement.SelectQuery);
+
+				BuildStep = Step.OffsetLimit;
+				BuildOffsetLimit(deleteStatement.SelectQuery);
+
+				SkipAlias = savedSkipAlias; // restore original alias state
+
+				// -----------------------------------------------------------------
+				// Query-level hints, if specified
+				// -----------------------------------------------------------------
+				BuildStep = Step.QueryExtensions;
+				BuildSubQueryExtensions(deleteStatement);
+			}
+			else
+			{
+				// For all other scenarios (e.g., JOINs, subqueries in ON),
+				// use the standard implementation,
+				// which is already adapted in the optimizer.
+				base.BuildDeleteQuery(deleteStatement);
+			}
+		}
+
+		//---------------------------------------------------------------------
+		// Sequence Mock Implementation
+		//---------------------------------------------------------------------
 
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
-			return FormattableString.Invariant($"SELECT * FROM GENERATE_SERIES(1,{count}) AS id; -- YDB doesn’t support sequences");
+			return FormattableString.Invariant(
+				$"SELECT * FROM GENERATE_SERIES(1,{count}) AS id; -- YDB doesn’t support sequences"
+			);
 		}
 
-		//---------------------------------------------------------------------  ✧ HINTS ✧
+		//--------------------------------------------------------------------- ✧ QUERY HINTS ✧
 		//
-		// После того, как базовый текст SELECT собран, добавляем Query‑level
-		// расширения (scope = QueryHint) — это:
-		//   • PRAGMA‑директивы   (PragmaQueryHintBuilder)
-		//   • WITH‑хинты «для всех таблиц»  (TablesInScopeHintBuilder)
+		// After the base SELECT text is generated,
+		// we append query-level extensions (scope = QueryHint), including:
+		//   • PRAGMA directives   (handled by PragmaQueryHintBuilder)
+		//   • WITH hints "for all tables" (handled by TablesInScopeHintBuilder)
 		//---------------------------------------------------------------------
 		protected override void BuildSubQueryExtensions(SqlStatement statement)
 		{
@@ -277,10 +358,11 @@ namespace LinqToDB.DataProvider.Ydb
 			BuildQueryExtensions(
 				StringBuilder,
 				sqlExts,
-				prefix: null,     // PragmaQueryHintBuilder сам добавит перенос/PRAGMA
+				prefix: null,     // PragmaQueryHintBuilder will insert line breaks/PRAGMA
 				delimiter: "\n",
 				suffix: null,
 				Sql.QueryExtensionScope.QueryHint);
 		}
+
 	}
 }
