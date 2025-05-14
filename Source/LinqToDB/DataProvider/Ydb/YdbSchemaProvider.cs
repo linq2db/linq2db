@@ -104,29 +104,24 @@ namespace LinqToDB.DataProvider.Ydb
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var conn = GetOpenConnection(dataConnection, out var created);
+			var conn    = GetOpenConnection(dataConnection, out var created);
 			try
 			{
 				LoadCollections(conn);
 				if (!Has("Tables"))
 					return new List<TableInfo>();
 
-				using var schema = conn.GetSchema("Tables");
+				using var schema = conn.GetSchema("Tables", new[] { null, "TABLE" });
+
 				var result = new List<TableInfo>();
 
 				foreach (DataRow row in schema.Rows)
 				{
-					string type = schema.Columns.Contains("TABLE_TYPE")
-				? Invariant(row["TABLE_TYPE"])
-				: string.Empty;
-					if (!type.Equals("TABLE", StringComparison.OrdinalIgnoreCase))
-						continue;
-
-					string name      = Invariant(row["TABLE_NAME"]);
+					string name = Invariant(row["TABLE_NAME"]);
 					string? schemaName = schema.Columns.Contains("TABLE_SCHEMA")
 				? Invariant(row["TABLE_SCHEMA"])
 				: null;
-					string? catalog  = schema.Columns.Contains("TABLE_CATALOG")
+					string? catalog = schema.Columns.Contains("TABLE_CATALOG")
 				? Invariant(row["TABLE_CATALOG"])
 				: null;
 
@@ -228,14 +223,6 @@ namespace LinqToDB.DataProvider.Ydb
 					else if (schemaTable.Columns.Contains("DECIMAL_DIGITS") && int.TryParse(Invariant(row["DECIMAL_DIGITS"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out sc))
 						scale = sc;
 
-					// ---- 3. HARD mapping: anything reported as "Unspecified" → Decimal
-					if (dataTypeName.Equals("Unspecified", StringComparison.OrdinalIgnoreCase))
-					{
-						dataTypeName = "Decimal";
-						precision ??= 22;
-						scale ??= 9;
-					}
-
 					// ---- 4. compose column type string -----------------------------
 					string columnType = ComposeColumnType(dataTypeName, length, precision, scale);
 
@@ -314,16 +301,20 @@ namespace LinqToDB.DataProvider.Ydb
 	new(@"^Decimal\(\d+,\s*\d+\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
 		protected override DataType GetDataType(
-			string? dataType,           // INFORMATION_SCHEMA.COLUMNS.DATA_TYPE
-			string? columnType,         // INFORMATION_SCHEMA.COLUMNS.TYPE_NAME
+			string? dataType,    // INFORMATION_SCHEMA.COLUMNS.DATA_TYPE или TYPE_NAME
+			string? columnType,  // полное имя типа, например "Decimal(22,9)"
 			int? length,
 			int? precision,
 			int? scale)
 		{
-			dataType = dataType?.Trim() ?? string.Empty;
-			columnType = columnType?.Trim() ?? dataType;
+			var baseType = dataType?.Trim() ?? string.Empty;
+			int paren = baseType.IndexOf('(');
+			if (paren > 0)
+				baseType = baseType.Substring(0, paren).Trim();
 
-			switch (dataType)
+			columnType = columnType?.Trim() ?? baseType;
+
+			switch (baseType)
 			{
 				case "Bool": return DataType.Boolean;
 				case "Int8": return DataType.SByte;
@@ -334,7 +325,6 @@ namespace LinqToDB.DataProvider.Ydb
 				case "Uint32": return DataType.UInt32;
 				case "Int64": return DataType.Int64;
 				case "Uint64": return DataType.UInt64;
-
 				case "Float": return DataType.Single;
 				case "Double": return DataType.Double;
 
@@ -353,25 +343,19 @@ namespace LinqToDB.DataProvider.Ydb
 				case "Uuid": return DataType.Guid;
 				case "DyNumber": return DataType.VarChar;
 
-				case "Decimal": return DataType.Decimal;
+				case "Decimal":
+				case "Numeric": return DataType.Decimal;
 
 				case "Unspecified":
-				{
-					// 1) Decimal(p,s)
 					if (_decimalRegex.IsMatch(columnType))
 						return DataType.Decimal;
-
 					if (columnType.Equals("Json", StringComparison.OrdinalIgnoreCase))
 						return DataType.Json;
-
 					if (columnType.Equals("Uuid", StringComparison.OrdinalIgnoreCase))
 						return DataType.Guid;
-
 					if (columnType.Equals("DyNumber", StringComparison.OrdinalIgnoreCase))
 						return DataType.VarChar;
-
 					return DataType.Undefined;
-				}
 
 				default:
 					return DataType.Undefined;
