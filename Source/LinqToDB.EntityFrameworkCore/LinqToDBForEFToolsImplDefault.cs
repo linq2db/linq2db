@@ -187,11 +187,11 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.MySql80                                                      => MySqlTools.GetDataProvider(MySqlVersion.MySql80, MySqlProvider.AutoDetect, connectionInfo.ConnectionString),
 				ProviderName.MariaDB10                                                    => MySqlTools.GetDataProvider(MySqlVersion.MariaDB10, MySqlProvider.MySqlConnector, connectionInfo.ConnectionString),
 
-				ProviderName.PostgreSQL                                                   => CreatePostgreSqlProvider(PostgreSqlDefaultVersion, connectionInfo),
-				ProviderName.PostgreSQL92                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v92, connectionInfo),
-				ProviderName.PostgreSQL93                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v93, connectionInfo),
-				ProviderName.PostgreSQL95                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v95, connectionInfo),
-				ProviderName.PostgreSQL15                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v15, connectionInfo),
+				ProviderName.PostgreSQL                                                   => CreatePostgreSqlProvider(PostgreSqlDefaultVersion, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.PostgreSQL92                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v92, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.PostgreSQL93                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v93, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.PostgreSQL95                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v95, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.PostgreSQL15                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v15, connectionInfo.ConnectionString, connectionInfo.Connection),
 
 				ProviderName.SQLite or ProviderName.SQLiteMS                              => SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft, connectionInfo.ConnectionString),
 
@@ -301,11 +301,12 @@ namespace LinqToDB.EntityFrameworkCore
 		/// Creates Linq To DB PostgreSQL database provider instance.
 		/// </summary>
 		/// <param name="version">PostgreSQL dialect.</param>
-		/// <param name="connectionInfo">EF connection info.</param>
+		/// <param name="connectionString">Connection string.</param>
+		/// <param name="connection">Connection.</param>
 		/// <returns>Linq To DB PostgreSQL provider instance.</returns>
-		protected virtual IDataProvider CreatePostgreSqlProvider(PostgreSQLVersion version, EFConnectionInfo connectionInfo)
+		protected virtual IDataProvider CreatePostgreSqlProvider(PostgreSQLVersion version, string? connectionString, DbConnection? connection)
 		{
-			return PostgreSQLTools.GetDataProvider(version, connectionInfo.Connection, connectionInfo.ConnectionString);
+			return PostgreSQLTools.GetDataProvider(version, connectionString, connection);
 		}
 
 		/// <summary>
