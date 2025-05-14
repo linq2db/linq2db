@@ -1061,6 +1061,9 @@ namespace Tests.Linq
 
 			AssertQuery(tb.Where(r => ((r.Value1 != r.Value2) == (r.Value1 == r.Value4)) == ((r.Value4 == r.Value5) == (r.Value2 != r.Value4))));
 			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != ((r.Value4 == r.Value1) == ((r.Value4 != r.Value5) != (r.Value4 != r.Value5)))));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != ((r.Value4 == r.Value1) == ((r.Value4 != r.Value5) == (r.Value4 != r.Value5)))));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != ((r.Value4 == r.Value1) != ((r.Value4 != r.Value5) != (r.Value4 != r.Value5)))));
+			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) != ((r.Value4 == r.Value1) != ((r.Value4 != r.Value5) == (r.Value4 != r.Value5)))));
 			AssertQuery(tb.Where(r => (((r.Value1 == r.Value2) == (r.Value2 != r.Value4)) != (r.Value1 == r.Value4)) != ((r.Value4 != r.Value5) == (r.Value4 != r.Value5))));
 			AssertQuery(tb.Where(r => ((r.Value1 != r.Value2) != (r.Value2 == r.Value5)) != ((r.Value4 != r.Value1) == (r.Value4 == r.Value5))));
 		}
