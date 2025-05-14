@@ -93,6 +93,9 @@ namespace LinqToDB.EntityFrameworkCore
 				ExpirationScanFrequency = TimeSpan.FromHours(1.0)
 			});
 
+		private readonly ConcurrentDictionary<Type, Func<RelationalOptionsExtension, string>>
+			_connectionStringExtractors = new();
+
 		/// <summary>
 		/// Force clear of internal caches.
 		/// </summary>
@@ -633,9 +636,24 @@ namespace LinqToDB.EntityFrameworkCore
 
 			if (result.ConnectionString == null && relational?.GetType().Name == "NpgsqlOptionsExtension")
 			{
-				var dataSource = relational.GetType().GetProperty("DataSource")?.GetValue(relational);
-				var settings = dataSource?.GetType().GetProperty("Settings", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(dataSource);
-				result.ConnectionString = (string?) settings?.GetType().GetProperty("ConnectionString")?.GetValue(settings);
+				var extractor = _connectionStringExtractors.GetOrAdd(relational.GetType(), type =>
+				{
+					var parameter = Expression.Parameter(typeof(RelationalOptionsExtension), "x");
+					var typedParameter = Expression.Convert(parameter, type);
+
+					var dataSourceProperty = type.GetProperty("DataSource")!;
+					var dataSourceExpression = Expression.Property(typedParameter, dataSourceProperty);
+
+					var dataSourceType = Type.GetType("Npgsql.NpgsqlDataSource, Npgsql")!;
+					var settingsProperty = dataSourceType.GetProperty("Settings", BindingFlags.Instance | BindingFlags.NonPublic)!;
+					var settingsExpression = Expression.Property(Expression.Convert(dataSourceExpression, dataSourceType), settingsProperty);
+
+					var connectionStringExpression = Expression.Property(settingsExpression, settingsProperty.PropertyType.GetProperty("ConnectionString")!);
+
+					var lambda = Expression.Lambda<Func<RelationalOptionsExtension, string>>(connectionStringExpression, parameter);
+					return lambda.CompileExpression();
+				});
+				result.ConnectionString = extractor(relational);
 			}
 
 			return result;
