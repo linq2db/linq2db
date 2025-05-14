@@ -190,11 +190,11 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.MySql80                                                      => MySqlTools.GetDataProvider(MySqlVersion.MySql80, MySqlProvider.AutoDetect, connectionInfo.ConnectionString),
 				ProviderName.MariaDB10                                                    => MySqlTools.GetDataProvider(MySqlVersion.MariaDB10, MySqlProvider.MySqlConnector, connectionInfo.ConnectionString),
 
-				ProviderName.PostgreSQL                                                   => CreatePostgreSqlProvider(PostgreSqlDefaultVersion, connectionInfo.ConnectionString),
-				ProviderName.PostgreSQL92                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v92, connectionInfo.ConnectionString),
-				ProviderName.PostgreSQL93                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v93, connectionInfo.ConnectionString),
-				ProviderName.PostgreSQL95                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v95, connectionInfo.ConnectionString),
-				ProviderName.PostgreSQL15                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v15, connectionInfo.ConnectionString),
+				ProviderName.PostgreSQL                                                   => CreatePostgreSqlProvider(PostgreSqlDefaultVersion, connectionInfo),
+				ProviderName.PostgreSQL92                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v92, connectionInfo),
+				ProviderName.PostgreSQL93                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v93, connectionInfo),
+				ProviderName.PostgreSQL95                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v95, connectionInfo),
+				ProviderName.PostgreSQL15                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v15, connectionInfo),
 
 				ProviderName.SQLite or ProviderName.SQLiteMS                              => SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft, connectionInfo.ConnectionString),
 
@@ -304,11 +304,11 @@ namespace LinqToDB.EntityFrameworkCore
 		/// Creates Linq To DB PostgreSQL database provider instance.
 		/// </summary>
 		/// <param name="version">PostgreSQL dialect.</param>
-		/// <param name="connectionString">Connection string.</param>
+		/// <param name="connectionInfo">EF connection info.</param>
 		/// <returns>Linq To DB PostgreSQL provider instance.</returns>
-		protected virtual IDataProvider CreatePostgreSqlProvider(PostgreSQLVersion version, string? connectionString)
+		protected virtual IDataProvider CreatePostgreSqlProvider(PostgreSQLVersion version, EFConnectionInfo connectionInfo)
 		{
-			return PostgreSQLTools.GetDataProvider(version, connectionString);
+			return PostgreSQLTools.GetDataProvider(version, connectionInfo.Connection, connectionInfo.ConnectionString);
 		}
 
 		/// <summary>
@@ -628,35 +628,11 @@ namespace LinqToDB.EntityFrameworkCore
 		public virtual EFConnectionInfo ExtractConnectionInfo(IDbContextOptions? options)
 		{
 			var relational = options?.Extensions.OfType<RelationalOptionsExtension>().FirstOrDefault();
-			var result = new EFConnectionInfo
+			return new EFConnectionInfo
 			{
 				ConnectionString = relational?.ConnectionString,
 				Connection = relational?.Connection
 			};
-
-			if (result.ConnectionString == null && relational?.GetType().Name == "NpgsqlOptionsExtension")
-			{
-				var extractor = _connectionStringExtractors.GetOrAdd(relational.GetType(), type =>
-				{
-					var parameter = Expression.Parameter(typeof(RelationalOptionsExtension), "x");
-					var typedParameter = Expression.Convert(parameter, type);
-
-					var dataSourceProperty = type.GetProperty("DataSource")!;
-					var dataSourceExpression = Expression.Property(typedParameter, dataSourceProperty);
-
-					var dataSourceType = Type.GetType("Npgsql.NpgsqlDataSource, Npgsql")!;
-					var settingsProperty = dataSourceType.GetProperty("Settings", BindingFlags.Instance | BindingFlags.NonPublic)!;
-					var settingsExpression = Expression.Property(Expression.Convert(dataSourceExpression, dataSourceType), settingsProperty);
-
-					var connectionStringExpression = Expression.Property(settingsExpression, settingsProperty.PropertyType.GetProperty("ConnectionString")!);
-
-					var lambda = Expression.Lambda<Func<RelationalOptionsExtension, string>>(connectionStringExpression, parameter);
-					return lambda.CompileExpression();
-				});
-				result.ConnectionString = extractor(relational);
-			}
-
-			return result;
 		}
 
 		/// <summary>
