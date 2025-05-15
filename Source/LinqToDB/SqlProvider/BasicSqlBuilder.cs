@@ -148,12 +148,12 @@ namespace LinqToDB.SqlProvider
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
-		public IQueryElement? Optimize(IQueryElement? element, bool reduceBinary)
+		public IQueryElement? Optimize(IQueryElement? element, bool reducePredicates)
 		{
 			if (element == null)
 				return null;
 
-			return OptimizationContext.Optimize(element, NullabilityContext, reduceBinary);
+			return OptimizationContext.Optimize(element, NullabilityContext, reducePredicates);
 		}
 
 		#endregion
@@ -2832,7 +2832,7 @@ namespace LinqToDB.SqlProvider
 				return searchCondition;
 
 			var condition = ConvertElement(searchCondition);
-			var optimized = Optimize(condition, true);
+			var optimized = Optimize(condition, reducePredicates: true);
 
 			if (optimized is SqlSearchCondition optimizedCondition)
 				condition = optimizedCondition;
@@ -2846,7 +2846,7 @@ namespace LinqToDB.SqlProvider
 		{
 			if (_binaryOptimized == 0)
 			{
-				var optimized = Optimize(predicate, true);
+				var optimized = Optimize(predicate, reducePredicates: true);
 				if (!ReferenceEquals(optimized, predicate))
 				{
 					predicate  = (ISqlPredicate)optimized;
