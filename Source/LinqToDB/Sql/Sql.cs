@@ -130,7 +130,7 @@ namespace LinqToDB
 				var right = builder.GetExpression(1)!;
 				var isNot = builder.Expression == "NOT";
 
-				var nullability = new NullabilityContext(builder.Query);
+				var nullability = NullabilityContext.GetContext(builder.Query);
 
 				SqlPredicate predicate = left.CanBeNullable(nullability) || right.CanBeNullable(nullability)
 					? new SqlPredicate.IsDistinct(left, isNot, right)
