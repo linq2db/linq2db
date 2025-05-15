@@ -377,11 +377,14 @@ namespace LinqToDB.SqlProvider
 				var expr1IsPredicate = QueryHelper.UnwrapNullablity(predicate.Expr1) is (ISqlPredicate or SqlExpression { IsPredicate: true });
 				var expr2IsPredicate = QueryHelper.UnwrapNullablity(predicate.Expr2) is (ISqlPredicate or SqlExpression { IsPredicate: true });
 
-				var expr1 = expr1IsPredicate
-					? WrapBooleanExpression(predicate.Expr1, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison && SequenceHelper.UnwrapNullability(predicate.Expr1) is ISqlPredicate or SqlExpression { IsPredicate: true })
+				var expr1IsConstant = QueryHelper.UnwrapNullablity(predicate.Expr1) is (SqlValue or SqlParameter { IsQueryParameter: false });
+				var expr2IsConstant = QueryHelper.UnwrapNullablity(predicate.Expr2) is (SqlValue or SqlParameter { IsQueryParameter: false });
+
+				var expr1 = expr1IsPredicate && !expr2IsConstant
+					? WrapBooleanExpression(predicate.Expr1, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
 					: predicate.Expr1;
-				var expr2 = expr2IsPredicate
-					? WrapBooleanExpression(predicate.Expr2, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison && SequenceHelper.UnwrapNullability(predicate.Expr2) is ISqlPredicate or SqlExpression { IsPredicate: true })
+				var expr2 = expr2IsPredicate && !expr1IsConstant
+					? WrapBooleanExpression(predicate.Expr2, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
 					: predicate.Expr2;
 
 				if (!ReferenceEquals(expr1, predicate.Expr1) || !ReferenceEquals(expr2, predicate.Expr2))
