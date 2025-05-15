@@ -190,6 +190,7 @@ namespace LinqToDB.DataProvider.Firebird
 			if (predicate.ElementType == QueryElementType.ExprPredicate && predicate.Expr1 is SqlParameter p && p.Type.DataType != DataType.Boolean)
 			{
 				predicate = new SqlPredicate.ExprExpr(p, SqlPredicate.Operator.Equal, MappingSchema.GetSqlValue(p.Type, true), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
+				return Visit(predicate);
 			}
 
 			return base.VisitExprPredicate(predicate);
