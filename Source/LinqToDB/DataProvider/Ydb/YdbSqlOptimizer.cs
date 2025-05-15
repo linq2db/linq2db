@@ -6,6 +6,10 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Ydb
 {
+	/// <summary>
+	/// Specialized SQL-tree optimizer for YDB.
+	/// Removes unnecessary aliases and prevents the generation of unsupported constructs.
+	/// </summary>
 	sealed class YdbSqlOptimizer : BasicSqlOptimizer
 	{
 		public YdbSqlOptimizer(SqlProviderFlags sqlProviderFlags)
@@ -14,6 +18,12 @@ namespace LinqToDB.DataProvider.Ydb
 		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 			=> new YdbSqlExpressionConvertVisitor(allowModify);
 
+		/// <summary>
+		/// Adjusts the SQL tree after the base transformation:
+		/// • For DELETE and UPDATE, clears the alias on the target table
+		///   so that the resulting SQL matches YDB/YQL syntax
+		///   (<c>UPDATE Table SET ... WHERE ...</c>, without “t1.”).
+		/// </summary>
 		public override SqlStatement TransformStatement(
 			SqlStatement statement,
 			DataOptions dataOptions,
@@ -26,18 +36,18 @@ namespace LinqToDB.DataProvider.Ydb
 				QueryType.Delete => CleanDeleteAlias(
 						(SqlDeleteStatement)GetAlternativeDelete(
 							(SqlDeleteStatement)statement, dataOptions)),
-				QueryType.Update => CorrectYdbUpdate(
-						(SqlUpdateStatement)statement, dataOptions, mappingSchema),
+
+				QueryType.Update => CleanUpdateAlias((SqlUpdateStatement)statement),
+
 				_ => statement
 			};
 		}
 
 		// -----------------------------------------------------------------
-		// DELETE  (delete alias after FROM)
+		// DELETE  (remove alias after FROM)
 		// -----------------------------------------------------------------
 		private static SqlDeleteStatement CleanDeleteAlias(SqlDeleteStatement stmt)
 		{
-			// Target‑table всегда первая в списке From.Tables
 			if (stmt.SelectQuery.From.Tables.Count == 1)
 			{
 				var ts = stmt.SelectQuery.From.Tables[0];
@@ -50,11 +60,19 @@ namespace LinqToDB.DataProvider.Ydb
 		}
 
 		// -----------------------------------------------------------------
-		// UPDATE
+		// UPDATE  (remove alias after UPDATE)
 		// -----------------------------------------------------------------
-		private SqlStatement CorrectYdbUpdate(SqlUpdateStatement statement,
-			DataOptions dataOptions,
-			MappingSchema mappingSchema)
-			=> GetAlternativeUpdate(statement, dataOptions, mappingSchema);
+		private static SqlUpdateStatement CleanUpdateAlias(SqlUpdateStatement stmt)
+		{
+			if (stmt.SelectQuery.From.Tables.Count == 1)
+			{
+				var ts = stmt.SelectQuery.From.Tables[0];
+				ts.Alias = null;
+				if (ts.Source is SqlTable tbl)
+					tbl.Alias = null;
+			}
+
+			return stmt;
+		}
 	}
 }

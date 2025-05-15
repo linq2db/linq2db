@@ -22,9 +22,9 @@ using LinqToDB.SqlQuery;
 namespace LinqToDB.DataProvider.Ydb
 {
 	/// <summary>
-	///  Построитель SQL‑кода (YQL) для провайдера YDB.
-	///  Адаптирует выражения LINQ to DB к синтаксису YQL,
-	///  поддерживает UPSERT, спец‑типы, временные таблицы, хинты и т. д.
+	///  SQL code builder (YQL) for the YDB provider.
+	///  Adapts LINQ to DB expressions to YQL syntax,
+	///  supports UPSERT, special types, temporary tables, hints, etc.
 	/// </summary>
 	public sealed class YdbSqlBuilder : BasicSqlBuilder<YdbOptions>
 	{
@@ -39,12 +39,12 @@ namespace LinqToDB.DataProvider.Ydb
 		{
 		}
 
-		// внутренний «copy‑ctor»
+		// internal copy-constructor
 		private YdbSqlBuilder(YdbSqlBuilder parent) : base(parent) { }
 
 		protected override ISqlBuilder CreateSqlBuilder() => new YdbSqlBuilder(this);
 
-		//--------------------------------------------------------------------- базовый синтаксис
+		//--------------------------------------------------------------------- basic syntax
 
 		protected override string LimitFormat(SelectQuery selectQuery) => "LIMIT {0}";
 		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
@@ -126,7 +126,7 @@ namespace LinqToDB.DataProvider.Ydb
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
-		//--------------------------------------------------------------------- типы‑данных + quoting
+		//--------------------------------------------------------------------- data types + quoting
 
 		protected override void BuildDataTypeFromDataType(
 			DbDataType type, bool forCreateTable, bool canBeNull)
@@ -255,11 +255,70 @@ namespace LinqToDB.DataProvider.Ydb
 			BuildMergeTerminator(NullabilityContext, merge);
 		}
 
+		//---------------------------------------------------------------------
+		//  UPDATE without alias
+		//---------------------------------------------------------------------
 		/// <summary>
-		/// Constructs a DELETE statement **without** using the alias "t1".
-		/// For more complex cases (e.g., involving JOINs or subqueries in ON clauses),
-		/// we fall back to the base <see cref="BasicSqlBuilder"/> logic.
+		/// Builds the <c>UPDATE … SET …</c> section without using an alias
+		/// (a requirement of YDB/YQL syntax).
 		/// </summary>
+		protected override void BuildUpdateClause(
+			SqlStatement statement,
+			SelectQuery selectQuery,
+			SqlUpdateClause updateClause)
+		{
+			// -----------------------------------------------------------------
+			// Clear auto-generated alias on the target table
+			// -----------------------------------------------------------------
+			if (selectQuery.From.Tables.Count == 1)
+			{
+				var ts = selectQuery.From.Tables[0];
+				ts.Alias = null;
+				if (ts.Source is SqlTable tbl)
+					tbl.Alias = null;
+			}
+
+			// -----------------------------------------------------------------
+			//  UPDATE <Table>
+			// -----------------------------------------------------------------
+			AppendIndent();
+			StringBuilder.Append("UPDATE ");
+			BuildPhysicalTable(selectQuery.From.Tables[0].Source, null);
+			StringBuilder.AppendLine();
+
+			// -----------------------------------------------------------------
+			//  SET  col = expr [, …]
+			// -----------------------------------------------------------------
+			AppendIndent();
+			StringBuilder.Append("SET ");
+
+			for (int i = 0; i < updateClause.Items.Count; i++)
+			{
+				if (i > 0)
+				{
+					StringBuilder.Append(',');
+					StringBuilder.AppendLine();
+					AppendIndent();
+					StringBuilder.Append("    ");
+				}
+
+				var item = updateClause.Items[i];
+
+				// col =
+				BuildExpression(item.Column, false, true);
+				StringBuilder.Append(" = ");
+
+				// expr
+				var addAlias = false;
+				BuildExpression(item.Expression!, false, true, null, ref addAlias);
+			}
+
+			StringBuilder.AppendLine();
+		}
+
+		//---------------------------------------------------------------------
+		// DELETE without alias
+		//---------------------------------------------------------------------
 		protected override void BuildDeleteQuery(SqlDeleteStatement deleteStatement)
 		{
 			if (deleteStatement.SelectQuery.From.Tables.Count == 1)
@@ -324,9 +383,6 @@ namespace LinqToDB.DataProvider.Ydb
 			}
 			else
 			{
-				// For all other scenarios (e.g., JOINs, subqueries in ON),
-				// use the standard implementation,
-				// which is already adapted in the optimizer.
 				base.BuildDeleteQuery(deleteStatement);
 			}
 		}
@@ -334,7 +390,6 @@ namespace LinqToDB.DataProvider.Ydb
 		//---------------------------------------------------------------------
 		// Sequence Mock Implementation
 		//---------------------------------------------------------------------
-
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
 			return FormattableString.Invariant(
@@ -344,11 +399,6 @@ namespace LinqToDB.DataProvider.Ydb
 
 		//--------------------------------------------------------------------- ✧ QUERY HINTS ✧
 		//
-		// After the base SELECT text is generated,
-		// we append query-level extensions (scope = QueryHint), including:
-		//   • PRAGMA directives   (handled by PragmaQueryHintBuilder)
-		//   • WITH hints "for all tables" (handled by TablesInScopeHintBuilder)
-		//---------------------------------------------------------------------
 		protected override void BuildSubQueryExtensions(SqlStatement statement)
 		{
 			var sqlExts = statement.SelectQuery?.SqlQueryExtensions;
@@ -363,6 +413,5 @@ namespace LinqToDB.DataProvider.Ydb
 				suffix: null,
 				Sql.QueryExtensionScope.QueryHint);
 		}
-
 	}
 }
