@@ -163,7 +163,7 @@ namespace LinqToDB.SqlProvider
 
 		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			if (element.Operation is "+" or "-" or "*" or "/" or "%" or "&")
+			if (element.Operation is "+" or "-" or "*" or "/" or "%" or "&" or "||")
 			{
 				if (element.Expr1.CanBeNullable(_nullabilityContext))
 					ReduceOrAdd(element.Expr1);
