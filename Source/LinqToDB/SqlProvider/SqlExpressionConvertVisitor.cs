@@ -374,15 +374,19 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.SupportsPredicatesComparison
 				|| QueryHelper.NeedsEqualityWithNull(predicate.Expr1, predicate.Operator, predicate.Expr2, NullabilityContext))
 			{
-				if (QueryHelper.UnwrapNullablity(predicate.Expr2) is not (SqlValue or SqlParameter) && QueryHelper.UnwrapNullablity(predicate.Expr1) is not (SqlValue or SqlParameter))
-				{
-					var expr1 = WrapBooleanExpression(predicate.Expr1, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison && SequenceHelper.UnwrapNullability(predicate.Expr1) is ISqlPredicate or SqlExpression { IsPredicate: true });
-					var expr2 = WrapBooleanExpression(predicate.Expr2, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison && SequenceHelper.UnwrapNullability(predicate.Expr2) is ISqlPredicate or SqlExpression { IsPredicate: true });
+				var expr1IsPredicate = QueryHelper.UnwrapNullablity(predicate.Expr1) is (ISqlPredicate or SqlExpression { IsPredicate: true });
+				var expr2IsPredicate = QueryHelper.UnwrapNullablity(predicate.Expr2) is (ISqlPredicate or SqlExpression { IsPredicate: true });
 
-					if (!ReferenceEquals(expr1, predicate.Expr1) || !ReferenceEquals(expr2, predicate.Expr2))
-					{
-						return new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.UnknownAsValue);
-					}
+				var expr1 = expr1IsPredicate
+					? WrapBooleanExpression(predicate.Expr1, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison && SequenceHelper.UnwrapNullability(predicate.Expr1) is ISqlPredicate or SqlExpression { IsPredicate: true })
+					: predicate.Expr1;
+				var expr2 = expr2IsPredicate
+					? WrapBooleanExpression(predicate.Expr2, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison && SequenceHelper.UnwrapNullability(predicate.Expr2) is ISqlPredicate or SqlExpression { IsPredicate: true })
+					: predicate.Expr2;
+
+				if (!ReferenceEquals(expr1, predicate.Expr1) || !ReferenceEquals(expr2, predicate.Expr2))
+				{
+					return new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.UnknownAsValue);
 				}
 			}
 
@@ -1245,7 +1249,7 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					wrap = !SqlProviderFlags.SupportsBooleanType || (!withNull && unwrapped.CanBeNullableOrUnknown(NullabilityContext)) || forceConvert;
+					wrap = !SqlProviderFlags.SupportsBooleanType || (!withNull && unwrapped.CanBeNullableOrUnknown(NullabilityContext, withoutReduction: true)) || forceConvert;
 				}
 
 				if (wrap)
@@ -1259,7 +1263,7 @@ namespace LinqToDB.SqlProvider
 					var trueValue  = new SqlValue(true);
 					var falseValue = new SqlValue(false);
 
-					if ((forceConvert || !SqlProviderFlags.SupportsBooleanType) && withNull && expr.CanBeNullableOrUnknown(NullabilityContext))
+					if ((forceConvert || !SqlProviderFlags.SupportsBooleanType) && withNull && expr.CanBeNullableOrUnknown(NullabilityContext, false))
 					{
 						var toType = QueryHelper.GetDbDataType(expr, MappingSchema);
 

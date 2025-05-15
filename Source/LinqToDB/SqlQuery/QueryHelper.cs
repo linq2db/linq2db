@@ -1680,10 +1680,10 @@ namespace LinqToDB.SqlQuery
 			return expr;
 		}
 
-		public static bool CanBeNullableOrUnknown(this ISqlExpression expr, NullabilityContext nullabilityContext)
+		public static bool CanBeNullableOrUnknown(this ISqlExpression expr, NullabilityContext nullabilityContext, bool withoutReduction)
 		{
 			if (expr is ISqlPredicate predicate)
-				return predicate.CanBeUnknown(nullabilityContext);
+				return predicate.CanBeUnknown(nullabilityContext, withoutReduction);
 
 			return expr.CanBeNullable(nullabilityContext);
 		}
@@ -1695,7 +1695,7 @@ namespace LinqToDB.SqlQuery
 			// !=: nullable XOR nullable
 			// see test GroupByAggregate
 			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
-				return expr1.CanBeNullableOrUnknown(nullabilityContext) || expr2.CanBeNullableOrUnknown(nullabilityContext);
+				return expr1.CanBeNullableOrUnknown(nullabilityContext, false) || expr2.CanBeNullableOrUnknown(nullabilityContext, false);
 
 			return false;
 		}

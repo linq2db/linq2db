@@ -1048,7 +1048,7 @@ namespace LinqToDB.SqlProvider
 			if (_nullabilityContext.IsEmpty)
 				return predicate;
 
-			if (!predicate.Expr1.CanBeNullableOrUnknown(_nullabilityContext))
+			if (!predicate.Expr1.CanBeNullableOrUnknown(_nullabilityContext, false))
 			{
 				//TODO: Exception for Row, find time to analyze why it's needed
 				if (predicate.Expr1.ElementType != QueryElementType.SqlRow)
@@ -1422,12 +1422,12 @@ namespace LinqToDB.SqlProvider
 						var sc = new SqlSearchCondition(true)
 							.AddAnd( sub =>
 								sub
-									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null))
+									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op != SqlPredicate.Operator.Equal : null))
 									.Add(sqlConditionExpression.Condition)
 							)
 							.AddAnd( sub =>
 								sub
-									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null))
+									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op != SqlPredicate.Operator.Equal : null))
 									.Add(sqlConditionExpression.Condition.MakeNot())
 								);
 

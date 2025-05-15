@@ -45,7 +45,7 @@ namespace LinqToDB.SqlQuery
 		public static readonly FalsePredicate False = new();
 #endif
 
-		public abstract bool CanBeUnknown(NullabilityContext nullability);
+		public abstract bool CanBeUnknown(NullabilityContext nullability, bool withoutReduction);
 
 		public static ISqlPredicate MakeBool(bool isTrue)
 		{
@@ -65,7 +65,7 @@ namespace LinqToDB.SqlQuery
 
 			public override bool          CanInvert(NullabilityContext    nullability) => true;
 			public override ISqlPredicate Invert(NullabilityContext       nullability) => Predicate;
-			public override bool          CanBeUnknown(NullabilityContext nullability) => Predicate.CanBeUnknown(nullability);
+			public override bool          CanBeUnknown(NullabilityContext nullability, bool withoutReduction) => Predicate.CanBeUnknown(nullability, withoutReduction);
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -111,7 +111,7 @@ namespace LinqToDB.SqlQuery
 
 			public override bool          CanInvert(NullabilityContext    nullability) => true;
 			public override ISqlPredicate Invert(NullabilityContext       nullability) => False;
-			public override bool          CanBeUnknown(NullabilityContext nullability) => false;
+			public override bool          CanBeUnknown(NullabilityContext nullability, bool withoutReduction) => false;
 		}
 
 		public sealed class FalsePredicate : SqlPredicate
@@ -137,7 +137,7 @@ namespace LinqToDB.SqlQuery
 
 			public override bool          CanInvert(NullabilityContext    nullability) => true;
 			public override ISqlPredicate Invert(NullabilityContext       nullability) => True;
-			public override bool          CanBeUnknown(NullabilityContext nullability) => false;
+			public override bool          CanBeUnknown(NullabilityContext nullability, bool withoutReduction) => false;
 		}
 
 		public class Expr : SqlPredicate
@@ -158,7 +158,7 @@ namespace LinqToDB.SqlQuery
 
 			public override bool          CanInvert(NullabilityContext    nullability) => false;
 			public override ISqlPredicate Invert(NullabilityContext       nullability) => throw new InvalidOperationException();
-			public override bool          CanBeUnknown(NullabilityContext nullability) => Expr1.CanBeNullableOrUnknown(nullability);
+			public override bool          CanBeUnknown(NullabilityContext nullability, bool withoutReduction) => Expr1.CanBeNullableOrUnknown(nullability, withoutReduction);
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -217,9 +217,9 @@ namespace LinqToDB.SqlQuery
 			public new Operator       Operator { get; }
 			public     ISqlExpression Expr2    { get; internal set; }
 
-			public override bool CanBeUnknown(NullabilityContext nullability)
+			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutReduction)
 			{
-				return Expr1.CanBeNullableOrUnknown(nullability) || Expr2.CanBeNullableOrUnknown(nullability);
+				return (withoutReduction || UnknownAsValue == null) && (Expr1.CanBeNullableOrUnknown(nullability, withoutReduction) || Expr2.CanBeNullableOrUnknown(nullability, withoutReduction));
 			}
 
 			/// <summary>
@@ -352,8 +352,8 @@ namespace LinqToDB.SqlQuery
 				if (UnknownAsValue == null || nullability.IsEmpty)
 					return this;
 
-				var expr1CanBeUnknown = Expr1.CanBeNullableOrUnknown(nullability);
-				var expr2CanBeUnknown = Expr2.CanBeNullableOrUnknown(nullability);
+				var expr1CanBeUnknown = Expr1.CanBeNullableOrUnknown(nullability, false);
+				var expr2CanBeUnknown = Expr2.CanBeNullableOrUnknown(nullability, false);
 				if (!expr1CanBeUnknown && !expr2CanBeUnknown)
 					return MakeWithoutNulls();
 
@@ -490,7 +490,7 @@ namespace LinqToDB.SqlQuery
 				return new Like(Expr1, !IsNot, Expr2, Escape);
 			}
 
-			public override bool CanBeUnknown(NullabilityContext nullability)
+			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutReduction)
 			{
 				return Expr1.CanBeNullable(nullability) || Expr2.CanBeNullable(nullability);
 			}
@@ -553,7 +553,7 @@ namespace LinqToDB.SqlQuery
 				return new SearchString(Expr1, !IsNot, Expr2, Kind, CaseSensitive);
 			}
 
-			public override bool CanBeUnknown(NullabilityContext nullability)
+			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutReduction)
 			{
 				return Expr1.CanBeNullable(nullability) || Expr2.CanBeNullable(nullability);
 			}
@@ -612,7 +612,7 @@ namespace LinqToDB.SqlQuery
 
 			public override ISqlPredicate Invert(NullabilityContext nullability) => new IsDistinct(Expr1, !IsNot, Expr2);
 
-			public override bool CanBeUnknown(NullabilityContext nullability) => false;
+			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutReduction) => false;
 
 			public override QueryElementType ElementType => QueryElementType.IsDistinctPredicate;
 
@@ -638,7 +638,7 @@ namespace LinqToDB.SqlQuery
 			public ISqlExpression Expr2 { get; internal set; }
 			public ISqlExpression Expr3 { get; internal set; }
 
-			public override bool CanBeUnknown(NullabilityContext nullability)
+			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutReduction)
 			{
 				return Expr1.CanBeNullable(nullability) || Expr2.CanBeNullable(nullability) || Expr3.CanBeNullable(nullability);
 			}
@@ -724,7 +724,7 @@ namespace LinqToDB.SqlQuery
 				// IS [NOT] NULL check needed for nullable predicate when it:
 				// - part of logic - evaluates predicate to true (WithNull == true)
 				// - when predicate is nested and expected to not return UNKNOWN (WithNull != null && isInsidePredicate)
-				if (WithNull == null || !Expr1.CanBeNullableOrUnknown(nullability) || (!isInsidePredicate && WithNull == false))
+				if (WithNull == null || !Expr1.CanBeNullableOrUnknown(nullability, false) || (!isInsidePredicate && WithNull == false))
 					return predicate;
 
 				var search = new SqlSearchCondition(WithNull == true, false)
@@ -741,7 +741,10 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.IsTruePredicate;
 
-			public override bool CanBeUnknown(NullabilityContext nullability) => Expr1.CanBeNullableOrUnknown(nullability);
+			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutReduction)
+			{
+				return (withoutReduction || WithNull == null) && Expr1.CanBeNullableOrUnknown(nullability, withoutReduction);
+			}
 		}
 
 		// expression IS [ NOT ] NULL
@@ -758,7 +761,7 @@ namespace LinqToDB.SqlQuery
 				return new IsNull(Expr1, !IsNot);
 			}
 
-			public override bool CanBeUnknown(NullabilityContext nullability) => false;
+			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutReduction) => false;
 
 			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
@@ -810,7 +813,7 @@ namespace LinqToDB.SqlQuery
 				return new InSubQuery(Expr1, !IsNot, SubQuery, DoNotConvert);
 			}
 
-			public override bool CanBeUnknown(NullabilityContext nullability) => base.CanBeUnknown(nullability) || SubQuery.CanBeNullable(nullability);
+			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutReduction) => base.CanBeUnknown(nullability, withoutReduction) || SubQuery.CanBeNullable(nullability);
 
 			public override QueryElementType ElementType => QueryElementType.InSubQueryPredicate;
 
@@ -892,9 +895,9 @@ namespace LinqToDB.SqlQuery
 				return true;
 			}
 
-			public override bool CanBeUnknown(NullabilityContext nullability)
+			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutReduction)
 			{
-				if (base.CanBeUnknown(nullability))
+				if (base.CanBeUnknown(nullability, withoutReduction))
 					return true;
 
 				return Values.Any(e => e.CanBeNullable(nullability));
@@ -959,7 +962,7 @@ namespace LinqToDB.SqlQuery
 				return new Exists(!IsNot, SubQuery);
 			}
 
-			public override bool CanBeUnknown(NullabilityContext nullability) => false;
+			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutReduction) => false;
 
 			public override QueryElementType ElementType => QueryElementType.ExistsPredicate;
 

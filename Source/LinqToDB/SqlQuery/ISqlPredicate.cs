@@ -12,7 +12,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Returns <c>true</c> if predicate could be evaluated to UNKNOWN.
 		/// </summary>
-		bool CanBeUnknown(NullabilityContext nullability);
+		bool CanBeUnknown(NullabilityContext nullability, bool withoutReduction);
 
 		bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer);
 	}

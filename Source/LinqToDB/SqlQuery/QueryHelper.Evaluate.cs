@@ -493,7 +493,7 @@ namespace LinqToDB.SqlQuery
 						else
 						{
 
-							if (predicate.CanBeUnknown(NullabilityContext.NonQuery))
+							if (predicate.CanBeUnknown(NullabilityContext.NonQuery, false))
 							{
 								canBeUnknown = true;
 							}

@@ -2102,7 +2102,7 @@ namespace LinqToDB.Linq.Builder
 								predicate = ConvertExpressionToPredicate(
 									placeholder.Sql,
 									withNull: withNull,
-									forceEquality: withNull && placeholder.Sql.CanBeNullableOrUnknown(GetNullabilityContext()));
+									forceEquality: withNull && placeholder.Sql.CanBeNullableOrUnknown(GetNullabilityContext(), false));
 							}
 
 							var condition = new SqlSearchCondition();
