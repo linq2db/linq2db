@@ -1680,10 +1680,10 @@ namespace LinqToDB.SqlQuery
 			return expr;
 		}
 
-		public static bool CanBeNullableOrUnknown(this ISqlExpression expr, NullabilityContext nullabilityContext, bool withoutReduction)
+		public static bool CanBeNullableOrUnknown(this ISqlExpression expr, NullabilityContext nullabilityContext, bool withoutUnknownErased)
 		{
 			if (expr is ISqlPredicate predicate)
-				return predicate.CanBeUnknown(nullabilityContext, withoutReduction);
+				return predicate.CanBeUnknown(nullabilityContext, withoutUnknownErased);
 
 			return expr.CanBeNullable(nullabilityContext);
 		}

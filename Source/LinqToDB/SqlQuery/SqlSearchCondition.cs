@@ -176,7 +176,7 @@ namespace LinqToDB.SqlQuery
 
 		public override bool CanBeNullable(NullabilityContext nullability) => false;
 
-		public bool CanBeUnknown(NullabilityContext nullability, bool withoutReduction)
+		public bool CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased)
 		{
 			if (CanReturnUnknown != null)
 				return CanReturnUnknown.Value;
@@ -189,7 +189,7 @@ namespace LinqToDB.SqlQuery
 				nullability = new NullabilityContext(nullability, visitor.Value.NotNullOverrides);
 			}
 
-			return Predicates.Any(predicate => predicate.CanBeUnknown(nullability, withoutReduction));
+			return Predicates.Any(predicate => predicate.CanBeUnknown(nullability, withoutUnknownErased));
 		}
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
