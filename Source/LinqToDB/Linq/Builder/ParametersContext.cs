@@ -96,17 +96,20 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			var unwrapped = SequenceHelper.UnwrapConstantAndParameter(expression);
+			if (!ReferenceEquals(unwrapped, expression))
+				return SimplifyConversion(unwrapped);
+
 			return expression;
 		}
 
 		public SqlParameter? BuildParameter(
-			IBuildContext? context,
-			Expression expr,
-			ColumnDescriptor? columnDescriptor,
-			bool doNotCheckCompatibility = false,
-			bool forceNew = false,
-			string? alias = null,
-			BuildParameterType buildParameterType = BuildParameterType.Default)
+			IBuildContext?     context,
+			Expression         expr,
+			ColumnDescriptor?  columnDescriptor,
+			bool               doNotCheckCompatibility = false,
+			string?            alias                   = null,
+			BuildParameterType buildParameterType      = BuildParameterType.Default)
 		{
 			if (columnDescriptor is null && expr is ConstantExpression { Value: null })
 				return null;
@@ -136,6 +139,12 @@ namespace LinqToDB.Linq.Builder
 				return null;
 
 			var finalParameterId = entry.ParameterId;
+
+			var unwrapped = expr.UnwrapConvert();
+			var forceNew  = false;
+
+			if (unwrapped.NodeType == ExpressionType.Constant)
+				forceNew = CanBeConstant(unwrapped);
 
 			if (forceNew)
 				CacheManager.RegisterParameterEntry(expr, entry);
