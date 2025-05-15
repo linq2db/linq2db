@@ -13,11 +13,6 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		public override SqlExpressionOptimizerVisitor CreateOptimizerVisitor(bool allowModify)
-		{
-			return new OracleSqlExpressionOptimizerVisitor(allowModify);
-		}
-
 		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 		{
 			return new OracleSqlExpressionConvertVisitor(allowModify);
