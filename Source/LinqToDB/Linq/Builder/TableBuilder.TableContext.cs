@@ -125,11 +125,26 @@ namespace LinqToDB.Linq.Builder
 
 				SelectQuery.From.Table(SqlTable);
 
-				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), mappingSchema, SqlTable, mc, static (context, a, _, inline) =>
+				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), mappingSchema, SqlTable, mc, static (context, argument, _, inline) =>
 				{
-					if (context.builder.CanBeEvaluatedOnClient(a))
+					using var saveState = context.builder.UsingColumnDescriptor(null);
+
+					if (inline == true)
 					{
-						var param = context.builder.ParametersContext.BuildParameter(context.context, a, columnDescriptor : null, doNotCheckCompatibility : true, forceNew: false);
+						context.builder.PushTranslationModifier(context.builder.GetTranslationModifier().WithInlineParameters(true), false);
+					}
+
+					var sqlExpr = context.builder.BuildSqlExpression(context.context, argument);
+
+					if (inline == true)
+					{
+						context.builder.PopTranslationModifier();
+					}
+
+					if (sqlExpr is not SqlPlaceholderExpression)
+					{
+						// See XmlTableTest1. Through parameter OracleXmlTable works 
+						var param = context.builder.ParametersContext.BuildParameter(context.context, argument, columnDescriptor : null, doNotCheckCompatibility : true);
 						if (param != null)
 						{
 							if (inline == true)
@@ -137,11 +152,11 @@ namespace LinqToDB.Linq.Builder
 								param.IsQueryParameter = false;
 							}
 
-							return new SqlPlaceholderExpression(null, param, a);
+							sqlExpr = new SqlPlaceholderExpression(null, param, argument);
 						}
 					}
 
-					return context.builder.BuildSqlExpression(context.context, a);
+					return sqlExpr;
 				});
 
 				builder.RegisterExtensionAccessors(mc);
