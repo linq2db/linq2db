@@ -1192,8 +1192,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
 		{
-			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : true);
-			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : true);
+			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : false);
+			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : false);
 
 			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
 			{
