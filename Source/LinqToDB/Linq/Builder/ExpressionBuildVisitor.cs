@@ -4113,7 +4113,6 @@ namespace LinqToDB.Linq.Builder
 						rOriginal = ApplyExpressionNullability(rOriginal, nullability);
 
 						predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-							//compareNullsAsValues ? false : null);
 							compareNullsAsValues && (lOriginal.CanBeNullable(nullability) || rOriginal.CanBeNullable(nullability))
 								? op == SqlPredicate.Operator.NotEqual
 								: null);
