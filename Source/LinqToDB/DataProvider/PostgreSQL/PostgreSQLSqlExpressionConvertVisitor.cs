@@ -82,7 +82,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 									p2,
 									Sub<int>(
 										(ISqlExpression)Visit(
-											new SqlFunction(typeof(int), "Length", p1)),
+											PseudoFunctions.MakeLength(p1)),
 										p2))
 							)),
 						Sub(p2, 1));
