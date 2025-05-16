@@ -1,7 +1,6 @@
 ﻿namespace LinqToDB.FSharp
 
 open System
-open System.Collections
 open System.Collections.Concurrent
 open System.Collections.Generic
 open System.Linq
@@ -14,7 +13,6 @@ open LinqToDB.Interceptors.Internal
 open LinqToDB.Reflection
 
 /// Provides Linq To DB interceptor with F# support implementation.
-[<AllowNullLiteral>]
 type FSharpEntityBindingInterceptor private () =
     inherit EntityBindingInterceptor()
 

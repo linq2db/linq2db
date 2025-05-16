@@ -395,5 +395,37 @@ namespace LinqToDB.DataProvider.Informix
 
 			base.BuildParameter(parameter);
 		}
+
+		protected override void BuildInListPredicate(SqlPredicate.InList predicate)
+		{
+			// IFX doesn't support `NULL [NOT] IN`
+			if (predicate.Expr1 is SqlParameter { IsQueryParameter: false } parameter)
+			{
+				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				if (paramValue.ProviderValue == null)
+				{
+					var nullExpr = new SqlCastExpression(new SqlValue(paramValue.DbDataType, null), paramValue.DbDataType, null, isMandatory: true);
+					predicate    = new SqlPredicate.InList(nullExpr, predicate.WithNull, predicate.IsNot, predicate.Values);
+				}
+			}
+
+			base.BuildInListPredicate(predicate);
+		}
+
+		protected override void BuildInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		{
+			// IFX doesn't support `NULL [NOT] IN`
+			if (predicate.Expr1 is SqlParameter { IsQueryParameter: false } parameter)
+			{
+				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				if (paramValue.ProviderValue == null)
+				{
+					var nullExpr = new SqlCastExpression(new SqlValue(paramValue.DbDataType, null), paramValue.DbDataType, null, isMandatory: true);
+					predicate    = new SqlPredicate.InSubQuery(nullExpr, predicate.IsNot, predicate.SubQuery, predicate.DoNotConvert);
+				}
+			}
+
+			base.BuildInSubQueryPredicate(predicate);
+		}
 	}
 }
