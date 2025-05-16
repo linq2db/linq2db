@@ -533,14 +533,16 @@ namespace LinqToDB.SqlProvider
 					var oldContext      = _nullabilityContext;
 					_nullabilityContext = new NullabilityContext(_nullabilityContext, notNullOverrides);
 
+					var indexOffset = 0;
 					for (var i = 0; i < element.Predicates.Count; i++)
 					{
-						if (duplicates?[i] == true)
+						if (duplicates?[i + indexOffset] == true)
 						{
 							if (modify)
 							{
 								element.Predicates.RemoveAt(i);
 								i--;
+								indexOffset++;
 								continue;
 							}
 							else
