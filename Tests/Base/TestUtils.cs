@@ -223,10 +223,10 @@ namespace Tests
 				base.Dispose();
 			}
 
-			public override ValueTask DisposeAsync()
+			public override async ValueTask DisposeAsync()
 			{
 				using var _ = new DisableBaseline("Test setup");
-				return base.DisposeAsync();
+				await base.DisposeAsync();
 			}
 		}
 
