@@ -1770,7 +1770,7 @@ namespace LinqToDB.SqlProvider
 					var sqlFunc = (SqlFunction)element;
 					switch (sqlFunc.Name)
 					{
-						case "Length":
+						case PseudoFunctions.LENGTH:
 						{
 							if (sqlFunc.Parameters[0].CanBeEvaluated(true))
 								return true;

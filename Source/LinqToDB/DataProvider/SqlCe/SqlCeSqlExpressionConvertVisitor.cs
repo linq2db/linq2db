@@ -50,8 +50,8 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			return func.Name switch
 			{
-				"Length" => func.WithName("LEN"),
-				_        => base.ConvertSqlFunction(func),
+				PseudoFunctions.LENGTH => func.WithName("LEN"),
+				_ => base.ConvertSqlFunction(func),
 			};
 		}
 
@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.SqlCe
 									new SqlFunction(typeof(string), "SUBSTRING",
 										predicate.Expr1,
 										new SqlValue(1),
-										new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+										PseudoFunctions.MakeLength(predicate.Expr2))),
 								SqlPredicate.Operator.Equal,
 								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
 								null
@@ -85,9 +85,9 @@ namespace LinqToDB.DataProvider.SqlCe
 					{
 						var indexExpression = new SqlBinaryExpression(typeof(int),
 							new SqlBinaryExpression(typeof(int),
-								new SqlFunction(typeof(int), "Length", predicate.Expr1),
+								PseudoFunctions.MakeLength(predicate.Expr1),
 								"-",
-								new SqlFunction(typeof(int), "Length", predicate.Expr2)),
+								PseudoFunctions.MakeLength(predicate.Expr2)),
 							"+",
 							new SqlValue(1));
 
@@ -97,7 +97,7 @@ namespace LinqToDB.DataProvider.SqlCe
 									new SqlFunction(typeof(string), "SUBSTRING",
 										predicate.Expr1,
 										indexExpression,
-										new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+										PseudoFunctions.MakeLength(predicate.Expr2))),
 								SqlPredicate.Operator.Equal,
 								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
 								null
