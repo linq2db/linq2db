@@ -430,12 +430,12 @@ namespace LinqToDB.SqlQuery
 										new Not(
 											new SqlSearchCondition(false)
 												.Add(new IsNull(Expr1, false))
-												.Add(new Not(new IsNull(Expr2, false)))))
+												.Add(new IsNull(Expr2, true))))
 									.Add(
 										new Not(
 											new SqlSearchCondition(false)
 												.Add(new IsNull(Expr2, false))
-												.Add(new Not(new IsNull(Expr1, false)))));
+												.Add(new IsNull(Expr1, true))));
 							}
 							else
 							{
