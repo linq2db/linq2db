@@ -165,8 +165,8 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
 		{
-			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : true, forceConvert: true);
-			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : true, forceConvert: true);
+			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : false, forceConvert: true);
+			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : false, forceConvert: true);
 
 			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
 			{
