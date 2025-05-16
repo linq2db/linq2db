@@ -23,9 +23,10 @@ namespace LinqToDB.DataProvider.Oracle
 		public static IDataProvider GetDataProvider(
 			OracleVersion  version          = OracleVersion.AutoDetect,
 			OracleProvider provider         = OracleProvider.AutoDetect,
-			string?        connectionString = null)
+			string?        connectionString = null,
+			DbConnection? connection        = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString : connectionString), provider, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString : connectionString, DbConnection: connection), provider, version);
 		}
 
 		#region CreateDataConnection
