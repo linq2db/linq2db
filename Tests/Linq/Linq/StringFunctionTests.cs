@@ -6,6 +6,7 @@ using System.Data;
 #endif
 
 using System.Linq;
+using System.Linq.Dynamic.Core;
 
 using FluentAssertions;
 
@@ -293,24 +294,32 @@ namespace Tests.Linq
 			}
 		}
 
+		class TestLengthModel
+		{
+			[Column] public int    Id  { get; set; }
+			[Column] public string Str { get; set; } = string.Empty;
+		}
+
 		[Test]
 		public void LengthWhiteSpace([DataSources] string context, [Values("abc ", " ", " abc ")] string stringValue)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result = db.Select(() =>
+			var data = new[] { new TestLengthModel { Str = stringValue } };
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var result = table.Select(t =>
 				new 
 				{
-					Str = Sql.AsSql(stringValue),
-					Len = Sql.AsSql(stringValue.Length),
-				});
+					Str = t.Str,
+					Len = t.Str.Length,
+				}).Single();
 
-				Assert.Multiple(() =>
-				{
-					Assert.That(result.Str, Is.EqualTo(stringValue));
-					Assert.That(result.Len, Is.EqualTo(stringValue.Length));
-				});
-			}
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Str, Is.EqualTo(stringValue));
+				Assert.That(result.Len, Is.EqualTo(stringValue.Length));
+			});
 		}
 
 		[Test]
