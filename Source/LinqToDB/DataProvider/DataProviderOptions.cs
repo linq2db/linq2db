@@ -47,5 +47,7 @@ namespace LinqToDB.DataProvider
 		/// Default options.
 		/// </summary>
 		public static T Default { get; set; } = new();
+
+		IOptionSet IOptionSet.Default => Default;
 	}
 }

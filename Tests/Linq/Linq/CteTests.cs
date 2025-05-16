@@ -2507,20 +2507,20 @@ namespace Tests.Linq
 			var booksQuery = db.GetTable<Book>()
 				.Select(b => new
 				{
-					Book = b, 
+					Book = b,
 					b.Author
 				})
 				.AsCte("BooksCte");
 
 			var query1 = booksQuery.Select(r => new
 			{
-				Book = (Book?)r.Book, 
+				Book = (Book?)r.Book,
 				Author = (Author?)null
 			});
 
 			var query2 = booksQuery.Select(r => new
 			{
-				Book = (Book?)null, 
+				Book = (Book?)null,
 				Author = (Author?)r.Author
 			});
 
@@ -2551,7 +2551,7 @@ namespace Tests.Linq
 						select new SequenceBuildFailedRecord(p.PersonID));
 			});
 
-			var query = 
+			var query =
 				from r in cte
 				join p in db.Patient on r.Id equals p.PersonID
 				select new
@@ -2569,7 +2569,7 @@ namespace Tests.Linq
 
 			var cte = db.Person.Select(s => new { s.Patient!.PersonID }).AsCte();
 
-			var query = 
+			var query =
 				from r in cte
 				join p in db.Patient on r.PersonID equals p.PersonID
 				select new

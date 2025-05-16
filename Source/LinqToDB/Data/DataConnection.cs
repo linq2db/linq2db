@@ -371,8 +371,8 @@ namespace LinqToDB.Data
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnection(dataProvider, connection)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
-			IDataProvider                 dataProvider,
-			DbConnection                  connection,
+			IDataProvider dataProvider,
+			DbConnection  connection,
 			Func<DataOptions,DataOptions> optionsSetter)
 			: this(dataProvider, connection, false, optionsSetter)
 		{
@@ -770,6 +770,7 @@ namespace LinqToDB.Data
 		/// Gets underlying database connection, used by current connection object, or opens new.
 		/// </summary>
 		// TODO: Remove in v7
+		// What is the point to remove this API?
 		[Obsolete("This API scheduled for removal in v7. Use TryGetDbConnection, OpenDbConnection or OpenDbConnectionAsync instead based on your use-case"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DbConnection Connection => OpenDbConnection();
 
@@ -866,8 +867,8 @@ namespace LinqToDB.Data
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.Open, false)
 					{
 						TraceLevel = TraceLevel.Error,
-						StartTime  = DateTime.UtcNow,
-						Exception  = ex,
+						StartTime = DateTime.UtcNow,
+						Exception = ex,
 					});
 				}
 
@@ -1005,7 +1006,7 @@ namespace LinqToDB.Data
 		/// </list>
 		/// </summary>
 #endif
-		public int   CommandTimeout
+		public  int   CommandTimeout
 		{
 			get => _commandTimeout ?? -1;
 			set
@@ -1020,7 +1021,8 @@ namespace LinqToDB.Data
 					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout method instead.");
 #endif
 				}
-				else
+
+				if (_commandTimeout != value)
 				{
 					_commandTimeout = value;
 					if (_command != null)
@@ -1125,9 +1127,9 @@ namespace LinqToDB.Data
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery, false)
 				{
-					TraceLevel = TraceLevel.Info,
-					Command    = CurrentCommand,
-					StartTime  = now,
+					TraceLevel     = TraceLevel.Info,
+					Command        = CurrentCommand,
+					StartTime      = now,
 				});
 			}
 
@@ -1157,11 +1159,11 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, false)
 					{
-						TraceLevel    = TraceLevel.Error,
-						Command       = CurrentCommand,
-						StartTime     = now,
-						ExecutionTime = sw.Elapsed,
-						Exception     = ex,
+						TraceLevel     = TraceLevel.Error,
+						Command        = CurrentCommand,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
+						Exception      = ex,
 					});
 				}
 
@@ -1215,8 +1217,8 @@ namespace LinqToDB.Data
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery, false)
 				{
 					TraceLevel = TraceLevel.Info,
-					Command    = CurrentCommand,
-					StartTime  = now,
+					Command = CurrentCommand,
+					StartTime = now,
 				});
 			}
 
@@ -1230,10 +1232,10 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQuery, false)
 					{
-						TraceLevel      = TraceLevel.Info,
-						Command         = CurrentCommand,
-						StartTime       = now,
-						ExecutionTime   = sw.Elapsed,
+						TraceLevel = TraceLevel.Info,
+						Command = CurrentCommand,
+						StartTime = now,
+						ExecutionTime = sw.Elapsed,
 						RecordsAffected = ret,
 					});
 				}
@@ -1246,11 +1248,11 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, false)
 					{
-						TraceLevel    = TraceLevel.Error,
-						Command       = CurrentCommand,
-						StartTime     = now,
+						TraceLevel = TraceLevel.Error,
+						Command = CurrentCommand,
+						StartTime = now,
 						ExecutionTime = sw.Elapsed,
-						Exception     = ex,
+						Exception = ex,
 					});
 				}
 
@@ -1305,9 +1307,9 @@ namespace LinqToDB.Data
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteScalar, false)
 				{
-					TraceLevel = TraceLevel.Info,
-					Command    = CurrentCommand,
-					StartTime  = now,
+					TraceLevel     = TraceLevel.Info,
+					Command        = CurrentCommand,
+					StartTime      = now,
 				});
 			}
 
@@ -1321,10 +1323,10 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteScalar, false)
 					{
-						TraceLevel    = TraceLevel.Info,
-						Command       = CurrentCommand,
-						StartTime     = now,
-						ExecutionTime = sw.Elapsed,
+						TraceLevel     = TraceLevel.Info,
+						Command        = CurrentCommand,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 					});
 				}
 
@@ -1336,11 +1338,11 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteScalar, false)
 					{
-						TraceLevel    = TraceLevel.Error,
-						Command       = CurrentCommand,
-						StartTime     = now,
-						ExecutionTime = sw.Elapsed,
-						Exception     = ex,
+						TraceLevel     = TraceLevel.Error,
+						Command        = CurrentCommand,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
+						Exception      = ex,
 					});
 				}
 
@@ -1416,9 +1418,9 @@ namespace LinqToDB.Data
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, false)
 				{
-					TraceLevel = TraceLevel.Info,
-					Command    = CurrentCommand,
-					StartTime  = now,
+					TraceLevel     = TraceLevel.Info,
+					Command        = CurrentCommand,
+					StartTime      = now,
 				});
 			}
 
@@ -1433,10 +1435,10 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, false)
 					{
-						TraceLevel    = TraceLevel.Info,
-						Command       = ret.Command,
-						StartTime     = now,
-						ExecutionTime = sw.Elapsed,
+						TraceLevel     = TraceLevel.Info,
+						Command        = ret.Command,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
 					});
 				}
 
@@ -1448,11 +1450,11 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, false)
 					{
-						TraceLevel    = TraceLevel.Error,
-						Command       = CurrentCommand,
-						StartTime     = now,
-						ExecutionTime = sw.Elapsed,
-						Exception     = ex,
+						TraceLevel     = TraceLevel.Error,
+						Command        = CurrentCommand,
+						StartTime      = now,
+						ExecutionTime  = sw.Elapsed,
+						Exception      = ex,
 					});
 				}
 
@@ -1472,7 +1474,7 @@ namespace LinqToDB.Data
 			CommandInfo.ClearObjectReaderCache();
 		}
 
-#endregion
+		#endregion
 
 		#region Transaction
 
@@ -1516,13 +1518,13 @@ namespace LinqToDB.Data
 				connection,
 				static (dataContext, connection) =>
 				{
-					// Create new transaction object.
-					//
+			// Create new transaction object.
+			//
 					dataContext.TransactionAsync = connection.BeginTransaction();
 
 					dataContext._closeTransaction = true;
 
-					// If the active command exists.
+			// If the active command exists.
 					if (dataContext._command != null)
 						dataContext._command.Transaction = dataContext.Transaction;
 
@@ -1556,13 +1558,13 @@ namespace LinqToDB.Data
 				(isolationLevel, connection),
 				static (dataConnection, ctx) =>
 				{
-					// Create new transaction object.
-					//
+			// Create new transaction object.
+			//
 					dataConnection.TransactionAsync = ctx.connection.BeginTransaction(ctx.isolationLevel);
 
 					dataConnection._closeTransaction = true;
 
-					// If the active command exists.
+			// If the active command exists.
 					if (dataConnection._command != null)
 						dataConnection._command.Transaction = dataConnection.Transaction;
 
@@ -1784,7 +1786,7 @@ namespace LinqToDB.Data
 		protected bool  Disposed        { get; private set; }
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public bool? ThrowOnDisposed { get; set; }
+		public    bool? ThrowOnDisposed { get; set; }
 
 		protected void CheckAndThrowOnDisposed()
 		{
@@ -1818,5 +1820,39 @@ namespace LinqToDB.Data
 		}
 
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance => ((IInfrastructure<IServiceProvider>)DataProvider).Instance;
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public IDisposable? UseOptions(Func<DataOptions,DataOptions> optionsSetter)
+		{
+			var prevOptions = Options;
+			var newOptions  = optionsSetter(Options) ?? throw new ArgumentNullException(nameof(optionsSetter));
+
+			if (((IConfigurationID)prevOptions).ConfigurationID == ((IConfigurationID)newOptions).ConfigurationID)
+				return null;
+
+			var configurationID = _configurationID;
+			var msID            = _msID;
+
+			Options          = newOptions;
+			_configurationID = null;
+			_msID            = 0;
+
+			var action = Options.Reapply(this, prevOptions);
+
+			action += () =>
+			{
+				Options          = prevOptions;
+
+#if DEBUG
+				_configurationID = null;
+				_msID            = 0;
+#else
+				_configurationID = configurationID;
+				_msID            = msID;
+#endif
+			};
+
+			return new DisposableAction(action);
+		}
 	}
 }

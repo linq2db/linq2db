@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
@@ -1727,5 +1729,57 @@ namespace LinqToDB
 			return new ExpressionQueryImpl<TResult>(dataContext, expression.Body);
 		}
 
+		#region UseOptions
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseOptions<TSet>(this IDataContext dataContext, Func<TSet,TSet> optionSetter)
+			where TSet : class, IOptionSet, new()
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseLinqOptions(this IDataContext dataContext, Func<LinqOptions,LinqOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseSqlOptions(this IDataContext dataContext, Func<SqlOptions,SqlOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseDataContextOptions(this IDataContext dataContext, Func<DataContextOptions,DataContextOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseRetryPolicyOptions(this IDataContext dataContext, Func<RetryPolicyOptions,RetryPolicyOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseBulkCopyOptions(this IDataContext dataContext, Func<BulkCopyOptions,BulkCopyOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseConnectionOptions(this IDataContext dataContext, Func<ConnectionOptions,ConnectionOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseQueryTraceOptions(this IDataContext dataContext, Func<QueryTraceOptions,QueryTraceOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		#endregion
 	}
 }
