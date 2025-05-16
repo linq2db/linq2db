@@ -78,7 +78,7 @@ namespace LinqToDB.SqlProvider
 			Visit(expr);
 
 			// not reduced, add as-is
-			if (_predicates.Count == cnt)
+			if (_predicates.Count == cnt && expr.CanBeNullable(_nullabilityContext))
 			{
 				AddIsNullCheck(expr);
 			}
@@ -165,11 +165,8 @@ namespace LinqToDB.SqlProvider
 		{
 			if (element.Operation is "+" or "-" or "*" or "/" or "%" or "&" or "||")
 			{
-				if (element.Expr1.CanBeNullable(_nullabilityContext))
-					ReduceOrAdd(element.Expr1);
-
-				if (element.Expr2.CanBeNullable(_nullabilityContext))
-					ReduceOrAdd(element.Expr2);
+				ReduceOrAdd(element.Expr1);
+				ReduceOrAdd(element.Expr2);
 			}
 
 			return element;
