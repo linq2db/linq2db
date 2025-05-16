@@ -39,7 +39,7 @@ namespace Tests.Linq
 
 			using var sy = new SystemDB(db.ConfigurationString!);
 
-			if (!sy.Object.Objects.Any(o => o.ObjectID == SqlFn.ObjectID("dbo.TemporalTest")))
+			if (!sy.System.Object.Objects.Any(o => o.ObjectID == SqlFn.ObjectID("dbo.TemporalTest")))
 			{
 				dc.Execute(@"
 -- ALTER TABLE [dbo].[TemporalTest] SET ( SYSTEM_VERSIONING = OFF)

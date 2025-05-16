@@ -3,3 +3,4 @@
 *.sln      text      eol=crlf
 *.csproj   text      eol=crlf
 *.sh       text      eol=lf
+"/Data/Setup Scripts/ase.sql" text eol=lf
