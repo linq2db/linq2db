@@ -100,7 +100,7 @@ namespace LinqToDB.SqlQuery
 		public const string LENGTH = "$Length$";
 		public static SqlFunction MakeLength(ISqlExpression value)
 		{
-			return new SqlFunction(typeof(string), LENGTH, false, true, Precedence.Primary,
+			return new SqlFunction(typeof(int), LENGTH, false, true, Precedence.Primary,
 				ParametersNullabilityType.IfAnyParameterNullable, null, value);
 		}
 

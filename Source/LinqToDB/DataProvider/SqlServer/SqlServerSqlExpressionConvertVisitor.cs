@@ -1,4 +1,5 @@
 ﻿using LinqToDB.Extensions;
+using LinqToDB.Linq.Translation;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
@@ -125,14 +126,26 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
+			switch (func.Name)
 			{
-				case { Name: PseudoFunctions.LENGTH }:
-					return func.WithName("LEN");
+				case PseudoFunctions.LENGTH:
+				{
+					/*
+					 * LEN(value + ".") - 1
+					 */
 
-				default:
-					return base.ConvertSqlFunction(func);
+					var value     = func.Parameters[0];
+					var valueType = Factory.GetDbDataType(value);
+					var funcType  = Factory.GetDbDataType(value);
+
+					var valueString = Factory.Add(valueType, value, Factory.Value(valueType, "."));
+					var valueLength = Factory.Function(funcType, "LEN", valueString);
+
+					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));
+				}
 			}
+
+			return base.ConvertSqlFunction(func);
 		}
 
 	}

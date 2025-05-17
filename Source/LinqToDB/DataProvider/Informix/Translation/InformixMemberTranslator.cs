@@ -332,23 +332,6 @@ namespace LinqToDB.DataProvider.Informix.Translation
 
 		public class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
-			{
-				var factory         = translationContext.ExpressionFactory;
-				var valueTypeString = factory.GetDbDataType(value);
-				var valueTypeInt    = factory.GetDbDataType(typeof(int));
-
-				/*
-				 * LEN(value + ".") - 1
-				 */
-
-				var valueString = factory.Add(valueTypeString, value, factory.Value(valueTypeString, "."));
-				var valueLength = base.TranslateLength(translationContext, translationFlags, valueString);
-				if (valueLength == null)
-					return null;
-
-				return factory.Sub(valueTypeInt, valueLength, factory.Value(valueTypeInt, 1));
-			}
 		}
 
 		class GuidMemberTranslator : GuidMemberTranslatorBase

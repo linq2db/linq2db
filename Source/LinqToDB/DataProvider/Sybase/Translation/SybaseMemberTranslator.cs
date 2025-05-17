@@ -197,17 +197,6 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 
 		public class SybaseStingMemberTranslator : StringMemberTranslatorBase
 		{
-			public override ISqlExpression? TranslateLength(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression value)
-			{
-				var factory         = translationContext.ExpressionFactory;
-				var valueStringType = factory.GetDbDataType(typeof(string));
-				var valueIntType    = factory.GetDbDataType(typeof(int));
-
-				var condition   = factory.Equal(factory.Value(valueStringType, string.Empty), value);
-				var valueLength = factory.Length(value);
-
-				return factory.Condition(condition, factory.Value(valueIntType, 0), valueLength);
-			}
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

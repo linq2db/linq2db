@@ -1,6 +1,7 @@
 ﻿using System;
 
 using LinqToDB.Extensions;
+using LinqToDB.Linq.Translation;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
@@ -76,8 +77,8 @@ namespace LinqToDB.DataProvider.Access
 					{
 						var indexExpr = new SqlBinaryExpression(typeof(int),
 							new SqlBinaryExpression(typeof(int),
-								PseudoFunctions.MakeLength(predicate.Expr1), "-",
-								PseudoFunctions.MakeLength(predicate.Expr2)), "+",
+								Factory.Length(predicate.Expr1), "-",
+								Factory.Length(predicate.Expr2)), "+",
 							new SqlValue(1));
 
 						subStrPredicate =

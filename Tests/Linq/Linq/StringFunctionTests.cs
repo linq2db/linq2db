@@ -301,7 +301,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LengthWhiteSpace([DataSources] string context, [Values("abc ", " ", " abc ")] string stringValue)
+		public void LengthWhiteSpace([DataSources(TestProvName.AllSybase)] string context, [Values("abc ", " ", " abc ")] string stringValue)
 		{
 			var data = new[] { new TestLengthModel { Str = stringValue } };
 

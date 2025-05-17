@@ -1038,20 +1038,7 @@ namespace LinqToDB.SqlProvider
 				case PseudoFunctions.TO_LOWER: return func.WithName("Lower");
 				case PseudoFunctions.TO_UPPER: return func.WithName("Upper");
 				case PseudoFunctions.REPLACE : return func.WithName("Replace");
-				case PseudoFunctions.LENGTH  :
-				{
-					/*
-					 * LEN(value + ".") - 1
-					 */
-
-					var value = func.Parameters[0];
-					var stringDataType = Factory.GetDbDataType(value);
-
-					var valueString = Factory.Add(stringDataType, value, Factory.Value(stringDataType, "."));
-					var valueLength = Factory.Function(func.Type, "Length", valueString);
-
-					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));
-				}
+				case PseudoFunctions.LENGTH  : return func.WithName("Length");
 			}
 
 			return func;
