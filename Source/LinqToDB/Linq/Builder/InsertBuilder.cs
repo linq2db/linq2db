@@ -375,7 +375,7 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var field in q)
 				{
-					var expr = Builder.DataContext.CreateSqlProvider().GetIdentityExpression(insert.Into);
+					var expr = Builder.DataContext.CreateSqlBuilder().GetIdentityExpression(insert.Into);
 
 					if (expr != null)
 					{

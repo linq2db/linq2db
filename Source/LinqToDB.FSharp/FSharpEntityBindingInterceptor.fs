@@ -14,7 +14,6 @@ open LinqToDB.Interceptors.Internal
 open LinqToDB.Reflection
 
 /// Provides Linq To DB interceptor with F# support implementation.
-[<AllowNullLiteral>]
 type FSharpEntityBindingInterceptor private () =
     inherit EntityBindingInterceptor()
 

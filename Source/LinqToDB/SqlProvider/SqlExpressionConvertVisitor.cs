@@ -6,6 +6,7 @@ using System.Linq;
 
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.SqlQuery.Visitors;
@@ -17,8 +18,9 @@ namespace LinqToDB.SqlProvider
 		protected bool            IsInsideNot;
 		protected bool            VisitQueries;
 
-		protected OptimizationContext OptimizationContext = default!;
-		protected NullabilityContext  NullabilityContext  = default!;
+		protected OptimizationContext   OptimizationContext = default!;
+		protected NullabilityContext    NullabilityContext  = default!;
+		protected ISqlExpressionFactory Factory => OptimizationContext.Factory;
 
 		protected EvaluationContext EvaluationContext => OptimizationContext.EvaluationContext;
 		protected DataOptions       DataOptions       => OptimizationContext.DataOptions;
@@ -1035,7 +1037,8 @@ namespace LinqToDB.SqlProvider
 
 				case PseudoFunctions.TO_LOWER: return func.WithName("Lower");
 				case PseudoFunctions.TO_UPPER: return func.WithName("Upper");
-				case PseudoFunctions.REPLACE:  return func.WithName("Replace");
+				case PseudoFunctions.REPLACE : return func.WithName("Replace");
+				case PseudoFunctions.LENGTH  : return func.WithName("Length");
 			}
 
 			return func;
@@ -1667,19 +1670,29 @@ namespace LinqToDB.SqlProvider
 		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlCoalesceExpression coalesce, string funcName, bool supportsParameters = true)
 		{
 			var last = coalesce.Expressions[^1];
-			if (!supportsParameters && last is SqlParameter p1)
-				p1.IsQueryParameter = false;
+			MarkParameters(last);
 
 			for (int i = coalesce.Expressions.Length - 2; i >= 0; i--)
 			{
 				var param = coalesce.Expressions[i];
-				if (!supportsParameters && param is SqlParameter p2)
-					p2.IsQueryParameter = false;
+				MarkParameters(param);
 
 				last = new SqlFunction(coalesce.SystemType!, funcName, param, last);
 			}
 
 			return last;
+
+			void MarkParameters(ISqlExpression expr)
+			{
+				if (supportsParameters)
+					return;
+
+				expr.VisitAll(e =>
+				{
+					if (e is SqlParameter param)
+						param.IsQueryParameter = false;
+				});
+			}
 		}
 
 		protected static bool IsDateDataType(DbDataType dataType, string typeName)

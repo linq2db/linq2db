@@ -62,6 +62,9 @@ namespace LinqToDB.DataProvider.Sybase
 				case { Name: PseudoFunctions.REPLACE }:
 					return func.WithName("Str_Replace");
 
+				case { Name: PseudoFunctions.LENGTH }:
+					return func.WithName("CHAR_LENGTH");
+
 				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
