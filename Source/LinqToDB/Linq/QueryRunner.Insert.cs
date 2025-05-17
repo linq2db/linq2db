@@ -62,7 +62,7 @@ namespace LinqToDB.Linq
 					}
 					else if (field.IsIdentity)
 					{
-						var sqlb = dataContext.CreateSqlProvider();
+						var sqlb = dataContext.CreateSqlBuilder();
 						var expr = sqlb.GetIdentityExpression(sqlTable);
 
 						if (expr != null)

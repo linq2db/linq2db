@@ -6,6 +6,7 @@ using System.Linq;
 
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.SqlQuery.Visitors;
@@ -17,8 +18,9 @@ namespace LinqToDB.SqlProvider
 		protected bool            IsInsideNot;
 		protected bool            VisitQueries;
 
-		protected OptimizationContext OptimizationContext = default!;
-		protected NullabilityContext  NullabilityContext  = default!;
+		protected OptimizationContext   OptimizationContext = default!;
+		protected NullabilityContext    NullabilityContext  = default!;
+		protected ISqlExpressionFactory Factory => OptimizationContext.Factory;
 
 		protected EvaluationContext EvaluationContext => OptimizationContext.EvaluationContext;
 		protected DataOptions       DataOptions       => OptimizationContext.DataOptions;
@@ -1036,7 +1038,20 @@ namespace LinqToDB.SqlProvider
 				case PseudoFunctions.TO_LOWER: return func.WithName("Lower");
 				case PseudoFunctions.TO_UPPER: return func.WithName("Upper");
 				case PseudoFunctions.REPLACE : return func.WithName("Replace");
-				case PseudoFunctions.LENGTH  : return func.WithName("Length");
+				case PseudoFunctions.LENGTH  :
+				{
+					/*
+					 * LEN(value + ".") - 1
+					 */
+
+					var value = func.Parameters[0];
+					var stringDataType = Factory.GetDbDataType(value);
+
+					var valueString = Factory.Add(stringDataType, value, Factory.Value(stringDataType, "."));
+					var valueLength = Factory.Function(func.Type, "Length", valueString);
+
+					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));
+				}
 			}
 
 			return func;

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Common;
 using LinqToDB.DataProvider;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.SqlQuery.Visitors;
@@ -42,6 +43,7 @@ namespace LinqToDB.SqlProvider
 			MappingSchema                    mappingSchema,
 			SqlExpressionOptimizerVisitor    optimizerVisitor,
 			SqlExpressionConvertVisitor      convertVisitor,
+			ISqlExpressionFactory            factory,
 			bool                             isParameterOrderDepended,
 			bool                             isAlreadyOptimizedAndConverted,
 			Func<IQueryParametersNormalizer> parametersNormalizerFactory)
@@ -52,14 +54,16 @@ namespace LinqToDB.SqlProvider
 			MappingSchema                  = mappingSchema;
 			OptimizerVisitor               = optimizerVisitor;
 			ConvertVisitor                 = convertVisitor;
+			Factory                        = factory;
 			IsParameterOrderDependent      = isParameterOrderDepended;
 			IsAlreadyOptimizedAndConverted = isAlreadyOptimizedAndConverted;
 			_parametersNormalizerFactory   = parametersNormalizerFactory;
 		}
 
-		public EvaluationContext EvaluationContext              { get; }
-		public bool              IsParameterOrderDependent      { get; }
-		public bool              IsAlreadyOptimizedAndConverted { get; }
+		public EvaluationContext     EvaluationContext              { get; }
+		public bool                  IsParameterOrderDependent      { get; }
+		public bool                  IsAlreadyOptimizedAndConverted { get; }
+		public ISqlExpressionFactory Factory                        { get; }
 
 		public bool HasParameters() => _actualParameters?.Count > 0;
 
