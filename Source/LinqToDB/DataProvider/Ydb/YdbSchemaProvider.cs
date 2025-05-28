@@ -223,13 +223,13 @@ namespace LinqToDB.DataProvider.Ydb
 					else if (schemaTable.Columns.Contains("DECIMAL_DIGITS") && int.TryParse(Invariant(row["DECIMAL_DIGITS"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out sc))
 						scale = sc;
 
-					// ---- 4. compose column type string -----------------------------
+					// ---- 3. compose column type string -----------------------------
 					string columnType = ComposeColumnType(dataTypeName, length, precision, scale);
 
-					// ---- 5. map to LinqToDB.DataType -------------------------------
+					// ---- 4. map to LinqToDB.DataType -------------------------------
 					DataType linq2dbType = GetDataType(dataTypeName, columnType, length, precision, scale);
 
-					// ---- 6. add ColumnInfo -----------------------------------------
+					// ---- 5. add ColumnInfo -----------------------------------------
 					result.Add(new ColumnInfo
 					{
 						TableID = tableId,
@@ -245,7 +245,7 @@ namespace LinqToDB.DataProvider.Ydb
 						IsIdentity = false
 					});
 
-					// ---- 7. PK map --------------------------------------------------
+					// ---- 6. PK map --------------------------------------------------
 					if (schemaTable.Columns.Contains("COLUMN_KEY") && Invariant(row["COLUMN_KEY"]).Equals("PRI", StringComparison.OrdinalIgnoreCase))
 					{
 						if (!_pkMap.TryGetValue(tableId, out var pkCols))
@@ -302,7 +302,7 @@ namespace LinqToDB.DataProvider.Ydb
 
 		protected override DataType GetDataType(
 			string? dataType,    // INFORMATION_SCHEMA.COLUMNS.DATA_TYPE или TYPE_NAME
-			string? columnType,  // полное имя типа, например "Decimal(22,9)"
+			string? columnType,
 			int? length,
 			int? precision,
 			int? scale)
