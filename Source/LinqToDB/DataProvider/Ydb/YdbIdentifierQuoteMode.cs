@@ -3,44 +3,44 @@
 namespace LinqToDB.DataProvider.Ydb
 {
 	/// <summary>
-	/// Определяет, как экранировать идентификаторы (имена таблиц, колонок и т. п.) при генерации
-	/// YQL/SQL для YDB.
+	/// Defines how to quote identifiers (such as table names, column names, etc.) 
+	/// when generating YQL/SQL for YDB.
 	/// </summary>
 	public enum YdbIdentifierQuoteMode
 	{
 		/// <summary>
-		/// Никогда не экранировать идентификаторы.<br/>
-		/// Использовать только, если вы уверены, что все имена:
+		/// Never quote identifiers.<br/>
+		/// Use this mode only if you are certain that all names:
 		/// <list type="bullet">
-		/// <item>не являются ключевыми словами;</item>
-		/// <item>начинаются с буквы или подчёркивания;</item>
-		/// <item>состоят только из латинских букв, цифр или подчёркиваний.</item>
+		/// <item>are not reserved keywords;</item>
+		/// <item>start with a letter or an underscore;</item>
+		/// <item>consist only of Latin letters, digits, or underscores.</item>
 		/// </list>
-		/// Несоответствие этим правилам приведёт к ошибке синтаксического анализатора YDB.
+		/// Violating these rules will cause a YDB syntax parser error.
 		/// </summary>
 		None,
 
 		/// <summary>
-		/// Всегда экранировать идентификаторы.<br/>
-		/// В стандартном режиме YDB используются обратные кавычки <c>`id`</c>,<br/>
-		/// в режиме ANSI SQL (<c>--!ansi_lexer</c>) — двойные кавычки <c>"id"</c>.
+		/// Always quote identifiers.<br/>
+		/// In the standard YDB mode, backticks are used (e.g., <c>`id`</c>),<br/>
+		/// while in ANSI SQL mode (<c>--!ansi_lexer</c>), double quotes are used (e.g., <c>"id"</c>).
 		/// </summary>
 		Quote,
 
 		/// <summary>
-		/// Экранировать идентификаторы только когда это требуется правилами YDB:
+		/// Quote identifiers only when required by YDB rules:
 		/// <list type="bullet">
-		/// <item>идентификатор совпадает с ключевым словом;</item>
-		/// <item>содержит пробелы, символ «/», или другие недопустимые символы;</item>
-		/// <item>начинается с цифры или содержит последовательность, запрещённую без кавычек.</item>
+		/// <item>the identifier matches a reserved keyword;</item>
+		/// <item>contains spaces, a slash character, or other invalid symbols;</item>
+		/// <item>starts with a digit or contains sequences not allowed without quotes.</item>
 		/// </list>
 		/// </summary>
 		Needed,
 
 		/// <summary>
-		/// «Умный» режим: экранировать, если это необходимо (см. <see cref="Needed"/>).<br/>
-		/// Для YDB этот режим эквивалентен <see cref="Needed"/>, так как регистр не влияет на
-		/// необходимость кавычек (идентификаторы всегда чувствительны к регистру).
+		/// "Smart" mode: quote when necessary (see <see cref="Needed"/>).<br/>
+		/// For YDB, this mode behaves identically to <see cref="Needed"/>, 
+		/// since case sensitivity always applies and does not affect quoting requirements.
 		/// </summary>
 		Auto
 	}
