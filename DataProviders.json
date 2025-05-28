@@ -26,11 +26,6 @@
 		"DefaultConfiguration": "SQLite.MS"
 	},
 
-	"NET60": {
-		"BasedOn": "LocalConnectionStrings",
-		"DefaultConfiguration": "SQLite.MS"
-	},
-
 	"NET80": {
 		"BasedOn": "LocalConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS"
@@ -42,12 +37,6 @@
 	},
 
 	"NETFX.Azure": {
-		"BasedOn": "AzureConnectionStrings",
-		"DefaultConfiguration": "SQLite.MS",
-		"TraceLevel": "Info"
-	},
-
-	"NET60.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"TraceLevel": "Info"
@@ -92,223 +81,64 @@
 	"LocalConnectionStrings": {
 		"BasedOn": "CommonConnectionStrings",
 		"Connections": {
-			"ClickHouse.Octonica": {
-				"Provider": "Octonica.ClickHouseClient",
-				"ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"
-			},
-			"ClickHouse.Client": {
-				"Provider": "ClickHouse.Client",
-				"ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true"
-			},
-			"ClickHouse.MySql": {
-				"Provider": "MySqlConnector",
-				"ConnectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;"
-			},
-			"DB2": {
-				"Provider": "IBM.Data.DB2",
-				"ConnectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!"
-			},
-			"Firebird.2.5": { "ConnectionString": "DataSource=localhost;Port=3025;Database=/firebird/data/testdb25.fdb;User Id=sysdba;Password=masterkey;charset=UTF8" },
-			"Firebird.3": { "ConnectionString": "DataSource=localhost;Port=3030;Database=/firebird/data/testdb30.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
-			"Firebird.4": { "ConnectionString": "DataSource=localhost;Port=3040;Database=/firebird/data/testdb40.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
-			"Firebird.5": { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb50.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
-			"Informix": {
-				"Provider": "IBM.Data.Informix",
-				"ConnectionString": "Host=DBHost;Service=9088;Server=ol_informix1170;Protocol=onsoctcp;Database=TestData;UID=informix;PWD=TestPassword;"
-			},
-			"Informix.DB2": { "ConnectionString": "Server=localhost:9189;Database=testdatadb2;userid=informix;password=in4mix" },
-			"MySql.5.7": {
-				"Provider": "MySql.Data",
-				"ConnectionString": "Server=localhost;Port=3307;Database=testdata;Uid=root;Pwd=root;charset=utf8mb4;Allow User Variables=True;SslMode=None;"
-			},
-			"MySqlConnector.5.7": {
-				"Provider": "MySqlConnector",
-				"ConnectionString": "Server=localhost;Port=3307;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;AllowLoadLocalInfile=true;"
-			},
-			"MySql.8.0": {
-				"Provider": "MySql.Data.MySqlClient",
-				"ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8mb4;Allow User Variables=True;"
-			},
-			"MySqlConnector.8.0": {
-				"Provider": "MySqlConnector",
-				"ConnectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"
-			},
-			"MariaDB.11": {
-				"Provider": "MySqlConnector",
-				"ConnectionString": "Server=localhost;Port=3316;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;AllowLoadLocalInfile=true;"
-			},
-			"Oracle.11.Managed": {
-				"Provider": "Oracle.ManagedDataAccess.Client",
-				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=test;Password=test;"
-			},
-			"Oracle.19.Managed": {
-				"Provider": "Oracle.ManagedDataAccess.Client",
-				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1531))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=password;"
-			},
-			"PostgreSQL.9.2": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5492;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
-			},
-			"PostgreSQL.9.3": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5493;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
-			},
-			"PostgreSQL.9.5": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5495;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
-			},
-			"PostgreSQL.10": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5410;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
-			},
-			"PostgreSQL.11": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5411;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
-			},
-			"PostgreSQL.12": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5412;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
-			},
-			"PostgreSQL.13": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5413;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
-			},
-			"PostgreSQL.14": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5414;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
-			},
-			"PostgreSQL.15": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5415;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
-			},
-			"PostgreSQL.16": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5416;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
-			},
-			"PostgreSQL.17": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5417;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
-			},
-			"SapHana.Native": {
-				"Provider": "Sap.Data.Hana",
-				"ConnectionString": "Server=localhost:39017;Current Schema=TESTDB;UserID=SYSTEM;Password=Passw0rd;"
-			},
-			"SqlServer.2005": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2005;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2005.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2005;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2008": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2008.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2012": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2012;Database=TestData;User Id=sa;Password=TestPassword;MultipleActiveResultSets=True;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2012.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2012;Database=TestData;User Id=sa;Password=TestPassword;MultipleActiveResultSets=True;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2014": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2014.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2016": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2016;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2016.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2016;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2017": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost,1417;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2017.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost,1417;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2019": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost,1419;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2019.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost,1419;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2022": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost,1422;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2022.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost,1422;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.SA": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost,1419;Database=TestDataSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.SA.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost,1419;Database=TestDataMSSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.Contained": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost,1419;Database=TestDataContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.Contained.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost,1419;Database=TestDataMSContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.Northwind": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost,1419;Database=Northwind;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.Northwind.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost,1419;Database=NorthwindMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.Azure": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"
-			},
-			"SqlServer.Azure.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"
-			},
-			"SqlServer.Azure.MI": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"
-			},
-			"SqlServer.Azure.MI.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"
-			},
-			"Sybase": {
-				"Provider": "Sybase.Data.AseClient",
-				"ConnectionString": "Data Source=DBHost;Port=5000;Database=TestData;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;"
-			},
-			"Sybase.Managed": {
-				"Provider": "AdoNetCore.AseClient",
-				"ConnectionString": "Data Source=localhost;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;"
-			},
-			"YDB": {
-				"Provider": "YDB",
-				"ConnectionString": "Host=localhost;Port=2136;Database=/local;UseTls=false"
-			}
+			"ClickHouse.Octonica"       : { "Provider": "Octonica.ClickHouseClient",        "ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"                                                                                           },
+			"ClickHouse.Client"         : { "Provider": "ClickHouse.Client",                "ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true"                                                                       },
+			"ClickHouse.MySql"          : { "Provider": "MySqlConnector",                   "ConnectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;"                                                                        },
+			"DB2"                       : { "Provider": "IBM.Data.DB2",                     "ConnectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!"                                                                                                 },
+			"Firebird.2.5"              : {                                                 "ConnectionString": "DataSource=localhost;Port=3025;Database=/firebird/data/testdb25.fdb;User Id=sysdba;Password=masterkey;charset=UTF8"                                                  },
+			"Firebird.3"                : {                                                 "ConnectionString": "DataSource=localhost;Port=3030;Database=/firebird/data/testdb30.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                               },
+			"Firebird.4"                : {                                                 "ConnectionString": "DataSource=localhost;Port=3040;Database=/firebird/data/testdb40.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                               },
+			"Firebird.5"                : {                                                 "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb50.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                               },
+			"Informix"                  : { "Provider": "IBM.Data.Informix",                "ConnectionString": "Host=DBHost;Service=9088;Server=ol_informix1170;Protocol=onsoctcp;Database=TestData;UID=informix;PWD=TestPassword;"                                                  },
+			"Informix.DB2"              : {                                                 "ConnectionString": "Server=localhost:9189;Database=testdatadb2;userid=informix;password=in4mix"                                                                                          },
+			"MySql.5.7"                 : { "Provider": "MySql.Data",                       "ConnectionString": "Server=localhost;Port=3307;Database=testdata;Uid=root;Pwd=root;charset=utf8mb4;Allow User Variables=True;SslMode=None;"                                                 },
+			"MySqlConnector.5.7"        : { "Provider": "MySqlConnector",                   "ConnectionString": "Server=localhost;Port=3307;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;AllowLoadLocalInfile=true;"              },
+			"MySql.8.0"                 : { "Provider": "MySql.Data.MySqlClient",           "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8mb4;Allow User Variables=True;"                                                              },
+			"MySqlConnector.8.0"        : { "Provider": "MySqlConnector",                   "ConnectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"                           },
+			"MariaDB.11"                : { "Provider": "MySqlConnector",                   "ConnectionString": "Server=localhost;Port=3316;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;AllowLoadLocalInfile=true;"                       },
+			"Oracle.11.Managed"         : { "Provider": "Oracle.ManagedDataAccess.Client",  "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=test;Password=test;"                           },
+			"Oracle.19.Managed"         : { "Provider": "Oracle.ManagedDataAccess.Client",  "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1531))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=password;"                     },
+			"PostgreSQL.9.2"            : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5492;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
+			"PostgreSQL.9.3"            : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5493;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
+			"PostgreSQL.9.5"            : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5495;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
+			"PostgreSQL.10"             : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5410;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
+			"PostgreSQL.11"             : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5411;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
+			"PostgreSQL.12"             : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5412;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
+			"PostgreSQL.13"             : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5413;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
+			"PostgreSQL.14"             : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5414;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
+			"PostgreSQL.15"             : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5415;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
+			"PostgreSQL.16"             : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5416;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
+			"PostgreSQL.17"             : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5417;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
+			"SapHana.Native"            : { "Provider": "Sap.Data.Hana",                    "ConnectionString": "Server=localhost:39017;Current Schema=TESTDB;UserID=SYSTEM;Password=Passw0rd;"                                                                                       },
+			"SqlServer.2005"            : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=DBHost\\SQLSERVER2005;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"                                            },
+			"SqlServer.2005.MS"         : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=DBHost\\SQLSERVER2005;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"                                            },
+			"SqlServer.2008"            : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=DBHost\\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"                                            },
+			"SqlServer.2008.MS"         : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=DBHost\\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"                                            },
+			"SqlServer.2012"            : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=DBHost\\SQLSERVER2012;Database=TestData;User Id=sa;Password=TestPassword;MultipleActiveResultSets=True;Encrypt=true;TrustServerCertificate=true"              },
+			"SqlServer.2012.MS"         : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=DBHost\\SQLSERVER2012;Database=TestData;User Id=sa;Password=TestPassword;MultipleActiveResultSets=True;Encrypt=true;TrustServerCertificate=true"              },
+			"SqlServer.2014"            : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"                                            },
+			"SqlServer.2014.MS"         : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"                                            },
+			"SqlServer.2016"            : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=DBHost\\SQLSERVER2016;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"                                            },
+			"SqlServer.2016.MS"         : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=DBHost\\SQLSERVER2016;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"                                            },
+			"SqlServer.2017"            : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=localhost,1417;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                    },
+			"SqlServer.2017.MS"         : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=localhost,1417;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                  },
+			"SqlServer.2019"            : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=localhost,1419;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                    },
+			"SqlServer.2019.MS"         : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=localhost,1419;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                  },
+			"SqlServer.2022"            : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=localhost,1422;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                    },
+			"SqlServer.2022.MS"         : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=localhost,1422;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                  },
+			"SqlServer.SA"              : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=localhost,1419;Database=TestDataSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                  },
+			"SqlServer.SA.MS"           : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=localhost,1419;Database=TestDataMSSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                },
+			"SqlServer.Contained"       : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=localhost,1419;Database=TestDataContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                           },
+			"SqlServer.Contained.MS"    : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=localhost,1419;Database=TestDataMSContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                         },
+			"SqlServer.Northwind"       : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=localhost,1419;Database=Northwind;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                   },
+			"SqlServer.Northwind.MS"    : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=localhost,1419;Database=NorthwindMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                 },
+			"SqlServer.Azure"           : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"                      },
+			"SqlServer.Azure.MS"        : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"                      },
+			"SqlServer.Azure.MI"        : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"                      },
+			"SqlServer.Azure.MI.MS"     : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"                      },
+			"Sybase"                    : { "Provider": "Sybase.Data.AseClient",            "ConnectionString": "Data Source=DBHost;Port=5000;Database=TestData;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;"      },
+			"Sybase.Managed"            : { "Provider": "AdoNetCore.AseClient",             "ConnectionString": "Data Source=localhost;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;" },
+			"YDB"                       : {	"Provider": "YDB",             		   	    	"ConnectionString": "Host=localhost;Port=2136;Database=/local;UseTls=false"                                                                                                               }
 		}
 	},
 
@@ -316,195 +146,56 @@
 		"BasedOn": "CommonConnectionStrings",
 		"BaselinesPath": "./../../../baselines",
 		"Connections": {
-			"MySql.5.7": {
-				"Provider": "MySql.Data",
-				"ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;"
-			},
-			"MySqlConnector.5.7": {
-				"Provider": "MySqlConnector",
-				"ConnectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;AllowLoadLocalInfile=true;"
-			},
-			"MySql.8.0": {
-				"Provider": "MySql.Data",
-				"ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"
-			},
-			"MySqlConnector.8.0": {
-				"Provider": "MySqlConnector",
-				"ConnectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"
-			},
-			"MariaDB.11": {
-				"Provider": "MySqlConnector",
-				"ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;AllowLoadLocalInfile=true;"
-			},
-			"PostgreSQL.13": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"
-			},
-			"PostgreSQL.14": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"
-			},
-			"PostgreSQL.15": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"
-			},
-			"PostgreSQL.16": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"
-			},
-			"PostgreSQL.17": {
-				"Provider": "Npgsql",
-				"ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"
-			},
-			"Firebird.2.5": { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8" },
-			"Firebird.3": { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
-			"Firebird.4": { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
-			"Firebird.5": { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
-			"SqlServer.2005": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=false"
-			},
-			"SqlServer.2005.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=false"
-			},
-			"SqlServer.2008": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2008.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2012": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2012.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2014": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2014.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2016": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2016.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2017": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2017.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2019": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2019.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2022": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.2022.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.SA": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestDataSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.SA.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestDataMSSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.Contained": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestDataContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.Contained.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestDataMSContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.Northwind": {
-				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=Northwind;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"SqlServer.Northwind.MS": {
-				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=NorthwindMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
-			},
-			"Sybase.Managed": {
-				"Provider": "AdoNetCore.AseClient",
-				"ConnectionString": "Data Source=127.0.0.1;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;"
-			},
-			"Oracle.11.Managed": {
-				"Provider": "Oracle.ManagedDataAccess.Client",
-				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=test;Password=test;"
-			},
-			"Oracle.12.Managed": {
-				"Provider": "Oracle.ManagedDataAccess.Client",
-				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=system;Password=oracle;"
-			},
-			"Oracle.18.Managed": {
-				"Provider": "Oracle.ManagedDataAccess.Client",
-				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;"
-			},
-			"Oracle.19.Managed": {
-				"Provider": "Oracle.ManagedDataAccess.Client",
-				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;"
-			},
-			"Oracle.21.Managed": {
-				"Provider": "Oracle.ManagedDataAccess.Client",
-				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;"
-			},
-			"Oracle.23.Managed": {
-				"Provider": "Oracle.ManagedDataAccess.Client",
-				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=FREE)));User Id=system;Password=oracle;"
-			},
-			"Informix": {
-				"Provider": "Informix",
-				"ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"
-			},
-			"Informix.DB2": { "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix" },
-			"DB2": {
-				"Provider": "IBM.Data.DB2.Core",
-				"ConnectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!"
-			},
-			"SapHana.Odbc": {
-				"Provider": "SapHana.Odbc",
-				"ConnectionString": "<SET BY SCRIPT>"
-			},
-			"ClickHouse.Octonica": {
-				"Provider": "Octonica.ClickHouseClient",
-				"ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"
-			},
-			"ClickHouse.Client": {
-				"Provider": "ClickHouse.Client",
-				"ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true"
-			},
-			"ClickHouse.MySql": {
-				"Provider": "MySqlConnector",
-				"ConnectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;"
-			},
-			"YDB": {
-				"Provider": "YDB",
-				"ConnectionString": "Host=localhost;Port=2136;Database=/local;UseTls=false"
-			}
+			"MySql.5.7"                 : { "Provider": "MySql.Data",                      "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;"                                                 },
+			"MySqlConnector.5.7"        : { "Provider": "MySqlConnector",                  "ConnectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;AllowLoadLocalInfile=true;"              },
+			"MySql.8.0"                 : { "Provider": "MySql.Data",                      "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                                                              },
+			"MySqlConnector.8.0"        : { "Provider": "MySqlConnector",                  "ConnectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"                           },
+			"MariaDB.11"                : { "Provider": "MySqlConnector",                  "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;AllowLoadLocalInfile=true;"                       },
+			"PostgreSQL.13"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
+			"PostgreSQL.14"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
+			"PostgreSQL.15"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
+			"PostgreSQL.16"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
+			"PostgreSQL.17"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
+			"Firebird.2.5"              : {                                                "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8"                                                    },
+			"Firebird.3"                : {                                                "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                                 },
+			"Firebird.4"                : {                                                "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                                 },
+			"Firebird.5"                : {                                                "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                                 },
+			"SqlServer.2005"            : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=false"                                                                                    },
+			"SqlServer.2005.MS"         : { "Provider": "Microsoft.Data.SqlClient",        "ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=false"                                                                                  },
+			"SqlServer.2008"            : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                         },
+			"SqlServer.2008.MS"         : { "Provider": "Microsoft.Data.SqlClient",        "ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                       },
+			"SqlServer.2012"            : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                         },
+			"SqlServer.2012.MS"         : { "Provider": "Microsoft.Data.SqlClient",        "ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                       },
+			"SqlServer.2014"            : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                         },
+			"SqlServer.2014.MS"         : { "Provider": "Microsoft.Data.SqlClient",        "ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                       },
+			"SqlServer.2016"            : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                         },
+			"SqlServer.2016.MS"         : { "Provider": "Microsoft.Data.SqlClient",        "ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                       },
+			"SqlServer.2017"            : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                         },
+			"SqlServer.2017.MS"         : { "Provider": "Microsoft.Data.SqlClient",        "ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                       },
+			"SqlServer.2019"            : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                         },
+			"SqlServer.2019.MS"         : { "Provider": "Microsoft.Data.SqlClient",        "ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                       },
+			"SqlServer.2022"            : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                         },
+			"SqlServer.2022.MS"         : { "Provider": "Microsoft.Data.SqlClient",        "ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                       },
+			"SqlServer.SA"              : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestDataSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                       },
+			"SqlServer.SA.MS"           : { "Provider": "Microsoft.Data.SqlClient",        "ConnectionString": "Server=localhost;Database=TestDataMSSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                     },
+			"SqlServer.Contained"       : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestDataContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                },
+			"SqlServer.Contained.MS"    : { "Provider": "Microsoft.Data.SqlClient",        "ConnectionString": "Server=localhost;Database=TestDataMSContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                              },
+			"SqlServer.Northwind"       : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=Northwind;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                        },
+			"SqlServer.Northwind.MS"    : { "Provider": "Microsoft.Data.SqlClient",        "ConnectionString": "Server=localhost;Database=NorthwindMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                      },
+			"Sybase.Managed"            : { "Provider": "AdoNetCore.AseClient",            "ConnectionString": "Data Source=127.0.0.1;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;" },
+			"Oracle.11.Managed"         : { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=test;Password=test;"                           },
+			"Oracle.12.Managed"         : { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=system;Password=oracle;"                    },
+			"Oracle.18.Managed"         : { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;"                       },
+			"Oracle.19.Managed"         : { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;"                       },
+			"Oracle.21.Managed"         : { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;"                       },
+			"Oracle.23.Managed"         : { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=FREE)));User Id=system;Password=oracle;"                     },
+			"Informix"                  : { "Provider": "Informix",                        "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"                                                                                               },
+			"Informix.DB2"              : {                                                "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"                                                                                               },
+			"DB2"                       : { "Provider": "IBM.Data.DB2.Core",               "ConnectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!"                                                                                                 },
+			"SapHana.Odbc"              : { "Provider": "SapHana.Odbc",                    "ConnectionString": "<SET BY SCRIPT>"                                                                                                                                                     },
+			"ClickHouse.Octonica"       : { "Provider": "Octonica.ClickHouseClient",       "ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"                                                                                           },
+			"ClickHouse.Client"         : { "Provider": "ClickHouse.Client",               "ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true"                                                                       },
+			"ClickHouse.MySql"          : { "Provider": "MySqlConnector",                  "ConnectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;"                                                                        }
 		}
 	},
 
