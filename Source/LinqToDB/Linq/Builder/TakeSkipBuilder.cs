@@ -48,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (expr.ElementType == QueryElementType.SqlValue && builder.CanBeEvaluatedOnClient(methodCall.Arguments[1]))
 					{
-						var param = builder.ParametersContext.BuildParameter(sequence, methodCall.Arguments[1], null, forceNew : true)!;
+						var param = builder.ParametersContext.BuildParameter(sequence, methodCall.Arguments[1], null)!;
 
 						param.Name             = methodCall.Method.Name == "Take" ? "take" : "skip";
 						param.IsQueryParameter = param.IsQueryParameter && parameterize;
