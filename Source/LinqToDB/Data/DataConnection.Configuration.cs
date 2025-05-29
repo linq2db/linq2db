@@ -522,6 +522,7 @@ namespace LinqToDB.Data
 				}
 
 				var dataProvider = options.DataProviderFactory == null ? options.DataProvider : options.DataProviderFactory(options);
+
 				var doSave       = true;
 
 				switch (
