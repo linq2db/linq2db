@@ -1785,6 +1785,16 @@ namespace LinqToDB.SqlProvider
 					if (appendParentheses)
 						AppendIndent().Append(')');
 
+					if (rawSqlTable.IsScalar && alias != null && SupportsColumnAliasesInSource && buildAlias != false)
+					{
+						StringBuilder.Append(' ');
+						BuildObjectName(StringBuilder, new(alias), ConvertType.NameToQueryFieldAlias, true, TableOptions.NotSet);
+						StringBuilder.Append('(');
+						BuildExpression(rawSqlTable.Fields.First(), buildTableName: false, checkParentheses: false);
+						StringBuilder.Append(')');
+						buildAlias = false;
+					}
+
 					break;
 
 				case QueryElementType.SqlValuesTable:
