@@ -610,7 +610,11 @@ namespace LinqToDB.EntityFrameworkCore
 			// Allow subclasses of QueryCompiler. E.g. used by https://github.com/koenbeuk/EntityFrameworkCore.Projectables.
 			// In case we never find it in the class hierarchy, the GetField below will throw an exception.
 			var compilerType = compiler.GetType();
-			while (compilerType != typeof(QueryCompiler) && compilerType.BaseType is {} baseType) compilerType = baseType;
+			while (compilerType != typeof(QueryCompiler)
+					&& compilerType.BaseType is {} baseType)
+			{
+				compilerType = baseType;
+			}
 
 			var queryContextFactoryField = compilerType.GetField("_queryContextFactory", BindingFlags.NonPublic | BindingFlags.Instance)
 				?? throw new LinqToDBForEFToolsException($"Can not find private field '{compiler.GetType()}._queryContextFactory' in current EFCore Version.");
