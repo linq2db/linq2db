@@ -312,6 +312,46 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 #endif
 
+#if NET9_0_OR_GREATER
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4917")]
+		public async ValueTask Issue4917Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
+		{
+			var connectionString = GetConnectionString(provider);
+			var dataSource = new NpgsqlDataSourceBuilder(connectionString).Build();
+			var optionsBuilder = new DbContextOptionsBuilder().UseNpgsql(dataSource);
+
+			using var ctx = new Issue4917Context(optionsBuilder.Options);
+
+			using (new DisableBaseline("create db"))
+			{
+				ctx.Database.EnsureDeleted();
+				ctx.Database.EnsureCreated();
+			}
+
+			var entities = new List<Issue4917RecordDb>()
+			{
+				new(0, "Name1"),
+				new(0, "Name2")
+			};
+
+			ctx.Issue4917DBRecords.AddRange(entities);
+			await ctx.SaveChangesAsync();
+		}
+
+		public sealed class Issue4917Context(DbContextOptions options) : DbContext(options)
+		{
+			public DbSet<Issue4917RecordDb> Issue4917DBRecords { get; set; } = null!;
+
+			protected override void OnModelCreating(ModelBuilder modelBuilder)
+			{
+				modelBuilder.Entity<Issue4917RecordDb>();
+			}
+		}
+
+		public record Issue4917RecordDb(
+			int Id,
+			string Name);
+#endif
 		#endregion
 	}
 }
