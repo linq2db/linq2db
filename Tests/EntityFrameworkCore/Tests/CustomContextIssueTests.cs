@@ -321,15 +321,14 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var optionsBuilder = new DbContextOptionsBuilder().UseNpgsql(dataSource);
 
 			using var ctx = new Issue4917Context(optionsBuilder.Options);
-			using var db  = ctx.CreateLinqToDBConnection();
-
 			using (new DisableBaseline("create db"))
 			{
 				ctx.Database.EnsureDeleted();
 				ctx.Database.EnsureCreated();
 			}
 
-			await db.GetTable<Issue4917RecordDb>().ToListAsyncLinqToDB(); //should not throw an exception
+			using var db  = ctx.CreateLinqToDBConnection(); //should not throw an exception
+			await db.GetTable<Issue4917RecordDb>().ToListAsyncLinqToDB(); 
 		}
 
 		public sealed class Issue4917Context(DbContextOptions options) : DbContext(options)
