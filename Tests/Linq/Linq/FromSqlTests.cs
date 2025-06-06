@@ -1077,7 +1077,12 @@ namespace Tests.Linq
 			}
 		}
 
-		const string MyTableNameStringConstant = "Person";
+		static string QuoteTableName(string tableName, string context)
+		{
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllSapHana, TestProvName.AllFirebird, TestProvName.AllDB2))
+				return "\"" + tableName + "\"";
+			return tableName;
+		}
 
 		[Test]
 		public void TestBasicScalarQuery([DataSources()] string context)
@@ -1086,20 +1091,49 @@ namespace Tests.Linq
 
 			var tableName = "Person";
 
-			if (context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllOracle))
-				tableName = "\"" + tableName + "\""; // PostgreSQL requires double quotes for identifiers
+			tableName = QuoteTableName(tableName, context);
 
 			var sql            = $"SELECT 1 AS \"value\" FROM {tableName}";
 			var formattableSql = FormattableStringFactory.Create(sql);
 
-			var query = from p in db.Person
+			var query = 
+				from p in db.Person
 				from s in db.FromSqlScalar<int>(formattableSql)
-				where s == 1
+					.Where(s => s == p.ID)
 				select p;
 
 			var result = query.ToArray();
+			result.Should().HaveCount(4);
 		}
 
+		[Test]
+		public void TestBasicScalarQueryWithoutExplicitAlias([DataSources(
+			TestProvName.AllAccess, 
+			TestProvName.AllMySql57, 
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllFirebird
+			)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var tableName = "Person";
+
+			tableName = QuoteTableName(tableName, context);
+
+			var sql            = $"SELECT 1 FROM {tableName}";
+			var formattableSql = FormattableStringFactory.Create(sql);
+
+			var query = from p in db.Person
+				from s in db.FromSqlScalar<int>(formattableSql)
+					.Where(s => s == p.ID)
+				select p;
+
+			var result = query.ToArray();
+			result.Should().HaveCount(4);
+		}
+
+		const string MyTableNameStringConstant = "Person";
 
 		[Test]
 		public void Issue3782Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool inline)

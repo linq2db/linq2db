@@ -30,6 +30,8 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
+		protected override bool SupportsColumnAliasesInSource => false;
+
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new FirebirdSqlBuilder(this);
