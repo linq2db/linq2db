@@ -460,7 +460,7 @@ namespace Tests.Linq
 
 		[ExpressionMethod(nameof(UnnestWithOrdinalityImpl))]
 		static IQueryable<UnnestEnvelope<TValue>> UnnestWithOrdinality<TValue>(IDataContext db, TValue[] member)
-			=> db.FromSql<UnnestEnvelope<TValue>>($"unnest({member}) with ordinality");
+			=> db.FromSql<UnnestEnvelope<TValue>>($"unnest({member}) with ordinality {Sql.AliasExpr()} (value, index)");
 
 		static Expression<Func<IDataContext, TValue[], IQueryable<UnnestEnvelope<TValue>>>> UnnestWithOrdinalityImpl<TValue>()
 			=> (db, member) => db.FromSql<UnnestEnvelope<TValue>>($"unnest({member}) with ordinality {Sql.AliasExpr()} (value, index)");
