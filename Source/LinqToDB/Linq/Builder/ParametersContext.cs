@@ -189,8 +189,9 @@ namespace LinqToDB.Linq.Builder
 
 			var originalAccessor = paramExpression;
 			var valueType        = elementType ?? paramExpression.Type;
+			var paramType        = elementType ?? paramExpression.UnwrapConvertToNotObject().Type;
 
-			var paramDataType = columnDescriptor?.GetDbDataType(true) ?? mappingSchema.GetDbDataType(valueType);
+			var paramDataType = columnDescriptor?.GetDbDataType(true) ?? mappingSchema.GetDbDataType(paramType);
 
 			var        objParam                   = ItemParameter;
 			Expression defaultProviderValueGetter = Expression.Convert(objParam, valueType);
@@ -200,9 +201,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (columnDescriptor != null && originalAccessor is not BinaryExpression)
 				{
-					paramDataType = columnDescriptor
-						.GetDbDataType(true)
-						.WithSystemType(valueType);
+					var updateType = true;
 
 					if (valueType != columnDescriptor.MemberType)
 					{
@@ -236,6 +235,7 @@ namespace LinqToDB.Linq.Builder
 								if (convertLambda != null)
 								{
 									providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, providerValueGetter);
+									updateType = false;
 								}
 							}
 
@@ -259,6 +259,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						providerValueGetter = Expression.Convert(providerValueGetter, valueType);
 					}
+
+					if (updateType && paramDataType.SystemType.UnwrapNullableType() != paramType.UnwrapNullableType() && paramType != typeof(object))
+						paramDataType = mappingSchema.GetDbDataType(paramType);
 
 					providerValueGetter = columnDescriptor.ApplyConversions(providerValueGetter, paramDataType, true);
 				}
