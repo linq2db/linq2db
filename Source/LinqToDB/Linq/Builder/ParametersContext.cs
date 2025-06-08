@@ -318,7 +318,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				providerValueGetter = null;
 			}
-			else {
+			else
+			{
 				//providerValueGetter = CorrectAccessorExpression(providerValueGetter, DataContext);
 				if (providerValueGetter.Type != typeof(object))
 					providerValueGetter = Expression.Convert(providerValueGetter, typeof(object));
@@ -328,7 +329,7 @@ namespace LinqToDB.Linq.Builder
 				_accessorIdGenerator.GetNext(),
 				parameterName,
 				paramDataType,
-				paramExpression, 
+				paramExpression,
 				isParameterList ? null : providerValueGetter,
 				isParameterList ? providerValueGetter : null,
 				dbDataTypeExpression);

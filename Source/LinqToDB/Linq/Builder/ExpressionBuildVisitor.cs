@@ -3039,10 +3039,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked:
 				case ExpressionType.Coalesce:
-				{
-					columnDescriptor = SuggestColumnDescriptor(left);
-					break;
-				}
+
 				case ExpressionType.Equal:
 				case ExpressionType.NotEqual:
 				case ExpressionType.GreaterThan:
@@ -3050,7 +3047,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.LessThan:
 				case ExpressionType.LessThanOrEqual:
 				{
-					columnDescriptor = SuggestColumnDescriptor(left);
+					columnDescriptor = SuggestColumnDescriptor(left) ?? SuggestColumnDescriptor(right);
 					break;
 				}
 			}
