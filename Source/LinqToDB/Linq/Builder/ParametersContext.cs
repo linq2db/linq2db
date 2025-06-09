@@ -201,6 +201,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (columnDescriptor != null && originalAccessor is not BinaryExpression)
 				{
+					if (paramType.IsNullable() && !paramDataType.SystemType.IsNullable())
+						paramDataType = paramDataType.WithSystemType(paramDataType.SystemType.MakeNullable());
+
 					var updateType = true;
 
 					if (valueType != columnDescriptor.MemberType)
