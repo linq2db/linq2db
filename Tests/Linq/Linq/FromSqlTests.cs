@@ -1113,7 +1113,6 @@ namespace Tests.Linq
 			TestProvName.AllMariaDB,
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
-			TestProvName.AllFirebird,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSapHana,
 			TestProvName.AllOracle
