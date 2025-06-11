@@ -96,10 +96,10 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
-			{
-				using var scope = NeedCast(false);
-				return base.VisitSqlCastExpression(element);
-			}
+		{
+			using var scope = NeedCast(false);
+			return base.VisitSqlCastExpression(element);
+		}
 
 		protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
 		{
