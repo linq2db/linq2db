@@ -50,6 +50,12 @@ namespace LinqToDB.Remote
 		{
 #pragma warning disable CS0618 // Type or member is obsolete
 			MappingSchema    = MappingSchema.CombineSchemas(mappingSchema, MappingSchema);
+			_configurationID = null;
+		}
+
+		void IDataContext.SetMappingSchema(MappingSchema mappingSchema)
+		{
+			MappingSchema    = mappingSchema;
 #pragma warning restore CS0618 // Type or member is obsolete
 			_configurationID = null;
 		}
@@ -224,17 +230,16 @@ namespace LinqToDB.Remote
 		string?            _contextName;
 		string IDataContext.ContextName => _contextName ??= GetConfigurationInfo().MappingSchema.ConfigurationList[0];
 
-		int  _msID;
 		int? _configurationID;
 		int IConfigurationID.ConfigurationID
 		{
 			get
 			{
-				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
+				if (_configurationID == null)
 				{
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
-						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
+						.Add(MappingSchema)
 						.Add(Options)
 						.Add(GetType())
 						.CreateID();
@@ -728,11 +733,9 @@ namespace LinqToDB.Remote
 				return null;
 
 			var configurationID = _configurationID;
-			var msID            = _msID;
 
 			Options          = newOptions;
 			_configurationID = null;
-			_msID            = 0;
 
 			var action = Options.Reapply(this, prevOptions);
 
@@ -742,14 +745,27 @@ namespace LinqToDB.Remote
 
 #if DEBUG
 				_configurationID = null;
-				_msID            = 0;
 #else
 				_configurationID = configurationID;
-				_msID            = msID;
 #endif
 			};
 
 			return new DisposableAction(action);
+		}
+
+		/// <inheritdoc cref="IDataContext.UseMappingSchema"/>
+		public IDisposable? UseMappingSchema(MappingSchema mappingSchema)
+		{
+			var oldSchema       = MappingSchema;
+			var configurationID = _configurationID;
+
+			AddMappingSchema(mappingSchema);
+
+			return new DisposableAction(() =>
+			{
+				((IDataContext)this).SetMappingSchema(oldSchema);
+				_configurationID = configurationID;
+			});
 		}
 	}
 }

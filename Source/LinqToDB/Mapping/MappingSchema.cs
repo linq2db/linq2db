@@ -33,7 +33,7 @@ namespace LinqToDB.Mapping
 	/// </summary>
 	[PublicAPI]
 	[DebuggerDisplay("{DisplayID}")]
-	public class MappingSchema : IConfigurationID
+	public class MappingSchema : IConfigurationID, IEquatable<MappingSchema>
 	{
 		static readonly MemoryCache<(MappingSchema ms1, MappingSchema ms2), MappingSchema> _combinedSchemasCache = new (new ());
 
@@ -107,7 +107,7 @@ namespace LinqToDB.Mapping
 
 			if (schemas == null || schemas.Length == 0)
 			{
-				Schemas = new[] { schemaInfo, Default.Schemas[0] };
+				Schemas = [schemaInfo, Default.Schemas[0]];
 
 				if (configuration!.Length == 0 && !IsLockable)
 					_configurationID = schemaInfo.ConfigurationID;
@@ -187,6 +187,7 @@ namespace LinqToDB.Mapping
 		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder, SqlDataType, object> converter)
 		{
 			ValueToSqlConverter.SetConverter(type, (sb, dt, _, v) => converter(sb, new SqlDataType(dt), v));
+			ResetID();
 			return this;
 		}
 
@@ -202,6 +203,7 @@ namespace LinqToDB.Mapping
 		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,DataOptions,object> converter)
 		{
 			ValueToSqlConverter.SetConverter(type, (sb, t, options, value) => converter(sb, new SqlDataType(t), options, value));
+			ResetID();
 			return this;
 		}
 
@@ -1295,6 +1297,11 @@ namespace LinqToDB.Mapping
 		{
 			using var idBuilder = new IdentifierBuilder();
 
+			idBuilder
+				.Add(GetType())
+				.Add(ValueToSqlConverter)
+				;
+
 			lock (_syncRoot)
 			{
 				foreach (var s in Schemas)
@@ -1351,7 +1358,7 @@ namespace LinqToDB.Mapping
 		{
 			get
 			{
-				var list = Schemas == null || ConfigurationList == null ? "" : ConfigurationList.Aggregate("", static (s1, s2) => s1.Length == 0 ? s2 : s1 + "." + s2);
+				var list = ConfigurationList.Aggregate("", static (s1, s2) => s1.Length == 0 ? s2 : s1 + "." + s2);
 				return FormattableString.Invariant($"{GetType().Name} : ({_configurationID}) {list}");
 			}
 		}
@@ -1878,6 +1885,28 @@ namespace LinqToDB.Mapping
 		internal virtual MappingSchemaInfo CreateMappingSchemaInfo(string configuration, MappingSchema mappingSchema)
 		{
 			return new (configuration);
+		}
+
+		public bool Equals(MappingSchema? other)
+		{
+			if (other is null)                return false;
+			if (ReferenceEquals(this, other)) return true;
+
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)other).ConfigurationID;
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (obj is null)                return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != GetType()) return false;
+
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)obj).ConfigurationID;
+		}
+
+		public override int GetHashCode()
+		{
+			return ((IConfigurationID)this).ConfigurationID;
 		}
 	}
 }

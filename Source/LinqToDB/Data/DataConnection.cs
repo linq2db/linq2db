@@ -1779,6 +1779,14 @@ namespace LinqToDB.Data
 			_configurationID = null;
 		}
 
+		void IDataContext.SetMappingSchema(MappingSchema mappingSchema)
+		{
+			CheckAndThrowOnDisposed();
+
+			MappingSchema    = mappingSchema;
+			_configurationID = null;
+		}
+
 		#endregion
 
 		#region System.IDisposable Members
@@ -1831,11 +1839,9 @@ namespace LinqToDB.Data
 				return null;
 
 			var configurationID = _configurationID;
-			var msID            = _msID;
 
 			Options          = newOptions;
 			_configurationID = null;
-			_msID            = 0;
 
 			var action = Options.Reapply(this, prevOptions);
 
@@ -1845,14 +1851,27 @@ namespace LinqToDB.Data
 
 #if DEBUG
 				_configurationID = null;
-				_msID            = 0;
 #else
 				_configurationID = configurationID;
-				_msID            = msID;
 #endif
 			};
 
 			return new DisposableAction(action);
+		}
+
+		/// <inheritdoc cref="IDataContext.UseMappingSchema"/>
+		public IDisposable? UseMappingSchema(MappingSchema mappingSchema)
+		{
+			var oldSchema       = MappingSchema;
+			var configurationID = _configurationID;
+
+			AddMappingSchema(mappingSchema);
+
+			return new DisposableAction(() =>
+			{
+				((IDataContext)this).SetMappingSchema(oldSchema);
+				_configurationID = configurationID;
+			});
 		}
 	}
 }

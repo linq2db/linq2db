@@ -2575,7 +2575,7 @@ $function$
 		// - letters
 		// - underscores
 		// - digits (0-9)
-		// - dollar signs ($). 
+		// - dollar signs ($).
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4285")]
 		public void TestIdentifierHasNoEscaping(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
@@ -2896,7 +2896,7 @@ $function$
 		static bool JsonContains(string? json, int value) => throw new NotImplementedException();
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4348")]
-		public void Issue4348Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void Issue4348Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue4348Table>();
@@ -2909,7 +2909,7 @@ $function$
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4348")]
-		public void Issue4348Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void Issue4348Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue4348Table>();
@@ -3157,13 +3157,15 @@ $function$
 
 		sealed class JsonComparisonTable2
 		{
-			[Column                  ] public string? Text  { get; set; }
-			[Column(DbType = "json") ] public string? Json  { get; set; }
+			[Column                  ] public string? Text { get; set; }
+			[Column(DbType = "json") ] public string? Json { get; set; }
+			[Column(DbType = "json", Configuration = ProviderName.PostgreSQL92)]
+			[Column(DbType = "json", Configuration = ProviderName.PostgreSQL93)]
 			[Column(DbType = "jsonb")] public string? Jsonb { get; set; }
 		}
 
 		[Test]
-		public void JsonComparison_ByDataType([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void JsonComparison_ByDataType([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable([new JsonComparisonTable1()
@@ -3189,7 +3191,7 @@ $function$
 		}
 
 		[Test]
-		public void JsonComparison_ByDbType([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void JsonComparison_ByDbType([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable([new JsonComparisonTable2()

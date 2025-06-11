@@ -478,7 +478,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-		int  _msID;
 		int? _configurationID;
 
 		int IConfigurationID.ConfigurationID
@@ -487,11 +486,11 @@ namespace LinqToDB.Data
 			{
 				CheckAndThrowOnDisposed();
 
-				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
+				if (_configurationID == null)
 				{
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
-						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
+						.Add(MappingSchema)
 						.Add(ConfigurationString)
 						.Add(Options)
 						.Add(GetType())

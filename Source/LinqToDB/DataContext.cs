@@ -111,6 +111,12 @@ namespace LinqToDB
 			_configurationID = null;
 		}
 
+		void IDataContext.SetMappingSchema(MappingSchema mappingSchema)
+		{
+			MappingSchema    = mappingSchema;
+			_configurationID = null;
+		}
+
 		/// <summary>
 		/// Gets initial value for database connection string.
 		/// </summary>
@@ -124,7 +130,6 @@ namespace LinqToDB
 		/// </summary>
 		public string        ContextName         => DataProvider.Name;
 
-		int  _msID;
 		int? _configurationID;
 		/// <summary>
 		/// Gets context configuration ID.
@@ -136,11 +141,11 @@ namespace LinqToDB
 			{
 				AssertDisposed();
 
-				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
+				if (_configurationID == null)
 				{
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
-						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
+						.Add(MappingSchema)
 						.Add(ConfigurationString)
 						.Add(Options)
 						.Add(GetType())
@@ -898,11 +903,9 @@ namespace LinqToDB
 				return null;
 
 			var configurationID = _configurationID;
-			var msID            = _msID;
 
 			Options          = newOptions;
 			_configurationID = null;
-			_msID            = 0;
 
 			var action = Options.Reapply(this, prevOptions);
 
@@ -912,14 +915,27 @@ namespace LinqToDB
 
 #if DEBUG
 				_configurationID = null;
-				_msID            = 0;
 #else
 				_configurationID = configurationID;
-				_msID            = msID;
 #endif
 			};
 
 			return new DisposableAction(action);
+		}
+
+		/// <inheritdoc cref="IDataContext.UseMappingSchema"/>
+		public IDisposable? UseMappingSchema(MappingSchema mappingSchema)
+		{
+			var oldSchema       = MappingSchema;
+			var configurationID = _configurationID;
+
+			AddMappingSchema(mappingSchema);
+
+			return new DisposableAction(() =>
+			{
+				((IDataContext)this).SetMappingSchema(oldSchema);
+				_configurationID = configurationID;
+			});
 		}
 	}
 }

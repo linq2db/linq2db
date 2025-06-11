@@ -1212,17 +1212,17 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Created table as queryable source.</returns>
 		internal static Task<ITable<T>> CreateTableAsync<T>(
-			this IDataContext dataContext,
-			EntityDescriptor? tableDescriptor,
-			string?           tableName       = default,
-			string?           databaseName    = default,
-			string?           schemaName      = default,
-			string?           statementHeader = default,
-			string?           statementFooter = default,
-			DefaultNullable   defaultNullable = DefaultNullable.None,
-			string?           serverName      = default,
-			TableOptions      tableOptions    = default,
-			CancellationToken token           = default)
+			this IDataContext    dataContext,
+			TempTableDescriptor? tableDescriptor,
+			string?              tableName       = default,
+			string?              databaseName    = default,
+			string?              schemaName      = default,
+			string?              statementHeader = default,
+			string?              statementFooter = default,
+			DefaultNullable      defaultNullable = DefaultNullable.None,
+			string?              serverName      = default,
+			TableOptions         tableOptions    = default,
+			CancellationToken    token           = default)
 			where T : notnull
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
