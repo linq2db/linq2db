@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
@@ -21,7 +22,7 @@ namespace LinqToDB.CommandLine
 {
 	partial class ScaffoldCommand : CliCommand
 	{
-		public override int Execute(
+		public override async ValueTask<int> Execute(
 			CliController                  controller,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
@@ -36,8 +37,15 @@ namespace LinqToDB.CommandLine
 				return StatusCodes.INVALID_ARGUMENTS;
 
 			// restart if other arch requested
-			if (options.Remove(General.Architecture, out var value) && RestartIfNeeded((string)value!, rawArgs, out var status))
-				return status.Value;
+			if (options.Remove(General.Architecture, out var value))
+			{
+				var status = await RestartIfNeeded((string)value!, rawArgs).ConfigureAwait(false);
+
+				if (status != null)
+				{
+					return status.Value;
+				}
+			}
 
 			// process remaining utility-specific (general) options
 
@@ -385,17 +393,14 @@ Provider could be downloaded from:
 		/// </summary>
 		/// <param name="requestedArch">New process architecture.</param>
 		/// <param name="args">Command line arguments for current invocation.</param>
-		/// <param name="status">Return code from child process.</param>
-		/// <returns><c>true</c> if scaffold restarted in child process with specific arch.</returns>
-		private bool RestartIfNeeded(string requestedArch, string[] args, [NotNullWhen(true)] out int? status)
+		/// <returns>Not-null return code from child process if scaffold restarted in child process with specific arch or <c>null</c> otherwise.</returns>
+		private async Task<int?> RestartIfNeeded(string requestedArch, string[] args)
 		{
-			status = null;
-
 			// currently we support multiarch only for Windows
 			if (!OperatingSystem.IsWindows())
 			{
 				Console.Out.WriteLine($"'{General.Architecture.Name}' parameter ignored for non-Windows system");
-				return false;
+				return null;
 			}
 
 			string? exeName = null;
@@ -410,7 +415,7 @@ Provider could be downloaded from:
 
 			if (exeName == null)
 			{
-				return false;
+				return null;
 			}
 
 			// build full path to executable
@@ -438,15 +443,12 @@ Provider could be downloaded from:
 			childProcess.BeginOutputReadLine();
 			childProcess.BeginErrorReadLine ();
 
-			// IMPORTANT: don't use WaitForExitAsync till net6+ migration due to buggy implementation in earlier versions
-			childProcess.WaitForExit();
+			await childProcess.WaitForExitAsync().ConfigureAwait(false);
 
 			childProcess.OutputDataReceived -= ChildProcess_OutputDataReceived;
 			childProcess.ErrorDataReceived  -= ChildProcess_ErrorDataReceived;
 
-			status = childProcess.ExitCode;
-
-			return true;
+			return childProcess.ExitCode;
 		}
 
 		private void ChildProcess_ErrorDataReceived(object sender, DataReceivedEventArgs e)

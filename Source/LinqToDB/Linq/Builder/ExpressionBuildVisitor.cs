@@ -2303,7 +2303,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression && Builder.CanBeEvaluatedOnClient(node))
 			{
-				var sqlParam = Builder.ParametersContext.BuildParameter(BuildContext, node, _columnDescriptor, forceNew: _buildFlags.HasFlag(BuildFlags.ForceParameter), alias: _alias);
+				var sqlParam = Builder.ParametersContext.BuildParameter(BuildContext, node, _columnDescriptor, alias : _alias);
 
 				if (sqlParam != null)
 				{
@@ -2426,7 +2426,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (toTranslate is not SqlGenericConstructorExpression)
 					{
-						sql = Builder.ParametersContext.BuildParameter(BuildContext, toTranslate, _columnDescriptor, forceNew: _buildFlags.HasFlag(BuildFlags.ForceParameter), alias: _alias);
+						sql = Builder.ParametersContext.BuildParameter(BuildContext, toTranslate, _columnDescriptor, alias : _alias);
 					}
 				}
 
@@ -3048,10 +3048,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked:
 				case ExpressionType.Coalesce:
-				{
-					columnDescriptor = SuggestColumnDescriptor(left);
-					break;
-				}
+
 				case ExpressionType.Equal:
 				case ExpressionType.NotEqual:
 				case ExpressionType.GreaterThan:
@@ -3059,7 +3056,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.LessThan:
 				case ExpressionType.LessThanOrEqual:
 				{
-					columnDescriptor = SuggestColumnDescriptor(left);
+					columnDescriptor = SuggestColumnDescriptor(left) ?? SuggestColumnDescriptor(right);
 					break;
 				}
 			}
@@ -3272,7 +3269,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertPredicateMethod(MethodCallExpression node)
 		{
-			ISqlExpression IsCaseSensitive(MethodCallExpression mc)
+			ISqlExpression? IsCaseSensitive(MethodCallExpression mc)
 			{
 				if (mc.Arguments.Count <= 1)
 					return new SqlValue(typeof(bool?), null);
@@ -3297,8 +3294,11 @@ namespace LinqToDB.Linq.Builder
 				expr = Expression.OrElse(expr, Expression.Equal(variable, Expression.Constant(StringComparison.Ordinal)));
 				expr = Expression.Block(new[] { variable }, assignment, expr);
 
-				var parameter = Builder.ParametersContext.BuildParameter(BuildContext, expr, columnDescriptor : null)!;
-				parameter.IsQueryParameter = false;
+				var parameter = Builder.ParametersContext.BuildParameter(BuildContext, expr, columnDescriptor : null);
+				if (parameter != null)
+				{
+					parameter.IsQueryParameter = false;
+				}
 
 				return parameter;
 			}
@@ -3316,9 +3316,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				switch (node.Method.Name)
 				{
-					case "Contains": predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.Contains, IsCaseSensitive(node)); break;
+					case "Contains"  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.Contains,   IsCaseSensitive(node)); break;
 					case "StartsWith": predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(node)); break;
-					case "EndsWith": predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.EndsWith, IsCaseSensitive(node)); break;
+					case "EndsWith"  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.EndsWith,   IsCaseSensitive(node)); break;
 				}
 			}
 			else if (node.Method.Name == "Contains")
@@ -4461,13 +4461,31 @@ namespace LinqToDB.Linq.Builder
 				// https://github.com/linq2db/linq2db/issues/2039
 				// byte, sbyte and ushort comparison operands upcasted to int
 				else if (op2.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
-					&& op2 is UnaryExpression op2conv1
-					&& op1conv.Operand.Type == op2conv1.Operand.Type
-					&& op1conv.Operand.Type != typeof(object))
+					&& op2 is UnaryExpression op2conv1)
 				{
-					op1 = op1conv.Operand;
-					op2 = op2conv1.Operand;
-					return true;
+					if (op1conv.Operand.Type == op2conv1.Operand.Type && op1conv.Operand.Type != typeof(object))
+					{
+						op1 = op1conv.Operand;
+						op2 = op2conv1.Operand;
+						return true;
+					}
+					else if (op1conv.Operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+					{
+						// double conversion (:> int :> int?)
+						var op1convNested = (UnaryExpression)op1conv.Operand;
+						if (op1convNested.Operand.Type == op2conv1.Operand.Type && op1convNested.Operand.Type != typeof(object))
+						{
+							op1 = op1convNested.Operand;
+							op2 = op2conv1.Operand;
+							return true;
+						}
+						else if (op1convNested.Operand.Type == op2conv1.Operand.Type.UnwrapNullableType() && op1convNested.Operand.Type != typeof(object))
+						{
+							op1 = Expression.Convert(op1convNested.Operand, op2conv1.Operand.Type);
+							op2 = op2conv1.Operand;
+							return true;
+						}
+					}
 				}
 
 				// https://github.com/linq2db/linq2db/issues/2166
@@ -4809,9 +4827,13 @@ namespace LinqToDB.Linq.Builder
 
 						if (Builder.CanBeEvaluatedOnClient(arr))
 						{
-							var p = Builder.ParametersContext.BuildParameter(BuildContext, arr, _columnDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate)!;
-							p.IsQueryParameter = false;
-							return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, p);
+							var parameter = Builder.ParametersContext.BuildParameter(BuildContext, arr, _columnDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate);
+
+							if (parameter != null)
+							{
+								parameter.IsQueryParameter = false;
+								return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, parameter);
+							}
 						}
 
 						break;
@@ -4830,11 +4852,11 @@ namespace LinqToDB.Linq.Builder
 
 		#region LIKE predicate
 
-		ISqlPredicate? CreateStringPredicate(MethodCallExpression expression, SqlPredicate.SearchString.SearchKind kind, ISqlExpression caseSensitive)
+		ISqlPredicate? CreateStringPredicate(MethodCallExpression expression, SqlPredicate.SearchString.SearchKind kind, ISqlExpression? caseSensitive)
 		{
 			var e = expression;
 
-			if (e.Object == null)
+			if (e.Object == null || caseSensitive == null)
 				return null;
 
 			var descriptor = SuggestColumnDescriptor(e.Object, e.Arguments[0]);

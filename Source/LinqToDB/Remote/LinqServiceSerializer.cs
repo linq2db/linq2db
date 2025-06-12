@@ -71,7 +71,7 @@ namespace LinqToDB.Remote
 			protected readonly Dictionary<object,string> DelayedObjects = new (Utils.ObjectReferenceEqualityComparer<object>.Default);
 			protected int                                Index;
 
-			protected readonly Dictionary<SqlValuesTable, IReadOnlyList<ISqlExpression[]>> EnumerableData = new ();
+			protected readonly Dictionary<SqlValuesTable, IReadOnlyList<List<ISqlExpression>>> EnumerableData = new ();
 
 			protected SerializerBase(MappingSchema serializationMappingSchema)
 			{
@@ -137,7 +137,7 @@ namespace LinqToDB.Remote
 				Builder.Append(' ').Append(value.HasValue ? '1' : '0');
 
 				if (value.HasValue)
-					Builder.Append(CultureInfo.InvariantCulture, $"{value.Value}");
+					Builder.Append(value.Value);
 			}
 
 			protected void Append(Type? value)
@@ -721,7 +721,7 @@ namespace LinqToDB.Remote
 				protected override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
 				{
 					VisitElements(element.Fields, VisitMode.ReadOnly);
-					VisitListOfArrays(element.Rows, VisitMode.ReadOnly);
+					VisitListOfLists(element.Rows, VisitMode.ReadOnly);
 					return element;
 				}
 
@@ -1081,6 +1081,7 @@ namespace LinqToDB.Remote
 							Append(elem.SourceID);
 							Append(elem.Alias);
 							Append(elem.ObjectType);
+							Append(elem.IsScalar);
 
 							Append(ObjectIndices[elem.All]);
 							Append(elem.Fields.Count);
@@ -2121,9 +2122,10 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.SqlRawSqlTable :
 						{
-							var sourceID           = ReadInt();
-							var alias              = ReadString()!;
-							var objectType         = ReadType()!;
+							var sourceID   = ReadInt();
+							var alias      = ReadString()!;
+							var objectType = ReadType()!;
+							var isScalar   = ReadBool();
 
 							var all    = Read<SqlField>()!;
 							var fields = ReadArray<SqlField>()!;
@@ -2136,7 +2138,7 @@ namespace LinqToDB.Remote
 							var parameters = ReadArray<ISqlExpression>()!;
 							var extensions = ReadList<SqlQueryExtension>();
 
-							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, parameters)
+							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, isScalar, parameters)
 							{
 								SqlQueryExtensions = extensions
 							};
@@ -2726,12 +2728,12 @@ namespace LinqToDB.Remote
 							var fields    = ReadArray<SqlField>()!;
 
 							var rowsCount = ReadInt();
-							var rows      = new List<ISqlExpression[]>(rowsCount);
+							var rows      = new List<List<ISqlExpression>>(rowsCount);
 
 							for (var i = 0; i < rowsCount; i++)
-								rows.Add(ReadArray<ISqlExpression>()!);
+								rows.Add(ReadList<ISqlExpression>()!);
 
-							obj = new SqlValuesTable(fields, null, rows);
+							obj = new SqlValuesTable(fields, rows);
 
 							break;
 						}

@@ -39,7 +39,6 @@ namespace LinqToDB.DataProvider
 				IsParameterOrderDependent            = false,
 				AcceptsTakeAsParameter               = true,
 				AcceptsTakeAsParameterIfSkip         = false,
-				IsTakeSupported                      = true,
 				IsSkipSupported                      = true,
 				IsSkipSupportedIfTake                = false,
 				TakeHintsSupported                   = null,
@@ -159,7 +158,7 @@ namespace LinqToDB.DataProvider
 			command.Dispose();
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		public virtual ValueTask DisposeCommandAsync(DbCommand command)
 		{
 			ClearCommandParameters(command);

@@ -140,6 +140,27 @@ namespace LinqToDB.Expressions
 			return ex;
 		}
 
+		[return: NotNullIfNotNull(nameof(ex))]
+		public static Expression? UnwrapConvertToNotObject(this Expression? ex)
+		{
+			if (ex == null)
+				return null;
+
+			switch (ex.NodeType)
+			{
+				case ExpressionType.ConvertChecked:
+				case ExpressionType.Convert:
+				{
+					var unaryExpression = (UnaryExpression)ex;
+					if (unaryExpression.Operand.Type != typeof(object) && unaryExpression.Method == null)
+						return unaryExpression.Operand.UnwrapConvertToNotObject();
+					break;
+				}
+			}
+
+			return ex;
+		}
+
 		public static Expression SkipMethodChain(this Expression expr, MappingSchema mappingSchema, out bool isQueryable)
 		{
 			return Sql.ExtensionAttribute.ExcludeExtensionChain(mappingSchema, expr, out isQueryable);

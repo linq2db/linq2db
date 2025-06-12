@@ -28,6 +28,11 @@ namespace LinqToDB.Linq.Translation
 			return new StringMemberTranslatorBase();
 		}
 
+		protected virtual IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslatorBase();
+		}
+
 		protected virtual IMemberTranslator? CreateWindowFunctionsMemberTranslator()
 		{
 			return new WindowFunctionsMemberTranslator();
@@ -56,6 +61,7 @@ namespace LinqToDB.Linq.Translation
 			CombinedMemberTranslator.Add(CreateDateMemberTranslator());
 			CombinedMemberTranslator.Add(CreateMathMemberTranslator());
 			CombinedMemberTranslator.Add(CreateStringMemberTranslator());
+			CombinedMemberTranslator.Add(CreateGuidMemberTranslator());
 
 			var windowFunctionsTranslator = CreateWindowFunctionsMemberTranslator();
 			if (windowFunctionsTranslator != null)

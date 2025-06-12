@@ -31,15 +31,9 @@ namespace Tests.DataProvider
 			// - types are defined and supported by this provider only
 			// - parameter type SqlDbType.Json supported by this provider only
 			// (older MDS and SDC versions could be used with JSON type in inline parameters mode)
-#if !NET6_0
-			var sqlJsonSupported = context.IsAnyOf(TestProvName.SqlAzureMS, TestProvName.SqlAzureMiMS);
-			var parametersSupported = context.IsAnyOf(TestProvName.SqlAzureMS, TestProvName.SqlAzureMiMS);
+			var sqlJsonSupported      = context.IsAnyOf(TestProvName.SqlAzureMS, TestProvName.SqlAzureMiMS);
+			var parametersSupported   = context.IsAnyOf(TestProvName.SqlAzureMS, TestProvName.SqlAzureMiMS);
 			var jsonDocumentSupported = context.IsAnyOf(TestProvName.SqlAzureMS);
-#else
-			var sqlJsonSupported = false;
-			var parametersSupported = false;
-			var jsonDocumentSupported = false;
-#endif
 
 			// see https://github.com/dotnet/SqlClient/discussions/3136
 			parametersSupported = false;
@@ -59,19 +53,11 @@ namespace Tests.DataProvider
 			await TestType<string, string?>(context, new(typeof(string), DataType.Json), "{ }", default, testParameters: parametersSupported, filterByValue: false, getExpectedValue: _ => expectedEmpty, testBulkCopyType: bc => testBulkCopyType(bc) && !(context.IsAnyOf(TestProvName.AllSqlAzure) && bc == BulkCopyType.ProviderSpecific));
 			await TestType<string, string?>(context, new(typeof(string), DataType.Json), json1, json2, testParameters: parametersSupported, filterByValue: false, filterByNullableValue: false, getExpectedValue: _ => expected1, getExpectedNullableValue: _ => expected2, testBulkCopyType: bc => testBulkCopyType(bc) && !(context.IsAnyOf(TestProvName.AllSqlAzure) && bc == BulkCopyType.ProviderSpecific));
 
-#if !NET6_0
 			if (sqlJsonSupported)
 			{
 				await TestType<SqlJson, SqlJson?>(context, new(typeof(SqlJson)), new("{ }"), default, testParameters: parametersSupported, filterByValue: false, isExpectedValue: v => v.Value == expectedEmpty, isExpectedNullableValue: v => v?.IsNull == true, testBulkCopyType: bc => testBulkCopyType(bc) && !(context.IsAnyOf(TestProvName.AllSqlAzure) && bc == BulkCopyType.ProviderSpecific));
 				await TestType<SqlJson, SqlJson?>(context, new(typeof(SqlJson)), new("{ }"), SqlJson.Null, testParameters: parametersSupported, filterByValue: false, filterByNullableValue: false, isExpectedValue: v => v.Value == expectedEmpty, isExpectedNullableValue: v => v?.IsNull == true, testBulkCopyType: bc => testBulkCopyType(bc) && !(context.IsAnyOf(TestProvName.AllSqlAzure) && bc == BulkCopyType.ProviderSpecific));
 				await TestType<SqlJson, SqlJson?>(context, new(typeof(SqlJson)), new(json1), new(json2), testParameters: parametersSupported, filterByValue: false, filterByNullableValue: false, isExpectedValue: v => v.Value == expected1, isExpectedNullableValue: v => v?.Value == expected2, testBulkCopyType: bc => testBulkCopyType(bc) && !(context.IsAnyOf(TestProvName.AllSqlAzure) && bc == BulkCopyType.ProviderSpecific));
-			}
-#endif
-
-			if (jsonDocumentSupported)
-			{
-				await TestType<JsonDocument, JsonDocument?>(context, new(typeof(JsonDocument)), JsonDocument.Parse("{ }"), default, testParameters: parametersSupported, filterByValue: false, isExpectedValue: v => v.RootElement.GetRawText() == expectedEmpty, testBulkCopyType: bc => testBulkCopyType(bc) && !(context.IsAnyOf(TestProvName.AllSqlAzure) && bc == BulkCopyType.ProviderSpecific));
-				await TestType<JsonDocument, JsonDocument?>(context, new(typeof(JsonDocument)), JsonDocument.Parse(json1), JsonDocument.Parse(json2), testParameters: parametersSupported, filterByValue: false, filterByNullableValue: false, isExpectedValue: v => v.RootElement.GetRawText() == expected1, isExpectedNullableValue: v => v?.RootElement.GetRawText() == expected2, testBulkCopyType: bc => testBulkCopyType(bc) && !(context.IsAnyOf(TestProvName.AllSqlAzure) && bc == BulkCopyType.ProviderSpecific));
 			}
 		}
 	}

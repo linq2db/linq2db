@@ -8,6 +8,7 @@ using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
+using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
@@ -951,6 +952,28 @@ namespace LinqToDB.Linq.Builder
 				return true;
 
 			return false;
+		}
+
+		public static Expression UnwrapConstantAndParameter(Expression expression)
+		{
+			if (expression is MethodCallExpression mc && (mc.IsSameGenericMethod(Methods.LinqToDB.SqlParameter) || mc.IsSameGenericMethod(Methods.LinqToDB.SqlConstant)))
+			{
+				return UnwrapConstantAndParameter(mc.Arguments[0]);
+			}
+
+			return expression;
+		}
+
+		public static Expression WrapAsParameter(Expression expression)
+		{
+			if (expression is MethodCallExpression mc && mc.IsSameGenericMethod(Methods.LinqToDB.SqlParameter))
+			{
+				return expression;
+			}
+
+			var unwrapped = UnwrapConstantAndParameter(expression);
+
+			return Expression.Call(Methods.LinqToDB.SqlParameter.MakeGenericMethod(unwrapped.Type), unwrapped);
 		}
 
 		public static IBuildContext? GetOrderSequence(IBuildContext context)

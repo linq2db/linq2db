@@ -204,7 +204,7 @@ namespace Tests.xUpdate
 					tableExists = false;
 				}
 
-				Assert.That(tableExists, Is.EqualTo(false));
+				Assert.That(tableExists, Is.False);
 			}
 		}
 
@@ -259,7 +259,7 @@ namespace Tests.xUpdate
 					tableExists = false;
 				}
 
-				Assert.That(tableExists, Is.EqualTo(false));
+				Assert.That(tableExists, Is.False);
 			}
 		}
 

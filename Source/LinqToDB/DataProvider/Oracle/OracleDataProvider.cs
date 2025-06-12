@@ -250,7 +250,7 @@ namespace LinqToDB.DataProvider.Oracle
 					break;
 				}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				case DataType.Date     :
 					if (value is DateOnly d)
 						value = d.ToDateTime(TimeOnly.MinValue);

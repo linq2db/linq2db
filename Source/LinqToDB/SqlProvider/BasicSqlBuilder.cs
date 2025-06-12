@@ -266,9 +266,6 @@ namespace LinqToDB.SqlProvider
 				&& skipExpr != null)
 				throw new LinqToDBException(ErrorHelper.Error_Skip_in_Subquery);
 
-			if (!SqlProviderFlags.IsTakeSupported && takeExpr != null)
-				throw new LinqToDBException($"Take for subqueries is not supported by the '{Name}' provider.");
-
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0,
 				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, skipAlias);
@@ -1572,7 +1569,7 @@ namespace LinqToDB.SqlProvider
 				}
 				else
 				{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					StringBuilder.Append(field.StringBuilder);
 #else
 					StringBuilder.Append(field.StringBuilder.ToString());
@@ -1793,6 +1790,16 @@ namespace LinqToDB.SqlProvider
 						StringBuilder.AppendLine();
 					if (appendParentheses)
 						AppendIndent().Append(')');
+
+					if (rawSqlTable.IsScalar && alias != null && SupportsColumnAliasesInSource && buildAlias != false)
+					{
+						StringBuilder.Append(' ');
+						BuildObjectName(StringBuilder, new(alias), ConvertType.NameToQueryFieldAlias, true, TableOptions.NotSet);
+						StringBuilder.Append('(');
+						BuildExpression(rawSqlTable.Fields.First(), buildTableName: false, checkParentheses: false);
+						StringBuilder.Append(')');
+						buildAlias = false;
+					}
 
 					break;
 
@@ -2324,7 +2331,7 @@ namespace LinqToDB.SqlProvider
 			=> skipExpression != null && SqlProviderFlags.GetIsSkipSupportedFlag(takeExpression, skipExpression);
 
 		protected bool NeedTake(ISqlExpression? takeExpression)
-			=> takeExpression != null && SqlProviderFlags.IsTakeSupported;
+			=> takeExpression != null;
 
 		protected virtual void BuildSkipFirst(SelectQuery selectQuery)
 		{
@@ -3622,7 +3629,9 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
 			var saveStep = BuildStep;
-			BuildStep = Step.TypedExpression;
+			// TODO: Step.TypedExpression should be removed/reworked as it doesn't work with nested expressions
+			// e.g. see Issue4963 test for Firebird
+			BuildStep = value is SqlParameter ? Step.TypedExpression : BuildStep;
 
 			StringBuilder.Append("CAST(");
 			BuildExpression(value);
