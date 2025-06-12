@@ -184,7 +184,7 @@ namespace LinqToDB.Linq.Builder
 				if ((flags.IsSql() || flags.IsExpression()) && SequenceHelper.IsSpecialProperty(path, typeof(int?), NotNullPropName))
 				{
 					var placeholder = ExpressionBuilder.CreatePlaceholder(this,
-						new SqlNullabilityExpression(new SqlValue(1), true),
+						new SqlValue(1),
 						path,
 						alias : NotNullPropName);
 
