@@ -485,6 +485,25 @@ namespace LinqToDB.Linq.Builder
 
 				default:
 				{
+					if (expr is UnaryExpression unary)
+					{
+						var l = Expressions.ConvertUnary(MappingSchema, unary);
+						if (l != null)
+						{
+							var body = l.Body.Unwrap();
+							var newExpr = body.Transform((l, unary), static (context, wpi) =>
+							{
+								if (wpi.NodeType == ExpressionType.Parameter)
+								{
+									if (context.l.Parameters[0] == wpi)
+										return context.unary.Operand;
+								}
+								return wpi;
+							});
+
+							return PreferServerSide(newExpr, enforceServerSide);
+						}
+					}
 					if (expr is BinaryExpression binary)
 					{
 						var l = Expressions.ConvertBinary(MappingSchema, binary);
