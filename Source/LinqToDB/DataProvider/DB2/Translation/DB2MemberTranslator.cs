@@ -24,6 +24,11 @@ namespace LinqToDB.DataProvider.DB2.Translation
 			return new DB2MathMemberTranslator();
 		}
 
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
 		protected override IMemberTranslator CreateGuidMemberTranslator()
 		{
 			return new GuidMemberTranslator();
@@ -79,14 +84,14 @@ namespace LinqToDB.DataProvider.DB2.Translation
 		{
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
-				DbDataType          resulType,
-				ISqlExpression      year,
-				ISqlExpression      month,
-				ISqlExpression      day,
-				ISqlExpression?     hour,
-				ISqlExpression?     minute,
-				ISqlExpression?     second,
-				ISqlExpression?     millisecond)
+				DbDataType resulType,
+				ISqlExpression year,
+				ISqlExpression month,
+				ISqlExpression day,
+				ISqlExpression? hour,
+				ISqlExpression? minute,
+				ISqlExpression? second,
+				ISqlExpression? millisecond)
 			{
 				var factory        = translationContext.ExpressionFactory;
 				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.NVarChar);
@@ -123,13 +128,13 @@ namespace LinqToDB.DataProvider.DB2.Translation
 
 				if (hour != null || minute != null || second != null || millisecond != null)
 				{
-					hour        ??= factory.Value(intDataType, 0);
-					minute      ??= factory.Value(intDataType, 0);
-					second      ??= factory.Value(intDataType, 0);
+					hour ??= factory.Value(intDataType, 0);
+					minute ??= factory.Value(intDataType, 0);
+					second ??= factory.Value(intDataType, 0);
 					millisecond ??= factory.Value(intDataType, 0);
 
 					resultExpression = factory.Concat(
-						resultExpression, 
+						resultExpression,
 						factory.Value(stringDataType, " "),
 						PartExpression(hour, 2), factory.Value(stringDataType, ":"),
 						PartExpression(minute, 2), factory.Value(stringDataType, ":"),
@@ -220,7 +225,7 @@ namespace LinqToDB.DataProvider.DB2.Translation
 					case Sql.DateParts.Year: expStr = "YEAR"; break;
 					case Sql.DateParts.Quarter:
 					{
-						expStr             = "MONTH";
+						expStr = "MONTH";
 						incrementValueExpr = factory.Multiply(incrementValueType, increment, 3);
 						break;
 					}
@@ -230,7 +235,7 @@ namespace LinqToDB.DataProvider.DB2.Translation
 					case Sql.DateParts.Day: expStr = "DAY"; break;
 					case Sql.DateParts.Week:
 					{
-						expStr             = "DAY";
+						expStr = "DAY";
 						incrementValueExpr = factory.Multiply(incrementValueType, increment, 7);
 						break;
 					}
@@ -239,7 +244,7 @@ namespace LinqToDB.DataProvider.DB2.Translation
 					case Sql.DateParts.Second: expStr = "SECOND"; break;
 					case Sql.DateParts.Millisecond:
 					{
-						expStr             = "MICROSECONDS";
+						expStr = "MICROSECONDS";
 						incrementValueExpr = factory.Multiply(doubleDataType, increment, 1000.0);
 						break;
 					}
@@ -280,6 +285,10 @@ namespace LinqToDB.DataProvider.DB2.Translation
 
 				return factory.Function(dbType, "LEAST", xValue, yValue);
 			}
+		}
+
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
 		}
 
 		// Same as SQLite

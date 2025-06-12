@@ -434,8 +434,7 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (   provider.IsAnyOf(TestProvName.AllSybase)
-					|| provider == ProviderName.SqlCe)
+				if (provider.IsAnyOf(TestProvName.AllSybase))
 					expected = expected.TrimEnd(' ');
 			}
 
@@ -566,7 +565,6 @@ namespace Tests.xUpdate
 				switch (provider)
 				{
 					case string when provider.IsAnyOf(TestProvName.AllSybase):
-					case ProviderName.SqlCe:
 						expected = expected.TrimEnd(' ');
 						break;
 					case ProviderName.Informix:
@@ -574,7 +572,7 @@ namespace Tests.xUpdate
 						break;
 				}
 			}
-
+			
 			Assert.That(actual, Is.EqualTo(expected));
 		}
 

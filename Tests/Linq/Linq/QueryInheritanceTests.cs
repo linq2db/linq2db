@@ -29,6 +29,7 @@ namespace Tests.Linq
 
 			var sqlBuilder   = connection.DataProvider.CreateSqlBuilder(connection.MappingSchema, connection.Options);
 			var sqlOptimizer = connection.DataProvider.GetSqlOptimizer(dataContext.Options);
+			var factory      = sqlOptimizer.CreateSqlExpressionFactory(connection.MappingSchema, connection.Options);
 			var sb           = new StringBuilder();
 
 			sqlBuilder.BuildSql(0, query, sb,
@@ -38,7 +39,8 @@ namespace Tests.Linq
 					sqlProviderFlags : dataContext.SqlProviderFlags,
 					mappingSchema : dataContext.MappingSchema,
 					optimizerVisitor : sqlOptimizer.CreateOptimizerVisitor(false),
-					convertVisitor : sqlOptimizer.CreateConvertVisitor(false),
+					convertVisitor : sqlOptimizer.CreateConvertVisitor(false), 
+					factory : factory,
 					isParameterOrderDepended : false,
 					isAlreadyOptimizedAndConverted : false,
 					parametersNormalizerFactory : connection.DataProvider.GetQueryParameterNormalizer

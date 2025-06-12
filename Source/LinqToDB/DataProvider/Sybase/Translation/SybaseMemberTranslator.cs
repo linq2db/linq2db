@@ -195,15 +195,8 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 			}
 		}
 
-		class SybaseStingMemberTranslator : StringMemberTranslatorBase
+		public class SybaseStingMemberTranslator : StringMemberTranslatorBase
 		{
-			public override ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue,
-				ISqlExpression newValue)
-			{
-				var func = base.TranslateReplace(translationContext, methodCall, translationFlags, value, oldValue, newValue) as SqlFunction;
-
-				return func?.WithName("Str_Replace");
-			}
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

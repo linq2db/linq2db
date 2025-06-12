@@ -10,16 +10,19 @@ namespace LinqToDB.SqlProvider
 			SqlProviderFlags sqlProviderFlags,
 			MappingSchema mappingSchema, DataOptions dataOptions, EvaluationContext evaluationContext)
 		{
+			var factory = optimizer.CreateSqlExpressionFactory(mappingSchema, dataOptions);
+
 			var optimizationContext = new OptimizationContext(
 				evaluationContext,
 				dataOptions,
-				sqlProviderFlags: sqlProviderFlags,
-				mappingSchema,
-				optimizer.CreateOptimizerVisitor(false),
-				optimizer.CreateConvertVisitor(false),
-				isParameterOrderDepended: false,
-				isAlreadyOptimizedAndConverted: false,
-				static () => NoopQueryParametersNormalizer.Instance);
+				sqlProviderFlags : sqlProviderFlags,
+				mappingSchema : mappingSchema,
+				optimizerVisitor : optimizer.CreateOptimizerVisitor(false),
+				convertVisitor : optimizer.CreateConvertVisitor(false), 
+				factory : factory,
+				isParameterOrderDepended : false,
+				isAlreadyOptimizedAndConverted : false,
+				parametersNormalizerFactory : static () => NoopQueryParametersNormalizer.Instance);
 
 			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 

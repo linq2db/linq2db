@@ -85,7 +85,7 @@ namespace Tests.Model
 
 		public string ContextName => ((IDataContext)Connection).ContextName;
 
-		public Func<ISqlBuilder> CreateSqlProvider => ((IDataContext)Connection).CreateSqlProvider;
+		public Func<ISqlBuilder> CreateSqlBuilder => ((IDataContext)Connection).CreateSqlBuilder;
 
 		public Func<DataOptions, ISqlOptimizer> GetSqlOptimizer => ((IDataContext)Connection).GetSqlOptimizer;
 

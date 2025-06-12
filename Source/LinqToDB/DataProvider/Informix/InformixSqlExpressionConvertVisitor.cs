@@ -2,6 +2,7 @@
 
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Linq.Translation;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
@@ -221,6 +222,30 @@ namespace LinqToDB.DataProvider.Informix
 			}
 
 			return newElement;
+		}
+
+		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
+		{
+			switch (func.Name)
+			{
+				case PseudoFunctions.LENGTH:
+				{
+					/*
+					 * CHAR_LENGTH(value + ".") - 1
+					 */
+
+					var value     = func.Parameters[0];
+					var valueType = Factory.GetDbDataType(value);
+					var funcType  = Factory.GetDbDataType(value);
+
+					var valueString = Factory.Add(valueType, value, Factory.Value(valueType, "."));
+					var valueLength = Factory.Function(funcType, "CHAR_LENGTH", valueString);
+
+					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));
+				}
+			}
+
+			return base.ConvertSqlFunction(func);
 		}
 	}
 }
