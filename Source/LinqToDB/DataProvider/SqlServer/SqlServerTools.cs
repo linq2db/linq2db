@@ -50,9 +50,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IDataProvider GetDataProvider(
 			SqlServerVersion  version          = SqlServerVersion.AutoDetect,
 			SqlServerProvider provider         = SqlServerProvider.AutoDetect,
-			string?           connectionString = null)
+			string?           connectionString = null,
+			DbConnection?     connection       = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection), provider, version);
 		}
 
 		/// <summary>
