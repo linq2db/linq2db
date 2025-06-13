@@ -867,8 +867,8 @@ namespace LinqToDB.Data
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.Open, false)
 					{
 						TraceLevel = TraceLevel.Error,
-						StartTime = DateTime.UtcNow,
-						Exception = ex,
+						StartTime  = DateTime.UtcNow,
+						Exception  = ex,
 					});
 				}
 
@@ -1006,7 +1006,7 @@ namespace LinqToDB.Data
 		/// </list>
 		/// </summary>
 #endif
-		public  int   CommandTimeout
+		public int   CommandTimeout
 		{
 			get => _commandTimeout ?? -1;
 			set
