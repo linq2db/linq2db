@@ -371,8 +371,8 @@ namespace LinqToDB.Data
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConnection(dataProvider, connection)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(
-			IDataProvider dataProvider,
-			DbConnection  connection,
+			IDataProvider                 dataProvider,
+			DbConnection                  connection,
 			Func<DataOptions,DataOptions> optionsSetter)
 			: this(dataProvider, connection, false, optionsSetter)
 		{
@@ -1127,9 +1127,9 @@ namespace LinqToDB.Data
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery, false)
 				{
-					TraceLevel     = TraceLevel.Info,
-					Command        = CurrentCommand,
-					StartTime      = now,
+					TraceLevel = TraceLevel.Info,
+					Command    = CurrentCommand,
+					StartTime  = now,
 				});
 			}
 
@@ -1159,11 +1159,11 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, false)
 					{
-						TraceLevel     = TraceLevel.Error,
-						Command        = CurrentCommand,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
-						Exception      = ex,
+						TraceLevel    = TraceLevel.Error,
+						Command       = CurrentCommand,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
+						Exception     = ex,
 					});
 				}
 
@@ -1217,8 +1217,8 @@ namespace LinqToDB.Data
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery, false)
 				{
 					TraceLevel = TraceLevel.Info,
-					Command = CurrentCommand,
-					StartTime = now,
+					Command    = CurrentCommand,
+					StartTime  = now,
 				});
 			}
 
@@ -1232,10 +1232,10 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQuery, false)
 					{
-						TraceLevel = TraceLevel.Info,
-						Command = CurrentCommand,
-						StartTime = now,
-						ExecutionTime = sw.Elapsed,
+						TraceLevel      = TraceLevel.Info,
+						Command         = CurrentCommand,
+						StartTime       = now,
+						ExecutionTime   = sw.Elapsed,
 						RecordsAffected = ret,
 					});
 				}
@@ -1248,11 +1248,11 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, false)
 					{
-						TraceLevel = TraceLevel.Error,
-						Command = CurrentCommand,
-						StartTime = now,
+						TraceLevel    = TraceLevel.Error,
+						Command       = CurrentCommand,
+						StartTime     = now,
 						ExecutionTime = sw.Elapsed,
-						Exception = ex,
+						Exception     = ex,
 					});
 				}
 
@@ -1307,9 +1307,9 @@ namespace LinqToDB.Data
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteScalar, false)
 				{
-					TraceLevel     = TraceLevel.Info,
-					Command        = CurrentCommand,
-					StartTime      = now,
+					TraceLevel = TraceLevel.Info,
+					Command    = CurrentCommand,
+					StartTime  = now,
 				});
 			}
 
@@ -1323,10 +1323,10 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteScalar, false)
 					{
-						TraceLevel     = TraceLevel.Info,
-						Command        = CurrentCommand,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
+						TraceLevel    = TraceLevel.Info,
+						Command       = CurrentCommand,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
 					});
 				}
 
@@ -1338,11 +1338,11 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteScalar, false)
 					{
-						TraceLevel     = TraceLevel.Error,
-						Command        = CurrentCommand,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
-						Exception      = ex,
+						TraceLevel    = TraceLevel.Error,
+						Command       = CurrentCommand,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
+						Exception     = ex,
 					});
 				}
 
@@ -1418,9 +1418,9 @@ namespace LinqToDB.Data
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, false)
 				{
-					TraceLevel     = TraceLevel.Info,
-					Command        = CurrentCommand,
-					StartTime      = now,
+					TraceLevel = TraceLevel.Info,
+					Command    = CurrentCommand,
+					StartTime  = now,
 				});
 			}
 
@@ -1435,10 +1435,10 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, false)
 					{
-						TraceLevel     = TraceLevel.Info,
-						Command        = ret.Command,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
+						TraceLevel    = TraceLevel.Info,
+						Command       = ret.Command,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
 					});
 				}
 
@@ -1450,11 +1450,11 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, false)
 					{
-						TraceLevel     = TraceLevel.Error,
-						Command        = CurrentCommand,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
-						Exception      = ex,
+						TraceLevel    = TraceLevel.Error,
+						Command       = CurrentCommand,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
+						Exception     = ex,
 					});
 				}
 
@@ -1518,13 +1518,13 @@ namespace LinqToDB.Data
 				connection,
 				static (dataContext, connection) =>
 				{
-			// Create new transaction object.
-			//
+					// Create new transaction object.
+					//
 					dataContext.TransactionAsync = connection.BeginTransaction();
 
 					dataContext._closeTransaction = true;
 
-			// If the active command exists.
+					// If the active command exists.
 					if (dataContext._command != null)
 						dataContext._command.Transaction = dataContext.Transaction;
 
@@ -1558,13 +1558,13 @@ namespace LinqToDB.Data
 				(isolationLevel, connection),
 				static (dataConnection, ctx) =>
 				{
-			// Create new transaction object.
-			//
+					// Create new transaction object.
+					//
 					dataConnection.TransactionAsync = ctx.connection.BeginTransaction(ctx.isolationLevel);
 
 					dataConnection._closeTransaction = true;
 
-			// If the active command exists.
+					// If the active command exists.
 					if (dataConnection._command != null)
 						dataConnection._command.Transaction = dataConnection.Transaction;
 

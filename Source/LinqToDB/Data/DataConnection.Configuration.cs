@@ -10,8 +10,6 @@ using LinqToDB.Common.Internal;
 using LinqToDB.Configuration;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
-using LinqToDB.Interceptors;
-using LinqToDB.Interceptors.Internal;
 
 namespace LinqToDB.Data
 {
@@ -478,6 +476,7 @@ namespace LinqToDB.Data
 			}
 		}
 
+		int  _msID;
 		int? _configurationID;
 
 		int IConfigurationID.ConfigurationID
@@ -486,11 +485,11 @@ namespace LinqToDB.Data
 			{
 				CheckAndThrowOnDisposed();
 
-				if (_configurationID == null)
+				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
 				{
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
-						.Add(MappingSchema)
+						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
 						.Add(ConfigurationString)
 						.Add(Options)
 						.Add(GetType())

@@ -130,6 +130,7 @@ namespace LinqToDB
 		/// </summary>
 		public string        ContextName         => DataProvider.Name;
 
+		int  _msID;
 		int? _configurationID;
 		/// <summary>
 		/// Gets context configuration ID.
@@ -141,11 +142,11 @@ namespace LinqToDB
 			{
 				AssertDisposed();
 
-				if (_configurationID == null)
+				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
 				{
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
-						.Add(MappingSchema)
+						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
 						.Add(ConfigurationString)
 						.Add(Options)
 						.Add(GetType())
