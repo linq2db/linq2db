@@ -521,7 +521,8 @@ namespace Tests.UserTests.VeryLongRunning
 				Column4 = mp.mp.Column4
 			});
 
-			(int Precision, int Scale) precAndScale = (28, 6);
+			var precision = 28;
+			var scale     = 6;
 
 			(
 				from pc in db.GetTable<Table7>()
@@ -533,10 +534,7 @@ namespace Tests.UserTests.VeryLongRunning
 				{
 					pc,
 					mp,
-					Column1 = VeryLongRunningTestExtensions.TryCastToDecimal(
-						pc.Column5 * mp.Column3,
-						precAndScale.Precision,
-						precAndScale.Scale)
+					Column1 = VeryLongRunningTestExtensions.TryCastToDecimal(pc.Column5 * mp.Column3, precision, scale)
 				}
 			)
 			.Update(
@@ -786,7 +784,8 @@ namespace Tests.UserTests.VeryLongRunning
 				Column4 = mp.mp.Column8
 			});
 
-			(int Precision, int Scale) precAndScale = (28, 6);
+			var precision = 28;
+			var scale     = 6;
 
 			var updateQuery =
 				from pc in db.GetTable<Table7>()
@@ -800,8 +799,8 @@ namespace Tests.UserTests.VeryLongRunning
 					mp,
 					Column1 = VeryLongRunningTestExtensions.TryCastToDecimal(
 						pc.Column5 * mp.Column3,
-						precAndScale.Precision,
-						precAndScale.Scale)
+						precision,
+						scale)
 				};
 
 			if (!flag)
