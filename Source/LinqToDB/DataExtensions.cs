@@ -1577,6 +1577,12 @@ namespace LinqToDB
 		///         you supply will automatically be converted to a DbParameter -
 		///         <code>context.FromSqlScalar&lt;Blogs&gt;($"UNNEST({array})");</code>
 		///     </para>
+		///		<para>
+		///			An alias for the scalar value will be generated automatically with the name <c>value</c>. For most databases, the following SQL will be generated:
+		///			<code>SELECT t.value FROM (SELECT '1') AS t(value)</code>
+		///			For databases that do not support this syntax, ensure that your query provides an alias for the column named <c>value</c> to allow correct translation, for example:
+		///			<code>SELECT t.value FROM (SELECT '1' AS value) AS t</code>
+		///		</para>
 		/// </summary>
 		/// <typeparam name="TEntity">Source query record type.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>

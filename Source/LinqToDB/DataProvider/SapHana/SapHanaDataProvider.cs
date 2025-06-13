@@ -177,6 +177,12 @@ namespace LinqToDB.DataProvider.SapHana
 				}
 			}
 
+			if (dataType.DataType == DataType.UInt32)
+			{
+				parameter.DbType = DbType.Int64;
+				return;
+			}
+
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
