@@ -794,7 +794,7 @@ namespace LinqToDB
 			{
 				var ms = o.MappingSchema == null
 					? mappingSchema
-					: MappingSchema.CombineSchemas(o.MappingSchema, mappingSchema);
+					: MappingSchema.CombineSchemas(mappingSchema, o.MappingSchema);
 
 				return o with { MappingSchema = ms };
 			});

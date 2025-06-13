@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
@@ -12,14 +12,21 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Mapping
 {
-	class MappingSchemaInfo : IConfigurationID
+	[DebuggerDisplay("ID={_configurationID}, Configuration={Configuration}")]
+	class MappingSchemaInfo : IConfigurationID, IEquatable<MappingSchemaInfo>
 	{
 		public MappingSchemaInfo(string configuration)
 		{
 			Configuration = configuration;
 
 			if (configuration.Length == 0)
-				_configurationID = 0;
+				_configurationID = -1;
+		}
+
+		protected MappingSchemaInfo(string configuration, int configurationID)
+		{
+			Configuration    = configuration;
+			_configurationID = configurationID;
 		}
 
 		public  string           Configuration;
@@ -345,7 +352,9 @@ namespace LinqToDB.Mapping
 			else
 				idBuilder.Add(_convertInfo.GetConfigurationID());
 
-			idBuilder.Add(IdentifierBuilder.GetObjectID(_columnNameComparer));
+			idBuilder
+				.Add(IdentifierBuilder.GetObjectID(_columnNameComparer))
+				.Add(_metadataReader?.GetObjectID());
 
 			return idBuilder.CreateID();
 		}
@@ -353,5 +362,28 @@ namespace LinqToDB.Mapping
 		public virtual bool IsLocked => false;
 
 		#endregion
+
+		public bool Equals(MappingSchemaInfo? other)
+		{
+			if (other is null)                return false;
+			if (ReferenceEquals(this, other)) return true;
+			if (other.GetType() != GetType()) return false;
+
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)other).ConfigurationID;
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (obj is null)                return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != GetType()) return false;
+
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)obj).ConfigurationID;
+		}
+
+		public override int GetHashCode()
+		{
+			return ConfigurationID;
+		}
 	}
 }

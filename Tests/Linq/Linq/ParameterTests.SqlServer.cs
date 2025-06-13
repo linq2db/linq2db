@@ -606,7 +606,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerCustomVarCharKnownParameterSizeAsDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context, new MappingSchema()))
+			using (var db = GetDataConnection(context, new MappingSchema("123")))
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new VarChar() { Value = "abc" };
@@ -805,6 +805,13 @@ namespace Tests.Linq
 				ms.SetConvertExpression<NVarChar?,  DataParameter?>(v => v == null ? null : DataParameter.NVarChar (null, v.Value));
 				ms.SetConvertExpression<VarBinary?, DataParameter?>(v => v == null ? null : DataParameter.VarBinary(null, v.Value));
 			}
+		}
+
+		[Test, Explicit]
+		public void CombinedTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			SqlServerCustomVarCharKnownParameterSizeAsDataParameter(context);
+			SqlServerCustomVarCharMaxOverflowParameterSize(context);
 		}
 	}
 }

@@ -28,10 +28,13 @@ namespace LinqToDB
 		where T : notnull
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		readonly ITable<T>         _table;
+		readonly ITable<T> _table;
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		readonly TempTableDescriptor? _tableDescriptor;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		readonly MappingSchema _mappingSchema;
 
 		/// <summary>
 		/// Gets total number of records, inserted into table using BulkCopy.
@@ -57,7 +60,8 @@ namespace LinqToDB
 		{
 			if (db == null) throw new ArgumentNullException(nameof(db));
 
-			_table = db.CreateTable<T>(tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
+			_table         = db.CreateTable<T>(tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
+			_mappingSchema = db.MappingSchema;
 		}
 
 		/// <summary>
@@ -112,6 +116,7 @@ namespace LinqToDB
 
 			_table           = db.CreateTable<T>(tableDescriptor?.EntityDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
 			_tableDescriptor = tableDescriptor;
+			_mappingSchema   = db.MappingSchema;
 
 			try
 			{
@@ -207,6 +212,7 @@ namespace LinqToDB
 
 			_table           = db.CreateTable<T>(tableDescriptor?.EntityDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
 			_tableDescriptor = tableDescriptor;
+			_mappingSchema   = db.MappingSchema;
 
 			try
 			{
@@ -260,6 +266,7 @@ namespace LinqToDB
 		{
 			_table           = table ?? throw new ArgumentNullException(nameof(table));
 			_tableDescriptor = tableDescriptor;
+			_mappingSchema   = table.DataContext.MappingSchema;
 		}
 
 		/// <summary>
@@ -693,7 +700,23 @@ namespace LinqToDB
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
-			return _table.GetEnumerator();
+			var currentSchema = _table.DataContext.MappingSchema;
+			var setSchema     = !ReferenceEquals(currentSchema, _mappingSchema);
+
+//			try
+//			{
+//				// Restore MappingSchema if it was changed by FluentMapping.
+//				//
+//				if (setSchema)
+//					_table.DataContext.SetMappingSchema(_mappingSchema);
+
+				return _table.GetEnumerator();
+//			}
+//			finally
+//			{
+//				if (setSchema)
+//					_table.DataContext.SetMappingSchema(currentSchema);
+//			}
 		}
 
 		#endregion
