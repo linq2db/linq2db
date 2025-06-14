@@ -369,10 +369,19 @@ namespace LinqToDB.SqlQuery
 				if (!expr1CanBeUnknown && !expr2CanBeUnknown)
 					return MakeWithoutNulls();
 
+				var expr1IsComplexNullable = expr1CanBeUnknown && IsComplexPredicate(Expr1);
+				var expr2IsComplexNullable = expr2CanBeUnknown && IsComplexPredicate(Expr2);
+
 				switch (Operator)
 				{
 					case Operator.NotEqual:
 					{
+						if (expr1IsComplexNullable || expr2IsComplexNullable)
+						{
+							// a != b -> IIF(a==b, false, true)
+							return WrapCondition(true);
+						}
+
 						var search = new SqlSearchCondition(true, canBeUnknown: expr1CanBeUnknown && expr2CanBeUnknown)
 							.Add(MakeWithoutNulls());
 
@@ -407,6 +416,23 @@ namespace LinqToDB.SqlQuery
 					}
 					case Operator.Equal:
 					{
+						if (expr1IsComplexNullable || expr2IsComplexNullable)
+						{
+							// a and b can be null:
+							// a == b -> IIF(a!=b, false, true)
+							if (expr1CanBeUnknown && expr2CanBeUnknown)
+							{
+								return WrapCondition(true);
+							}
+
+							// only a or b cannot be null:
+							// a == b -> IIF(a==b, true, false)
+							if (isInsidePredicate)
+							{
+								return WrapCondition(false);
+							}
+						}
+
 						var search = MakeWithoutNulls();
 
 						if (expr1CanBeUnknown && expr2CanBeUnknown)
@@ -454,13 +480,50 @@ namespace LinqToDB.SqlQuery
 
 						// eliminate UNKNOWN for nested conditions
 						// in C# >, >=, <, <= evaluate to FALSE if any (one or both) operands are NULL
+						if (expr1IsComplexNullable || expr2IsComplexNullable)
+						{
+							return WrapCondition(UnknownAsValue.Value);
+						}
+
 						return new SqlSearchCondition(UnknownAsValue.Value, canBeUnknown: false)
 							.Add(MakeWithoutNulls())
 							.Add(new IsNull(Expr1, !UnknownAsValue.Value))
 							.Add(new IsNull(Expr2, !UnknownAsValue.Value));
 					}
 				}
-			}
+
+				ISqlPredicate WrapCondition(bool invert)
+				{
+					var trueValue  = new SqlValue(true);
+					var falseValue = new SqlValue(false);
+
+					if (!invert)
+					{
+						return new Expr(new SqlConditionExpression(MakeWithoutNulls(), trueValue, falseValue));
+					}
+					else
+					{
+						// for UNKNOWN -> TRUE case we need to generate
+						// IIF (inverted_expr, false, true)
+						// instead of
+						// IIF (expr, true, false)
+						return new Expr(new SqlConditionExpression(
+							new ExprExpr(Expr1, InvertOperator(Operator), Expr2, null),
+							falseValue,
+							trueValue));
+					}
+				}
+
+				static bool IsComplexPredicate(ISqlExpression predicate)
+				{
+					// decide on level of condition complexity to use IIF(cond, true, false)
+					// istead of IS NULL checks
+					return null != predicate.Find(static e =>
+					{
+						return e.ElementType is QueryElementType.SqlQuery;
+					});
+				}
+		}
 
 			public void Deconstruct(out ISqlExpression expr1, out Operator @operator, out ISqlExpression expr2, out bool? unknownAsValue)
 			{

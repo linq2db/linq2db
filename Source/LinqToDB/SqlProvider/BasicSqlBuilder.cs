@@ -709,7 +709,7 @@ namespace LinqToDB.SqlProvider
 				first = false;
 
 				var addAlias = true;
-				var expr     = ConvertElement(col.Expression);
+				var expr     = (ISqlExpression)Optimize(col.Expression, reducePredicates: true);
 
 				AppendIndent();
 				BuildColumnExpression(selectQuery, expr, col.Alias, ref addAlias);

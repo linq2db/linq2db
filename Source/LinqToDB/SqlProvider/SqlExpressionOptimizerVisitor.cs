@@ -203,7 +203,21 @@ namespace LinqToDB.SqlProvider
 				{
 					return isNullPredicate.Expr1;
 				}
+			}
 
+			if (element.Condition is SqlPredicate.Expr { ElementType: QueryElementType.ExprPredicate, Expr1: SqlConditionExpression nestedCondition })
+			{
+				if (element.TrueValue.Equals(nestedCondition.TrueValue, SqlExpression.DefaultComparer)
+					&& element.FalseValue.Equals(nestedCondition.FalseValue, SqlExpression.DefaultComparer))
+				{
+					return nestedCondition;
+				}
+
+				if (element.TrueValue.Equals(nestedCondition.FalseValue, SqlExpression.DefaultComparer)
+					&& element.FalseValue.Equals(nestedCondition.TrueValue, SqlExpression.DefaultComparer))
+				{
+					return new SqlConditionExpression(nestedCondition.Condition, element.FalseValue, element.TrueValue);
+				}
 			}
 
 			return element;
@@ -1115,7 +1129,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var saveInsidePredicate = _isInsidePredicate;
 			_isInsidePredicate      = true;
-			var newElement = base.VisitExprExprPredicate(predicate);
+			var newElement          = base.VisitExprExprPredicate(predicate);
 			_isInsidePredicate      = saveInsidePredicate;
 
 			if (!ReferenceEquals(newElement, predicate))
