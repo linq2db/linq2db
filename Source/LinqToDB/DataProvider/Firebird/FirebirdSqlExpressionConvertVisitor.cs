@@ -145,7 +145,7 @@ namespace LinqToDB.DataProvider.Firebird
 					throw new InvalidOperationException($"Unexpected predicate: {predicate.Kind}");
 			}
 
-			return new SqlSearchCondition(false, new SqlPredicate.Expr(expr));
+			return new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Expr(expr));
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
@@ -190,6 +190,7 @@ namespace LinqToDB.DataProvider.Firebird
 			if (predicate.ElementType == QueryElementType.ExprPredicate && predicate.Expr1 is SqlParameter p && p.Type.DataType != DataType.Boolean)
 			{
 				predicate = new SqlPredicate.ExprExpr(p, SqlPredicate.Operator.Equal, MappingSchema.GetSqlValue(p.Type, true), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
+				return Visit(predicate);
 			}
 
 			return base.VisitExprPredicate(predicate);

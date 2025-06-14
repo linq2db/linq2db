@@ -276,7 +276,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(GetSource1(db).ToList().Concat(new[] { new TestMapping1() { Id = 1, Field1 = 123 } }))
+					.Using(GetSource1(db).ToList().Concat(new[] { new TestMapping1() { Id = 1, Field1 = 123 } }).OrderBy(r => r.Id))
 					.OnTargetKey()
 					.InsertWhenNotMatchedAnd(s => s.Id == 5)
 					.InsertWhenNotMatched()

@@ -1,7 +1,6 @@
 ﻿namespace LinqToDB.FSharp
 
 open System
-open System.Collections
 open System.Collections.Concurrent
 open System.Collections.Generic
 open System.Linq

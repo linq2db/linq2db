@@ -121,7 +121,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						? predicate.Expr2
 						: new SqlCastExpression(predicate.Expr2, new DbDataType(predicate.Expr2.SystemType ?? typeof(object), DataType.BinaryJson), null, isMandatory: true);
 
-					predicate = new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.WithNull);
+					predicate = new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.UnknownAsValue);
 				}
 			}
 

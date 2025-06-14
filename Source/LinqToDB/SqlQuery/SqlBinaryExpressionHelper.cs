@@ -327,7 +327,7 @@ namespace LinqToDB.SqlQuery
 			return _operationTypes.TryGetValue((left, operation, right), out var type) ? type : null;
 		}
 
-		public static SqlBinaryExpression CreateWithTypeInferred(Type defaultType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = SqlQuery.Precedence.Unknown)
+		public static SqlBinaryExpression CreateWithTypeInferred(Type defaultType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = Precedence.Unknown)
 		{
 			var type = expr1.SystemType == null || expr2.SystemType == null
 				? defaultType

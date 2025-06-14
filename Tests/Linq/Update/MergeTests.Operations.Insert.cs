@@ -1619,7 +1619,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(GetSource2(db).ToList().Select(_ => new
+					.Using(GetSource2(db).ToList().OrderBy(s => s.OtherId).Select(_ => new
 					{
 						@as    = _.OtherId,
 						take   = _.OtherField1,
