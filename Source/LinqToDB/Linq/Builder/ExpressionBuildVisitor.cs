@@ -3039,10 +3039,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked:
 				case ExpressionType.Coalesce:
-				{
-					columnDescriptor = SuggestColumnDescriptor(left);
-					break;
-				}
+
 				case ExpressionType.Equal:
 				case ExpressionType.NotEqual:
 				case ExpressionType.GreaterThan:
@@ -3050,7 +3047,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.LessThan:
 				case ExpressionType.LessThanOrEqual:
 				{
-					columnDescriptor = SuggestColumnDescriptor(left);
+					columnDescriptor = SuggestColumnDescriptor(left) ?? SuggestColumnDescriptor(right);
 					break;
 				}
 			}
@@ -4464,13 +4461,31 @@ namespace LinqToDB.Linq.Builder
 				// https://github.com/linq2db/linq2db/issues/2039
 				// byte, sbyte and ushort comparison operands upcasted to int
 				else if (op2.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
-					&& op2 is UnaryExpression op2conv1
-					&& op1conv.Operand.Type == op2conv1.Operand.Type
-					&& op1conv.Operand.Type != typeof(object))
+					&& op2 is UnaryExpression op2conv1)
 				{
-					op1 = op1conv.Operand;
-					op2 = op2conv1.Operand;
-					return true;
+					if (op1conv.Operand.Type == op2conv1.Operand.Type && op1conv.Operand.Type != typeof(object))
+					{
+						op1 = op1conv.Operand;
+						op2 = op2conv1.Operand;
+						return true;
+					}
+					else if (op1conv.Operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+					{
+						// double conversion (:> int :> int?)
+						var op1convNested = (UnaryExpression)op1conv.Operand;
+						if (op1convNested.Operand.Type == op2conv1.Operand.Type && op1convNested.Operand.Type != typeof(object))
+						{
+							op1 = op1convNested.Operand;
+							op2 = op2conv1.Operand;
+							return true;
+						}
+						else if (op1convNested.Operand.Type == op2conv1.Operand.Type.UnwrapNullableType() && op1convNested.Operand.Type != typeof(object))
+						{
+							op1 = Expression.Convert(op1convNested.Operand, op2conv1.Operand.Type);
+							op2 = op2conv1.Operand;
+							return true;
+						}
+					}
 				}
 
 				// https://github.com/linq2db/linq2db/issues/2166

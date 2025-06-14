@@ -1784,6 +1784,16 @@ namespace LinqToDB.SqlProvider
 					if (appendParentheses)
 						AppendIndent().Append(')');
 
+					if (rawSqlTable.IsScalar && alias != null && SupportsColumnAliasesInSource && buildAlias != false)
+					{
+						StringBuilder.Append(' ');
+						BuildObjectName(StringBuilder, new(alias), ConvertType.NameToQueryFieldAlias, true, TableOptions.NotSet);
+						StringBuilder.Append('(');
+						BuildExpression(rawSqlTable.Fields.First(), buildTableName: false, checkParentheses: false);
+						StringBuilder.Append(')');
+						buildAlias = false;
+					}
+
 					break;
 
 				case QueryElementType.SqlValuesTable:
@@ -3444,7 +3454,9 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
 			var saveStep = BuildStep;
-			BuildStep = Step.TypedExpression;
+			// TODO: Step.TypedExpression should be removed/reworked as it doesn't work with nested expressions
+			// e.g. see Issue4963 test for Firebird
+			BuildStep = value is SqlParameter ? Step.TypedExpression : BuildStep;
 
 			StringBuilder.Append("CAST(");
 			BuildExpression(value);
