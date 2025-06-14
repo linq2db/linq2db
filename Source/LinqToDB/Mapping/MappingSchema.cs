@@ -9,7 +9,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -33,22 +32,31 @@ namespace LinqToDB.Mapping
 	/// </summary>
 	[PublicAPI]
 	[DebuggerDisplay("{DisplayID}")]
-	public class MappingSchema : IConfigurationID
+	public class MappingSchema : IConfigurationID, IEquatable<MappingSchema>
 	{
 		static readonly MemoryCache<(MappingSchema ms1, MappingSchema ms2), MappingSchema> _combinedSchemasCache = new (new ());
 
 		/// <summary>
 		/// Internal API.
+		/// <para>
+		/// <b>Order of <paramref name="ms1"/> and <paramref name="ms2"/> is important:</b>
+		/// the first schema (<paramref name="ms1"/>) will have higher priority than the second (<paramref name="ms2"/>).
+		/// </para>
 		/// </summary>
 		public static MappingSchema CombineSchemas(MappingSchema ms1, MappingSchema ms2)
 		{
-			return _combinedSchemasCache.GetOrCreate(
-				(ms1, ms2),
-				static entry =>
-				{
-					entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-					return new MappingSchema(entry.Key.ms1, entry.Key.ms2);
-				});
+			if (((IConfigurationID)ms1).ConfigurationID >= 0 && ((IConfigurationID)ms2).ConfigurationID >= 0)
+			{
+				return _combinedSchemasCache.GetOrCreate(
+					(ms1, ms2),
+					static entry =>
+					{
+						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return new MappingSchema(entry.Key.ms1, entry.Key.ms2);
+					});
+			}
+
+			return new MappingSchema(ms1, ms2);
 		}
 
 		#region Init
@@ -105,11 +113,17 @@ namespace LinqToDB.Mapping
 			var schemaInfo = CreateMappingSchemaInfo(configuration, this);
 #pragma warning restore CA2214 // Do not call overridable methods in constructors
 
+#if DEBUG
+if (!IsLockable && schemas != null)
+{
+}
+#endif
+
 			if (schemas == null || schemas.Length == 0)
 			{
-				Schemas = new[] { schemaInfo, Default.Schemas[0] };
+				Schemas = [schemaInfo, Default.Schemas[0]];
 
-				if (configuration!.Length == 0 && !IsLockable)
+				if (configuration.Length == 0 && !IsLockable)
 					_configurationID = schemaInfo.ConfigurationID;
 
 				ValueToSqlConverter = new (Default.ValueToSqlConverter);
@@ -130,7 +144,7 @@ namespace LinqToDB.Mapping
 				ValueToSqlConverter = new (baseConverters);
 
 				if (configuration!.Length == 0 && !IsLockable)
-					_configurationID = schemaInfo.ConfigurationID = Schemas[1].ConfigurationID;
+					_configurationID = Schemas[1].ConfigurationID;
 			}
 			else
 			{
@@ -140,7 +154,7 @@ namespace LinqToDB.Mapping
 				var i = 0;
 				var j = 0;
 
-				schemaList[schemaInfo] = i++;
+//				schemaList[schemaInfo] = i++;
 
 				foreach (var schema in schemas)
 				{
@@ -153,11 +167,12 @@ namespace LinqToDB.Mapping
 						baseConverters[bc] = j++;
 				}
 
-				Schemas             = schemaList.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray();
-				ValueToSqlConverter = new (baseConverters.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray());
+//				Schemas             = schemaList.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray();
+				Schemas             = new[] { schemaInfo }.Concat(schemaList.OrderBy(static _ => _.Value).Select(static _ => _.Key)).ToArray();
+				ValueToSqlConverter = new (baseConverters.OrderBy(static c => c.Value).Select(static c => c.Key).ToArray());
 			}
 
-			InitMetadataReaders();
+			InitMetadataReaders(schemas?.Length > 1);
 
 			(_cache, _firstOnlyCache) = CreateAttributeCaches();
 		}
@@ -187,6 +202,7 @@ namespace LinqToDB.Mapping
 		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder, SqlDataType, object> converter)
 		{
 			ValueToSqlConverter.SetConverter(type, (sb, dt, _, v) => converter(sb, new SqlDataType(dt), v));
+			ResetID();
 			return this;
 		}
 
@@ -202,6 +218,7 @@ namespace LinqToDB.Mapping
 		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,DataOptions,object> converter)
 		{
 			ValueToSqlConverter.SetConverter(type, (sb, t, options, value) => converter(sb, new SqlDataType(t), options, value));
+			ResetID();
 			return this;
 		}
 
@@ -1041,9 +1058,13 @@ namespace LinqToDB.Mapping
 
 		#region MetadataReader
 
-		void InitMetadataReaders()
+		void InitMetadataReaders(bool combine)
 		{
-			if (Schemas.Length > 1)
+			if (!combine && Schemas[0].MetadataReader == null && Schemas.Length > 1)
+			{
+				Schemas[0].MetadataReader = Schemas[1].MetadataReader;
+			}
+			else if (Schemas.Length > 1)
 			{
 				List<IMetadataReader>? readers = null;
 				HashSet<string>?       hash    = null;
@@ -1295,14 +1316,19 @@ namespace LinqToDB.Mapping
 		{
 			using var idBuilder = new IdentifierBuilder();
 
+			idBuilder
+				.Add(GetType())
+				.Add(ValueToSqlConverter)
+				;
+
 			lock (_syncRoot)
 			{
 				foreach (var s in Schemas)
 					idBuilder.Add(s.ConfigurationID);
 
-				var reader = Schemas[0].MetadataReader;
-				if (reader != null)
-					idBuilder.Add(reader.GetObjectID());
+//				var reader = Schemas[0].MetadataReader;
+//				if (reader != null)
+//					idBuilder.Add(reader.GetObjectID());
 			}
 
 			return idBuilder.CreateID();
@@ -1351,7 +1377,7 @@ namespace LinqToDB.Mapping
 		{
 			get
 			{
-				var list = Schemas == null || ConfigurationList == null ? "" : ConfigurationList.Aggregate("", static (s1, s2) => s1.Length == 0 ? s2 : s1 + "." + s2);
+				var list = ConfigurationList.Aggregate("", static (s1, s2) => s1.Length == 0 ? s2 : s1 + "." + s2);
 				return FormattableString.Invariant($"{GetType().Name} : ({_configurationID}) {list}");
 			}
 		}
@@ -1368,7 +1394,7 @@ namespace LinqToDB.Mapping
 
 			ValueToSqlConverter = new ();
 
-			InitMetadataReaders();
+			InitMetadataReaders(false);
 
 			(_cache, _firstOnlyCache) = CreateAttributeCaches();
 		}
@@ -1426,7 +1452,7 @@ namespace LinqToDB.Mapping
 
 			sealed class DefaultMappingSchemaInfo : MappingSchemaInfo
 			{
-				public DefaultMappingSchemaInfo() : base("")
+				public DefaultMappingSchemaInfo() : base("", 0)
 				{
 					MetadataReader = MetadataReader.Default;
 				}
@@ -1878,6 +1904,30 @@ namespace LinqToDB.Mapping
 		internal virtual MappingSchemaInfo CreateMappingSchemaInfo(string configuration, MappingSchema mappingSchema)
 		{
 			return new (configuration);
+		}
+
+		public bool Equals(MappingSchema? other)
+		{
+			if (other is null)                return false;
+			if (ReferenceEquals(this, other)) return true;
+
+			return
+				((IConfigurationID)this).ConfigurationID == ((IConfigurationID)other).ConfigurationID &&
+				((IConfigurationID)this).ConfigurationID != -1;
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (obj is null)                return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != GetType()) return false;
+
+			return Equals((MappingSchema)obj);
+		}
+
+		public override int GetHashCode()
+		{
+			return ((IConfigurationID)this).ConfigurationID;
 		}
 	}
 }

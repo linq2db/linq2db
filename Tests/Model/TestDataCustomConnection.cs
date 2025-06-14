@@ -109,7 +109,12 @@ namespace Tests.Model
 
 		public string? ConfigurationString => ((IDataContext)Connection).ConfigurationString;
 
+		public IDisposable? UseOptions(Func<DataOptions, DataOptions> optionsSetter) => null;
+
+		public IDisposable? UseMappingSchema(MappingSchema mappingSchema) => null;
+
 		public void AddMappingSchema(MappingSchema mappingSchema) {}
+		public void SetMappingSchema(MappingSchema mappingSchema) {}
 
 		public int ConfigurationID => ((IConfigurationID)Connection).ConfigurationID;
 

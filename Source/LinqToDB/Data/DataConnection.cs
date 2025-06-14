@@ -770,6 +770,7 @@ namespace LinqToDB.Data
 		/// Gets underlying database connection, used by current connection object, or opens new.
 		/// </summary>
 		// TODO: Remove in v7
+		// What is the point to remove this API?
 		[Obsolete("This API scheduled for removal in v7. Use TryGetDbConnection, OpenDbConnection or OpenDbConnectionAsync instead based on your use-case"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DbConnection Connection => OpenDbConnection();
 
@@ -1020,7 +1021,8 @@ namespace LinqToDB.Data
 					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout method instead.");
 #endif
 				}
-				else
+
+				if (_commandTimeout != value)
 				{
 					_commandTimeout = value;
 					if (_command != null)
@@ -1472,7 +1474,7 @@ namespace LinqToDB.Data
 			CommandInfo.ClearObjectReaderCache();
 		}
 
-#endregion
+		#endregion
 
 		#region Transaction
 
@@ -1777,6 +1779,14 @@ namespace LinqToDB.Data
 			_configurationID = null;
 		}
 
+		void IDataContext.SetMappingSchema(MappingSchema mappingSchema)
+		{
+			CheckAndThrowOnDisposed();
+
+			MappingSchema    = mappingSchema;
+			_configurationID = null;
+		}
+
 		#endregion
 
 		#region System.IDisposable Members
@@ -1784,7 +1794,7 @@ namespace LinqToDB.Data
 		protected bool  Disposed        { get; private set; }
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public bool? ThrowOnDisposed { get; set; }
+		public    bool? ThrowOnDisposed { get; set; }
 
 		protected void CheckAndThrowOnDisposed()
 		{
@@ -1818,5 +1828,50 @@ namespace LinqToDB.Data
 		}
 
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance => ((IInfrastructure<IServiceProvider>)DataProvider).Instance;
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public IDisposable? UseOptions(Func<DataOptions,DataOptions> optionsSetter)
+		{
+			var prevOptions = Options;
+			var newOptions  = optionsSetter(Options) ?? throw new ArgumentNullException(nameof(optionsSetter));
+
+			if (((IConfigurationID)prevOptions).ConfigurationID == ((IConfigurationID)newOptions).ConfigurationID)
+				return null;
+
+			var configurationID = _configurationID;
+
+			Options          = newOptions;
+			_configurationID = null;
+
+			var action = Options.Reapply(this, prevOptions);
+
+			action += () =>
+			{
+				Options          = prevOptions;
+
+#if DEBUG
+				_configurationID = null;
+#else
+				_configurationID = configurationID;
+#endif
+			};
+
+			return new DisposableAction(action);
+		}
+
+		/// <inheritdoc cref="IDataContext.UseMappingSchema"/>
+		public IDisposable? UseMappingSchema(MappingSchema mappingSchema)
+		{
+			var oldSchema       = MappingSchema;
+			var configurationID = _configurationID;
+
+			AddMappingSchema(mappingSchema);
+
+			return new DisposableAction(() =>
+			{
+				((IDataContext)this).SetMappingSchema(oldSchema);
+				_configurationID = configurationID;
+			});
+		}
 	}
 }
