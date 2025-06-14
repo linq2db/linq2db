@@ -1197,7 +1197,6 @@ namespace LinqToDB.SqlProvider
 				{
 					return Visit(new SqlPredicate.IsNull(predicate.Expr1, expr.Operator == SqlPredicate.Operator.NotEqual));
 				}
-
 			}
 
 			switch (expr.Operator)
@@ -1416,7 +1415,8 @@ namespace LinqToDB.SqlProvider
 
 			var isNot = op == SqlPredicate.Operator.NotEqual;
 
-			if (unwrappedOther is SqlConditionExpression sqlConditionExpression)
+			if (unwrappedOther is SqlConditionExpression sqlConditionExpression
+				&& !sqlConditionExpression.Condition.CanBeUnknown(_nullabilityContext, false))
 			{
 				if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 				{

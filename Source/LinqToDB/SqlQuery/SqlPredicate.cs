@@ -499,7 +499,7 @@ namespace LinqToDB.SqlQuery
 
 					if (!invert)
 					{
-						return new Expr(new SqlConditionExpression(MakeWithoutNulls(), trueValue, falseValue));
+						return new IsTrue(new SqlConditionExpression(MakeWithoutNulls(), trueValue, falseValue), trueValue, falseValue, null, false);
 					}
 					else
 					{
@@ -507,10 +507,12 @@ namespace LinqToDB.SqlQuery
 						// IIF (inverted_expr, false, true)
 						// instead of
 						// IIF (expr, true, false)
-						return new Expr(new SqlConditionExpression(
-							new ExprExpr(Expr1, InvertOperator(Operator), Expr2, null),
-							falseValue,
-							trueValue));
+						return new IsTrue(
+							new SqlConditionExpression(
+								new ExprExpr(Expr1, InvertOperator(Operator), Expr2, null),
+								falseValue,
+								trueValue),
+							 trueValue, falseValue, null, false);
 					}
 				}
 
