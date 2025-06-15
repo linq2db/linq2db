@@ -1435,9 +1435,39 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 
-				if (TryEvaluateNoParameters(unwrappedValue, out _))
+				if (TryEvaluateNoParameters(unwrappedValue, out var otherVal))
 				{
-					if (TryEvaluateNoParameters(sqlConditionExpression.TrueValue, out _) || TryEvaluateNoParameters(sqlConditionExpression.FalseValue, out _))
+					var convert = false;
+
+					if (TryEvaluateNoParameters(sqlConditionExpression.TrueValue, out var trueVal))
+					{
+						if (Equals(otherVal, trueVal))
+						{
+							var sc = new SqlSearchCondition(true)
+								.Add(sqlConditionExpression.Condition)
+								.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op == SqlPredicate.Operator.NotEqual : null));
+
+							return sc;
+						}
+
+						convert = true;
+					}
+
+					if (TryEvaluateNoParameters(sqlConditionExpression.FalseValue, out var falseVal))
+					{
+						if (Equals(otherVal, falseVal))
+						{
+							var sc = new SqlSearchCondition(true)
+								.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op == SqlPredicate.Operator.NotEqual : null))
+								.Add(sqlConditionExpression.Condition.MakeNot());
+
+							return sc;
+						}
+
+						convert = true;
+					}
+
+					if (convert)
 					{
 						var sc = new SqlSearchCondition(true)
 							.AddAnd( sub =>
