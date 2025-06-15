@@ -45,6 +45,13 @@ namespace LinqToDB.SqlQuery
 			return new NullabilityContext(InQuery, _nullabilityCache, transformationInfo);
 		}
 
+		public NullabilityContext(NullabilityContext parentContext, Dictionary<ISqlExpression, bool> nullabilityOverrides)
+		{
+			_parentContext        = parentContext;
+			_nullabilityOverrides = nullabilityOverrides;
+			InQuery               = parentContext.InQuery;
+		}
+
 		/// <summary>
 		/// Current context query.
 		/// </summary>
@@ -55,6 +62,9 @@ namespace LinqToDB.SqlQuery
 
 		NullabilityCache?                                    _nullabilityCache;
 		readonly SqlQueryVisitor.IVisitorTransformationInfo? _transformationInfo;
+
+		NullabilityContext?               _parentContext;
+		Dictionary<ISqlExpression, bool>? _nullabilityOverrides;
 
 		bool? CanBeNullInternal(SelectQuery? query, ISqlTableSource source)
 		{
@@ -73,6 +83,16 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		public bool CanBeNull(ISqlExpression expression)
 		{
+			if (_nullabilityOverrides?.TryGetValue(expression, out var nullabilityOverride) == true)
+			{
+				return nullabilityOverride;
+			}
+
+			if (_parentContext != null)
+			{
+				return _parentContext.CanBeNull(expression);
+			}
+
 			if (expression is SqlColumn column)
 			{
 				// if column comes from nullable subquery - column is always nullable

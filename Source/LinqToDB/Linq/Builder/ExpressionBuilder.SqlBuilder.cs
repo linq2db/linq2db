@@ -680,7 +680,7 @@ namespace LinqToDB.Linq.Builder
 								discriminatorExpr,
 								notEqual ? SqlPredicate.Operator.NotEqual : SqlPredicate.Operator.Equal,
 								value,
-								withNull: true)
+								unknownAsValue: true)
 						)
 					);
 				}
