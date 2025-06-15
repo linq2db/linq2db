@@ -125,6 +125,12 @@ namespace Tests.Linq
 		[Sql.Expression("{0} IS NULL", IsPredicate = true, ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Comparison)]
 		static bool IsNull(object? value) => throw new InvalidOperationException();
 
+		[Sql.Expression("({0} + {1})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		static int? Add(int? left, int? right) => left is null || right is null ? null : left + right;
+
+		[Sql.Expression("(1=1)", IsPredicate = true, ServerSideOnly = true)]
+		static bool TruePredicate() => true;
+
 		// Supported: DB2, FB3+, MySQL, PostgreSQL, SQLite
 		[Test(Description = "<PREDICATE> IS [NOT] TRUE")]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
@@ -1175,6 +1181,71 @@ namespace Tests.Linq
 			AssertQuery(tb.Where(r => !listN.Contains(OneN)));
 			AssertQuery(tb.Where(r => !listN.Contains(ZeroN)));
 			AssertQuery(tb.Where(r => !listN.Contains(Null)));
+		}
+
+		[Test]
+		public void Test_ComplexPredicateComparisonWithUnknown([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+			
+			var cnt = tb.Where(r => r.Value1 == 1).Count();
+
+			// nullable == nullable(complex)
+			AssertQuery(tb.Where(r => (Equal(r.Value1, r.Value4) == Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt)))));
+			AssertQuery(tb.Where(r => (NotEqual(r.Value1, r.Value4) == Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt)))));
+
+			// non-nullable == nullable(complex)
+			AssertQuery(tb.Where(r => (Equal(r.Value1, r.Value2) == Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt)))));
+			AssertQuery(tb.Where(r => (NotEqual(r.Value1, r.Value2) == Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt)))));
+
+			// NESTED: nullable == nullable(complex)
+			AssertQuery(tb.Where(r => TruePredicate() == ((Equal(r.Value1, r.Value4) == Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt))))));
+			AssertQuery(tb.Where(r => TruePredicate() == ((NotEqual(r.Value1, r.Value4) == Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt))))));
+
+			// NESTED: non-nullable == nullable(complex)
+			AssertQuery(tb.Where(r => TruePredicate() == ((Equal(r.Value1, r.Value2) == Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt))))));
+			AssertQuery(tb.Where(r => TruePredicate() == ((NotEqual(r.Value1, r.Value2) == Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt))))));
+
+			// nullable != nullable(complex)
+			AssertQuery(tb.Where(r => (Equal(r.Value1, r.Value4) != Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt)))));
+			AssertQuery(tb.Where(r => (NotEqual(r.Value1, r.Value4) != Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt)))));
+
+			// non-nullable != nullable(complex)
+			AssertQuery(tb.Where(r => (Equal(r.Value1, r.Value2) != Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt)))));
+			AssertQuery(tb.Where(r => (NotEqual(r.Value1, r.Value2) != Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt)))));
+
+			// NESTED: nullable != nullable(complex)
+			AssertQuery(tb.Where(r => TruePredicate() == ((Equal(r.Value1, r.Value4) != Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt))))));
+			AssertQuery(tb.Where(r => TruePredicate() == ((NotEqual(r.Value1, r.Value4) != Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt))))));
+
+			// NESTED: non-nullable != nullable(complex)
+			AssertQuery(tb.Where(r => TruePredicate() == ((Equal(r.Value1, r.Value2) != Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt))))));
+			AssertQuery(tb.Where(r => TruePredicate() == ((NotEqual(r.Value1, r.Value2) != Equal(tb.Where(r => r.Value1 == 1).Count(), Add(r.Value5, cnt))))));
+
+			// nullable COMP nullable(complex)
+			AssertQuery(tb.Where(r => (Add(r.Value4, cnt) >= Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5))));
+			AssertQuery(tb.Where(r => (Add(r.Value4, cnt) > Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5))));
+			AssertQuery(tb.Where(r => (Add(r.Value4, cnt) <= Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5))));
+			AssertQuery(tb.Where(r => (Add(r.Value4, cnt) < Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5))));
+
+			// non-nullable COMP nullable(complex)
+			AssertQuery(tb.Where(r => (Add(r.Value2, cnt) >= Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5))));
+			AssertQuery(tb.Where(r => (Add(r.Value2, cnt) > Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5))));
+			AssertQuery(tb.Where(r => (Add(r.Value2, cnt) <= Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5))));
+			AssertQuery(tb.Where(r => (Add(r.Value2, cnt) < Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5))));
+
+			// NESTED: nullable COMP nullable(complex)
+			AssertQuery(tb.Where(r => TruePredicate() == ((Add(r.Value4, cnt) >= Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5)))));
+			AssertQuery(tb.Where(r => TruePredicate() == ((Add(r.Value4, cnt) > Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5)))));
+			AssertQuery(tb.Where(r => TruePredicate() == ((Add(r.Value4, cnt) <= Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5)))));
+			AssertQuery(tb.Where(r => TruePredicate() == ((Add(r.Value4, cnt) < Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5)))));
+
+			// NESTED: non-nullable COMP nullable(complex)
+			AssertQuery(tb.Where(r => TruePredicate() == ((Add(r.Value2, cnt) >= Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5)))));
+			AssertQuery(tb.Where(r => TruePredicate() == ((Add(r.Value2, cnt) > Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5)))));
+			AssertQuery(tb.Where(r => TruePredicate() == ((Add(r.Value2, cnt) <= Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5)))));
+			AssertQuery(tb.Where(r => TruePredicate() == ((Add(r.Value2, cnt) < Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5)))));
 		}
 		#endregion
 	}

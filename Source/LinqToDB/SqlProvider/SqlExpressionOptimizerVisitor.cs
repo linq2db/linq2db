@@ -43,11 +43,9 @@ namespace LinqToDB.SqlProvider
 			EvaluationContext  = evaluationContext;
 			DataOptions        = dataOptions;
 			MappingSchema      = mappingSchema;
-			_allowOptimize     = default;
-			_allowOptimizeList = default;
 			_visitQueries      = visitQueries;
-			_isInsidePredicate = default;
 			_reducePredicates  = reducePredicates;
+
 			SetTransformationInfo(transformationInfo);
 
 			_nullabilityContext = nullabilityContext.WithTransformationInfo(GetTransformationInfo());
@@ -203,7 +201,27 @@ namespace LinqToDB.SqlProvider
 				{
 					return isNullPredicate.Expr1;
 				}
+			}
 
+			SqlConditionExpression? nestedCondition = null;
+			if (element.Condition is SqlPredicate.Expr { ElementType: QueryElementType.ExprPredicate, Expr1: SqlConditionExpression nestedCondition1 })
+				nestedCondition = nestedCondition1;
+			else if (element.Condition is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal, Expr1: SqlConditionExpression nestedCondition2, UnknownAsValue: null, Expr2: SqlValue { Value: true } })
+				nestedCondition = nestedCondition2;
+
+			if (nestedCondition != null)
+			{
+				if (element.TrueValue.Equals(nestedCondition.TrueValue, SqlExpression.DefaultComparer)
+					&& element.FalseValue.Equals(nestedCondition.FalseValue, SqlExpression.DefaultComparer))
+				{
+					return nestedCondition;
+				}
+
+				if (element.TrueValue.Equals(nestedCondition.FalseValue, SqlExpression.DefaultComparer)
+					&& element.FalseValue.Equals(nestedCondition.TrueValue, SqlExpression.DefaultComparer))
+				{
+					return new SqlConditionExpression(nestedCondition.Condition, element.FalseValue, element.TrueValue);
+				}
 			}
 
 			return element;
@@ -1115,7 +1133,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var saveInsidePredicate = _isInsidePredicate;
 			_isInsidePredicate      = true;
-			var newElement = base.VisitExprExprPredicate(predicate);
+			var newElement          = base.VisitExprExprPredicate(predicate);
 			_isInsidePredicate      = saveInsidePredicate;
 
 			if (!ReferenceEquals(newElement, predicate))
@@ -1183,7 +1201,6 @@ namespace LinqToDB.SqlProvider
 				{
 					return Visit(new SqlPredicate.IsNull(predicate.Expr1, expr.Operator == SqlPredicate.Operator.NotEqual));
 				}
-
 			}
 
 			switch (expr.Operator)
@@ -1402,7 +1419,8 @@ namespace LinqToDB.SqlProvider
 
 			var isNot = op == SqlPredicate.Operator.NotEqual;
 
-			if (unwrappedOther is SqlConditionExpression sqlConditionExpression)
+			if (unwrappedOther is SqlConditionExpression sqlConditionExpression
+				&& !sqlConditionExpression.Condition.CanBeUnknown(_nullabilityContext, false))
 			{
 				if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 				{
