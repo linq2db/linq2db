@@ -113,12 +113,6 @@ namespace LinqToDB.Mapping
 			var schemaInfo = CreateMappingSchemaInfo(configuration, this);
 #pragma warning restore CA2214 // Do not call overridable methods in constructors
 
-#if DEBUG
-if (!IsLockable && schemas != null)
-{
-}
-#endif
-
 			if (schemas == null || schemas.Length == 0)
 			{
 				Schemas = [schemaInfo, Default.Schemas[0]];
@@ -154,7 +148,7 @@ if (!IsLockable && schemas != null)
 				var i = 0;
 				var j = 0;
 
-//				schemaList[schemaInfo] = i++;
+				schemaList[schemaInfo] = -100;
 
 				foreach (var schema in schemas)
 				{
@@ -167,8 +161,7 @@ if (!IsLockable && schemas != null)
 						baseConverters[bc] = j++;
 				}
 
-//				Schemas             = schemaList.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray();
-				Schemas             = new[] { schemaInfo }.Concat(schemaList.OrderBy(static _ => _.Value).Select(static _ => _.Key)).ToArray();
+				Schemas             = schemaList.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray();
 				ValueToSqlConverter = new (baseConverters.OrderBy(static c => c.Value).Select(static c => c.Key).ToArray());
 			}
 
@@ -1452,7 +1445,7 @@ if (!IsLockable && schemas != null)
 
 			sealed class DefaultMappingSchemaInfo : MappingSchemaInfo
 			{
-				public DefaultMappingSchemaInfo() : base("", 0)
+				public DefaultMappingSchemaInfo() : base("")
 				{
 					MetadataReader = MetadataReader.Default;
 				}

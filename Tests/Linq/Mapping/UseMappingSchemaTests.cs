@@ -66,7 +66,7 @@ namespace Tests.Mapping
 
 			using (db.UseMappingSchema(new FluentMappingBuilder(new())
 				.Entity<UseMappingSchemaTestTable>()
-					.HasTableName("UseMappingSchemaTestTable1")
+					.HasTableName("UseMappingSchemaTestTable2")
 					.Property(e => e.Field1)
 						.HasColumnName("Column1")
 				.Build()
@@ -87,9 +87,13 @@ namespace Tests.Mapping
 				Assert.That(LastQuery, Does.Contain("Field1"));
 			}
 
-			using var tmp3 = db.CreateLocalTable<UseMappingSchemaTestTable>();
+			using var tmp3 = db.CreateLocalTable<UseMappingSchemaTestTable>("UseMappingSchemaTestTable3");
 
 			_ = tmp.ToList();
+
+			Assert.That(LastQuery, Does.Contain("Field1"));
+
+			_ = tmp3.ToList();
 
 			Assert.That(LastQuery, Does.Contain("Field1"));
 		}

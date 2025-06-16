@@ -341,9 +341,9 @@ namespace Tests.UserTests.VeryLongRunning
 			using var tbl13 = db.CreateTempTable<Table13>();
 			using var tbl15 = db.CreateTempTable<Table15>();
 
-			var cobDates = new[] { new DateTime(2018, 11, 23), new DateTime(2018, 11, 27) };
+			var dates = new[] { new DateTime(2018, 11, 23), new DateTime(2018, 11, 27) };
 
-			foreach (var cob in cobDates)
+			foreach (var d in dates)
 			{
 				using (var tmp = db.CreateTempTable<Table14>())
 				{
@@ -358,8 +358,8 @@ namespace Tests.UserTests.VeryLongRunning
 					_ = q.ToDictionary(i => i.Column1, i => i.Column5);
 				}
 
-				Update1(db, cob, db.GetTable<Table7>());
-				Update2(db, cob, db.GetTable<Table7>());
+				Update1(db, d, db.GetTable<Table7>());
+				Update2(db, d, db.GetTable<Table7>());
 			}
 		}
 

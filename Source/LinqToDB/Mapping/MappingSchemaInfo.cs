@@ -13,25 +13,11 @@ using LinqToDB.SqlQuery;
 namespace LinqToDB.Mapping
 {
 	[DebuggerDisplay("ID={_configurationID}, Configuration={Configuration}")]
-	class MappingSchemaInfo : IConfigurationID, IEquatable<MappingSchemaInfo>
+	class MappingSchemaInfo(string configuration) : IConfigurationID
 	{
-		public MappingSchemaInfo(string configuration)
-		{
-			Configuration = configuration;
-
-			if (configuration.Length == 0)
-				_configurationID = -1;
-		}
-
-		protected MappingSchemaInfo(string configuration, int configurationID)
-		{
-			Configuration    = configuration;
-			_configurationID = configurationID;
-		}
-
-		public  string           Configuration;
-		private MetadataReader? _metadataReader;
-		readonly Lock           _syncRoot = new();
+		public   string          Configuration = configuration;
+		private  MetadataReader? _metadataReader;
+		readonly Lock            _syncRoot = new();
 
 		public MetadataReader? MetadataReader
 		{
@@ -327,6 +313,13 @@ namespace LinqToDB.Mapping
 			ProcessDictionary(_dataTypes);
 			ProcessDictionary(_defaultFromEnumTypes);
 
+			return idBuilder
+				.Add(_convertInfo?.GetConfigurationID())
+				.Add(IdentifierBuilder.GetObjectID(_columnNameComparer))
+				.Add(_metadataReader?.GetObjectID())
+				.CreateID()
+				;
+
 			void ProcessDictionary<T>(ConcurrentDictionary<Type,T>? dic)
 			{
 				idBuilder.Add(dic?.Count);
@@ -346,44 +339,10 @@ namespace LinqToDB.Mapping
 					}
 				}
 			}
-
-			if (_convertInfo == null)
-				idBuilder.Add(string.Empty);
-			else
-				idBuilder.Add(_convertInfo.GetConfigurationID());
-
-			idBuilder
-				.Add(IdentifierBuilder.GetObjectID(_columnNameComparer))
-				.Add(_metadataReader?.GetObjectID());
-
-			return idBuilder.CreateID();
 		}
 
 		public virtual bool IsLocked => false;
 
 		#endregion
-
-		public bool Equals(MappingSchemaInfo? other)
-		{
-			if (other is null)                return false;
-			if (ReferenceEquals(this, other)) return true;
-			if (other.GetType() != GetType()) return false;
-
-			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)other).ConfigurationID;
-		}
-
-		public override bool Equals(object? obj)
-		{
-			if (obj is null)                return false;
-			if (ReferenceEquals(this, obj)) return true;
-			if (obj.GetType() != GetType()) return false;
-
-			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)obj).ConfigurationID;
-		}
-
-		public override int GetHashCode()
-		{
-			return ConfigurationID;
-		}
 	}
 }
