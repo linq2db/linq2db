@@ -362,10 +362,11 @@ namespace LinqToDB.SqlQuery
 				}
 				else
 				{
-					if ((Expr1.TryEvaluateExpression(context, out var value) && value == null)
-						|| (Expr2.TryEvaluateExpression(context, out value) && value == null))
+					if (UnknownAsValue != null
+						&& ((Expr1.TryEvaluateExpression(context, out var value) && value == null)
+						|| (Expr2.TryEvaluateExpression(context, out value) && value == null)))
 					{
-						return new Expr(new SqlValue(typeof(bool?), UnknownAsValue));
+						return new Expr(new SqlValue(typeof(bool), UnknownAsValue.Value));
 					}
 				}
 
