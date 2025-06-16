@@ -1425,7 +1425,8 @@ namespace LinqToDB.SqlProvider
 				var trueEvaluated  = TryEvaluateNoParameters(sqlConditionExpression.TrueValue, out var trueVal);
 				var falseEvaluated = TryEvaluateNoParameters(sqlConditionExpression.FalseValue, out var falseVal);
 
-				if (!Equals(otherEvaluated, trueVal) && !Equals(otherEvaluated, falseVal))
+				if (otherEvaluated && trueEvaluated && falseEvaluated
+					&& !Equals(otherVal, trueVal) && !Equals(otherVal, falseVal))
 				{
 					if (op == SqlPredicate.Operator.Equal)
 					{
