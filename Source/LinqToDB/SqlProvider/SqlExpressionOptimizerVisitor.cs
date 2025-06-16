@@ -1441,13 +1441,25 @@ namespace LinqToDB.SqlProvider
 
 					if (TryEvaluateNoParameters(sqlConditionExpression.TrueValue, out var trueVal))
 					{
-						if (Equals(otherVal, trueVal))
+						if ((trueVal != null || op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
+							&& Equals(otherVal, trueVal))
 						{
-							var sc = new SqlSearchCondition(true)
-								.Add(sqlConditionExpression.Condition)
-								.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op == SqlPredicate.Operator.NotEqual : null));
+							if (ReduceOp(op))
+							{
+								var sc = new SqlSearchCondition(true)
+									.Add(sqlConditionExpression.Condition)
+									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op == SqlPredicate.Operator.NotEqual : null));
 
-							return sc;
+								return sc;
+							}
+							else
+							{
+								var sc = new SqlSearchCondition(false)
+									.Add(sqlConditionExpression.Condition.MakeNot())
+									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op == SqlPredicate.Operator.NotEqual : null));
+
+								return sc;
+							}
 						}
 
 						convert = true;
@@ -1455,13 +1467,25 @@ namespace LinqToDB.SqlProvider
 
 					if (TryEvaluateNoParameters(sqlConditionExpression.FalseValue, out var falseVal))
 					{
-						if (Equals(otherVal, falseVal))
+						if ((falseVal != null || op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
+							&& Equals(otherVal, falseVal))
 						{
-							var sc = new SqlSearchCondition(true)
-								.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op == SqlPredicate.Operator.NotEqual : null))
-								.Add(sqlConditionExpression.Condition.MakeNot());
+							if (ReduceOp(op))
+							{
+								var sc = new SqlSearchCondition(true)
+									.Add(sqlConditionExpression.Condition.MakeNot())
+									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op == SqlPredicate.Operator.NotEqual : null));
 
-							return sc;
+								return sc;
+							}
+							else
+							{
+								var sc = new SqlSearchCondition(false)
+									.Add(sqlConditionExpression.Condition)
+									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op == SqlPredicate.Operator.NotEqual : null));
+
+								return sc;
+							}
 						}
 
 						convert = true;
@@ -1482,6 +1506,21 @@ namespace LinqToDB.SqlProvider
 								);
 
 						return sc;
+					}
+
+					static bool ReduceOp(SqlPredicate.Operator op)
+					{
+						// return A op A result
+						return op switch
+						{
+							SqlPredicate.Operator.Equal => true,
+							SqlPredicate.Operator.GreaterOrEqual => true,
+							SqlPredicate.Operator.LessOrEqual => true,
+							SqlPredicate.Operator.NotEqual => false,
+							SqlPredicate.Operator.Greater => false,
+							SqlPredicate.Operator.Less => false,
+							_ => throw new InvalidOperationException($"Unexpected binary operator {op}")
+						};
 					}
 				}
 			}

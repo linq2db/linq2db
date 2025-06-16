@@ -96,9 +96,15 @@ namespace LinqToDB.SqlProvider
 			else if (trueIsNull)
 			{
 				_predicates.Add(element.Condition);
+
+				if (element.FalseValue.CanBeNullable(_nullabilityContext))
+					AddIsNullCheck(element.FalseValue);
 			}
 			else if (falseIsNull)
 			{
+				if (element.TrueValue.CanBeNullable(_nullabilityContext))
+					AddIsNullCheck(element.TrueValue);
+
 				_predicates.Add(element.Condition.MakeNot());
 			}
 

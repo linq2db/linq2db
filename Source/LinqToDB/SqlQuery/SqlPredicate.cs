@@ -360,6 +360,14 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 				}
+				else
+				{
+					if ((Expr1.TryEvaluateExpression(context, out var value) && value == null)
+						|| (Expr2.TryEvaluateExpression(context, out value) && value == null))
+					{
+						return new Expr(new SqlValue(typeof(bool?), UnknownAsValue));
+					}
+				}
 
 				if (UnknownAsValue == null || nullability.IsEmpty)
 					return this;

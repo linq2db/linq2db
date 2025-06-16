@@ -1247,6 +1247,86 @@ namespace Tests.Linq
 			AssertQuery(tb.Where(r => TruePredicate() == ((Add(r.Value2, cnt) <= Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5)))));
 			AssertQuery(tb.Where(r => TruePredicate() == ((Add(r.Value2, cnt) < Add(tb.Where(r => r.Value1 == 1).Count(), r.Value5)))));
 		}
+
+		// tests optimization of IIF(cond, A, B) op X where X and A or/and B are evaluable
+		[Test]
+		public void Test_ConditionOptimization([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+#pragma warning disable CS0464 // Comparing with null of struct type always produces 'false'
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 1) == 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 1) != 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 1) > 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 1) >= 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 1) < 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 1) <= 0));
+
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 1) == 1));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 1) != 1));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 1) > 1));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 1) >= 1));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 1) < 1));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 1) <= 1));
+
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : null) == 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : null) != 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : null) > 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : null) >= 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : null) < 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : null) <= 0));
+
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : null) == null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : null) != null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : null) > null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : null) >= null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : null) < null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : null) <= null));
+
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 0) == null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 0) != null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 0) > null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 0) >= null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 0) < null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? r.Value5 : 0) <= null));
+
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 1 : r.Value5) == 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 1 : r.Value5) != 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 1 : r.Value5) > 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 1 : r.Value5) >= 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 1 : r.Value5) < 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 1 : r.Value5) <= 0));
+
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 1 : r.Value5) == 1));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 1 : r.Value5) != 1));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 1 : r.Value5) > 1));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 1 : r.Value5) >= 1));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 1 : r.Value5) < 1));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 1 : r.Value5) <= 1));
+
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? null : r.Value5) == 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? null : r.Value5) != 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? null : r.Value5) > 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? null : r.Value5) >= 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? null : r.Value5) < 0));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? null : r.Value5) <= 0));
+
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? null : r.Value5) == null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? null : r.Value5) != null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? null : r.Value5) > null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? null : r.Value5) >= null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? null : r.Value5) < null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? null : r.Value5) <= null));
+
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 0 : r.Value5) == null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 0 : r.Value5) != null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 0 : r.Value5) > null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 0 : r.Value5) >= null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 0 : r.Value5) < null));
+			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 0 : r.Value5) <= null));
+#pragma warning restore CS0464 // Comparing with null of struct type always produces 'false'
+		}
 		#endregion
 	}
 }
