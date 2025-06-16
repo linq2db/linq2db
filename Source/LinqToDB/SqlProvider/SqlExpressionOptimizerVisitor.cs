@@ -1419,81 +1419,98 @@ namespace LinqToDB.SqlProvider
 
 			var isNot = op == SqlPredicate.Operator.NotEqual;
 
-			if (unwrappedOther is SqlConditionExpression sqlConditionExpression
-				&& !sqlConditionExpression.Condition.CanBeUnknown(_nullabilityContext, false))
+			if (unwrappedOther is SqlConditionExpression sqlConditionExpression)
 			{
-				if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
-				{
-					if (sqlConditionExpression.TrueValue.Equals(unwrappedValue) && TryEvaluateNoParameters(sqlConditionExpression.FalseValue, out _))
-					{
-						return sqlConditionExpression.Condition.MakeNot(isNot);
-					}
+				var otherEvaluated = TryEvaluateNoParameters(unwrappedValue, out var otherVal);
+				var trueEvaluated  = TryEvaluateNoParameters(sqlConditionExpression.TrueValue, out var trueVal);
+				var falseEvaluated = TryEvaluateNoParameters(sqlConditionExpression.FalseValue, out var falseVal);
 
-					if (sqlConditionExpression.FalseValue.Equals(unwrappedValue) && TryEvaluateNoParameters(sqlConditionExpression.TrueValue, out _))
+				if (!Equals(otherEvaluated, trueVal) && !Equals(otherEvaluated, falseVal))
+				{
+					if (op == SqlPredicate.Operator.Equal)
 					{
-						return sqlConditionExpression.Condition.MakeNot(!isNot);
+						return SqlPredicate.False;
+					}
+					else if (op == SqlPredicate.Operator.NotEqual)
+					{
+						return SqlPredicate.True;
 					}
 				}
 
-				if (TryEvaluateNoParameters(unwrappedValue, out var otherVal))
+				if (!sqlConditionExpression.Condition.CanBeUnknown(_nullabilityContext, false))
 				{
-					var convert = false;
-
-					if (TryEvaluateNoParameters(sqlConditionExpression.TrueValue, out var trueVal))
+					if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 					{
-						if ((trueVal != null || op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
-							&& Equals(otherVal, trueVal))
+						if (sqlConditionExpression.TrueValue.Equals(unwrappedValue) && falseEvaluated)
 						{
-							if (ReduceOp(op))
+							return sqlConditionExpression.Condition.MakeNot(isNot);
+						}
+
+						if (sqlConditionExpression.FalseValue.Equals(unwrappedValue) && trueEvaluated)
+						{
+							return sqlConditionExpression.Condition.MakeNot(!isNot);
+						}
+					}
+
+					if (otherEvaluated)
+					{
+						var convert = false;
+
+						if (trueEvaluated)
+						{
+							if ((trueVal != null || op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
+								&& Equals(otherVal, trueVal))
 							{
-								var sc = new SqlSearchCondition(true)
+								if (ReduceOp(op))
+								{
+									var sc = new SqlSearchCondition(true)
 									.Add(sqlConditionExpression.Condition)
 									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op == SqlPredicate.Operator.NotEqual : null));
 
-								return sc;
-							}
-							else
-							{
-								var sc = new SqlSearchCondition(false)
+									return sc;
+								}
+								else
+								{
+									var sc = new SqlSearchCondition(false)
 									.Add(sqlConditionExpression.Condition.MakeNot())
 									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op == SqlPredicate.Operator.NotEqual : null));
 
-								return sc;
+									return sc;
+								}
 							}
+
+							convert = true;
 						}
 
-						convert = true;
-					}
-
-					if (TryEvaluateNoParameters(sqlConditionExpression.FalseValue, out var falseVal))
-					{
-						if ((falseVal != null || op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
-							&& Equals(otherVal, falseVal))
+						if (falseEvaluated)
 						{
-							if (ReduceOp(op))
+							if ((falseVal != null || op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
+								&& Equals(otherVal, falseVal))
 							{
-								var sc = new SqlSearchCondition(true)
+								if (ReduceOp(op))
+								{
+									var sc = new SqlSearchCondition(true)
 									.Add(sqlConditionExpression.Condition.MakeNot())
 									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op == SqlPredicate.Operator.NotEqual : null));
 
-								return sc;
-							}
-							else
-							{
-								var sc = new SqlSearchCondition(false)
+									return sc;
+								}
+								else
+								{
+									var sc = new SqlSearchCondition(false)
 									.Add(sqlConditionExpression.Condition)
 									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op == SqlPredicate.Operator.NotEqual : null));
 
-								return sc;
+									return sc;
+								}
 							}
+
+							convert = true;
 						}
 
-						convert = true;
-					}
-
-					if (convert)
-					{
-						var sc = new SqlSearchCondition(true)
+						if (convert)
+						{
+							var sc = new SqlSearchCondition(true)
 							.AddAnd( sub =>
 								sub
 									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? op == SqlPredicate.Operator.NotEqual : null))
@@ -1505,22 +1522,23 @@ namespace LinqToDB.SqlProvider
 									.Add(sqlConditionExpression.Condition.MakeNot())
 								);
 
-						return sc;
-					}
+							return sc;
+						}
 
-					static bool ReduceOp(SqlPredicate.Operator op)
-					{
-						// return A op A result
-						return op switch
+						static bool ReduceOp(SqlPredicate.Operator op)
 						{
-							SqlPredicate.Operator.Equal => true,
-							SqlPredicate.Operator.GreaterOrEqual => true,
-							SqlPredicate.Operator.LessOrEqual => true,
-							SqlPredicate.Operator.NotEqual => false,
-							SqlPredicate.Operator.Greater => false,
-							SqlPredicate.Operator.Less => false,
-							_ => throw new InvalidOperationException($"Unexpected binary operator {op}")
-						};
+							// return A op A result
+							return op switch
+							{
+								SqlPredicate.Operator.Equal => true,
+								SqlPredicate.Operator.GreaterOrEqual => true,
+								SqlPredicate.Operator.LessOrEqual => true,
+								SqlPredicate.Operator.NotEqual => false,
+								SqlPredicate.Operator.Greater => false,
+								SqlPredicate.Operator.Less => false,
+								_ => throw new InvalidOperationException($"Unexpected binary operator {op}")
+							};
+						}
 					}
 				}
 			}
