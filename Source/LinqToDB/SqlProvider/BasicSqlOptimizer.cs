@@ -5,6 +5,7 @@ using System.Linq;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.SqlQuery.Visitors;
@@ -1770,7 +1771,7 @@ namespace LinqToDB.SqlProvider
 					var sqlFunc = (SqlFunction)element;
 					switch (sqlFunc.Name)
 					{
-						case "Length":
+						case PseudoFunctions.LENGTH:
 						{
 							if (sqlFunc.Parameters[0].CanBeEvaluated(true))
 								return true;
@@ -2099,6 +2100,9 @@ namespace LinqToDB.SqlProvider
 
 			return statement;
 		}
+
+		public virtual ISqlExpressionFactory CreateSqlExpressionFactory(MappingSchema mappingSchema, DataOptions dataOptions)
+			=> new SqlExpressionFactory(mappingSchema, dataOptions);
 
 		#region Visitors
 		protected sealed class ClearColumParametersVisitor : SqlQueryVisitor
