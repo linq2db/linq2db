@@ -387,7 +387,7 @@ namespace LinqToDB.SqlQuery
 
 					switch (function.Name)
 					{
-						case "Length":
+						case PseudoFunctions.LENGTH:
 						{
 							if (function.Parameters[0]
 								.TryEvaluateExpression(forServer, context, out var strValue))

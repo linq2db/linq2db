@@ -77,7 +77,7 @@ namespace LinqToDB
 		public static string GetTableName<T>(this ITable<T> table)
 			where T : notnull
 		{
-			return table.DataContext.CreateSqlProvider()
+			return table.DataContext.CreateSqlBuilder()
 				.BuildObjectName(new (), new (table.TableName, Server: table.ServerName, Database: table.DatabaseName, Schema: table.SchemaName), tableOptions: table.TableOptions)
 				.ToString();
 		}
