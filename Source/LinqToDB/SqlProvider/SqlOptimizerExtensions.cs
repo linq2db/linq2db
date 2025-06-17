@@ -26,7 +26,7 @@ namespace LinqToDB.SqlProvider
 
 			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
-			var newStatement = optimizationContext.OptimizeAndConvertAllForRemoting(statement, nullability);
+			var newStatement = optimizationContext.OptimizeAndConvertAll(statement, nullability);
 
 			return newStatement;
 		}

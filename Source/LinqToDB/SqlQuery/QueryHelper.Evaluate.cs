@@ -157,26 +157,34 @@ namespace LinqToDB.SqlQuery
 					{
 						case SqlPredicate.Operator.Equal:
 						{
-							if (value1 == null)
+							if (value1 == null && value2 == null && exprExpr.UnknownAsValue != null)
 							{
-								result = value2 == null;
+								result = true;
+							}
+							else if (value1 == null || value2 == null)
+							{
+								result = exprExpr.UnknownAsValue;
 							}
 							else
 							{
-								result = (value2 != null) && value1.Equals(value2);
+								result = value1.Equals(value2);
 							}
 
 							break;
 						}
 						case SqlPredicate.Operator.NotEqual:
 						{
-							if (value1 == null)
+							if (value1 == null && value2 == null && exprExpr.UnknownAsValue != null)
 							{
-								result = value2 != null;
+								result = false;
+							}
+							else if (value1 == null || value2 == null)
+							{
+								result = exprExpr.UnknownAsValue;
 							}
 							else
 							{
-								result = value2 == null || !value1.Equals(value2);
+								result = !value1.Equals(value2);
 							}
 
 							break;
@@ -493,7 +501,7 @@ namespace LinqToDB.SqlQuery
 						else
 						{
 
-							if (predicate.CanBeUnknown(NullabilityContext.NonQuery))
+							if (predicate.CanBeUnknown(NullabilityContext.NonQuery, false))
 							{
 								canBeUnknown = true;
 							}

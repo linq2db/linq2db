@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 				if (subStrPredicate != null)
 				{
-					var result = new SqlSearchCondition(predicate.IsNot,
+					var result = new SqlSearchCondition(predicate.IsNot, canBeUnknown: null,
 						like,
 						subStrPredicate.MakeNot(predicate.IsNot));
 
@@ -144,14 +144,14 @@ namespace LinqToDB.DataProvider.SQLite
 				if (!(expr1 is SqlCastExpression || expr1 is SqlFunction { DoNotOptimize: true }))
 				{
 					var left = PseudoFunctions.MakeMandatoryCast(predicate.Expr1, dateType, null);
-					predicate = new SqlPredicate.ExprExpr(left, predicate.Operator, predicate.Expr2, predicate.WithNull);
+					predicate = new SqlPredicate.ExprExpr(left, predicate.Operator, predicate.Expr2, predicate.UnknownAsValue);
 				}
 
 				var expr2 = QueryHelper.UnwrapNullablity(predicate.Expr2);
 				if (!(expr2 is SqlCastExpression || expr2 is SqlFunction { DoNotOptimize: true }))
 				{
 					var right = PseudoFunctions.MakeMandatoryCast(predicate.Expr2, dateType, null);
-					predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, right, predicate.WithNull);
+					predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, right, predicate.UnknownAsValue);
 				}
 			}
 
