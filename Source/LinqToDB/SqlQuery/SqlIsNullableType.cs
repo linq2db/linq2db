@@ -40,6 +40,9 @@
 		/// Expression could return NULL if last parameter of expression could contain NULL.
 		/// </summary>
 		SameAsLastParameter,
+		/// <summary>
+		/// Expression could return NULL if all parameters of expression could contain NULL.
+		/// </summary>
 		IfAllParametersNullable,
 	}
 

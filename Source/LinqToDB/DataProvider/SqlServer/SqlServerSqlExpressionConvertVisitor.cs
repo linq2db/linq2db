@@ -74,7 +74,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				if (subStrPredicate != null)
 				{
-					var result = new SqlSearchCondition(predicate.IsNot,
+					var result = new SqlSearchCondition(predicate.IsNot, canBeUnknown: null,
 						like,
 						subStrPredicate.MakeNot(predicate.IsNot));
 

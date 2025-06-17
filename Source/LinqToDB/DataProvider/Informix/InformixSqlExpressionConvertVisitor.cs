@@ -166,12 +166,46 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
 		{
-			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : true, forceConvert: true);
-			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : true, forceConvert: true);
+			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : false, forceConvert: true);
+			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : false, forceConvert: true);
 
 			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
 			{
 				return new SqlConditionExpression(element.Condition, trueValue, falseValue);
+			}
+
+			return element;
+		}
+
+		protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		{
+			var element = base.VisitInListPredicate(predicate);
+
+			if (element is SqlPredicate.InList { Expr1: SqlValue { Value: null } value } p)
+			{
+				// IFX doesn't support
+				// NULL [NOT] IN (...)
+				// but support typed NULL or parameter
+				// for non-query parameter same code exists in SqlBuilder
+				var nullCast = new SqlCastExpression(value, value.ValueType, null, isMandatory: true);
+				element      = new SqlPredicate.InList(nullCast, p.WithNull, p.IsNot, p.Values);
+			}
+
+			return element;
+		}
+
+		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		{
+			var element = base.VisitInSubQueryPredicate(predicate);
+
+			if (element is SqlPredicate.InSubQuery { Expr1: SqlValue { Value: null } value } p)
+			{
+				// IFX doesn't support
+				// NULL [NOT] IN (...)
+				// but support typed NULL or parameter
+				// for non-query parameter same code exists in SqlBuilder
+				var nullCast = new SqlCastExpression(value, value.ValueType, null, isMandatory: true);
+				element      = new SqlPredicate.InSubQuery(nullCast, p.IsNot, p.SubQuery, p.DoNotConvert);
 			}
 
 			return element;
@@ -220,6 +254,16 @@ namespace LinqToDB.DataProvider.Informix
 					newElement = new SqlSetExpression(newElement.Column, wrapped);
 				}
 			}
+
+			return newElement;
+		}
+
+		protected override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
+		{
+			var newElement = base.VisitExprPredicate(predicate);
+
+			if (newElement is SqlPredicate.Expr { Expr1: SqlParameter { IsQueryParameter: true, NeedsCast: false, Type.DataType: DataType.Boolean } p })
+				p.NeedsCast = true;
 
 			return newElement;
 		}
