@@ -1688,6 +1688,11 @@ namespace LinqToDB.SqlQuery
 			return expr.CanBeNullable(nullabilityContext);
 		}
 
+		public static bool IsPredicate(this ISqlExpression expr)
+		{
+			return expr is ISqlPredicate or SqlExpression { IsPredicate: true };
+		}
+
 		public static ISqlExpression UnwrapCastAndNullability(ISqlExpression expr)
 		{
 			do
