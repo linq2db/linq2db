@@ -489,8 +489,8 @@ namespace LinqToDB.SqlProvider
 				// Operator check added as we perform optimization only for boolean operands, which cannot be used with non-equality operators
 				|| (predicate.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual && (expr1IsNullable || expr2IsNullable)))
 			{
-				var expr1IsPredicate = QueryHelper.UnwrapNullablity(predicate.Expr1).IsPredicate());
-				var expr2IsPredicate = QueryHelper.UnwrapNullablity(predicate.Expr2).IsPredicate());
+				var expr1IsPredicate = QueryHelper.UnwrapNullablity(predicate.Expr1).IsPredicate();
+				var expr2IsPredicate = QueryHelper.UnwrapNullablity(predicate.Expr2).IsPredicate();
 
 				var expr1IsConstant = QueryHelper.UnwrapNullablity(predicate.Expr1) is (SqlValue or SqlParameter { IsQueryParameter: false });
 				var expr2IsConstant = QueryHelper.UnwrapNullablity(predicate.Expr2) is (SqlValue or SqlParameter { IsQueryParameter: false });
