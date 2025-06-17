@@ -59,26 +59,29 @@ namespace LinqToDB.SqlQuery
 			TableName    = physicalName != null && entityDescriptor.Name.Name != physicalName ? entityDescriptor.Name with { Name = physicalName } : entityDescriptor.Name;
 			TableOptions = entityDescriptor.TableOptions;
 
-			foreach (var column in entityDescriptor.Columns)
+			if (!entityDescriptor.MappingSchema.IsScalarType(ObjectType))
 			{
-				var field = new SqlField(column);
-
-				Add(field);
-
-				if (field.Type.DataType == DataType.Undefined)
+				foreach (var column in entityDescriptor.Columns)
 				{
-					field.Type = SuggestType(field.Type, entityDescriptor.MappingSchema, out var canBeNull);
-					if (canBeNull is not null)
-						field.CanBeNull = canBeNull.Value;
+					var field = new SqlField(column);
+
+					Add(field);
+
+					if (field.Type.DataType == DataType.Undefined)
+					{
+						field.Type = SuggestType(field.Type, entityDescriptor.MappingSchema, out var canBeNull);
+						if (canBeNull is not null)
+							field.CanBeNull = canBeNull.Value;
+					}
 				}
-			}
 
-			var identityField = GetIdentityField();
+				var identityField = GetIdentityField();
 
-			if (identityField != null)
-			{
-				var cd = entityDescriptor[identityField.Name]!;
-				SequenceAttributes = cd.SequenceName == null ? null : new[] { cd.SequenceName };
+				if (identityField != null)
+				{
+					var cd = entityDescriptor[identityField.Name]!;
+					SequenceAttributes = cd.SequenceName == null ? null : new[] { cd.SequenceName };
+				}
 			}
 
 			_all ??= SqlField.All(this);
