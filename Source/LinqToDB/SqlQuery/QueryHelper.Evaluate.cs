@@ -157,7 +157,11 @@ namespace LinqToDB.SqlQuery
 					{
 						case SqlPredicate.Operator.Equal:
 						{
-							if (value1 == null || value2 == null)
+							if (value1 == null && value2 == null && exprExpr.UnknownAsValue != null)
+							{
+								result = true;
+							}
+							else if (value1 == null || value2 == null)
 							{
 								result = exprExpr.UnknownAsValue;
 							}
@@ -170,7 +174,11 @@ namespace LinqToDB.SqlQuery
 						}
 						case SqlPredicate.Operator.NotEqual:
 						{
-							if (value1 == null || value2 == null)
+							if (value1 == null && value2 == null && exprExpr.UnknownAsValue != null)
+							{
+								result = false;
+							}
+							else if (value1 == null || value2 == null)
 							{
 								result = exprExpr.UnknownAsValue;
 							}
