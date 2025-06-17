@@ -26,7 +26,7 @@ namespace LinqToDB.SqlQuery
 
 		public List<SqlField> SourceFields { get; } = new ();
 
-		void AddField(SqlField field)
+		public void AddField(SqlField field)
 		{
 			field.Table = this;
 			SourceFields.Add(field);
@@ -52,7 +52,21 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementType       ElementType => QueryElementType.SqlTableLikeSource;
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			return writer.AppendElement(Source);
+			writer
+				.AppendElement(Source)
+				.Append(" AS t")
+				.Append(SourceID)
+				.Append(" (");
+
+			for (var i = 0; i < SourceFields.Count; i++)
+			{
+				if (i > 0)
+					writer.Append(", ");
+				writer.AppendElement(SourceFields[i]);
+			}
+
+			writer.Append(')');
+			return writer;
 		}
 
 		public override SqlTableType SqlTableType => SqlTableType.MergeSource;

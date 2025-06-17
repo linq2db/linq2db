@@ -1,7 +1,0 @@
-﻿{
-	"NET60.Azure": {
-		"Providers": [
-			"Firebird.4"
-		]
-	}
-}

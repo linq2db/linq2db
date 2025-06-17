@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
@@ -239,8 +240,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task CalledWithCorrectNames([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
-			db.DataProvider = new WrapperProvider(db.DataProvider, (normalizerBase) => new ValidateOriginalNameNormalizer(normalizerBase));
+			using var db = GetDataConnection(context, o => o.UseDataProvider(new WrapperProvider(GetDataProvider(context), (normalizerBase) => new ValidateOriginalNameNormalizer(normalizerBase))));
 
 			await using var dbTable1 = db.CreateLocalTable<Table1>("table1");
 			await using var dbTable2 = db.CreateLocalTable<Table2>("table2");
@@ -270,18 +270,17 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task ExecutesDeterministically([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
 			string? lastSql = null;
-			var defaultTrace = db.OnTraceConnection;
-			db.OnTraceConnection = info =>
+
+			using var db = GetDataConnection(context, o => o.UseTracing(info =>
 			{
 				if (info.TraceInfoStep == TraceInfoStep.BeforeExecute)
 				{
 					lastSql = info.SqlText;
 				}
 
-				defaultTrace(info);
-			};
+				DataConnection.DefaultOnTraceConnection(info);
+			}));
 
 			await using var dbTable1 = db.CreateLocalTable<Table1>("table1");
 			await using var dbTable2 = db.CreateLocalTable<Table2>("table2");
@@ -363,11 +362,13 @@ namespace Tests.DataProvider
 			public DbConnection CreateConnection(string connectionString) => _baseProvider.CreateConnection(connectionString);
 			public ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions) => _baseProvider.CreateSqlBuilder(mappingSchema, dataOptions);
 			public void DisposeCommand(DbCommand command) => _baseProvider.DisposeCommand(command);
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			public ValueTask DisposeCommandAsync(DbCommand command) => _baseProvider.DisposeCommandAsync(command);
 #endif
 			public IExecutionScope? ExecuteScope(DataConnection dataConnection) => _baseProvider.ExecuteScope(dataConnection);
 			public CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior) => _baseProvider.GetCommandBehavior(commandBehavior);
+			// TODO: Remove in v7
+			[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 			public object? GetConnectionInfo(DataConnection dataConnection, string parameterName) => _baseProvider.GetConnectionInfo(dataConnection, parameterName);
 			public IQueryParametersNormalizer GetQueryParameterNormalizer() => _normalizerFactory(_baseProvider.GetQueryParameterNormalizer());
 			public Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType) => _baseProvider.GetReaderExpression(reader, idx, readerExpression, toType);

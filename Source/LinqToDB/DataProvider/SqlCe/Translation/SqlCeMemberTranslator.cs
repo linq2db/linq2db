@@ -10,6 +10,31 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 {
 	public class SqlCeMemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new SqlCeMathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertSmallMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -208,19 +233,26 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 			}
 		}
 
-		protected override IMemberTranslator CreateSqlTypesTranslator()
+		public class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			return new SqlTypesTranslation();
-		}
+			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
+			{
+				/*
+				 * SELECT REPLICATE(paddingSymbol, padding - LEN(value)) + value
+				 */
+				var factory         = translationContext.ExpressionFactory;
+				var valueTypeString = factory.GetDbDataType(value);
+				var valueTypeInt    = factory.GetDbDataType(typeof(int));
 
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new DateFunctionsTranslator();
-		}
+				var lengthValue = TranslateLength(translationContext, translationFlags, value);
+				if (lengthValue == null)
+					return null;
 
-		protected override IMemberTranslator CreateMathMemberTranslator()
-		{
-			return new SqlCeMathMemberTranslator();
+				var symbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
+				var stringToAdd  = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
+
+				return factory.Add(valueTypeString, stringToAdd, value);
+			}
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
@@ -231,5 +263,20 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 			return timePart;
 		}
 
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+		{
+				//"LOWER(CAST({0} AS char(36)))"
+
+			var factory  = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(36);
+
+				var cast  = factory.Cast(guidExpr, stringDataType);
+				var lower = factory.ToLower(cast);
+
+				return lower;
+			}
+		}
 	}
 }

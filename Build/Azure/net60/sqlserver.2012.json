@@ -1,8 +1,0 @@
-﻿{
-	"NET60.Azure": {
-		"Providers": [
-			"SqlServer.2012",
-			"SqlServer.2012.MS"
-		]
-	}
-}

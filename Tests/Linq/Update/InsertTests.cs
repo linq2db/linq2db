@@ -2072,6 +2072,115 @@ namespace Tests.xUpdate
 			}
 		}
 
+		class InsertEntity
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column]
+			public string Name { get; set; } = null!;
+
+			public bool IsDeleted { get; set; }
+		}
+
+		[Test]
+		public void InsertIntoTableWithFilter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			var ms = new MappingSchema();
+			var builder = new FluentMappingBuilder(ms);
+
+			builder.Entity<InsertEntity>()
+				.HasQueryFilter(e => !e.IsDeleted);
+
+			builder.Build();
+
+			using var db = GetDataContext(context, ms);
+			var table = db.CreateLocalTable<InsertEntity>();
+
+			var affected = table.Insert(() => new InsertEntity()
+			{
+				Id = 1,
+				Name = "test",
+				IsDeleted = false
+			});
+
+			var entity = table.Single(e => e.Id == 1);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(affected, Is.EqualTo(1));
+				Assert.That(entity.Name, Is.EqualTo("test"));
+				Assert.That(entity.IsDeleted, Is.False);
+			});
+		}
+
+		[Test]
+		public void InsertFromQueryIntoTableWithFilter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			var ms      = new MappingSchema();
+			var builder = new FluentMappingBuilder(ms);
+
+			builder.Entity<InsertEntity>()
+				.HasQueryFilter(e => !e.IsDeleted);
+
+			builder.Build();
+
+			using var db = GetDataContext(context, ms);
+
+			var table = db.CreateLocalTable<InsertEntity>([
+				new InsertEntity() { Id = 1, Name = "test1", IsDeleted = false },
+				new InsertEntity() { Id = 2, Name = "test2", IsDeleted = true },
+			]);
+
+			var affected = table.AsQueryable()
+				.Insert(table, s => new InsertEntity()
+				{
+					Id = s.Id + 100, 
+					Name = s.Name, 
+					IsDeleted = s.IsDeleted
+				});
+
+			var entities = table.ToList();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(affected, Is.EqualTo(1));
+				Assert.That(entities, Has.Count.EqualTo(2));
+			});
+		}
+
+		[Test]
+		public void InsertViaValueIntoTableWithFilter([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			var ms      = new MappingSchema();
+			var builder = new FluentMappingBuilder(ms);
+
+			builder.Entity<InsertEntity>()
+				.HasQueryFilter(e => !e.IsDeleted);
+
+			builder.Build();
+
+			using var db = GetDataContext(context, ms);
+
+			var table = db.CreateLocalTable<InsertEntity>([
+				new InsertEntity() { Id = 1, Name = "test1", IsDeleted = false }
+			]);
+
+			var affected = table
+				.Value(s => s.Id, 2)
+				.Value(s => s.Name, "test2")
+				.Value(s => s.IsDeleted, () => false)
+				.Insert();
+
+			var entities = table.ToList();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(affected, Is.EqualTo(1));
+				Assert.That(entities, Has.Count.EqualTo(2));
+			});
+		}
+  
 		#region InsertIfNotExists (https://github.com/linq2db/linq2db/issues/3005)
 		private int GetEmptyRowCount(string context)
 		{

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CA1873 // Avoid potentially expensive logging
+using System;
 using System.Collections.Concurrent;
 using System.Data.Common;
 using System.Diagnostics;
@@ -606,7 +607,16 @@ namespace LinqToDB.EntityFrameworkCore
 			var compilerField = typeof (EntityQueryProvider).GetField("_queryCompiler", BindingFlags.NonPublic | BindingFlags.Instance)!;
 			var compiler = (QueryCompiler)compilerField.GetValue(query.Provider)!;
 
-			var queryContextFactoryField = compiler.GetType().GetField("_queryContextFactory", BindingFlags.NonPublic | BindingFlags.Instance)
+			// Allow subclasses of QueryCompiler. E.g. used by https://github.com/koenbeuk/EntityFrameworkCore.Projectables.
+			// In case we never find it in the class hierarchy, the GetField below will throw an exception.
+			var compilerType = compiler.GetType();
+			while (compilerType != typeof(QueryCompiler)
+					&& compilerType.BaseType is {} baseType)
+			{
+				compilerType = baseType;
+			}
+
+			var queryContextFactoryField = compilerType.GetField("_queryContextFactory", BindingFlags.NonPublic | BindingFlags.Instance)
 				?? throw new LinqToDBForEFToolsException($"Can not find private field '{compiler.GetType()}._queryContextFactory' in current EFCore Version.");
 			if (queryContextFactoryField.GetValue(compiler) is not RelationalQueryContextFactory queryContextFactory)
 				throw new LinqToDBForEFToolsException("LinqToDB Tools for EFCore support only Relational Databases.");

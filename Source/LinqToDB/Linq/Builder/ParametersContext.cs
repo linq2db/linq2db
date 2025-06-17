@@ -96,17 +96,20 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			var unwrapped = SequenceHelper.UnwrapConstantAndParameter(expression);
+			if (!ReferenceEquals(unwrapped, expression))
+				return SimplifyConversion(unwrapped);
+
 			return expression;
 		}
 
 		public SqlParameter? BuildParameter(
-			IBuildContext? context,
-			Expression expr,
-			ColumnDescriptor? columnDescriptor,
-			bool doNotCheckCompatibility = false,
-			bool forceNew = false,
-			string? alias = null,
-			BuildParameterType buildParameterType = BuildParameterType.Default)
+			IBuildContext?     context,
+			Expression         expr,
+			ColumnDescriptor?  columnDescriptor,
+			bool               doNotCheckCompatibility = false,
+			string?            alias                   = null,
+			BuildParameterType buildParameterType      = BuildParameterType.Default)
 		{
 			if (columnDescriptor is null && expr is ConstantExpression { Value: null })
 				return null;
@@ -136,6 +139,12 @@ namespace LinqToDB.Linq.Builder
 				return null;
 
 			var finalParameterId = entry.ParameterId;
+
+			var unwrapped = expr.UnwrapConvert();
+			var forceNew  = false;
+
+			if (unwrapped.NodeType == ExpressionType.Constant)
+				forceNew = CanBeConstant(unwrapped);
 
 			if (forceNew)
 				CacheManager.RegisterParameterEntry(expr, entry);
@@ -180,8 +189,9 @@ namespace LinqToDB.Linq.Builder
 
 			var originalAccessor = paramExpression;
 			var valueType        = elementType ?? paramExpression.Type;
+			var paramType        = elementType ?? paramExpression.UnwrapConvertToNotObject().Type;
 
-			var paramDataType = columnDescriptor?.GetDbDataType(true) ?? mappingSchema.GetDbDataType(valueType);
+			var paramDataType = columnDescriptor?.GetDbDataType(true) ?? mappingSchema.GetDbDataType(paramType);
 
 			var        objParam                   = ItemParameter;
 			Expression defaultProviderValueGetter = Expression.Convert(objParam, valueType);
@@ -191,21 +201,32 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (columnDescriptor != null && originalAccessor is not BinaryExpression)
 				{
-					paramDataType = columnDescriptor
-						.GetDbDataType(true)
-						.WithSystemType(valueType);
+					if (paramType.IsNullable() && !paramDataType.SystemType.IsNullable())
+						paramDataType = paramDataType.WithSystemType(paramDataType.SystemType.MakeNullable());
+
+					var updateType = true;
 
 					if (valueType != columnDescriptor.MemberType)
 					{
 						var memberType = columnDescriptor.MemberType;
-						var noConvert  = providerValueGetter;
+						var noConvert  = providerValueGetter.UnwrapConvert();
 
 						if (noConvert.Type != typeof(object))
+						{
 							providerValueGetter = noConvert;
+						}
 						else if (!isParameterList && providerValueGetter.Type != paramExpression.Type)
+						{
 							providerValueGetter = Expression.Convert(noConvert, paramExpression.Type);
+						}
 						else if (providerValueGetter.Type == typeof(object))
-							providerValueGetter = Expression.Convert(noConvert, elementType != null && elementType != typeof(object) ? elementType : memberType);
+						{
+							var convertLambda = GenerateConvertFromObject(mappingSchema, memberType);
+							if (convertLambda == null)
+								return null;
+
+							providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, noConvert);
+						}
 
 						if (providerValueGetter.Type != memberType
 							&& !(providerValueGetter.Type.IsNullable() && providerValueGetter.Type.ToNullableUnderlying() == memberType.ToNullableUnderlying()))
@@ -217,6 +238,7 @@ namespace LinqToDB.Linq.Builder
 								if (convertLambda != null)
 								{
 									providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, providerValueGetter);
+									updateType = false;
 								}
 							}
 
@@ -240,6 +262,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						providerValueGetter = Expression.Convert(providerValueGetter, valueType);
 					}
+
+					if (updateType && paramDataType.SystemType.UnwrapNullableType() != paramType.UnwrapNullableType() && paramType != typeof(object))
+						paramDataType = mappingSchema.GetDbDataType(paramType);
 
 					providerValueGetter = columnDescriptor.ApplyConversions(providerValueGetter, paramDataType, true);
 				}
@@ -299,7 +324,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				providerValueGetter = null;
 			}
-			else {
+			else
+			{
 				//providerValueGetter = CorrectAccessorExpression(providerValueGetter, DataContext);
 				if (providerValueGetter.Type != typeof(object))
 					providerValueGetter = Expression.Convert(providerValueGetter, typeof(object));
@@ -309,12 +335,67 @@ namespace LinqToDB.Linq.Builder
 				_accessorIdGenerator.GetNext(),
 				parameterName,
 				paramDataType,
-				paramExpression, 
+				paramExpression,
 				isParameterList ? null : providerValueGetter,
 				isParameterList ? providerValueGetter : null,
 				dbDataTypeExpression);
 
 			return parameterCacheEntry;
+		}
+
+		static LambdaExpression? GenerateConvertFromObject(MappingSchema mappingSchema, Type toType)
+		{
+			var param = Expression.Parameter(typeof(object), "p");
+			var continuation = Expression.Parameter(toType, "cont");
+
+			Expression convertBody = Expression.Condition(Expression.Equal(param, Expression.Constant(null)),
+				Expression.Default(toType),
+				continuation
+			);
+
+			var underlying = toType.ToNullableUnderlying();
+
+			if (underlying != toType)
+			{
+				convertBody = Inject(convertBody, Expression.Condition(Expression.TypeIs(param, underlying),
+					Expression.Convert(param, toType),
+					continuation));
+			}
+
+			if (underlying.IsEnum)
+			{
+				var intConverter = mappingSchema.GetConvertExpression(new DbDataType(typeof(int)), new DbDataType(toType), checkNull : false, createDefault : true);
+
+				if (intConverter != null)
+				{
+					convertBody = Inject(convertBody, Expression.Condition(
+						Expression.TypeIs(param, typeof(int)),
+						Expression.Invoke(intConverter, Expression.Convert(param, typeof(int))), 
+						continuation));
+				}
+
+				var stringConverter = mappingSchema.GetConvertExpression(new DbDataType(typeof(string)), new DbDataType(toType), checkNull : false, createDefault : true);
+
+				if (stringConverter != null)
+				{
+					convertBody = Inject(convertBody, Expression.Condition(
+						Expression.TypeIs(param, typeof(string)),
+						Expression.Invoke(stringConverter, Expression.Convert(param, typeof(string))),
+						continuation));
+				}
+			}
+
+			var defaultConverter = mappingSchema.GetConvertExpression(new DbDataType(typeof(object)), new DbDataType(toType), checkNull : false, createDefault : true);
+
+			convertBody = Inject(convertBody, Expression.Invoke(defaultConverter!, param));
+
+			return Expression.Lambda(convertBody, param);
+
+			// --- helper method ---
+			Expression Inject(Expression expr, Expression addition)
+			{
+				return expr.Replace(continuation, addition);
+			}
 		}
 
 		static bool HasDbMapping(MappingSchema mappingSchema, Type testedType, out LambdaExpression? convertExpr)
