@@ -1066,6 +1066,7 @@ namespace LinqToDB.Remote
 							Append(elem.SourceID);
 							Append(elem.Alias);
 							Append(elem.ObjectType);
+							Append(elem.IsScalar);
 
 							Append(ObjectIndices[elem.All]);
 							Append(elem.Fields.Count);
@@ -2042,9 +2043,10 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.SqlRawSqlTable :
 						{
-							var sourceID           = ReadInt();
-							var alias              = ReadString()!;
-							var objectType         = ReadType()!;
+							var sourceID   = ReadInt();
+							var alias      = ReadString()!;
+							var objectType = ReadType()!;
+							var isScalar   = ReadBool();
 
 							var all    = Read<SqlField>()!;
 							var fields = ReadArray<SqlField>()!;
@@ -2057,7 +2059,7 @@ namespace LinqToDB.Remote
 							var parameters = ReadArray<ISqlExpression>()!;
 							var extensions = ReadList<SqlQueryExtension>();
 
-							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, parameters)
+							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, isScalar, parameters)
 							{
 								SqlQueryExtensions = extensions
 							};

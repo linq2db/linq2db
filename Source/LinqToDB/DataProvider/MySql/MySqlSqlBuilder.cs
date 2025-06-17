@@ -28,9 +28,10 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
-		protected override bool   IsRecursiveCteKeywordRequired   => true;
-		public    override bool   IsNestedJoinParenthesisRequired => true;
-		protected override bool   IsValuesSyntaxSupported         => false;
+		protected override bool IsRecursiveCteKeywordRequired   => true;
+		public    override bool IsNestedJoinParenthesisRequired => true;
+		protected override bool IsValuesSyntaxSupported         => false;
+		protected override bool SupportsColumnAliasesInSource   => false;
 
 		protected override bool CanSkipRootAliases(SqlStatement statement)
 		{
