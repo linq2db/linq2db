@@ -223,22 +223,22 @@ namespace Tests
 				base.Dispose();
 			}
 
-			public override ValueTask DisposeAsync()
+			public override async ValueTask DisposeAsync()
 			{
 				using var _ = new DisableBaseline("Test setup");
-				return base.DisposeAsync();
+				await base.DisposeAsync();
 			}
 		}
 
 		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet)
 			where T : notnull =>
-			db.CreateSqlProvider() is FirebirdSqlBuilder ?
+			db.CreateSqlBuilder() is FirebirdSqlBuilder ?
 				new FirebirdTempTable<T>(db, tableName, tableOptions : tableOptions) :
 				new     TestTempTable<T>(db, tableName, tableOptions : tableOptions);
 
 		static void ClearDataContext(IDataContext db)
 		{
-			if (db.CreateSqlProvider() is FirebirdSqlBuilder)
+			if (db.CreateSqlBuilder() is FirebirdSqlBuilder)
 			{
 				db.Close();
 				FirebirdTools.ClearAllPools();

@@ -5,6 +5,7 @@ using System.Linq;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.SqlQuery.Visitors;
@@ -466,7 +467,7 @@ namespace LinqToDB.SqlProvider
 				// flip expressions when comparing a row to a query
 				if (QueryHelper.UnwrapNullablity(predicate.Expr2).ElementType == QueryElementType.SqlRow && QueryHelper.UnwrapNullablity(predicate.Expr1).ElementType == QueryElementType.SqlQuery)
 				{
-					var newPredicate = new SqlPredicate.ExprExpr(predicate.Expr2, SqlPredicate.ExprExpr.SwapOperator(predicate.Operator), predicate.Expr1, predicate.WithNull);
+					var newPredicate = new SqlPredicate.ExprExpr(predicate.Expr2, SqlPredicate.ExprExpr.SwapOperator(predicate.Operator), predicate.Expr1, predicate.UnknownAsValue);
 					return newPredicate;
 				}
 
@@ -1770,7 +1771,7 @@ namespace LinqToDB.SqlProvider
 					var sqlFunc = (SqlFunction)element;
 					switch (sqlFunc.Name)
 					{
-						case "Length":
+						case PseudoFunctions.LENGTH:
 						{
 							if (sqlFunc.Parameters[0].CanBeEvaluated(true))
 								return true;
@@ -1815,8 +1816,8 @@ namespace LinqToDB.SqlProvider
 		{
 			// make skip take as parameters or evaluate otherwise
 
-			takeExpr = optimizationContext.Optimize(selectQuery.Select.TakeValue, nullability, isInsideNot: false, false);
-			skipExpr = optimizationContext.Optimize(selectQuery.Select.SkipValue, nullability, isInsideNot: false, false);
+			takeExpr = optimizationContext.Optimize(selectQuery.Select.TakeValue, nullability, false);
+			skipExpr = optimizationContext.Optimize(selectQuery.Select.SkipValue, nullability, false);
 
 			if (takeExpr != null)
 			{
@@ -2099,6 +2100,9 @@ namespace LinqToDB.SqlProvider
 
 			return statement;
 		}
+
+		public virtual ISqlExpressionFactory CreateSqlExpressionFactory(MappingSchema mappingSchema, DataOptions dataOptions)
+			=> new SqlExpressionFactory(mappingSchema, dataOptions);
 
 		#region Visitors
 		protected sealed class ClearColumParametersVisitor : SqlQueryVisitor

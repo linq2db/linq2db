@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
@@ -149,14 +150,44 @@ namespace LinqToDB.Linq.Builder
 		//TODO: We have to separate TableContext in proper hierarchy
 		sealed class RawSqlContext : TableContext
 		{
+			public bool IsScalar { get; }
+
 			public RawSqlContext(TranslationModifier translationModifier, ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, bool isScalar, string sql, ISqlExpression[] parameters)
-				: base(translationModifier, builder, builder.MappingSchema, buildInfo, new SqlRawSqlTable(builder.MappingSchema.GetEntityDescriptor(originalType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated), sql, parameters))
+				: base(translationModifier, builder, builder.MappingSchema, buildInfo, new SqlRawSqlTable(builder.MappingSchema.GetEntityDescriptor(originalType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated), sql, isScalar, parameters))
 			{
-				// Marking All field as not nullable for satisfying DefaultIfEmptyBuilder
+				IsScalar = isScalar;
+
 				if (isScalar)
 				{
+					// Marking All field as not nullable for satisfying DefaultIfEmptyBuilder
 					SqlTable.CanBeNull = false;
+
+					var dbDataType = MappingSchema.GetDbDataType(originalType);
+					var field      = new SqlField(dbDataType, "value", true);
+					SqlTable.Add(field);
 				}
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (IsScalar && flags.IsSqlOrExpression() && SequenceHelper.IsSameContext(path, this))
+				{
+					var table = (SqlRawSqlTable)SqlTable;
+
+					//TODO: It is strictly coupled with SQLBuilder logic. Maybe we can unify. Feels like we should refactor this logic
+
+					// in case when we have alias placeholder we should not generate any fields
+					if (table.Parameters.All(p => p.ElementType != QueryElementType.SqlAliasPlaceholder))
+					{
+						var sql = SqlTable.Fields.FirstOrDefault(f => f.Name == "value");
+						if (sql != null)
+						{
+							return ExpressionBuilder.CreatePlaceholder(this, sql, path);
+						}
+					}
+				}
+
+				return base.MakeExpression(path, flags);
 			}
 		}
 	}

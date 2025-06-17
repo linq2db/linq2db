@@ -2102,7 +2102,7 @@ namespace LinqToDB.Linq.Builder
 								predicate = ConvertExpressionToPredicate(
 									placeholder.Sql,
 									withNull: withNull,
-									forceEquality: withNull && placeholder.Sql.CanBeNullableOrUnknown(GetNullabilityContext()));
+									forceEquality: withNull && placeholder.Sql.CanBeNullableOrUnknown(GetNullabilityContext(), false));
 							}
 
 							var condition = new SqlSearchCondition();
@@ -2295,7 +2295,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression && Builder.CanBeEvaluatedOnClient(node))
 			{
-				var sqlParam = Builder.ParametersContext.BuildParameter(BuildContext, node, _columnDescriptor, forceNew: _buildFlags.HasFlag(BuildFlags.ForceParameter), alias: _alias);
+				var sqlParam = Builder.ParametersContext.BuildParameter(BuildContext, node, _columnDescriptor, alias : _alias);
 
 				if (sqlParam != null)
 				{
@@ -2418,7 +2418,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (toTranslate is not SqlGenericConstructorExpression)
 					{
-						sql = Builder.ParametersContext.BuildParameter(BuildContext, toTranslate, _columnDescriptor, forceNew: _buildFlags.HasFlag(BuildFlags.ForceParameter), alias: _alias);
+						sql = Builder.ParametersContext.BuildParameter(BuildContext, toTranslate, _columnDescriptor, alias : _alias);
 					}
 				}
 
@@ -2979,7 +2979,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (predicateSql is not ISqlExpression sqlExpr)
 						{
-							sqlExpr = new SqlSearchCondition(false, predicateSql);
+							sqlExpr = new SqlSearchCondition(false, canBeUnknown: null, predicateSql);
 						}
 
 						var placeholder = CreatePlaceholder(sqlExpr, itemNode);
@@ -2998,7 +2998,7 @@ namespace LinqToDB.Linq.Builder
 				return true;
 			}
 
-			var condition = new SqlSearchCondition(node.NodeType is ExpressionType.OrElse or ExpressionType.Or, predicates!);
+			var condition = new SqlSearchCondition(node.NodeType is ExpressionType.OrElse or ExpressionType.Or, canBeUnknown: null, predicates!);
 			translated = CreatePlaceholder(condition, node);
 
 			return true;
@@ -3039,10 +3039,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked:
 				case ExpressionType.Coalesce:
-				{
-					columnDescriptor = SuggestColumnDescriptor(left);
-					break;
-				}
+
 				case ExpressionType.Equal:
 				case ExpressionType.NotEqual:
 				case ExpressionType.GreaterThan:
@@ -3050,7 +3047,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.LessThan:
 				case ExpressionType.LessThanOrEqual:
 				{
-					columnDescriptor = SuggestColumnDescriptor(left);
+					columnDescriptor = SuggestColumnDescriptor(left) ?? SuggestColumnDescriptor(right);
 					break;
 				}
 			}
@@ -3927,9 +3924,9 @@ namespace LinqToDB.Linq.Builder
 								if (rightPredicate is SqlPredicate.IsNull isnull)
 								{
 									if (isnull.IsNot == localIsNot)
-										return CreatePlaceholder(new SqlSearchCondition(false, isnull), GetOriginalExpression());
+										return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, isnull), GetOriginalExpression());
 
-									return CreatePlaceholder(new SqlSearchCondition(false, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
+									return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
 								}
 							}
 
@@ -3948,9 +3945,9 @@ namespace LinqToDB.Linq.Builder
 								if (leftPredicate is SqlPredicate.IsNull isnull)
 								{
 									if (isnull.IsNot == localIsNot)
-										return CreatePlaceholder(new SqlSearchCondition(false, isnull), GetOriginalExpression());
+										return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, isnull), GetOriginalExpression());
 
-									return CreatePlaceholder(new SqlSearchCondition(false, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
+									return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
 								}
 							}
 
@@ -3982,7 +3979,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var p = ConvertEnumConversion(left, op, right);
 					if (p != null)
-						return CreatePlaceholder(new SqlSearchCondition(false, p), GetOriginalExpression());
+						return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, p), GetOriginalExpression());
 				}
 
 				if (l is null)
@@ -4090,10 +4087,19 @@ namespace LinqToDB.Linq.Builder
 							if (trueValue.ElementType == QueryElementType.SqlValue &&
 								falseValue.ElementType == QueryElementType.SqlValue)
 							{
-								var withNullValue = compareNullsAsValues
-								? withNull
-								: (bool?)null;
-								predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
+								if (expression is SqlExpression { IsPredicate: true } predicateExpr)
+								{
+									predicate = new SqlPredicate.Expr(predicateExpr);
+									if (isNot)
+										predicate = new SqlPredicate.Not(predicate);
+								}
+								else
+								{
+									var withNullValue = compareNullsAsValues
+										? withNull
+										: (bool?)null;
+									predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
+								}
 							}
 						}
 					}
@@ -4105,12 +4111,12 @@ namespace LinqToDB.Linq.Builder
 
 						predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
 							compareNullsAsValues && (lOriginal.CanBeNullable(nullability) || rOriginal.CanBeNullable(nullability))
-								? true
+								? op == SqlPredicate.Operator.NotEqual
 								: null);
 					}
 				}
 
-				return CreatePlaceholder(new SqlSearchCondition(false, predicate), GetOriginalExpression());
+				return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, predicate), GetOriginalExpression());
 
 			}
 			finally
@@ -4455,13 +4461,31 @@ namespace LinqToDB.Linq.Builder
 				// https://github.com/linq2db/linq2db/issues/2039
 				// byte, sbyte and ushort comparison operands upcasted to int
 				else if (op2.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
-					&& op2 is UnaryExpression op2conv1
-					&& op1conv.Operand.Type == op2conv1.Operand.Type
-					&& op1conv.Operand.Type != typeof(object))
+					&& op2 is UnaryExpression op2conv1)
 				{
-					op1 = op1conv.Operand;
-					op2 = op2conv1.Operand;
-					return true;
+					if (op1conv.Operand.Type == op2conv1.Operand.Type && op1conv.Operand.Type != typeof(object))
+					{
+						op1 = op1conv.Operand;
+						op2 = op2conv1.Operand;
+						return true;
+					}
+					else if (op1conv.Operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+					{
+						// double conversion (:> int :> int?)
+						var op1convNested = (UnaryExpression)op1conv.Operand;
+						if (op1convNested.Operand.Type == op2conv1.Operand.Type && op1convNested.Operand.Type != typeof(object))
+						{
+							op1 = op1convNested.Operand;
+							op2 = op2conv1.Operand;
+							return true;
+						}
+						else if (op1convNested.Operand.Type == op2conv1.Operand.Type.UnwrapNullableType() && op1convNested.Operand.Type != typeof(object))
+						{
+							op1 = Expression.Convert(op1convNested.Operand, op2conv1.Operand.Type);
+							op2 = op2conv1.Operand;
+							return true;
+						}
+					}
 				}
 
 				// https://github.com/linq2db/linq2db/issues/2166
