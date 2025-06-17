@@ -45,7 +45,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public static MappingSchema CombineSchemas(MappingSchema ms1, MappingSchema ms2)
 		{
-			if (((IConfigurationID)ms1).ConfigurationID >= 0 && ((IConfigurationID)ms2).ConfigurationID >= 0)
+			if (ms1.IsLockable && ms2.IsLockable)
 			{
 				return _combinedSchemasCache.GetOrCreate(
 					(ms1, ms2),
