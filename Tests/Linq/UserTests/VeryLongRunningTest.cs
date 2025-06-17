@@ -307,7 +307,7 @@ namespace Tests.UserTests.VeryLongRunning
 	public class Tests : TestBase
 	{
 		[Test]
-		public void Test([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			var task = Task.Run(() => TestImpl(context));
 
@@ -318,7 +318,7 @@ namespace Tests.UserTests.VeryLongRunning
 		}
 
 		[Test, Explicit("For debugging.")]
-		public void DebugTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void DebugTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			TestImpl(context);
 		}
