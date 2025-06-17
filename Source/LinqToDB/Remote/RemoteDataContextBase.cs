@@ -392,27 +392,27 @@ namespace LinqToDB.Remote
 
 		static readonly ConcurrentDictionary<Tuple<Type,MappingSchema,Type,SqlProviderFlags,DataOptions>,Func<ISqlBuilder>> _sqlBuilders = new ();
 
-		Func<ISqlBuilder>? _createSqlProvider;
+		Func<ISqlBuilder>? _createSqlBuilder;
 
-		Func<ISqlBuilder> IDataContext.CreateSqlProvider
+		Func<ISqlBuilder> IDataContext.CreateSqlBuilder
 		{
 			get
 			{
 				ThrowOnDisposed();
 
-				if (_createSqlProvider == null)
+				if (_createSqlBuilder == null)
 				{
 					var key = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options);
 
 #if NET462 || NETSTANDARD2_0
-					_createSqlProvider = _sqlBuilders.GetOrAdd(
+					_createSqlBuilder = _sqlBuilders.GetOrAdd(
 						key,
 						key =>
 					{
 						var mappingSchema = MappingSchema;
 						var sqlOptimizer  = GetSqlOptimizer(Options);
 #else
-					_createSqlProvider = _sqlBuilders.GetOrAdd(
+					_createSqlBuilder = _sqlBuilders.GetOrAdd(
 						key,
 						static (key, args) =>
 					{
@@ -445,7 +445,7 @@ namespace LinqToDB.Remote
 #endif
 				}
 
-				return _createSqlProvider;
+				return _createSqlBuilder;
 			}
 		}
 
