@@ -125,7 +125,7 @@ namespace LinqToDB.Linq.Builder
 
 				SelectQuery.From.Table(SqlTable);
 
-				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), mappingSchema, SqlTable, mc, static (context, argument, _, inline) =>
+				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlBuilder(), mappingSchema, SqlTable, mc, static (context, argument, _, inline) =>
 				{
 					using var saveState = context.builder.UsingColumnDescriptor(null);
 
