@@ -64,11 +64,6 @@ namespace LinqToDB.DataProvider.Informix
 
 			statement = base.Finalize(mappingSchema, statement, dataOptions);
 
-			// Informix has some unclear issues probably with parameters in select list
-			// test: Distinct6
-			if (statement.QueryType == QueryType.Select)
-				new ClearColumParametersVisitor().Visit(statement.SelectQuery!.Select);
-
 			return statement;
 		}
 
@@ -163,7 +158,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			var visitor = new WrapParametersVisitor(VisitMode.Modify);
 
-			statement = (TElement)visitor.WrapParameters(statement, WrapParametersVisitor.WrapFlags.InSelect);
+			statement = (TElement)visitor.WrapParameters(statement, WrapParametersVisitor.WrapFlags.InSelect | WrapParametersVisitor.WrapFlags.InBinary);
 
 			return statement;
 		}

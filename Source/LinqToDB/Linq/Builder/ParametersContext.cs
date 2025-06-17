@@ -189,8 +189,9 @@ namespace LinqToDB.Linq.Builder
 
 			var originalAccessor = paramExpression;
 			var valueType        = elementType ?? paramExpression.Type;
+			var paramType        = elementType ?? paramExpression.UnwrapConvertToNotObject().Type;
 
-			var paramDataType = columnDescriptor?.GetDbDataType(true) ?? mappingSchema.GetDbDataType(valueType);
+			var paramDataType = columnDescriptor?.GetDbDataType(true) ?? mappingSchema.GetDbDataType(paramType);
 
 			var        objParam                   = ItemParameter;
 			Expression defaultProviderValueGetter = Expression.Convert(objParam, valueType);
@@ -200,9 +201,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (columnDescriptor != null && originalAccessor is not BinaryExpression)
 				{
-					paramDataType = columnDescriptor
-						.GetDbDataType(true)
-						.WithSystemType(valueType);
+					if (paramType.IsNullable() && !paramDataType.SystemType.IsNullable())
+						paramDataType = paramDataType.WithSystemType(paramDataType.SystemType.MakeNullable());
+
+					var updateType = true;
 
 					if (valueType != columnDescriptor.MemberType)
 					{
@@ -236,6 +238,7 @@ namespace LinqToDB.Linq.Builder
 								if (convertLambda != null)
 								{
 									providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, providerValueGetter);
+									updateType = false;
 								}
 							}
 
@@ -259,6 +262,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						providerValueGetter = Expression.Convert(providerValueGetter, valueType);
 					}
+
+					if (updateType && paramDataType.SystemType.UnwrapNullableType() != paramType.UnwrapNullableType() && paramType != typeof(object))
+						paramDataType = mappingSchema.GetDbDataType(paramType);
 
 					providerValueGetter = columnDescriptor.ApplyConversions(providerValueGetter, paramDataType, true);
 				}
@@ -318,7 +324,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				providerValueGetter = null;
 			}
-			else {
+			else
+			{
 				//providerValueGetter = CorrectAccessorExpression(providerValueGetter, DataContext);
 				if (providerValueGetter.Type != typeof(object))
 					providerValueGetter = Expression.Convert(providerValueGetter, typeof(object));
@@ -328,7 +335,7 @@ namespace LinqToDB.Linq.Builder
 				_accessorIdGenerator.GetNext(),
 				parameterName,
 				paramDataType,
-				paramExpression, 
+				paramExpression,
 				isParameterList ? null : providerValueGetter,
 				isParameterList ? providerValueGetter : null,
 				dbDataTypeExpression);

@@ -1,6 +1,7 @@
 ﻿using System;
 
 using LinqToDB.Extensions;
+using LinqToDB.Linq.Translation;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
@@ -76,8 +77,8 @@ namespace LinqToDB.DataProvider.Access
 					{
 						var indexExpr = new SqlBinaryExpression(typeof(int),
 							new SqlBinaryExpression(typeof(int),
-								new SqlFunction(typeof(int), "Length", predicate.Expr1), "-",
-								new SqlFunction(typeof(int), "Length", predicate.Expr2)), "+",
+								Factory.Length(predicate.Expr1), "-",
+								Factory.Length(predicate.Expr2)), "+",
 							new SqlValue(1));
 
 						subStrPredicate =
@@ -110,7 +111,7 @@ namespace LinqToDB.DataProvider.Access
 
 				if (subStrPredicate != null)
 				{
-					result = new SqlSearchCondition(predicate.IsNot, like, subStrPredicate.MakeNot(predicate.IsNot));
+					result = new SqlSearchCondition(predicate.IsNot, canBeUnknown: null, like, subStrPredicate.MakeNot(predicate.IsNot));
 				}
 			}
 
@@ -150,7 +151,7 @@ namespace LinqToDB.DataProvider.Access
 					return func.WithName("LCase");
 				case { Name: PseudoFunctions.TO_UPPER }:
 					return func.WithName("UCase");
-				case { Name: "Length" }:
+				case { Name: PseudoFunctions.LENGTH }:
 					return func.WithName("Len");
 
 				case {

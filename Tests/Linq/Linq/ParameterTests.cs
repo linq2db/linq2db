@@ -1992,5 +1992,29 @@ namespace Tests.Linq
 
 			AssertQuery(db.Parent.Where(r => r.ParentID == valueGetter()));
 		}
+
+		sealed class Issue4963Table
+		{
+			public byte Field { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4963")]
+		public void Issue4963([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(new[] { new Issue4963Table() { Field = 2 } });
+
+			db.InlineParameters = inline;
+			var offset = -1;
+
+			tb.Update(r => new Issue4963Table()
+			{
+				Field = (byte)(r.Field + offset)
+			});
+
+			var record = tb.Single();
+
+			Assert.That(record.Field, Is.EqualTo(1));
+		}
 	}
 }
