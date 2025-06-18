@@ -103,10 +103,12 @@ namespace Tests.Infrastructure
 			var dataOptions       = new DataOptions();
 			var optimizer         = new SqlExpressionOptimizerVisitor(false);
 			var sqlOptimizer      = dataProvider.GetSqlOptimizer(dataOptions);
+			var factory           = sqlOptimizer.CreateSqlExpressionFactory(dataProvider.MappingSchema, dataOptions);
 			var convertVisitor    = sqlOptimizer.CreateConvertVisitor(false);
 			var aliasesContext    = new AliasesContext();
 
-			var optimizationContext = new OptimizationContext(evaluationContext, dataOptions, dataProvider.SqlProviderFlags, dataProvider.MappingSchema, optimizer, convertVisitor, false, true,
+			var optimizationContext = new OptimizationContext(evaluationContext, dataOptions, dataProvider.SqlProviderFlags, dataProvider.MappingSchema, optimizer, convertVisitor, factory, false,
+				true,
 				static () => NoopQueryParametersNormalizer.Instance);
 
 			var sqlBuilder = dataProvider.CreateSqlBuilder(dataProvider.MappingSchema, dataOptions);
@@ -168,10 +170,10 @@ namespace Tests.Infrastructure
 
 			Assert.Multiple(() =>
 			{
-				Assert.That(nullabilityContext.CanBeNullSource(ts1.Source), Is.EqualTo(true));
-				Assert.That(nullabilityContext.CanBeNullSource(ts2.Source), Is.EqualTo(true));
-				Assert.That(nullabilityContext.CanBeNullSource(ts3.Source), Is.EqualTo(true));
-				Assert.That(nullabilityContext.CanBeNullSource(ts4.Source), Is.EqualTo(true));
+				Assert.That(nullabilityContext.CanBeNullSource(ts1.Source), Is.True);
+				Assert.That(nullabilityContext.CanBeNullSource(ts2.Source), Is.True);
+				Assert.That(nullabilityContext.CanBeNullSource(ts3.Source), Is.True);
+				Assert.That(nullabilityContext.CanBeNullSource(ts4.Source), Is.True);
 			});
 
 			AssertJoinNotNullable(nullabilityContext, ts1.Joins[0]);
@@ -223,10 +225,10 @@ namespace Tests.Infrastructure
 
 			Assert.Multiple(() =>
 			{
-				Assert.That(nullabilityContext.CanBeNullSource(table1), Is.EqualTo(true));
-				Assert.That(nullabilityContext.CanBeNullSource(table2), Is.EqualTo(true));
-				Assert.That(nullabilityContext.CanBeNullSource(table3), Is.EqualTo(true));
-				Assert.That(nullabilityContext.CanBeNullSource(table4), Is.EqualTo(true));
+				Assert.That(nullabilityContext.CanBeNullSource(table1), Is.True);
+				Assert.That(nullabilityContext.CanBeNullSource(table2), Is.True);
+				Assert.That(nullabilityContext.CanBeNullSource(table3), Is.True);
+				Assert.That(nullabilityContext.CanBeNullSource(table4), Is.True);
 			});
 
 			AssertJoinNotNullable(nullabilityContext, qts1.Joins[0]);
@@ -268,10 +270,10 @@ namespace Tests.Infrastructure
 
 			Assert.Multiple(() =>
 			{
-				Assert.That(nullabilityContext.CanBeNullSource(ts1.Source), Is.EqualTo(true));
-				Assert.That(nullabilityContext.CanBeNullSource(ts2.Source), Is.EqualTo(true));
-				Assert.That(nullabilityContext.CanBeNullSource(ts3.Source), Is.EqualTo(true));
-				Assert.That(nullabilityContext.CanBeNullSource(ts4.Source), Is.EqualTo(false));
+				Assert.That(nullabilityContext.CanBeNullSource(ts1.Source), Is.True);
+				Assert.That(nullabilityContext.CanBeNullSource(ts2.Source), Is.True);
+				Assert.That(nullabilityContext.CanBeNullSource(ts3.Source), Is.True);
+				Assert.That(nullabilityContext.CanBeNullSource(ts4.Source), Is.False);
 			});
 
 			AssertJoinNotNullable(nullabilityContext, ts1.Joins[0]);
@@ -323,10 +325,10 @@ namespace Tests.Infrastructure
 
 			Assert.Multiple(() =>
 			{
-				Assert.That(nullabilityContext.CanBeNullSource(table1), Is.EqualTo(true));
-				Assert.That(nullabilityContext.CanBeNullSource(table2), Is.EqualTo(true));
-				Assert.That(nullabilityContext.CanBeNullSource(table3), Is.EqualTo(true));
-				Assert.That(nullabilityContext.CanBeNullSource(table4), Is.EqualTo(false));
+				Assert.That(nullabilityContext.CanBeNullSource(table1), Is.True);
+				Assert.That(nullabilityContext.CanBeNullSource(table2), Is.True);
+				Assert.That(nullabilityContext.CanBeNullSource(table3), Is.True);
+				Assert.That(nullabilityContext.CanBeNullSource(table4), Is.False);
 			});
 
 			AssertJoinNotNullable(nullabilityContext, qts1.Joins[0]);
@@ -368,10 +370,10 @@ namespace Tests.Infrastructure
 
 			Assert.Multiple(() =>
 			{
-				Assert.That(nullabilityContext.CanBeNullSource(ts1.Source), Is.EqualTo(true));
-				Assert.That(nullabilityContext.CanBeNullSource(ts2.Source), Is.EqualTo(true));
-				Assert.That(nullabilityContext.CanBeNullSource(ts3.Source), Is.EqualTo(false));
-				Assert.That(nullabilityContext.CanBeNullSource(ts4.Source), Is.EqualTo(false));
+				Assert.That(nullabilityContext.CanBeNullSource(ts1.Source), Is.True);
+				Assert.That(nullabilityContext.CanBeNullSource(ts2.Source), Is.True);
+				Assert.That(nullabilityContext.CanBeNullSource(ts3.Source), Is.False);
+				Assert.That(nullabilityContext.CanBeNullSource(ts4.Source), Is.False);
 			});
 
 			AssertJoinNotNullable(nullabilityContext, ts1.Joins[0]);
