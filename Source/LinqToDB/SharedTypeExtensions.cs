@@ -375,12 +375,12 @@ namespace LinqToDB
 	#pragma warning disable IDE0034 // Simplify 'default' expression - default causes default(object)
 			{ typeof(int), default(int) },
 			{ typeof(Guid), default(Guid) },
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			{ typeof(DateOnly), default(DateOnly) },
 #endif
 			{ typeof(DateTime), default(DateTime) },
 			{ typeof(DateTimeOffset), default(DateTimeOffset) },
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			{ typeof(TimeOnly), default(TimeOnly) },
 #endif
 			{ typeof(long), default(long) },

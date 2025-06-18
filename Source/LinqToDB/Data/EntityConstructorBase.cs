@@ -27,7 +27,7 @@ namespace LinqToDB.Data
 
 		#region Entity Construction
 
-		public virtual List<LoadWithInfo>? GetTableLoadWith(Expression path)
+		public virtual LoadWithEntity? GetTableLoadWith(Expression path)
 		{
 			return null;
 		}
@@ -168,24 +168,29 @@ namespace LinqToDB.Data
 			{
 				var loadWith = GetTableLoadWith(currentPath);
 
-				if (loadWith?.Count > 0)
+				if (loadWith?.MembersToLoad?.Count > 0)
 				{
 					var assignedMembers = new HashSet<MemberInfo>(MemberInfoComparer.Instance);
 
-					foreach (var info in loadWith)
+					foreach (var info in loadWith.MembersToLoad)
 					{
 						if (!info.ShouldLoad)
 							continue;
 
 						var memberInfo = info.MemberInfo;
 
-						if (memberInfo == null || !assignedMembers.Add(memberInfo))
+						if (!assignedMembers.Add(memberInfo))
 							continue;
 
-						var expression = Expression.MakeMemberAccess(currentPath, memberInfo);
+						var currentMember = currentPath.Type.GetMemberEx(memberInfo);
+
+						if (currentMember == null)
+							continue;
+
+						var expression = Expression.MakeMemberAccess(currentPath, currentMember);
 
 						members.Add(
-							new SqlGenericConstructorExpression.Assignment(memberInfo, expression, true, true));
+							new SqlGenericConstructorExpression.Assignment(currentMember, expression, true, true));
 					}
 				}
 			}

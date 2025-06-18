@@ -3033,7 +3033,7 @@ namespace Tests.xUpdate
 			{
 				Assert.That(people[0].Id, Is.EqualTo(1));
 				Assert.That(people[0].Name, Is.EqualTo("name1"));
-				Assert.That(people[0].NeedsUpdate, Is.EqualTo(true));
+				Assert.That(people[0].NeedsUpdate, Is.True);
 			});
 		}
 

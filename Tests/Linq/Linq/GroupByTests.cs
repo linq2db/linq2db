@@ -1392,6 +1392,42 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void GroupByAggregate21([NorthwindDataContext] string context)
+		{
+			using (var db = new NorthwindDB(new DataOptions().UseConfiguration(context).UseGuardGrouping(false)))
+			{
+				var dd = GetNorthwindAsList(context);
+				AreEqual(
+					(
+						from c in dd.Customer
+						group c by c.Orders.Count > 0 && c.Orders.Average(o => o.Freight) == 33.25m
+					).ToList().Select(k => k.Key),
+					(
+						from c in db.Customer
+						group c by c.Orders.Average(o => o.Freight) == 33.25m
+					).ToList().Select(k => k.Key));
+			}
+		}
+
+		[Test]
+		public void GroupByAggregate22([NorthwindDataContext] string context)
+		{
+			using (var db = new NorthwindDB(new DataOptions().UseConfiguration(context).UseGuardGrouping(false)))
+			{
+				var dd = GetNorthwindAsList(context);
+				AreEqual(
+					(
+						from c in dd.Customer
+						group c by c.Orders.Count > 0 && c.Orders.Average(o => o.Freight) != 33.25m
+					).ToList().Select(k => k.Key),
+					(
+						from c in db.Customer
+						group c by c.Orders.Average(o => o.Freight) != 33.25m
+					).ToList().Select(k => k.Key));
+			}
+		}
+
+		[Test]
 		public void GroupByAggregate3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2820,7 +2856,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue4098WithCte([CteTests.CteContextSource] string context)
+		public void Issue4098WithCte([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 

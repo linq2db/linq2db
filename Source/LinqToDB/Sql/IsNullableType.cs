@@ -2,13 +2,15 @@
 {
 	public static partial class Sql
 	{
+		// !!! must be in sync by value with ParametersNullabilityType
+
 		/// <summary>
 		/// Provides information when function or expression could return null.
 		/// </summary>
 		public enum IsNullableType
 		{
 			/// <summary>
-			/// Nullability not specified, and other sources (like <see cref="Sql.ExpressionAttribute.CanBeNull"/> or return type)
+			/// Nullability not specified, and other sources (like <see cref="ExpressionAttribute.CanBeNull"/> or return type)
 			/// will be used to identify nullability.
 			/// </summary>
 			Undefined = 0,

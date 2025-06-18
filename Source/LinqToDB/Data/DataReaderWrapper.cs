@@ -68,7 +68,7 @@ namespace LinqToDB.Data
 				_dataConnection.Close();
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		public async ValueTask DisposeAsync()
 		{
 			if (_disposed)

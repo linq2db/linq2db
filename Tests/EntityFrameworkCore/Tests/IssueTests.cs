@@ -228,11 +228,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(gc, Is.Not.Null);
 		}
 
-#if NET6_0
-		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllMySql])]
-#else
 		[ActiveIssue(TestProvName.AllPostgreSQL)]
-#endif
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4333")]
 		public void Issue4333Test([EFDataSources] string provider)
 		{
@@ -886,11 +882,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.ToListAsyncEF();
 		}
 
-#if NET6_0
-		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllMySql])]
-#else
 		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL)]
-#endif
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
 		public void Issue4671Test1([EFDataSources] string provider)
 		{

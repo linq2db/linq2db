@@ -206,6 +206,7 @@ namespace LinqToDB.Data
 
 					var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (options);
 					var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, options);
+					var factory      = sqlOptimizer.CreateSqlExpressionFactory(dataConnection.MappingSchema, options);
 
 					// custom query handling
 					var preprocessContext = new EvaluationContext(parameterValues);
@@ -244,10 +245,11 @@ namespace LinqToDB.Data
 						dataConnection.DataProvider.SqlProviderFlags,
 						dataConnection.MappingSchema,
 						optimizeVisitor,
-						convertVisitor,
+						convertVisitor, 
+						factory,
 						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
-						isAlreadyOptimizedAndConverted: optimizeAndConvertAll,
-						dataConnection.DataProvider.GetQueryParameterNormalizer);
+						isAlreadyOptimizedAndConverted : optimizeAndConvertAll,
+						parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
 					if (optimizeAndConvertAll)
 					{
@@ -384,8 +386,9 @@ namespace LinqToDB.Data
 							await dataConnection.ExecuteNonQueryDataAsync(cancellationToken)
 								.ConfigureAwait(false);
 						}
-						catch (Exception)
+						catch
 						{
+							// ignore
 						}
 					}
 					else
@@ -423,8 +426,9 @@ namespace LinqToDB.Data
 						{
 							dataConnection.ExecuteNonQuery();
 						}
-						catch (Exception)
+						catch
 						{
+							// ignore
 						}
 					}
 					else
@@ -719,6 +723,7 @@ namespace LinqToDB.Data
 						}
 						catch
 						{
+							// ignore
 						}
 					}
 					else

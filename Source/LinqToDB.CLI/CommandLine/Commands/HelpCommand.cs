@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB.Naming;
 
@@ -24,7 +25,7 @@ namespace LinqToDB.CommandLine
 		{
 		}
 
-		public override int Execute(
+		public override ValueTask<int> Execute(
 			CliController                  controller,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
@@ -36,7 +37,7 @@ namespace LinqToDB.CommandLine
 				// "dotnet linq2db"
 				// "dotnet linq2db help"
 				PrintGeneralHelp(controller, Array.Empty<string>());
-				return StatusCodes.SUCCESS;
+				return new(StatusCodes.SUCCESS);
 			}
 
 			// handle command-specific help requests (except help command itself):
@@ -51,7 +52,7 @@ namespace LinqToDB.CommandLine
 						{
 							// request for command help for known non-help command - print specific command help
 							PrintCommandHelp(command, unknownArgs);
-							return StatusCodes.SUCCESS;
+							return new(StatusCodes.SUCCESS);
 						}
 					}
 				}
@@ -59,13 +60,13 @@ namespace LinqToDB.CommandLine
 				// help request for unknown command:
 				// dotnet linq2db help <unknown-command>
 				PrintGeneralHelp(controller, new[] { rawArgs[1] });
-				return StatusCodes.INVALID_ARGUMENTS;
+				return new(StatusCodes.INVALID_ARGUMENTS);
 			}
 
 			// all other cases - print default help and error message:
 			// "dotnet linq2db help <whatever> <arguments> <here>"
 			PrintGeneralHelp(controller, rawArgs);
-			return StatusCodes.INVALID_ARGUMENTS;
+			return new(StatusCodes.INVALID_ARGUMENTS);
 		}
 
 		/// <summary>
