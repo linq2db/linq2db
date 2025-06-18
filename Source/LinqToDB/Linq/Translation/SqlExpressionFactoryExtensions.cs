@@ -8,34 +8,34 @@ namespace LinqToDB.Linq.Translation
 {
 	public static class SqlExpressionFactoryExtensions
 	{
-		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] parameters)
+		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] arguments)
 		{
-			return factory.Fragment(dataType, Precedence.Primary, fragmentText, null, parameters);
+			return factory.Fragment(dataType, Precedence.Primary, fragmentText, null, arguments);
 		}
 
-		public static ISqlExpression NotNullFragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] parameters)
+		public static ISqlExpression NotNullFragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] arguments)
 		{
-			return factory.NotNullFragment(dataType, Precedence.Primary, fragmentText, parameters);
+			return factory.NotNullFragment(dataType, Precedence.Primary, fragmentText, arguments);
 		}
 
-		public static ISqlExpression NonPureFragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] parameters)
+		public static ISqlExpression NonPureFragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] arguments)
 		{
-			return new SqlExpression(dataType.SystemType, fragmentText, Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, null, parameters);
+			return new SqlExpression(dataType.SystemType, fragmentText, Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, null, arguments);
 		}
 
-		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, params ISqlExpression[] parameters)
+		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, params ISqlExpression[] arguments)
 		{
-			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.Undefined, null, parameters);
+			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.Undefined, null, arguments);
 		}
 
-		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, bool? canBeNull, params ISqlExpression[] parameters)
+		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, bool? canBeNull, params ISqlExpression[] arguments)
 		{
-			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.Undefined, canBeNull, parameters);
+			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.Undefined, canBeNull, arguments);
 		}
 
-		public static ISqlExpression NotNullFragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, params ISqlExpression[] parameters)
+		public static ISqlExpression NotNullFragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, params ISqlExpression[] arguments)
 		{
-			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.NotNullable, null, parameters);
+			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.NotNullable, null, arguments);
 		}
 
 		public static ISqlExpression Function(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, params ISqlExpression[] parameters)
@@ -177,6 +177,14 @@ namespace LinqToDB.Linq.Translation
 			}
 			
 			return result;
+		}
+
+		public static ISqlExpression Coalesce(this ISqlExpressionFactory factory, params ISqlExpression[] expressions)
+		{
+			if (expressions.Length == 0)
+				throw new InvalidOperationException("At least one expression must be provided for coalesce.");
+
+			return new SqlCoalesceExpression(expressions);
 		}
 
 		public static ISqlExpression Condition(this ISqlExpressionFactory factory, ISqlPredicate condition, ISqlExpression trueExpression, ISqlExpression falseExpression)

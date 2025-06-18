@@ -5146,6 +5146,11 @@ namespace LinqToDB.Linq.Builder
 					result = BuildPurpose.Expand;
 				}
 
+				if (translationFlags.HasFlag(TranslationFlags.Traverse))
+				{
+					result = BuildPurpose.Traverse;
+				}
+
 				return result;
 			}
 
@@ -5155,6 +5160,28 @@ namespace LinqToDB.Linq.Builder
 				if (CurrentContext == null)
 					throw new InvalidOperationException("CurrentContext not initialized");
 				return Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.None, alias: CurrentAlias);
+			}
+
+			public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, out SqlErrorExpression? error)
+			{
+				var translated = Translate(expression, TranslationFlags.Sql);
+				if (translated is SqlPlaceholderExpression placeholder)
+				{
+					sql = placeholder.Sql;
+					error = null;
+					return true;
+				}
+
+				if (translated is SqlErrorExpression sqlError)
+				{
+					sql = null;
+					error = sqlError;
+					return false;
+				}
+
+				sql = null;
+				error = CreateErrorExpression(expression);
+				return false;
 			}
 
 			public MappingSchema MappingSchema => CurrentContext?.MappingSchema ?? throw new InvalidOperationException();
@@ -5216,6 +5243,16 @@ namespace LinqToDB.Linq.Builder
 				throw new InvalidOperationException("Invalid enumerable context");
 			}
 
+			public Expression? BuildAggregationFunction(
+				Expression                                                                      methodsChain,
+				Expression                                                                      functionExpression,
+				ITranslationContext.AllowedAggregationOperators                                 allowedOperations,
+				Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)> functionFactory
+			)
+			{
+				return Builder.BuildAggregationFunction(methodsChain, functionExpression, allowedOperations, functionFactory);
+			}
+
 			public bool CanBeEvaluatedOnClient(Expression expression)
 			{
 				return Builder.CanBeEvaluatedOnClient(expression);
@@ -5275,7 +5312,6 @@ namespace LinqToDB.Linq.Builder
 					_disposable.Dispose();
 				}
 			}
-
 		}
 
 		static ObjectPool<TranslationContext> _translationContexts = new(() => new TranslationContext(), c => c.Cleanup(), 100);
@@ -5301,9 +5337,6 @@ namespace LinqToDB.Linq.Builder
 		public bool TranslateMember(IBuildContext? context, Expression memberExpression, [NotNullWhen(true)] out Expression? translated)
 		{
 			translated = null;
-
-			if (context == null)
-				return false;
 
 			if (memberExpression is MethodCallExpression || memberExpression is MemberExpression || memberExpression is NewExpression)
 			{

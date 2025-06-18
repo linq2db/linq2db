@@ -268,19 +268,23 @@ namespace LinqToDB.SqlQuery
 				case VisitMode.ReadOnly:
 				{
 					Visit(element.Expression);
+					Visit(element.Suffix);
 					break;
 				}
 				case VisitMode.Modify:
 				{
-					element.Modify((ISqlExpression)this.Visit(element.Expression));
+					element.Modify((ISqlExpression)this.Visit(element.Expression), this.Visit(element.Suffix) as ISqlExpression);
 					break;
 				}
 				case VisitMode.Transform:
 				{
 					var expression = (ISqlExpression)this.Visit(element.Expression);
+					var suffix     = this.Visit(element.Suffix) as ISqlExpression;
 
-					if (ShouldReplace(element) || !ReferenceEquals(element.Expression, expression))
-						return NotifyReplaced(new SqlFunctionArgument(expression, element.Modifier), element);
+					if (ShouldReplace(element) 
+					    || !ReferenceEquals(element.Expression, expression)
+						|| !ReferenceEquals(element.Suffix, suffix))
+						return NotifyReplaced(new SqlFunctionArgument(expression, element.Modifier, suffix), element);
 					break;
 				}
 				default:

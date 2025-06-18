@@ -201,7 +201,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var argument in Arguments)
 			{
-				if (!otherFunction.Arguments.Any(a => argument.Modifier == a.Modifier && argument.Expression.Equals(a.Expression, comparer)))
+				if (!otherFunction.Arguments.Any(a => argument.Modifier == a.Modifier && argument.Expression.Equals(a.Expression, comparer) && argument.Suffix.AreEqual(a.Suffix, comparer)))
 					return false;
 			}
 
@@ -250,7 +250,9 @@ namespace LinqToDB.SqlQuery
 
 		public override Type SystemType => Type.SystemType;
 
-		public override QueryElementType ElementType => QueryElementType.SqlWindowFunction;
+		public override QueryElementType ElementType      => QueryElementType.SqlWindowFunction;
+
+		public bool IsWindowFunction => OrderBy?.Count > 0 || PartitionBy?.Count > 0 || FrameClause != null;
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
@@ -328,14 +330,16 @@ namespace LinqToDB.SqlQuery
 
 	public class SqlFunctionArgument : QueryElement
 	{
-		public SqlFunctionArgument(ISqlExpression expression, Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
+		public SqlFunctionArgument(ISqlExpression expression, Sql.AggregateModifier modifier = Sql.AggregateModifier.None, ISqlExpression? suffix = default)
 		{
 			Expression = expression;
-			Modifier = modifier;
+			Modifier   = modifier;
+			Suffix     = suffix;
 		}
 
 		public ISqlExpression        Expression { get; private set; }
 		public Sql.AggregateModifier Modifier   { get; }
+		public ISqlExpression?       Suffix     { get; private set; }
 
 		public override QueryElementType ElementType => QueryElementType.SqlFunctionArgument;
 
@@ -353,9 +357,10 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public void Modify(ISqlExpression sqlExpression)
+		public void Modify(ISqlExpression sqlExpression, ISqlExpression? suffix)
 		{
 			Expression = sqlExpression;
+			Suffix     = suffix;
 		}
 	}
 

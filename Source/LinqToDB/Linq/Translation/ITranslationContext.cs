@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
+using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -14,10 +16,41 @@ namespace LinqToDB.Linq.Translation
 		Expression = 1,
 		Sql        = 1 << 1,
 		Expand     = 1 << 2,
+		Traverse   = 1 << 3
 	}
 
-	public interface ITranslationContext
+	public interface ISqlExpressionTranslator
 	{
+		public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, out SqlErrorExpression? error);
+	}
+
+	public interface IAggregationContext : ISqlExpressionTranslator
+	{
+		public Expression?                              FilterExpression { get; }
+		public Expression?                              ValueExpression  { get; }
+		public ITranslationContext.OrderByInformation[] OrderBy          { get; }
+		public bool                                     IsDistinct       { get; }
+		public bool                                     IsGroupBy        { get;  }
+
+		public bool      TranslateLambdaExpression(LambdaExpression lambdaExpression, [NotNullWhen(true)] out ISqlExpression? sql, out SqlErrorExpression? error);
+		LambdaExpression SimplifyEntityLambda(LambdaExpression      lambda,           int                                     parameterIndex);
+	}
+
+	public interface ITranslationContext : ISqlExpressionTranslator
+	{
+		[Flags]
+		public enum AllowedAggregationOperators
+		{
+			None     = 0,
+			Filter   = 1 << 0,
+			OrderBy  = 1 << 1,
+			Distinct = 1 << 2,
+
+			All = Filter | OrderBy | Distinct
+		}
+
+		public record OrderByInformation(Expression Expr, bool IsDescending, Sql.NullsPosition Nulls);
+
 		Expression Translate(Expression expression, TranslationFlags translationFlags = TranslationFlags.Sql);
 
 		MappingSchema MappingSchema { get; }
@@ -40,6 +73,11 @@ namespace LinqToDB.Linq.Translation
 		bool    CanBeEvaluated(Expression     expression);
 		object? Evaluate(Expression           expression);
 		bool    TryEvaluate(ISqlExpression    expression, out object? result);
+
+		public Expression? BuildAggregationFunction(Expression                              methodsChain,
+			Expression                                                                      functionExpression,
+			AllowedAggregationOperators                                                     allowedOperations,
+			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)> functionFactory);
 
 		/// <summary>
 		/// Forces expression cache to compare expressions by value, not by reference.

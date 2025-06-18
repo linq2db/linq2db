@@ -1,0 +1,129 @@
+﻿using System.Linq;
+using System.Linq.Expressions;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
+
+namespace Tests.Linq
+{
+	public class StringJoinTests : TestBase
+	{
+		[Table]
+		sealed class SampleClass
+		{
+			[Column]                                                              public int     Id               { get; set; }
+			[Column(Length = 50, CanBeNull = true)]                               public string? NullableValue    { get; set; }
+			[Column(Length = 50, CanBeNull = false)]                              public string  NotNullableValue { get; set; } = string.Empty;
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]  public string? VarcharValue     { get; set; }
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.NVarChar)] public string? NVarcharValue    { get; set; }
+
+			public static SampleClass[] GenerateDataUniquerId()
+			{
+				var data = new[]
+				{
+					new SampleClass { Id = 1, NullableValue = "A", NotNullableValue = "B", VarcharValue = "C", NVarcharValue = "D" },
+					new SampleClass { Id = 2, NullableValue = "E", NotNullableValue = "F", VarcharValue = "G", NVarcharValue = "H" },
+					new SampleClass { Id = 3, NullableValue = "I", NotNullableValue = "J", VarcharValue = "K", NVarcharValue = "L" },
+					new SampleClass { Id = 4, NullableValue = null, NotNullableValue = "M", VarcharValue = null, NVarcharValue = null },
+				};
+				return data;
+			}
+
+			public static SampleClass[] GenerateDataNotUniquerId()
+			{
+				var data = new[]
+				{
+					new SampleClass { Id = 1, NullableValue = "A", NotNullableValue  = "B", VarcharValue = "C", NVarcharValue  = "D" },
+					new SampleClass { Id = 1, NullableValue = "E", NotNullableValue  = "F", VarcharValue = "G", NVarcharValue  = "H" },
+					new SampleClass { Id = 2, NullableValue = "I", NotNullableValue  = "J", VarcharValue = "K", NVarcharValue  = "L" },
+					new SampleClass { Id = 2, NullableValue = null, NotNullableValue = "M", VarcharValue = null, NVarcharValue = null },
+				};
+				return data;
+			}
+		}
+
+		[Test]
+		public void JoinWithGrouping([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query = from t in table
+				group t by t.Id
+				into g
+				select new
+				{
+					Id = g.Key, 
+					Nullable = string.Join(", ", g.Select(x => x.NullableValue)),
+					NotNullable = string.Join(", ", g.Select(x => x.NotNullableValue)),
+				}
+				into s
+				orderby s.Id
+				select s;
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void JoinWithGroupingOrdered([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		{
+			var       data  = SampleClass.GenerateDataNotUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			string?[] values = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", null, null, null, null };
+
+			var xx = values.OrderBy(x => x).ToArray();
+
+			var query = from t in table
+				group t by t.Id
+				into g
+				select new
+				{
+					Id          = g.Key,
+					
+					Nullable    = string.Join(", ", g
+						.OrderBy(x => x.NotNullableValue)
+						.ThenByDescending(x => x.NullableValue)
+						.Select(x => x.NullableValue)
+					),
+					NotNullable = string.Join(", ", g
+						.OrderByDescending(x => x.NullableValue)
+						.ThenByDescending(x => x.NotNullableValue)
+						.Select(x => x.NotNullableValue)),
+						
+
+					/*NullableDoubleOrder    = string.Join(", ", g
+						.OrderBy(x => x.NotNullableValue)
+						.ThenByDescending(x => x.NullableValue)
+						.OrderByDescending(x => x.NullableValue)
+						.Select(x => x.NullableValue)
+					),
+					NotNullableDoubleOrder = string.Join(", ", g
+						.OrderByDescending(x => x.NullableValue)
+						.ThenByDescending(x => x.NotNullableValue)
+						.OrderByDescending(x => x.NotNullableValue)
+						.Select(x => x.NotNullableValue)),*/
+				}
+				into s
+				orderby s.Id
+				select s;
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void JoinAggregateExecute([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var allAggregated = table.AggregateExecute(e => string.Join(", ", e.OrderBy(x => x.NotNullableValue).Select(x => x.NullableValue)));
+ 		}
+
+	}
+}

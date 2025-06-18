@@ -411,9 +411,10 @@ namespace LinqToDB
 
 		public static TValue PercentileCont<TElement, TValue>(
 			this IEnumerable<TElement>                                 source,
-			double                                                     argument, 
+			double                                                     argument,
 			Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>> func
-			) => throw new ServerSideOnlyException(nameof(PercentileCont));
+		)
+			=> throw new ServerSideOnlyException(nameof(PercentileCont));
 
 		public static TValue PercentileCont<TElement, TValue>(
 			this IQueryable<TElement> source,

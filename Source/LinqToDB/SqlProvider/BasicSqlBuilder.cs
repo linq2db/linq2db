@@ -3226,6 +3226,12 @@ namespace LinqToDB.SqlProvider
 					}
 
 					BuildExpression(argument.Expression);
+
+					if (argument.Suffix != null)
+					{
+						StringBuilder.Append(' ');
+						BuildExpression(argument.Suffix);
+					}
 				}
 			}
 

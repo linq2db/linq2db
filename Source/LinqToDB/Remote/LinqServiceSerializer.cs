@@ -1735,6 +1735,7 @@ namespace LinqToDB.Remote
 					{
 						var elem = (SqlFunctionArgument)e;
 						Append(elem.Expression);
+						Append(elem.Suffix);
 						Append((int)elem.Modifier);
 						break;
 					}
@@ -2890,9 +2891,10 @@ namespace LinqToDB.Remote
 					case QueryElementType.SqlFunctionArgument:
 					{
 						var expression = Read<ISqlExpression>()!;
+						var suffix     = Read<ISqlExpression>();
 						var modifier   = (Sql.AggregateModifier)ReadInt();
 
-						obj = new SqlFunctionArgument(expression, modifier);
+						obj = new SqlFunctionArgument(expression, modifier, suffix);
 
 						break;
 					}

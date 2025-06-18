@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod(() => Sql.Window.NTile(1, f => f.OrderBy(1)), TranslateNTile);
 
 			Registration.RegisterMethod((IEnumerable<int> g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont);
-			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TransformPercentileCont);
+			Registration.RegisterMethod((IQueryable<int>  g) => g.PercentileCont(0.5, (e, f) => f.OrderBy(e)), TranslatePercentileCont);
 
 			RegisterSum();
 			RegisterAvg();
@@ -364,37 +364,35 @@ namespace LinqToDB.Linq.Translation
 			return true;
 		}
 
-		protected bool TranslateOrderItems(ITranslationContext translationContext, Type errorType, IEnumerable<OrderByInformation> orderBy, List<SqlWindowOrderItem> orderItems, [NotNullWhen(false)] out SqlErrorExpression? error)
+		protected bool TranslateOrderItems(ISqlExpressionTranslator translator, Type errorType, IEnumerable<OrderByInformation> orderBy, List<SqlWindowOrderItem> orderItems, [NotNullWhen(false)] out SqlErrorExpression? error)
 		{
 			error = null;
 			foreach (var orderItem in orderBy)
 			{
-				var translated = translationContext.Translate(orderItem.Expr);
-				if (translated is not SqlPlaceholderExpression placeholder)
+				if (!translator.TranslateExpression(orderItem.Expr, out var sql, out error))
 				{
-					error = SqlErrorExpression.EnsureError(translated, errorType);
+					error = error!.WithType(errorType);
 					return false;
 				}
 
-				orderItems.Add(new SqlWindowOrderItem(placeholder.Sql, orderItem.IsDescending, orderItem.Nulls));
+				orderItems.Add(new SqlWindowOrderItem(sql, orderItem.IsDescending, orderItem.Nulls));
 			}
 
 			return true;
 		}
 
-		protected bool TranslatePartitionBy(ITranslationContext translationContext, Type errorType, IEnumerable<Expression> partitionBy, List<ISqlExpression> partitionByItems, [NotNullWhen(false)] out SqlErrorExpression? error)
+		protected bool TranslatePartitionBy(ISqlExpressionTranslator translator, Type errorType, IEnumerable<Expression> partitionBy, List<ISqlExpression> partitionByItems, [NotNullWhen(false)] out SqlErrorExpression? error)
 		{
 			error = null;
 			foreach (var partition in partitionBy)
 			{
-				var translated = translationContext.Translate(partition);
-				if (translated is not SqlPlaceholderExpression placeholder)
+				if (!translator.TranslateExpression(partition, out var sql, out error))
 				{
-					error = SqlErrorExpression.EnsureError(translated, errorType);
+					error = error!.WithType(errorType);
 					return false;
 				}
 
-				partitionByItems.Add(placeholder.Sql);
+				partitionByItems.Add(sql);
 			}
 
 			return true;
@@ -573,6 +571,63 @@ namespace LinqToDB.Linq.Translation
 		}
 
 		public virtual Expression? TranslatePercentileCont(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var result = translationContext.BuildAggregationFunction(methodCall.Arguments[0], methodCall, ITranslationContext.AllowedAggregationOperators.None, ac =>
+			{
+				var argumentExpr = methodCall.Arguments[1];
+				if (!ac.TranslateExpression(argumentExpr, out var argumentSql, out var error))
+					return (null, error);
+
+				var builderLambda = methodCall.Arguments[2].UnwrapLambda();
+
+				builderLambda = ac.SimplifyEntityLambda(builderLambda, 0);
+
+				if (!CollectWindowFunctionInformation(
+					    translationContext,
+					    methodCall.Type,
+					    null,
+					    builderLambda.Body,
+					    out var information,
+					    out error))
+					return (null, error);
+
+				if (information.OrderBy!.Length != 1)
+					return (null, translationContext.CreateErrorExpression(methodCall.Arguments[2], "Expected single order by expression", methodCall.Type));
+
+				List<SqlWindowOrderItem> withinGroupOrder = new();
+				if (!TranslateOrderItems(ac, methodCall.Type, information.OrderBy, withinGroupOrder, out var orderError))
+					return (null, orderError);
+
+				List<ISqlExpression>? partitionBy = null;
+				if (information.PartitionBy != null)
+				{
+					partitionBy ??= new();
+					if (!TranslatePartitionBy(ac, methodCall.Type, information.PartitionBy, partitionBy, out var partitionError))
+						return (null, partitionError);
+				}
+
+				var functionType = translationContext.GetDbDataType(withinGroupOrder[0].Expression);
+
+				var windowFunction = translationContext.ExpressionFactory.WindowFunction(
+					functionType,
+					"PERCENTILE_CONT",
+					[new SqlFunctionArgument(argumentSql, Sql.AggregateModifier.None)],
+					[true],
+					withinGroup : withinGroupOrder,
+					partitionBy : partitionBy,
+					isAggregate: true
+				);
+
+				return (windowFunction, null);
+			});
+
+			if (result == null)
+				return translationContext.CreateErrorExpression(methodCall, "Failed to build aggregation function for PERCENTILE_CONT.", methodCall.Type);
+
+			return result;
+		}
+
+		public virtual Expression? TranslatePercentileContOld(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			var enumerableContext = translationContext.GetAggregationContext(methodCall.Arguments[0]);
 			if (enumerableContext == null)

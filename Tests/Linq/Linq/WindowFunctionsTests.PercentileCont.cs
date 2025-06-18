@@ -74,8 +74,7 @@ namespace Tests.Linq
 
 			var sql = query.ToSqlQuery().Sql;
 
-			// Will be translated with OUTER APPLY
-			sql.Should().Contain("SELECT", Exactly.Thrice());
+			sql.Should().Contain("SELECT", Exactly.Once());
 			sql.Should().Contain("PERCENTILE_CONT", Exactly.Twice());
 
 			Assert.DoesNotThrow(() =>
