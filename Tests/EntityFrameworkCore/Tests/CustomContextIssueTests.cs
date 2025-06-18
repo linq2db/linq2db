@@ -312,7 +312,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 #endif
 
-#if NET9_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4917")]
 		public async ValueTask Issue4917Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
 		{
@@ -341,10 +341,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-		public record Issue4917RecordDb(
-			int Id,
-			string Name);
+		public record Issue4917RecordDb(int Id, string Name);
 #endif
-		#endregion
+#endregion
 	}
 }
