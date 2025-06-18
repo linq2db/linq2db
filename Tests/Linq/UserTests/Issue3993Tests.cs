@@ -357,5 +357,58 @@ namespace Tests.UserTests.Test3993
 				db?.Dispose();
 			}
 		}
+
+		public class LanguageDTO
+		{
+			public string? LanguageID { get; set; }
+
+			public TimeSpan TimeSpan { get; set; }
+
+			public TimeSpan? TimeSpanNull { get; set; }
+		}
+
+		[Test]
+		public void TestIssue3993_BulkCopy([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
+		{
+			var ms = new FluentMappingBuilder()
+					.Entity<LanguageDTO>()
+						.HasTableName("Common_Language")
+						.Property(e => e.LanguageID).IsNullable()
+					.Build()
+					.MappingSchema;
+
+			if (configuration.Contains("PostgreSQL") || configuration.Contains("Oracle") || configuration.Contains("Informix"))
+			{
+				ms.AddScalarType(typeof(TimeSpan), DataType.Interval);
+			}
+			else
+			{
+				ms.AddScalarType(typeof(TimeSpan), DataType.Int64);
+				ms.AddScalarType(typeof(TimeSpan?), DataType.Int64);
+			}
+			LinqToDB.Linq.Expressions.AddTimeSpanMappings();
+
+			using var db = (DataConnection) GetDataContext(configuration, ms);
+
+			using var tbl = db.CreateLocalTable(new[]
+				{
+					new LanguageDTO
+					{
+						LanguageID = "de",
+						TimeSpan = new TimeSpan(2000, 4, 3)
+					},
+
+				});
+
+			db.BulkCopy(new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific }, new[]
+				{
+					new LanguageDTO
+					{
+						LanguageID = "en",
+						TimeSpan = new TimeSpan(2000, 4, 3),
+						TimeSpanNull = new TimeSpan(2000, 4, 3)
+					},
+				});
+		}
 	}
 }
