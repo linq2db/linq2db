@@ -317,7 +317,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		public async ValueTask Issue4917Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
 		{
 			var connectionString = GetConnectionString(provider);
-			var dataSource = new NpgsqlDataSourceBuilder(connectionString).Build();
+			var dataSource = new NpgsqlDataSourceBuilder(connectionString).UseLoggerFactory(LoggerFactory).Build();
 			var optionsBuilder = new DbContextOptionsBuilder().UseNpgsql(dataSource);
 
 			using var ctx = new Issue4917Context(optionsBuilder.Options);
