@@ -49,6 +49,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				var connectionString = GetConnectionString(provider);
 
 				var optionsBuilder = new DbContextOptionsBuilder();
+				optionsBuilder.UseLoggerFactory(LoggerFactory);
 
 				optionsBuilder = provider switch
 				{
@@ -124,6 +125,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var connectionString = GetConnectionString(provider);
 
 			var optionsBuilder = new DbContextOptionsBuilder().UseSqlServer(connectionString);
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
 
 			using var ctx = new Issue4657Context(optionsBuilder.Options);
 
@@ -160,6 +162,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var connectionString = GetConnectionString(provider);
 
 			var optionsBuilder = new DbContextOptionsBuilder();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
 			optionsBuilder.UseSqlite(connectionString);
 			optionsBuilder.UseLinqToDB(builder =>
 			{
@@ -237,13 +240,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var connectionString = GetConnectionString(provider);
 
 			var optionsBuilder = new DbContextOptionsBuilder();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
 
 			optionsBuilder = optionsBuilder.UseNpgsql(
 				connectionString,
-				o => o.UseNodaTime().MapEnum<Issue4783DBStatus>())
-				// TODO: remove and fix connection detection logic to use existing connection without extra connection
-				//.UseLinqToDB(builder => builder.AddCustomOptions(o => o.UsePostgreSQL(connectionString, PostgreSQLVersion.v15)))
-				;
+				o => o.UseNodaTime().MapEnum<Issue4783DBStatus>());
 
 			using var ctx = new Issue4783Context(optionsBuilder.Options);
 
@@ -319,6 +320,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var connectionString = GetConnectionString(provider);
 
 			var optionsBuilder = new DbContextOptionsBuilder();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
 
 			optionsBuilder = optionsBuilder.UseNpgsql(
 				connectionString,
@@ -387,6 +389,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var connectionString = GetConnectionString(provider);
 
 			var optionsBuilder = new DbContextOptionsBuilder();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
 
 			optionsBuilder = optionsBuilder.UseNpgsql(
 				connectionString,

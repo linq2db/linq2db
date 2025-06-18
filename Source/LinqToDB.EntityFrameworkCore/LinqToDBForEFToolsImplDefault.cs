@@ -398,11 +398,14 @@ namespace LinqToDB.EntityFrameworkCore
 				var mapping = mappingSource?.FindMapping(type);
 				if (mapping?.GetType().Name == "NpgsqlEnumTypeMapping")
 				{
-					var labels = (Dictionary<object, string>) mapping.GetType().GetProperty("Labels")!.GetValue(mapping)!;
-					var typedLabels = labels.ToDictionary(kv => kv.Key, kv => $"'{kv.Value}'::{mapping.StoreType}");
-				
-					mappingSchema.SetDataType(type, new SqlDataType(new DbDataType(type, DataType.Enum, mapping.StoreType)));
-					mappingSchema.SetValueToSqlConverter(type, (sb, _, v) => sb.Append(typedLabels[v]));
+					var labels = mapping.GetType().GetProperty("Labels")?.GetValue(mapping) as IReadOnlyDictionary<object, string>;
+					if (labels != null)
+					{
+						var typedLabels = labels.ToDictionary(kv => kv.Key, kv => $"'{kv.Value}'::{mapping.StoreType}");
+
+						mappingSchema.SetDataType(type, new SqlDataType(new DbDataType(type, DataType.Enum, mapping.StoreType)));
+						mappingSchema.SetValueToSqlConverter(type, (sb, _, v) => sb.Append(typedLabels[v]));
+					}
 				}
 			}
 
