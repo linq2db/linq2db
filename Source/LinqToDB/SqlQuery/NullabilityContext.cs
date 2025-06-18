@@ -97,8 +97,8 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		NullabilityContext?               _parentContext;
-		Dictionary<ISqlExpression, bool>? _nullabilityOverrides;
+		readonly NullabilityContext?               _parentContext;
+		readonly Dictionary<ISqlExpression, bool>? _nullabilityOverrides;
 
 		bool? CanBeNullInternal(SelectQuery? query, ISqlTableSource source)
 		{
