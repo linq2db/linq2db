@@ -1,5 +1,6 @@
 *          text=auto
 *.cs       text      eol=crlf diff=csharp
 *.sln      text      eol=crlf
+*.slnx     text      eol=crlf
 *.csproj   text      eol=crlf
 *.sh       text      eol=lf

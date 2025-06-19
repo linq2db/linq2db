@@ -47,7 +47,7 @@ jobs:
   - task: DotNetCoreCLI@2
     inputs:
       command: build
-      projects: 'Examples/Examples.sln'
+      projects: 'Examples/Examples.slnx'
       arguments: '--configuration Debug'
     displayName: Build Examples (verify)
     condition: and(succeeded(), ${{ parameters.with_examples }})

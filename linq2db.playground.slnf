@@ -1,24 +1,24 @@
 {
   "solution": {
-    "path": "linq2db.sln",
-	"projects": [
-		"Source\\CodeGenerators\\CodeGenerators.csproj",
-		"Source\\LinqToDB.EntityFrameworkCore\\LinqToDB.EntityFrameworkCore.csproj",
-		"Source\\LinqToDB.EntityFrameworkCore\\LinqToDB.EntityFrameworkCore.STS.csproj",
-		"Source\\LinqToDB.Extensions\\LinqToDB.Extensions.csproj",
-		"Source\\LinqToDB.FSharp\\LinqToDB.FSharp.fsproj",
-		"Source\\LinqToDB.Remote.Grpc\\LinqToDB.Remote.Grpc.csproj",
-		"Source\\LinqToDB.Remote.Wcf\\LinqToDB.Remote.Wcf.csproj",
-		"Source\\LinqToDB.Tools\\LinqToDB.Tools.csproj",
-		"Source\\LinqToDB\\LinqToDB.csproj",
-		"Tests\\Base\\Tests.Base.csproj",
-		"Tests\\EntityFrameworkCore.FSharp\\Tests.EntityFrameworkCore.FSharp.fsproj",
-		"Tests\\EntityFrameworkCore\\Tests.EntityFrameworkCore.csproj",
-		"Tests\\EntityFrameworkCore\\Tests.EntityFrameworkCore.STS.csproj",
-		"Tests\\FSharp\\Tests.FSharp.fsproj",
-		"Tests\\Model\\Tests.Model.csproj",
-		"Tests\\Tests.Playground\\Tests.Playground.csproj",
-		"Tests\\VisualBasic\\Tests.VisualBasic.vbproj"
-	]
+    "path": "linq2db.slnx",
+    "projects": [
+        "Source\\CodeGenerators\\CodeGenerators.csproj",
+        "Source\\LinqToDB.EntityFrameworkCore\\LinqToDB.EntityFrameworkCore.csproj",
+        "Source\\LinqToDB.EntityFrameworkCore\\LinqToDB.EntityFrameworkCore.STS.csproj",
+        "Source\\LinqToDB.Extensions\\LinqToDB.Extensions.csproj",
+        "Source\\LinqToDB.FSharp\\LinqToDB.FSharp.fsproj",
+        "Source\\LinqToDB.Remote.Grpc\\LinqToDB.Remote.Grpc.csproj",
+        "Source\\LinqToDB.Remote.Wcf\\LinqToDB.Remote.Wcf.csproj",
+        "Source\\LinqToDB.Tools\\LinqToDB.Tools.csproj",
+        "Source\\LinqToDB\\LinqToDB.csproj",
+        "Tests\\Base\\Tests.Base.csproj",
+        "Tests\\EntityFrameworkCore.FSharp\\Tests.EntityFrameworkCore.FSharp.fsproj",
+        "Tests\\EntityFrameworkCore\\Tests.EntityFrameworkCore.csproj",
+        "Tests\\EntityFrameworkCore\\Tests.EntityFrameworkCore.STS.csproj",
+        "Tests\\FSharp\\Tests.FSharp.fsproj",
+        "Tests\\Model\\Tests.Model.csproj",
+        "Tests\\Tests.Playground\\Tests.Playground.csproj",
+        "Tests\\VisualBasic\\Tests.VisualBasic.vbproj"
+    ]
   }
 }
