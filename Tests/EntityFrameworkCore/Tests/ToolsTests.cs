@@ -104,6 +104,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var connectionString = GetConnectionString(provider);
 
 			var optionsBuilder = new DbContextOptionsBuilder<NorthwindContextBase>();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
+
 			optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
 
 			var options = base.ProviderSetup(provider, connectionString, optionsBuilder).Options;
@@ -413,9 +415,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		public void TestInMemory()
 		{
 			var optionsBuilder = new DbContextOptionsBuilder<SQLServerNorthwindContext>();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
 
 			optionsBuilder.UseInMemoryDatabase("sample");
-			optionsBuilder.UseLoggerFactory(LoggerFactory);
 			optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
 
 			using var ctx = new SQLServerNorthwindContext(optionsBuilder.Options);
