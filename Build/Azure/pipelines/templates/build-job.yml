@@ -13,8 +13,12 @@ jobs:
 
   steps:
 
-  # .NET 8 and 9 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
-  # Don't add explicit SDK install for now as it will break LinqToDB.CLI without fix for https://github.com/dotnet/sdk/issues/45926
+# use latest SDK explicitly to avoid issues with slow azure updates
+  - task: UseDotNet@2
+    displayName: 'Use latest .NET SDK'
+    inputs:
+      packageType: sdk
+      version: 9.x
 
   - task: PowerShell@2
     inputs:
