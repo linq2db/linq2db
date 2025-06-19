@@ -1574,6 +1574,21 @@ namespace LinqToDB.Linq.Builder
 
 						if (HandleSubquery(node, out translated))
 							return Visit(translated);
+
+						if (node.Expression is ContextRefExpression contextRef)
+						{
+							// Handling case when implementation of interface refers to ExpressionMethod
+							if (contextRef.ElementType.IsInterface && contextRef.BuildContext is ITableContext tableContext && tableContext.ObjectType != contextRef.ElementType)
+							{
+								var newMember = tableContext.ObjectType.GetMemberEx(node.Member);
+								if (newMember != null)
+								{
+									var newMemberAccess = Expression.MakeMemberAccess(contextRef.WithType(tableContext.ObjectType), newMember);
+									return Visit(newMemberAccess);
+								}
+							}
+						}
+
 					}
 				}
 
