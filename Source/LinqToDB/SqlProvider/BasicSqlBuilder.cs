@@ -70,7 +70,6 @@ namespace LinqToDB.SqlProvider
 		#region Build Flags
 
 		bool _disableAlias;
-		bool _isInsideNot;
 		int  _binaryOptimized;
 
 		#endregion
@@ -145,16 +144,16 @@ namespace LinqToDB.SqlProvider
 		public T? ConvertElement<T>(T? element)
 			where T : class, IQueryElement
 		{
-			return OptimizationContext.OptimizeAndConvert(element, NullabilityContext, _isInsideNot);
+			return OptimizationContext.OptimizeAndConvert(element, NullabilityContext);
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
-		public IQueryElement? Optimize(IQueryElement? element, bool reduceBinary)
+		public IQueryElement? Optimize(IQueryElement? element, bool reducePredicates)
 		{
 			if (element == null)
 				return null;
 
-			return OptimizationContext.Optimize(element, NullabilityContext, _isInsideNot, reduceBinary);
+			return OptimizationContext.Optimize(element, NullabilityContext, reducePredicates);
 		}
 
 		#endregion
@@ -710,7 +709,7 @@ namespace LinqToDB.SqlProvider
 				first = false;
 
 				var addAlias = true;
-				var expr     = ConvertElement(col.Expression);
+				var expr     = (ISqlExpression)Optimize(col.Expression, reducePredicates: true);
 
 				AppendIndent();
 				BuildColumnExpression(selectQuery, expr, col.Alias, ref addAlias);
@@ -2507,20 +2506,11 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.InSubQueryPredicate:
-					{
-						BuildExpression(GetPrecedence((SqlPredicate.InSubQuery)predicate), ((SqlPredicate.InSubQuery)predicate).Expr1);
-						StringBuilder.Append(((SqlPredicate.InSubQuery)predicate).IsNot ? " NOT IN " : " IN ");
-						BuildExpression(GetPrecedence((SqlPredicate.InSubQuery)predicate), ((SqlPredicate.InSubQuery)predicate).SubQuery);
-					}
-
+					BuildInSubQueryPredicate((SqlPredicate.InSubQuery)predicate);
 					break;
 
 				case QueryElementType.InListPredicate:
-					BuildInListPredicate(predicate);
-					break;
-
-				case QueryElementType.IsTruePredicate:
-					BuildPredicate(((SqlPredicate.IsTrue)predicate).Reduce(NullabilityContext, _isInsideNot));
+					BuildInListPredicate((SqlPredicate.InList)predicate);
 					break;
 
 				case QueryElementType.ExistsPredicate:
@@ -2538,12 +2528,7 @@ namespace LinqToDB.SqlProvider
 
 						StringBuilder.Append("NOT ");
 
-						var saveIsInsideNot = _isInsideNot;
-						_isInsideNot = true;
-
 						BuildPredicate(p.Precedence, GetPrecedence(p.Predicate), p.Predicate);
-
-						_isInsideNot = saveIsInsideNot;
 
 						break;
 					}
@@ -2646,10 +2631,16 @@ namespace LinqToDB.SqlProvider
 			};
 		}
 
-		void BuildInListPredicate(ISqlPredicate predicate)
+		protected virtual void BuildInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
-			var p      = (SqlPredicate.InList)predicate;
-			var values = p.Values;
+			BuildExpression(GetPrecedence(predicate), predicate.Expr1);
+			StringBuilder.Append((predicate).IsNot ? " NOT IN " : " IN ");
+			BuildExpression(GetPrecedence(predicate), predicate.SubQuery);
+		}
+
+		protected virtual void BuildInListPredicate(SqlPredicate.InList predicate)
+		{
+			var values = predicate.Values;
 
 			// Handle x.In(IEnumerable variable)
 			if (values.Count == 1 && values[0] is SqlParameter pr)
@@ -2664,7 +2655,7 @@ namespace LinqToDB.SqlProvider
 					case string:
 						break;
 					case IEnumerable items:
-						if (p.Expr1 is ISqlTableSource table)
+						if (predicate.Expr1 is ISqlTableSource table)
 							TableSourceIn(table, items);
 						else
 							InValues(items);
@@ -2691,8 +2682,8 @@ namespace LinqToDB.SqlProvider
 						if (firstValue)
 						{
 							firstValue = false;
-							BuildExpression(GetPrecedence(p), keys[0]);
-							StringBuilder.Append(p.IsNot ? " NOT IN (" : " IN (");
+							BuildExpression(GetPrecedence(predicate), keys[0]);
+							StringBuilder.Append(predicate.IsNot ? " NOT IN (" : " IN (");
 						}
 
 						var field = GetUnderlayingField(keys[0]);
@@ -2724,7 +2715,7 @@ namespace LinqToDB.SqlProvider
 							var field = GetUnderlayingField(key);
 							var value = field.ColumnDescriptor.MemberAccessor.GetValue(item!);
 
-							BuildExpression(GetPrecedence(p), key);
+							BuildExpression(GetPrecedence(predicate), key);
 
 							if (value == null)
 							{
@@ -2756,7 +2747,7 @@ namespace LinqToDB.SqlProvider
 				}
 
 				if (firstValue)
-					BuildPredicate(SqlPredicate.MakeBool(p.IsNot));
+					BuildPredicate(SqlPredicate.MakeBool(predicate.IsNot));
 				else
 					StringBuilder.Remove(StringBuilder.Length - 2, 2).Append(')');
 			}
@@ -2765,12 +2756,12 @@ namespace LinqToDB.SqlProvider
 			{
 				var firstValue    = true;
 				var len           = StringBuilder.Length;
-				var checkNull     = p.WithNull != null;
+				var checkNull     = predicate.WithNull != null;
 				var hasNull       = false;
 				var count         = 0;
 				var multipleParts = false;
 
-				var dbDataType = QueryHelper.GetDbDataType(p.Expr1, MappingSchema);
+				var dbDataType = QueryHelper.GetDbDataType(predicate.Expr1, MappingSchema);
 
 				foreach (object? value in values)
 				{
@@ -2783,7 +2774,7 @@ namespace LinqToDB.SqlProvider
 						firstValue = true;
 						RemoveInlineComma()
 							.Append(')')
-							.Append(p.IsNot ? " AND " : " OR ");
+							.Append(predicate.IsNot ? " AND " : " OR ");
 					}
 
 					object? val = value;
@@ -2803,8 +2794,8 @@ namespace LinqToDB.SqlProvider
 					if (firstValue)
 					{
 						firstValue = false;
-						BuildExpression(GetPrecedence(p), p.Expr1);
-						StringBuilder.Append(p.IsNot ? " NOT IN (" : " IN (");
+						BuildExpression(GetPrecedence(predicate), predicate.Expr1);
+						StringBuilder.Append(predicate.IsNot ? " NOT IN (" : " IN (");
 					}
 
 					if (value is ISqlExpression expression)
@@ -2819,8 +2810,8 @@ namespace LinqToDB.SqlProvider
 				{
 					// Nothing was built, because the values contained only null values, or nothing at all.
 					BuildPredicate(hasNull ?
-						new SqlPredicate.IsNull(p.Expr1, p.IsNot) :
-						SqlPredicate.MakeBool(p.IsNot));
+						new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot) :
+						SqlPredicate.MakeBool(predicate.IsNot));
 				}
 				else
 				{
@@ -2828,14 +2819,14 @@ namespace LinqToDB.SqlProvider
 
 					if (hasNull)
 					{
-						StringBuilder.Append(p.IsNot ? " AND " : " OR ");
-						BuildPredicate(new SqlPredicate.IsNull(p.Expr1, p.IsNot));
+						StringBuilder.Append(predicate.IsNot ? " AND " : " OR ");
+						BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot));
 						multipleParts = true;
 					}
-					else if (p.WithNull == true && p.Expr1.ShouldCheckForNull(NullabilityContext))
+					else if (predicate.WithNull == true && predicate.Expr1.ShouldCheckForNull(NullabilityContext))
 					{
 						StringBuilder.Append(" OR ");
-						BuildPredicate(new SqlPredicate.IsNull(p.Expr1, false));
+						BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, false));
 						multipleParts = true;
 					}
 				}
@@ -2851,7 +2842,7 @@ namespace LinqToDB.SqlProvider
 				return searchCondition;
 
 			var condition = ConvertElement(searchCondition);
-			var optimized = Optimize(condition, true);
+			var optimized = Optimize(condition, reducePredicates: true);
 
 			if (optimized is SqlSearchCondition optimizedCondition)
 				condition = optimizedCondition;
@@ -2865,7 +2856,7 @@ namespace LinqToDB.SqlProvider
 		{
 			if (_binaryOptimized == 0)
 			{
-				var optimized = Optimize(predicate, true);
+				var optimized = Optimize(predicate, reducePredicates: true);
 				if (!ReferenceEquals(optimized, predicate))
 				{
 					predicate  = (ISqlPredicate)optimized;

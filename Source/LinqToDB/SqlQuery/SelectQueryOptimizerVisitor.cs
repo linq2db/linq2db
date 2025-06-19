@@ -33,7 +33,6 @@ namespace LinqToDB.SqlQuery
 		SelectQuery?     _applySelect;
 		SelectQuery?     _inSubquery;
 		bool             _isInRecursiveCte;
-		bool             _isInsideNot;
 		SelectQuery?     _updateQuery;
 		ISqlTableSource? _updateTable;
 
@@ -73,7 +72,6 @@ namespace LinqToDB.SqlQuery
 			_evaluationContext = evaluationContext;
 			_root              = root;
 			_rootElement       = rootElement;
-			_isInsideNot       = false;
 			_dependencies      = dependencies;
 			_parentSelect      = default!;
 			_applySelect       = default!;
@@ -175,12 +173,10 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			var saveSetOperatorCount = selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0;
-			var saveParent           = _parentSelect;
-			var saveIsInsideNot      = _isInsideNot;
+			var saveSetOperatorCount  = selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0;
+			var saveParent            = _parentSelect;
 
-			_parentSelect = selectQuery;
-			_isInsideNot = false;
+			_parentSelect      = selectQuery;
 
 			if (saveParent == null)
 			{
@@ -188,7 +184,7 @@ namespace LinqToDB.SqlQuery
 				var before = selectQuery.ToDebugString();
 #endif
 				// only once
-				_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries: true, isInsideNot: false, reduceBinary: false);
+				_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries: true, reducePredicates: false);
 			}
 
 			var newQuery = (SelectQuery)base.VisitSqlQuery(selectQuery);
@@ -277,7 +273,7 @@ namespace LinqToDB.SqlQuery
 #endif
 					CorrectEmptyInnerJoinsRecursive(selectQuery);
 
-					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries : true, isInsideNot : false, reduceBinary: false);
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries : true, reducePredicates: false);
 				}
 
 				if (saveSetOperatorCount != (selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0))
@@ -289,8 +285,6 @@ namespace LinqToDB.SqlQuery
 
 				_parentSelect = saveParent;
 			}
-
-			_isInsideNot = saveIsInsideNot;
 
 			return newQuery;
 		}
@@ -2706,7 +2700,6 @@ namespace LinqToDB.SqlQuery
 			SqlExpressionOptimizerVisitor _optimizerVisitor  = default!;
 			DataOptions                   _dataOptions       = default!;
 			MappingSchema                 _mappingSchema     = default!;
-			bool                          _isInsideNot;
 			int                           _foundCount;
 			bool                          _notAllowedScope;
 			bool                          _doNotAllow;
@@ -2733,7 +2726,6 @@ namespace LinqToDB.SqlQuery
 				_mappingSchema     = default!;
 
 				_foundCount = 0;
-				_isInsideNot       = default;
 			}
 
 			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, NullabilityContext nullability, SqlExpressionOptimizerVisitor optimizerVisitor, DataOptions dataOptions, MappingSchema mappingSchema,
@@ -2748,7 +2740,6 @@ namespace LinqToDB.SqlQuery
 				_mappingSchema     = mappingSchema;
 				_doNotAllow        = default;
 				_foundCount        = 0;
-				_isInsideNot       = default;
 
 				Visit(parent);
 
@@ -2785,21 +2776,6 @@ namespace LinqToDB.SqlQuery
 				return base.Visit(element);
 			}
 
-			protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
-			{
-				IQueryElement reduced = predicate.Reduce(_nullability, _evaluationContext, _isInsideNot, _dataOptions.LinqOptions);
-				if (!ReferenceEquals(reduced, predicate))
-				{
-					reduced = _optimizerVisitor.Optimize(_evaluationContext, _nullability, null, _dataOptions, _mappingSchema, reduced, false, _isInsideNot, true);
-
-					Visit(reduced);
-				}
-				else
-					base.VisitExprExprPredicate(predicate);
-
-				return predicate;
-			}
-
 			protected override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
 			{
 				if (element.IsPositioned)
@@ -2810,27 +2786,6 @@ namespace LinqToDB.SqlQuery
 				}
 
 				return base.VisitSqlOrderByItem(element);
-			}
-
-			protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
-			{
-				var saveIsInsideNot = _isInsideNot;
-				_isInsideNot = false;
-				var newElement =  base.VisitSqlQuery(selectQuery);
-				_isInsideNot = saveIsInsideNot;
-				return newElement;
-			}
-
-			protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
-			{
-				var saveValue = _isInsideNot;
-				_isInsideNot = true;
-
-				var result = base.VisitNotPredicate(predicate);
-
-				_isInsideNot = saveValue;
-
-				return result;
 			}
 
 			protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
