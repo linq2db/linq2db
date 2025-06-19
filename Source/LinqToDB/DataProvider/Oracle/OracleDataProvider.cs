@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsRowNumberWithoutOrderBySupported                    = false;
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = 1;
-			SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull       = false;
+			SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull       = true;
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported   = version >= OracleVersion.v12;
 			SqlProviderFlags.IsDistinctFromSupported                               = true;
 			SqlProviderFlags.DoesProviderTreatsEmptyStringAsNull                   = true;
