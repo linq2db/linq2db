@@ -309,5 +309,9 @@ namespace LinqToDB
 		/// ClickHouse provider using MySqlConnector ADO.NET provider.
 		/// </summary>
 		public const string ClickHouseMySql   = "ClickHouse.MySql";
+		/// <summary>
+		/// ClickHouse provider base name. 1Has a comment. Original line has a comment.
+		/// </summary>
+		public const string Ydb        = "YDB";
 	}
 }
