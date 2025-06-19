@@ -71,7 +71,7 @@ namespace LinqToDB.SqlProvider
 			SetConverter(typeof(SqlChars),   (sb,_,_,v) => BuildString  (sb, ((SqlChars)v).ToSqlString().ToString()));
 			SetConverter(typeof(SqlGuid),    (sb,_,_,v) => sb.Append('\'').Append(((SqlGuid)v).Value.ToString()).Append('\''));
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			SetConverter(typeof(DateOnly),   (sb,_,_,v) => BuildDateOnly(sb, (DateOnly)v));
 #endif
 		}
@@ -157,7 +157,7 @@ namespace LinqToDB.SqlProvider
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		static void BuildDateOnly(StringBuilder stringBuilder, DateOnly value)
 		{
 			stringBuilder.Append(CultureInfo.InvariantCulture, $"'{value:yyyy-MM-dd}'");

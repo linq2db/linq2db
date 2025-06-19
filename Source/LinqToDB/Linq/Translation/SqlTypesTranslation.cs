@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Common;
+using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Translation
@@ -35,7 +36,7 @@ namespace LinqToDB.Linq.Translation
 			_registration.RegisterMember(() => Sql.Types.SmallDateTime, ConvertSmallDateTime);
 			_registration.RegisterMember(() => Sql.Types.Date, ConvertDate);
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			_registration.RegisterMember(() => Sql.Types.DateOnly, ConvertDateOnly);
 #endif
 			_registration.RegisterMember(() => Sql.Types.Time, ConvertTime);
@@ -122,7 +123,7 @@ namespace LinqToDB.Linq.Translation
 			return MakeSqlTypeExpression(translationContext, methodCall, typeof(char), t => t.WithDataType(DataType.Char).WithSystemType(typeof(string)).WithLength(length));
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		protected virtual Expression? ConvertDateOnly(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 			=> MakeSqlTypeExpression(translationContext, memberExpression);
 #endif
@@ -211,16 +212,12 @@ namespace LinqToDB.Linq.Translation
 
 		public Expression? Translate(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
 		{
-			MemberInfo memberInfo;
-
-			if (memberExpression is MethodCallExpression methodCall)
-				memberInfo = methodCall.Method;
-			else if (memberExpression is MemberExpression member)
-				memberInfo = member.Member;
-			else
+			if (memberExpression is not (MethodCallExpression or MemberExpression or NewExpression))
 				return null;
 
-			var translationFunc = _registration.GetTranslation(memberInfo);
+			var memberInfoWithType = MemberHelper.GetMemberInfoWithType(memberExpression);
+
+			var translationFunc = _registration.GetTranslation(memberInfoWithType);
 			if (translationFunc == null)
 				return null;
 

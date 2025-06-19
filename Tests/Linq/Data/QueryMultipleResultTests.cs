@@ -39,7 +39,7 @@ namespace Tests.Data
 					Assert.That(res.AllDoctors.Any(), Is.True);
 					Assert.That(res.AllPatients.Any(), Is.True);
 					Assert.That(res.AllPersons.Any(), Is.True);
-					Assert.That(res.FirstPatient, Is.Not.EqualTo(null));
+					Assert.That(res.FirstPatient, Is.Not.Null);
 				});
 				Assert.Multiple(() =>
 				{
@@ -65,7 +65,7 @@ namespace Tests.Data
 					Assert.That(res.AllDoctors.Any(), Is.True);
 					Assert.That(res.AllPatients.Any(), Is.True);
 					Assert.That(res.AllPersons.Any(), Is.True);
-					Assert.That(res.FirstPatient, Is.Not.EqualTo(null));
+					Assert.That(res.FirstPatient, Is.Not.Null);
 				});
 				Assert.Multiple(() =>
 				{
@@ -99,7 +99,7 @@ namespace Tests.Data
 					Assert.That(res.AllDoctors.Any(), Is.True);
 					Assert.That(res.AllPatients.Any(), Is.True);
 					Assert.That(res.AllPersons.Any(), Is.True);
-					Assert.That(res.FirstPatient, Is.Not.EqualTo(null));
+					Assert.That(res.FirstPatient, Is.Not.Null);
 				});
 				Assert.Multiple(() =>
 				{
@@ -125,7 +125,7 @@ namespace Tests.Data
 					Assert.That(res.AllDoctors.Any(), Is.True);
 					Assert.That(res.AllPatients.Any(), Is.True);
 					Assert.That(res.AllPersons.Any(), Is.True);
-					Assert.That(res.FirstPatient, Is.Not.EqualTo(null));
+					Assert.That(res.FirstPatient, Is.Not.Null);
 				});
 				Assert.Multiple(() =>
 				{

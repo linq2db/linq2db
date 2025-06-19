@@ -8,17 +8,20 @@ namespace LinqToDB.SqlQuery
 	//TODO: Investigate how to implement only ISqlTableSource interface
 	public class SqlRawSqlTable : SqlTable
 	{
-		public string SQL { get; }
+		public string SQL      { get; }
+		public bool   IsScalar { get; }
 
 		public ISqlExpression[] Parameters { get; private set; }
 
 		public SqlRawSqlTable(
 			EntityDescriptor endtityDescriptor,
 			string           sql,
+			bool             isScalar,
 			ISqlExpression[] parameters)
 			: base(endtityDescriptor)
 		{
 			SQL        = sql        ?? throw new ArgumentNullException(nameof(sql));
+			IsScalar   = isScalar;
 			Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));
 
 			foreach (var value in parameters)
@@ -26,14 +29,18 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlRawSqlTable(
-			int id, string alias, Type objectType,
+			int              id, 
+			string           alias, 
+			Type             objectType,
 			SqlField[]       fields,
 			string           sql,
+			bool             isScalar,
 			ISqlExpression[] parameters)
 			: base(id, string.Empty, alias, new (string.Empty), objectType, null, fields, SqlTableType.RawSql, null, TableOptions.NotSet, null)
 		{
 			SQL        = sql;
 			Parameters = parameters;
+			IsScalar   = isScalar;
 		}
 
 		public SqlRawSqlTable(SqlRawSqlTable table, ISqlExpression[] parameters)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
@@ -38,7 +39,6 @@ namespace LinqToDB.DataProvider
 				IsParameterOrderDependent            = false,
 				AcceptsTakeAsParameter               = true,
 				AcceptsTakeAsParameterIfSkip         = false,
-				IsTakeSupported                      = true,
 				IsSkipSupported                      = true,
 				IsSkipSupportedIfTake                = false,
 				TakeHintsSupported                   = null,
@@ -158,7 +158,7 @@ namespace LinqToDB.DataProvider
 			command.Dispose();
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		public virtual ValueTask DisposeCommandAsync(DbCommand command)
 		{
 			ClearCommandParameters(command);
@@ -166,6 +166,8 @@ namespace LinqToDB.DataProvider
 		}
 #endif
 
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public virtual object? GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
 			return null;

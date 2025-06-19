@@ -15,7 +15,7 @@
 
 ## Installation
 
-> Requires .NET 6 or higher.
+> Requires .NET 8 or higher.
 
 Install as global tool:
 

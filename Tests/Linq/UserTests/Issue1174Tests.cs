@@ -20,11 +20,7 @@ namespace Tests.UserTests
 			{
 				return () =>
 				{
-					var db = new MyDB(configuration)
-					{
-						// No exception if policy removed
-						RetryPolicy = new SqlServerRetryPolicy(retryCount, delay, randomFactor, exponentialBase, coefficient, null)
-					};
+					var db = new MyDB(new DataOptions().UseConfiguration(configuration).UseRetryPolicy(new SqlServerRetryPolicy(retryCount, delay, randomFactor, exponentialBase, coefficient, null)));
 					return db;
 				};
 			}
@@ -34,10 +30,11 @@ namespace Tests.UserTests
 			{
 			}
 
-			public MyDB(string configuration)
-				: base(configuration)
+			public MyDB(DataOptions options)
+				: base(options)
 			{
 			}
+
 			public MyDB(IDataProvider dataProvider, string connectionString) : base(new DataOptions().UseConnectionString(dataProvider, connectionString))
 			{
 			}

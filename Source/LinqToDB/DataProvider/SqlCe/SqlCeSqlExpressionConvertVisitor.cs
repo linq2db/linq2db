@@ -2,6 +2,7 @@
 
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Linq.Translation;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
@@ -48,11 +49,26 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			return func.Name switch
+			switch (func.Name)
 			{
-				"Length" => func.WithName("LEN"),
-				_        => base.ConvertSqlFunction(func),
-			};
+				case PseudoFunctions.LENGTH:
+				{
+					/*
+					 * LEN(value + ".") - 1
+					 */
+
+					var value     = func.Parameters[0];
+					var valueType = Factory.GetDbDataType(value);
+					var funcType  = Factory.GetDbDataType(value);
+
+					var valueString = Factory.Add(valueType, value, Factory.Value(valueType, "."));
+					var valueLength = Factory.Function(funcType, "LEN", valueString);
+
+					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));
+				}
+			}
+
+			return base.ConvertSqlFunction(func);
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
@@ -73,7 +89,7 @@ namespace LinqToDB.DataProvider.SqlCe
 									new SqlFunction(typeof(string), "SUBSTRING",
 										predicate.Expr1,
 										new SqlValue(1),
-										new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+										Factory.Length(predicate.Expr2))),
 								SqlPredicate.Operator.Equal,
 								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
 								null
@@ -85,9 +101,9 @@ namespace LinqToDB.DataProvider.SqlCe
 					{
 						var indexExpression = new SqlBinaryExpression(typeof(int),
 							new SqlBinaryExpression(typeof(int),
-								new SqlFunction(typeof(int), "Length", predicate.Expr1),
+								Factory.Length(predicate.Expr1),
 								"-",
-								new SqlFunction(typeof(int), "Length", predicate.Expr2)),
+								Factory.Length(predicate.Expr2)),
 							"+",
 							new SqlValue(1));
 
@@ -97,7 +113,7 @@ namespace LinqToDB.DataProvider.SqlCe
 									new SqlFunction(typeof(string), "SUBSTRING",
 										predicate.Expr1,
 										indexExpression,
-										new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+										Factory.Length(predicate.Expr2))),
 								SqlPredicate.Operator.Equal,
 								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
 								null
@@ -124,7 +140,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 				if (subStrPredicate != null)
 				{
-					var result = new SqlSearchCondition(predicate.IsNot, subStrPredicate.MakeNot(predicate.IsNot));
+					var result = new SqlSearchCondition(predicate.IsNot, canBeUnknown: null, subStrPredicate.MakeNot(predicate.IsNot));
 
 					return result;
 				}
