@@ -608,7 +608,7 @@ namespace LinqToDB.Linq
 						throw query.ErrorExpression.CreateException();
 				}
 			}
-			catch (Exception)
+			catch
 			{
 				var linqOptions = optimizationContext.DataContext.Options.LinqOptions;
 
