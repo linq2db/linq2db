@@ -1080,7 +1080,7 @@ namespace LinqToDB.SqlQuery
 							if (rnExpression != null)
 							{
 								// we can only optimize equals
-								if (predicate is not SqlPredicate.ExprExpr expExpr || expExpr.Operator != SqlPredicate.Operator.Equal)
+								if (predicate is not (SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } or SqlPredicate.IsNull))
 								{
 									return optimized;
 								}

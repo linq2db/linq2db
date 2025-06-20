@@ -268,7 +268,7 @@ namespace LinqToDB.Data
 						sb.Value.Length = 0;
 
 						using (ActivityService.Start(ActivityID.BuildSql))
-							sqlBuilder.BuildSql(i, statement, sb.Value, optimizationContext, aliases, startIndent);
+							sqlBuilder.BuildSql(i, statement, sb.Value, optimizationContext, aliases, null, startIndent);
 
 						commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
 						optimizationContext.ClearParameters();
