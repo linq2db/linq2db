@@ -88,7 +88,7 @@ namespace LinqToDB.CommandLine
 				var assemblyResolver  = new CompositeCompilationAssemblyResolver(resolver);
 				var loadContext       = AssemblyLoadContext.GetLoadContext(interceptorsAssembly);
 
-				loadContext!.Resolving += (AssemblyLoadContext context, AssemblyName name) =>
+				loadContext!.Resolving += (context, name) =>
 				{
 					bool NamesMatch(RuntimeLibrary runtime)
 					{

@@ -75,14 +75,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				// FixedString binary readers and string fallback for other target types
 				// read as binary only for binary mappings
-				SetProviderField<DbDataReader, byte[], byte[]>((DbDataReader rd, int idx) => rd.GetFieldValue<byte[]>(idx));
-				SetProviderField<DbDataReader, Binary, byte[]>((DbDataReader rd, int idx) => new Binary(rd.GetFieldValue<byte[]>(idx)));
+				SetProviderField<DbDataReader, byte[], byte[]>((rd, idx) => rd.GetFieldValue<byte[]>(idx));
+				SetProviderField<DbDataReader, Binary, byte[]>((rd, idx) => new Binary(rd.GetFieldValue<byte[]>(idx)));
 				// for other target types read as string for better compatibility with string-based conversions
 				ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(byte[]) }] = (DbDataReader rd, int idx) => Encoding.UTF8.GetString(rd.GetFieldValue<byte[]>(idx));
 
 				// String as binary data
-				SetProviderField<DbDataReader, byte[], string>((DbDataReader rd, int idx) => rd.GetFieldValue<byte[]>(idx));
-				SetProviderField<DbDataReader, Binary, string>((DbDataReader rd, int idx) => new Binary(rd.GetFieldValue<byte[]>(idx)));
+				SetProviderField<DbDataReader, byte[], string>((rd, idx) => rd.GetFieldValue<byte[]>(idx));
+				SetProviderField<DbDataReader, Binary, string>((rd, idx) => new Binary(rd.GetFieldValue<byte[]>(idx)));
 			}
 
 			if (Provider == ClickHouseProvider.MySqlConnector)
