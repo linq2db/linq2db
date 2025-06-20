@@ -617,10 +617,12 @@ namespace LinqToDB.Linq
 					var testFile = new ExpressionTestGenerator(dataContext).GenerateSource(expressions.MainExpression);
 
 					if (dataContext.GetTraceSwitch().TraceInfo)
+					{
 						dataContext.WriteTraceLine(
 							$"Expression test code generated: \'{testFile}\'.",
 							dataContext.GetTraceSwitch().DisplayName,
 							TraceLevel.Info);
+					}
 				}
 				else
 				{
