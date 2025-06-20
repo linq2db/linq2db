@@ -671,7 +671,7 @@ namespace LinqToDB.SqlQuery
 			if (whereClause.SearchCondition.IsOr)
 			{
 				var old = whereClause.SearchCondition;
-				whereClause.SearchCondition = new SqlSearchCondition(false, old);
+				whereClause.SearchCondition = new SqlSearchCondition(false, canBeUnknown: null, old);
 			}
 
 			return whereClause.SearchCondition;
@@ -687,7 +687,7 @@ namespace LinqToDB.SqlQuery
 			if (whereClause.SearchCondition.IsOr)
 			{
 				var old = whereClause.SearchCondition;
-				whereClause.SearchCondition = new SqlSearchCondition(false, old);
+				whereClause.SearchCondition = new SqlSearchCondition(false, canBeUnknown: null, old);
 			}
 
 			return whereClause.SearchCondition;
@@ -703,7 +703,7 @@ namespace LinqToDB.SqlQuery
 			if (joinedTable.Condition.IsOr)
 			{
 				var old = joinedTable.Condition;
-				joinedTable.Condition = new SqlSearchCondition(false, old);
+				joinedTable.Condition = new SqlSearchCondition(false, canBeUnknown: null, old);
 			}
 
 			return joinedTable.Condition;
@@ -1582,7 +1582,7 @@ namespace LinqToDB.SqlQuery
 				var predicate = sc.Predicates[index];
 				if (predicate is SqlPredicate.ExprExpr exprExpr)
 				{
-					if (exprExpr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual && exprExpr.WithNull != null)
+					if (exprExpr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual && exprExpr.UnknownAsValue != null)
 					{
 						predicate = new SqlPredicate.ExprExpr(exprExpr.Expr1, exprExpr.Operator, exprExpr.Expr2, null);
 					}
@@ -1680,24 +1680,17 @@ namespace LinqToDB.SqlQuery
 			return expr;
 		}
 
-		public static bool CanBeNullableOrUnknown(this ISqlExpression expr, NullabilityContext nullabilityContext)
+		public static bool CanBeNullableOrUnknown(this ISqlExpression expr, NullabilityContext nullabilityContext, bool withoutUnknownErased)
 		{
 			if (expr is ISqlPredicate predicate)
-				return predicate.CanBeUnknown(nullabilityContext);
+				return predicate.CanBeUnknown(nullabilityContext, withoutUnknownErased);
 
 			return expr.CanBeNullable(nullabilityContext);
 		}
 
-		public static bool NeedsEqualityWithNull(ISqlExpression expr1, SqlPredicate.Operator op, ISqlExpression expr2, NullabilityContext nullabilityContext)
+		public static bool IsPredicate(this ISqlExpression expr)
 		{
-			// we cannot relax it to:
-			// ==: nullable && nullable
-			// !=: nullable XOR nullable
-			// see test GroupByAggregate
-			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
-				return expr1.CanBeNullableOrUnknown(nullabilityContext) || expr2.CanBeNullableOrUnknown(nullabilityContext);
-
-			return false;
+			return expr is ISqlPredicate or SqlExpression { IsPredicate: true };
 		}
 
 		public static ISqlExpression UnwrapCastAndNullability(ISqlExpression expr)
@@ -1832,16 +1825,16 @@ namespace LinqToDB.SqlQuery
 				if (child.IsAnd)
 					parent.Predicates.InsertRange(0, child.Predicates);
 				else
-					parent.Predicates.Insert(0, new SqlSearchCondition(true, child.Predicates));
+					parent.Predicates.Insert(0, new SqlSearchCondition(true, canBeUnknown: null, child.Predicates));
 
 				return parent;
 			}
 			else
 			{
 				if (child.IsAnd)
-					return new SqlSearchCondition(false, [..child.Predicates, parent]);
+					return new SqlSearchCondition(false, canBeUnknown: null, [..child.Predicates, parent]);
 				else
-					return new SqlSearchCondition(false, child, parent);
+					return new SqlSearchCondition(false, canBeUnknown: null, child, parent);
 			}
 		}
 
