@@ -1468,7 +1468,7 @@ namespace LinqToDB.Linq
 				builder.ResultExpression = new SqlExpression(
 					typeof(string),
 					builder.Expression,
-					SqlQuery.Precedence.Primary,
+					Precedence.Primary,
 					stringExpression,
 					new SqlExpression(typeof(string), "{0}", new SqlValue(new string(chars))));
 			}
@@ -1524,7 +1524,7 @@ namespace LinqToDB.Linq
 				builder.ResultExpression = new SqlExpression(
 					typeof(string),
 					builder.Expression,
-					SqlQuery.Precedence.Primary,
+					Precedence.Primary,
 					stringExpression,
 					new SqlExpression(typeof(string), "{0}", Precedence.Primary, new SqlValue(new string(chars))));
 			}
