@@ -1362,13 +1362,13 @@ namespace LinqToDB.Linq.Builder
 										var mi = assignment.MemberInfo.ReflectedType!.GetMemberEx(member);
 										if (mi != null && IsEqualMembers(assignment.MemberInfo, mi))
 										{
-											if (member.ReflectedType?.IsInterface == true && assignment.MemberInfo.ReflectedType?.IsClass == true && member is PropertyInfo propInfo && assignment.MemberInfo is PropertyInfo classPropinfo)
+											if (member.ReflectedType?.IsInterface == true && assignment.MemberInfo.ReflectedType?.IsClass == true && member is PropertyInfo propInfo && assignment.MemberInfo is PropertyInfo classPropInfo)
 											{
 												// Validating that interface property is pointing to the correct class property
 
 												var interfaceMap               = assignment.MemberInfo.ReflectedType.GetInterfaceMapEx(member.ReflectedType);
 												var interfacePropertyGetMethod = propInfo.GetGetMethod();
-												var classPropertyGetMethod     = classPropinfo.GetGetMethod();
+												var classPropertyGetMethod     = classPropInfo.GetGetMethod();
 
 												var methodIndex             = Array.IndexOf(interfaceMap.InterfaceMethods, interfacePropertyGetMethod);
 												var classImplementingMethod = interfaceMap.TargetMethods[methodIndex];
