@@ -1362,7 +1362,8 @@ namespace LinqToDB.Linq.Builder
 										var mi = assignment.MemberInfo.ReflectedType!.GetMemberEx(member);
 										if (mi != null && IsEqualMembers(assignment.MemberInfo, mi))
 										{
-											if (member.ReflectedType?.IsInterface == true && assignment.MemberInfo.ReflectedType?.IsClass == true && member is PropertyInfo propInfo && assignment.MemberInfo is PropertyInfo classPropInfo)
+											if (member is PropertyInfo { ReflectedType.IsInterface: true } propInfo
+												&& assignment.MemberInfo is PropertyInfo { ReflectedType.IsClass: true } classPropInfo)
 											{
 												// Validating that interface property is pointing to the correct class property
 

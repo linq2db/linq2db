@@ -336,62 +336,49 @@ namespace LinqToDB.Extensions
 
 		public static MemberInfo? GetImplementation(this Type concreteType, MemberInfo interfaceMember)
 		{
-			if (interfaceMember.DeclaringType == null || !interfaceMember.DeclaringType.IsInterface)
+			if (interfaceMember.DeclaringType is null or { IsInterface: false })
 				throw new ArgumentException("Member must be declared on an interface", nameof(interfaceMember));
 
 			var interfaceType = interfaceMember.DeclaringType!;
 			var map           = concreteType.GetInterfaceMapEx(interfaceType);
 
-			if (interfaceMember is MethodInfo method)
+			return interfaceMember switch
 			{
-				for (int i = 0; i < map.InterfaceMethods.Length; i++)
+				MethodInfo method     => FindMethod(map, method),
+				PropertyInfo property => FindPropertyMethod(map, concreteType, property),
+				_                     => null,
+			};
+
+			static MethodInfo? FindMethod(in InterfaceMapping map, MethodInfo? target)
+			{
+				if (target is not null)
 				{
-					if (map.InterfaceMethods[i] == method)
-						return map.TargetMethods[i];
+					for (int i = 0; i < map.InterfaceMethods.Length; i++)
+					{
+						if (map.InterfaceMethods[i] == target)
+							return map.TargetMethods[i];
+					}
 				}
+
+				return null;
 			}
-			else if (interfaceMember is PropertyInfo property)
+
+			static MemberInfo? FindPropertyMethod(in InterfaceMapping map, Type concreteType, PropertyInfo property)
 			{
 				// Check both get and set methods
-				var getMethod = property.GetMethod;
-				var setMethod = property.SetMethod;
-
-				MethodInfo? targetGet = null, targetSet = null;
-
-				if (getMethod != null)
-				{
-					for (int i = 0; i < map.InterfaceMethods.Length; i++)
-					{
-						if (map.InterfaceMethods[i] == getMethod)
-						{
-							targetGet = map.TargetMethods[i];
-							break;
-						}
-					}
-				}
-
-				if (setMethod != null)
-				{
-					for (int i = 0; i < map.InterfaceMethods.Length; i++)
-					{
-						if (map.InterfaceMethods[i] == setMethod)
-						{
-							targetSet = map.TargetMethods[i];
-							break;
-						}
-					}
-				}
+				var targetGet = FindMethod(map, property.GetMethod);
+				var targetSet = FindMethod(map, property.SetMethod);
 
 				// Find matching property in concrete type by methods
 				foreach (var prop in concreteType.GetProperties(
-					         BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+							 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
 				{
 					if (prop.GetMethod == targetGet || prop.SetMethod == targetSet)
 						return prop;
 				}
-			}
 
-			return null; // not found
+				return null;
+			}
 		}
 
 		/// <summary>

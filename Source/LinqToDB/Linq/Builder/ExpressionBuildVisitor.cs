@@ -1578,7 +1578,7 @@ namespace LinqToDB.Linq.Builder
 						if (node.Expression is ContextRefExpression contextRef)
 						{
 							// Handling case when implementation of interface refers to ExpressionMethod
-							if (contextRef.ElementType.IsInterface && contextRef.BuildContext is ITableContext tableContext && tableContext.ObjectType != contextRef.ElementType)
+							if (contextRef is { ElementType.IsInterface: true, BuildContext: ITableContext tableContext } && tableContext.ObjectType != contextRef.ElementType)
 							{
 								var newMember = tableContext.ObjectType.GetImplementation(node.Member);
 								if (newMember != null)
