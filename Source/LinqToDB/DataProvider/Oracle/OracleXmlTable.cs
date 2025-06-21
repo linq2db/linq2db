@@ -197,7 +197,7 @@ namespace LinqToDB.DataProvider.Oracle
 		private static MethodInfo? _oracleXmlTableString;
 		private static MethodInfo? _oracleXmlTableFuncString;
 
-		private static MethodInfo OracleXmlTableIEnumerableT => _oracleXmlTableIEnumerableT ??= MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (IEnumerable<object>)null!)).GetGenericMethodDefinition();
+		private static MethodInfo OracleXmlTableIEnumerableT => _oracleXmlTableIEnumerableT ??= MemberHelper.MethodOf(() => OracleXmlTable        (null!, (IEnumerable<object>)null!)).GetGenericMethodDefinition();
 		private static MethodInfo OracleXmlTableString       => _oracleXmlTableString       ??= MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (string)null!))             .GetGenericMethodDefinition();
 		private static MethodInfo OracleXmlTableFuncString   => _oracleXmlTableFuncString   ??= MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (Func<string>)null!))       .GetGenericMethodDefinition();
 

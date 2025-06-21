@@ -208,7 +208,7 @@ namespace Tests.xUpdate
 				{
 					db.DropTable<TestEnumTable>();
 				}
-				catch (Exception)
+				catch
 				{
 				}
 

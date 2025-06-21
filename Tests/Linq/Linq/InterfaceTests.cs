@@ -527,5 +527,111 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Interface with Expression
+		interface IParameters
+		{
+			Attributes Attributes { get; }
+		}
+
+		class Attributes
+		{
+			public int? UserId { get; set; }
+		}
+
+		interface IUserOwned
+		{
+			int UserId { get; }
+
+			int UserIdMethod();
+		}
+
+		[Table]
+		class TransactionLine : IUserOwned
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[ExpressionMethod(nameof(UserIdExpression))]
+			public int UserId => throw new InvalidOperationException();
+
+			[ExpressionMethod(nameof(UserIdExpression))]
+			public int UserIdMethod() => throw new InvalidOperationException();
+
+			private static Expression<Func<TransactionLine, int>> UserIdExpression()
+				=> x => x.Id;
+
+			public static readonly TransactionLine[] Data = new[]
+			{
+				new TransactionLine() { Id = 1 },
+				new TransactionLine() { Id = 2 },
+			};
+		}
+
+		private static IQueryable<T> Filter1<T>(IQueryable<T> q, IParameters dbCtx)
+				where T : IUserOwned
+				=> dbCtx.Attributes.UserId is null
+					? q
+					: q.Where(x => x.UserId == dbCtx.Attributes.UserId.Value);
+
+		private static IQueryable<T> Filter2<T>(IQueryable<T> q, IParameters dbCtx)
+			where T : IUserOwned
+			=> dbCtx.Attributes.UserId is null
+				? q
+				: q.Where(x => x.UserIdMethod() == dbCtx.Attributes.UserId.Value);
+
+		private static IQueryable<T> Filter1Expr<T>(IQueryable<T> q, IParameters dbCtx)
+				where T : IUserOwned
+		{
+			if (dbCtx.Attributes.UserId is null)
+				return q;
+
+			var parameter = Expression.Parameter(typeof(T));
+			var property = Expression.Property(parameter, nameof(IUserOwned.UserId));
+			var userIdValue = Expression.Constant(dbCtx.Attributes.UserId.Value);
+			var body = Expression.Equal(property, userIdValue);
+			var lambda = Expression.Lambda<Func<T, bool>>(body, parameter);
+
+			return q.Where(lambda);
+		}
+
+		private static IQueryable<T> Filter2Expr<T>(IQueryable<T> q, IParameters dbCtx)
+			where T : IUserOwned
+		{
+			if (dbCtx.Attributes.UserId is null)
+				return q;
+
+			var parameter = Expression.Parameter(typeof(T));
+			var call = Expression.Call(parameter, nameof(IUserOwned.UserIdMethod), null);
+			var userIdValue = Expression.Constant(dbCtx.Attributes.UserId.Value);
+			var body = Expression.Equal(call, userIdValue);
+			var lambda = Expression.Lambda<Func<T, bool>>(body, parameter);
+
+			return q.Where(lambda);
+		}
+
+		class Parameters : IParameters
+		{
+			Attributes IParameters.Attributes { get; } = new Attributes() { UserId = 2 };
+		}
+
+		[Test]
+		public void InterfaceFilterRegression([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TransactionLine.Data);
+
+			var cn = new Parameters();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(Filter1Expr(tb, cn).Single().Id, Is.EqualTo(2));
+				Assert.That(Filter2Expr(tb, cn).Single().Id, Is.EqualTo(2));
+
+				Assert.That(Filter1(tb, cn).Single().Id, Is.EqualTo(2));
+				Assert.That(Filter2(tb, cn).Single().Id, Is.EqualTo(2));
+			}
+		}
+		#endregion
 	}
 }

@@ -334,6 +334,53 @@ namespace LinqToDB.Extensions
 			}
 		}
 
+		public static MemberInfo? GetImplementation(this Type concreteType, MemberInfo interfaceMember)
+		{
+			if (interfaceMember.DeclaringType is null or { IsInterface: false })
+				throw new ArgumentException("Member must be declared on an interface", nameof(interfaceMember));
+
+			var interfaceType = interfaceMember.DeclaringType!;
+			var map           = concreteType.GetInterfaceMapEx(interfaceType);
+
+			return interfaceMember switch
+			{
+				MethodInfo method     => FindMethod(map, method),
+				PropertyInfo property => FindPropertyMethod(map, concreteType, property),
+				_                     => null,
+			};
+
+			static MethodInfo? FindMethod(in InterfaceMapping map, MethodInfo? target)
+			{
+				if (target is not null)
+				{
+					for (int i = 0; i < map.InterfaceMethods.Length; i++)
+					{
+						if (map.InterfaceMethods[i] == target)
+							return map.TargetMethods[i];
+					}
+				}
+
+				return null;
+			}
+
+			static MemberInfo? FindPropertyMethod(in InterfaceMapping map, Type concreteType, PropertyInfo property)
+			{
+				// Check both get and set methods
+				var targetGet = FindMethod(map, property.GetMethod);
+				var targetSet = FindMethod(map, property.SetMethod);
+
+				// Find matching property in concrete type by methods
+				foreach (var prop in concreteType.GetProperties(
+							 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+				{
+					if (prop.GetMethod == targetGet || prop.SetMethod == targetSet)
+						return prop;
+				}
+
+				return null;
+			}
+		}
+
 		/// <summary>
 		/// Returns true, if type is <see cref="Nullable{T}"/> type.
 		/// </summary>
