@@ -104,7 +104,7 @@ namespace LinqToDB.Configuration
 				source    = css.ElementInformation.Source;
 				isPresent = css.ElementInformation.IsPresent;
 			}
-			catch (Exception)
+			catch
 			{
 				source    = "";
 				isPresent = true;
