@@ -90,21 +90,21 @@ namespace Tests.UserTests
 				var users = db.GetTable<User>().Where(x => x.InYourOrganization(user)).OrderBy(x => x.Id).Select(x => x.Id.ToString()).ToList();
 
 				Assert.That(users, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(users[0], Is.EqualTo("1"));
 					Assert.That(users[1], Is.EqualTo("3"));
-				});
+				}
 
 				user  = new User() { Id = 4, Type = UserTypeEnum.OrganizationUser, OrganizationId = 2 };
 				users = db.GetTable<User>().Where(x => x.InYourOrganization(user)).OrderBy(x => x.Id).Select(x => x.Id.ToString()).ToList();
 
 				Assert.That(users, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(users[0], Is.EqualTo("2"));
 					Assert.That(users[1], Is.EqualTo("4"));
-				});
+				}
 			}
 			finally
 			{
