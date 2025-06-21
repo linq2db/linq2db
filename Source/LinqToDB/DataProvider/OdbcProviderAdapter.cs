@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider
 						typeMapper.RegisterTypeWrapper<OdbcConnection>(connectionType);
 						typeMapper.FinalizeMappings();
 
-						var connectionFactory = typeMapper.BuildTypedFactory<string, OdbcConnection, DbConnection>((string connectionString) => new OdbcConnection(connectionString));
+						var connectionFactory = typeMapper.BuildTypedFactory<string, OdbcConnection, DbConnection>(connectionString => new OdbcConnection(connectionString));
 
 						var dbTypeBuilder = typeMapper.Type<OdbcParameter>().Member(p => p.OdbcType);
 						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
@@ -117,7 +117,7 @@ namespace LinqToDB.DataProvider
 			private static LambdaExpression[] Wrappers { get; } =
 			{
 				// [0]: get Driver
-				(Expression<Func<OdbcConnection, string>>)((OdbcConnection this_) => this_.Driver),
+				(Expression<Func<OdbcConnection, string>>)(this_ => this_.Driver),
 			};
 
 			public OdbcConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)

@@ -1,0 +1,57 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Azure" />
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+  </Configurations>
+  <Folder Name="/.root/">
+    <File Path="../Directory.Packages.props" />
+    <File Path=".editorconfig" />
+    <File Path="Compile.cmd" />
+    <File Path="Directory.Build.props" />
+  </Folder>
+  <Folder Name="/Compat/">
+    <Project Path="Compat/ConfigurationManager/ConfigurationManager.csproj" />
+  </Folder>
+  <Folder Name="/Mapping/">
+    <Project Path="Mapping/UtcDateTime/UtcDateTime.csproj" />
+  </Folder>
+  <Folder Name="/Metrics/">
+    <File Path="Metrics/README.md" />
+    <Project Path="Metrics/OpenTelemetry/OpenTelemetryExample.csproj" />
+    <Project Path="Metrics/Tools/Tools.csproj" />
+  </Folder>
+  <Folder Name="/Remote/" />
+  <Folder Name="/Remote/Grpc/">
+    <File Path="Remote/Grpc/README.md" />
+    <Project Path="Remote/Grpc/GrpcClient/GrpcClient.csproj" />
+    <Project Path="Remote/Grpc/GrpcServer/GrpcServer.csproj" />
+  </Folder>
+  <Folder Name="/Remote/HttpClient/">
+    <File Path="Remote/HttpClient/README.md" />
+    <Project Path="Remote/HttpClient/HttpClientClient/HttpClientClient.csproj" />
+    <Project Path="Remote/HttpClient/HttpClientServer/HttpClientServer.csproj" />
+  </Folder>
+  <Folder Name="/Remote/SignalR/">
+    <File Path="Remote/SignalR/README.md" />
+    <Project Path="Remote/SignalR/SignalRClient/SignalRClient.csproj" />
+    <Project Path="Remote/SignalR/SignalRServer/SignalRServer.csproj" />
+  </Folder>
+  <Folder Name="/Remote/Wcf/">
+    <File Path="Remote/Wcf/README.md" />
+    <Project Path="Remote/Wcf/WcfClient/WcfClient.csproj" />
+    <Project Path="Remote/Wcf/WcfHost/WcfHost.csproj" />
+  </Folder>
+  <Folder Name="/Source/">
+    <Project Path="../Source/LinqToDB.Compat/LinqToDB.Compat.csproj" />
+    <Project Path="../Source/LinqToDB.Extensions/LinqToDB.Extensions.csproj" />
+    <Project Path="../Source/LinqToDB.Remote.Grpc/LinqToDB.Remote.Grpc.csproj" />
+    <Project Path="../Source/LinqToDB.Remote.HttpClient.Client/LinqToDB.Remote.HttpClient.Client.csproj" />
+    <Project Path="../Source/LinqToDB.Remote.HttpClient.Server/LinqToDB.Remote.HttpClient.Server.csproj" />
+    <Project Path="../Source/LinqToDB.Remote.SignalR.Client/LinqToDB.Remote.SignalR.Client.csproj" />
+    <Project Path="../Source/LinqToDB.Remote.SignalR.Server/LinqToDB.Remote.SignalR.Server.csproj" />
+    <Project Path="../Source/LinqToDB.Remote.Wcf/LinqToDB.Remote.Wcf.csproj" />
+    <Project Path="../Source/LinqToDB.Tools/LinqToDB.Tools.csproj" />
+    <Project Path="../Source/LinqToDB/LinqToDB.csproj" />
+  </Folder>
+</Solution>

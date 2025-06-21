@@ -815,7 +815,7 @@ namespace Tests.Linq
 		{
 			public BoolConverterNullableAttribute()
 			{
-				ValueConverter = new ValueConverter<bool?, string>((bool? b) => b == true ? "Y" : "N", m => m == "Y", false);
+				ValueConverter = new ValueConverter<bool?, string>(b => b == true ? "Y" : "N", m => m == "Y", false);
 			}
 		}
 
