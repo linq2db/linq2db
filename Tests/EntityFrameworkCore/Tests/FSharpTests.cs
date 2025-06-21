@@ -62,12 +62,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			FSharpTestMethods.Issue4646TestLinqToDB(ctx);
 
 			var result = db.GetTable<Issue4646Table>().Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Value, Is.Null);
 				Assert.That(result.ValueN, Is.Null);
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -81,12 +80,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			ctx.SaveChanges();
 
 			var result = db.GetTable<Issue4646Table>().Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Value, Is.Null);
 				Assert.That(result.ValueN, Is.Null);
-			});
+			}
 		}
 
 		#endregion

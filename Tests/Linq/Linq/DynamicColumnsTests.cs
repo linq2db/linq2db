@@ -414,12 +414,12 @@ namespace Tests.Linq
 					};
 
 				var result = query.ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].NI, Is.EqualTo(77));
 					Assert.That(result[0].Count, Is.EqualTo(2));
-				});
+				}
+
 				Assert.That(result[0].Sum, Is.EqualTo(10));
 			}
 		}
@@ -692,11 +692,11 @@ namespace Tests.Linq
 			var testRows = db.GetTable<TestJsonRead>().ToArray();
 			foreach (var testRow in testRows)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(testData, Does.ContainKey(testRow.Id));
 					Assert.That(testRow.Values, Has.Count.EqualTo(readColCount));
-				});
+				}
 			}
 		}
 
@@ -743,11 +743,11 @@ namespace Tests.Linq
 			var testRows = db.GetTable<TestJsonRead>().ToArray();
 			foreach (var testRow in testRows)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(testData, Does.ContainKey(testRow.Id));
 					Assert.That(testRow.Values, Has.Count.EqualTo(readColCount));
-				});
+				}
 			}
 		}
 

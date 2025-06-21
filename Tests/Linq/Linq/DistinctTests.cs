@@ -193,14 +193,14 @@ namespace Tests.Linq
 				var res = t.Select(_ => new { _.F1, _.F2 }).Distinct().OrderByDescending(_ => _.F1).Select(_ => _.F2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(5));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0], Is.EqualTo("8"));
 					Assert.That(res[1], Is.EqualTo("5"));
 					Assert.That(res[2], Is.EqualTo("4"));
 					Assert.That(res[3], Is.EqualTo("3"));
 					Assert.That(res[4], Is.EqualTo("2"));
-				});
+				}
 			}
 		}
 
@@ -213,11 +213,11 @@ namespace Tests.Linq
 				var res = t.Select(_ => new { _.F1, _.F2 }).Distinct().OrderByDescending(_ => _.F1).Select(_ => _.F2).Skip(1).Take(2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0], Is.EqualTo("5"));
 					Assert.That(res[1], Is.EqualTo("4"));
-				});
+				}
 			}
 		}
 
@@ -230,11 +230,11 @@ namespace Tests.Linq
 				var res = t.Select(_ => new { _.F1, _.F2 }).Distinct().OrderByDescending(_ => _.F1).Select(_ => _.F2).Take(2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0], Is.EqualTo("8"));
 					Assert.That(res[1], Is.EqualTo("5"));
-				});
+				}
 			}
 		}
 
@@ -247,12 +247,12 @@ namespace Tests.Linq
 				var res = t.Select(_ => new { _.F1, _.F2 }).Distinct().OrderByDescending(_ => _.F1).Select(_ => _.F2).Skip(2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0], Is.EqualTo("4"));
 					Assert.That(res[1], Is.EqualTo("3"));
 					Assert.That(res[2], Is.EqualTo("2"));
-				});
+				}
 			}
 		}
 
@@ -265,7 +265,7 @@ namespace Tests.Linq
 				var res = t.OrderByDescending(_ => _.F3).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(5));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// ordering optimized out for non-selected column and not preserved
 					Assert.That(res, Contains.Item("2"));
@@ -273,7 +273,7 @@ namespace Tests.Linq
 					Assert.That(res, Contains.Item("4"));
 					Assert.That(res, Contains.Item("8"));
 					Assert.That(res, Contains.Item("5"));
-				});
+				}
 			}
 		}
 
@@ -286,11 +286,11 @@ namespace Tests.Linq
 				var res = t.OrderByDescending(_ => _.F3).Select(_ => new { _.F1, _.F2 }).Distinct().OrderBy(_ => _.F1).Select(_ => _.F2).Skip(1).Take(2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0], Is.EqualTo("3"));
 					Assert.That(res[1], Is.EqualTo("4"));
-				});
+				}
 			}
 		}
 
@@ -303,11 +303,11 @@ namespace Tests.Linq
 				var res = t.OrderByDescending(_ => _.F3).Select(_ => new { _.F1, _.F2 }).Distinct().OrderBy(_ => _.F1).Select(_ => _.F2).Take(2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0], Is.EqualTo("2"));
 					Assert.That(res[1], Is.EqualTo("3"));
-				});
+				}
 			}
 		}
 
@@ -320,12 +320,12 @@ namespace Tests.Linq
 				var res = t.OrderByDescending(_ => _.F3).Select(_ => new { _.F1, _.F2 }).Distinct().OrderBy(r => r.F1).Select(_ => _.F2).Skip(2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0], Is.EqualTo("4"));
 					Assert.That(res[1], Is.EqualTo("5"));
 					Assert.That(res[2], Is.EqualTo("8"));
-				});
+				}
 			}
 		}
 
@@ -340,13 +340,13 @@ namespace Tests.Linq
 				var res = t.OrderByDescending(_ => _.F3).Skip(1).Take(4).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// order not preserved
 					Assert.That(res, Contains.Item("3"));
 					Assert.That(res, Contains.Item("4"));
 					Assert.That(res, Contains.Item("8"));
-				});
+				}
 			}
 		}
 
@@ -360,14 +360,14 @@ namespace Tests.Linq
 				var res = t.OrderByDescending(_ => _.F3).Take(5).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// ordering not guaranteed
 					Assert.That(res, Contains.Item("2"));
 					Assert.That(res, Contains.Item("3"));
 					Assert.That(res, Contains.Item("4"));
 					Assert.That(res, Contains.Item("8"));
-				});
+				}
 			}
 		}
 
@@ -382,7 +382,7 @@ namespace Tests.Linq
 				var res = t.OrderByDescending(_ => _.F3).Skip(2).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(5));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// ordering not preserved
 					Assert.That(res, Contains.Item("4"));
@@ -390,7 +390,7 @@ namespace Tests.Linq
 					Assert.That(res, Contains.Item("3"));
 					Assert.That(res, Contains.Item("5"));
 					Assert.That(res, Contains.Item("2"));
-				});
+				}
 			}
 		}
 
@@ -403,14 +403,14 @@ namespace Tests.Linq
 			var res = t.OrderByDescending(r => r.F1).ThenBy(r => r.F3).ThenBy(r => r.F2).Select(r => new { r.F1, r.F2 }).Distinct().ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(5));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].F2, Is.EqualTo("8"));
 				Assert.That(res[1].F2, Is.EqualTo("5"));
 				Assert.That(res[2].F2, Is.EqualTo("4"));
 				Assert.That(res[3].F2, Is.EqualTo("3"));
 				Assert.That(res[4].F2, Is.EqualTo("2"));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
@@ -422,14 +422,14 @@ namespace Tests.Linq
 			var res = t.OrderByDescending(r => r.F1).Select(r => new { r.F1, r.F2 }).Distinct().ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(5));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].F2, Is.EqualTo("8"));
 				Assert.That(res[1].F2, Is.EqualTo("5"));
 				Assert.That(res[2].F2, Is.EqualTo("4"));
 				Assert.That(res[3].F2, Is.EqualTo("3"));
 				Assert.That(res[4].F2, Is.EqualTo("2"));
-			});
+			}
 		}
 
 		sealed class Level1

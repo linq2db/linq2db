@@ -67,13 +67,12 @@ namespace Tests.Linq
 			using var dc = GetDataConnection(context.StripRemote());
 			var bySql = dc.Query<Person>(command.Sql).ToArray();
 			var expected = query.ToArray();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("SELECT"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(0));
+				Assert.That(command.Parameters, Has.Count.Zero);
 				Assert.That(bySql, Has.Length.EqualTo(expected.Length));
-			});
+			}
 		}
 
 		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configuration = ProviderName.SqlCe)]
@@ -91,16 +90,16 @@ namespace Tests.Linq
 			var expected = query.Single();
 
 			Assert.That(person, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("SELECT"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(0));
+				Assert.That(command.Parameters, Has.Count.Zero);
 				Assert.That(person[0].ID, Is.EqualTo(expected.ID));
 				Assert.That(person[0].FirstName, Is.EqualTo(expected.FirstName));
 				Assert.That(person[0].MiddleName, Is.EqualTo(expected.MiddleName));
 				Assert.That(person[0].LastName, Is.EqualTo(expected.LastName));
 				Assert.That(person[0].Gender, Is.EqualTo(expected.Gender));
-			});
+			}
 		}
 
 		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configuration = ProviderName.SqlCe)]
@@ -125,7 +124,7 @@ namespace Tests.Linq
 					: 0;
 
 			Assert.That(person, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("SELECT"));
 				Assert.That(command.Parameters, Has.Count.EqualTo(expectedParams));
@@ -134,7 +133,7 @@ namespace Tests.Linq
 				Assert.That(person[0].MiddleName, Is.EqualTo(expected.MiddleName));
 				Assert.That(person[0].LastName, Is.EqualTo(expected.LastName));
 				Assert.That(person[0].Gender, Is.EqualTo(expected.Gender));
-			});
+			}
 		}
 
 		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configuration = ProviderName.SqlCe)]
@@ -160,7 +159,7 @@ namespace Tests.Linq
 					: 0;
 
 			Assert.That(person, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("SELECT"));
 				Assert.That(command.Parameters, Has.Count.EqualTo(expectedParams));
@@ -169,7 +168,7 @@ namespace Tests.Linq
 				Assert.That(person[0].MiddleName, Is.EqualTo(expected.MiddleName));
 				Assert.That(person[0].LastName, Is.EqualTo(expected.LastName));
 				Assert.That(person[0].Gender, Is.EqualTo(expected.Gender));
-			});
+			}
 		}
 
 		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configuration = ProviderName.SqlCe)]
@@ -190,16 +189,16 @@ namespace Tests.Linq
 			var expected = query.Single();
 
 			Assert.That(person, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("SELECT"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(0));
+				Assert.That(command.Parameters, Has.Count.Zero);
 				Assert.That(person[0].ID, Is.EqualTo(expected.ID));
 				Assert.That(person[0].FirstName, Is.EqualTo(expected.FirstName));
 				Assert.That(person[0].MiddleName, Is.EqualTo(expected.MiddleName));
 				Assert.That(person[0].LastName, Is.EqualTo(expected.LastName));
 				Assert.That(person[0].Gender, Is.EqualTo(expected.Gender));
-			});
+			}
 		}
 
 		[Test]
@@ -220,12 +219,12 @@ namespace Tests.Linq
 			var expected = db.Person.Where(p => p.ID == id).Single();
 
 			Assert.That(parent, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("SELECT"));
 				Assert.That(command.Parameters, Has.Count.EqualTo(!inlineParameters && context.IsUseParameters() ? 1 : 0));
 				Assert.That(parent[0].ParentID, Is.EqualTo(expected.ID));
-			});
+			}
 		}
 
 		[Test]
@@ -244,13 +243,12 @@ namespace Tests.Linq
 			dc.Execute(command.Sql, command.Parameters);
 
 			var record = dc.GetTable<TableWithIdentity>().Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("UPDATE"));
 				Assert.That(command.Parameters, Has.Count.EqualTo(!inlineParameters && context.IsUseParameters() ? 1 : 0));
 				Assert.That(record.Value, Is.EqualTo(newValue));
-			});
+			}
 		}
 
 		[Test]
@@ -273,13 +271,12 @@ namespace Tests.Linq
 			dc.Execute(command.Sql, command.Parameters);
 
 			var record = dc.GetTable<TableWithIdentity>().Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("UPDATE"));
 				Assert.That(command.Parameters, Has.Count.EqualTo(!inlineParameters && context.IsUseParameters() ? 1 : 0));
 				Assert.That(record.Value, Is.EqualTo(newValue));
-			});
+			}
 		}
 
 		[Test]
@@ -298,13 +295,12 @@ namespace Tests.Linq
 			dc.Execute(command.Sql, command.Parameters);
 
 			var record = dc.GetTable<TableWithIdentity>().Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("INSERT"));
 				Assert.That(command.Parameters, Has.Count.EqualTo(!inlineParameters && context.IsUseParameters() ? 1 : 0));
 				Assert.That(record.Value, Is.EqualTo(value));
-			});
+			}
 		}
 
 		[Test]
@@ -327,13 +323,12 @@ namespace Tests.Linq
 			dc.Execute(command.Sql, command.Parameters);
 
 			var record = dc.GetTable<TableWithIdentity>().Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("INSERT"));
 				Assert.That(command.Parameters, Has.Count.EqualTo(!inlineParameters && context.IsUseParameters() ? 1 : 0));
 				Assert.That(record.Value, Is.EqualTo(value));
-			});
+			}
 		}
 
 		[Test]
@@ -356,13 +351,13 @@ namespace Tests.Linq
 			var records = dc.GetTable<TableWithIdentity>().ToArray();
 
 			Assert.That(records, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("INSERT"));
 				Assert.That(command.Sql, Does.Contain("SELECT"));
 				Assert.That(command.Parameters, Has.Count.EqualTo(!inlineParameters && context.IsUseParameters() ? 1 : 0));
 				Assert.That(records.Count(r => r.Value == 1 + addition), Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -389,13 +384,13 @@ namespace Tests.Linq
 			var records = dc.GetTable<TableWithIdentity>().ToArray();
 
 			Assert.That(records, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("INSERT"));
 				Assert.That(command.Sql, Does.Contain("SELECT"));
 				Assert.That(command.Parameters, Has.Count.EqualTo(!inlineParameters && context.IsUseParameters() ? 1 : 0));
 				Assert.That(records.Count(r => r.Value == 1 + addition), Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -412,12 +407,12 @@ namespace Tests.Linq
 			var expected = query.Single();
 
 			Assert.That(parent, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("SELECT"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(0));
+				Assert.That(command.Parameters, Has.Count.Zero);
 				Assert.That(parent[0].ParentID, Is.EqualTo(expected.ParentID));
-			});
+			}
 		}
 
 		[Test]
@@ -447,15 +442,14 @@ namespace Tests.Linq
 
 			using var dc = GetDataConnection(context.StripRemote());
 			var count = dc.Execute(command.Sql);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("INSERT ALL"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(0));
+				Assert.That(command.Parameters, Has.Count.Zero);
 				Assert.That(count, Is.EqualTo(3));
 				Assert.That(dest1.Count(), Is.EqualTo(2));
 				Assert.That(dest2.Count(x => x.ID == 1003), Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -488,18 +482,17 @@ namespace Tests.Linq
 
 			using var dc = GetDataConnection(context.StripRemote());
 			var count = dc.Execute(command.Sql);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("INSERT ALL"));
 				Assert.That(command.Sql, Does.Contain("WHEN"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(0));
+				Assert.That(command.Parameters, Has.Count.Zero);
 
 				Assert.That(count, Is.EqualTo(2));
 				Assert.That(dest1.Count(), Is.EqualTo(1));
 				Assert.That(dest1.Count(x => x.ID == 1001), Is.EqualTo(1));
 				Assert.That(dest2.Count(x => x.ID == 1003), Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -530,17 +523,16 @@ namespace Tests.Linq
 
 			using var dc = GetDataConnection(context.StripRemote());
 			var count = dc.Execute(command.Sql);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("INSERT FIRST"));
 				Assert.That(command.Sql, Does.Contain("WHEN"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(0));
+				Assert.That(command.Parameters, Has.Count.Zero);
 
 				Assert.That(count, Is.EqualTo(1));
 				Assert.That(dest.Count(), Is.EqualTo(1));
 				Assert.That(dest.Count(x => x.ID == 1003), Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -563,12 +555,11 @@ namespace Tests.Linq
 
 			using var dc = GetDataConnection(context.StripRemote());
 			var count = dc.Execute(command.Sql);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("MERGE"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(0));
-			});
+				Assert.That(command.Parameters, Has.Count.Zero);
+			}
 		}
 
 		[Test]
@@ -588,12 +579,11 @@ namespace Tests.Linq
 
 			using var dc = GetDataConnection(context.StripRemote());
 			var count = dc.Execute(command.Sql);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("MERGE"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(0));
-			});
+				Assert.That(command.Parameters, Has.Count.Zero);
+			}
 		}
 
 		[Test]
@@ -613,12 +603,11 @@ namespace Tests.Linq
 
 			using var dc = GetDataConnection(context.StripRemote());
 			var count = dc.Execute(command.Sql);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(command.Sql, Does.Contain("MERGE"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(0));
-			});
+				Assert.That(command.Parameters, Has.Count.Zero);
+			}
 		}
 	}
 }

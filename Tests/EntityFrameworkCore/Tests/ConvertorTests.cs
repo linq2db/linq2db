@@ -51,15 +51,14 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			_ = ctx.Subdivisions.ToLinqToDB().Where(s => ids.Contains(s.Id)).ToArray();
 
 			_ = ctx.Subdivisions.ToLinqToDB().ToArray();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result1[0].Code, Is.EqualTo(ef[0].Code));
 				Assert.That(result1[0].Id, Is.EqualTo(ef[0].Id));
 
 				Assert.That(result2[0].Code, Is.EqualTo(ef[0].Code));
 				Assert.That(result2[0].Id, Is.EqualTo(ef[0].Id));
-			});
+			}
 		}
 	}
 }

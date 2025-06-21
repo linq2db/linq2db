@@ -28,18 +28,18 @@ namespace Tests.Linq
 		[Test]
 		public void Length()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Sql.Length((string)null!), Is.Null);
-				Assert.That(Sql.Length(string.Empty), Is.EqualTo(0));
+				Assert.That(Sql.Length(string.Empty), Is.Zero);
 				Assert.That(Sql.Length("test"), Is.EqualTo(4));
-			});
+			}
 		}
 
 		[Test]
 		public void Substring()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Sql.Substring(null, 0, 0), Is.Null);
 				Assert.That(Sql.Substring("test", null, 0), Is.Null);
@@ -52,7 +52,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Substring("test", 3, 1), Is.EqualTo("s"));
 				Assert.That(Sql.Substring("test", 3, 2), Is.EqualTo("st"));
 				Assert.That(Sql.Substring("test", 3, 3), Is.EqualTo("st"));
-			});
+			}
 		}
 
 		[Test]
@@ -69,82 +69,82 @@ namespace Tests.Linq
 		[Test]
 		public void CharIndex1()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Sql.CharIndex("", null), Is.Null);
 				Assert.That(Sql.CharIndex((string)null!, "test"), Is.Null);
 
-				Assert.That(Sql.CharIndex("", "test"), Is.EqualTo(0));
-				Assert.That(Sql.CharIndex("g", "test"), Is.EqualTo(0));
+				Assert.That(Sql.CharIndex("", "test"), Is.Zero);
+				Assert.That(Sql.CharIndex("g", "test"), Is.Zero);
 				Assert.That(Sql.CharIndex("st", "test"), Is.EqualTo(3));
-			});
+			}
 		}
 
 		[Test]
 		public void CharIndex2()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Sql.CharIndex("", null, 0), Is.Null);
 				Assert.That(Sql.CharIndex((string)null!, "test", 0), Is.Null);
 				Assert.That(Sql.CharIndex("st", "test", null), Is.Null);
 
-				Assert.That(Sql.CharIndex("", "test", 0), Is.EqualTo(0));
-				Assert.That(Sql.CharIndex("g", "test", 0), Is.EqualTo(0));
+				Assert.That(Sql.CharIndex("", "test", 0), Is.Zero);
+				Assert.That(Sql.CharIndex("g", "test", 0), Is.Zero);
 				Assert.That(Sql.CharIndex("st", "test", -1), Is.EqualTo(3));
 				Assert.That(Sql.CharIndex("st", "test", 2), Is.EqualTo(3));
-				Assert.That(Sql.CharIndex("st", "test", 4), Is.EqualTo(0));
-				Assert.That(Sql.CharIndex("st", "test", 5), Is.EqualTo(0));
-			});
+				Assert.That(Sql.CharIndex("st", "test", 4), Is.Zero);
+				Assert.That(Sql.CharIndex("st", "test", 5), Is.Zero);
+			}
 		}
 
 		[Test]
 		public void CharIndex3()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Sql.CharIndex('t', null), Is.Null);
 				Assert.That(Sql.CharIndex((char?)null!, "test"), Is.Null);
 
-				Assert.That(Sql.CharIndex(Char.MinValue, "test"), Is.EqualTo(0));
-				Assert.That(Sql.CharIndex('g', "test"), Is.EqualTo(0));
+				Assert.That(Sql.CharIndex(Char.MinValue, "test"), Is.Zero);
+				Assert.That(Sql.CharIndex('g', "test"), Is.Zero);
 				Assert.That(Sql.CharIndex('s', "test"), Is.EqualTo(3));
-			});
+			}
 		}
 
 		[Test]
 		public void CharIndex4()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Sql.CharIndex('t', null, 0), Is.Null);
 				Assert.That(Sql.CharIndex((char?)null!, "test", 0), Is.Null);
 				Assert.That(Sql.CharIndex('t', "test", null), Is.Null);
 
-				Assert.That(Sql.CharIndex(Char.MinValue, "test", 0), Is.EqualTo(0));
-				Assert.That(Sql.CharIndex('g', "test", 0), Is.EqualTo(0));
+				Assert.That(Sql.CharIndex(Char.MinValue, "test", 0), Is.Zero);
+				Assert.That(Sql.CharIndex('g', "test", 0), Is.Zero);
 				Assert.That(Sql.CharIndex('s', "test", -1), Is.EqualTo(3));
 				Assert.That(Sql.CharIndex('s', "test", 2), Is.EqualTo(3));
-				Assert.That(Sql.CharIndex('s', "test", 4), Is.EqualTo(0));
-				Assert.That(Sql.CharIndex('s', "test", 5), Is.EqualTo(0));
-			});
+				Assert.That(Sql.CharIndex('s', "test", 4), Is.Zero);
+				Assert.That(Sql.CharIndex('s', "test", 5), Is.Zero);
+			}
 		}
 
 		[Test]
 		public void Reverse()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Sql.Reverse(null), Is.Null);
 				Assert.That(Sql.Reverse(string.Empty), Is.EqualTo(string.Empty));
 				Assert.That(Sql.Reverse("abcd"), Is.EqualTo("dcba"));
-			});
+			}
 		}
 
 		[Test]
 		public void Left()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Sql.Left(null, 0), Is.Null);
 				Assert.That(Sql.Left("test", null), Is.Null);
@@ -152,13 +152,13 @@ namespace Tests.Linq
 				Assert.That(Sql.Left("test", 0), Is.EqualTo(""));
 				Assert.That(Sql.Left("test", 2), Is.EqualTo("te"));
 				Assert.That(Sql.Left("test", 5), Is.EqualTo("test"));
-			});
+			}
 		}
 
 		[Test]
 		public void Right()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Sql.Right(null, 0), Is.Null);
 				Assert.That(Sql.Right("test", null), Is.Null);
@@ -166,13 +166,13 @@ namespace Tests.Linq
 				Assert.That(Sql.Right("test", 0), Is.EqualTo(""));
 				Assert.That(Sql.Right("test", 2), Is.EqualTo("st"));
 				Assert.That(Sql.Right("test", 5), Is.EqualTo("test"));
-			});
+			}
 		}
 
 		[Test]
 		public void Stuff1()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				// Disallowed null parameters
 				Assert.That(Sql.Stuff((string)null!, 1, 1, "test"), Is.Null);
@@ -195,7 +195,7 @@ namespace Tests.Linq
 
 				// Correct length
 				Assert.That(Sql.Stuff("1234", 3, 5, "5678"), Is.EqualTo("125678"));
-			});
+			}
 		}
 
 		[Test]
@@ -208,19 +208,19 @@ namespace Tests.Linq
 		[Test]
 		public void Space()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Sql.Space(null), Is.Null);
 				Assert.That(Sql.Space(-1), Is.Null);
 				Assert.That(Sql.Space(0), Is.EqualTo(""));
 				Assert.That(Sql.Space(1), Is.EqualTo(" "));
-			});
+			}
 		}
 
 		[Test]
 		public void PadLeft()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Sql.PadLeft(null, 1, '.'), Is.Null);
 				Assert.That(Sql.PadLeft("test", null, '.'), Is.Null);
@@ -231,13 +231,13 @@ namespace Tests.Linq
 				Assert.That(Sql.PadLeft("test", 3, '.'), Is.EqualTo("tes"));
 				Assert.That(Sql.PadLeft("test", 4, '.'), Is.EqualTo("test"));
 				Assert.That(Sql.PadLeft("test", 5, '.'), Is.EqualTo(".test"));
-			});
+			}
 		}
 
 		[Test]
 		public void PadRight()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Sql.PadRight(null, 1, '.'), Is.Null);
 				Assert.That(Sql.PadRight("test", null, '.'), Is.Null);
@@ -248,13 +248,13 @@ namespace Tests.Linq
 				Assert.That(Sql.PadRight("test", 3, '.'), Is.EqualTo("tes"));
 				Assert.That(Sql.PadRight("test", 4, '.'), Is.EqualTo("test"));
 				Assert.That(Sql.PadRight("test", 5, '.'), Is.EqualTo("test."));
-			});
+			}
 		}
 
 		[Test]
 		public void Replace1()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Sql.Replace(null, "e", "oa"), Is.Null);
 				Assert.That(Sql.Replace("test", null, "oa"), Is.Null);
@@ -264,13 +264,13 @@ namespace Tests.Linq
 				Assert.That(Sql.Replace("test", "", "oa"), Is.EqualTo("test"));
 				Assert.That(Sql.Replace("test", "g", "oa"), Is.EqualTo("test"));
 				Assert.That(Sql.Replace("test", "e", "oa"), Is.EqualTo("toast"));
-			});
+			}
 		}
 
 		[Test]
 		public void Replace2()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Sql.Replace(null, 'e', 'o'), Is.Null);
 				Assert.That(Sql.Replace("test", null, 'o'), Is.Null);
@@ -279,7 +279,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Replace("", 'e', 'o'), Is.EqualTo(""));
 				Assert.That(Sql.Replace("test", 'g', 'o'), Is.EqualTo("test"));
 				Assert.That(Sql.Replace("test", 'e', 'o'), Is.EqualTo("tost"));
-			});
+			}
 		}
 
 		#endregion
@@ -314,12 +314,11 @@ namespace Tests.Linq
 					Str = t.Str,
 					Len = t.Str.Length,
 				}).Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Str, Is.EqualTo(stringValue));
 				Assert.That(result.Len, Is.EqualTo(stringValue.Length));
-			});
+			}
 		}
 
 		[Test]
@@ -374,7 +373,7 @@ namespace Tests.Linq
 				var arr = new[] { "oh", "oh'", "oh\\" };
 
 				var q = from p in db.Person where  arr.Contains(p.FirstName) select p;
-				Assert.That(q.Count(), Is.EqualTo(0));
+				Assert.That(q.Count(), Is.Zero);
 			}
 		}
 
@@ -456,11 +455,11 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where p.FirstName.Contains(str) && p.ID == 1 select new { p, str };
 				var r = q.ToList().First();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r.p.ID, Is.EqualTo(1));
 					Assert.That(r.str, Is.EqualTo(str));
-				});
+				}
 			}
 		}
 
@@ -1227,8 +1226,7 @@ namespace Tests.Linq
 		public void String_PadLeft_Translation([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(0, '.'))),  Is.EqualTo("test"));
 				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(3, '.'))),  Is.EqualTo("test"));
@@ -1237,7 +1235,7 @@ namespace Tests.Linq
 				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(6, ' '))),  Is.EqualTo("  test"));
 				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(6))),       Is.EqualTo("  test"));
 				Assert.That(db.Select(() => Sql.AsSql("test".PadLeft(16, '.'))), Is.EqualTo("............test"));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4799")]
@@ -1263,15 +1261,14 @@ namespace Tests.Linq
 		public void String_PadRight_Translation([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(0, '.'))), Is.EqualTo("test"));
 				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(3, '.'))), Is.EqualTo("test"));
 				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(4, '.'))), Is.EqualTo("test"));
 				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(5, '.'))), Is.EqualTo("test."));
 				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(6, '.'))), Is.EqualTo("test.."));
-			});
+			}
 		}
 
 		[Test]
@@ -1992,26 +1989,25 @@ namespace Tests.Linq
 				});
 
 				var test = "Test";
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(table.Any(sampleClass => sampleClass.Value   == test || sampleClass.Value2!.Contains(test)), Is.True);
 					Assert.That(table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.EqualTo(2));
-				});
+				}
 
 				test = "Value";
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(table.Any(sampleClass => sampleClass.Value   == test || sampleClass.Value2!.Contains(test)), Is.True);
 					Assert.That(table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.EqualTo(1));
-				});
+				}
 
 				test = "Class";
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(table.Any(sampleClass => sampleClass.Value   == test || sampleClass.Value2!.Contains(test)), Is.True);
 					Assert.That(table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 		#endregion

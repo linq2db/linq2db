@@ -187,11 +187,11 @@ namespace Tests.Linq
 			using (var db = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(new DataOptions().UseConnectionString(db.DataProvider.Name, db.ConnectionString!)))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db1.DataProvider.Name, Is.EqualTo(db.DataProvider.Name));
 					Assert.That(db1.ConnectionString, Is.EqualTo(db.ConnectionString));
-				});
+				}
 
 				AreEqual(
 					db.GetTable<Child>().OrderBy(_ => _.ChildID).ToList(),
@@ -290,7 +290,7 @@ namespace Tests.Linq
 		{
 			using (var db = new NewDataContext(context))
 			{
-				Assert.That(db.CreateCalled, Is.EqualTo(0));
+				Assert.That(db.CreateCalled, Is.Zero);
 
 				using (var _ = new KeepConnectionAliveScope(db))
 				{
@@ -418,12 +418,11 @@ namespace Tests.Linq
 			((IDataContext)db).CloseAfterUse = closeAfterUse;
 
 			db.Query<int>("SELECT 1").SingleOrDefault();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(interceptor.OnClosedCount, Is.EqualTo(closeAfterUse ? 1 : 0));
-				Assert.That(interceptor.OnClosedAsyncCount, Is.EqualTo(0));
-			});
+				Assert.That(interceptor.OnClosedAsyncCount, Is.Zero);
+			}
 		}
 
 	}

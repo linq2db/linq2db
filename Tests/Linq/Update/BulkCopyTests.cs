@@ -92,14 +92,13 @@ namespace Tests.xUpdate
 					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
 					var useGenerated = keepIdentity != true
 						|| context.IsAnyOf(TestProvName.AllOracle);
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(data[0].ID, Is.EqualTo(lastId + (!useGenerated ? 10 : 1)));
 						Assert.That(data[0].Value, Is.EqualTo(200));
 						Assert.That(data[1].ID, Is.EqualTo(lastId + (!useGenerated ? 20 : 2)));
 						Assert.That(data[1].Value, Is.EqualTo(300));
-					});
+					}
 
 					async Task perform()
 					{
@@ -179,14 +178,13 @@ namespace Tests.xUpdate
 					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
 					var useGenerated = keepIdentity != true
 						|| context.IsAnyOf(TestProvName.AllOracle);
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(data[0].ID, Is.EqualTo(lastId + (!useGenerated ? 10 : 1)));
 						Assert.That(data[0].Value, Is.EqualTo(200));
 						Assert.That(data[1].ID, Is.EqualTo(lastId + (!useGenerated ? 20 : 2)));
 						Assert.That(data[1].Value, Is.EqualTo(300));
-					});
+					}
 
 					async Task perform()
 					{
@@ -510,24 +508,24 @@ namespace Tests.xUpdate
 
 			if (context.IsAnyOf(ProviderName.ClickHouseClient) && copyType is BulkCopyType.ProviderSpecific)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// provider-specific bulk copy doesn't support sync API
-					Assert.That(interceptor.Closed, Is.EqualTo(0));
+					Assert.That(interceptor.Closed, Is.Zero);
 					Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-					Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
-					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
-				});
+					Assert.That(interceptor.ClosedCtx, Is.Zero);
+					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.Zero);
+				}
 			}
 			else
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(interceptor.Closed, Is.EqualTo(1));
-					Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
-					Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.EqualTo(0));
-					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
-				});
+					Assert.That(interceptor.ClosedAsync, Is.Zero);
+					Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.Zero);
+					Assert.That(interceptor.ClosedAsyncCtx, Is.Zero);
+				}
 			}
 		}
 
@@ -550,24 +548,24 @@ namespace Tests.xUpdate
 			if (context.IsAnyOf(TestProvName.AllInformix, ProviderName.DB2, ProviderName.Sybase, TestProvName.AllOracle)
 				&& copyType is BulkCopyType.ProviderSpecific)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// provider-specific bulk copy doesn't support async API
 					Assert.That(interceptor.Closed, Is.EqualTo(1));
-					Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
-					Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.EqualTo(0));
-					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
-				});
+					Assert.That(interceptor.ClosedAsync, Is.Zero);
+					Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.Zero);
+					Assert.That(interceptor.ClosedAsyncCtx, Is.Zero);
+				}
 			}
 			else
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(interceptor.Closed, Is.EqualTo(0));
+					Assert.That(interceptor.Closed, Is.Zero);
 					Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-					Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
-					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
-				});
+					Assert.That(interceptor.ClosedCtx, Is.Zero);
+					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.Zero);
+				}
 			}
 		}
 
@@ -590,24 +588,24 @@ namespace Tests.xUpdate
 			if (context.IsAnyOf(TestProvName.AllInformix, ProviderName.DB2, ProviderName.Sybase, TestProvName.AllOracle)
 				&& copyType is BulkCopyType.ProviderSpecific)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// provider-specific bulk copy doesn't support async API
 					Assert.That(interceptor.Closed, Is.EqualTo(1));
-					Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
-					Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.EqualTo(0));
-					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
-				});
+					Assert.That(interceptor.ClosedAsync, Is.Zero);
+					Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.Zero);
+					Assert.That(interceptor.ClosedAsyncCtx, Is.Zero);
+				}
 			}
 			else
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(interceptor.Closed, Is.EqualTo(0));
+					Assert.That(interceptor.Closed, Is.Zero);
 					Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-					Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
-					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
-				});
+					Assert.That(interceptor.ClosedCtx, Is.Zero);
+					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.Zero);
+				}
 			}
 		}
 
@@ -630,20 +628,20 @@ namespace Tests.xUpdate
 
 			if (context.IsAnyOf(ProviderName.ClickHouseClient) && copyType is BulkCopyType.ProviderSpecific)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// provider-specific bulk copy doesn't support sync API
-					Assert.That(interceptor.Closed, Is.EqualTo(0));
+					Assert.That(interceptor.Closed, Is.Zero);
 					Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-				});
+				}
 			}
 			else
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(interceptor.Closed, Is.EqualTo(1));
-					Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
-				});
+					Assert.That(interceptor.ClosedAsync, Is.Zero);
+				}
 			}
 		}
 
@@ -667,20 +665,20 @@ namespace Tests.xUpdate
 			if (context.IsAnyOf(TestProvName.AllInformix, ProviderName.DB2, ProviderName.Sybase, TestProvName.AllOracle)
 				&& copyType is BulkCopyType.ProviderSpecific)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// provider-specific bulk copy doesn't support async API
 					Assert.That(interceptor.Closed, Is.EqualTo(1));
-					Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
-				});
+					Assert.That(interceptor.ClosedAsync, Is.Zero);
+				}
 			}
 			else
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(interceptor.Closed, Is.EqualTo(0));
+					Assert.That(interceptor.Closed, Is.Zero);
 					Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -704,20 +702,20 @@ namespace Tests.xUpdate
 			if (context.IsAnyOf(TestProvName.AllInformix, ProviderName.DB2, ProviderName.Sybase, TestProvName.AllOracle)
 				&& copyType is BulkCopyType.ProviderSpecific)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// provider-specific bulk copy doesn't support async API
 					Assert.That(interceptor.Closed, Is.EqualTo(1));
-					Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
-				});
+					Assert.That(interceptor.ClosedAsync, Is.Zero);
+				}
 			}
 			else
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(interceptor.Closed, Is.EqualTo(0));
+					Assert.That(interceptor.Closed, Is.Zero);
 					Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -735,14 +733,13 @@ namespace Tests.xUpdate
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new IdentitySimpleBulkCopyTable() { Id = 1 } });
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(interceptor.Closed, Is.EqualTo(1));
-				Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
-				Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.EqualTo(0));
-				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
-			});
+				Assert.That(interceptor.ClosedAsync, Is.Zero);
+				Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.Zero);
+				Assert.That(interceptor.ClosedAsyncCtx, Is.Zero);
+			}
 		}
 
 		[Test]
@@ -759,14 +756,13 @@ namespace Tests.xUpdate
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new IdentitySimpleBulkCopyTable() { Id = 1 } }, default);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.Closed, Is.Zero);
 				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-				Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
-				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
-			});
+				Assert.That(interceptor.ClosedCtx, Is.Zero);
+				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.Zero);
+			}
 		}
 
 		[Test]
@@ -783,14 +779,13 @@ namespace Tests.xUpdate
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, IdentityAsyncEnumerableData(2, 1), default);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.Closed, Is.Zero);
 				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-				Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
-				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
-			});
+				Assert.That(interceptor.ClosedCtx, Is.Zero);
+				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.Zero);
+			}
 		}
 
 		[Test]
@@ -808,12 +803,11 @@ namespace Tests.xUpdate
 			db.AddInterceptor(interceptor);
 
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new IdentitySimpleBulkCopyTable() { Id = 1 } });
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(interceptor.Closed, Is.EqualTo(1));
-				Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
-			});
+				Assert.That(interceptor.ClosedAsync, Is.Zero);
+			}
 		}
 
 		[Test]
@@ -831,12 +825,11 @@ namespace Tests.xUpdate
 			db.AddInterceptor(interceptor);
 
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new IdentitySimpleBulkCopyTable() { Id = 1 } }, default);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.Closed, Is.Zero);
 				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -854,12 +847,11 @@ namespace Tests.xUpdate
 			db.AddInterceptor(interceptor);
 
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, IdentityAsyncEnumerableData(2, 1), default);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.Closed, Is.Zero);
 				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -876,14 +868,13 @@ namespace Tests.xUpdate
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(interceptor.Closed, Is.EqualTo(1));
-				Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
-				Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.EqualTo(0));
-				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
-			});
+				Assert.That(interceptor.ClosedAsync, Is.Zero);
+				Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.Zero);
+				Assert.That(interceptor.ClosedAsyncCtx, Is.Zero);
+			}
 		}
 
 		[Test]
@@ -900,14 +891,13 @@ namespace Tests.xUpdate
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.Closed, Is.Zero);
 				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-				Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
-				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
-			});
+				Assert.That(interceptor.ClosedCtx, Is.Zero);
+				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.Zero);
+			}
 		}
 
 		[Test]
@@ -924,14 +914,13 @@ namespace Tests.xUpdate
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, AsyncEnumerableData(2, 1), default);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.Closed, Is.Zero);
 				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-				Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
-				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
-			});
+				Assert.That(interceptor.ClosedCtx, Is.Zero);
+				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.Zero);
+			}
 		}
 
 		[Test]
@@ -949,12 +938,11 @@ namespace Tests.xUpdate
 			db.AddInterceptor(interceptor);
 
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(interceptor.Closed, Is.EqualTo(1));
-				Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
-			});
+				Assert.That(interceptor.ClosedAsync, Is.Zero);
+			}
 		}
 
 		[Test]
@@ -972,12 +960,11 @@ namespace Tests.xUpdate
 			db.AddInterceptor(interceptor);
 
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.Closed, Is.Zero);
 				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -995,12 +982,11 @@ namespace Tests.xUpdate
 			db.AddInterceptor(interceptor);
 
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, AsyncEnumerableData(2, 1), default);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.Closed, Is.Zero);
 				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-			});
+			}
 		}
 		#endregion
 

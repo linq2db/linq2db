@@ -74,12 +74,11 @@ namespace Tests.UserTests
 					id = db.InsertWithInt32Identity(obj);
 
 				var obj2 = db.GetTable<Entity533>().First(_ => _.ID == id);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(obj2.MiddleName, Is.Null);
 					Assert.That(obj2.FirstName.Value, Is.EqualTo(obj.FirstName.Value));
-				});
+				}
 			}
 		}
 	}

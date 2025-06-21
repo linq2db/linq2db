@@ -819,11 +819,11 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ID, Is.EqualTo(3));
 				Assert.That(result[1].ID, Is.EqualTo(1));
-			});
+			}
 
 			var selects = db.LastQuery!.Split(["SELECT"], StringSplitOptions.None).Length - 1;
 

@@ -96,31 +96,30 @@ namespace Tests.Linq
 						OrderID2 = o2.OrderID,
 						OrderID3 = o3.OrderID,
 					};
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(q2, Is.EqualTo(q));
 
 					Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1));
-				});
+				}
 
 				var proj1 = q.Select(v => v.OrderID);
 				proj1.ToArray();
 				var sq1 = proj1.GetSelectQuery();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sq1.GetTableSource().Joins, Has.Count.EqualTo(1));
 					Assert.That(sq1.GetWhere().Predicates, Is.Empty);
-				});
+				}
 
 				var proj2 = q.Select(v => v.OrderDate);
 				proj2.ToArray();
 				var sq2 = proj2.GetSelectQuery();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sq2.GetTableSource().Joins, Has.Count.EqualTo(1));
 					Assert.That(sq2.GetWhere().Predicates, Is.Empty);
-				});
+				}
 			}
 		}
 
@@ -220,11 +219,11 @@ namespace Tests.Linq
 				Assert.That(q2, Is.EqualTo(q));
 
 				var ts = q.GetTableSource();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(ts.Joins.Count(j => j.JoinType == JoinType.Inner), Is.EqualTo(2));
 					Assert.That(ts.Joins.Count(j => j.JoinType == JoinType.Left), Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
@@ -357,19 +356,19 @@ namespace Tests.Linq
 
 				var sql = q.GetSelectQuery();
 				Assert.That(sql.GetTableSource().Joins, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sql.GetTableSource().Joins.First().Condition.Predicates, Has.Count.EqualTo(2));
 					Assert.That(sql.GetWhere().Predicates, Is.Empty);
-				});
+				}
 
 				var proj1 = q.Select(v => v.OrderID);
 				var sql1 = proj1.GetSelectQuery();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sql1.GetTableSource().Joins, Has.Count.EqualTo(1));
 					Assert.That(sql1.GetWhere().Predicates, Is.Empty);
-				});
+				}
 			}
 		}
 

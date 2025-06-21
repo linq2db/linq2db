@@ -989,12 +989,12 @@ namespace Tests.Linq
 
 			var result = filteredByScore.ToArray();
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ItemId, Is.EqualTo("1"));
 				Assert.That(result[0].TotalAvailable, Is.EqualTo(10));
 				Assert.That(result[0].Reviews.Count(), Is.EqualTo(2));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
@@ -1020,12 +1020,12 @@ namespace Tests.Linq
 
 			var result = filteredByScore.ToArray();
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ItemId, Is.EqualTo("1"));
 				Assert.That(result[0].TotalAvailable, Is.EqualTo(10));
 				Assert.That(result[0].Reviews.Count(), Is.EqualTo(2));
-			});
+			}
 		}
 		#endregion
 

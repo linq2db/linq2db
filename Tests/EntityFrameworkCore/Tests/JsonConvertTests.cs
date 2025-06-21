@@ -65,12 +65,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var item = items.FirstOrDefault();
 
 			Assert.That(item, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(item!.NameLocalized.English, Is.EqualTo("English"));
 				Assert.That(item.NameLocalized.German, Is.EqualTo("German"));
 				Assert.That(item.NameLocalized.Slovak, Is.EqualTo("Slovak"));
-			});
+			}
 
 			//TODO: make it work
 			// var concrete = queryable.Select(p => new

@@ -53,12 +53,12 @@ namespace Tests.xUpdate
 						.Where(c => Sql.Property<int>(c, ChildIDColumn) == id && Sql.Property<int?>(Sql.Property<Parent>(c, "Parent"), "Value1") == 1)
 						.Set(c => Sql.Property<int>(c, ChildIDColumn), c => Sql.Property<int>(c, ChildIDColumn) + 1)
 						.Update();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id + 1), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -77,12 +77,12 @@ namespace Tests.xUpdate
 						.Where(c => Sql.Property<int>(c, ChildIDColumn) == id && Sql.Property<int?>(Sql.Property<Parent>(c, "Parent"), "Value1") == 1)
 						.Set(c => Sql.Property<int>(c, ChildIDColumn), 5000)
 						.Update();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == 5000), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 

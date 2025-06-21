@@ -191,19 +191,15 @@ namespace Tests.DataProvider
 					.Merge();
 
 				var data = table.OrderBy(_ => _.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(2));
 					Assert.That(data, Has.Length.EqualTo(2));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].Id, Is.EqualTo(1));
 					Assert.That(data[0].Name, Is.EqualTo("Value1"));
 					Assert.That(data[1].Id, Is.EqualTo(2));
 					Assert.That(data[1].Name, Is.EqualTo("Value2"));
-				});
+				}
 			}
 		}
 

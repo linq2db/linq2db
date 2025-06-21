@@ -47,13 +47,12 @@ namespace Tests.UserTests
 			var result1 = query.ToList();
 			param = null;
 			var result2 = query.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result1, Has.Count.EqualTo(1));
 				Assert.That(result2, Is.Empty);
 				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
-			});
+			}
 		}
 
 		[Test]
@@ -68,13 +67,12 @@ namespace Tests.UserTests
 			var result1 = query.ToList();
 			param = null;
 			var result2 = query.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result1, Has.Count.EqualTo(1));
 				Assert.That(result2, Is.Empty);
 				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
-			});
+			}
 		}
 
 		[Test]
@@ -89,13 +87,12 @@ namespace Tests.UserTests
 			var result1 = query.ToList();
 			param = null;
 			var result2 = query.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result1, Has.Count.EqualTo(1));
 				Assert.That(result2, Is.Empty);
 				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
-			});
+			}
 		}
 
 		[Test]
@@ -110,13 +107,12 @@ namespace Tests.UserTests
 			var result1 = query.ToList();
 			param = null;
 			var result2 = query.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result1, Has.Count.EqualTo(1));
 				Assert.That(result2, Is.Empty);
 				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
-			});
+			}
 		}
 
 		[Test]
@@ -131,13 +127,12 @@ namespace Tests.UserTests
 			var result1 = query.ToList();
 			param = null;
 			var result2 = query.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result1, Has.Count.EqualTo(1));
 				Assert.That(result2, Is.Empty);
 				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
-			});
+			}
 		}
 
 		[Test]
@@ -152,13 +147,12 @@ namespace Tests.UserTests
 			var result1 = query.ToList();
 			param = null;
 			var result2 = query.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result1, Has.Count.EqualTo(1));
 				Assert.That(result2, Is.Empty);
 				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
-			});
+			}
 		}
 
 		[Test]
@@ -173,13 +167,12 @@ namespace Tests.UserTests
 			var result1 = query.ToList();
 			param = null;
 			var result2 = query.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result1, Has.Count.EqualTo(1));
 				Assert.That(result2, Is.Empty);
 				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
-			});
+			}
 		}
 
 		[Test]
@@ -194,13 +187,12 @@ namespace Tests.UserTests
 			var result1 = query.ToList();
 			param = null;
 			var result2 = query.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result1, Has.Count.EqualTo(1));
 				Assert.That(result2, Is.Empty);
 				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
-			});
+			}
 		}
 
 		[Test]
@@ -216,13 +208,12 @@ namespace Tests.UserTests
 
 			param = null;
 			var result2 = query.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result1, Has.Count.EqualTo(1));
 				Assert.That(result2, Is.Empty);
 				Assert.That(GetCurrentBaselines(), Does.Contain("IS NULL"));
-			});
+			}
 		}
 
 		[Test]
@@ -238,13 +229,12 @@ namespace Tests.UserTests
 
 			param = null;
 			var result2 = query.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result1, Has.Count.EqualTo(1));
 				Assert.That(result2, Has.Count.EqualTo(10));
 				Assert.That(GetCurrentBaselines(), Does.Contain("IS NULL"));
-			});
+			}
 		}
 
 		[Test]
@@ -260,13 +250,12 @@ namespace Tests.UserTests
 			var result1 = query.ToList();
 			param = null;
 			var result2 = query.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result1, Has.Count.EqualTo(1));
 				Assert.That(result2, Has.Count.EqualTo(cnt));
 				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
-			});
+			}
 		}
 
 		[Test]
@@ -282,13 +271,12 @@ namespace Tests.UserTests
 			var result1 = query.ToList();
 			param = null;
 			var result2 = query.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result1, Has.Count.EqualTo(1));
 				Assert.That(result2, Has.Count.EqualTo(cnt));
 				Assert.That(GetCurrentBaselines(), Does.Not.Contain("NULL"));
-			});
+			}
 		}
 	}
 }

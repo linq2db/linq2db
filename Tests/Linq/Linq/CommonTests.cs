@@ -35,11 +35,11 @@ namespace Tests.Linq
 				var list = q.ToList();
 
 				Assert.That(list, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list[0].ChildA, Is.Null);
 					Assert.That(list[0].ChildB, Is.Not.Null);
-				});
+				}
 			}
 		}
 

@@ -34,7 +34,7 @@ namespace Tests.xUpdate
 				var cnt = db.Parent.Delete(p => p.ParentID == parent.ParentID);
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.That(cnt, Is.EqualTo(1));
-				Assert.That(db.Parent.Count (p => p.ParentID == parent.ParentID), Is.EqualTo(0));
+				Assert.That(db.Parent.Count (p => p.ParentID == parent.ParentID), Is.Zero);
 			}
 		}
 
@@ -53,7 +53,7 @@ namespace Tests.xUpdate
 				var cnt = db.Parent.Where(p => p.ParentID == parent.ParentID).Delete();
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.That(cnt, Is.EqualTo(1));
-				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID), Is.EqualTo(0));
+				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID), Is.Zero);
 			}
 		}
 
@@ -67,12 +67,12 @@ namespace Tests.xUpdate
 
 				db.Child.Insert(() => new Child { ParentID = 1, ChildID = 1001 });
 				db.Child.Insert(() => new Child { ParentID = 1, ChildID = 1002 });
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.Child.Count(c => c.ParentID == 1), Is.EqualTo(3));
 					Assert.That(db.Child.Where(c => c.Parent!.ParentID == 1 && new[] { 1001, 1002 }.Contains(c.ChildID)).Delete(), Is.EqualTo(2));
-				});
+				}
+
 				Assert.That(db.Child.Count(c => c.ParentID == 1), Is.EqualTo(1));
 			}
 		}
@@ -87,12 +87,12 @@ namespace Tests.xUpdate
 
 				db.GrandChild.Insert(() => new GrandChild { ParentID = 1, ChildID = 1, GrandChildID = 1001 });
 				db.GrandChild.Insert(() => new GrandChild { ParentID = 1, ChildID = 2, GrandChildID = 1002 });
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.GrandChild1.Count(gc => gc.ParentID == 1), Is.EqualTo(3));
 					Assert.That(db.GrandChild1.Where(gc => gc.Parent!.ParentID == 1 && new[] { 1001, 1002 }.Contains(gc.GrandChildID!.Value)).Delete(), Is.EqualTo(2));
-				});
+				}
+
 				Assert.That(db.GrandChild1.Count(gc => gc.ParentID == 1), Is.EqualTo(1));
 			}
 		}
@@ -119,7 +119,7 @@ namespace Tests.xUpdate
 					var cnt = db.Parent.Delete(_ => values.Contains(_.ParentID));
 					if (!context.IsAnyOf(TestProvName.AllClickHouse))
 						Assert.That(cnt, Is.EqualTo(2));
-					Assert.That(db.Parent.Count(_ => _.ParentID > 1000), Is.EqualTo(0));
+					Assert.That(db.Parent.Count(_ => _.ParentID > 1000), Is.Zero);
 				}
 			}
 		}
@@ -193,12 +193,11 @@ namespace Tests.xUpdate
 
 					var n1 = q.SelectMany(p => p.Children.SelectMany(c => c.GrandChildren)).Delete();
 					var n2 = q.SelectMany(p => p.Children).                                 Delete();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(n1, Is.EqualTo(6));
 						Assert.That(n2, Is.EqualTo(2));
-					});
+					}
 				}
 				finally
 				{
@@ -532,11 +531,11 @@ namespace Tests.xUpdate
 			using (var table = db.CreateLocalTable<Person>(tableName))
 			{
 				var iTable = (ITable<Person>)table;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(iTable.TableName, Is.EqualTo(tableName));
 					Assert.That(iTable.SchemaName, Is.Null);
-				});
+				}
 
 				var person = new Person()
 				{
@@ -554,7 +553,7 @@ namespace Tests.xUpdate
 
 				db.Delete(personForDelete, tableName);
 
-				Assert.That(table.Count(), Is.EqualTo(0));
+				Assert.That(table.Count(), Is.Zero);
 			}
 		}
 
@@ -571,12 +570,11 @@ namespace Tests.xUpdate
 				try
 				{
 					var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(table.TableName, Is.EqualTo(tableName));
 						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					});
+					}
 
 					var person = new Person()
 					{
@@ -594,7 +592,7 @@ namespace Tests.xUpdate
 
 					await db.DeleteAsync(personForDelete, tableName: tableName, schemaName: schemaName);
 
-					Assert.That(await table.CountAsync(), Is.EqualTo(0));
+					Assert.That(await table.CountAsync(), Is.Zero);
 
 					await table.DropAsync();
 				}
@@ -626,15 +624,14 @@ namespace Tests.xUpdate
 
 			var left = db.Parent.Count(c => c.ParentID > 1000);
 			var deleted = db.Parent.Delete(c => c.ParentID == 1003) == 1;
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.That(cnt, Is.EqualTo(2));
 				Assert.That(left, Is.EqualTo(1));
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.That(deleted, Is.True);
-			});
+			}
 		}
 
 		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSybase])]
@@ -655,15 +652,14 @@ namespace Tests.xUpdate
 
 			var left = db.Parent.Count(c => c.ParentID > 1000);
 			var deleted = db.Parent.Delete(c => c.ParentID > 1000) == 1;
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.That(cnt, Is.EqualTo(2));
 				Assert.That(left, Is.EqualTo(1));
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
 					Assert.That(deleted, Is.True);
-			});
+			}
 		}
 	}
 }

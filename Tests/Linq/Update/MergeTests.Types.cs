@@ -351,12 +351,11 @@ namespace Tests.xUpdate
 
 				var result1 = GetTypes1(db).OrderBy(_ => _.Id).ToList();
 				var result2 = GetTypes2(db).OrderBy(_ => _.Id).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result1, Has.Count.EqualTo(InitialTypes1Data.Length));
 					Assert.That(result2, Has.Count.EqualTo(InitialTypes2Data.Length));
-				});
+				}
 
 				var provider = GetProviderName(context, out var _);
 				for (var i = 0; i < InitialTypes1Data.Length; i++)
@@ -373,11 +372,11 @@ namespace Tests.xUpdate
 
 		private void AssertTypesRow(MergeTypes expected, MergeTypes actual, string provider, bool isIDS)
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(actual.Id, Is.EqualTo(expected.Id));
 				Assert.That(actual.FieldInt32, Is.EqualTo(expected.FieldInt32));
-			});
+			}
 
 			if (!provider.IsAnyOf(TestProvName.AllAccess))
 				Assert.That(actual.FieldInt64, Is.EqualTo(expected.FieldInt64));
@@ -660,12 +659,11 @@ namespace Tests.xUpdate
 
 				var result1 = GetTypes1(db).OrderBy(_ => _.Id).ToList();
 				var result2 = GetTypes2(db).OrderBy(_ => _.Id).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result1, Has.Count.EqualTo(InitialTypes1Data.Length));
 					Assert.That(result2, Has.Count.EqualTo(InitialTypes2Data.Length));
-				});
+				}
 
 				var provider = GetProviderName(context, out var _);
 				for (var i = 0; i < InitialTypes1Data.Length; i++)

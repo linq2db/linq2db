@@ -93,12 +93,11 @@ namespace Tests.Scaffold
 				fkName,
 				transformation,
 				defaultSchemas);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(sourceSideAssociationName, Is.EqualTo(expectedSourceName));
 				Assert.That(targetSideAssociationName, Is.EqualTo(expectedTargetName));
-			});
+			}
 		}
 	}
 }

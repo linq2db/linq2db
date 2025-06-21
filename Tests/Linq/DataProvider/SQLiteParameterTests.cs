@@ -57,15 +57,14 @@ namespace Tests.DataProvider
 						select t;
 
 			query.ToArray();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 #pragma warning disable CS0618 // Type or member is obsolete
 				Assert.That(query.GetStatement().CollectParameters(), Is.Empty);
 #pragma warning restore CS0618 // Type or member is obsolete
 
 				Assert.That(query.ToSqlQuery().Sql, Does.Not.Contain("DateTime("));
-			});
+			}
 		}
 
 		[Test]

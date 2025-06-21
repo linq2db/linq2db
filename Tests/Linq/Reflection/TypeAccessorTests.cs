@@ -130,12 +130,11 @@ namespace Tests.Reflection
 			var ta = TypeAccessor.GetAccessor(typeof(TestClass1));
 #pragma warning restore CA2263 // Prefer generic overload when type is known
 			var ma = ta["Prop1"];
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ma.HasGetter, Is.True);
 				Assert.That(ma.HasSetter, Is.False);
-			});
+			}
 		}
 
 		[Test]
@@ -145,12 +144,11 @@ namespace Tests.Reflection
 			var ta = TypeAccessor.GetAccessor(typeof(TestClass1));
 #pragma warning restore CA2263 // Prefer generic overload when type is known
 			var ma = ta["Prop3"];
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ma.HasGetter, Is.False);
 				Assert.That(ma.HasSetter, Is.True);
-			});
+			}
 		}
 
 	}

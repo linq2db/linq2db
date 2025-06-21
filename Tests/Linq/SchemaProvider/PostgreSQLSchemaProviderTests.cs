@@ -290,8 +290,7 @@ namespace Tests.SchemaProvider
 				Assert.That(procedures, Has.Count.EqualTo(1));
 
 				var procedure = procedures[0];
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(procedure.CatalogName, Is.EqualTo(expectedProc.CatalogName));
 					Assert.That(procedure.SchemaName, Is.EqualTo(expectedProc.SchemaName));
@@ -306,22 +305,22 @@ namespace Tests.SchemaProvider
 					Assert.That(procedure.ResultException, Is.Null);
 
 					Assert.That(procedure.Parameters, Has.Count.EqualTo(expectedProc.Parameters.Count));
-				});
+				}
 
 				for (var i = 0; i < procedure.Parameters.Count; i++)
 				{
 					var actualParam = procedure.Parameters[i];
 					var expectedParam = expectedProc.Parameters[i];
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(expectedParam, Is.Not.Null);
 
 						Assert.That(actualParam.SchemaName, Is.EqualTo(expectedParam.SchemaName));
-					});
+					}
+
 					if (expectedParam.ParameterName != "__skip")
 						Assert.That(actualParam.ParameterName, Is.EqualTo(expectedParam.ParameterName));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(actualParam.SchemaType, Is.EqualTo(expectedParam.SchemaType));
 						Assert.That(actualParam.IsIn, Is.EqualTo(expectedParam.IsIn));
@@ -332,18 +331,18 @@ namespace Tests.SchemaProvider
 						Assert.That(actualParam.SystemType, Is.EqualTo(expectedParam.SystemType));
 						Assert.That(actualParam.DataType, Is.EqualTo(expectedParam.DataType));
 						Assert.That(actualParam.ProviderSpecificType, Is.EqualTo(expectedParam.ProviderSpecificType));
-					});
+					}
 				}
 
 				if (expectedProc.ResultTable == null)
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(procedure.ResultTable, Is.Null);
 
 						// maybe it is worth changing
 						Assert.That(procedure.SimilarTables, Is.Null);
-					});
+					}
 				}
 				else
 				{
@@ -351,8 +350,7 @@ namespace Tests.SchemaProvider
 
 					var expectedTable = expectedProc.ResultTable;
 					var actualTable = procedure.ResultTable;
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(actualTable!.ID, Is.EqualTo(expectedTable.ID));
 						Assert.That(actualTable.CatalogName, Is.EqualTo(expectedTable.CatalogName));
@@ -366,7 +364,8 @@ namespace Tests.SchemaProvider
 						Assert.That(actualTable.IsProviderSpecific, Is.EqualTo(expectedTable.IsProviderSpecific));
 
 						Assert.That(actualTable.ForeignKeys, Is.Not.Null);
-					});
+					}
+
 					Assert.That(actualTable.ForeignKeys, Is.Empty);
 
 					var expectedColumns = expectedTable.Columns;
@@ -413,8 +412,7 @@ namespace Tests.SchemaProvider
 							Assert.That(new[] { "timestamp (0) without time zone", "timestamp without time zone" }, Does.Contain(actualColumn.ColumnType));
 						else
 							Assert.That(actualColumn.ColumnType, Is.EqualTo(expectedColumn.ColumnType));
-
-						Assert.Multiple(() =>
+						using (Assert.EnterMultipleScope())
 						{
 							Assert.That(actualColumn.IsNullable, Is.EqualTo(expectedColumn.IsNullable));
 							Assert.That(actualColumn.IsIdentity, Is.EqualTo(expectedColumn.IsIdentity));
@@ -429,13 +427,10 @@ namespace Tests.SchemaProvider
 							Assert.That(actualColumn.SkipOnInsert, Is.EqualTo(expectedColumn.SkipOnInsert));
 							Assert.That(actualColumn.SkipOnUpdate, Is.EqualTo(expectedColumn.SkipOnUpdate));
 							Assert.That(actualColumn.Length, Is.EqualTo(expectedColumn.Length));
-						});
-						Assert.Multiple(() =>
-						{
 							Assert.That(actualColumn.Precision, Is.EqualTo(expectedColumn.Precision));
 							Assert.That(actualColumn.Scale, Is.EqualTo(expectedColumn.Scale));
 							Assert.That(actualColumn.Table, Is.EqualTo(actualTable));
-						});
+						}
 					}
 
 					Assert.That(procedure.SimilarTables, Is.Not.Null);
@@ -461,12 +456,11 @@ namespace Tests.SchemaProvider
 
 				var table  = schema.Tables.First(t => t.TableName == "Person");
 				var column = table.Columns.First(t => t.ColumnName == "PersonID");
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(table.Description, Is.EqualTo("This is the Person table"));
 					Assert.That(column.Description, Is.EqualTo("This is the Person.PersonID column"));
-				});
+				}
 			}
 		}
 
@@ -487,8 +481,7 @@ namespace Tests.SchemaProvider
 				}
 
 				Assert.That(view, Is.Not.Null);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(view!.ID, Is.EqualTo(view.CatalogName + ".public.Issue2023"));
 					Assert.That(view.CatalogName, Is.Not.Null);
@@ -502,10 +495,6 @@ namespace Tests.SchemaProvider
 					Assert.That(view.IsProviderSpecific, Is.False);
 					Assert.That(view.ForeignKeys, Is.Empty);
 					Assert.That(view.Columns, Has.Count.EqualTo(5));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(view.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 					Assert.That(view.Columns[0].ColumnType, Is.EqualTo("integer"));
 					Assert.That(view.Columns[0].IsNullable, Is.True);
@@ -521,12 +510,9 @@ namespace Tests.SchemaProvider
 					Assert.That(view.Columns[0].SkipOnInsert, Is.True);
 					Assert.That(view.Columns[0].SkipOnUpdate, Is.True);
 					Assert.That(view.Columns[0].Length, Is.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					// TODO: maybe we should fix it?
 					Assert.That(view.Columns[0].Precision, Is.EqualTo(32));
-					Assert.That(view.Columns[0].Scale, Is.EqualTo(0));
+					Assert.That(view.Columns[0].Scale, Is.Zero);
 					Assert.That(view.Columns[0].Table, Is.EqualTo(view));
 
 					Assert.That(view.Columns[1].ColumnName, Is.EqualTo("FirstName"));
@@ -544,9 +530,6 @@ namespace Tests.SchemaProvider
 					Assert.That(view.Columns[1].SkipOnInsert, Is.True);
 					Assert.That(view.Columns[1].SkipOnUpdate, Is.True);
 					Assert.That(view.Columns[1].Length, Is.EqualTo(50));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(view.Columns[1].Precision, Is.Null);
 					Assert.That(view.Columns[1].Scale, Is.Null);
 					Assert.That(view.Columns[1].Table, Is.EqualTo(view));
@@ -566,9 +549,6 @@ namespace Tests.SchemaProvider
 					Assert.That(view.Columns[2].SkipOnInsert, Is.True);
 					Assert.That(view.Columns[2].SkipOnUpdate, Is.True);
 					Assert.That(view.Columns[2].Length, Is.EqualTo(50));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(view.Columns[2].Precision, Is.Null);
 					Assert.That(view.Columns[2].Scale, Is.Null);
 					Assert.That(view.Columns[2].Table, Is.EqualTo(view));
@@ -588,9 +568,6 @@ namespace Tests.SchemaProvider
 					Assert.That(view.Columns[3].SkipOnInsert, Is.True);
 					Assert.That(view.Columns[3].SkipOnUpdate, Is.True);
 					Assert.That(view.Columns[3].Length, Is.EqualTo(50));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(view.Columns[3].Precision, Is.Null);
 					Assert.That(view.Columns[3].Scale, Is.Null);
 					Assert.That(view.Columns[3].Table, Is.EqualTo(view));
@@ -610,13 +587,10 @@ namespace Tests.SchemaProvider
 					Assert.That(view.Columns[4].SkipOnInsert, Is.True);
 					Assert.That(view.Columns[4].SkipOnUpdate, Is.True);
 					Assert.That(view.Columns[4].Length, Is.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(view.Columns[4].Precision, Is.Null);
 					Assert.That(view.Columns[4].Scale, Is.Null);
 					Assert.That(view.Columns[4].Table, Is.EqualTo(view));
-				});
+				}
 			}
 		}
 	}

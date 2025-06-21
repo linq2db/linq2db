@@ -146,11 +146,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				}
 			}
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(exceptExpected, Is.EqualTo(0), $"Expected Was{Environment.NewLine}{message}");
-				Assert.That(exceptResult, Is.EqualTo(0), $"Expect Result{Environment.NewLine}{message}");
-			});
+				Assert.That(exceptExpected, Is.Zero, $"Expected Was{Environment.NewLine}{message}");
+				Assert.That(exceptResult, Is.Zero, $"Expect Result{Environment.NewLine}{message}");
+			}
 		}
 
 		// use TFM-specific suffix to avoid database conflicts on parallel runs

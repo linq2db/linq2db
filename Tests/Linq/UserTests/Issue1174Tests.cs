@@ -68,12 +68,11 @@ namespace Tests.UserTests
 					var user2Task = db2.Users.FirstAsync();
 
 					Assert.DoesNotThrowAsync(() => Task.WhenAll(user1Task, user2Task));
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(user1Task.Result, Is.Not.Null);
 						Assert.That(user2Task.Result, Is.Not.Null);
-					});
+					}
 				}
 			}
 		}

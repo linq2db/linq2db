@@ -100,13 +100,12 @@ namespace Tests.Mapping
 				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed.Associations.Single().MemberInfo.Name, Is.EqualTo("Parent"));
 				Assert.That(ed.Associations.Single().ThisKey.Single(), Is.EqualTo("ID1"));
 				Assert.That(ed.Associations.Single().OtherKey.Single(), Is.EqualTo("ID"));
-			});
+			}
 		}
 
 		[Test]
@@ -120,13 +119,12 @@ namespace Tests.Mapping
 				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed.Associations.Single().MemberInfo.Name, Is.EqualTo("Parent2"));
 				Assert.That(ed.Associations.Single().ThisKey.Single(), Is.EqualTo("ID2"));
 				Assert.That(ed.Associations.Single().OtherKey.Single(), Is.EqualTo("ID3"));
-			});
+			}
 		}
 
 		[Test]
@@ -240,13 +238,12 @@ namespace Tests.Mapping
 			var ms = new MappingSchema();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed.DynamicColumnsStore!.MemberName, Is.EqualTo(nameof(MyClass.ExtendedColumns)));
 				Assert.That(ed.Columns.Any(c => c.MemberName == nameof(MyClass.ExtendedColumns)), Is.False);
 				Assert.That(ed.Columns.Any(c => c.MemberName == nameof(MyClass.ExtendedSQLiteColumns)), Is.False);
-			});
+			}
 		}
 
 		[Test]
@@ -255,13 +252,12 @@ namespace Tests.Mapping
 			var ms = new MappingSchema(ProviderName.SQLite);
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed.DynamicColumnsStore!.MemberName, Is.EqualTo(nameof(MyClass.ExtendedSQLiteColumns)));
 				Assert.That(ed.Columns.Any(c => c.MemberName == nameof(MyClass.ExtendedColumns)), Is.False);
 				Assert.That(ed.Columns.Any(c => c.MemberName == nameof(MyClass.ExtendedSQLiteColumns)), Is.False);
-			});
+			}
 		}
 
 		[Test]

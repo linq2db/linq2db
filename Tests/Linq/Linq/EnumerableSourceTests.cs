@@ -702,7 +702,7 @@ namespace Tests.Linq
 					Assert.That(cnt, Is.EqualTo(2));
 				cnt = table.Insert(queryToInsert);
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.That(cnt, Is.EqualTo(0));
+					Assert.That(cnt, Is.Zero);
 
 				if (iteration > 1)
 					table.GetCacheMissCount().Should().Be(cacheMiss);

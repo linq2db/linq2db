@@ -163,19 +163,17 @@ namespace Tests.Linq
 			Assert.That(res, Has.Length.EqualTo(3));
 
 			Assert.That(res[0].Array, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Array.Count(), Is.EqualTo(3));
 
 				Assert.That(res[1].Array, Is.Not.Null);
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(res[1].Array.Count(), Is.EqualTo(2));
 
 				Assert.That(res[2].Array, Is.Not.Null);
-			});
-			Assert.That(res[2].Array.Count(), Is.EqualTo(0));
+			}
+
+			Assert.That(res[2].Array.Count(), Is.Zero);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
@@ -195,13 +193,12 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(1));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Id, Is.EqualTo(1));
 				Assert.That(res[0].Array.Count(), Is.EqualTo(3));
 				Assert.That(res[0].Array, Is.EqualTo(new string[] { "one", "two", "three" }));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
@@ -221,13 +218,12 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(1));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Id, Is.EqualTo(1));
 				Assert.That(res[0].Array.Count(), Is.EqualTo(3));
 				Assert.That(res[0].Array, Is.EqualTo(new string[] { "one", "two", "three" }));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
@@ -247,13 +243,12 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(1));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Id, Is.EqualTo(1));
 				Assert.That(res[0].Array.Count(), Is.EqualTo(3));
 				Assert.That(res[0].Array, Is.EqualTo(new string[] { "one", "two", "three" }));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
@@ -273,13 +268,12 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(1));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Id, Is.EqualTo(1));
 				Assert.That(res[0].Array.Count(), Is.EqualTo(3));
 				Assert.That(res[0].Array, Is.EqualTo(new string[] { "one", "two", "three" }));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
@@ -299,13 +293,12 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(1));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Id, Is.EqualTo(1));
 				Assert.That(res[0].Array.Count(), Is.EqualTo(3));
 				Assert.That(res[0].Array, Is.EqualTo(new string[] { "one", "two", "three" }));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
@@ -325,13 +318,12 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(1));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Id, Is.EqualTo(1));
 				Assert.That(res[0].Array.Count(), Is.EqualTo(3));
 				Assert.That(res[0].Array, Is.EqualTo(new string[] { "one", "two", "three" }));
-			});
+			}
 		}
 
 		static partial class SqlFnEx
@@ -439,7 +431,7 @@ namespace Tests.Linq
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(db.Person.Where(r => GetValue(Wrap<int?>(null)) == null).Count(), Is.EqualTo(4));
-				Assert.That(db.Person.Where(r => GetValue(Wrap<int?>(null)) != null).Count(), Is.EqualTo(0));
+				Assert.That(db.Person.Where(r => GetValue(Wrap<int?>(null)) != null).Count(), Is.Zero);
 				Assert.That(db.Person.Where(r => !(GetValue(Wrap<int?>(null)) != null)).Count(), Is.EqualTo(4));
 			}
 		}

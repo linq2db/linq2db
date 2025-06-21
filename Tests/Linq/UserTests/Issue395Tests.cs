@@ -29,8 +29,7 @@ namespace Tests.UserTests
 					});
 
 				var data = allData.First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// ok
 					Assert.That(data.Via1,
@@ -46,7 +45,7 @@ namespace Tests.UserTests
 					Assert.That(data.Via3,
 								Is.EqualTo(third.Where(x => x.ShipCountry == data.ShipCountry).Sum(x => x.Via3)),
 								"third aggregation sum mismatch");
-				});
+				}
 			}
 		}
 	}

@@ -36,12 +36,12 @@ namespace Tests.Linq
 		{
 			using (var db = new TestDataConnection())
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.OracleXmlTable<Person>(() => "<xml/>"), Is.Not.Null);
 					Assert.That(db.OracleXmlTable<Person>("<xml/>"), Is.Not.Null);
 					Assert.That(db.OracleXmlTable(new[] { new Person() }), Is.Not.Null);
-				});
+				}
 			}
 		}
 	}

@@ -10,12 +10,12 @@ namespace Tests.Common
 		[Test]
 		public void Test([Values("", TestProvName.AllPostgreSQL, TestProvName.AllOracle)] string providerName)
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ReservedWords.IsReserved("select", providerName), Is.True);
 				Assert.That(ReservedWords.IsReserved("SELECT", providerName), Is.True);
 				Assert.That(ReservedWords.IsReserved("Select", providerName), Is.True);
-			});
+			}
 		}
 	}
 }

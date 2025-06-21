@@ -76,7 +76,7 @@ namespace Tests.Mapping
 				if (context.IsAnyOf(TestProvName.AllOracleNative))
 					Assert.That(res, Is.EqualTo(-1));
 				else
-					Assert.That(res, Is.EqualTo(0));
+					Assert.That(res, Is.Zero);
 			}
 		}
 	}

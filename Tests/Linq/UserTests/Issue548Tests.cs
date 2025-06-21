@@ -59,12 +59,11 @@ namespace Tests.UserTests
 		public void Test2()
 		{
 			var ms      = new MappingSchema();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Id")!), Is.Empty);
 				Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Value")!), Is.Empty);
-			});
+			}
 
 			const int taskCount = 2;
 

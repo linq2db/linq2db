@@ -65,15 +65,14 @@ namespace Tests.UserTests
 					});
 
 					var recordsAfter = db.GetTable<AllTypes>().Count();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						// schema request shouldn't execute procedure
 						Assert.That(recordsAfter, Is.EqualTo(recordsBefore));
 
 						// schema provider should find our procedure for real
 						Assert.That(schema.Procedures.Count(p => p.ProcedureName.ToUpperInvariant() == "ADDISSUE792RECORD"), Is.EqualTo(1));
-					});
+					}
 				}
 				finally
 				{
@@ -114,15 +113,14 @@ namespace Tests.UserTests
 				});
 
 				var recordsAfter = db.GetTable<AllTypes>().Count();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// schema request shouldn't execute procedure
 					Assert.That(recordsAfter, Is.EqualTo(recordsBefore));
 
 					// schema provider should find our procedure for real
 					Assert.That(schema.Procedures.Count(p => p.ProcedureName.ToUpperInvariant() == "ADDISSUE792RECORD"), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 

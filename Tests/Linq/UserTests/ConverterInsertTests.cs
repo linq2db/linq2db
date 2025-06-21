@@ -86,12 +86,11 @@ namespace Tests.UserTests
 
 			var p1 = db.GetTable<Person>()    .First(t => t.PersonID == id);
 			var p2 = db.GetTable<PurePerson>().First(t => t.PersonID == id);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(p1.FirstName.Keys.First(), Is.EqualTo("123"));
 				Assert.That(p2.FirstName, Is.EqualTo("123"));
-			});
+			}
 		}
 
 		[Test]
@@ -149,12 +148,11 @@ namespace Tests.UserTests
 				id = Convert.ToInt32(db.InsertWithIdentity(person));
 
 			var p = db.GetTable<PurePerson>().First(t => t.PersonID == id);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(p.Gender, Is.EqualTo(Gender.M.ToString()));
 				Assert.That(p.FirstName, Is.EqualTo("123"));
-			});
+			}
 		}
 	}
 }

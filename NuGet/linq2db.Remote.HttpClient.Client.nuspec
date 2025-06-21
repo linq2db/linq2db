@@ -8,13 +8,13 @@
 		<dependencies>
 			<group targetFramework="net462">
 				<dependency id="linq2db"                   version="6.0.0" />
-				<dependency id="Microsoft.Extensions.Http" version="9.0.4" />
-				<dependency id="System.Net.Http.Json"      version="9.0.4" />
+				<dependency id="Microsoft.Extensions.Http" version="9.0.6" />
+				<dependency id="System.Net.Http.Json"      version="9.0.6" />
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"                   version="6.0.0" />
-				<dependency id="Microsoft.Extensions.Http" version="9.0.4" />
-				<dependency id="System.Net.Http.Json"      version="9.0.4" />
+				<dependency id="Microsoft.Extensions.Http" version="9.0.6" />
+				<dependency id="System.Net.Http.Json"      version="9.0.6" />
 			</group>
 			<group targetFramework="net8.0">
 				<dependency id="linq2db"                   version="6.0.0" />
@@ -22,7 +22,7 @@
 			</group>
 			<group targetFramework="net9.0">
 				<dependency id="linq2db"                   version="6.0.0" />
-				<dependency id="Microsoft.Extensions.Http" version="9.0.4" />
+				<dependency id="Microsoft.Extensions.Http" version="9.0.6" />
 			</group>
 		</dependencies>
 	</metadata>

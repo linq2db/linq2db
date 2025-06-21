@@ -113,12 +113,11 @@ namespace Tests.Mapping
 				mb.Entity<MyClass>().HasTableName("NewName").Property(x => x.ID1).IsColumn().Build();
 
 				var ed = ms.GetEntityDescriptor(typeof(MyClass));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(ed.Name.Name, Is.EqualTo("newname"));
 					Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("id1"));
-				});
+				}
 			}
 			finally
 			{
@@ -180,12 +179,11 @@ namespace Tests.Mapping
 			mb.Entity<MyClass>().HasPrimaryKey(e => e.ID1, 3).Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed["ID1"]!.IsPrimaryKey);
 				Assert.That(ed["ID1"]!.PrimaryKeyOrder, Is.EqualTo(3));
-			});
+			}
 		}
 
 		[Test]
@@ -197,14 +195,13 @@ namespace Tests.Mapping
 			mb.Entity<MyClass>().HasPrimaryKey(e => new { e.ID, e.ID1 }, 3).Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed["ID"]!.IsPrimaryKey);
 				Assert.That(ed["ID"]!.PrimaryKeyOrder, Is.EqualTo(3));
 				Assert.That(ed["ID1"]!.IsPrimaryKey);
 				Assert.That(ed["ID1"]!.PrimaryKeyOrder, Is.EqualTo(4));
-			});
+			}
 		}
 
 		[Test]
@@ -233,12 +230,11 @@ namespace Tests.Mapping
 				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed["ID"]!.IsPrimaryKey);
 				Assert.That(ed["ID"]!.IsIdentity);
-			});
+			}
 		}
 
 		[Test]
@@ -253,12 +249,11 @@ namespace Tests.Mapping
 				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed.Name.Name, Is.EqualTo("Table"));
 				Assert.That(ed.Name.Schema, Is.EqualTo("Schema"));
-			});
+			}
 		}
 
 		[Test]
@@ -499,11 +494,11 @@ namespace Tests.Mapping
 				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed.Associations, Has.Count.EqualTo(2));
 				Assert.That(ed.Columns.Count(_ => _.IsPrimaryKey), Is.EqualTo(1));
-			});
+			}
 
 		}
 
@@ -520,18 +515,18 @@ namespace Tests.Mapping
 				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed.Associations, Has.Count.EqualTo(2));
 				Assert.That(ed.Columns.Count(_ => _.IsPrimaryKey), Is.EqualTo(1));
-			});
+			}
 
 			var ed1 = ms.GetEntityDescriptor(typeof(MyBaseClass));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed1.Associations, Is.Empty);
-				Assert.That(ed1.Columns.Count(_ => _.IsPrimaryKey), Is.EqualTo(0));
-			});
+				Assert.That(ed1.Columns.Count(_ => _.IsPrimaryKey), Is.Zero);
+			}
 
 		}
 
@@ -554,15 +549,14 @@ namespace Tests.Mapping
 			b.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass4));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed.Name.Name, Is.EqualTo(nameof(IInterfaceBase)));
 
 				Assert.That(ed[nameof(MyInheritedClass4.IntValue)]!.SkipOnUpdate, Is.True);
 				Assert.That(ed[nameof(MyInheritedClass4.StringValue)]!.SkipOnInsert, Is.True);
 				Assert.That(ed[nameof(MyInheritedClass4.MarkedOnType)]!.SkipOnInsert, Is.True);
-			});
+			}
 		}
 
 		/// issue 291 Tests
@@ -628,13 +622,12 @@ namespace Tests.Mapping
 
 					DerivedClass res = db.GetTable<DerivedClass>().First();
 					var count = db.GetTable<DerivedClass>().Count();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res.MyCol1, Is.EqualTo(item.MyCol1));
 						Assert.That(res.NotACol, Is.Not.EqualTo(item.NotACol));
 						Assert.That(count, Is.EqualTo(1));
-					});
+					}
 				}
 			}
 		}
@@ -667,13 +660,12 @@ namespace Tests.Mapping
 
 					DerivedClass res = db.GetTable<DerivedClass>().Where(o => o.MyCol1 == "MyCol1").First();
 					var count = db.GetTable<DerivedClass>().Count();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res.MyCol1, Is.EqualTo(item.MyCol1));
 						Assert.That(res.NotACol, Is.Not.EqualTo(item.NotACol));
 						Assert.That(count, Is.EqualTo(2));
-					});
+					}
 				}
 			}
 		}
@@ -829,13 +821,13 @@ namespace Tests.Mapping
 			var records = db.GetTable<EnumPerson>().OrderBy(r => r.PersonID).ToArray();
 
 			Assert.That(records, Has.Length.EqualTo(4));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(records[0].Gender, Is.EqualTo(GenderEnum.Male));
 				Assert.That(records[1].Gender, Is.EqualTo(GenderEnum.Male));
 				Assert.That(records[2].Gender, Is.EqualTo(GenderEnum.Female));
 				Assert.That(records[3].Gender, Is.EqualTo(GenderEnum.Male));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -854,11 +846,11 @@ namespace Tests.Mapping
 			var attrs = mb.MappingSchema.GetAttributes<ColumnAttribute>(typeof(Issue3119Entity), typeof(Issue3119Entity).GetProperty("UserId")!);
 
 			Assert.That(attrs, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(attrs[0].IsIdentity, Is.True);
 				Assert.That(attrs[0].IsPrimaryKey, Is.True);
-			});
+			}
 		}
 
 		sealed class Issue3119Entity
@@ -884,13 +876,13 @@ namespace Tests.Mapping
 			var attrs = mb.MappingSchema.GetAttributes<ColumnAttribute>(typeof(Issue3119Entity), typeof(Issue3119Entity).GetProperty("UserId")!);
 
 			Assert.That(attrs, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(attrs[0].IsIdentity, Is.False);
 				Assert.That(attrs[0].Configuration, Is.Null);
 				Assert.That(attrs[1].IsIdentity, Is.True);
 				Assert.That(attrs[1].Configuration, Is.EqualTo(configuration));
-			});
+			}
 		}
 	}
 }
