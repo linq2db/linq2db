@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
@@ -12,19 +12,12 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Mapping
 {
-	class MappingSchemaInfo : IConfigurationID
+	[DebuggerDisplay("ID={_configurationID}, Configuration={Configuration}")]
+	class MappingSchemaInfo(string configuration) : IConfigurationID
 	{
-		public MappingSchemaInfo(string configuration)
-		{
-			Configuration = configuration;
-
-			if (configuration.Length == 0)
-				_configurationID = 0;
-		}
-
-		public  string           Configuration;
-		private MetadataReader? _metadataReader;
-		readonly Lock           _syncRoot = new();
+		public   string          Configuration = configuration;
+		private  MetadataReader? _metadataReader;
+		readonly Lock            _syncRoot = new();
 
 		public MetadataReader? MetadataReader
 		{
@@ -320,6 +313,13 @@ namespace LinqToDB.Mapping
 			ProcessDictionary(_dataTypes);
 			ProcessDictionary(_defaultFromEnumTypes);
 
+			return idBuilder
+				.Add(_convertInfo?.GetConfigurationID())
+				.Add(IdentifierBuilder.GetObjectID(_columnNameComparer))
+				.Add(_metadataReader?.GetObjectID())
+				.CreateID()
+				;
+
 			void ProcessDictionary<T>(ConcurrentDictionary<Type,T>? dic)
 			{
 				idBuilder.Add(dic?.Count);
@@ -339,15 +339,6 @@ namespace LinqToDB.Mapping
 					}
 				}
 			}
-
-			if (_convertInfo == null)
-				idBuilder.Add(string.Empty);
-			else
-				idBuilder.Add(_convertInfo.GetConfigurationID());
-
-			idBuilder.Add(IdentifierBuilder.GetObjectID(_columnNameComparer));
-
-			return idBuilder.CreateID();
 		}
 
 		public virtual bool IsLocked => false;
