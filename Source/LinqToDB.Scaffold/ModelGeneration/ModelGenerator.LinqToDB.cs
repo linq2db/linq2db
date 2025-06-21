@@ -312,6 +312,9 @@ namespace LinqToDB.Tools.ModelGeneration
 						"_dataContext = dataContext;",
 					]);
 
+				if (schemas.Count > 0)
+					m.BodyBuilders.Add(() => ["InitSchemas();"]);
+
 				ctorGroup.Members.Add(m);
 				ctorGroup.Members.Add(new TField  { TypeBuilder = () => "IDataContext", Name = "_dataContext", AccessModifier = AccessModifier.Private, IsReadonly = true });
 

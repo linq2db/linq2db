@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -8,6 +9,8 @@ using LinqToDB.Tools;
 using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.DataProvider
 {
@@ -1628,7 +1631,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 
-			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
+			var file   = db.System.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FileID(file.Name));
 
 			Console.WriteLine(result);
@@ -1641,7 +1644,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 
-			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
+			var file   = db.System.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FileIDEx(file.Name));
 
 			Console.WriteLine(result);
@@ -1654,7 +1657,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 
-			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
+			var file   = db.System.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FileName(file.FileID));
 
 			Console.WriteLine(result);
@@ -1694,7 +1697,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 
-			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
+			var file   = db.System.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FileProperty(file.Name, SqlFn.FilePropertyName.IsPrimaryFile));
 
 			Console.WriteLine(result);
@@ -1707,7 +1710,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 
-			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
+			var file   = db.System.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FilePropertyEx(file.Name, SqlFn.FilePropertyExName.AccountType));
 
 			Console.WriteLine(result);
@@ -2702,5 +2705,32 @@ namespace Tests.DataProvider
 		}
 
 		#endregion
+
+		[Test]
+		public void GetTableRowCountInfoTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new TestDataConnection(context);
+
+			var resultBefore = db.GetTableRowCountInfo().OrderBy(t => t.ObjectID).ToList();
+
+			List<SystemSchemaExtensions.TableRowCountInfo> resultAfter;
+
+			using (var tx = db.BeginTransaction())
+			{
+				db.Insert(new Parent { ParentID = -345 });
+
+				resultAfter = db.GetTableRowCountInfo().OrderBy(t => t.ObjectID).ToList();
+
+				Assert.That(resultAfter, Is.Not.EquivalentTo(resultBefore));
+
+				tx.Rollback();
+			}
+
+			resultAfter = db.GetTableRowCountInfo().OrderBy(t => t.ObjectID).ToList();
+
+			Assert.That(resultAfter, Is.EquivalentTo(resultBefore));
+
+			Console.WriteLine(resultAfter.ToDiagnosticString());
+		}
 	}
 }
