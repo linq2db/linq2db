@@ -10,7 +10,7 @@ if [ $? != 0 ]; then exit 1; fi
 unzip 9.0.0.200 -d Net.IBM.Data.Db2-osx
 if [ $? != 0 ]; then exit 1; fi
 
-cp -f ./Net.IBM.Data.Db2-osx/lib/net9.0/IBM.Data.Db2.dll ./IBM.Data.Db2.dll
+cp -f ./Net.IBM.Data.Db2-osx/lib/net8.0/IBM.Data.Db2.dll ./IBM.Data.Db2.dll
 if [ $? != 0 ]; then exit 1; fi
 
 cp -rf ./Net.IBM.Data.Db2-osx/buildTransitive/clidriver/ ./clidriver/

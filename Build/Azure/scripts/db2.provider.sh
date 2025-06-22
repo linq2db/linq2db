@@ -14,7 +14,7 @@ if [ $? != 0 ]; then exit 1; fi
 
 cp -a ./Net.IBM.Data.Db2-lnx/buildTransitive/clidriver/. ./clidriver/
 if [ $? != 0 ]; then exit 1; fi
-cp -f ./Net.IBM.Data.Db2-lnx/lib/net9.0/IBM.Data.Db2.dll ./IBM.Data.Db2.dll
+cp -f ./Net.IBM.Data.Db2-lnx/lib/net8.0/IBM.Data.Db2.dll ./IBM.Data.Db2.dll
 if [ $? != 0 ]; then exit 1; fi
 
 echo "##vso[task.setvariable variable=PATH]$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib"
