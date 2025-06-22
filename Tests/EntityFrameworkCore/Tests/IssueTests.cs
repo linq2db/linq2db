@@ -485,14 +485,14 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					Count = Sql.Ext.Count().Over().ToValue(),
 					Id = id,
 				})
-				.ToLinqToDB().ToArray();
+				.ToLinqToDB().ToArray().OrderBy(r => r.Id.Id).ToArray();
 
 			Assert.That(posts, Has.Length.EqualTo(2));
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(posts[0].Id.Id, Is.EqualTo(2));
+				Assert.That(posts[0].Id.Id, Is.EqualTo(1));
 				Assert.That(posts[0].Count, Is.EqualTo(2));
-				Assert.That(posts[1].Id.Id, Is.EqualTo(1));
+				Assert.That(posts[1].Id.Id, Is.EqualTo(2));
 				Assert.That(posts[1].Count, Is.EqualTo(2));
 			}
 		}
