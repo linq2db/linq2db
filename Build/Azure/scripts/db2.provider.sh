@@ -19,3 +19,6 @@ if [ $? != 0 ]; then exit 1; fi
 
 echo "##vso[task.setvariable variable=PATH]$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib"
 echo "##vso[task.setvariable variable=LD_LIBRARY_PATH]$PWD/clidriver/lib/"
+# for debug
+echo $PATH
+echo $LD_LIBRARY_PATH
