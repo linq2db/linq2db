@@ -1073,5 +1073,41 @@ namespace Tests.xUpdate
 				Assert.That(tmp.GetCacheMissCount(), Is.EqualTo(cacheMiss));
 			}
 		}
+
+		#region Issue 4584
+		class MyBaseClass
+		{
+			[Column, PrimaryKey]
+			public int Id { get; set; }
+		}
+
+		[Table]
+		sealed class MyChildClass : MyBaseClass
+		{
+			[Column]
+			public int Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4584")]
+		public void Issue_EnumerableSourceDuplicateColumnAlias([MergeDataContextSource(true)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<MyChildClass>();
+
+			List<MyChildClass> items = [
+				new MyChildClass { Value = 1 },
+				new MyChildClass { Value = 2 },
+				new MyChildClass { Value = 3 },
+				new MyChildClass { Value = 4 },
+			];
+
+			tb
+				.Merge()
+				.Using(items)
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.Merge();
+		}
+		#endregion
 	}
 }
