@@ -10,7 +10,7 @@ using LinqToDB.Extensions;
 
 namespace LinqToDB.Common.Internal
 {
-	abstract class ValueComparer : IEqualityComparer, IEqualityComparer<object>
+	public abstract class ValueComparer : IEqualityComparer, IEqualityComparer<object>
 	{
 		private protected static readonly MethodInfo _doubleEqualsMethodInfo
 			= MemberHelper.MethodOf<double>(d => d.Equals(0));

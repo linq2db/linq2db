@@ -153,7 +153,7 @@ namespace LinqToDB.DataProvider.Informix
 		public Func<TimeSpan, object>? TimeSpanFactory { get; }
 
 		internal BulkCopyAdapter?                    InformixBulkCopy { get; }
-		internal DB2ProviderAdapter.BulkCopyAdapter? DB2BulkCopy      { get; }
+		public   DB2ProviderAdapter.BulkCopyAdapter? DB2BulkCopy      { get; }
 
 		public string? GetDecimalReaderMethod  { get; }
 		public string  GetDateTimeReaderMethod { get; }

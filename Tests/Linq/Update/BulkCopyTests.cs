@@ -503,7 +503,8 @@ namespace Tests.xUpdate
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
-			MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
+			// TODO: uncomment after DataConnectionExtensions refactored to work with IDataContext
+			//MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
@@ -542,7 +543,8 @@ namespace Tests.xUpdate
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
-			MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
+			// TODO: uncomment after DataConnectionExtensions refactored to work with IDataContext
+			//MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
@@ -582,7 +584,8 @@ namespace Tests.xUpdate
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
-			MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
+			// TODO: uncomment after DataConnectionExtensions refactored to work with IDataContext
+			//MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, AsyncEnumerableData(2, 1), default);

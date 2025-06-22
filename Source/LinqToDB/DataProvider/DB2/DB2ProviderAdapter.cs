@@ -217,7 +217,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		public Func<object, bool> IsDB2BinaryNull { get; }
 
-		internal Func<DbConnection, DB2Connection> ConnectionWrapper { get; }
+		public Func<DbConnection, DB2Connection> ConnectionWrapper { get; }
 
 		public BulkCopyAdapter BulkCopy { get; }
 
