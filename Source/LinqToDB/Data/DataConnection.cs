@@ -481,12 +481,23 @@ namespace LinqToDB.Data
 #pragma warning disable CS8618
 		public DataConnection(DataOptions options)
 		{
+#if DEBUG
+			_dataConnectionID = Interlocked.Increment(ref _dataConnectionIDCounter);
+			Interlocked.Increment(ref _dataConnectionCount);
+#endif
+
 			Options = options ?? throw new ArgumentNullException(nameof(options));
 
 			options.Apply(this);
 
 			DataProvider!.InitContext(this);
 		}
+#if DEBUG
+		int _dataConnectionID;
+		static int _dataConnectionIDCounter;
+		static int _dataConnectionCount;
+#endif
+
 #pragma warning restore CS8618
 
 		#endregion
@@ -521,6 +532,11 @@ namespace LinqToDB.Data
 			[Obsolete("This API scheduled for removal in v7. Use DataOptions's UseRetryPolicy API"), EditorBrowsable(EditorBrowsableState.Never)]
 			set;
 		}
+
+		/// <summary>
+		/// Gets or sets a value to specify additional connection info to be used in tracing.
+		/// </summary>
+		public string?       Tag                 { get; set; }
 
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -581,13 +597,15 @@ namespace LinqToDB.Data
 					break;
 
 				case TraceInfoStep.AfterExecute:
+				{
 					dc.WriteTraceLineConnection(
 						info.RecordsAffected != null
-							? FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n")
-							: FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n"),
+							? FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){GetTagInfo()}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n")
+							: FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){GetTagInfo()}: {info.ExecutionTime}\r\n"),
 						dc.TraceSwitchConnection.DisplayName,
 						info.TraceLevel);
 					break;
+				}
 
 				case TraceInfoStep.Error:
 				{
@@ -642,7 +660,7 @@ namespace LinqToDB.Data
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Value.Append(CultureInfo.InvariantCulture, $"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
+					sb.Value.Append(CultureInfo.InvariantCulture, $"Total Execution Time ({info.TraceInfoStep}){GetTagInfo()}: {info.ExecutionTime}.");
 
 					if (info.RecordsAffected != null)
 						sb.Value.Append(CultureInfo.InvariantCulture, $" Rows Count: {info.RecordsAffected}.");
@@ -653,6 +671,17 @@ namespace LinqToDB.Data
 
 					break;
 				}
+			}
+
+			string GetTagInfo()
+			{
+				return (info.IsAsync, Client: info.DataConnection.Tag) switch
+				{
+					(true,  not null) => $" (async, {info.DataConnection.Tag})",
+					(true,      null) =>  " (async)",
+					(false, not null) => $" ({info.DataConnection.Tag})",
+					(false,     null) => "",
+				};
 			}
 		}
 
@@ -713,7 +742,7 @@ namespace LinqToDB.Data
 		/// <seealso cref="TraceSwitch"/>
 		/// <remarks>Should only not use to write trace lines, only use <see cref="WriteTraceLineConnection"/>.</remarks>
 		/// </summary>
-		public static Action<string,string,TraceLevel> WriteTraceLine = (message, category, level) => Debug.WriteLine(message, category);
+		public static Action<string,string,TraceLevel> WriteTraceLine = (message, category, _) => Debug.WriteLine(message, category);
 
 		/// <summary>
 		/// Gets the delegate to write logging messages for this connection.
@@ -954,7 +983,7 @@ namespace LinqToDB.Data
 		}
 
 		private int? _commandTimeout;
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		/// <summary>
 		/// Gets or sets command execution timeout in seconds.
 		/// Supported values:
@@ -986,7 +1015,7 @@ namespace LinqToDB.Data
 
 				if (value < 0)
 				{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout or ResetCommandTimeoutAsync methods instead.");
 #else
 					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout method instead.");
@@ -1741,14 +1770,12 @@ namespace LinqToDB.Data
 		/// <remarks><see cref="DataConnection"/> will share <see cref="Mapping.MappingSchema"/> instances that were created by combining same mapping schemas.</remarks>
 		/// <param name="mappingSchema">Mapping schema.</param>
 		/// <returns>Current connection object.</returns>
-		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
+		public void AddMappingSchema(MappingSchema mappingSchema)
 		{
 			CheckAndThrowOnDisposed();
 
 			MappingSchema    = MappingSchema.CombineSchemas(mappingSchema, MappingSchema);
 			_configurationID = null;
-
-			return this;
 		}
 
 		#endregion
@@ -1776,6 +1803,10 @@ namespace LinqToDB.Data
 			Close();
 
 			Disposed = true;
+
+#if DEBUG
+			Interlocked.Decrement(ref _dataConnectionCount);
+#endif
 		}
 
 		#endregion

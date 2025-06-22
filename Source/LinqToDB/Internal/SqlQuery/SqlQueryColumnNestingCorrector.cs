@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -70,6 +71,48 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				if (TableSource is SelectQuery selectQuery)
 				{
+					element = UpdateNestingInQuery(selectQuery, element);
+				}
+
+				if (element is SqlColumn column)
+				{
+					if (Parent is { TableSource: SqlTableLikeSource tableLike } && tableLike.SourceQuery != null)
+					{
+						var columnIndex = tableLike.SourceQuery.Select.Columns.IndexOf(column);
+						if (columnIndex >= 0 && tableLike.SourceFields.Count > columnIndex)
+						{
+							return tableLike.SourceFields[columnIndex];
+						}
+
+						SqlField? field            = null;
+						var       columnDescriptor = QueryHelper.GetColumnDescriptor(element);
+						if (columnDescriptor != null)
+						{
+							field = new SqlField(columnDescriptor) { Name = "field" };
+						}
+						else
+						{
+							var dbDataType = QueryHelper.GetDbDataTypeWithoutSchema(element);
+							field = new SqlField(dbDataType, "field", true);
+						}
+
+						var nullability = NullabilityContext.GetContext(tableLike.SourceQuery);
+						var canBeNull   = nullability.CanBeNull(element);
+						field.CanBeNull = canBeNull;
+
+						Utils.MakeUniqueNames([field], tableLike.SourceFields.Select(f => f.Name), f => f.Name, (f, n, _) => f.Name = n);
+
+						tableLike.AddField(field);
+
+						return field;
+					}
+				}
+
+				return element;
+			}
+
+			public ISqlExpression UpdateNestingInQuery(SelectQuery selectQuery, ISqlExpression element)
+			{
 					if (Parent is { TableSource: SelectQuery { HasSetOperators: true } parentSelectQuery })
 					{
 						if (parentSelectQuery.SetOperators.Any(so => so.SelectQuery == selectQuery))
@@ -81,7 +124,7 @@ namespace LinqToDB.Internal.SqlQuery
 							if (saveCount == selectQuery.Select.Columns.Count)
 								return parentSelectQuery.Select.Columns[setColumnIndex];
 
-							var dbDataType = QueryHelper.GetDbDataTypeWithoutSchema(element);
+						var dbDataType   = QueryHelper.GetDbDataTypeWithoutSchema(element);
 							var resultColumn = parentSelectQuery.Select.AddNewColumn(new SqlValue(dbDataType, null));
 
 							foreach (var so in parentSelectQuery.SetOperators)
@@ -98,11 +141,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 					return selectQuery.Select.AddColumn(element);
 				}
-
-				return element;
 			}
-
-		}
 
 		QueryNesting? _parentQueryNesting;
 
@@ -171,6 +210,24 @@ namespace LinqToDB.Internal.SqlQuery
 
 			if (element.Table != null)
 			{
+				if (element.Table is SqlTableLikeSource tableLikeSource && tableLikeSource.SourceQuery != null)
+				{
+					var current = _parentQueryNesting?.Parent;
+					while (current != null)
+					{
+						if (current.TableSource == element.Table)
+						{
+							var fieldIndex = tableLikeSource.SourceFields.IndexOf(element);
+							if (fieldIndex < 0)
+								throw new InvalidOperationException($"Invalid field for {nameof(SqlTableLikeSource)}");
+							var fieldExpression = tableLikeSource.SourceQuery.Select.Columns[fieldIndex].Expression;
+							return Visit(fieldExpression);
+						}
+
+						current = current.Parent;
+					}
+				}
+
 				newElement = ProcessNesting(element.Table, element);
 			}
 
@@ -216,5 +273,17 @@ namespace LinqToDB.Internal.SqlQuery
 			return newElement;
 		}
 
+		protected override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+		{
+			var saveQueryNesting = _parentQueryNesting;
+			_parentQueryNesting = new QueryNesting(saveQueryNesting, element);
+
+			var newElement = base.VisitSqlTableLikeSource(element);
+
+			if (saveQueryNesting != null)
+				_parentQueryNesting = saveQueryNesting;
+
+			return newElement;
 	}
+}
 }

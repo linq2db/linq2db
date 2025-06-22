@@ -38,9 +38,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
+		static BuildSequenceResult TryBuildSequenceWithFilter(ExpressionBuilder builder, BuildInfo localBuildInfo, bool shouldDisableFilter)
+		{
+			if (shouldDisableFilter)
+				builder.PushDisabledQueryFilters([]);
+
+			var buildResult = builder.TryBuildSequence(localBuildInfo);
+
+			if (shouldDisableFilter)
+				builder.PopDisabledFilter();
+
+			return buildResult;
+		}
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var shouldDisableFilters = typeof(ITable<>).IsSameOrParentOf(methodCall.Method.GetParameters()[0].ParameterType);
+			var buildResult          = TryBuildSequenceWithFilter(builder, new BuildInfo(buildInfo, methodCall.Arguments[0]), shouldDisableFilters);
 
 			if (buildResult.BuildContext == null)
 				return buildResult;
@@ -103,7 +116,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					// static int Insert<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target, Expression<Func<TSource,TTarget>> setter)
 					//
 
-					var into = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+					var intoResult = TryBuildSequenceWithFilter(builder, new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()), true);
+					if (intoResult.BuildContext == null)
+						return intoResult;
+					var into = intoResult.BuildContext;
+
 					var tableContext = SequenceHelper.GetTableOrCteContext(builder, new ContextRefExpression(into.ElementType, into));
 
 					if (tableContext == null)
@@ -214,7 +231,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (insertType is InsertContext.InsertTypeEnum.InsertOutputInto)
 					{
 						var outputTable = methodCall.GetArgumentByName("outputTable")!;
-						var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
+
+						var destinationResult = TryBuildSequenceWithFilter(builder, new BuildInfo(buildInfo, outputTable, new SelectQuery()), true);
+						if (destinationResult.BuildContext == null)
+							return destinationResult;
+						var destination = destinationResult.BuildContext;
 
 						var destinationRef = new ContextRefExpression(outputExpression.Body.Type, destination);
 						var sourceRef      = SequenceHelper.CreateRef(sequence);
@@ -355,7 +376,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				foreach (var field in q)
 				{
-					var expr = Builder.DataContext.CreateSqlProvider().GetIdentityExpression(insert.Into);
+					var expr = Builder.DataContext.CreateSqlBuilder().GetIdentityExpression(insert.Into);
 
 					if (expr != null)
 					{
@@ -437,7 +458,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (source.IsNullValue() || typeof(IDataContext).IsSameOrParentOf(source.Type))
 				{
 					createColumns = false;
-					sequence = builder.BuildSequence(new BuildInfo((IBuildContext?)null, into, new SelectQuery()));
+					var buildResult = TryBuildSequenceWithFilter(builder, new BuildInfo((IBuildContext?)null, into, new SelectQuery()), true);
+					if (buildResult.BuildContext == null)
+						return buildResult;
+
+					sequence            = buildResult.BuildContext;
 					destinationSequence = sequence;
 				}
 				// static ISelectInsertable<TSource,TTarget> Into<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target)
@@ -446,8 +471,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					createColumns = true;
 					sequence = builder.BuildSequence(new BuildInfo(buildInfo, source));
-					destinationSequence = builder.BuildSequence(new BuildInfo((IBuildContext?)null, into, new SelectQuery()));
 
+					var buildResult = TryBuildSequenceWithFilter(builder, new BuildInfo((IBuildContext?)null, into, new SelectQuery()), true);
+					if (buildResult.BuildContext == null)
+						return buildResult;
+					destinationSequence = buildResult.BuildContext;
 				}
 
 				insertStatement = new SqlInsertStatement(sequence.SelectQuery);
@@ -474,7 +502,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder,
 				MethodCallExpression                                                 methodCall, BuildInfo buildInfo)
 			{
-				var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+				var buildResult = TryBuildSequenceWithFilter(builder, new BuildInfo(buildInfo, methodCall.Arguments[0]), true);
+				if (buildResult.BuildContext == null)
+					return buildResult;
+
+				var sequence = buildResult.BuildContext;
 				var extract  = methodCall.Arguments[1].UnwrapLambda();
 				var update   = methodCall.Arguments[2].Unwrap();
 

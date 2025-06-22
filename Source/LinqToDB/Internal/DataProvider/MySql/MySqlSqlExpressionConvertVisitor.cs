@@ -131,5 +131,16 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			return ConvertSearchStringPredicateViaLike(predicate);
 		}
 
+		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
+		{
+			switch (func)
+			{
+				case { Name: PseudoFunctions.LENGTH }:
+					return func.WithName("CHAR_LENGTH");
+
+				default:
+					return base.ConvertSqlFunction(func);
+			}
+		}
 	}
 }

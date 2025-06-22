@@ -51,5 +51,4 @@ namespace Server
 			});
 		}
 	}
-
 }

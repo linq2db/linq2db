@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Extensions;
@@ -43,9 +44,40 @@ namespace LinqToDB.Internal.Linq.Builder
 			var collectionType = typeof(IEnumerable<>).GetGenericType(buildInfo.Expression.Type) ??
 			                     throw new InvalidOperationException();
 
-			var enumerableContext = new EnumerableContext(builder.GetTranslationModifier(), builder, buildInfo, buildInfo.SelectQuery, collectionType.GetGenericArguments()[0]);
+			if (buildInfo.Expression is NewArrayExpression)
+			{
+				if (buildInfo.Parent == null)
+					return BuildSequenceResult.Error(buildInfo.Expression);
 
-			return BuildSequenceResult.FromContext(enumerableContext);
+				var expressions = ((NewArrayExpression)buildInfo.Expression).Expressions.Select(e =>
+					builder.BuildExtractExpression(buildInfo.Parent, e))
+					.ToArray();
+
+				var dynamicContext = new EnumerableContextDynamic(
+					builder.GetTranslationModifier(),
+					buildInfo.Parent,
+					builder,
+					expressions,
+					buildInfo.SelectQuery,
+					collectionType.GetGenericArguments()[0]);
+
+				return BuildSequenceResult.FromContext(dynamicContext);
+			}
+
+			if (builder.CanBeEvaluatedOnClient(buildInfo.Expression))
+			{
+				var param = builder.ParametersContext.BuildParameter(buildInfo.Parent, buildInfo.Expression, null,
+					buildParameterType : ParametersContext.BuildParameterType.InPredicate);
+
+				if (param != null)
+				{
+					var enumerableContext = new EnumerableContext(builder.GetTranslationModifier(), builder, param, buildInfo.SelectQuery, collectionType.GetGenericArguments()[0]);
+
+					return BuildSequenceResult.FromContext(enumerableContext);
+				}
+			}
+
+			return BuildSequenceResult.Error(buildInfo.Expression);
 		}
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)

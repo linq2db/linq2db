@@ -195,48 +195,45 @@ namespace Tests.TypeMapping
 				= new object[]
 			{
 				// [0]: get Id
-				(Expression<Func<SampleClass, int>>)((SampleClass this_) => this_.Id),
+				(Expression<Func<SampleClass, int>>)(this_ => this_.Id),
 				// [1]: get Value
-				(Expression<Func<SampleClass, int>>)((SampleClass this_) => this_.Value),
+				(Expression<Func<SampleClass, int>>)(this_ => this_.Value),
 				// [2]: GetOtherAnother
-				(Expression<Func<SampleClass, int, OtherClass>>)((SampleClass this_, int idx) => this_.GetOtherAnother(idx)),
+				(Expression<Func<SampleClass, int, OtherClass>>)((this_, idx) => this_.GetOtherAnother(idx)),
 				// [3]: SomeAction
-				(Expression<Action<SampleClass>>)((SampleClass this_) => this_.SomeAction()),
+				(Expression<Action<SampleClass>>)(this_ => this_.SomeAction()),
 				// [4]: GetRegularEnum1
-				(Expression<Func<SampleClass, int, RegularEnum1>>)((SampleClass this_, int raw) => this_.GetRegularEnum1(raw)),
+				(Expression<Func<SampleClass, int, RegularEnum1>>)((this_, raw) => this_.GetRegularEnum1(raw)),
 				// [5]: GetFlagsEnum
-				(Expression<Func<SampleClass, int, FlagsEnum>>)((SampleClass this_, int raw) => this_.GetFlagsEnum(raw)),
+				(Expression<Func<SampleClass, int, FlagsEnum>>)((this_, raw) => this_.GetFlagsEnum(raw)),
 				// [6]: SetRegularEnum1
-				(Expression<Func<SampleClass, RegularEnum1, int>>)((SampleClass this_, RegularEnum1 val) => this_.SetRegularEnum1(val)),
+				(Expression<Func<SampleClass, RegularEnum1, int>>)((this_, val) => this_.SetRegularEnum1(val)),
 				// [7]: SetFlagsEnum
-				(Expression<Func<SampleClass, FlagsEnum, int>>)((SampleClass this_, FlagsEnum val) => this_.SetFlagsEnum(val)),
+				(Expression<Func<SampleClass, FlagsEnum, int>>)((this_, val) => this_.SetFlagsEnum(val)),
 				// [8]: get RegularEnum1Property
-				(Expression<Func<SampleClass, RegularEnum1>>)((SampleClass this_) => this_.RegularEnum1Property),
+				(Expression<Func<SampleClass, RegularEnum1>>)(this_ => this_.RegularEnum1Property),
 				// [9]: get FlagsEnumProperty
-				(Expression<Func<SampleClass, FlagsEnum>>)((SampleClass this_) => this_.FlagsEnumProperty),
+				(Expression<Func<SampleClass, FlagsEnum>>)(this_ => this_.FlagsEnumProperty),
 				// [10]: Fire
-				(Expression<Action<SampleClass, bool>>)((SampleClass this_,bool withHandlers) => this_.Fire(withHandlers)),
+				(Expression<Action<SampleClass, bool>>)((this_,withHandlers) => this_.Fire(withHandlers)),
 				// [11]: set RegularEnum1Property
 				PropertySetter((SampleClass this_) => this_.RegularEnum1Property),
 				// [12]: set FlagsEnumProperty
 				PropertySetter((SampleClass this_) => this_.FlagsEnumProperty),
 				// [13]: GetRegularEnum2
-				(Expression<Func<SampleClass, int, RegularEnum2>>)((SampleClass this_, int raw) => this_.GetRegularEnum2(raw)),
+				(Expression<Func<SampleClass, int, RegularEnum2>>)((this_, raw) => this_.GetRegularEnum2(raw)),
 				// [14]: SetRegularEnum2
-				(Expression<Func<SampleClass, RegularEnum2, int>>)((SampleClass this_, RegularEnum2 val) => this_.SetRegularEnum2(val)),
+				(Expression<Func<SampleClass, RegularEnum2, int>>)((this_, val) => this_.SetRegularEnum2(val)),
 				// [15]: get RegularEnum2Property
-				(Expression<Func<SampleClass, RegularEnum2>>)((SampleClass this_) => this_.RegularEnum2Property),
+				(Expression<Func<SampleClass, RegularEnum2>>)(this_ => this_.RegularEnum2Property),
 				// [16]: set RegularEnum2Property
 				PropertySetter((SampleClass this_) => this_.RegularEnum2Property),
 				// [17]: set MethodWithRemappedName
-				new Tuple<LambdaExpression, bool>
-					((Expression<Func<SampleClass, string, string>>     )((SampleClass this_, string value) => this_.MethodWithRemappedName2(value)), true),
+				new Tuple<LambdaExpression, bool>((Expression<Func<SampleClass, string, string>>)((this_, value) => this_.MethodWithRemappedName2(value)), true),
 				// [18]: set MethodWithWrongReturnType
-				new Tuple<LambdaExpression, bool>
-					((Expression<Func<SampleClass, string, string>>     )((SampleClass this_, string value) => this_.MethodWithWrongReturnType(value)), true),
+				new Tuple<LambdaExpression, bool>((Expression<Func<SampleClass, string, string>>)((this_, value) => this_.MethodWithWrongReturnType(value)), true),
 				// [19]: set ReturnTypeMapper
-				new Tuple<LambdaExpression, bool>
-					((Expression<Func<SampleClass, string, int>>        )((SampleClass this_, string value) => this_.ReturnTypeMapper(value)), true),
+				new Tuple<LambdaExpression, bool>((Expression<Func<SampleClass, string, int>>)((this_, value) => this_.ReturnTypeMapper(value)), true),
 			};
 
 			private static string[] Events { get; }
@@ -343,7 +340,7 @@ namespace Tests.TypeMapping
 				= new LambdaExpression[]
 			{
 				// [0]: get OtherStrProp
-				(Expression<Func<OtherClass, string>>)((OtherClass this_) => this_.OtherStrProp),
+				(Expression<Func<OtherClass, string>>)(this_ => this_.OtherStrProp),
 			};
 
 			public string OtherStrProp => ((Func<OtherClass, string>)CompiledWrappers[0])(this);
@@ -359,7 +356,7 @@ namespace Tests.TypeMapping
 				= new LambdaExpression[]
 			{
 				// [0]: Add
-				(Expression<Func<CollectionSample, SampleClass, SampleClass>>)((CollectionSample this_, SampleClass item) => this_.Add(item)),
+				(Expression<Func<CollectionSample, SampleClass, SampleClass>>)((this_, item) => this_.Add(item)),
 			};
 
 			public CollectionSample()
@@ -388,9 +385,9 @@ namespace Tests.TypeMapping
 				= new LambdaExpression[]
 			{
 				// [0]: GetEnumerator
-				(Expression<Func<SqlErrorCollection, IEnumerator>>)((SqlErrorCollection this_) => this_.GetEnumerator()),
+				(Expression<Func<SqlErrorCollection, IEnumerator>>)(this_ => this_.GetEnumerator()),
 				// [1]: SqlError wrapper
-				(Expression<Func<object, SqlError>>)((object error) => (SqlError)error),
+				(Expression<Func<object, SqlError>>)(error => (SqlError)error),
 			};
 
 			public SqlErrorCollection()

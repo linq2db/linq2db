@@ -12,7 +12,7 @@ using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
-using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
@@ -78,8 +78,11 @@ namespace LinqToDB
 
 				for (var i = 0; i < parameters.Length; i++)
 				{
-					var type = pis[i].ParameterType;
-					args.Add(Expression.Constant(parameters[i], (type.IsByRef ? type.GetElementType() : type)!));
+					var        type    = pis[i].ParameterType;
+					Expression argExpr = Expression.Constant(parameters[i], (type.IsByRef ? type.GetElementType() : type)!);
+					argExpr = SequenceHelper.WrapAsParameter(argExpr);
+
+					args.Add(argExpr);
 				}
 
 				expr = Expression.Call(instance == null ? null : Expression.Constant(instance), methodInfo, args);
@@ -1403,8 +1406,7 @@ namespace LinqToDB
 					return Expression.Constant(null, typeof(object));
 				
 				var argumentType    = p.GetType();
-				var method          = Methods.LinqToDB.SqlParameter.MakeGenericMethod(argumentType);
-				var valueExpression = (Expression)Expression.Call(method, Expression.Constant(p, argumentType));
+				var valueExpression = SequenceHelper.WrapAsParameter(Expression.Constant(p, argumentType));
 				if (valueExpression.Type != typeof(object))
 					valueExpression = Expression.Convert(valueExpression, typeof(object));
 
@@ -1472,6 +1474,12 @@ namespace LinqToDB
 		///         you supply will automatically be converted to a DbParameter -
 		///         <code>context.FromSqlScalar&lt;Blogs&gt;($"UNNEST({array})");</code>
 		///     </para>
+		///		<para>
+		///			An alias for the scalar value will be generated automatically with the name <c>value</c>. For most databases, the following SQL will be generated:
+		///			<code>SELECT t.value FROM (SELECT '1') AS t(value)</code>
+		///			For databases that do not support this syntax, ensure that your query provides an alias for the column named <c>value</c> to allow correct translation, for example:
+		///			<code>SELECT t.value FROM (SELECT '1' AS value) AS t</code>
+		///		</para>
 		/// </summary>
 		/// <typeparam name="TEntity">Source query record type.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>

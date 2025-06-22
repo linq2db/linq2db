@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				var stype = cast.Expression.SystemType!.ToUnderlying();
 
 				if (stype == typeof(DateTime)
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 							|| stype == typeof(DateOnly)
 #endif
 				   )
@@ -61,6 +61,9 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			{
 				case { Name: PseudoFunctions.REPLACE }:
 					return func.WithName("Str_Replace");
+
+				case { Name: PseudoFunctions.LENGTH }:
+					return func.WithName("CHAR_LENGTH");
 
 				case {
 					Name: "CharIndex",

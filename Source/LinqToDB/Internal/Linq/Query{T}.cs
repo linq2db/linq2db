@@ -395,19 +395,6 @@ namespace LinqToDB.Internal.Linq
 
 		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, ref IQueryExpressions expressions)
 		{
-			var linqOptions = optimizationContext.DataContext.Options.LinqOptions;
-
-			if (linqOptions.GenerateExpressionTest)
-			{
-				var testFile = new ExpressionTestGenerator(dataContext).GenerateSource(expressions.MainExpression);
-
-				if (dataContext.GetTraceSwitch().TraceInfo)
-					dataContext.WriteTraceLine(
-						$"Expression test code generated: \'{testFile}\'.",
-						dataContext.GetTraceSwitch().DisplayName,
-						TraceLevel.Info);
-			}
-
 			var query = new Query<T>(dataContext);
 
 			try
@@ -426,9 +413,23 @@ namespace LinqToDB.Internal.Linq
 						throw query.ErrorExpression.CreateException();
 				}
 			}
-			catch (Exception)
+			catch
 			{
-				if (!linqOptions.GenerateExpressionTest)
+				var linqOptions = optimizationContext.DataContext.Options.LinqOptions;
+
+				if (linqOptions.GenerateExpressionTest)
+				{
+					var testFile = new ExpressionTestGenerator(dataContext).GenerateSource(expressions.MainExpression);
+
+					if (dataContext.GetTraceSwitch().TraceInfo)
+					{
+						dataContext.WriteTraceLine(
+							$"Expression test code generated: \'{testFile}\'.",
+							dataContext.GetTraceSwitch().DisplayName,
+							TraceLevel.Info);
+					}
+				}
+				else
 				{
 					dataContext.WriteTraceLine(
 						"""

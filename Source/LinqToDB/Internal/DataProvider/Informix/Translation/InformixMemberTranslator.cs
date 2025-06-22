@@ -11,6 +11,26 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 {
 	public class InformixMemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -311,15 +331,23 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 			}
 		}
 
-		protected override IMemberTranslator CreateSqlTypesTranslator()
+		public class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			return new SqlTypesTranslation();
 		}
 
-		protected override IMemberTranslator CreateDateMemberTranslator()
+		class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
-			return new DateFunctionsTranslator();
-		}
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+		{
+				// Lower(To_Char({0}))
 
+				var factory        = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string));
+				var toChar         = factory.Function(stringDataType, "To_Char", guidExpr);
+				var toLower        = factory.ToLower(toChar);
+
+				return toLower;
+		}
+		}
 	}
 }

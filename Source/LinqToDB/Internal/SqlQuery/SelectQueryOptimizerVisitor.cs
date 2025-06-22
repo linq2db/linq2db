@@ -34,7 +34,6 @@ namespace LinqToDB.Internal.SqlQuery
 		SelectQuery?     _applySelect;
 		SelectQuery?     _inSubquery;
 		bool             _isInRecursiveCte;
-		bool             _isInsideNot;
 		SelectQuery?     _updateQuery;
 		ISqlTableSource? _updateTable;
 
@@ -74,7 +73,6 @@ namespace LinqToDB.Internal.SqlQuery
 			_evaluationContext = evaluationContext;
 			_root              = root;
 			_rootElement       = rootElement;
-			_isInsideNot       = false;
 			_dependencies      = dependencies;
 			_parentSelect      = default!;
 			_applySelect       = default!;
@@ -176,12 +174,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			var saveSetOperatorCount = selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0;
-			var saveParent           = _parentSelect;
-			var saveIsInsideNot      = _isInsideNot;
+			var saveSetOperatorCount  = selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0;
+			var saveParent            = _parentSelect;
 
-			_parentSelect = selectQuery;
-			_isInsideNot = false;
+			_parentSelect      = selectQuery;
 
 			if (saveParent == null)
 			{
@@ -189,7 +185,7 @@ namespace LinqToDB.Internal.SqlQuery
 				var before = selectQuery.ToDebugString();
 #endif
 				// only once
-				_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries: true, isInsideNot: false, reduceBinary: false);
+				_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries: true, reducePredicates: false);
 			}
 
 			var newQuery = (SelectQuery)base.VisitSqlQuery(selectQuery);
@@ -278,7 +274,7 @@ namespace LinqToDB.Internal.SqlQuery
 #endif
 					CorrectEmptyInnerJoinsRecursive(selectQuery);
 
-					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries : true, isInsideNot : false, reduceBinary: false);
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries : true, reducePredicates: false);
 				}
 
 				if (saveSetOperatorCount != (selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0))
@@ -290,8 +286,6 @@ namespace LinqToDB.Internal.SqlQuery
 
 				_parentSelect = saveParent;
 			}
-
-			_isInsideNot = saveIsInsideNot;
 
 			return newQuery;
 		}
@@ -2351,11 +2345,17 @@ namespace LinqToDB.Internal.SqlQuery
 			return false;
 		}
 
-		static int CountUsage(SelectQuery rootQuery, SqlColumn column)
+		int CountUsage(SelectQuery rootQuery, SqlColumn column)
 		{
-			int counter = 0;
+			IQueryElement root = rootQuery;
+			if (_rootElement is not SqlSelectStatement)
+			{
+				root = _rootElement;
+			}
 
-			rootQuery.VisitParentFirstAll(e =>
+			var counter = 0;
+
+			root.VisitParentFirstAll(e =>
 			{
 				// do not search in the same query
 				if (e is SelectQuery sq && sq == column.Parent)
@@ -2701,7 +2701,6 @@ namespace LinqToDB.Internal.SqlQuery
 			SqlExpressionOptimizerVisitor _optimizerVisitor  = default!;
 			DataOptions                   _dataOptions       = default!;
 			MappingSchema                 _mappingSchema     = default!;
-			bool                          _isInsideNot;
 			int                           _foundCount;
 			bool                          _notAllowedScope;
 			bool                          _doNotAllow;
@@ -2728,7 +2727,6 @@ namespace LinqToDB.Internal.SqlQuery
 				_mappingSchema     = default!;
 
 				_foundCount = 0;
-				_isInsideNot       = default;
 			}
 
 			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, NullabilityContext nullability, SqlExpressionOptimizerVisitor optimizerVisitor, DataOptions dataOptions, MappingSchema mappingSchema,
@@ -2743,7 +2741,6 @@ namespace LinqToDB.Internal.SqlQuery
 				_mappingSchema     = mappingSchema;
 				_doNotAllow        = default;
 				_foundCount        = 0;
-				_isInsideNot       = default;
 
 				Visit(parent);
 
@@ -2780,21 +2777,6 @@ namespace LinqToDB.Internal.SqlQuery
 				return base.Visit(element);
 			}
 
-			protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
-			{
-				IQueryElement reduced = predicate.Reduce(_nullability, _evaluationContext, _isInsideNot, _dataOptions.LinqOptions);
-				if (!ReferenceEquals(reduced, predicate))
-				{
-					reduced = _optimizerVisitor.Optimize(_evaluationContext, _nullability, null, _dataOptions, _mappingSchema, reduced, false, _isInsideNot, true);
-
-					Visit(reduced);
-				}
-				else
-					base.VisitExprExprPredicate(predicate);
-
-				return predicate;
-			}
-
 			protected override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
 			{
 				if (element.IsPositioned)
@@ -2805,27 +2787,6 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 
 				return base.VisitSqlOrderByItem(element);
-			}
-
-			protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
-			{
-				var saveIsInsideNot = _isInsideNot;
-				_isInsideNot = false;
-				var newElement =  base.VisitSqlQuery(selectQuery);
-				_isInsideNot = saveIsInsideNot;
-				return newElement;
-			}
-
-			protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
-			{
-				var saveValue = _isInsideNot;
-				_isInsideNot = true;
-
-				var result = base.VisitNotPredicate(predicate);
-
-				_isInsideNot = saveValue;
-
-				return result;
 			}
 
 			protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
@@ -2964,6 +2925,54 @@ namespace LinqToDB.Internal.SqlQuery
 					ProcessSelectClause(element, null);
 
 				return base.VisitSqlSelectClause(element);
+			}
+
+			protected override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+			{
+				var newElement = base.VisitSqlTableLikeSource(element);
+
+				if (!ReferenceEquals(newElement, element))
+				{
+					return Visit(newElement);
+				}
+
+				if (element.SourceEnumerable != null)
+				{
+					// Synchronizing Enumerable table
+
+					var enumerableSource = element.SourceEnumerable;
+					
+					for(var i = enumerableSource.Fields.Count - 1; i >= 0; i--)
+					{
+						var enumerableSourceField = enumerableSource.Fields[i];
+
+						if (element.SourceFields.All(f => f.BasedOn != enumerableSourceField))
+						{
+							enumerableSource.RemoveField(i);
+						}
+					}
+
+					if (element.SourceFields.All(x => x.BasedOn != null))
+					{
+						var newIndexes = element.SourceFields
+							.Select((field, currentIndex) => (field, currentIndex))
+							.OrderBy(t => enumerableSource.Fields.IndexOf(t.field.BasedOn!))
+							.Select((r, newIndex) => (r.field, r.currentIndex, idx : newIndex))
+							.ToList();
+
+						for (var i = 0; i < newIndexes.Count; i++)
+						{
+							var (field, currentIndex, newIndex) = newIndexes[i];
+							if (currentIndex != newIndex)
+							{
+								element.SourceFields.Remove(field);
+								element.SourceFields.Insert(newIndex, field);
+							}
+						}
+					}
+				}
+
+				return element;
 			}
 
 			private void ProcessSelectClause(SqlSelectClause element, CteClause? cte)

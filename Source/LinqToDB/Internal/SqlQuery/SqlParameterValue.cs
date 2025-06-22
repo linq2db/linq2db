@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		public object?    ProviderValue { get; }
-		public object?    ClientValue { get; }
+		public object?    ClientValue   { get; }
 		public DbDataType DbDataType    { get; }
 	}
 }

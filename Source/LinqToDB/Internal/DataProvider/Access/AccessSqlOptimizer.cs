@@ -62,7 +62,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 			var visitor = new WrapParametersVisitor(VisitMode.Modify);
 
-			statement = (SqlStatement)visitor.WrapParameters(statement, WrapParametersVisitor.WrapFlags.All);
+			statement = (SqlStatement)visitor.WrapParameters(statement,
+				WrapParametersVisitor.WrapFlags.InSelect         |
+				WrapParametersVisitor.WrapFlags.InUpdateSet      |
+				WrapParametersVisitor.WrapFlags.InInsertValue    |
+				WrapParametersVisitor.WrapFlags.InInsertOrUpdate);
 
 			return statement;
 		}

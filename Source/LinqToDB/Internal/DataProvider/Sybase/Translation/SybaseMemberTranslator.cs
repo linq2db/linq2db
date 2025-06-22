@@ -11,6 +11,31 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 {
 	public class SybaseMemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new SybaseStingMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new SybaseMathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertDateTime2(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -171,35 +196,8 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 			}
 		}
 
-		class SybaseStingMemberTranslator : StringMemberTranslatorBase
+		public class SybaseStingMemberTranslator : StringMemberTranslatorBase
 		{
-			public override ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue,
-				ISqlExpression newValue)
-			{
-				var func = base.TranslateReplace(translationContext, methodCall, translationFlags, value, oldValue, newValue) as SqlFunction;
-
-				return func?.WithName("Str_Replace");
-			}
-		}
-
-		protected override IMemberTranslator CreateSqlTypesTranslator()
-		{
-			return new SqlTypesTranslation();
-		}
-
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new DateFunctionsTranslator();
-		}
-
-		protected override IMemberTranslator CreateStringMemberTranslator()
-		{
-			return new SybaseStingMemberTranslator();
-		}
-
-		protected override IMemberTranslator CreateMathMemberTranslator()
-		{
-			return new SybaseMathMemberTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
@@ -208,6 +206,22 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID", factory.Value(1));
 
 			return timePart;
+		}
+
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// Lower(Convert(NVarChar(36), {0}))
+
+				var factory        = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.NVarChar).WithLength(36);
+
+				var cast    = factory.Cast(guidExpr, stringDataType);
+				var toLower = factory.ToLower(cast);
+
+				return toLower;
+			}
 		}
 	}
 }

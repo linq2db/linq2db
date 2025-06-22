@@ -43,7 +43,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 
 			SetCharField("NChar",    (r,i) => r.GetString(i).TrimEnd(' '));
-			SetCharField("NVarChar", (r,i) => r.GetString(i).TrimEnd(' '));
+			SetCharField("NVarChar", (r,i) => r.GetString(i));
 
 			ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), ProviderFieldType = typeof(SqlDecimal), DataReaderType = Adapter.DataReaderType }] = Adapter.GetDecimalExpression;
 
@@ -78,7 +78,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (value is DateOnly d)
 				value = d.ToDateTime(TimeOnly.MinValue);
 #endif

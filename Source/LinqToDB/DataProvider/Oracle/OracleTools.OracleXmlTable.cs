@@ -9,6 +9,7 @@ using System.Text;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -131,7 +132,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (arg is SqlParameter p)
 				{
-					exp = exp.Unwrap();
+					exp = SequenceHelper.UnwrapConstantAndParameter(exp.Unwrap()).Unwrap();
 
 					// TODO: ValueConverter contract nullability violations
 					if (exp is ConstantExpression constExpr)
@@ -197,7 +198,7 @@ namespace LinqToDB.DataProvider.Oracle
 		private static MethodInfo? _oracleXmlTableString;
 		private static MethodInfo? _oracleXmlTableFuncString;
 
-		private static MethodInfo OracleXmlTableIEnumerableT => _oracleXmlTableIEnumerableT ??= MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (IEnumerable<object>)null!)).GetGenericMethodDefinition();
+		private static MethodInfo OracleXmlTableIEnumerableT => _oracleXmlTableIEnumerableT ??= MemberHelper.MethodOf(() => OracleXmlTable        (null!, (IEnumerable<object>)null!)).GetGenericMethodDefinition();
 		private static MethodInfo OracleXmlTableString       => _oracleXmlTableString       ??= MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (string)null!))             .GetGenericMethodDefinition();
 		private static MethodInfo OracleXmlTableFuncString   => _oracleXmlTableFuncString   ??= MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (Func<string>)null!))       .GetGenericMethodDefinition();
 

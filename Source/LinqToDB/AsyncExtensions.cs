@@ -22,7 +22,7 @@ namespace LinqToDB
 		{
 			var list = new List<T>();
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (source.TryGetNonEnumeratedCount(out var count))
 				list.EnsureCapacity(count);
 #endif
@@ -40,7 +40,7 @@ namespace LinqToDB
 		{
 			var list = new List<T>();
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (source.TryGetNonEnumeratedCount(out var count))
 				list.EnsureCapacity(count);
 #endif
@@ -63,7 +63,7 @@ namespace LinqToDB
 		{
 			var dictionary = new Dictionary<TKey, TSource>(comparer);
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (source.TryGetNonEnumeratedCount(out var count))
 				dictionary.EnsureCapacity(count);
 #endif
@@ -87,7 +87,7 @@ namespace LinqToDB
 		{
 			var dictionary = new Dictionary<TKey, TElement>(comparer);
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (source.TryGetNonEnumeratedCount(out var count))
 				dictionary.EnsureCapacity(count);
 #endif
@@ -110,7 +110,7 @@ namespace LinqToDB
 		{
 			var lookup = new Lookup<TKey,TSource>(comparer);
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (source.TryGetNonEnumeratedCount(out var count))
 				lookup.EnsureCapacity(count);
 #endif
@@ -134,7 +134,7 @@ namespace LinqToDB
 		{
 			var lookup = new Lookup<TKey,TElement>(comparer);
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (source.TryGetNonEnumeratedCount(out var count))
 				lookup.EnsureCapacity(count);
 #endif

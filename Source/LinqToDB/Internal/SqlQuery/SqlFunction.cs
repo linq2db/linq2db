@@ -116,7 +116,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override bool CanBeNullable(NullabilityContext nullability)
 		{
-			return QueryHelper.CalcCanBeNull(_canBeNull, NullabilityType,
+			return QueryHelper.CalcCanBeNull(SystemType, _canBeNull, NullabilityType,
 				Parameters.Select(p => p.CanBeNullable(nullability)));
 		}
 

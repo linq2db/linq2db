@@ -32,7 +32,7 @@ namespace LinqToDB.Internal.Remote
 			SetConvertExpression<char          , string>(value => value.ToString(CultureInfo.InvariantCulture));
 			SetConvertExpression<DateTime      , string>(value => value.ToBinary().ToString(CultureInfo.InvariantCulture));
 			SetConvertExpression<DateTimeOffset, string>(value => $"{value.Ticks.ToString(CultureInfo.InvariantCulture)}:{value.Offset.Ticks.ToString(CultureInfo.InvariantCulture)}");
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			SetConvertExpression<DateOnly      , string>(value => value.DayNumber.ToString(CultureInfo.InvariantCulture));
 #endif
 			SetConvertExpression<Guid          , string>(value => value.ToString("N"));
@@ -55,7 +55,7 @@ namespace LinqToDB.Internal.Remote
 			SetConvertExpression<string, char          >(value => value[0]);
 			SetConvertExpression<string, DateTime      >(value => DateTime.FromBinary(long.Parse(value, CultureInfo.InvariantCulture)));
 			SetConvertExpression<string, DateTimeOffset>(value => StringToDateTimeOffset(value));
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			SetConvertExpression<string, DateOnly      >(value => DateOnly.FromDayNumber(int.Parse(value, CultureInfo.InvariantCulture)));
 #endif
 			SetConvertExpression<string, Guid          >(value => Guid    .Parse(value));

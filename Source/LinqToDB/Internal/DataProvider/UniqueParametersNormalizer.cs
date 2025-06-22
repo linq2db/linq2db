@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.DataProvider
 
 			if (badIdx != -1)
 			{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				// allocate memory on the stack if possible, and prepopulate it with the original string
 				Span<char> newName = name.Length < 500 ? stackalloc char[name.Length] : name.ToCharArray();
 				if (name.Length < 500)
@@ -66,7 +66,7 @@ namespace LinqToDB.Internal.DataProvider
 
 				if (newNameLength > 0)
 				{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					name = new string(newName.Slice(0, newNameLength));
 #else
 					name = new string(newName, 0, newNameLength);

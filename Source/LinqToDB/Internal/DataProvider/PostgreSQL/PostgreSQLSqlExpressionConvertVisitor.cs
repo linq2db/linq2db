@@ -1,6 +1,7 @@
 ﻿using System;
 
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
@@ -82,7 +83,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 									p2,
 									Sub<int>(
 										(ISqlExpression)Visit(
-											new SqlFunction(typeof(int), "Length", p1)),
+											Factory.Length(p1)),
 										p2))
 							)),
 						Sub(p2, 1));
@@ -121,7 +122,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 						? predicate.Expr2
 						: new SqlCastExpression(predicate.Expr2, new DbDataType(predicate.Expr2.SystemType ?? typeof(object), DataType.BinaryJson), null, isMandatory: true);
 
-					predicate = new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.WithNull);
+					predicate = new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.UnknownAsValue);
 				}
 			}
 

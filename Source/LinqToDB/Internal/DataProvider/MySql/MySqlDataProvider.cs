@@ -77,7 +77,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			if (Adapter.GetUInt16MethodName   != null) SetProviderField<ushort  >(Adapter.GetUInt16MethodName  , Adapter.DataReaderType);
 			if (Adapter.GetUInt32MethodName   != null) SetProviderField<uint    >(Adapter.GetUInt32MethodName  , Adapter.DataReaderType);
 			if (Adapter.GetUInt64MethodName   != null) SetProviderField<ulong   >(Adapter.GetUInt64MethodName  , Adapter.DataReaderType);
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (Adapter.GetTimeOnlyMethodName != null) SetProviderField<TimeOnly>(Adapter.GetTimeOnlyMethodName, Adapter.DataReaderType);
 			if (Adapter.GetDateOnlyMethodName != null) SetProviderField<DateOnly>(Adapter.GetDateOnlyMethodName, Adapter.DataReaderType);
 #endif
@@ -146,7 +146,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				dataType = dataType.WithDataType(DataType.VarChar);
 			}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
 			{
 				value = d.ToDateTime(TimeOnly.MinValue);

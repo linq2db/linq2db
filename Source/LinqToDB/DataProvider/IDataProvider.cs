@@ -41,7 +41,7 @@ namespace LinqToDB.DataProvider
 		/// <returns>Initialized command instance.</returns>
 		DbCommand          InitCommand           (DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters);
 		void               DisposeCommand        (DbCommand command);
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		ValueTask          DisposeCommandAsync   (DbCommand command);
 #endif
 		// TODO: Remove in v7

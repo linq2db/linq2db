@@ -210,10 +210,10 @@ namespace Tests.Linq
 					Assert.That(result[9].Value1, Is.Null);
 					Assert.That(result[9].Value2, Is.Null);
 
-					Assert.That(result[0].BoolValue, Is.EqualTo(true));
-					Assert.That(result[1].BoolValue, Is.EqualTo(false));
-					Assert.That(result[2].BoolValue, Is.EqualTo(false));
-					Assert.That(result[3].BoolValue, Is.EqualTo(false));
+					Assert.That(result[0].BoolValue, Is.True);
+					Assert.That(result[1].BoolValue, Is.False);
+					Assert.That(result[2].BoolValue, Is.False);
+					Assert.That(result[3].BoolValue, Is.False);
 				});
 
 				var query = from t in table
@@ -814,7 +814,7 @@ namespace Tests.Linq
 		{
 			public BoolConverterNullableAttribute()
 			{
-				ValueConverter = new ValueConverter<bool?, string>((bool? b) => b == true ? "Y" : "N", m => m == "Y", false);
+				ValueConverter = new ValueConverter<bool?, string>(b => b == true ? "Y" : "N", m => m == "Y", false);
 			}
 		}
 

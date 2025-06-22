@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlProvider
@@ -41,6 +42,7 @@ namespace LinqToDB.Internal.SqlProvider
 			MappingSchema                    mappingSchema,
 			SqlExpressionOptimizerVisitor    optimizerVisitor,
 			SqlExpressionConvertVisitor      convertVisitor,
+			ISqlExpressionFactory            factory,
 			bool                             isParameterOrderDepended,
 			bool                             isAlreadyOptimizedAndConverted,
 			Func<IQueryParametersNormalizer> parametersNormalizerFactory)
@@ -51,14 +53,16 @@ namespace LinqToDB.Internal.SqlProvider
 			MappingSchema                  = mappingSchema;
 			OptimizerVisitor               = optimizerVisitor;
 			ConvertVisitor                 = convertVisitor;
+			Factory                        = factory;
 			IsParameterOrderDependent      = isParameterOrderDepended;
 			IsAlreadyOptimizedAndConverted = isAlreadyOptimizedAndConverted;
 			_parametersNormalizerFactory   = parametersNormalizerFactory;
 		}
 
-		public EvaluationContext EvaluationContext              { get; }
-		public bool              IsParameterOrderDependent      { get; }
-		public bool              IsAlreadyOptimizedAndConverted { get; }
+		public EvaluationContext     EvaluationContext              { get; }
+		public bool                  IsParameterOrderDependent      { get; }
+		public bool                  IsAlreadyOptimizedAndConverted { get; }
+		public ISqlExpressionFactory Factory                        { get; }
 
 		public bool HasParameters() => _actualParameters?.Count > 0;
 
@@ -119,28 +123,17 @@ namespace LinqToDB.Internal.SqlProvider
 			_parametersNormalizer = null;
 		}
 
-		[return: NotNullIfNotNull(nameof(element))]
-		public T OptimizeAndConvertAllForRemoting<T>(T element, NullabilityContext nullabilityContext)
-			where T : class, IQueryElement
-		{
-			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : true, isInsideNot : false, reduceBinary: false);
-			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true, isInsideNot : false);
-
-			return result;
-		}
-
-		[return : NotNullIfNotNull(nameof(element))]
 		public T OptimizeAndConvertAll<T>(T element, NullabilityContext nullabilityContext)
 			where T : class, IQueryElement
 		{
-			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : true, isInsideNot : false, reduceBinary: true);
-			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true, isInsideNot : false);
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : true, reducePredicates: false);
+			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true);
 
 			return result;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
-		public T? OptimizeAndConvert<T>(T? element, NullabilityContext nullabilityContext, bool isInsideNot)
+		public T? OptimizeAndConvert<T>(T? element, NullabilityContext nullabilityContext)
 			where T : class, IQueryElement
 		{
 			if (IsAlreadyOptimizedAndConverted)
@@ -149,20 +142,20 @@ namespace LinqToDB.Internal.SqlProvider
 			if (element == null)
 				return null;
 
-			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : false, isInsideNot, reduceBinary : false);
-			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, false, isInsideNot);
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : false, reducePredicates : false);
+			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, false);
 
 			return result;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
-		public T? Optimize<T>(T? element, NullabilityContext nullabilityContext, bool isInsideNot, bool reduceBinary)
+		public T? Optimize<T>(T? element, NullabilityContext nullabilityContext, bool reducePredicates)
 			where T : class, IQueryElement
 		{
 			if (element == null)
 				return null;
 
-			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, false, isInsideNot, reduceBinary);
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, false, reducePredicates);
 
 			return (T)newElement;
 		}

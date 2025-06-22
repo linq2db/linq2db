@@ -39,7 +39,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SetValueToSqlConverter(typeof(Binary)  , (sb, _,_,v) => ConvertBinaryToSql (sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => BuildDateTime      (sb, dt, (DateTime)v));
 			SetValueToSqlConverter(typeof(Guid)    , (sb,dt,_,v) => ConvertGuidToSql   (sb, dt, (Guid)v));
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDateOnly(sb, dt, (DateOnly)v));
 #endif
 
@@ -96,7 +96,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		static void BuildDateOnly(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
 		{
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value, dt.Type.DbType ?? "date");

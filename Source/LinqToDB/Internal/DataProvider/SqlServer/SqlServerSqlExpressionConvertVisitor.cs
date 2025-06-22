@@ -1,5 +1,6 @@
 ﻿using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
@@ -74,7 +75,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				if (subStrPredicate != null)
 				{
-					var result = new SqlSearchCondition(predicate.IsNot,
+					var result = new SqlSearchCondition(predicate.IsNot, canBeUnknown: null,
 						like,
 						subStrPredicate.MakeNot(predicate.IsNot));
 
@@ -123,5 +124,30 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			return base.ConvertConversion(cast);
 		}
+
+		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
+		{
+			switch (func.Name)
+			{
+				case PseudoFunctions.LENGTH:
+				{
+					/*
+					 * LEN(value + ".") - 1
+					 */
+
+					var value     = func.Parameters[0];
+					var valueType = Factory.GetDbDataType(value);
+					var funcType  = Factory.GetDbDataType(value);
+
+					var valueString = Factory.Add(valueType, value, Factory.Value(valueType, "."));
+					var valueLength = Factory.Function(funcType, "LEN", valueString);
+
+					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));
+	}
+}
+
+			return base.ConvertSqlFunction(func);
+		}
+
 	}
 }

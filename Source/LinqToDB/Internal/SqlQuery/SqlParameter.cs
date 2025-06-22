@@ -30,6 +30,9 @@ namespace LinqToDB.Internal.SqlQuery
 		internal int?       AccessorId       { get; set; }
 
 		public object? Value     { get; }
+		/// <summary>
+		/// Enable parameter wrapping with type-cast. Ignored when <see cref="IsQueryParameter"/> is <c>false</c>.
+		/// </summary>
 		public bool    NeedsCast { get; set; }
 
 		public object? CorrectParameterValue(object? rawValue)

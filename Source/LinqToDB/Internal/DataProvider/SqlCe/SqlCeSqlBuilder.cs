@@ -44,7 +44,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 		protected override bool OffsetFirst                   => true;
 		protected override bool IsValuesSyntaxSupported       => false;
-		protected override bool SupportsColumnAliasesInSource => true;
+		protected override bool SupportsColumnAliasesInSource => false;
 		protected override bool RequiresConstantColumnAliases => true;
 
 		protected override bool CanSkipRootAliases(SqlStatement statement)

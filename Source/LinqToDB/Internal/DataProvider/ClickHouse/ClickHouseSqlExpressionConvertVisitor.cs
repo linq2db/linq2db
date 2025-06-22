@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 
 using LinqToDB.DataProvider.ClickHouse;
-using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
@@ -282,6 +282,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				}
 				case PseudoFunctions.TO_LOWER              : return func.WithName("lowerUTF8");
 				case PseudoFunctions.TO_UPPER              : return func.WithName("upperUTF8");
+				case PseudoFunctions.LENGTH                : return func.WithName("lengthUTF8");
 
 				case PseudoFunctions.TRY_CONVERT           : // toTypeOrNull
 				case PseudoFunctions.TRY_CONVERT_OR_DEFAULT: // coalesce(toTypeOrNull, defaultValue)

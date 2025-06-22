@@ -197,7 +197,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateClientAdapter()
 		{
-			var assembly = Internal.Common.Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
+			var assembly = Common.Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {ClientAssemblyName}");
 
@@ -232,7 +232,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			else
 				typeMapper.FinalizeMappings();
 
-			var connectionFactory = typeMapper.BuildTypedFactory<string, ClientWrappers.ClickHouseConnection, DbConnection>((string connectionString) => new ClientWrappers.ClickHouseConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, ClientWrappers.ClickHouseConnection, DbConnection>(connectionString => new ClientWrappers.ClickHouseConnection(connectionString));
 
 			return new ClickHouseProviderAdapter(
 				connectionType,
@@ -301,7 +301,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			ClickHouseTransientExceptionDetector.RegisterExceptionType(sqlExceptionType, exceptionErrorsGettter);
 
-			var connectionFactory = typeMapper.BuildTypedFactory<string, OctonicaWrappers.ClickHouseConnection, DbConnection>((string connectionString) => new OctonicaWrappers.ClickHouseConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, OctonicaWrappers.ClickHouseConnection, DbConnection>(connectionString => new OctonicaWrappers.ClickHouseConnection(connectionString));
 
 			return new ClickHouseProviderAdapter(
 				connectionType,
@@ -352,11 +352,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					= new LambdaExpression[]
 				{
 					// [0]: get UseSession
-					(Expression<Func<ClickHouseConnectionStringBuilder, bool>>)((ClickHouseConnectionStringBuilder this_) => this_.UseSession),
+					(Expression<Func<ClickHouseConnectionStringBuilder, bool>>)(this_ => this_.UseSession),
 					// [1]: set UseSession
 					PropertySetter((ClickHouseConnectionStringBuilder this_) => this_.UseSession),
 					// [2]: ToString
-					(Expression<Func<ClickHouseConnectionStringBuilder, string>>)((ClickHouseConnectionStringBuilder this_) => this_.ToString()!),
+					(Expression<Func<ClickHouseConnectionStringBuilder, string>>)(this_ => this_.ToString()!),
 				};
 
 				public ClickHouseConnectionStringBuilder(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -387,25 +387,25 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					= new []
 				{
 					// [0]: Dispose
-					new Tuple<LambdaExpression, bool>((Expression<Action<ClickHouseBulkCopy>>)((ClickHouseBulkCopy this_) => ((IDisposable)this_).Dispose()), true),
+					new Tuple<LambdaExpression, bool>((Expression<Action<ClickHouseBulkCopy>>)(this_ => ((IDisposable)this_).Dispose()), true),
 					// [1]: get BatchSize
-					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, int>>)((ClickHouseBulkCopy this_) => this_.BatchSize), true),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, int>>)(this_ => this_.BatchSize), true),
 					// [2]: set BatchSize
 					new Tuple<LambdaExpression, bool>(PropertySetter((ClickHouseBulkCopy this_) => this_.BatchSize), true),
 					// [3]: get MaxDegreeOfParallelism
-					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, int>>)((ClickHouseBulkCopy this_) => this_.MaxDegreeOfParallelism), true),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, int>>)(this_ => this_.MaxDegreeOfParallelism), true),
 					// [4]: set MaxDegreeOfParallelism
 					new Tuple<LambdaExpression, bool>(PropertySetter((ClickHouseBulkCopy this_) => this_.MaxDegreeOfParallelism), true),
 					// [5]: get DestinationTableName
-					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, string?>>)((ClickHouseBulkCopy this_) => this_.DestinationTableName), true),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, string?>>)(this_ => this_.DestinationTableName), true),
 					// [6]: set DestinationTableName
 					new Tuple<LambdaExpression, bool>(PropertySetter((ClickHouseBulkCopy this_) => this_.DestinationTableName), true),
 					// [7]: get RowsWritten
-					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, long>>)((ClickHouseBulkCopy this_) => this_.RowsWritten), true),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, long>>)(this_ => this_.RowsWritten), true),
 					// [8]: WriteToServerAsync
-					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, IDataReader, CancellationToken, Task>>)((ClickHouseBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync(dataReader, cancellationToken)), true),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, IDataReader, CancellationToken, Task>>)((this_, dataReader, cancellationToken) => this_.WriteToServerAsync(dataReader, cancellationToken)), true),
 					// [9]: InitAsync
-					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, Task>>)((ClickHouseBulkCopy this_) => this_.InitAsync()), false),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, Task>>)(this_ => this_.InitAsync()), false),
 					// [10]: ColumnNames { set; }
 					new Tuple<LambdaExpression, bool>(PropertySetter((ClickHouseBulkCopy this_) => this_.ColumnNames), false),
 				};
@@ -486,21 +486,21 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					= new object[]
 				{
 					// [0]: Dispose
-					new Tuple<LambdaExpression, bool>((Expression<Action<ClickHouseColumnWriter>>)((ClickHouseColumnWriter this_) => this_.Dispose()), true),
+					new Tuple<LambdaExpression, bool>((Expression<Action<ClickHouseColumnWriter>>)(this_ => this_.Dispose()), true),
 					// [1]: EndWrite
-					new Tuple<LambdaExpression, bool>((Expression<Action<ClickHouseColumnWriter>>)((ClickHouseColumnWriter this_) => this_.EndWrite()), true),
+					new Tuple<LambdaExpression, bool>((Expression<Action<ClickHouseColumnWriter>>)(this_ => this_.EndWrite()), true),
 					// [2]: EndWriteAsync
-					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseColumnWriter, CancellationToken, Task>>)((ClickHouseColumnWriter this_, CancellationToken cancellationToken) => this_.EndWriteAsync(cancellationToken)), true),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseColumnWriter, CancellationToken, Task>>)((this_, cancellationToken) => this_.EndWriteAsync(cancellationToken)), true),
 					// [3]: WriteTable
-					new Tuple<LambdaExpression, bool>((Expression<Action<ClickHouseColumnWriter, IReadOnlyList<object>, int>>)((ClickHouseColumnWriter this_, IReadOnlyList<object> columns, int rowCount) => this_.WriteTable(columns, rowCount)), true),
+					new Tuple<LambdaExpression, bool>((Expression<Action<ClickHouseColumnWriter, IReadOnlyList<object>, int>>)((this_, columns, rowCount) => this_.WriteTable(columns, rowCount)), true),
 					// [4]: WriteTableAsync
-					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseColumnWriter, IReadOnlyList<object>, int, CancellationToken, Task>>)((ClickHouseColumnWriter this_, IReadOnlyList<object> columns, int rowCount, CancellationToken cancellationToken) => this_.WriteTableAsync(columns, rowCount, cancellationToken)), true),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseColumnWriter, IReadOnlyList<object>, int, CancellationToken, Task>>)((this_, columns, rowCount, cancellationToken) => this_.WriteTableAsync(columns, rowCount, cancellationToken)), true),
 
 					// [5]: DisposeAsync
 					new Tuple<LambdaExpression, bool>
-					((Expression<Func<ClickHouseColumnWriter, ValueTask>>)((ClickHouseColumnWriter this_) => this_.DisposeAsync()), true),
+					((Expression<Func<ClickHouseColumnWriter, ValueTask>>)(this_ => this_.DisposeAsync()), true),
 					// [6]: ConfigureColumn
-					new Tuple<LambdaExpression, bool>((Expression<Action<ClickHouseColumnWriter, int, ClickHouseColumnSettings>>)((ClickHouseColumnWriter this_, int ordinal, ClickHouseColumnSettings columnSettings) => this_.ConfigureColumn(ordinal, columnSettings)), true),
+					new Tuple<LambdaExpression, bool>((Expression<Action<ClickHouseColumnWriter, int, ClickHouseColumnSettings>>)((this_, ordinal, columnSettings) => this_.ConfigureColumn(ordinal, columnSettings)), true),
 				};
 
 				public ClickHouseColumnWriter(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -522,8 +522,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			{
 				private static LambdaExpression[] Wrappers { get; } =
 				[
-					// [0]: get ErrorCode
-					(Expression<Func<ClickHouseException, int>>)((ClickHouseException this_) => this_.ErrorCode),
+						// [0]: get ErrorCode
+						(Expression<Func<ClickHouseException, int>>)(this_ => this_.ErrorCode),
 				];
 
 				public ClickHouseException(object instance, Delegate[] wrappers) : base(instance, wrappers)

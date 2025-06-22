@@ -29,7 +29,6 @@ namespace LinqToDB
 			public FunctionAttribute()
 				: base(null)
 			{
-				IsNullable = IsNullableType.IfAnyParameterNullable;
 			}
 
 			/// <summary>
@@ -39,7 +38,6 @@ namespace LinqToDB
 			public FunctionAttribute(string name)
 				: base(name)
 			{
-				IsNullable = IsNullableType.IfAnyParameterNullable;
 			}
 
 			/// <summary>
@@ -51,7 +49,6 @@ namespace LinqToDB
 			public FunctionAttribute(string name, params int[] argIndices)
 				: base(name, argIndices)
 			{
-				IsNullable = IsNullableType.IfAnyParameterNullable;
 			}
 
 			/// <summary>
@@ -63,7 +60,6 @@ namespace LinqToDB
 			public FunctionAttribute(string configuration, string name)
 				: base(configuration, name)
 			{
-				IsNullable = IsNullableType.IfAnyParameterNullable;
 			}
 
 			/// <summary>
@@ -77,7 +73,6 @@ namespace LinqToDB
 			public FunctionAttribute(string configuration, string name, params int[] argIndices)
 				: base(configuration, name, argIndices)
 			{
-				IsNullable = IsNullableType.IfAnyParameterNullable;
 			}
 
 			/// <summary>
@@ -109,7 +104,7 @@ namespace LinqToDB
 					return SqlErrorExpression.EnsureError(error, expression.Type);
 
 				var function = new SqlFunction(expression.Type, expressionStr!, IsAggregate, IsPure, Precedence,
-					ToParametersNullabilityType(IsNullable), _canBeNull, parameters!);
+					ToParametersNullabilityType(IsNullable), СonfiguredCanBeNull, parameters!);
 
 				return ExpressionBuilder.CreatePlaceholder(query, function, expression);
 			}

@@ -19,9 +19,9 @@ namespace LinqToDB.DataProvider.SQLite
 			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider(SQLiteProvider provider = SQLiteProvider.AutoDetect, string? connectionString = null)
+		public static IDataProvider GetDataProvider(SQLiteProvider provider = SQLiteProvider.AutoDetect, string? connectionString = null, DbConnection? connection = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection), provider, default);
 		}
 
 		public static void ResolveSQLite(string path, string? assemblyName = null)

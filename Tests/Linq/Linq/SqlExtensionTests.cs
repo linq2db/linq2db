@@ -566,7 +566,7 @@ namespace Tests.Linq
 						values.Add(row);
 					}
 
-					builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.InList(left, null, false, values));
+					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.InList(left, null, false, values));
 				}
 				else
 				{
@@ -576,7 +576,7 @@ namespace Tests.Linq
 							.Select(prop => new SqlValue(prop.PropertyType, prop.GetValue(value)))
 							.Cast<ISqlExpression>()
 							.ToArray());
-					builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.ExprExpr(left, SqlPredicate.Operator.Equal, right, null));
+					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.ExprExpr(left, SqlPredicate.Operator.Equal, right, null));
 				}
 			}
 		}

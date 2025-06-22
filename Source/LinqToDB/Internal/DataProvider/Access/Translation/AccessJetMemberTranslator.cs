@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 			return new AccessJetStringMemberTranslator();
 		}
 
-		class AccessJetStringMemberTranslator : StringMemberTranslatorBase
+		class AccessJetStringMemberTranslator : StringMemberTranslator
 		{
 			public override ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue,
 				ISqlExpression                                   newValue)

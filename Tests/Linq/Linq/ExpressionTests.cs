@@ -403,5 +403,44 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		[ExpressionMethod(nameof(GetValueNullableExpr))]
+		static int? GetValue(int? value) => throw new InvalidOperationException();
+
+		// this function should be a blackbox for linq2db
+		[Sql.Expression("IIF({0} IS NULL, -1, {0} + 1)", ServerSideOnly = true)]
+		static int GetValueFinal(int value) => throw new InvalidOperationException();
+
+		static Expression<Func<int?, int?>> GetValueNullableExpr()
+		{
+			return value => value == null ? null : GetValueFinal(value.Value);
+		}
+
+		[Sql.Expression("{0}", ServerSideOnly = true, IgnoreGenericParameters = true)]
+		static T Wrap<T>(T value) => throw new InvalidOperationException();
+
+		[Test]
+		//public void Test_ConditionalExpressionOptimization([IncludeDataSources(true, TestProvName.AllSqlServer)] string context, [Values] bool inline)
+		public void Test_ConditionalExpressionOptimization(
+			[DataSources(
+			// no IIF or other syntax issues
+			ProviderName.SqlCe,
+			TestProvName.AllClickHouse,
+			TestProvName.AllDB2,
+			TestProvName.AllInformix,
+			TestProvName.AllMySql,
+			TestProvName.AllOracle,
+			TestProvName.AllSybase,
+			TestProvName.AllSapHana,
+			TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.Person.Where(r => GetValue(Wrap<int?>(null)) == null).Count(), Is.EqualTo(4));
+				Assert.That(db.Person.Where(r => GetValue(Wrap<int?>(null)) != null).Count(), Is.EqualTo(0));
+				Assert.That(db.Person.Where(r => !(GetValue(Wrap<int?>(null)) != null)).Count(), Is.EqualTo(4));
+			}
+		}
 	}
 }

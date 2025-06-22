@@ -7,11 +7,16 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {
+	sealed class RowByRowBulkCopy : BasicBulkCopy
+	{
+	}
+
 	/// <summary>
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
@@ -2408,7 +2413,18 @@ namespace LinqToDB.Data
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
-			var dataConnection = table.GetDataConnection();
+			DataConnection? dataConnection = null;
+
+			if (options.BulkCopyType == BulkCopyType.RowByRow && !table.TryGetDataConnection(out dataConnection))
+			{
+				return new RowByRowBulkCopy().BulkCopy(
+					BulkCopyType.RowByRow,
+					table,
+					table.DataContext.Options.WithOptions(options),
+					source);
+			}
+
+			dataConnection ??= table.GetDataConnection();
 
 			return table.GetDataProvider().BulkCopy(
 				dataConnection.Options.WithOptions(options),
@@ -2561,7 +2577,20 @@ namespace LinqToDB.Data
 			if (table  == null) throw new ArgumentNullException(nameof(table));
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var dataConnection = table.GetDataConnection();
+			DataConnection? dataConnection = null;
+
+			if (options.BulkCopyType == BulkCopyType.RowByRow && !table.TryGetDataConnection(out dataConnection))
+			{
+			return CallMetrics(() =>
+					new RowByRowBulkCopy().BulkCopyAsync(
+						BulkCopyType.RowByRow,
+						table,
+						table.DataContext.Options.WithOptions(options),
+						source,
+						cancellationToken));
+			}
+
+			dataConnection ??= table.GetDataConnection();
 
 			return CallMetrics(() =>
 				table.GetDataProvider().BulkCopyAsync(

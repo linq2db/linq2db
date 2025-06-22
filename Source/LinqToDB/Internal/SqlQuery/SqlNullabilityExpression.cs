@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return SqlExpression.Equals(((SqlNullabilityExpression)other).SqlExpression, comparer);
 		}
 
-		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+		public override bool CanBeNullable(NullabilityContext nullability) => nullability.CanBeNull(this);
 
 		public          bool             CanBeNull   => _isNullable;
 		public override int              Precedence  => SqlExpression.Precedence;

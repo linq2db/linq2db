@@ -1,4 +1,5 @@
 ﻿using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlProvider
@@ -22,7 +23,9 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		void ConvertSkipTake(NullabilityContext nullability, MappingSchema mappingSchema, DataOptions dataOptions, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr);
 
-		SqlExpressionOptimizerVisitor CreateOptimizerVisitor(bool allowModify);
-		SqlExpressionConvertVisitor   CreateConvertVisitor(bool   allowModify);
+		SqlExpressionOptimizerVisitor      CreateOptimizerVisitor(bool allowModify);
+		SqlExpressionConvertVisitor        CreateConvertVisitor(bool   allowModify);
+
+		ISqlExpressionFactory CreateSqlExpressionFactory(MappingSchema mappingSchema, DataOptions dataOptions);
 	}
 }

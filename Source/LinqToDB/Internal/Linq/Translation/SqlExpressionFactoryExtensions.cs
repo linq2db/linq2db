@@ -53,6 +53,11 @@ namespace LinqToDB.Internal.Linq.Translation
 			return new SqlPredicate.Expr(expression);
 		}
 
+		public static ISqlPredicate IsNullPredicate(this ISqlExpressionFactory factory, ISqlExpression expression, bool isNot = false)
+		{
+			return new SqlPredicate.IsNull(expression, isNot);
+		}
+
 		public static SqlSearchCondition SearchCondition(this ISqlExpressionFactory factory, bool isOr = false)
 		{
 			return new SqlSearchCondition(isOr);
@@ -71,6 +76,11 @@ namespace LinqToDB.Internal.Linq.Translation
 		public static ISqlExpression Value<T>(this ISqlExpressionFactory factory, T value)
 		{
 			return factory.Value(factory.GetDbDataType(typeof(T)), value);
+		}
+
+		public static ISqlExpression NotNull(this ISqlExpressionFactory factory, ISqlExpression expression)
+		{
+			return new SqlNullabilityExpression(expression, false);
 		}
 
 		public static ISqlExpression Cast(this ISqlExpressionFactory factory, ISqlExpression expression, DbDataType toDbDataType, bool isMandatory = false)
@@ -114,7 +124,7 @@ namespace LinqToDB.Internal.Linq.Translation
 
 		public static ISqlExpression Sub(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
-			return new SqlBinaryExpression(dbDataType, x, "-", y, Precedence.Additive);
+			return new SqlBinaryExpression(dbDataType, x, "-", y, Precedence.Subtraction);
 		}
 
 		public static ISqlExpression Add(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
@@ -156,7 +166,7 @@ namespace LinqToDB.Internal.Linq.Translation
 
 		public static ISqlExpression Concat(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
-			return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Additive);
+			return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Concatenate);
 		}
 
 		public static ISqlExpression Concat(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string value)
@@ -167,7 +177,7 @@ namespace LinqToDB.Internal.Linq.Translation
 		public static ISqlExpression Concat(this ISqlExpressionFactory factory, ISqlExpression x, string value)
 		{
 			var dbDataType = factory.GetDbDataType(x);
-			return new SqlBinaryExpression(dbDataType, x, "+", factory.Value(dbDataType, value), Precedence.Additive);
+			return new SqlBinaryExpression(dbDataType, x, "+", factory.Value(dbDataType, value), Precedence.Concatenate);
 		}
 
 		public static ISqlExpression Increment<T>(this ISqlExpressionFactory factory, ISqlExpression x, T value)
@@ -220,6 +230,31 @@ namespace LinqToDB.Internal.Linq.Translation
 			return factory.Cast(expression, dbDataType);
 		}
 
+		#region String functions
+
+		public static ISqlExpression ToLower(this ISqlExpressionFactory factory, ISqlExpression expression)
+		{
+			return factory.Function(factory.GetDbDataType(expression), PseudoFunctions.TO_LOWER, expression);
+		}
+
+		public static ISqlExpression ToUpper(this ISqlExpressionFactory factory, ISqlExpression expression)
+		{
+			return factory.Function(factory.GetDbDataType(expression), PseudoFunctions.TO_UPPER, expression);
+		}
+
+		public static ISqlExpression Length(this ISqlExpressionFactory factory, ISqlExpression expression)
+		{
+			return factory.Function(factory.GetDbDataType(typeof(int)), PseudoFunctions.LENGTH, expression);
+		}
+
+		public static ISqlExpression Replace(this ISqlExpressionFactory factory, ISqlExpression expression, ISqlExpression oldSubString, ISqlExpression newSubstring)
+		{
+			var valueType = factory.GetDbDataType(expression);
+			return factory.Function(valueType, PseudoFunctions.REPLACE, expression, factory.EnsureType(oldSubString, valueType), factory.EnsureType(newSubstring, valueType));
+		}
+
+		#endregion
+
 		#region Predicates
 
 		public static ISqlPredicate Equal(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
@@ -250,6 +285,11 @@ namespace LinqToDB.Internal.Linq.Translation
 		public static ISqlPredicate LessOrEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
 		{
 			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.LessOrEqual, expr2, factory.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
+		}
+
+		public static ISqlPredicate IsNull(this ISqlExpressionFactory factory, ISqlExpression expr, bool isNot = false)
+		{
+			return new SqlPredicate.IsNull(expr, isNot);
 		}
 
 		#endregion

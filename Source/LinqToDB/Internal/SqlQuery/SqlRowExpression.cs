@@ -16,7 +16,7 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			// SqlRow doesn't exactly have its own type and nullability, being a collection of values.
 			// But it can be null in the sense that `(1, 2) IS NULL` can be true (when all values are null).
-			return QueryHelper.CalcCanBeNull(null, ParametersNullabilityType.IfAllParametersNullable, Values.Select(v => v.CanBeNullable(nullability)));
+			return QueryHelper.CalcCanBeNull(null, null, ParametersNullabilityType.IfAllParametersNullable, Values.Select(v => v.CanBeNullable(nullability)));
 		}
 
 		public override int Precedence => LinqToDB.SqlQuery.Precedence.Primary;

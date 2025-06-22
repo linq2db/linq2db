@@ -63,7 +63,7 @@ namespace LinqToDB.Internal.DataProvider
 			}
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 #pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		public override ValueTask DisposeAsync()
 #pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose

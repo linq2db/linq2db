@@ -696,7 +696,7 @@ namespace Tests.Linq
 
 			public static Expression<Action<ParentContainer, Parent>> SetParentValue()
 			{
-				return static (ParentContainer container, Parent value) => container.SetValue(value);
+				return static (container, value) => container.SetValue(value);
 			}
 		}
 
@@ -749,7 +749,7 @@ namespace Tests.Linq
 
 			public static Expression<Action<ChildrenContainer<Child>, IEnumerable<Child>>> SetChildrenValue()
 			{
-				return static (ChildrenContainer<Child> container, IEnumerable<Child> value) => container.SetValue(value);
+				return static (container, value) => container.SetValue(value);
 			}
 		}
 
@@ -1410,7 +1410,7 @@ namespace Tests.Linq
 					Assert.That(res[0].t.TargetName, Is.EqualTo("bda.Requests"));
 					Assert.That(res[0].ActualStage.Id, Is.EqualTo(1));
 					Assert.That(res[0].ActualStage.TaskId, Is.EqualTo(1));
-					Assert.That(res[0].ActualStage.Actual, Is.EqualTo(true));
+					Assert.That(res[0].ActualStage.Actual, Is.True);
 				});
 			}
 		}
@@ -1430,7 +1430,7 @@ namespace Tests.Linq
 			[Association(ExpressionPredicate = nameof(OwnerPredicate), CanBeNull = true)]
 			public Issue2981OwnerEntity? Owner { get; set; }
 
-			public static Expression<Func<T, Issue2981OwnerEntity, bool>> OwnerPredicate { get; set; } = (T entity, Issue2981OwnerEntity owner) => entity.OwnerId == owner.Id;
+			public static Expression<Func<T, Issue2981OwnerEntity, bool>> OwnerPredicate { get; set; } = (entity, owner) => entity.OwnerId == owner.Id;
 		}
 
 		[Table]

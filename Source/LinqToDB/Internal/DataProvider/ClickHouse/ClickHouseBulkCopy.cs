@@ -579,7 +579,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				// actually currently DisposeAsync is not implemented in Client provider and we can call Dispose with same effect
 				if (disposeConnection)
 				{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					await connection.DisposeAsync().ConfigureAwait(false);
 #else
 					connection.Dispose();

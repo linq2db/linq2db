@@ -14,6 +14,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 		}
 
+		protected override bool SupportsColumnAliasesInSource => true;
+
 		MySql80SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}

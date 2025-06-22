@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Internal.Linq.Translation;
@@ -22,6 +24,16 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
 		}
 
 		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
@@ -194,6 +206,79 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				var resultExpression = factory.Function(factory.GetDbDataType(typeof(TimeSpan)), StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(TimeFormat), dateExpression);
 
 				return resultExpression;
+			}
+		}
+
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
+			{
+				/*
+				 * SELECT value || SUBSTR(
+				 *				REPLACE(HEX(ZEROBLOB(padding)), '0', paddingSymbol), 
+				 *				1,
+				 *				padding - LENGTH(value));
+				*/
+
+				var factory = translationContext.ExpressionFactory;
+
+				var valueTypeString = factory.GetDbDataType(value);
+				var valueTypeInt    = factory.GetDbDataType(typeof(int));
+
+				var valueZeroBlob = factory.Function(valueTypeString, "ZEROBLOB", padding);
+				var valueHex      = factory.Function(valueTypeString, "HEX", valueZeroBlob);
+				var paddingString = factory.Function(valueTypeString, "REPLACE", valueHex, factory.Value(valueTypeString, "0"), paddingChar);
+
+				var lengthExpr = TranslateLength(translationContext, translationFlags, value);
+				if (lengthExpr == null)
+					return null;
+
+				var valueSymbolsToAdd = factory.Sub(valueTypeInt, padding, lengthExpr);
+				var fillingString     = factory.Function(valueTypeString, "SUBSTR", paddingString, factory.Value(valueTypeInt, 1), valueSymbolsToAdd);
+				
+				return factory.Concat(fillingString, value);
+			}
+		}
+
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// 	lower((substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12)))
+
+				var factory      = translationContext.ExpressionFactory;
+				var stringDbType = factory.GetDbDataType(typeof(string));
+				var hexExpr      = factory.Function(stringDbType, "hex", guidExpr);
+
+				var dividerExpr = factory.Value(stringDbType, "-");
+
+				var resultExpression = factory.ToLower(
+					factory.Concat(
+						SubString(hexExpr, 7, 2),
+						SubString(hexExpr, 5, 2),
+						SubString(hexExpr, 3, 2),
+						SubString(hexExpr, 1, 2),
+						dividerExpr,
+						SubString(hexExpr, 11, 2),
+						SubString(hexExpr, 9,  2),
+						dividerExpr,
+						SubString(hexExpr, 15, 2),
+						SubString(hexExpr, 13, 2),
+						dividerExpr,
+						SubString(hexExpr, 17, 4),
+						dividerExpr,
+						SubString(hexExpr, 21, 12)
+					)
+				);
+
+				resultExpression = factory.Condition(factory.IsNullPredicate(guidExpr), factory.Value<string?>(stringDbType, null), factory.NotNull(resultExpression));
+
+				return resultExpression; 
+
+				ISqlExpression SubString(ISqlExpression expression, int pos, int length)
+				{
+					return factory.Function(stringDbType, "substr", expression, factory.Value(pos), factory.Value(length));
+				}
 			}
 		}
 	}

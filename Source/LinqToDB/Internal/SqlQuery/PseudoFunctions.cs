@@ -94,5 +94,15 @@ namespace LinqToDB.Internal.SqlQuery
 				ParametersNullabilityType.IfAnyParameterNullable, null, value, resultType);
 		}
 
+		/// <summary>
+		/// Function for calculating length of string: <c>LENGTH(value)</c>
+		/// </summary>
+		public const string LENGTH = "$Length$";
+		public static SqlFunction MakeLength(ISqlExpression value)
+		{
+			return new SqlFunction(typeof(int), LENGTH, false, true, Precedence.Primary,
+				ParametersNullabilityType.IfAnyParameterNullable, null, value);
+		}
+
 	}
 }

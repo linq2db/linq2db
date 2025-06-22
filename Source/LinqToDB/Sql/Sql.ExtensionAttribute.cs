@@ -596,7 +596,7 @@ namespace LinqToDB
 				else if (member is PropertyInfo)
 					type = ((PropertyInfo)member).PropertyType;
 
-				var extension = new SqlExtension(type, Expression!, Precedence, ChainPrecedence, IsAggregate, IsWindowFunction, IsPure, IsPredicate, IsNullable, _canBeNull);
+				var extension = new SqlExtension(type, Expression!, Precedence, ChainPrecedence, IsAggregate, IsWindowFunction, IsPure, IsPredicate, IsNullable, СonfiguredCanBeNull);
 
 				SqlExtensionParam? result = null;
 
@@ -663,7 +663,7 @@ namespace LinqToDB
 										foreach (var pair
 										         in TypeHelper.EnumTypeRemapping(elementType, argElementType, templateGenericArguments))
 										{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 											descriptorMapping.TryAdd(pair.Item1, descriptor);
 #else
 											if (!descriptorMapping.ContainsKey(pair.Item1))
@@ -734,7 +734,7 @@ namespace LinqToDB
 					var callBuilder = _builders.GetOrAdd(BuilderType, ActivatorExt.CreateInstance<IExtensionCallBuilder>);
 
 					var builder = new ExtensionBuilder<TContext>(context, evaluator, Configuration, BuilderValue, dataContext,
-						query, extension, converter, member, arguments, IsNullable, _canBeNull);
+						query, extension, converter, member, arguments, IsNullable, СonfiguredCanBeNull);
 
 					callBuilder.Build(builder);
 

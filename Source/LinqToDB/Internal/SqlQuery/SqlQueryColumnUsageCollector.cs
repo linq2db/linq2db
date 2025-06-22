@@ -268,5 +268,19 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return element;
 		}
+
+		protected override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+		{
+			if (element.SourceQuery != null)
+			{
+				foreach(var column in element.SourceQuery.Select.Columns)
+					RegisterColumn(column);
+
+				VisitSqlQuery(element.SourceQuery);
+			}
+
+			return element;
+		}
+
 	}
 }

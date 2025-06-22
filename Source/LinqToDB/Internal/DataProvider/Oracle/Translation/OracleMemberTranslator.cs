@@ -11,6 +11,26 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 {
 	public class OracleMemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new OracleMathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -222,27 +242,55 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			}
 		}
 
-		protected override IMemberTranslator CreateSqlTypesTranslator()
-		{
-			return new SqlTypesTranslation();
-		}
-
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new DateFunctionsTranslator();
-		}
-
-		protected override IMemberTranslator CreateMathMemberTranslator()
-		{
-			return new OracleMathMemberTranslator();
-		}
-
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			var factory  = translationContext.ExpressionFactory;
 			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "Sys_Guid");
 
 			return timePart;
+		}
+
+		// Similar to SQLite
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// 	lower((substr(rawtohex({0}), 7, 2) || substr(rawtohex({0}), 5, 2) || substr(rawtohex({0}), 3, 2) || substr(rawtohex({0}), 1, 2) || '-' || substr(rawtohex({0}), 11, 2) || substr(rawtohex({0}), 9, 2) || '-' || substr(rawtohex({0}), 15, 2) || substr(rawtohex({0}), 13, 2) || '-' || substr(rawtohex({0}), 17, 4) || '-' || substr(rawtohex({0}), 21, 12)))
+
+				var factory      = translationContext.ExpressionFactory;
+				var stringDbType = factory.GetDbDataType(typeof(string));
+				var hexExpr      = factory.Function(stringDbType, "RAWTOHEX", guidExpr);
+
+				var dividerExpr = factory.Value(stringDbType, "-");
+
+				var resultExpression = factory.ToLower(
+					factory.Concat(
+						SubString(hexExpr, 7, 2),
+						SubString(hexExpr, 5, 2),
+						SubString(hexExpr, 3, 2),
+						SubString(hexExpr, 1, 2),
+						dividerExpr,
+						SubString(hexExpr, 11, 2),
+						SubString(hexExpr, 9,  2),
+						dividerExpr,
+						SubString(hexExpr, 15, 2),
+						SubString(hexExpr, 13, 2),
+						dividerExpr,
+						SubString(hexExpr, 17, 4),
+						dividerExpr,
+						SubString(hexExpr, 21, 12)
+					)
+				);
+
+				resultExpression = factory.Condition(factory.IsNullPredicate(guidExpr), factory.Value<string?>(stringDbType, null), factory.NotNull(resultExpression));
+
+				return resultExpression;
+
+				ISqlExpression SubString(ISqlExpression expression, int pos, int length)
+				{
+					return factory.Function(stringDbType, "SUBSTR", expression, factory.Value(pos), factory.Value(length));
+				}
+			}
 		}
 
 	}

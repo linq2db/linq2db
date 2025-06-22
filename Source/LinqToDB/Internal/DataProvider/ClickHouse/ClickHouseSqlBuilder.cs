@@ -472,7 +472,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 
-		protected override bool IsValuesSyntaxSupported => false;
+		protected override bool IsValuesSyntaxSupported       => false;
+		protected override bool SupportsColumnAliasesInSource => false;
 
 		protected override void BuildSetOperation(SetOperation operation, StringBuilder sb)
 		{

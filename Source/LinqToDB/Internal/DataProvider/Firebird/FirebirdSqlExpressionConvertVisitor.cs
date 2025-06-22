@@ -145,7 +145,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					throw new InvalidOperationException($"Unexpected predicate: {predicate.Kind}");
 			}
 
-			return new SqlSearchCondition(false, new SqlPredicate.Expr(expr));
+			return new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Expr(expr));
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
@@ -164,7 +164,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			}
 			else if (cast.SystemType.ToUnderlying() == typeof(string) && cast.Expression.SystemType?.ToUnderlying() == typeof(Guid))
 			{
-				return new SqlFunction(cast.SystemType, "UUID_TO_CHAR", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, cast.Expression);
+				// TODO: think how to use FirebirdMemberTranslator.GuidMemberTranslator.TranslateGuildToString instead of code duplication here
+				return PseudoFunctions.MakeToLower(new SqlFunction(cast.SystemType, "UUID_TO_CHAR", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, cast.Expression));
 			}
 			else if (cast.SystemType.ToUnderlying() == typeof(Guid) && cast.Expression.SystemType?.ToUnderlying() == typeof(string))
 			{
@@ -189,9 +190,23 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			if (predicate.ElementType == QueryElementType.ExprPredicate && predicate.Expr1 is SqlParameter p && p.Type.DataType != DataType.Boolean)
 			{
 				predicate = new SqlPredicate.ExprExpr(p, SqlPredicate.Operator.Equal, MappingSchema.GetSqlValue(p.Type, true), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
+				return Visit(predicate);
 			}
 
 			return base.VisitExprPredicate(predicate);
 		}
+
+		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
+		{
+			switch (func)
+			{
+				case { Name: PseudoFunctions.LENGTH }:
+					return func.WithName("CHAR_LENGTH");
+
+				default:
+					return base.ConvertSqlFunction(func);
+			}
+		}
+
 	}
 }

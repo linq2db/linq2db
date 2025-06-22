@@ -287,7 +287,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit));
 				}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				// Check if the property belongs to a readonly struct and is not modifying state
 				if (property.DeclaringType?.IsValueType == true &&
 				    property.DeclaringType.IsDefined(typeof(IsReadOnlyAttribute), false))
@@ -301,7 +301,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			bool IsReadOnlyMethod(MethodInfo method)
 			{
 				// Check if the method is marked with [IsReadOnly] (for .NET 5+)
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				if (method.GetAttributes<IsReadOnlyAttribute>().Length > 0)
 				{
 					return true;

@@ -74,18 +74,26 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				
-				if (SequenceHelper.IsSameContext(path, this) 
-					&& (flags.IsRoot() || flags.IsExtractProjection() || flags.IsExpand() || flags.IsSubquery() || flags.IsAggregationRoot() || flags.IsExpand())
-				    && !path.Type.IsAssignableFrom(ElementType))
+				if (SequenceHelper.IsSameContext(path, this))
 				{
-					var result = GetGroupJoinCall();
-					if (result.Type == path.Type)
+					if ((flags.IsRoot() || flags.IsExtractProjection() || flags.IsExpand() || flags.IsSubquery() || flags.IsAggregationRoot() || flags.IsExpand())
+					    && !path.Type.IsAssignableFrom(ElementType))
 					{
-						return result;
+						var result = GetGroupJoinCall();
+						if (result.Type == path.Type)
+						{
+							return result;
+						}
+
+						return SqlAdjustTypeExpression.AdjustType(result, path.Type, MappingSchema);
 					}
 
-					return SqlAdjustTypeExpression.AdjustType(result, path.Type, MappingSchema);
+					if (flags.IsSql())
+					{
+						return new SqlErrorExpression(path,
+							"Cannot use the collection from a GroupJoin as an expression. This typically occurs when attempting a LEFT JOIN and choosing the wrong property for comparison.",
+							path.Type);
+					}
 				}
 
 				return path;

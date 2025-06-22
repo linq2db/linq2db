@@ -26,7 +26,8 @@ namespace LinqToDB.Remote
 		private MappingSchema? _serializationMappingSchema;
 		private MappingSchema? _mappingSchema;
 
-		public bool AllowUpdates { get; set; }
+		public bool    AllowUpdates    { get; set; }
+		public string? RemoteClientTag { get; set; }
 
 		public MappingSchema? MappingSchema
 		{
@@ -58,7 +59,7 @@ namespace LinqToDB.Remote
 
 		public virtual DataConnection CreateDataContext(string? configuration)
 		{
-			var dc = new DataConnection(configuration);
+			var dc = new DataConnection(configuration) { Tag = RemoteClientTag };
 			if (MappingSchema != null)
 				dc.AddMappingSchema(MappingSchema);
 			return dc;
@@ -74,7 +75,7 @@ namespace LinqToDB.Remote
 		{
 		}
 
-#region ILinqService Members
+		#region ILinqService Members
 
 		public virtual LinqServiceInfo GetInfo(string? configuration)
 		{

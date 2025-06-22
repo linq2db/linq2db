@@ -66,7 +66,7 @@ namespace LinqToDB
 					var name = column.ColumnName;
 
 					if (qualified)
-						name = builder.DataContext.CreateSqlProvider().ConvertInline(name, ConvertType.NameToQueryField);
+						name = builder.DataContext.CreateSqlBuilder().ConvertInline(name, ConvertType.NameToQueryField);
 
 					builder.ResultExpression = new SqlValue(name);
 				}
@@ -96,7 +96,7 @@ namespace LinqToDB
 					var name = field.PhysicalName;
 
 					if (qualified)
-						name = builder.DataContext.CreateSqlProvider().ConvertInline(name, ConvertType.NameToQueryField);
+						name = builder.DataContext.CreateSqlBuilder().ConvertInline(name, ConvertType.NameToQueryField);
 
 					builder.ResultExpression = new SqlValue(name);
 				}
@@ -121,7 +121,7 @@ namespace LinqToDB
 			var result = column.ColumnName;
 			if (qualified)
 			{
-				var sqlBuilder = table.DataContext.CreateSqlProvider();
+				var sqlBuilder = table.DataContext.CreateSqlBuilder();
 				result         = sqlBuilder.ConvertInline(result, ConvertType.NameToQueryField);
 			}
 
@@ -313,7 +313,7 @@ namespace LinqToDB
 					if (qualified != TableQualification.None)
 					{
 						using var sb = Pools.StringBuilder.Allocate();
-						builder.DataContext.CreateSqlProvider().BuildObjectName(
+						builder.DataContext.CreateSqlBuilder().BuildObjectName(
 							sb.Value,
 							new SqlObjectName(
 								name,
@@ -351,7 +351,7 @@ namespace LinqToDB
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
-					builder.DataContext.CreateSqlProvider().BuildObjectName(
+					builder.DataContext.CreateSqlBuilder().BuildObjectName(
 						sb.Value,
 						new SqlObjectName(
 							sqlTable.TableName.Name,
@@ -435,7 +435,7 @@ namespace LinqToDB
 
 			if (qualification != TableQualification.None)
 			{
-				var sqlBuilder = table.DataContext.CreateSqlProvider();
+				var sqlBuilder = table.DataContext.CreateSqlBuilder();
 				using var sb   = Pools.StringBuilder.Allocate();
 				sqlBuilder.BuildObjectName(
 					sb.Value,
@@ -476,7 +476,7 @@ namespace LinqToDB
 
 			if (qualification != TableQualification.None)
 			{
-				var sqlBuilder = table.DataContext.CreateSqlProvider();
+				var sqlBuilder = table.DataContext.CreateSqlBuilder();
 				using var sb   = Pools.StringBuilder.Allocate();
 
 				sqlBuilder.BuildObjectName(

@@ -246,6 +246,43 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		}
 
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var valueTypeString = factory.GetDbDataType(value);
+				var valueTypeInt    = factory.GetDbDataType(typeof(int));
+
+				var lengthValue = TranslateLength(translationContext, translationFlags, value);
+				if (lengthValue == null)
+					return null;
+
+				var valueSymbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
+				var fillingString     = factory.Function(valueTypeString, "STRING", valueSymbolsToAdd, paddingChar);
+
+				return factory.Concat(fillingString, value);
+			}
+		}
+
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// LCase(Mid(CStr({0}), 2, 36))
+
+				var factory      = translationContext.ExpressionFactory;
+				var stringDbType = factory.GetDbDataType(typeof(string));
+
+				var cStrExpression = factory.Function(stringDbType, "CStr", guidExpr);
+				var midExpression  = factory.Function(stringDbType, "Mid", cStrExpression, factory.Value(2), factory.Value(36));
+				var toLower        = factory.ToLower(midExpression);
+
+				return toLower;
+			}
+		}
+
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();
@@ -259,6 +296,16 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 		protected override IMemberTranslator CreateMathMemberTranslator()
 		{
 			return new MathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
 		}
 	}
 }

@@ -108,7 +108,7 @@ namespace LinqToDB.Internal.DataProvider
 			return RowByRowCopyAsync(table, options, source, cancellationToken);
 		}
 
-		protected virtual BulkCopyRowsCopied RowByRowCopy<T>(ITable<T> table, DataOptions dataOptions, IEnumerable<T> source)
+		protected BulkCopyRowsCopied RowByRowCopy<T>(ITable<T> table, DataOptions dataOptions, IEnumerable<T> source)
 			where T : notnull
 		{
 			var options = dataOptions.BulkCopyOptions;

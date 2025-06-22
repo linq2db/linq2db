@@ -10,6 +10,26 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 {
 	public class SapHanaMemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new SapHanaMathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -239,21 +259,6 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 			}
 		}
 
-		protected override IMemberTranslator CreateSqlTypesTranslator()
-		{
-			return new SqlTypesTranslation();
-		}
-
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new DateFunctionsTranslator();
-		}
-
-		protected override IMemberTranslator CreateMathMemberTranslator()
-		{
-			return new SapHanaMathMemberTranslator();
-		}
-
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			// Not found working solution for this
@@ -264,6 +269,22 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 			return sysUUID;*/
 
 			return null;
+		}
+
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// Lower(Cast({0} as NVarChar(36)))
+
+				var factory        = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.NVarChar).WithLength(36);
+
+				var cast    = factory.Cast(guidExpr, stringDataType);
+				var toLower = factory.ToLower(cast);
+
+				return toLower;
+			}
 		}
 	}
 }

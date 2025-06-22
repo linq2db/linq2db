@@ -30,9 +30,10 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
-		protected override bool   IsRecursiveCteKeywordRequired   => true;
-		public    override bool   IsNestedJoinParenthesisRequired => true;
-		protected override bool   IsValuesSyntaxSupported         => false;
+		protected override bool IsRecursiveCteKeywordRequired   => true;
+		public    override bool IsNestedJoinParenthesisRequired => true;
+		protected override bool IsValuesSyntaxSupported         => false;
+		protected override bool SupportsColumnAliasesInSource   => false;
 
 		protected override bool CanSkipRootAliases(SqlStatement statement)
 		{
@@ -390,7 +391,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					AppendIndent();
 					BuildExpression(expr.Column, false, true);
 					StringBuilder.Append(" = ");
-					BuildExpression(expr.Expression!, false, true);
+					var convertedExpr = ConvertElement(expr.Expression!);
+					BuildExpression(convertedExpr, false, true);
 				}
 
 				Indent--;

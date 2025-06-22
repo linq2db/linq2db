@@ -39,7 +39,7 @@ namespace LinqToDB.Internal.Async
 
 		public virtual Task CommitAsync(CancellationToken cancellationToken)
 		{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionCommitAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 
 			if (a is null)
@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.Async
 
 		public virtual Task RollbackAsync(CancellationToken cancellationToken)
 		{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionRollbackAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 
 			if (a is null)

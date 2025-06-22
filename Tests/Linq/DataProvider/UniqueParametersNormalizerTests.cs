@@ -362,7 +362,7 @@ namespace Tests.DataProvider
 			public DbConnection CreateConnection(string connectionString) => _baseProvider.CreateConnection(connectionString);
 			public ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions) => _baseProvider.CreateSqlBuilder(mappingSchema, dataOptions);
 			public void DisposeCommand(DbCommand command) => _baseProvider.DisposeCommand(command);
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			public ValueTask DisposeCommandAsync(DbCommand command) => _baseProvider.DisposeCommandAsync(command);
 #endif
 			public IExecutionScope? ExecuteScope(DataConnection dataConnection) => _baseProvider.ExecuteScope(dataConnection);

@@ -41,7 +41,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			AddScalarType(typeof(BigInteger), DataType.Int256);
 			AddScalarType(typeof(byte[])    , DataType.VarBinary);
 			AddScalarType(typeof(string)    , DataType.NVarChar);
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			AddScalarType(typeof(DateOnly)  , DataType.Date32);
 #endif
 
@@ -55,7 +55,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpan      (sb, dt, (TimeSpan)v));
 			SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTime      (sb, dt, (DateTime)v));
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffset(sb, dt, (DateTimeOffset)v));
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateOnly      (sb, dt, (DateOnly)v));
 #endif
 			SetValueToSqlConverter(typeof(byte)          , (sb,dt,_,v) => ConvertByte          (sb, dt, (byte)v));
@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			// conversions to DateTimeOffset
 			SetConvertExpression((DateTime v) => new DateTimeOffset(v.Ticks, default));
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			SetConvertExpression((DateOnly       v) => new DateTimeOffset(v.ToDateTime(TimeOnly.MinValue), default));
 			SetConvertExpression((DateTimeOffset v) => new DateOnly(v.Year, v.Month, v.Day));
 #endif
@@ -567,7 +567,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			}
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		private static void ConvertDateOnly(StringBuilder sb, SqlDataType dt, DateOnly value)
 		{
 			switch (dt.Type.DataType)

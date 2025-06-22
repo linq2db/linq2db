@@ -26,7 +26,7 @@ namespace LinqToDB.Internal.Expressions
 		/// </summary>
 		/// <param name="expression">Expression to get DebugView.</param>
 		/// <returns>DebugView value.</returns>
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[DynamicDependency("get_DebugView", typeof(Expression))]
 #endif
 		public static string GetDebugView(this Expression expression)

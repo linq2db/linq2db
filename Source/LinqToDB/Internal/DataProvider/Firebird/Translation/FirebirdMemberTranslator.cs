@@ -11,6 +11,26 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 {
 	public class FirebirdMemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new FirebirdDateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -225,14 +245,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			}
 		}
 
-		protected override IMemberTranslator CreateSqlTypesTranslator()
+		public class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			return new SqlTypesTranslation();
-		}
-
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new FirebirdDateFunctionsTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
@@ -242,5 +256,21 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 
 			return timePart;
 		}
+
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+		{
+				// lower(UUID_TO_CHAR({0}))
+
+			var factory  = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string));
+				var toChar         = factory.Function(stringDataType, "UUID_TO_CHAR", guidExpr);
+				var toLower        = factory.ToLower(toChar);
+
+				return toLower;
+			}
+		}
+
 	}
 }

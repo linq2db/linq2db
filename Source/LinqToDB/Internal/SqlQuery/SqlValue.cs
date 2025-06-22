@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
-using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.SqlQuery
 {

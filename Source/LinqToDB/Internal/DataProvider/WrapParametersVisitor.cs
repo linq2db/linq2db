@@ -23,8 +23,7 @@ namespace LinqToDB.Internal.DataProvider
 			InInsertOrUpdate = 1 << 4,
 			InOutput         = 1 << 5,
 			InMerge          = 1 << 6,
-
-			All = InSelect | InUpdateSet | InInsertValue | InInsertOrUpdate | InOutput | InMerge
+			InBinary         = 1 << 7,
 		}
 	
 		public WrapParametersVisitor(VisitMode visitMode) : base(visitMode, null)
@@ -133,7 +132,7 @@ namespace LinqToDB.Internal.DataProvider
 
 		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			using var scope = NeedCast(!_inModifier);
+			using var scope = NeedCast(!_inModifier && _wrapFlags.HasFlag(WrapFlags.InBinary));
 			return base.VisitSqlBinaryExpression(element);
 		}
 

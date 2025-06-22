@@ -31,8 +31,6 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 #if NETFRAMEWORK
 		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.v4.5"];
-#elif NET6_0 || NET7_0
-		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Net.v6.0", "Sap.Data.Hana.Core.v2.1"];
 #elif NET8_0_OR_GREATER
 		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Net.v8.0", "Sap.Data.Hana.Net.v6.0", "Sap.Data.Hana.Core.v2.1"];
 #else
@@ -218,7 +216,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 								});
 							}
 
-							var connectionFactory = typeMapper.BuildTypedFactory<string, HanaConnection, DbConnection>((string connectionString) => new HanaConnection(connectionString));
+							var connectionFactory = typeMapper.BuildTypedFactory<string, HanaConnection, DbConnection>(connectionString => new HanaConnection(connectionString));
 
 							var typeProperty = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType);
 
@@ -329,19 +327,19 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				= new object[]
 			{
 				// [0]: Dispose
-				(Expression<Action<HanaBulkCopy>>                                   )((HanaBulkCopy this_                    ) => ((IDisposable)this_).Dispose()),
+				(Expression<Action<HanaBulkCopy>>                                   )(this_ => ((IDisposable)this_).Dispose()),
 				// [1]: WriteToServer
-				(Expression<Action<HanaBulkCopy, IDataReader>>                      )((HanaBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
+				(Expression<Action<HanaBulkCopy, IDataReader>>                      )((this_, reader) => this_.WriteToServer(reader)),
 				// [2]: get NotifyAfter
-				(Expression<Func<HanaBulkCopy, int>>                                )((HanaBulkCopy this_                    ) => this_.NotifyAfter),
+				(Expression<Func<HanaBulkCopy, int>>                                )(this_ => this_.NotifyAfter),
 				// [3]: get BatchSize
-				(Expression<Func<HanaBulkCopy, int>>                                )((HanaBulkCopy this_                    ) => this_.BatchSize),
+				(Expression<Func<HanaBulkCopy, int>>                                )(this_ => this_.BatchSize),
 				// [4]: get BulkCopyTimeout
-				(Expression<Func<HanaBulkCopy, int>>                                )((HanaBulkCopy this_                    ) => this_.BulkCopyTimeout),
+				(Expression<Func<HanaBulkCopy, int>>                                )(this_ => this_.BulkCopyTimeout),
 				// [5]: get DestinationTableName
-				(Expression<Func<HanaBulkCopy, string?>>                            )((HanaBulkCopy this_                    ) => this_.DestinationTableName),
+				(Expression<Func<HanaBulkCopy, string?>>                            )(this_ => this_.DestinationTableName),
 				// [6]: get ColumnMappings
-				(Expression<Func<HanaBulkCopy, HanaBulkCopyColumnMappingCollection>>)((HanaBulkCopy this_                    ) => this_.ColumnMappings),
+				(Expression<Func<HanaBulkCopy, HanaBulkCopyColumnMappingCollection>>)(this_ => this_.ColumnMappings),
 				// [7]: set NotifyAfter
 				PropertySetter((HanaBulkCopy this_) => this_.NotifyAfter),
 				// [8]: set BatchSize
@@ -352,7 +350,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				PropertySetter((HanaBulkCopy this_) => this_.DestinationTableName),
 				// [11]: WriteToServerAsync
 				new Tuple<LambdaExpression, bool>
-				((Expression<Func<HanaBulkCopy, IDataReader, CancellationToken, Task>>)((HanaBulkCopy this_, IDataReader reader, CancellationToken cancellationToken) => this_.WriteToServerAsync(reader, cancellationToken)), true),
+				((Expression<Func<HanaBulkCopy, IDataReader, CancellationToken, Task>>)((this_, reader, cancellationToken) => this_.WriteToServerAsync(reader, cancellationToken)), true),
 			};
 
 			private static string[] Events { get; }
@@ -419,9 +417,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				= new LambdaExpression[]
 			{
 				// [0]: get RowsCopied
-				(Expression<Func<HanaRowsCopiedEventArgs, long>>)((HanaRowsCopiedEventArgs this_) => this_.RowsCopied),
+				(Expression<Func<HanaRowsCopiedEventArgs, long>>)(this_ => this_.RowsCopied),
 				// [1]: get Abort
-				(Expression<Func<HanaRowsCopiedEventArgs, bool>>)((HanaRowsCopiedEventArgs this_) => this_.Abort),
+				(Expression<Func<HanaRowsCopiedEventArgs, bool>>)(this_ => this_.Abort),
 				// [2]: set Abort
 				PropertySetter((HanaRowsCopiedEventArgs this_) => this_.Abort),
 			};
@@ -449,7 +447,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				= new LambdaExpression[]
 			{
 				// [0]: Add
-				(Expression<Func<HanaBulkCopyColumnMappingCollection, HanaBulkCopyColumnMapping, HanaBulkCopyColumnMapping>>)((HanaBulkCopyColumnMappingCollection this_, HanaBulkCopyColumnMapping column) => this_.Add(column)),
+				(Expression<Func<HanaBulkCopyColumnMappingCollection, HanaBulkCopyColumnMapping, HanaBulkCopyColumnMapping>>)((this_, column) => this_.Add(column)),
 			};
 
 			public HanaBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)

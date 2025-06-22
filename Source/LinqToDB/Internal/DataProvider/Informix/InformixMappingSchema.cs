@@ -40,7 +40,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,o,v) => ConvertDateTimeToSql(sb, dt, o, (DateTime)v));
 			SetValueToSqlConverter(typeof(TimeSpan), (sb, _,_,v) => BuildIntervalLiteral(sb, (TimeSpan)v));
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
 #endif
 		}
@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dataType, DateOnly value)
 		{
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);

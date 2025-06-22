@@ -1144,7 +1144,7 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				case VisitMode.ReadOnly:
 				{
-					VisitListOfArrays(element.Rows, VisitMode.ReadOnly);
+					VisitListOfLists(element.Rows, VisitMode.ReadOnly);
 
 					Visit(element.Source);
 
@@ -1152,14 +1152,14 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 				case VisitMode.Modify:
 				{
-					VisitListOfArrays(element.Rows, VisitMode.Modify);
+					VisitListOfLists(element.Rows, VisitMode.Modify);
 					element.Modify(Visit(element.Source) as ISqlExpression);
 
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					var rows   = VisitListOfArrays(element.Rows, VisitMode.Transform);
+					var rows   = VisitListOfLists(element.Rows, VisitMode.Transform);
 					var source = Visit(element.Source) as ISqlExpression;
 
 					if (ShouldReplace(element) || rows != element.Rows || !ReferenceEquals(source, element.Source))
@@ -1167,11 +1167,6 @@ namespace LinqToDB.Internal.SqlQuery
 						var newFields = CopyFields(element.Fields);
 
 						var sqlValuesTable = new SqlValuesTable(source, element.ValueBuilders, newFields, rows);
-						if (element.FieldsLookup != null)
-						{
-							sqlValuesTable.FieldsLookup =
-								element.FieldsLookup.ToDictionary(e => e.Key, e => (SqlField)Visit(e.Value));
-						}
 
 						return NotifyReplaced(sqlValuesTable, element);
 					}
@@ -1822,7 +1817,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 					if (ShouldReplace(element) || element.Predicates != predicates)
 					{
-						return NotifyReplaced(new SqlSearchCondition(element.IsOr, element.Predicates != predicates ? predicates : predicates.ToList()), element);
+						return NotifyReplaced(new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, element.Predicates != predicates ? predicates : predicates.ToList()), element);
 					}
 
 					break;
@@ -2461,7 +2456,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 					if (ShouldReplace(predicate) || !ReferenceEquals(predicate.Expr1, expr1) || !ReferenceEquals(predicate.Expr2, expr2))
 					{
-						return NotifyReplaced(new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.WithNull), predicate);
+						return NotifyReplaced(new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.UnknownAsValue), predicate);
 					}
 
 					break;
@@ -2924,7 +2919,7 @@ namespace LinqToDB.Internal.SqlQuery
 					{
 						foreach(var m in current)
 						{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 							modified.TryAdd(m.Key, m.Value);
 #else
 							if (!modified.ContainsKey(m.Key))
@@ -3458,6 +3453,82 @@ namespace LinqToDB.Internal.SqlQuery
 								for (var j = 0; j < i; j++)
 								{
 									list2.Add(list1[j].ToArray());
+								}
+							}
+
+							list2.Add(elem2);
+						}
+						else if (list2 != null)
+						{
+							list2.Add(elem1);
+						}
+					}
+
+					return list2 ?? list1;
+				}
+
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+		}
+
+		/// <summary>
+		/// Visits list of list of query elements.
+		/// </summary>
+		/// <returns>
+		/// Return value depends on <paramref name="mode"/> value:
+		/// <list type="bullet">
+		/// <item><c>null</c> when <paramref name="list1"/> is <c>null</c>;</item>
+		/// <item><see cref="VisitMode.ReadOnly"/>: returns input list <paramref name="list1"/> instance;</item>
+		/// <item><see cref="VisitMode.Modify"/>: returns input list <paramref name="list1"/> instance, could contain inplace list item replacements;</item>
+		/// <item><see cref="VisitMode.Transform"/>: returns new list instance when there were changes to list items; otherwise returns original list.</item>
+		/// </list>
+		/// </returns>
+		[return: NotNullIfNotNull(nameof(list1))]
+		protected List<List<T>>? VisitListOfLists<T>(List<List<T>>? list1, VisitMode mode)
+			where T : class, IQueryElement
+		{
+			if (list1 == null)
+				return null;
+
+			switch (mode)
+			{
+				case VisitMode.ReadOnly:
+				{
+					foreach (var t in list1)
+					{
+						_ = VisitElements(t, VisitMode.ReadOnly);
+					}
+
+					return list1;
+				}
+				case VisitMode.Modify:
+				{
+					for (var i = 0; i < list1.Count; i++)
+					{
+						list1[i] = VisitElements(list1[i], VisitMode.Modify);
+					}
+
+					return list1;
+				}
+				case VisitMode.Transform:
+				{
+					List<List<T>>? list2 = null;
+
+					for (var i = 0; i < list1.Count; i++)
+					{
+						var elem1 = list1[i];
+						var elem2 = VisitElements(elem1, VisitMode.Transform);
+
+						if (elem1 != elem2)
+						{
+							if (list2 == null)
+							{
+								list2 = new List<List<T>>(list1.Count);
+
+								for (var j = 0; j < i; j++)
+								{
+									list2.Add(list1[j].ToList());
 								}
 							}
 

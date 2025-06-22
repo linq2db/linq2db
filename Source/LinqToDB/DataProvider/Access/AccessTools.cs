@@ -27,9 +27,9 @@ namespace LinqToDB.DataProvider.Access
 		/// <summary>
 		/// Returns instance of Access database provider.
 		/// </summary>
-		public static IDataProvider GetDataProvider(AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect, string? connectionString = null)
+		public static IDataProvider GetDataProvider(AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect, string? connectionString = null, DbConnection? connection = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection), provider, version);
 		}
 
 		#region CreateDataConnection

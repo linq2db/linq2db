@@ -38,7 +38,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		{
 			switch (func.Name)
 			{
-				case "Millisecond"   : return Div(new SqlFunction(func.SystemType, "Microsecond", func.Parameters), 1000);
+				case PseudoFunctions.LENGTH: return func.WithName("CHAR_LENGTH");
+				case "Millisecond"   :       return Div(new SqlFunction(func.SystemType, "Microsecond", func.Parameters), 1000);
 				case "SmallDateTime" :
 				case "DateTime"      :
 				case "DateTime2"     : return new SqlFunction(func.SystemType, "TimeStamp", func.Parameters);

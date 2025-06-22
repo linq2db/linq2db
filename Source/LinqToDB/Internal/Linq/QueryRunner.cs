@@ -447,17 +447,6 @@ namespace LinqToDB.Internal.Linq
 						EvaluateTakeSkipValue(qq, expr, db, ps, qn, skipValue), null);
 			}
 
-			if (select.TakeValue != null && !query.SqlProviderFlags.IsTakeSupported)
-			{
-				var takeValue = select.TakeValue;
-
-				var q = queryFunc;
-
-				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) =>
-					new LimitResultEnumerable<T>(q(qq, db, mapper, expr, ps, preambles, qn),
-						null, EvaluateTakeSkipValue(qq, expr, db, ps, qn, takeValue));
-			}
-
 			return queryFunc;
 		}
 

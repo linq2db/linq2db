@@ -63,7 +63,7 @@ namespace Tests.DataProvider
 				{
 					Assert.That(TestType<long?>(conn, "bigintDataType", DataType.Int64), Is.EqualTo(1000000L));
 					Assert.That(TestType<decimal?>(conn, "numericDataType", DataType.Decimal), Is.EqualTo(9999999m));
-					Assert.That(TestType<bool?>(conn, "bitDataType", DataType.Boolean), Is.EqualTo(true));
+					Assert.That(TestType<bool?>(conn, "bitDataType", DataType.Boolean), Is.True);
 					Assert.That(TestType<short?>(conn, "smallintDataType", DataType.Int16), Is.EqualTo(25555));
 					Assert.That(TestType<decimal?>(conn, "decimalDataType", DataType.Decimal), Is.EqualTo(2222222m));
 					Assert.That(TestType<decimal?>(conn, "smallmoneyDataType", DataType.SmallMoney), Is.EqualTo(100000m));
@@ -576,7 +576,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.NText("p", "123")), Is.EqualTo("123"));
 					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", "123")), Is.EqualTo("123"));
 
-					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Create("p", (string?)null)), Is.Null);
 					Assert.That(conn.Execute<string>("SELECT @p", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 				});
 			}
@@ -598,14 +598,14 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as varbinary(2))"), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as varbinary(4))"), Is.EqualTo(new Binary(arr2)));
 
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"), Is.Null);
 
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as varbinary(max))"), Is.EqualTo(arr2));
 
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)), Is.Null);
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(1))", DataParameter.Binary("p", Array.Empty<byte>())), Is.EqualTo(new byte[] { 0 }));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary("p", Array.Empty<byte>())), Is.EqualTo(new byte[8000]));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
@@ -627,7 +627,7 @@ namespace Tests.DataProvider
 				Assert.Multiple(() =>
 				{
 					Assert.That(conn.Execute<SqlBinary>("SELECT Cast(12345    as binary(2))").Value, Is.EqualTo(arr));
-					Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(1        as bit)").Value, Is.EqualTo(true));
+					Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(1        as bit)").Value, Is.True);
 					Assert.That(conn.Execute<SqlByte>("SELECT Cast(1        as tinyint)").Value, Is.EqualTo((byte)1));
 					Assert.That(conn.Execute<SqlDecimal>("SELECT Cast(1        as decimal)").Value, Is.EqualTo(1));
 					Assert.That(conn.Execute<SqlDouble>("SELECT Cast(1        as float)").Value, Is.EqualTo(1.0));
@@ -651,8 +651,8 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<SqlBinary>("SELECT @p", new DataParameter("p", new SqlBinary(arr))).Value, Is.EqualTo(arr));
 					Assert.That(conn.Execute<SqlBinary>("SELECT @p", new DataParameter("p", new SqlBinary(arr), DataType.VarBinary)).Value, Is.EqualTo(arr));
 
-					Assert.That(conn.Execute<SqlBoolean>("SELECT @p", new DataParameter("p", true)).Value, Is.EqualTo(true));
-					Assert.That(conn.Execute<SqlBoolean>("SELECT @p", new DataParameter("p", true, DataType.Boolean)).Value, Is.EqualTo(true));
+					Assert.That(conn.Execute<SqlBoolean>("SELECT @p", new DataParameter("p", true)).Value, Is.True);
+					Assert.That(conn.Execute<SqlBoolean>("SELECT @p", new DataParameter("p", true, DataType.Boolean)).Value, Is.True);
 				});
 
 				var conv = conn.MappingSchema.GetConverter<string,SqlXml>()!;
@@ -741,7 +741,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<SqlHierarchyId>("SELECT Cast('/1/3/' as hierarchyid)"), Is.EqualTo(id));
 					Assert.That(conn.Execute<SqlHierarchyId?>("SELECT Cast('/1/3/' as hierarchyid)"), Is.EqualTo(id));
 					Assert.That(conn.Execute<SqlHierarchyId>("SELECT Cast(NULL as hierarchyid)"), Is.EqualTo(SqlHierarchyId.Null));
-					Assert.That(conn.Execute<SqlHierarchyId?>("SELECT Cast(NULL as hierarchyid)"), Is.EqualTo(null));
+					Assert.That(conn.Execute<SqlHierarchyId?>("SELECT Cast(NULL as hierarchyid)"), Is.Null);
 
 					Assert.That(conn.Execute<SqlHierarchyId>("SELECT @p", new DataParameter("p", id)), Is.EqualTo(id));
 				});
@@ -1840,7 +1840,7 @@ namespace Tests.DataProvider
 				Assert.Multiple(() =>
 				{
 					Assert.That(proc.ProcedureName, Is.EqualTo("Issue1921"));
-					Assert.That(proc.IsTableFunction, Is.EqualTo(true));
+					Assert.That(proc.IsTableFunction, Is.True);
 					Assert.That(proc.ResultTable, Is.Not.Null);
 				});
 				Assert.Multiple(() =>
@@ -1891,57 +1891,185 @@ AS
 			}
 		}
 
-		public class Issue1294Table
+		#region Issue 1294
+
+		private void InitIssue1294(DataConnection db)
 		{
-			public int Id { get; set; }
-		}
+			CleanupIssue1294(db);
 
-		[Sql.TableFunction(Name = "Issue1294")]
-		private LinqToDB.ITable<Issue1294Table> GetPermissions(int p1, int p2)
-		{
-			throw new InvalidOperationException();
-		}
+			using var _ = new DisableBaseline("test setup");
 
-		[Test]
-		[ActiveIssue(1294)]
-		public void Issue1294Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
-		{
-			var methodInfo = GetType().GetMethod(nameof(GetPermissions), new[] { typeof(int), typeof(int) })!;
-
-			using (var db = GetDataConnection(context))
-			using (db.CreateLocalTable<Issue1294Table>())
-			{
-				db.Execute(@"
-IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'Issue1294')
-	BEGIN DROP FUNCTION Issue1294
-END
-");
-
-				db.Execute(@"
+			db.Execute(@"
 CREATE FUNCTION dbo.Issue1294(@p1 int, @p2 int)
 RETURNS TABLE
 AS
 	RETURN SELECT @p1 + @p2 as Id
 ");
+		}
 
+		private void CleanupIssue1294(DataConnection db)
+		{
+			using var _ = new DisableBaseline("test cleanup");
+
+			db.Execute(@"
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'Issue1294')
+BEGIN
+	DROP FUNCTION Issue1294
+END
+");
+		}
+
+		public class Issue1294Table
+		{
+			public int Id { get; set; }
+		}
+
+		[Sql.TableFunction("Issue1294", argIndices: new[] { 1, 2 })]
+		private static LinqToDB.ITable<Issue1294Table> GetPermissions(IDataContext db, int p1, int p2)
+		{
+			return db.TableFromExpression(() => GetPermissions(db, p1, p2));
+		}
+
+		[Sql.TableFunction("Issue1294", argIndices: new[] { 1, 2 })]
+		private static LinqToDB.ITable<Issue1294Table> GetPermissionsLiteral(IDataContext db, [ExprParameter(DoNotParameterize = true)] int p1, [ExprParameter(DoNotParameterize = true)] int p2)
+		{
+			return db.TableFromExpression(() => GetPermissionsLiteral(db, p1, p2));
+		}
+
+		[Test]
+		public void Issue1294Test_Parameter([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue1294Table>();
+
+			InitIssue1294(db);
+
+			try
+			{
 				var p1 = 1;
 				var p2 = 2;
 				var p11 = 3;
-				var permissions = CallFunc(p1, p2)
+
+				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, p1, p2)
 					.Select(x => x.Id)
-					.Union(CallFunc(p11, p2).Select(x => x.Id));
-				var q = db.GetTable<Issue1294Table>().Where(x => permissions.Contains(x.Id));
+					.Union(GetPermissions(db, p11, p2).Select(x => x.Id)).Contains(x.Id));
 
 				q.ToArray();
 
-				Assert.That(db.LastQuery!, Does.Contain("@"));
-
-				LinqToDB.ITable<Issue1294Table> CallFunc(int p1, int p2)
-				{
-					return db.GetTable<Issue1294Table>(this, methodInfo, p1, p2);
-				}
+				Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(5));
+			}
+			finally
+			{
+				CleanupIssue1294(db);
 			}
 		}
+
+		[Test]
+		public void Issue1294Test_Literal([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue1294Table>();
+
+			InitIssue1294(db);
+
+			try
+
+			{
+				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, 1, 2)
+					.Select(x => x.Id)
+					.Union(GetPermissions(db, 1, 3).Select(x => x.Id)).Contains(x.Id));
+
+				q.ToArray();
+
+				Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(1));
+			}
+			finally
+			{
+				CleanupIssue1294(db);
+			}
+		}
+
+		[Test]
+		public void Issue1294Test_LiteralByAttribute([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue1294Table>();
+
+			InitIssue1294(db);
+
+			try
+			{
+				var p1 = 1;
+				var p2 = 2;
+				var p11 = 3;
+
+				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissionsLiteral(db, p1, p2)
+					.Select(x => x.Id)
+					.Union(GetPermissionsLiteral(db, p11, p2).Select(x => x.Id)).Contains(x.Id));
+
+				q.ToArray();
+
+				Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(1));
+			}
+			finally
+			{
+				CleanupIssue1294(db);
+			}
+		}
+
+		[Test]
+		public void Issue1294Test_LiteralByHelper([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue1294Table>();
+
+			InitIssue1294(db);
+
+			try
+			{
+				var p1 = 1;
+				var p2 = 2;
+				var p11 = 3;
+
+				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, Sql.Constant(p1), Sql.Constant(p2))
+					.Select(x => x.Id)
+					.Union(GetPermissions(db, Sql.Constant(p11), Sql.Constant(p2)).Select(x => x.Id)).Contains(x.Id));
+
+				q.ToArray();
+
+				Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(1));
+			}
+			finally
+			{
+				CleanupIssue1294(db);
+			}
+		}
+
+		[Test]
+		public void Issue1294Test_ParameterByHelper([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue1294Table>();
+
+			InitIssue1294(db);
+
+			try
+			{
+				var q = db.GetTable<Issue1294Table>().Where(x => GetPermissions(db, Sql.Parameter(2), Sql.Parameter(5))
+					.Select(x => x.Id)
+					.Union(GetPermissions(db, Sql.Parameter(3), Sql.Parameter(4)).Select(x => x.Id)).Contains(x.Id));
+
+				q.ToArray();
+
+				Assert.That(db.LastQuery!.Split('@'), Has.Length.EqualTo(5));
+			}
+			finally
+			{
+				CleanupIssue1294(db);
+			}
+		}
+
+		#endregion
 
 		[Test]
 		[ActiveIssue(1468)]

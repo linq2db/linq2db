@@ -222,8 +222,26 @@ namespace LinqToDB.EntityFrameworkCore
 			DataOptions? dataOptions)
 		{
 			var converterSelector = accessor?.GetService<IValueConverterSelector>();
-
-			return Implementation.GetMappingSchema(model, GetMetadataReader(model, accessor), converterSelector, dataOptions);
+			var mappingSource = accessor?.GetService<IRelationalTypeMappingSource>();
+			
+			return Implementation.GetMappingSchema(model, mappingSource, GetMetadataReader(model, accessor), converterSelector, dataOptions);
+		}
+		
+		/// <summary>
+		/// Creates mapping schema using provided EF Core data model.
+		/// </summary>
+		/// <param name="model">EF Core data model.</param>
+		/// <param name="mappingSource">EF Core mapping source.</param>
+		/// <param name="converterSelector">EF Core converter selector.</param>
+		/// <param name="dataOptions">Linq To DB context options.</param>
+		/// <returns>Mapping schema for provided EF Core model.</returns>
+		public static MappingSchema GetMappingSchema(
+			IModel                        model,
+			IRelationalTypeMappingSource? mappingSource,
+			IValueConverterSelector?      converterSelector,
+			DataOptions?                  dataOptions)
+		{
+			return Implementation.GetMappingSchema(model, mappingSource, GetMetadataReader(model, null), converterSelector, dataOptions);
 		}
 
 		/// <summary>
@@ -255,7 +273,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			var info    = GetEFProviderInfo(context);
 			var options = context.GetLinqToDBOptions() ?? new DataOptions();
-			options     = AddMappingSchema(options, GetMappingSchema(context.Model, context, options));
+			options     = options.UseAdditionalMappingSchema(GetMappingSchema(context.Model, context, options));
 			options     = EnableTracing(options, CreateLogger(info.Options));
 
 			DataConnection? dc = null;
@@ -325,7 +343,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			var info    = GetEFProviderInfo(context);
 			var options = context.GetLinqToDBOptions() ?? new DataOptions();
-			options     = AddMappingSchema(options, GetMappingSchema(context.Model, context, options));
+			options     = options.UseAdditionalMappingSchema(GetMappingSchema(context.Model, context, options));
 
 			DataConnection? dc = null;
 
@@ -361,10 +379,10 @@ namespace LinqToDB.EntityFrameworkCore
 
 					if (mappingSchema != null)
 						dataContext.MappingSchema = mappingSchema;
-					
+
 					if (logger != null)
 						dataContext.OnTraceConnection = t => Implementation.LogConnectionTrace(t, logger);
-						
+
 					return dataContext;
 					*/
 				}
@@ -388,7 +406,8 @@ namespace LinqToDB.EntityFrameworkCore
 			var options        = context.GetLinqToDBOptions() ?? new DataOptions();
 			var dataProvider   = GetDataProvider(options, info, connectionInfo);
 
-			options = AddMappingSchema(options, GetMappingSchema(context.Model, context, options))
+			options = options
+				.UseAdditionalMappingSchema(GetMappingSchema(context.Model, context, options))
 				.UseDataProvider(dataProvider)
 				.UseConnectionString(connectionInfo.ConnectionString!);
 
@@ -447,7 +466,7 @@ namespace LinqToDB.EntityFrameworkCore
 			var model          = GetModel(options);
 
 			if (model != null)
-				dataOptions = AddMappingSchema(dataOptions, GetMappingSchema(model, null, dataOptions));
+				dataOptions = dataOptions.UseAdditionalMappingSchema(GetMappingSchema(model, null, dataOptions));
 
 			dataOptions = dataOptions.UseDataProvider(dataProvider);
 			dataOptions = EnableTracing(dataOptions, CreateLogger(info.Options));
@@ -534,20 +553,12 @@ namespace LinqToDB.EntityFrameworkCore
 
 		/// <summary>
 		/// Enables attaching entities to change tracker.
-		/// Entities will be attached only if AsNoTracking() is not used in query and DbContext is configured to track entities. 
+		/// Entities will be attached only if AsNoTracking() is not used in query and DbContext is configured to track entities.
 		/// </summary>
 		public static bool EnableChangeTracker
-		{ 
+		{
 			get => Implementation.EnableChangeTracker;
 			set => Implementation.EnableChangeTracker = value;
-		}
-
-		private static DataOptions AddMappingSchema(DataOptions dataOptions, MappingSchema mappingSchema)
-		{
-			if (dataOptions.ConnectionOptions.MappingSchema != null)
-				return dataOptions.UseMappingSchema(MappingSchema.CombineSchemas(dataOptions.ConnectionOptions.MappingSchema, mappingSchema));
-
-			return dataOptions.UseMappingSchema(mappingSchema);
 		}
 	}
 }

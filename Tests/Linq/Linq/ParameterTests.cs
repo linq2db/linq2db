@@ -1741,7 +1741,7 @@ namespace Tests.Linq
 				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Table]
 		public sealed class Issue4371Table2
 		{
@@ -1919,7 +1919,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			Assert.That(db.Select(() => Sql.AsSql(Sql.PadLeft(null, 1, '.'))), Is.EqualTo(null));
+			Assert.That(db.Select(() => Sql.AsSql(Sql.PadLeft(null, 1, '.'))), Is.Null);
 		}
 
 		sealed class IssueDedup
@@ -1991,6 +1991,30 @@ namespace Tests.Linq
 			var valueGetter = () => 1;
 
 			AssertQuery(db.Parent.Where(r => r.ParentID == valueGetter()));
+		}
+
+		sealed class Issue4963Table
+		{
+			public byte Field { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4963")]
+		public void Issue4963([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(new[] { new Issue4963Table() { Field = 2 } });
+
+			db.InlineParameters = inline;
+			var offset = -1;
+
+			tb.Update(r => new Issue4963Table()
+			{
+				Field = (byte)(r.Field + offset)
+			});
+
+			var record = tb.Single();
+
+			Assert.That(record.Field, Is.EqualTo(1));
 		}
 	}
 }

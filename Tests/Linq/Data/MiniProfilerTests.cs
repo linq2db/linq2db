@@ -1832,7 +1832,7 @@ namespace Tests.Data
 					Assert.That(tsColumn.ProviderSpecificType, Is.EqualTo("NpgsqlInterval"));
 
 					// provider properties
-					Assert.That(provider.HasMacAddr8, Is.EqualTo(true));
+					Assert.That(provider.HasMacAddr8, Is.True);
 				});
 
 				// type name generation from provider type
@@ -1983,7 +1983,7 @@ namespace Tests.Data
 						if (context.IsAnyOf(ProviderName.ClickHouseClient))
 							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
 						else
-							Assert.That(trace.Contains("INSERT INTO"), Is.EqualTo(true));
+							Assert.That(trace, Does.Contain("INSERT INTO"));
 						Assert.That(copied, Is.EqualTo(1000));
 					}
 				}
@@ -2007,7 +2007,7 @@ namespace Tests.Data
 						if (context.IsAnyOf(ProviderName.ClickHouseClient))
 							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
 						else
-							Assert.That(trace.Contains("INSERT INTO"), Is.EqualTo(true));
+							Assert.That(trace, Does.Contain("INSERT INTO"));
 						Assert.That(copied, Is.EqualTo(1000));
 					}
 				}

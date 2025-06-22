@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 using FluentAssertions;
 
@@ -1076,10 +1077,68 @@ namespace Tests.Linq
 			}
 		}
 
+		static string QuoteTableName(string tableName, string context)
+		{
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllSapHana, TestProvName.AllFirebird, TestProvName.AllDB2))
+				return "\"" + tableName + "\"";
+			return tableName;
+		}
+
+		[Test]
+		public void TestBasicScalarQuery([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var tableName = "Person";
+
+			tableName = QuoteTableName(tableName, context);
+
+			var sql            = $"SELECT 1 AS \"value\" FROM {tableName}";
+			var formattableSql = FormattableStringFactory.Create(sql);
+
+			var query = 
+				from p in db.Person
+				from s in db.FromSqlScalar<int>(formattableSql)
+					.Where(s => s == p.ID)
+				select p;
+
+			var result = query.ToArray();
+			result.Should().HaveCount(4);
+		}
+
+		[Test]
+		public void TestBasicScalarQueryWithoutExplicitAlias([DataSources(
+			TestProvName.AllAccess, 
+			TestProvName.AllMySql57,
+			TestProvName.AllMariaDB,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllClickHouse,
+			TestProvName.AllSapHana,
+			TestProvName.AllOracle
+			)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var tableName = "Person";
+
+			tableName = QuoteTableName(tableName, context);
+
+			var sql            = $"SELECT 1 FROM {tableName}";
+			var formattableSql = FormattableStringFactory.Create(sql);
+
+			var query = from p in db.Person
+				from s in db.FromSqlScalar<int>(formattableSql)
+					.Where(s => s == p.ID)
+				select p;
+
+			var result = query.ToArray();
+			result.Should().HaveCount(4);
+		}
+
 		const string MyTableNameStringConstant = "Person";
 
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782 / https://github.com/linq2db/linq2db/issues/2779")]
+		[Test]
 		public void Issue3782Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
@@ -1101,7 +1160,7 @@ namespace Tests.Linq
 			Assert.That(exists, Is.True);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782 / https://github.com/linq2db/linq2db/issues/2779")]
+		[Test]
 		public void Issue3782Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
@@ -1125,7 +1184,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782 / https://github.com/linq2db/linq2db/issues/2779")]
+		[Test]
 		public void Issue3782Test3([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
@@ -1138,7 +1197,7 @@ namespace Tests.Linq
 			Assert.That(tableExists, Is.True);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782 / https://github.com/linq2db/linq2db/issues/2779")]
+		[Test]
 		public void Issue3782Test4([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);

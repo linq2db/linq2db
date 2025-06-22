@@ -10,8 +10,6 @@
 		</packageTypes>
 	</metadata>
 	<files>
-		<file src="bin\LinqToDB.CLI\{0}\net6.0\**\*" target="tools\net6.0\any\" />
-		<file src="NuGet\CLI\DotnetToolSettings.xml" target="tools\net6.0\any\" />
 		<file src="bin\LinqToDB.CLI\{0}\net8.0\**\*" target="tools\net8.0\any\" />
 		<file src="NuGet\CLI\DotnetToolSettings.xml" target="tools\net8.0\any\" />
 		<file src="bin\LinqToDB.CLI\{0}\net9.0\**\*" target="tools\net9.0\any\" />

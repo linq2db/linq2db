@@ -9,6 +9,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -952,6 +953,28 @@ namespace LinqToDB.Internal.Linq.Builder
 				return true;
 
 			return false;
+		}
+
+		public static Expression UnwrapConstantAndParameter(Expression expression)
+		{
+			if (expression is MethodCallExpression mc && (mc.IsSameGenericMethod(Methods.LinqToDB.SqlParameter) || mc.IsSameGenericMethod(Methods.LinqToDB.SqlConstant)))
+			{
+				return UnwrapConstantAndParameter(mc.Arguments[0]);
+			}
+
+			return expression;
+		}
+
+		public static Expression WrapAsParameter(Expression expression)
+		{
+			if (expression is MethodCallExpression mc && mc.IsSameGenericMethod(Methods.LinqToDB.SqlParameter))
+			{
+				return expression;
+			}
+
+			var unwrapped = UnwrapConstantAndParameter(expression);
+
+			return Expression.Call(Methods.LinqToDB.SqlParameter.MakeGenericMethod(unwrapped.Type), unwrapped);
 		}
 
 		#region Special fields helpers

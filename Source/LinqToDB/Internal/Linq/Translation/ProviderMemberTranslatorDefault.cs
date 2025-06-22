@@ -28,6 +28,11 @@ namespace LinqToDB.Internal.Linq.Translation
 			return new StringMemberTranslatorBase();
 		}
 
+		protected virtual IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslatorBase();
+		}
+
 		protected ProviderMemberTranslatorDefault()
 		{
 			InitDefaultTranslators();
@@ -51,6 +56,7 @@ namespace LinqToDB.Internal.Linq.Translation
 			CombinedMemberTranslator.Add(CreateDateMemberTranslator());
 			CombinedMemberTranslator.Add(CreateMathMemberTranslator());
 			CombinedMemberTranslator.Add(CreateStringMemberTranslator());
+			CombinedMemberTranslator.Add(CreateGuidMemberTranslator());
 		}
 
 		protected SqlPlaceholderExpression? TranslateNoRequiredObjectExpression(ITranslationContext translationContext, Expression? objExpression, TranslationFlags translationFlags)

@@ -1,6 +1,7 @@
 ﻿using System;
 
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
@@ -75,10 +76,15 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 					case SqlPredicate.SearchString.SearchKind.EndsWith:
 					{
-						var indexExpr = new SqlBinaryExpression(typeof(int),
-							new SqlBinaryExpression(typeof(int),
-								new SqlFunction(typeof(int), "Length", predicate.Expr1), "-",
-								new SqlFunction(typeof(int), "Length", predicate.Expr2)), "+",
+						var indexExpr = new SqlBinaryExpression(
+							typeof(int),
+							new SqlBinaryExpression(
+								typeof(int),
+								Factory.Length(predicate.Expr1),
+								"-",
+								Factory.Length(predicate.Expr2)
+							),
+							"+",
 							new SqlValue(1));
 
 						subStrPredicate =
@@ -111,7 +117,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 				if (subStrPredicate != null)
 				{
-					result = new SqlSearchCondition(predicate.IsNot, like, subStrPredicate.MakeNot(predicate.IsNot));
+					result = new SqlSearchCondition(predicate.IsNot, canBeUnknown: null, like, subStrPredicate.MakeNot(predicate.IsNot));
 				}
 			}
 
@@ -151,7 +157,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					return func.WithName("LCase");
 				case { Name: PseudoFunctions.TO_UPPER }:
 					return func.WithName("UCase");
-				case { Name: "Length" }:
+				case { Name: PseudoFunctions.LENGTH }:
 					return func.WithName("Len");
 
 				case {
