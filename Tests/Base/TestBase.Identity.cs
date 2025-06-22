@@ -15,6 +15,8 @@ namespace Tests
 	{
 		protected void ResetPersonIdentity(string context)
 		{
+			using var _ = new DisableBaseline("Test support code");
+
 			var provider = GetProviderName(context, out var _);
 
 			var lastValue = 4;
@@ -121,6 +123,8 @@ CREATE COLUMN TABLE ""Person"" (
 
 		protected void ResetAllTypesIdentity(string context)
 		{
+			using var _ = new DisableBaseline("Test support code");
+
 			var provider = GetProviderName(context, out var _);
 
 			var lastValue = 2;
@@ -249,6 +253,8 @@ CREATE COLUMN TABLE ""AllTypes""
 
 		protected void ResetTestSequence(string context)
 		{
+			using var _ = new DisableBaseline("Test support code");
+
 			var provider = GetProviderName(context, out var _);
 
 			var lastValue = 0;
