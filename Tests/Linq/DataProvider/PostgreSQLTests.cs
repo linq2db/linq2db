@@ -14,6 +14,7 @@ using System.Xml.Linq;
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;

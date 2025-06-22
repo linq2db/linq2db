@@ -4,6 +4,7 @@ using System.Data.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.Mapping;

@@ -8,7 +8,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Linq;
 
-namespace LinqToDB
+namespace LinqToDB.Async
 {
 	/// <summary>
 	/// Provides helper methods for asynchronous operations.

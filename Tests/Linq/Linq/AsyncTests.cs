@@ -156,9 +156,9 @@ namespace Tests.Linq
 
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToSqlQuery().Sql;
 
-				var list = await conn.SetCommand(sql)
-					.QueryToAsyncEnumerable<string>()
-					.ToListAsync();
+				var list = await AsyncEnumerableToListAsync(
+					conn.SetCommand(sql)
+						.QueryToAsyncEnumerable<string>());
 
 				Assert.That(list[0], Is.EqualTo("John"));
 			}
