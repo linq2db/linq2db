@@ -290,8 +290,6 @@ namespace LinqToDB.SqlQuery
 
 		#region Overrides
 
-#if OVERRIDETOSTRING
-
 		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
@@ -309,6 +307,8 @@ namespace LinqToDB.SqlQuery
 
 			return hash.ToHashCode();
 		}
+
+#if OVERRIDETOSTRING
 
 		public override string ToString()
 		{
