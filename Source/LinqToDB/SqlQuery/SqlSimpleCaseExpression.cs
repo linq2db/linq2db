@@ -86,6 +86,19 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(PrimaryExpression.GetElementHashCode());
+			hash.Add(ElseExpression?.GetElementHashCode());
+			foreach (var c in Cases)
+			{
+				hash.Add(c.MatchValue.GetElementHashCode());
+				hash.Add(c.ResultExpression.GetElementHashCode());
+			}
+			return hash.ToHashCode();
+		}
+
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (other is not SqlSimpleCaseExpression caseOther)

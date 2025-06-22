@@ -170,6 +170,25 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(SourceID);
+			hash.Add(TableName);
+			hash.Add(Alias);
+			hash.Add(ObjectType);
+			hash.Add(SqlTableType);
+			hash.Add(TableOptions);
+			hash.Add(Expression);
+			if (TableArguments != null)
+			{
+				foreach (var arg in TableArguments)
+					hash.Add(arg.GetElementHashCode());
+			}
+			return hash.ToHashCode();
+		}
+
 		public override bool Equals(ISqlExpression? other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (ReferenceEquals(this, other))

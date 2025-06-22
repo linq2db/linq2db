@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace LinqToDB.SqlQuery
 {
 	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
-	public abstract class SqlStatement : IQueryElement
+	public abstract class SqlStatement : QueryElement
 	{
 		public string SqlText => this.ToDebugString(SelectQuery);
 
@@ -25,17 +26,6 @@ namespace LinqToDB.SqlQuery
 		public SqlComment?              Tag                { get; internal set; }
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 
-		#region IQueryElement
-
-#if DEBUG
-		public virtual string DebugText => this.ToDebugString();
-#endif
-
-		public abstract QueryElementType       ElementType { get; }
-		public abstract QueryElementTextWriter ToString(QueryElementTextWriter writer);
-
-		#endregion
-
 		public abstract ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias);
 
 		/// <summary>
@@ -48,12 +38,20 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-#if OVERRIDETOSTRING
-		public override string ToString()
+		public override int GetElementHashCode()
 		{
-			return this.ToDebugString(SelectQuery);
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(QueryType);
+			hash.Add(SelectQuery?.GetElementHashCode());
+			hash.Add(IsParameterDependent);
+			hash.Add(Tag?.GetElementHashCode());
+			if (SqlQueryExtensions != null)
+			{
+				foreach (var extension in SqlQueryExtensions)
+					hash.Add(extension.GetElementHashCode());
+			}
+			return hash.ToHashCode();
 		}
-#endif
-
 	}
 }

@@ -167,7 +167,7 @@ namespace LinqToDB.Concurrency
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
-			var dc = Linq.Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
 
 			return MakeUpdateOptimistic(source, dc, obj).Update();
 		}
@@ -187,7 +187,7 @@ namespace LinqToDB.Concurrency
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
-			var dc = Linq.Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
 
 			return MakeUpdateOptimistic(source, dc, obj).UpdateAsync(cancellationToken);
 		}
@@ -268,7 +268,7 @@ namespace LinqToDB.Concurrency
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
-			var dc      = Linq.Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc      = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
 			var objType = typeof(T);
 			var ed      = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 

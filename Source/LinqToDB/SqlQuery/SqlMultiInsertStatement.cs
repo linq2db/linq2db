@@ -45,6 +45,18 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(base.GetElementHashCode());
+			hash.Add(InsertType);
+			hash.Add(Source.GetElementHashCode());
+			foreach (var insert in Inserts)
+				hash.Add(insert.GetElementHashCode());
+
+			return hash.ToHashCode();
+		}
+
 		public override bool IsParameterDependent
 		{
 			get => Source.IsParameterDependent;

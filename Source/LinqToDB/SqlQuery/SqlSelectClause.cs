@@ -292,6 +292,24 @@ namespace LinqToDB.SqlQuery
 
 #if OVERRIDETOSTRING
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+
+			hash.Add(ElementType);
+			hash.Add(IsDistinct);
+			hash.Add(SkipValue?.GetElementHashCode());
+			hash.Add(TakeValue?.GetElementHashCode());
+			hash.Add(TakeHints);
+
+			foreach (var column in Columns)
+			{
+				hash.Add(column.GetElementHashCode());
+			}
+
+			return hash.ToHashCode();
+		}
+
 		public override string ToString()
 		{
 			return this.ToDebugString();

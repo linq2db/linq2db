@@ -3,17 +3,20 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Xml.Linq;
 
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.SqlQuery.Visitors;
+#pragma warning disable CS0162 // Unreachable code detected
 
 namespace LinqToDB.SqlProvider
 {
 	public class SqlExpressionOptimizerVisitor : SqlQueryVisitor
 	{
+		ISimilarityMerger           _similarityMerger   = SimilarityMerger.Instance;
 		NullabilityContext          _nullabilityContext = default!;
 		ICollection<ISqlPredicate>? _allowOptimizeList;
 		ISqlPredicate?              _allowOptimize;
@@ -613,11 +616,225 @@ namespace LinqToDB.SqlProvider
 					_nullabilityContext = oldContext;
 
 					if (!modify && newPredicates != null)
-						return new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, newPredicates);
+						return Visit(new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, newPredicates));
+				}
+			}
+
+			// A IS NOT NULL AND A = B => A = B, when B is not nullable
+			// A OR B OR A => A OR B
+			// A AND B AND A => A AND B
+			newElement = OptimizeSimilarFlat(element);
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			// A OR (A AND B) => A OR B
+			// A AND (A OR B) => A AND B
+			newElement = OptimizeSimilarForSinglePredicate(element);
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			return element;
+		}
+
+		IQueryElement OptimizeSimilarFlat(SqlSearchCondition element)
+		{
+			//return element;
+
+			if (element.Predicates.Count <= 1)
+				return element;
+
+			var predicatesToCompare = element.Predicates
+				.SelectMany(p => _similarityMerger.GetSimilarityCodes(p).Select(code => (predicate : p, code)))
+				.GroupBy(x => x.code)
+				.Select(g => g.Select(x => x.predicate).Distinct().ToList())
+				.Where(p => p.Count > 1)
+				.ToList();
+
+			var isOptimized = false;
+
+			if (predicatesToCompare.Count > 0)
+			{
+				List<ISqlPredicate>? newPredicates     = null;
+				var                  visitedPredicates = new HashSet<ISqlPredicate>(Utils.ObjectReferenceEqualityComparer<ISqlPredicate>.Default);
+
+				for (var i = 0; i < predicatesToCompare.Count; i++)
+				{
+					var group = predicatesToCompare[i];
+					for (var j = 0; j < group.Count; j++)
+					{
+						var predicate1 = group[j];
+						if (visitedPredicates.Contains(predicate1))
+							continue;
+
+						for (var k = j + 1; k < group.Count; k++)
+						{
+							var predicate2 = group[k];
+							if (visitedPredicates.Contains(predicate2))
+								continue;
+
+							if (_similarityMerger.TryMerge(_nullabilityContext, predicate1, predicate2, element.IsOr, out var mergedPredicate) || 
+							    _similarityMerger.TryMerge(_nullabilityContext, predicate2, predicate1, element.IsOr, out mergedPredicate))
+							{
+								var predicatesList = element.Predicates;
+
+								if (GetVisitMode(element) == VisitMode.Transform)
+								{
+									newPredicates  ??= [..element.Predicates];
+									predicatesList =   newPredicates;
+								}
+
+								group.RemoveAt(k);
+								group.RemoveAt(j);
+
+								var idx1 = predicatesList.IndexOf(predicate1);
+								var idx2 = predicatesList.IndexOf(predicate2);
+
+								visitedPredicates.Add(predicate1);
+								visitedPredicates.Add(predicate2);
+
+								predicatesList.Remove(predicate1);
+								predicatesList.Remove(predicate2);
+
+								if (mergedPredicate != null)
+								{
+									var insertIndex = idx1;
+									if (insertIndex < 0 || insertIndex > idx2)
+										insertIndex = idx2;
+
+									if (insertIndex < 0)
+										insertIndex = 0;
+
+									predicatesList.Insert(insertIndex, mergedPredicate);
+									group.Insert(j, mergedPredicate);
+								}
+
+								isOptimized = true;
+
+								i--;
+
+								break;
+							}
+						}
+					}
+				}
+
+				if (newPredicates != null)
+				{
+					var newSearchCondition = new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, newPredicates);
+					return NotifyReplaced(newSearchCondition, element);
+				}
+					
+				if (isOptimized)
+				{
+					return Visit(element);
 				}
 			}
 
 			return element;
+		}
+
+		public IQueryElement OptimizeSimilarForSinglePredicate(SqlSearchCondition element)
+		{
+			if (element.Predicates.Count != 2)
+				return element;
+
+			if (element.Predicates[0] is SqlSearchCondition search)
+			{
+				if (OptimizeSimilarForSearch(element.Predicates[1], search, out var newCondition, out var newPredicate))
+				{
+					if (newPredicate == null)
+						return newCondition;
+
+					if (GetVisitMode(element) == VisitMode.Transform)
+					{
+						var newElement = new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, [newCondition, newPredicate]);
+						NotifyReplaced(newElement, element);
+						return newElement;
+					}
+
+					return Visit(newCondition);
+				}
+			}
+			else if (element.Predicates[1] is SqlSearchCondition search2)
+			{
+				if (OptimizeSimilarForSearch(element.Predicates[0], search2, out var newCondition, out var newPredicate))
+				{
+					if (newPredicate == null)
+						return newCondition;
+
+					if (GetVisitMode(element) == VisitMode.Transform)
+					{
+						var newElement = new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, [newPredicate, newCondition]);
+						NotifyReplaced(newElement, element);
+						return newElement;
+					}
+
+					return Visit(newCondition);
+				}
+			}
+
+			return element;
+		}
+
+		public bool OptimizeSimilarForSearch(ISqlPredicate predicate, SqlSearchCondition searchCondition, out ISqlPredicate newCondition, out ISqlPredicate? newPredicate)
+		{
+			var predicateCodes = _similarityMerger.GetSimilarityCodes(predicate).ToArray();
+
+			newCondition = searchCondition;
+			newPredicate = predicate;
+
+			if (predicateCodes.Length == 0)
+				return false;
+
+			var predicatesToCompare = searchCondition.Predicates
+				.Where(p => _similarityMerger.GetSimilarityCodes(p).Any(code => predicateCodes.Contains(code)))
+				.ToList();
+
+			if (predicatesToCompare.Count == 0)
+				return false;
+
+			List<ISqlPredicate>? newPredicates = null;
+			var visitedPredicates = new HashSet<ISqlPredicate>(Utils.ObjectReferenceEqualityComparer<ISqlPredicate>.Default);
+
+			for (var i = 0; i < predicatesToCompare.Count; i++)
+			{
+				var conditionPredicate = predicatesToCompare[i];
+
+				if (visitedPredicates.Contains(conditionPredicate))
+					continue;
+
+				if (_similarityMerger.TryMerge(_nullabilityContext, predicate, conditionPredicate, true, out var mergedPredicate) || 
+				    _similarityMerger.TryMerge(_nullabilityContext, conditionPredicate, predicate, true, out mergedPredicate))
+				{
+					var predicatesList = searchCondition.Predicates;
+					if (GetVisitMode(searchCondition) == VisitMode.Transform)
+					{
+						newPredicates  ??= [..searchCondition.Predicates];
+						predicatesList =   newPredicates;
+					}
+
+					var ixd = predicatesList.IndexOf(conditionPredicate);
+					predicatesList.RemoveAt(ixd);
+					visitedPredicates.Add(conditionPredicate);
+
+					if (mergedPredicate != null)
+					{
+						predicatesList.Insert(ixd, mergedPredicate);
+					}
+
+					newPredicate = null;
+					break;
+				}
+			}
+
+			if (newPredicates != null)
+			{
+				newCondition = new SqlSearchCondition(searchCondition.IsOr, canBeUnknown: searchCondition.CanReturnUnknown, newPredicates);
+				NotifyReplaced(newCondition, searchCondition);
+				return true;
+			}
+
+			return newPredicate is null;
 		}
 
 		protected override IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)

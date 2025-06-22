@@ -32,17 +32,17 @@ uid: contributing
 |.\Tests\Linq|Main project for LINQ to DB unit tests|
 |.\Tests\Model|Model classes for tests|
 |.\Tests\Tests.Benchmarks| Benchmarks|
-|.\Tests\Tests.PLayground| Test project for use with linq2db.playground.sln lite test solution. Used for work on specific test without full solution load|
+|.\Tests\Tests.PLayground| Test project for use with linq2db.playground.slnf lite test solution. Used for work on specific test without full solution load|
 |.\Tests\Tests.T4|T4 templates test project|
 |.\Tests\Tests.T4.Nugets|T4 nugets test project|
 |.\Tests\VisualBasic|Visual Basic models and tests support|
 
 #### Solutions
 
-* `.\linq2db.sln` - full linq2db solution
+* `.\linq2db.slnx` - full linq2db solution
 * `.\linq2db.playground.slnf` - ligthweight linq2db test solution. Used to work on specific test without loading of all payload of full solution
 * `.\linq2db.Benchmarks.slnf` - ligthweight linq2db benchmarks solution. Used to work on benchmarks without loading of all payload of full solution
-* `.\Tests\Tests.T4.Nugets\Tests.T4.Nugets.sln` - separate solution for T4 nugets testing
+* `.\Tests\Tests.T4.Nugets\Tests.T4.Nugets.slnx` - separate solution for T4 nugets testing
 
 #### Source projects
 

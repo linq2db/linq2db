@@ -87,5 +87,14 @@ namespace LinqToDB.SqlQuery
 
 			return writer;
 		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(SqlExpression.GetElementHashCode());
+
+			return hash.ToHashCode();
+		}
 	}
 }

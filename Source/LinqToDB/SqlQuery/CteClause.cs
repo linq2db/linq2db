@@ -80,5 +80,22 @@ namespace LinqToDB.SqlQuery
 				.Append("\")")
 				;
 		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(CteID);
+			hash.Add(Name);
+			hash.Add(ElementType);
+			hash.Add(IsRecursive);
+			hash.Add(Body);
+			hash.Add(ObjectType);
+			foreach (var field in Fields)
+			{
+				hash.Add(field.GetElementHashCode());
+			}
+
+			return hash.ToHashCode();
+		}
 	}
 }

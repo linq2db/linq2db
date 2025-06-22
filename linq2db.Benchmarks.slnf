@@ -1,6 +1,6 @@
 {
   "solution": {
-    "path": "linq2db.sln",
+    "path": "linq2db.slnx",
     "projects": [
       "Source\\LinqToDB.Tools\\LinqToDB.Tools.csproj",
       "Source\\LinqToDB\\LinqToDB.csproj",

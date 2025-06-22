@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.SapHana
 				dataConnection.Execute("SELECT 1 FROM _SYS_BI.BIMC_ALL_CUBES LIMIT 1");
 				return true;
 			}
-			catch (Exception)
+			catch
 			{
 				var options = HanaSchemaOptions ?? new GetHanaSchemaOptions();
 				if (options.ThrowExceptionIfCalculationViewsNotAuthorized)

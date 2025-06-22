@@ -1574,6 +1574,21 @@ namespace LinqToDB.Linq.Builder
 
 						if (HandleSubquery(node, out translated))
 							return Visit(translated);
+
+						if (node.Expression is ContextRefExpression contextRef)
+						{
+							// Handling case when implementation of interface refers to ExpressionMethod
+							if (contextRef is { ElementType.IsInterface: true, BuildContext: ITableContext tableContext } && tableContext.ObjectType != contextRef.ElementType)
+							{
+								var newMember = tableContext.ObjectType.GetImplementation(node.Member);
+								if (newMember != null)
+								{
+									var newMemberAccess = Expression.MakeMemberAccess(contextRef.WithType(tableContext.ObjectType), newMember);
+									return Visit(newMemberAccess);
+								}
+							}
+						}
+
 					}
 				}
 
@@ -4089,7 +4104,7 @@ namespace LinqToDB.Linq.Builder
 					if (predicate == null)
 					{
 						predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-							compareNullsAsValues && (lOriginal.CanBeNullable(nullability) || rOriginal.CanBeNullable(nullability))
+							compareNullsAsValues
 								? op == SqlPredicate.Operator.NotEqual
 								: null);
 					}

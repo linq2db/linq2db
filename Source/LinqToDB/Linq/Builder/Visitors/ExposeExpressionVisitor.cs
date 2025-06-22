@@ -946,6 +946,16 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi);
 
+			if (attr == null && type != mi.ReflectedType && mi.DeclaringType?.IsInterface == true && type.IsClass)
+			{
+				var newInfo = type.GetImplementation(mi);
+				if (newInfo != null)
+				{
+					attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, newInfo);
+					mi   = newInfo;
+				}
+			}
+
 			if (attr != null)
 			{
 				alias = attr.Alias ?? mi.Name;

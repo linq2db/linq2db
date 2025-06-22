@@ -3,7 +3,7 @@ variables:
   master_branch: master
   release_branch: release
   baselines_master: master
-  solution: 'linq2db.sln'
+  solution: 'linq2db.slnx'
   netfx_tfm: 'net462'
   release_configuration: 'Release'
   test_configuration: 'Azure'

@@ -108,6 +108,16 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(Expression.GetElementHashCode());
+			hash.Add(Parent?.SourceID ?? -1);
+			hash.Add(RawAlias);
+
+			return hash.ToHashCode();
+		}
+
 		public override string ToString()
 		{
 #if OVERRIDETOSTRING

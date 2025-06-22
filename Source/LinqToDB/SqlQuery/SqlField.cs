@@ -144,6 +144,24 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(Name);
+			hash.Add(PhysicalName);
+			hash.Add(Alias);
+			hash.Add(CanBeNull);
+			hash.Add(IsPrimaryKey);
+			hash.Add(PrimaryKeyOrder);
+			hash.Add(IsIdentity);
+			hash.Add(IsInsertable);
+			hash.Add(IsUpdatable);
+			hash.Add(CreateFormat);
+			hash.Add(CreateOrder);
+			return hash.ToHashCode();
+		}
+
 		#endregion
 
 		internal static SqlField FakeField(DbDataType dataType, string fieldName, bool canBeNull)

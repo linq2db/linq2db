@@ -119,6 +119,17 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(GroupingType);
+			foreach (var item in Items)
+			{
+				hash.Add(item.GetElementHashCode());
+			}
+			return hash.ToHashCode();
+		}
+
 		#endregion
 
 		public void Cleanup()
