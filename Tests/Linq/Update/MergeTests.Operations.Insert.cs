@@ -1644,7 +1644,7 @@ namespace Tests.xUpdate
 
 		#region Async
 		[Test]
-		public async Task SameSourceInsertFromTableAsyn([MergeDataContextSource] string context)
+		public async Task SameSourceInsertFromTableAsync([MergeDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1675,7 +1675,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task SameSourceInsertFromQueryAsyn([MergeDataContextSource] string context)
+		public async Task SameSourceInsertFromQueryAsync([MergeDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
