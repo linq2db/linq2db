@@ -54,13 +54,13 @@ namespace LinqToDB.SqlQuery
 				}
 				else if (predicate2 is SqlPredicate.ExprExpr exprExpr2)
 				{
-					if (!isLogicalOr && isNull1.IsNot && !nullabilityContext.IsEmpty && exprExpr2 is { Operator: SqlPredicate.Operator.Equal, UnknownAsValue: false} &&
+					if (!isLogicalOr && isNull1.IsNot && !nullabilityContext.IsEmpty && exprExpr2 is { Operator: SqlPredicate.Operator.Equal, UnknownAsValue: true} &&
 					    (
-						    (exprExpr2.Expr1.Equals(isNull1.Expr1, SqlExpression.DefaultComparer) && !exprExpr2.Expr2.CanBeNullable(nullabilityContext)) ||
-						    (exprExpr2.Expr2.Equals(isNull1.Expr1, SqlExpression.DefaultComparer) && !exprExpr2.Expr1.CanBeNullable(nullabilityContext))
+						    exprExpr2.Expr1.Equals(isNull1.Expr1, SqlExpression.DefaultComparer) ||
+						    exprExpr2.Expr2.Equals(isNull1.Expr1, SqlExpression.DefaultComparer) 
 					    ))
 					{
-						mergedPredicate = exprExpr2;
+						mergedPredicate = new SqlPredicate.ExprExpr(exprExpr2.Expr1, exprExpr2.Operator, exprExpr2.Expr2, null);
 						return true;
 					}
 				}
@@ -88,7 +88,22 @@ namespace LinqToDB.SqlQuery
 			mergedPredicate = null;
 			return false;
 		}
-	}
+
+		public bool TryMerge(NullabilityContext nullabilityContext, ISqlPredicate single, ISqlPredicate predicateFromList, bool isLogicalOr, out ISqlPredicate? mergedSinglePredicate,
+			out ISqlPredicate?                  mergedListPredicate)
+		{
+			if (single.Equals(predicateFromList, SqlExpression.DefaultComparer))
+			{
+				mergedSinglePredicate = single;
+				mergedListPredicate   = isLogicalOr ? SqlPredicate.True : SqlPredicate.False;
+				return true;
+			}
+
+			mergedSinglePredicate = null;
+			mergedListPredicate = null;
+			return false;
+		}
+}
 }
 
 

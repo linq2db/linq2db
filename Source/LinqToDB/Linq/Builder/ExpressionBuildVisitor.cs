@@ -4105,7 +4105,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
 							compareNullsAsValues
-								? op == SqlPredicate.Operator.NotEqual
+								? op == SqlPredicate.Operator.Equal
 								: null);
 					}
 				}

@@ -796,6 +796,8 @@ namespace LinqToDB.SqlProvider
 			List<ISqlPredicate>? newPredicates = null;
 			var visitedPredicates = new HashSet<ISqlPredicate>(Utils.ObjectReferenceEqualityComparer<ISqlPredicate>.Default);
 
+			var isOptimized = false;
+
 			for (var i = 0; i < predicatesToCompare.Count; i++)
 			{
 				var conditionPredicate = predicatesToCompare[i];
@@ -803,27 +805,29 @@ namespace LinqToDB.SqlProvider
 				if (visitedPredicates.Contains(conditionPredicate))
 					continue;
 
-				if (_similarityMerger.TryMerge(_nullabilityContext, predicate, conditionPredicate, true, out var mergedPredicate) || 
-				    _similarityMerger.TryMerge(_nullabilityContext, conditionPredicate, predicate, true, out mergedPredicate))
+				if (_similarityMerger.TryMerge(_nullabilityContext, predicate, conditionPredicate, !searchCondition.IsOr, out var mergedSingle, out var mergedConditional))
 				{
-					var predicatesList = searchCondition.Predicates;
-					if (GetVisitMode(searchCondition) == VisitMode.Transform)
+					isOptimized = true;
+
+					if (!ReferenceEquals(mergedConditional, conditionPredicate))
 					{
-						newPredicates  ??= [..searchCondition.Predicates];
-						predicatesList =   newPredicates;
+						var predicatesList = searchCondition.Predicates;
+						if (GetVisitMode(searchCondition) == VisitMode.Transform)
+						{
+							newPredicates  ??= [.. searchCondition.Predicates];
+							predicatesList =   newPredicates;
+						}
+
+						var ixd = predicatesList.IndexOf(conditionPredicate);
+						predicatesList.RemoveAt(ixd);
+						visitedPredicates.Add(conditionPredicate);
 					}
 
-					var ixd = predicatesList.IndexOf(conditionPredicate);
-					predicatesList.RemoveAt(ixd);
-					visitedPredicates.Add(conditionPredicate);
-
-					if (mergedPredicate != null)
+					if (!ReferenceEquals(mergedSingle, mergedConditional))
 					{
-						predicatesList.Insert(ixd, mergedPredicate);
+						newPredicate = mergedSingle;
+						break;
 					}
-
-					newPredicate = null;
-					break;
 				}
 			}
 
@@ -834,7 +838,7 @@ namespace LinqToDB.SqlProvider
 				return true;
 			}
 
-			return newPredicate is null;
+			return isOptimized;
 		}
 
 		protected override IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
