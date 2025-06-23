@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 			return BuildSequenceResult.FromContext(new DistinctContext(outerSubqueryContext));
 		}
 
-		class DistinctContext : PassThroughContext
+		sealed class DistinctContext : PassThroughContext
 		{
 			public DistinctContext(IBuildContext context) : base(context)
 			{

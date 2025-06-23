@@ -1,5 +1,9 @@
 ﻿namespace LinqToDB
 {
+	/// <summary>
+	/// This is internal API and is not intended for use by Linq To DB applications.
+	/// It may change or be removed without further notice.
+	/// </summary>
 	public static class ErrorHelper
 	{
 		public const string Error_Correlated_Subqueries          = "Provider does not support correlated subqueries.";

@@ -10,6 +10,10 @@ using LinqToDB.Extensions;
 
 namespace LinqToDB.Common.Internal
 {
+	/// <summary>
+	/// This is internal API and is not intended for use by Linq To DB applications.
+	/// It may change or be removed without further notice.
+	/// </summary>
 	public abstract class ValueComparer : IEqualityComparer, IEqualityComparer<object>
 	{
 		private protected static readonly MethodInfo _doubleEqualsMethodInfo
