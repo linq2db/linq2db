@@ -848,7 +848,7 @@ namespace LinqToDB.SqlProvider
 						var changed = ctx.WriteableValue || newExpr != expr.Expr;
 
 						if (changed)
-							newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.Flags, expr.NullabilityType, null, newExpressions.ToArray());
+							newExpression = new SqlExpression(expr.Type, newExpr, expr.Precedence, expr.Flags, expr.NullabilityType, null, newExpressions.ToArray());
 
 						return newExpression;
 					}
@@ -900,17 +900,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return deleteStatement;
-		}
-
-		static bool IsAggregationFunction(IQueryElement expr)
-		{
-			if (expr is SqlFunction func)
-				return func.IsAggregate;
-
-			if (expr is SqlExpression expression)
-				return expression.IsAggregate;
-
-			return false;
 		}
 
 		protected bool NeedsEnvelopingForUpdate(SelectQuery query)
@@ -1964,7 +1953,7 @@ namespace LinqToDB.SqlProvider
 					//}
 
 					if (orderByItems == null || orderByItems.Count == 0)
-						orderByItems = context.supportsEmptyOrderBy ? [] : new[] { new SqlOrderByItem(new SqlExpression("SELECT NULL"), false, false) };
+						orderByItems = context.supportsEmptyOrderBy ? [] : new[] { new SqlOrderByItem(new SqlFragment("SELECT NULL"), false, false) };
 
 					var orderBy = string.Join(", ",
 						orderByItems.Select(static (oi, i) => oi.IsDescending ? FormattableString.Invariant($"{{{i}}} DESC") : FormattableString.Invariant($"{{{i}}}")));
@@ -1975,8 +1964,8 @@ namespace LinqToDB.SqlProvider
 					query.OrderBy.Items.Clear();
 
 					var rowNumberExpression = parameters.Length == 0
-						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null)
-						: new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null, parameters);
+						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable)
+						: new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, parameters);
 
 					var rowNumberColumn = query.Select.AddNewColumn(rowNumberExpression);
 					rowNumberColumn.Alias = "RN";

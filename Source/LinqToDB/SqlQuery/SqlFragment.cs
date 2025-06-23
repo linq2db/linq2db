@@ -1,0 +1,103 @@
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Linq;
+
+namespace LinqToDB.SqlQuery
+{
+	/// <summary>
+	/// Untyped (doesn't have type of type information should be hidden from Linq To DB) SQL fragment with parameters.
+	/// </summary>
+	public class SqlFragment : SqlExpressionBase
+	{
+		public SqlFragment(string expr, params ISqlExpression[] parameters)
+		{
+			Expr       = expr;
+			Parameters = parameters;
+		}
+
+		public string           Expr       { get; }
+		public ISqlExpression[] Parameters { get; }
+
+		#region Overrides
+
+		public override QueryElementType ElementType => QueryElementType.SqlFragment;
+
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
+		{
+			writer.DebugAppendUniqueId(this);
+
+			var len = writer.Length;
+			var arguments  = Parameters.Select(p =>
+			{
+				p.ToString(writer);
+				var s = writer.ToString(len, writer.Length - len);
+				writer.Length = len;
+				return (object)s;
+			});
+
+			if (Parameters.Length == 0)
+				return writer.Append(Expr);
+
+			if (Expr.Contains("{"))
+				writer.AppendFormat(Expr, arguments.ToArray());
+			else
+				writer.Append(Expr)
+					.Append('{')
+					.Append(string.Join(", ", arguments.Select(s => string.Format(CultureInfo.InvariantCulture, "{0}", s))))
+					.Append('}');
+
+			return writer;
+		}
+
+		public override string ToString()
+		{
+			return this.ToDebugString();
+		}
+
+		#endregion
+
+		#region ISqlExpression
+
+		int? _hashCode;
+
+		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
+		public override int GetHashCode()
+		{
+			if (_hashCode != null)
+				return _hashCode.Value;
+
+			var hashCode = Expr.GetHashCode();
+
+			for (var i = 0; i < Parameters.Length; i++)
+				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
+
+			_hashCode = hashCode;
+
+			return hashCode;
+		}
+
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			if (ReferenceEquals(this, other))
+				return true;
+
+			if (other is not SqlFragment expr
+				|| Expr              != expr.Expr
+				|| Parameters.Length != expr.Parameters.Length)
+				return false;
+
+			for (var i = 0; i < Parameters.Length; i++)
+				if (!Parameters[i].Equals(expr.Parameters[i], comparer))
+					return false;
+
+			return comparer(this, expr);
+		}
+
+		public override bool CanBeNullable(NullabilityContext nullability) => false;
+
+		public override int  Precedence  => SqlQuery.Precedence.Primary;
+		public override Type? SystemType => null;
+		#endregion
+	}
+}

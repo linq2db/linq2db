@@ -130,6 +130,7 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.SqlCoalesce               => VisitSqlCoalesceExpression     ((SqlCoalesceExpression      )element),
 				QueryElementType.SqlCase                   => VisitSqlCaseExpression         ((SqlCaseExpression          )element),
 				QueryElementType.CompareTo                 => VisitSqlCompareToExpression    ((SqlCompareToExpression     )element),
+				QueryElementType.SqlFragment               => VisitSqlFragment               ((SqlFragment                )element),
 
 				_ => throw new InvalidOperationException()
 			};
@@ -1373,6 +1374,40 @@ namespace LinqToDB.SqlQuery
 
 					if (ShouldReplace(element) || !ReferenceEquals(element.Expression, e))
 						return NotifyReplaced(new SqlOrderByItem(e, element.IsDescending, element.IsPositioned), element);
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected virtual IQueryElement VisitSqlFragment(SqlFragment element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					VisitElements(element.Parameters, VisitMode.ReadOnly);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					VisitElements(element.Parameters, VisitMode.Modify);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var parameters = VisitElements(element.Parameters, VisitMode.Transform);
+
+					if (ShouldReplace(element) || parameters != element.Parameters)
+					{
+						return NotifyReplaced(
+							new SqlFragment(element.Expr, parameters != element.Parameters ? parameters : parameters.ToArray()),
+							element);
+					}
 
 					break;
 				}
@@ -2812,7 +2847,7 @@ namespace LinqToDB.SqlQuery
 					if (ShouldReplace(element) || parameters != element.Parameters)
 					{
 						return NotifyReplaced(new SqlExpression(
-							element.SystemType, element.Expr, element.Precedence,
+							element.Type, element.Expr, element.Precedence,
 							element.Flags, element.NullabilityType, element.CanBeNullNullable, parameters != element.Parameters ? parameters : parameters.ToArray()),
 							element);
 					}
@@ -2849,9 +2884,8 @@ namespace LinqToDB.SqlQuery
 					if (ShouldReplace(element) || parameters != element.Parameters)
 					{
 						return NotifyReplaced(
-							new SqlFunction(element.SystemType, element.Name, element.IsAggregate,
-								element.IsPure,
-								element.Precedence, element.NullabilityType, element.CanBeNullNullable, parameters != element.Parameters ? parameters : parameters.ToArray())
+							new SqlFunction(element.Type, element.Name,
+								element.Flags, element.NullabilityType, element.CanBeNullNullable, parameters != element.Parameters ? parameters : parameters.ToArray())
 							{
 								DoNotOptimize = element.DoNotOptimize
 							},

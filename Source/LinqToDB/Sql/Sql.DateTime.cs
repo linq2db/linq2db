@@ -151,7 +151,7 @@ namespace LinqToDB
 					return;
 				}
 
-				var partSql   = new SqlExpression(DatePartToStr(part), Precedence.Primary);
+				var partSql   = new SqlFragment(DatePartToStr(part));
 
 				builder.ResultExpression = new SqlFunction(typeof(int), builder.Expression, partSql, startdate, endDate);
 			}

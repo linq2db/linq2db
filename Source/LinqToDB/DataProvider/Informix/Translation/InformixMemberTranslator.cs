@@ -304,7 +304,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 				// EXTEND(your_datetime_column, YEAR TO DAY)
 
 				var factory = translationContext.ExpressionFactory;
-				var extend  = new SqlFunction(factory.GetDbDataType(dateExpression).WithDataType(DataType.Date), "Extend", ParametersNullabilityType.SameAsFirstParameter, dateExpression, new SqlExpression("Year to Day") { CanBeNull = false });
+				var extend  = new SqlFunction(factory.GetDbDataType(dateExpression).WithDataType(DataType.Date), "Extend", ParametersNullabilityType.SameAsFirstParameter, dateExpression, new SqlFragment("Year to Day"));
 
 				return extend;
 			}

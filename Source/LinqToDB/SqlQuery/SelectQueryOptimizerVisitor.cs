@@ -1043,7 +1043,7 @@ namespace LinqToDB.SqlQuery
 					rnBuilder.Append(')');
 
 					rnExpression = new SqlExpression(typeof(long), rnBuilder.ToString(), Precedence.Primary,
-						SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null, parameters.ToArray());
+						SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, parameters.ToArray());
 				}
 
 				var whereToIgnore = new List<IQueryElement> { sql.Where, sql.Select };
@@ -1903,8 +1903,8 @@ namespace LinqToDB.SqlQuery
 
 						if (columnExpression is SqlColumn or SqlField or SqlTable or SqlBinaryExpression)
 							return true;
-						if (columnExpression is SqlFunction func)
-							return !func.IsAggregate;
+						if (columnExpression is SqlParametrizedExpressionBase e)
+							return !e.IsAggregate;
 						return false;
 					}))
 				{
@@ -2559,31 +2559,28 @@ namespace LinqToDB.SqlQuery
 										}
 									}
 
-									if (testedColumn.Expression is SqlFunction function)
+									if (QueryHelper.IsAggregationFunction(testedColumn.Expression))
 									{
-										if (function.IsAggregate)
+										if (!_providerFlags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
 										{
-											if (!_providerFlags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
+											if (_providerFlags.IsApplyJoinSupported)
 											{
-												if (_providerFlags.IsApplyJoinSupported)
-												{
-													// Well, provider can process this query as OUTER APPLY
-													isValid = false;
-													break;
-												}
-
-												MoveDuplicateUsageToSubQuery(sq);
-												// will be processed in the next step
-												ti      = -1;
+												// Well, provider can process this query as OUTER APPLY
 												isValid = false;
 												break;
 											}
 
-											if (!_providerFlags.IsCountSubQuerySupported)
-											{
-												isValid = false;
-												break;
-											}
+											MoveDuplicateUsageToSubQuery(sq);
+											// will be processed in the next step
+											ti = -1;
+											isValid = false;
+											break;
+										}
+
+										if (!_providerFlags.IsCountSubQuerySupported)
+										{
+											isValid = false;
+											break;
 										}
 									}
 								}

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.DataProvider.MySql;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.SqlQuery;
@@ -364,7 +365,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence,
-						SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression,
+						sequence.SelectQuery.CreateCount(), buildInfo.Expression,
 						convertType : returnType);
 
 					context = new AggregationContext(buildInfo.Parent, sequence, aggregationType, functionName, returnType);
@@ -391,7 +392,7 @@ namespace LinqToDB.Linq.Builder
 					var sql = sqlPlaceholder.Sql;
 
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence,
-						new SqlFunction(returnType, functionName, true, sql) { CanBeNull = true }, buildInfo.Expression, convertType: returnType);
+						new SqlFunction(returnType, functionName, isAggregate: true, canBeNull: true, sql), buildInfo.Expression, convertType: returnType);
 				}
 			}
 			else
@@ -512,7 +513,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (isDistinct)
 							{
-								sql = new SqlExpression("DISTINCT {0}", valueSqlExpression!);
+								sql = new SqlExpression(QueryHelper.GetDbDataType(valueSqlExpression!, builder.MappingSchema), "DISTINCT {0}", valueSqlExpression!);
 							}
 							else
 							{
@@ -525,14 +526,14 @@ namespace LinqToDB.Linq.Builder
 								}
 								else
 								{
-									sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID)) { CanBeNull = false };
+									sql = new SqlFragment("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
 								}
 							}
 
 						}
 						else
 						{
-							sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID)) { CanBeNull = false };
+							sql = new SqlFragment("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
 						}
 
 						break;
@@ -564,7 +565,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (isDistinct)
 							{
-								sql = new SqlExpression("DISTINCT {0}", sql);
+								sql = new SqlExpression(QueryHelper.GetDbDataType(sql, builder.MappingSchema), "DISTINCT {0}", sql);
 							}
 						}
 						else
@@ -599,7 +600,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql == null)
 					throw new InvalidOperationException();
 
-				sql = new SqlFunction(returnType, functionName, true, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, canBeNull, sql);
+				sql = new SqlFunction(returnType, functionName, isAggregate: true, canBeNull, sql);
 
 				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/sql, buildInfo.Expression, convertType: returnType);
 

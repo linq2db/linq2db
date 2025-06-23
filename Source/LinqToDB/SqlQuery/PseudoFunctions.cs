@@ -15,8 +15,7 @@ namespace LinqToDB.SqlQuery
 		public const string TO_LOWER = "$ToLower$";
 		public static SqlFunction MakeToLower(ISqlExpression value)
 		{
-			return new SqlFunction(typeof(string), TO_LOWER, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAnyParameterNullable, null, value);
+			return new SqlFunction(typeof(string), TO_LOWER, value);
 		}
 
 		/// <summary>
@@ -25,8 +24,7 @@ namespace LinqToDB.SqlQuery
 		public const string TO_UPPER = "$ToUpper$";
 		public static SqlFunction MakeToUpper(ISqlExpression value)
 		{
-			return new SqlFunction(typeof(string), TO_UPPER, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAnyParameterNullable, null, value);
+			return new SqlFunction(typeof(string), TO_UPPER, value);
 		}
 
 		/// <summary>
@@ -57,10 +55,7 @@ namespace LinqToDB.SqlQuery
 		public const string TRY_CONVERT = "$TryConvert$";
 		public static SqlFunction MakeTryConvert(SqlDataType toType, SqlDataType fromType, ISqlExpression value)
 		{
-			return new SqlFunction(toType.SystemType, TRY_CONVERT, false, true, toType, fromType, value)
-			{
-				CanBeNull = true
-			};
+			return new SqlFunction(toType.Type, TRY_CONVERT, canBeNull: true, toType, fromType, value);
 		}
 
 		/// <summary>
@@ -70,8 +65,7 @@ namespace LinqToDB.SqlQuery
 		public const string TRY_CONVERT_OR_DEFAULT = "$TryConvertOrDefault$";
 		public static SqlFunction MakeTryConvertOrDefault(SqlDataType toType, SqlDataType fromType, ISqlExpression value, ISqlExpression defaultValue)
 		{
-			return new SqlFunction(toType.SystemType, TRY_CONVERT_OR_DEFAULT, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAnyParameterNullable, null, toType, fromType, value, defaultValue);
+			return new SqlFunction(toType.Type, TRY_CONVERT_OR_DEFAULT, toType, fromType, value, defaultValue);
 		}
 
 		/// <summary>
@@ -80,8 +74,7 @@ namespace LinqToDB.SqlQuery
 		public const string REPLACE = "$Replace$";
 		public static SqlFunction MakeReplace(ISqlExpression value, ISqlExpression oldSubstring, ISqlExpression newSubstring)
 		{
-			return new SqlFunction(typeof(string), REPLACE, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAnyParameterNullable, null, value, oldSubstring, newSubstring);
+			return new SqlFunction(typeof(string), REPLACE, value, oldSubstring, newSubstring);
 		}
 
 		/// <summary>
@@ -90,8 +83,7 @@ namespace LinqToDB.SqlQuery
 		public const string REMOVE_CONVERT = "$Convert_Remover$";
 		public static SqlFunction MakeRemoveConvert(ISqlExpression value, SqlDataType resultType)
 		{
-			return new SqlFunction(resultType.SystemType, REMOVE_CONVERT, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAnyParameterNullable, null, value, resultType);
+			return new SqlFunction(resultType.Type, REMOVE_CONVERT, value, resultType);
 		}
 
 		/// <summary>
@@ -100,8 +92,7 @@ namespace LinqToDB.SqlQuery
 		public const string LENGTH = "$Length$";
 		public static SqlFunction MakeLength(ISqlExpression value)
 		{
-			return new SqlFunction(typeof(int), LENGTH, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAnyParameterNullable, null, value);
+			return new SqlFunction(typeof(int), LENGTH, value);
 		}
 
 	}

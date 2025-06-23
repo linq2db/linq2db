@@ -19,22 +19,22 @@ namespace LinqToDB.Linq.Translation
 
 		public static ISqlExpression NonPureFragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] parameters)
 		{
-			return new SqlExpression(dataType.SystemType, fragmentText, Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, null, parameters);
+			return new SqlExpression(dataType.SystemType, fragmentText, Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, parameters);
 		}
 
 		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, params ISqlExpression[] parameters)
 		{
-			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.Undefined, null, parameters);
+			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, parameters);
 		}
 
 		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, bool? canBeNull, params ISqlExpression[] parameters)
 		{
-			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.Undefined, canBeNull, parameters);
+			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, canBeNull, parameters);
 		}
 
 		public static ISqlExpression NotNullFragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, params ISqlExpression[] parameters)
 		{
-			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.NotNullable, null, parameters);
+			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.NotNullable, parameters);
 		}
 
 		public static ISqlExpression Function(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, params ISqlExpression[] parameters)
@@ -64,7 +64,7 @@ namespace LinqToDB.Linq.Translation
 
 		public static ISqlExpression NonPureFunction(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, params ISqlExpression[] parameters)
 		{
-			return new SqlFunction(dataType, functionName, false, false, parameters);
+			return new SqlFunction(dataType, functionName, SqlFlags.None, parameters);
 		}
 
 		public static ISqlExpression Value<T>(this ISqlExpressionFactory factory, DbDataType dataType, T value)

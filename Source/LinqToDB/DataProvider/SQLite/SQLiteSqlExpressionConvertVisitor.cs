@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.SQLite
 				case {
 					Name: "Space",
 					Parameters: [var p0],
-					SystemType: var type,
+					Type: var type,
 				}:
 					return new SqlFunction(type, "PadR", new SqlValue(" "), p0);
 
@@ -184,9 +184,9 @@ namespace LinqToDB.DataProvider.SQLite
 				if (!(expression is SqlCastExpression || expression is SqlFunction { DoNotOptimize: true }))
 				{
 					if (IsDateDataType(dbDataType, "Date"))
-						return new SqlFunction(dbDataType.SystemType, "Date", expression) { DoNotOptimize = true };
+						return new SqlFunction(dbDataType, "Date", expression) { DoNotOptimize = true };
 
-					return new SqlFunction(dbDataType.SystemType, "strftime", ParametersNullabilityType.SameAsSecondParameter, new SqlValue("%Y-%m-%d %H:%M:%f"), expression) { DoNotOptimize = true };
+					return new SqlFunction(dbDataType, "strftime", ParametersNullabilityType.SameAsSecondParameter, new SqlValue("%Y-%m-%d %H:%M:%f"), expression) { DoNotOptimize = true };
 				}
 			}
 

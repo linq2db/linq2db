@@ -194,7 +194,7 @@ namespace LinqToDB.SqlProvider
 					{
 						newResult = ConvertCastToPredicate(castExpression);
 					}
-					else if (unwrapped is SqlExpression { IsPredicate: true } or SqlValue { Value: null })
+					else if (unwrapped is SqlParametrizedExpressionBase { IsPredicate: true } or SqlValue { Value: null })
 					{
 						// do nothing
 					}
@@ -1143,7 +1143,7 @@ namespace LinqToDB.SqlProvider
 
 				case PseudoFunctions.CONVERT_FORMAT:
 				{
-					return new SqlFunction(func.SystemType, "Convert", func.Parameters[0], func.Parameters[2], func.Parameters[3]);
+					return new SqlFunction(func.Type, "Convert", func.Parameters[0], func.Parameters[2], func.Parameters[3]);
 				}
 
 				case PseudoFunctions.TO_LOWER: return func.WithName("Lower");
@@ -1376,7 +1376,7 @@ namespace LinqToDB.SqlProvider
 				if (wrap)
 				{
 					var predicate = unwrapped as ISqlPredicate;
-					if (predicate == null && unwrapped is SqlExpression { IsPredicate: true })
+					if (predicate == null && unwrapped is SqlParametrizedExpressionBase { IsPredicate: true })
 						predicate = new SqlPredicate.Expr(expr);
 					if (predicate == null)
 						predicate = ConvertToBooleanSearchCondition(expr);

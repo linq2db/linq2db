@@ -54,31 +54,26 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case SqlPredicate.SearchString.SearchKind.StartsWith:
 					if (!caseSensitive)
 						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "startsWith", false, true, Precedence.Primary,
-								ParametersNullabilityType.IfAnyParameterNullable, null,
+							new SqlFunction(typeof(bool), "startsWith",
 								PseudoFunctions.MakeToLower(dataExpr), PseudoFunctions.MakeToLower(searchExpr)));
 					else
 						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "startsWith", false, true, Precedence.Primary,
-								ParametersNullabilityType.IfAnyParameterNullable, null, dataExpr, searchExpr));
+							new SqlFunction(typeof(bool), "startsWith", dataExpr, searchExpr));
 					break;
 
 				case SqlPredicate.SearchString.SearchKind.EndsWith:
 					if (!caseSensitive)
 						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "endsWith", false, true, Precedence.Primary,
-								ParametersNullabilityType.IfAnyParameterNullable, null,
+							new SqlFunction(typeof(bool), "endsWith",
 								PseudoFunctions.MakeToLower(dataExpr), PseudoFunctions.MakeToLower(searchExpr)));
 					else
 						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "endsWith", false, true, Precedence.Primary,
-								ParametersNullabilityType.IfAnyParameterNullable, null, dataExpr, searchExpr));
+							new SqlFunction(typeof(bool), "endsWith", dataExpr, searchExpr));
 					break;
 
 				case SqlPredicate.SearchString.SearchKind.Contains:
 					subStrPredicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(bool), caseSensitive ? "position" : "positionCaseInsensitive", false, true, Precedence.Primary,
-							ParametersNullabilityType.IfAnyParameterNullable, null, dataExpr, searchExpr),
+						new SqlFunction(typeof(bool), caseSensitive ? "position" : "positionCaseInsensitive", dataExpr, searchExpr),
 						SqlPredicate.Operator.Greater,
 						new SqlValue(0),
 						null);
@@ -156,14 +151,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 					return element;
 				}
 
-				case SqlBinaryExpression(var type, var left, "|", var right)    : return new SqlFunction(type, "bitOr",  false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, left, right);
-				case SqlBinaryExpression(var type, var left, "&", var right)    : return new SqlFunction(type, "bitAnd", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, left, right);
-				case SqlBinaryExpression(var type, var left, "^", var right)    : return new SqlFunction(type, "bitXor", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, left, right);
-				case SqlBinaryExpression(var type, SqlValue(-1), "*", var right): return new SqlFunction(type, "negate", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, right      );
+				case SqlBinaryExpression(var type, var left, "|", var right)    : return new SqlFunction(type, "bitOr" , left, right);
+				case SqlBinaryExpression(var type, var left, "&", var right)    : return new SqlFunction(type, "bitAnd", left, right);
+				case SqlBinaryExpression(var type, var left, "^", var right)    : return new SqlFunction(type, "bitXor", left, right);
+				case SqlBinaryExpression(var type, SqlValue(-1), "*", var right): return new SqlFunction(type, "negate", right      );
 
-				case SqlBinaryExpression(var type, var ex1, "+", var ex2) when type == typeof(string):
+				case SqlBinaryExpression(var type, var ex1, "+", var ex2) when type.SystemType == typeof(string):
 				{
-					return ConvertFunc(new(type, "concat", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, ex1, ex2));
+					return ConvertFunc(new(type, "concat", ex1, ex2));
 
 					static SqlFunction ConvertFunc(SqlFunction func)
 					{
@@ -171,7 +166,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						{
 							switch (func.Parameters[i])
 							{
-								case SqlBinaryExpression(var t, var e1, "+", var e2) when t == typeof(string):
+								case SqlBinaryExpression(var t, var e1, "+", var e2) when t.SystemType == typeof(string):
 								{
 									var ps = new List<ISqlExpression>(func.Parameters);
 
@@ -179,17 +174,17 @@ namespace LinqToDB.DataProvider.ClickHouse
 									ps.Insert(i, e1);
 									ps.Insert(i + 1, e2);
 
-									return ConvertFunc(new(t, func.Name, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, ps.ToArray()));
+									return ConvertFunc(new(t, func.Name, ps.ToArray()));
 								}
 
-								case SqlFunction(var t, "concat") f when t == typeof(string):
+								case SqlFunction { Name: "concat", Type: var t } f when t.SystemType == typeof(string):
 								{
 									var ps = new List<ISqlExpression>(func.Parameters);
 
 									ps.RemoveAt(i);
 									ps.InsertRange(i, f.Parameters);
 
-									return ConvertFunc(new(t, func.Name, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, ps.ToArray()));
+									return ConvertFunc(new(t, func.Name, ps.ToArray()));
 								}
 							}
 						}
@@ -270,7 +265,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					// https://github.com/ClickHouse/ClickHouse/pull/16123
 					if (func.IsAggregate && _providerOptions.UseStandardCompatibleAggregates)
 					{
-						return new SqlFunction(func.SystemType, func.Name.ToLowerInvariant() + suffix, true, func.IsPure, func.Precedence, func.NullabilityType, canBeNullable, func.Parameters)
+						return new SqlFunction(func.Type, func.Name.ToLowerInvariant() + suffix, isAggregate: true, func.NullabilityType, canBeNullable, func.Parameters)
 						{
 							DoNotOptimize = func.DoNotOptimize,
 						};
@@ -336,8 +331,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 						var valueType = QueryHelper.GetDbDataType(value, MappingSchema);
 						if (valueType.DataType is DataType.Char or DataType.NChar or DataType.Binary)
 						{
-							return new SqlFunction(toType.SystemType, "trim", false, true,
-								new SqlExpression(toType.SystemType, "TRAILING '\x00' FROM {0}", Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, null, value));
+							return new SqlFunction(toType, "trim", canBeNull: true,
+								new SqlExpression(toType.SystemType, "TRAILING '\x00' FROM {0}", Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, value));
 						}
 
 						return new SqlCastExpression(value, toType, null, true);
@@ -351,8 +346,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						// toDecimalX(S)
 						ISqlExpression newFunc = newFunc = suffix == null
 							? new SqlCastExpression(value, toType, null, true)
-							: new SqlFunction(toType.SystemType, name + suffix, false, true,
-								Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
+							: new SqlFunction(toType, name + suffix,
 								value,
 								new SqlValue((byte)(toType.Scale ?? ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)));
 
@@ -368,8 +362,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 						ISqlExpression newFunc = newFunc = suffix == null
 							? new SqlCastExpression(value, toType, null, true)
-							: new SqlFunction(toType.SystemType, name + suffix, false, true,
-								Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
+							: new SqlFunction(toType, name + suffix,
 								value,
 								new SqlValue((byte)(toType.Precision ?? ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION)));
 
@@ -384,7 +377,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					{
 						ISqlExpression newFunc = suffix == null
 							? new SqlCastExpression(value, toType, null, true)
-							: new SqlFunction(toType.SystemType, name + suffix, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, true, value);
+							: new SqlFunction(toType, name + suffix, true, value);
 
 						if (defaultValue != null)
 							newFunc = (ISqlExpression)Visit(new SqlCoalesceExpression(newFunc, defaultValue));
