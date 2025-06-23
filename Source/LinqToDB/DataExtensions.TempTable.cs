@@ -27,11 +27,11 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
-			this         IDataContext db,
-			string?      tableName    = default,
-			string?      databaseName = default,
-			string?      schemaName   = default,
-			string?      serverName   = default,
+			this IDataContext db,
+			string? tableName = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			string? serverName = default,
 			TableOptions tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
@@ -53,13 +53,13 @@ namespace LinqToDB
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			this IDataContext db,
-			IEnumerable<T>    items,
-			BulkCopyOptions?  options      = default,
-			string?           tableName    = default,
-			string?           databaseName = default,
-			string?           schemaName   = default,
-			string?           serverName   = default,
-			TableOptions      tableOptions = TableOptions.IsTemporary)
+			IEnumerable<T> items,
+			BulkCopyOptions? options = default,
+			string? tableName = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
 			return new TempTable<T>(db, items, options, tableName, databaseName, schemaName, serverName, tableOptions);
@@ -84,20 +84,20 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext               db,
-			IEnumerable<T>                  items,
+			this IDataContext db,
+			IEnumerable<T> items,
 			Action<EntityMappingBuilder<T>> setTable,
-			BulkCopyOptions?                options      = default,
-			string?                         tableName    = default,
-			string?                         databaseName = default,
-			string?                         schemaName   = default,
-			string?                         serverName   = default,
-			TableOptions                    tableOptions = TableOptions.IsTemporary)
+			BulkCopyOptions? options = default,
+			string? tableName = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return new TempTable<T>(db, tempTableDescriptor, items, options, tableName, databaseName, schemaName, serverName, tableOptions);
 		}
@@ -117,13 +117,13 @@ namespace LinqToDB
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			this IDataContext db,
-			string            tableName,
-			IEnumerable<T>    items,
-			BulkCopyOptions?  options      = default,
-			string?           databaseName = default,
-			string?           schemaName   = default,
-			string?           serverName   = default,
-			TableOptions      tableOptions = TableOptions.IsTemporary)
+			string tableName,
+			IEnumerable<T> items,
+			BulkCopyOptions? options = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
 			return new TempTable<T>(db, tableName, items, options, databaseName, schemaName, serverName, tableOptions);
@@ -148,20 +148,20 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext               db,
-			string                          tableName,
-			IEnumerable<T>                  items,
+			this IDataContext db,
+			string tableName,
+			IEnumerable<T> items,
 			Action<EntityMappingBuilder<T>> setTable,
-			BulkCopyOptions?                options      = default,
-			string?                         databaseName = default,
-			string?                         schemaName   = default,
-			string?                         serverName   = default,
-			TableOptions                    tableOptions = TableOptions.IsTemporary)
+			BulkCopyOptions? options = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return new TempTable<T>(db, tempTableDescriptor, items, options, tableName, databaseName, schemaName, serverName, tableOptions);
 		}
@@ -180,14 +180,14 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext  db,
-			IQueryable<T>      items,
-			string?            tableName    = default,
-			string?            databaseName = default,
-			string?            schemaName   = default,
-			Action<ITable<T>>? action       = default,
-			string?            serverName   = default,
-			TableOptions       tableOptions = TableOptions.IsTemporary)
+			this IDataContext db,
+			IQueryable<T> items,
+			string? tableName = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			Action<ITable<T>>? action = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
 			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
@@ -213,20 +213,20 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext               db,
-			IQueryable<T>                   items,
+			this IDataContext db,
+			IQueryable<T> items,
 			Action<EntityMappingBuilder<T>> setTable,
-			string?                         tableName    = default,
-			string?                         databaseName = default,
-			string?                         schemaName   = default,
-			Action<ITable<T>>?              action       = default,
-			string?                         serverName   = default,
-			TableOptions                    tableOptions = TableOptions.IsTemporary)
+			string? tableName = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			Action<ITable<T>>? action = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return new TempTable<T>(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
 		}
@@ -245,14 +245,14 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext  db,
-			string?            tableName,
-			IQueryable<T>      items,
-			string?            databaseName = default,
-			string?            schemaName   = default,
-			Action<ITable<T>>? action       = default,
-			string?            serverName   = default,
-			TableOptions       tableOptions = TableOptions.IsTemporary)
+			this IDataContext db,
+			string? tableName,
+			IQueryable<T> items,
+			string? databaseName = default,
+			string? schemaName = default,
+			Action<ITable<T>>? action = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
 			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action, serverName, tableOptions);
@@ -278,20 +278,20 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext               db,
-			string?                         tableName,
-			IQueryable<T>                   items,
+			this IDataContext db,
+			string? tableName,
+			IQueryable<T> items,
 			Action<EntityMappingBuilder<T>> setTable,
-			string?                         databaseName = default,
-			string?                         schemaName   = default,
-			Action<ITable<T>>?              action       = default,
-			string?                         serverName   = default,
-			TableOptions                    tableOptions = TableOptions.IsTemporary)
+			string? databaseName = default,
+			string? schemaName = default,
+			Action<ITable<T>>? action = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return new TempTable<T>(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
 		}
@@ -310,11 +310,11 @@ namespace LinqToDB
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
 			this IDataContext db,
-			string?           tableName         = default,
-			string?           databaseName      = default,
-			string?           schemaName        = default,
-			string?           serverName        = default,
-			TableOptions      tableOptions      = TableOptions.IsTemporary,
+			string? tableName = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary,
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
@@ -337,13 +337,13 @@ namespace LinqToDB
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
 			this IDataContext db,
-			IEnumerable<T>    items,
-			BulkCopyOptions?  options           = default,
-			string?           tableName         = default,
-			string?           databaseName      = default,
-			string?           schemaName        = default,
-			string?           serverName        = default,
-			TableOptions      tableOptions      = TableOptions.IsTemporary,
+			IEnumerable<T> items,
+			BulkCopyOptions? options = default,
+			string? tableName = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary,
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
@@ -370,21 +370,21 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext               db,
-			IEnumerable<T>                  items,
+			this IDataContext db,
+			IEnumerable<T> items,
 			Action<EntityMappingBuilder<T>> setTable,
-			BulkCopyOptions?                options           = default,
-			string?                         tableName         = default,
-			string?                         databaseName      = default,
-			string?                         schemaName        = default,
-			string?                         serverName        = default,
-			TableOptions                    tableOptions      = TableOptions.IsTemporary,
-			CancellationToken               cancellationToken = default)
+			BulkCopyOptions? options = default,
+			string? tableName = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary,
+			CancellationToken cancellationToken = default)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return TempTable<T>.CreateAsync(db, tempTableDescriptor, tableName, items, options, databaseName, schemaName, serverName, tableOptions, cancellationToken);
 		}
@@ -405,13 +405,13 @@ namespace LinqToDB
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
 			this IDataContext db,
-			string            tableName,
-			IEnumerable<T>    items,
-			BulkCopyOptions?  options           = default,
-			string?           databaseName      = default,
-			string?           schemaName        = default,
-			string?           serverName        = default,
-			TableOptions      tableOptions      = TableOptions.IsTemporary,
+			string tableName,
+			IEnumerable<T> items,
+			BulkCopyOptions? options = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary,
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
@@ -438,21 +438,21 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext               db,
-			string                          tableName,
-			IEnumerable<T>                  items,
+			this IDataContext db,
+			string tableName,
+			IEnumerable<T> items,
 			Action<EntityMappingBuilder<T>> setTable,
-			BulkCopyOptions?                options           = default,
-			string?                         databaseName      = default,
-			string?                         schemaName        = default,
-			string?                         serverName        = default,
-			TableOptions                    tableOptions      = TableOptions.IsTemporary,
-			CancellationToken               cancellationToken = default)
+			BulkCopyOptions? options = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary,
+			CancellationToken cancellationToken = default)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return TempTable<T>.CreateAsync(db, tempTableDescriptor, tableName, items, options, databaseName, schemaName, serverName, tableOptions, cancellationToken);
 		}
@@ -472,15 +472,15 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext     db,
-			IQueryable<T>         items,
-			string?               tableName         = default,
-			string?               databaseName      = default,
-			string?               schemaName        = default,
-			Func<ITable<T>,Task>? action            = default,
-			string?               serverName        = default,
-			TableOptions          tableOptions      = TableOptions.IsTemporary,
-			CancellationToken     cancellationToken = default)
+			this IDataContext db,
+			IQueryable<T> items,
+			string? tableName = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			Func<ITable<T>, Task>? action = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary,
+			CancellationToken cancellationToken = default)
 			where T : class
 		{
 			return TempTable<T>.CreateAsync(db, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
@@ -507,21 +507,21 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext               db,
-			IQueryable<T>                   items,
+			this IDataContext db,
+			IQueryable<T> items,
 			Action<EntityMappingBuilder<T>> setTable,
-			string?                         tableName         = default,
-			string?                         databaseName      = default,
-			string?                         schemaName        = default,
-			Func<ITable<T>,Task>?           action            = default,
-			string?                         serverName        = default,
-			TableOptions                    tableOptions      = TableOptions.IsTemporary,
-			CancellationToken               cancellationToken = default)
+			string? tableName = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			Func<ITable<T>, Task>? action = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary,
+			CancellationToken cancellationToken = default)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return TempTable<T>.CreateAsync(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
 		}
@@ -541,15 +541,15 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext     db,
-			string?               tableName,
-			IQueryable<T>         items,
-			string?               databaseName      = default,
-			string?               schemaName        = default,
-			Func<ITable<T>,Task>? action            = default,
-			string?               serverName        = default,
-			TableOptions          tableOptions      = TableOptions.IsTemporary,
-			CancellationToken     cancellationToken = default)
+			this IDataContext db,
+			string? tableName,
+			IQueryable<T> items,
+			string? databaseName = default,
+			string? schemaName = default,
+			Func<ITable<T>, Task>? action = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary,
+			CancellationToken cancellationToken = default)
 			where T : class
 		{
 			return TempTable<T>.CreateAsync(db, tableName, items, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
@@ -576,21 +576,21 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext               db,
-			string?                         tableName,
-			IQueryable<T>                   items,
+			this IDataContext db,
+			string? tableName,
+			IQueryable<T> items,
 			Action<EntityMappingBuilder<T>> setTable,
-			string?                         databaseName      = default,
-			string?                         schemaName        = default,
-			Func<ITable<T>,Task>?           action            = default,
-			string?                         serverName        = default,
-			TableOptions                    tableOptions      = TableOptions.IsTemporary,
-			CancellationToken               cancellationToken = default)
+			string? databaseName = default,
+			string? schemaName = default,
+			Func<ITable<T>, Task>? action = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary,
+			CancellationToken cancellationToken = default)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
 			return TempTable<T>.CreateAsync(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
 		}
@@ -614,13 +614,13 @@ namespace LinqToDB
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> IntoTempTable<T>(
 			this IEnumerable<T> items,
-			IDataContext        db,
-			string?             tableName    = default,
-			string?             databaseName = default,
-			string?             schemaName   = default,
-			string?             serverName   = default,
-			TableOptions        tableOptions = TableOptions.IsTemporary,
-			BulkCopyOptions?    options      = default)
+			IDataContext db,
+			string? tableName = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary,
+			BulkCopyOptions? options = default)
 			where T : class
 		{
 			return new TempTable<T>(db, items, options, tableName, databaseName, schemaName, serverName, tableOptions);
@@ -644,21 +644,21 @@ namespace LinqToDB
 		/// Latter option is not recommended as it will affect performance significantly.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> IntoTempTable<T>(
-			this IQueryable<T>               items,
-			string?                          tableName    = default,
-			string?                          databaseName = default,
-			string?                          schemaName   = default,
-			string?                          serverName   = default,
-			TableOptions                     tableOptions = TableOptions.IsTemporary,
-			Action<ITable<T>>?               action       = default,
-			Action<EntityMappingBuilder<T>>? setTable     = default)
+			this IQueryable<T> items,
+			string? tableName = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary,
+			Action<ITable<T>>? action = default,
+			Action<EntityMappingBuilder<T>>? setTable = default)
 			where T : class
 		{
 			if (items is IExpressionQuery eq)
 			{
 				EntityDescriptor? tempTableDescriptor = null;
 				if (setTable != null)
-					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext.MappingSchema, eq.DataContext.Options, setTable);
+					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext, setTable);
 
 				return new TempTable<T>(eq.DataContext, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
 			}
@@ -682,14 +682,14 @@ namespace LinqToDB
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> IntoTempTableAsync<T>(
 			this IEnumerable<T> items,
-			IDataContext        db,
-			string?             tableName         = default,
-			string?             databaseName      = default,
-			string?             schemaName        = default,
-			string?             serverName        = default,
-			TableOptions        tableOptions      = TableOptions.IsTemporary,
-			BulkCopyOptions?    options           = default,
-			CancellationToken   cancellationToken = default)
+			IDataContext db,
+			string? tableName = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary,
+			BulkCopyOptions? options = default,
+			CancellationToken cancellationToken = default)
 			where T : class
 		{
 			return TempTable<T>.CreateAsync(db, items, options, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken);
@@ -715,22 +715,22 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> IntoTempTableAsync<T>(
-			this IQueryable<T>               items,
-			string?                          tableName         = default,
-			string?                          databaseName      = default,
-			string?                          schemaName        = default,
-			string?                          serverName        = default,
-			TableOptions                     tableOptions      = TableOptions.IsTemporary,
-			Func<ITable<T>,Task>?            action            = default,
-			Action<EntityMappingBuilder<T>>? setTable          = default,
-			CancellationToken                cancellationToken = default)
+			this IQueryable<T> items,
+			string? tableName = default,
+			string? databaseName = default,
+			string? schemaName = default,
+			string? serverName = default,
+			TableOptions tableOptions = TableOptions.IsTemporary,
+			Func<ITable<T>, Task>? action = default,
+			Action<EntityMappingBuilder<T>>? setTable = default,
+			CancellationToken cancellationToken = default)
 			where T : class
 		{
 			if (items is IExpressionQuery eq)
 			{
 				EntityDescriptor? tempTableDescriptor = null;
 				if (setTable != null)
-					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext.MappingSchema, eq.DataContext.Options, setTable);
+					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext, setTable);
 
 				return TempTable<T>.CreateAsync(eq.DataContext, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
 			}
@@ -738,13 +738,17 @@ namespace LinqToDB
 			throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
 		}
 
-		private static EntityDescriptor GetTempTableDescriptor<T>(MappingSchema contextSchema, DataOptions options, Action<EntityMappingBuilder<T>> setTable)
+		private static EntityDescriptor GetTempTableDescriptor<T>(IDataContext dataContext, Action<EntityMappingBuilder<T>> setTable)
 		{
-			var ms = new MappingSchema(contextSchema);
+			var ms      = new MappingSchema(dataContext.MappingSchema);
 			var builder = new FluentMappingBuilder(ms);
+
 			setTable(builder.Entity<T>());
 			builder.Build();
-			return ms.GetEntityDescriptor(typeof(T), options.ConnectionOptions.OnEntityDescriptorCreated);
+
+			dataContext.AddMappingSchema(ms);
+
+			return ms.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 		}
 
 		#endregion
