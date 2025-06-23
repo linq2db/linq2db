@@ -17,12 +17,5 @@ if [ $? != 0 ]; then exit 1; fi
 cp -f ./Net.IBM.Data.Db2-lnx/lib/net8.0/IBM.Data.Db2.dll ./IBM.Data.Db2.dll
 if [ $? != 0 ]; then exit 1; fi
 
-newPath=$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib
-newLdPath=$PWD/clidriver/lib/
-
-# debug
-echo "Current PATH=$PATH, New=$newPath"
-echo "Current LD_LIBRARY_PATH=$LD_LIBRARY_PATH, New=$newLdPath"
-
-echo "##vso[task.setvariable variable=PATH]$newPath"
-echo "##vso[task.setvariable variable=LD_LIBRARY_PATH]$newLdPath"
+echo "##vso[task.setvariable variable=PATH;]$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib"
+echo "##vso[task.setvariable variable=LD_LIBRARY_PATH;]$PWD/clidriver/lib/"
