@@ -142,6 +142,7 @@ namespace LinqToDB.SqlQuery
 		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
+			hash.Add(ElementType);
 			hash.Add(Name);
 			hash.Add(Type);
 			hash.Add(IsQueryParameter);

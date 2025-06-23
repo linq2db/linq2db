@@ -710,7 +710,7 @@ namespace LinqToDB.SqlProvider
 
 								isOptimized = true;
 
-								i--;
+								j--;
 
 								break;
 							}

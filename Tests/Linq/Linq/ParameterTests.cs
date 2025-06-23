@@ -1725,7 +1725,7 @@ namespace Tests.Linq
 
 			// check only one parameter generated
 			if(!context.IsAnyOf(TestProvName.AllClickHouse))
-				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(context.IsUsePositionalParameters() ? 2 : 1));
+				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(1));
 
 			id = 2;
 

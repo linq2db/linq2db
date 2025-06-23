@@ -21,6 +21,10 @@ namespace LinqToDB.SqlQuery
 			{
 				yield return isNull.Expr1.GetElementHashCode();
 			}
+			else if (predicate is SqlPredicate.Not notPredicate)
+			{
+				yield return notPredicate.Predicate.GetElementHashCode();
+			}
 		}
 
 		public bool TryMerge(NullabilityContext nullabilityContext, ISqlPredicate predicate1, ISqlPredicate predicate2, bool isLogicalOr, out ISqlPredicate? mergedPredicate)
@@ -67,6 +71,16 @@ namespace LinqToDB.SqlQuery
 				    (SqlPredicate.ExprExpr.SwapOperator(exprExpr1.Operator) == exprExpr2.Operator && exprExpr1.Expr1.Equals(exprExpr2.Expr2, SqlExpression.DefaultComparer) && exprExpr1.Expr2.Equals(exprExpr2.Expr1, SqlExpression.DefaultComparer)))
 				{
 					mergedPredicate = predicate1;
+					return true;
+				}
+			}
+			else if (predicate1 is SqlPredicate.Not notPredicate1)
+			{
+				// NOT P OR P => true
+				// NOT P AND P => false
+				if (notPredicate1.Predicate.Equals(predicate2, SqlExpression.DefaultComparer))
+				{
+					mergedPredicate = isLogicalOr ? SqlPredicate.True : SqlPredicate.False;
 					return true;
 				}
 			}
