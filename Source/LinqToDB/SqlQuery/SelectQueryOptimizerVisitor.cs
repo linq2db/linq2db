@@ -1903,7 +1903,7 @@ namespace LinqToDB.SqlQuery
 
 						if (columnExpression is SqlColumn or SqlField or SqlTable or SqlBinaryExpression)
 							return true;
-						if (columnExpression is SqlParametrizedExpressionBase e)
+						if (columnExpression is SqlParameterizedExpressionBase e)
 							return !e.IsAggregate;
 						return false;
 					}))

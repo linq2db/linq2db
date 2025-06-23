@@ -3397,7 +3397,7 @@ namespace LinqToDB.Linq.Builder
 			if (sqlExpression is ISqlPredicate predicate)
 				return predicate;
 
-			if (sqlExpression is SqlParametrizedExpressionBase { IsPredicate: true })
+			if (sqlExpression is SqlParameterizedExpressionBase { IsPredicate: true })
 				return new SqlPredicate.Expr(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()));
 
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(sqlExpression);
@@ -4102,7 +4102,7 @@ namespace LinqToDB.Linq.Builder
 							if (trueValue.ElementType == QueryElementType.SqlValue &&
 								falseValue.ElementType == QueryElementType.SqlValue)
 							{
-								if (expression is SqlParametrizedExpressionBase { IsPredicate: true } predicateExpr)
+								if (expression is SqlParameterizedExpressionBase { IsPredicate: true } predicateExpr)
 								{
 									predicate = new SqlPredicate.Expr(predicateExpr);
 									if (isNot)

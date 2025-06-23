@@ -7,7 +7,7 @@ using LinqToDB.Common;
 namespace LinqToDB.SqlQuery
 {
 #pragma warning disable CS0659 // Type overrides Object.Equals(object o) but does not override Object.GetHashCode()
-	public sealed class SqlExpression : SqlParametrizedExpressionBase
+	public sealed class SqlExpression : SqlParameterizedExpressionBase
 #pragma warning restore CS0659 // Type overrides Object.Equals(object o) but does not override Object.GetHashCode()
 	{
 		private const int                       DefaultPrecedence  = SqlQuery.Precedence.Unknown;

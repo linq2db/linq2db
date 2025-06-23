@@ -5,7 +5,7 @@ using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlFunction : SqlParametrizedExpressionBase
+	public class SqlFunction : SqlParameterizedExpressionBase
 	{
 		private const SqlFlags                  DefaultFlags       = SqlFlags.IsPure;
 		private const ParametersNullabilityType DefaultNullability = ParametersNullabilityType.IfAnyParameterNullable;

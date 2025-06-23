@@ -194,7 +194,7 @@ namespace LinqToDB.SqlProvider
 					{
 						newResult = ConvertCastToPredicate(castExpression);
 					}
-					else if (unwrapped is SqlParametrizedExpressionBase { IsPredicate: true } or SqlValue { Value: null })
+					else if (unwrapped is SqlParameterizedExpressionBase { IsPredicate: true } or SqlValue { Value: null })
 					{
 						// do nothing
 					}
@@ -1376,7 +1376,7 @@ namespace LinqToDB.SqlProvider
 				if (wrap)
 				{
 					var predicate = unwrapped as ISqlPredicate;
-					if (predicate == null && unwrapped is SqlParametrizedExpressionBase { IsPredicate: true })
+					if (predicate == null && unwrapped is SqlParameterizedExpressionBase { IsPredicate: true })
 						predicate = new SqlPredicate.Expr(expr);
 					if (predicate == null)
 						predicate = ConvertToBooleanSearchCondition(expr);

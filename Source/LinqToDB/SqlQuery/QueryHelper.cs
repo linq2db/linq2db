@@ -380,7 +380,7 @@ namespace LinqToDB.SqlQuery
 				case SqlCastExpression   { Type: var t }: return t;
 				case SqlBinaryExpression { Type: var t }: return t;
 
-				case SqlParametrizedExpressionBase { Type: var t }: return t;
+				case SqlParameterizedExpressionBase { Type: var t }: return t;
 
 				case SqlColumn                { Expression:    var e }: return GetDbDataType(e);
 				case SqlNullabilityExpression { SqlExpression: var e }: return GetDbDataType(e);
@@ -1267,7 +1267,7 @@ namespace LinqToDB.SqlQuery
 
 		public static bool IsAggregationFunction(IQueryElement expr)
 		{
-			if (expr is SqlParametrizedExpressionBase e)
+			if (expr is SqlParameterizedExpressionBase e)
 				return e.IsAggregate;
 
 			return false;
@@ -1370,7 +1370,7 @@ namespace LinqToDB.SqlQuery
 
 		public static bool IsWindowFunction(IQueryElement expr)
 		{
-			if (expr is SqlParametrizedExpressionBase expression)
+			if (expr is SqlParameterizedExpressionBase expression)
 				return expression.IsWindowFunction;
 
 			return false;
@@ -1687,7 +1687,7 @@ namespace LinqToDB.SqlQuery
 
 		public static bool IsPredicate(this ISqlExpression expr)
 		{
-			return expr is ISqlPredicate or SqlParametrizedExpressionBase { IsPredicate: true };
+			return expr is ISqlPredicate or SqlParameterizedExpressionBase { IsPredicate: true };
 		}
 
 		public static ISqlExpression UnwrapCastAndNullability(ISqlExpression expr)

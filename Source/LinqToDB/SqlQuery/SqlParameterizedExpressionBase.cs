@@ -6,9 +6,9 @@ using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	public abstract class SqlParametrizedExpressionBase : SqlExpressionBase
+	public abstract class SqlParameterizedExpressionBase : SqlExpressionBase
 	{
-		protected SqlParametrizedExpressionBase(
+		protected SqlParameterizedExpressionBase(
 			DbDataType                type,
 			string                    exprOrName,
 			int                       precedence,
@@ -88,7 +88,7 @@ namespace LinqToDB.SqlQuery
 			if (ReferenceEquals(this, other))
 				return true;
 
-			if (other is not SqlParametrizedExpressionBase expr
+			if (other is not SqlParameterizedExpressionBase expr
 				|| GetType()         != other.GetType()
 				|| Type              != expr.Type
 				|| ExprOrName        != expr.ExprOrName
