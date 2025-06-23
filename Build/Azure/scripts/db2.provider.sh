@@ -17,8 +17,8 @@ if [ $? != 0 ]; then exit 1; fi
 cp -f ./Net.IBM.Data.Db2-lnx/lib/net8.0/IBM.Data.Db2.dll ./IBM.Data.Db2.dll
 if [ $? != 0 ]; then exit 1; fi
 
-newPath = $PATH:$PWD/clidriver/bin:$PWD/clidriver/lib
-newLdPath = $PWD/clidriver/lib/
+newPath=$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib
+newLdPath=$PWD/clidriver/lib/
 
 # debug
 echo "Current PATH=$PATH, New=$newPath"
