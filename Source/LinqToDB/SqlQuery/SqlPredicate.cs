@@ -80,7 +80,7 @@ namespace LinqToDB.SqlQuery
 				if (other is not Not notPredicate)
 					return false;
 
-				return notPredicate.Predicate.Equals(notPredicate.Predicate, comparer);
+				return Predicate.Equals(notPredicate.Predicate, comparer);
 			}
 
 			public void Modify(ISqlPredicate predicate)

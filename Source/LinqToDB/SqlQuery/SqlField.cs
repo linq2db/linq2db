@@ -117,7 +117,7 @@ namespace LinqToDB.SqlQuery
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
-			return this == other;
+			return ReferenceEquals(this, other);
 		}
 
 		public override int Precedence => SqlQuery.Precedence.Primary;

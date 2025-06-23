@@ -10,7 +10,6 @@ using LinqToDB.Common.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.SqlQuery.Visitors;
-#pragma warning disable CS0162 // Unreachable code detected
 
 namespace LinqToDB.SqlProvider
 {
@@ -638,8 +637,6 @@ namespace LinqToDB.SqlProvider
 
 		IQueryElement OptimizeSimilarFlat(SqlSearchCondition element)
 		{
-			//return element;
-
 			if (element.Predicates.Count <= 1)
 				return element;
 
