@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,10 +14,6 @@ using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {
-	sealed class RowByRowBulkCopy : BasicBulkCopy
-	{
-	}
-
 	/// <summary>
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
@@ -2797,4 +2794,7 @@ namespace LinqToDB.Data
 
 		#endregion
 	}
+
+	[SuppressMessage("Design", "MA0048:File name must match type name")]
+	sealed class RowByRowBulkCopy : BasicBulkCopy;
 }
