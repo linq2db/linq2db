@@ -217,6 +217,10 @@ namespace LinqToDB.DataProvider.DB2
 
 		public Func<object, bool> IsDB2BinaryNull { get; }
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public Func<DbConnection, DB2Connection> ConnectionWrapper { get; }
 
 		public BulkCopyAdapter BulkCopy { get; }
