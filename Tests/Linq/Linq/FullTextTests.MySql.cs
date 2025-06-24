@@ -37,13 +37,13 @@ namespace Tests.Linq
 
 				var results = query.ToList();
 				Assert.That(results, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].TestField1, Is.EqualTo("looking for something?"));
 					Assert.That(results[0].TestField2, Is.EqualTo("found it!"));
 					Assert.That(results[1].TestField1, Is.EqualTo("record not found"));
 					Assert.That(results[1].TestField2, Is.EqualTo("empty"));
-				});
+				}
 			}
 		}
 
@@ -58,11 +58,11 @@ namespace Tests.Linq
 
 				var results = query.ToList();
 				Assert.That(results, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].TestField1, Is.EqualTo("record not found"));
 					Assert.That(results[0].TestField2, Is.EqualTo("empty"));
-				});
+				}
 			}
 		}
 
@@ -77,13 +77,13 @@ namespace Tests.Linq
 
 				var results = query.ToList();
 				Assert.That(results, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].TestField1, Is.EqualTo("looking for something?"));
 					Assert.That(results[0].TestField2, Is.EqualTo("found it!"));
 					Assert.That(results[1].TestField1, Is.EqualTo("record not found"));
 					Assert.That(results[1].TestField2, Is.EqualTo("empty"));
-				});
+				}
 			}
 		}
 		#endregion
@@ -101,11 +101,11 @@ namespace Tests.Linq
 				var results = query.ToList();
 				Assert.That(results, Has.Count.EqualTo(3));
 				Assert.That(results[1], Is.EqualTo(results[0]));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[1], Is.GreaterThan(results[2]));
-					Assert.That(results[2], Is.EqualTo(0));
-				});
+					Assert.That(results[2], Is.Zero);
+				}
 			}
 		}
 
@@ -120,12 +120,13 @@ namespace Tests.Linq
 
 				var results = query.ToList();
 				Assert.That(results, Has.Count.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0], Is.GreaterThan(results[1]));
 					Assert.That(results[2], Is.EqualTo(results[1]));
-				});
-				Assert.That(results[2], Is.EqualTo(0));
+				}
+
+				Assert.That(results[2], Is.Zero);
 			}
 		}
 
@@ -144,11 +145,11 @@ namespace Tests.Linq
 					Assert.That(results[0], Is.GreaterThan(results[1]));
 				else
 					Assert.That(results[1], Is.EqualTo(results[0]));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[1], Is.GreaterThan(results[2]));
-					Assert.That(results[2], Is.EqualTo(0));
-				});
+					Assert.That(results[2], Is.Zero);
+				}
 			}
 		}
 		#endregion

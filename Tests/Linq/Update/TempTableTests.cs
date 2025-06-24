@@ -29,13 +29,12 @@ namespace Tests.xUpdate
 			t2.Insert(from t in t1 select new Table2 { ID = t.ID });
 
 			var result = t2.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result,         Has.Count.EqualTo(1));
 				Assert.That(result[0].ID,   Is.EqualTo(10));
 				Assert.That(result[0].Date, Is.Null);
-			});
+			}
 		}
 	}
 }

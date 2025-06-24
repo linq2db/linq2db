@@ -65,7 +65,7 @@ namespace Tests.xUpdate
 
 				for (var i = 4; i < size + 4; i++)
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(result[i].Id, Is.EqualTo(i + 1));
 						Assert.That(result[i].Field1, Is.EqualTo(i + 2));
@@ -73,7 +73,7 @@ namespace Tests.xUpdate
 						Assert.That(result[i].Field3, Is.Null);
 						Assert.That(result[i].Field4, Is.EqualTo(i + 5));
 						Assert.That(result[i].Field5, Is.Null);
-					});
+					}
 				}
 			}
 		}

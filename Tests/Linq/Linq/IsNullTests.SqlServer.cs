@@ -33,11 +33,11 @@ namespace Tests.Linq
 				Assert.That(query.ToSqlQuery().Sql, Does.Contain(statement));
 
 				var results = await query.ToListAsync();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results.Any(), Is.True);
 					Assert.That(db.LastQuery!, Does.Contain(statement));
-				});
+				}
 			}
 		}
 
@@ -53,11 +53,11 @@ namespace Tests.Linq
 				Assert.That(supplierQuery.ToSqlQuery().Sql, Does.Contain(statement));
 
 				var results = await supplierQuery.ToListAsync();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results.Any(), Is.True);
 					Assert.That(db.LastQuery!, Does.Contain(statement));
-				});
+				}
 			}
 		}
 

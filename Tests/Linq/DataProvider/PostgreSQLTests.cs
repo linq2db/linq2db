@@ -60,7 +60,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context, suppressSequentialAccess: true))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<string>("SELECT :p", new { p = "1" }), Is.EqualTo("1"));
 					Assert.That(conn.Execute<int>("SELECT :p", new { p = new DataParameter { Value = 1 } }), Is.EqualTo(1));
@@ -68,7 +68,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<int>("SELECT :p1 + :p2", new { p1 = 2, p2 = 3 }), Is.EqualTo(5));
 					Assert.That(conn.Execute<int>("SELECT :p2 + :p1", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
 					Assert.That(conn.Execute<string>("SELECT :p", new { p = 1 }), Is.EqualTo("1"));
-				});
+				}
 			}
 		}
 
@@ -245,12 +245,12 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(conn.Execute<T>("SELECT :p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
 				Assert.That(conn.Execute<T>("SELECT :p", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
 				Assert.That(conn.Execute<T>("SELECT :p", new { p = expectedValue }), Is.EqualTo(expectedValue));
-			});
+			}
 		}
 
 		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
@@ -316,14 +316,13 @@ namespace Tests.DataProvider
 			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<DateTime>("SELECT Cast('2012-12-12' as date)"), Is.EqualTo(dateTime));
 					Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12' as date)"), Is.EqualTo(dateTime));
 					Assert.That(conn.Execute<DateTime>("SELECT :p", DataParameter.Date("p", dateTime)), Is.EqualTo(dateTime));
 					Assert.That(conn.Execute<DateTime?>("SELECT :p", new DataParameter("p", dateTime, DataType.Date)), Is.EqualTo(dateTime));
-				});
+				}
 			}
 		}
 
@@ -356,12 +355,11 @@ namespace Tests.DataProvider
 				//converted between a binary json format and the string representation
 				var raw = conn.Execute<string>("SELECT :p", new DataParameter("p", JsonConvert.SerializeObject(json), DataType.BinaryJson));
 				var obj = JObject.Parse(raw);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(obj.Value<string>("name"), Is.EqualTo(json.name));
 					Assert.That(obj.Value<int>("age"), Is.EqualTo(json.age));
-				});
+				}
 			}
 		}
 
@@ -371,8 +369,7 @@ namespace Tests.DataProvider
 			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<DateTime>("SELECT Cast('2012-12-12 12:12:12' as timestamp)"), Is.EqualTo(dateTime));
 					Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12' as timestamp)"), Is.EqualTo(dateTime));
@@ -380,7 +377,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<DateTime>("SELECT :p", DataParameter.DateTime("p", dateTime)), Is.EqualTo(dateTime));
 					Assert.That(conn.Execute<DateTime?>("SELECT :p", new DataParameter("p", dateTime)), Is.EqualTo(dateTime));
 					Assert.That(conn.Execute<DateTime?>("SELECT :p", new DataParameter("p", dateTime, DataType.DateTime)), Is.EqualTo(dateTime));
-				});
+				}
 			}
 		}
 
@@ -389,7 +386,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<char>("SELECT Cast('1' as char)"), Is.EqualTo('1'));
 					Assert.That(conn.Execute<char?>("SELECT Cast('1' as char)"), Is.EqualTo('1'));
@@ -419,7 +416,7 @@ namespace Tests.DataProvider
 
 					Assert.That(conn.Execute<char>("SELECT :p", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
 					Assert.That(conn.Execute<char?>("SELECT :p", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
-				});
+				}
 			}
 		}
 
@@ -428,7 +425,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"), Is.EqualTo("12345"));
 					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"), Is.Null);
@@ -449,7 +446,7 @@ namespace Tests.DataProvider
 
 					Assert.That(conn.Execute<string>("SELECT :p", DataParameter.Create("p", (string?)null)), Is.Null);
 					Assert.That(conn.Execute<string>("SELECT :p", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
-				});
+				}
 			}
 		}
 
@@ -460,7 +457,7 @@ namespace Tests.DataProvider
 
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<byte[]>("SELECT E'\\060\\071'::bytea"), Is.EqualTo(arr1));
 
@@ -473,7 +470,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create("p", new Binary(arr1))), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
-				});
+				}
 			}
 		}
 
@@ -482,7 +479,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(
 									conn.Execute<Guid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uuid)"),
@@ -491,15 +488,14 @@ namespace Tests.DataProvider
 					Assert.That(
 						conn.Execute<Guid?>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uuid)"),
 						Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
-				});
+				}
 
 				var guid = TestData.Guid1;
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<Guid>("SELECT :p", DataParameter.Create("p", guid)), Is.EqualTo(guid));
 					Assert.That(conn.Execute<Guid>("SELECT :p", new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
-				});
+				}
 			}
 		}
 
@@ -508,24 +504,23 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<string>("SELECT XMLPARSE (DOCUMENT'<xml/>')"), Is.EqualTo("<xml/>"));
 					Assert.That(conn.Execute<XDocument>("SELECT XMLPARSE (DOCUMENT'<xml/>')").ToString(), Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XmlDocument>("SELECT XMLPARSE (DOCUMENT'<xml/>')").InnerXml, Is.EqualTo("<xml />"));
-				});
+				}
 
 				var xdoc = XDocument.Parse("<xml/>");
 				var xml = Convert<string, XmlDocument>.Lambda("<xml/>");
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Xml("p", "<xml/>")), Is.EqualTo("<xml/>"));
 					Assert.That(conn.Execute<XDocument>("SELECT @p", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XmlDocument>("SELECT @p", DataParameter.Xml("p", xml)).InnerXml, Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XDocument>("SELECT @p", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XDocument>("SELECT @p", new DataParameter("p", xml)).ToString(), Is.EqualTo("<xml />"));
-				});
+				}
 			}
 		}
 
@@ -541,13 +536,13 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<TestEnum>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 					Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 					Assert.That(conn.Execute<TestEnum>("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
 					Assert.That(conn.Execute<TestEnum?>("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
-				});
+				}
 			}
 		}
 
@@ -556,7 +551,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<string>("SELECT @p", new { p = TestEnum.AA }), Is.EqualTo("A"));
 					Assert.That(conn.Execute<string>("SELECT @p", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
@@ -564,7 +559,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 					Assert.That(conn.Execute<string>("SELECT @p", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
 					Assert.That(conn.Execute<string>("SELECT @p", new { p = conn.MappingSchema.GetConverter<TestEnum?, string>()!(TestEnum.AA) }), Is.EqualTo("A"));
-				});
+				}
 			}
 		}
 
@@ -581,7 +576,7 @@ namespace Tests.DataProvider
 
 				db.GetTable<PostgreSQLSpecific.SequenceTest1>().Where(_ => _.ID == id).Delete();
 
-				Assert.That(db.GetTable<PostgreSQLSpecific.SequenceTest1>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
+				Assert.That(db.GetTable<PostgreSQLSpecific.SequenceTest1>().Count(_ => _.Value == "SeqValue"), Is.Zero);
 			}
 		}
 
@@ -597,7 +592,7 @@ namespace Tests.DataProvider
 
 				db.GetTable<PostgreSQLSpecific.SequenceTest2>().Where(_ => _.ID == id).Delete();
 
-				Assert.That(db.GetTable<PostgreSQLSpecific.SequenceTest2>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
+				Assert.That(db.GetTable<PostgreSQLSpecific.SequenceTest2>().Count(_ => _.Value == "SeqValue"), Is.Zero);
 			}
 		}
 
@@ -614,7 +609,7 @@ namespace Tests.DataProvider
 
 				db.GetTable<PostgreSQLSpecific.SequenceTest3>().Where(_ => _.ID == id).Delete();
 
-				Assert.That(db.GetTable<PostgreSQLSpecific.SequenceTest3>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
+				Assert.That(db.GetTable<PostgreSQLSpecific.SequenceTest3>().Count(_ => _.Value == "SeqValue"), Is.Zero);
 			}
 		}
 
@@ -632,7 +627,7 @@ namespace Tests.DataProvider
 
 				db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Where(_ => _.ID == id1).Delete();
 
-				Assert.That(db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
+				Assert.That(db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Count(_ => _.Value == "SeqValue"), Is.Zero);
 			}
 		}
 
@@ -684,7 +679,7 @@ namespace Tests.DataProvider
 
 				db.GetTable<PostgreSQLSpecific.SequenceTest1>().Where(_ => _.ID == id1).Delete();
 
-				Assert.That(db.GetTable<PostgreSQLSpecific.SequenceTest1>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
+				Assert.That(db.GetTable<PostgreSQLSpecific.SequenceTest1>().Count(_ => _.Value == "SeqValue"), Is.Zero);
 			}
 		}
 
@@ -702,7 +697,7 @@ namespace Tests.DataProvider
 
 				db.GetTable<PostgreSQLSpecific.SequenceTest2>().Where(_ => _.ID == id1).Delete();
 
-				Assert.That(db.GetTable<PostgreSQLSpecific.SequenceTest2>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
+				Assert.That(db.GetTable<PostgreSQLSpecific.SequenceTest2>().Count(_ => _.Value == "SeqValue"), Is.Zero);
 			}
 		}
 
@@ -721,7 +716,7 @@ namespace Tests.DataProvider
 
 				db.GetTable<PostgreSQLSpecific.SequenceTest3>().Where(_ => _.ID == id1).Delete();
 
-				Assert.That(db.GetTable<PostgreSQLSpecific.SequenceTest3>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
+				Assert.That(db.GetTable<PostgreSQLSpecific.SequenceTest3>().Count(_ => _.Value == "SeqValue"), Is.Zero);
 			}
 		}
 
@@ -860,11 +855,11 @@ namespace Tests.DataProvider
 					.FirstOrDefault(_ => _.Guid == e.Guid)!;
 
 				Assert.That(e2, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(e2.Guid, Is.EqualTo(e.Guid));
 					Assert.That(e2.TimeOffset, Is.EqualTo(e.TimeOffset));
-				});
+				}
 			}
 		}
 
@@ -1088,7 +1083,7 @@ namespace Tests.DataProvider
 				}
 
 				if (mode == BulkTestMode.WithRollback)
-					Assert.That(db.GetTable<AllTypes>().Where(_ => ids.Contains(_.ID)).Count(), Is.EqualTo(0));
+					Assert.That(db.GetTable<AllTypes>().Where(_ => ids.Contains(_.ID)).Count(), Is.Zero);
 			}
 		}
 
@@ -1232,7 +1227,7 @@ namespace Tests.DataProvider
 				}
 
 				if (mode == BulkTestMode.WithRollback)
-					Assert.That(db.GetTable<AllTypes>().Where(_ => ids!.Contains(_.ID)).Count(), Is.EqualTo(0));
+					Assert.That(db.GetTable<AllTypes>().Where(_ => ids!.Contains(_.ID)).Count(), Is.Zero);
 			}
 		}
 
@@ -1379,11 +1374,11 @@ namespace Tests.DataProvider
 				var result = db.Select(() => TestPgFunctions.TestParameters(1, 2));
 
 				Assert.That(result, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.param2, Is.EqualTo(1));
 					Assert.That(result.param3, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -1396,11 +1391,11 @@ namespace Tests.DataProvider
 
 				Assert.That(result, Is.Not.Null);
 				Assert.That(result, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].param2, Is.EqualTo(4));
 					Assert.That(result[1].param2, Is.EqualTo(4));
-				});
+				}
 
 			}
 		}
@@ -1414,13 +1409,13 @@ namespace Tests.DataProvider
 
 				Assert.That(result, Is.Not.Null);
 				Assert.That(result, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].param3, Is.EqualTo(1));
 					Assert.That(result[0].param4, Is.EqualTo(23));
 					Assert.That(result[1].param3, Is.EqualTo(333));
 					Assert.That(result[1].param4, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -1456,18 +1451,15 @@ namespace Tests.DataProvider
 				var result2 = db.Select(() => TestPgFunctions.DynamicRecordFunction<TestPgFunctions.TestRecordTableFunctionResult>(/*lang=json*/ "{param4:4}"));
 
 				Assert.That(result1, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result1.param3, Is.EqualTo(1));
 					Assert.That(result1.param4, Is.EqualTo(2));
 
 					Assert.That(result2, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result2.param3, Is.Null);
 					Assert.That(result2.param4, Is.EqualTo(4));
-				});
+				}
 			}
 		}
 
@@ -1481,13 +1473,13 @@ namespace Tests.DataProvider
 
 				Assert.That(result, Is.Not.Null);
 				Assert.That(result, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].param3, Is.EqualTo(1));
 					Assert.That(result[0].param4, Is.EqualTo(2));
 					Assert.That(result[1].param3, Is.Null);
 					Assert.That(result[1].param4, Is.EqualTo(4));
-				});
+				}
 			}
 		}
 
@@ -1667,7 +1659,7 @@ namespace Tests.DataProvider
 				Assert.That(db.LastQuery!, Does.Contain("18446744073709551615"));
 				var res = table.ToArray();
 				Assert.That(res, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Field16, Is.EqualTo(ushort.MaxValue));
 					Assert.That(res[0].Field32, Is.EqualTo(uint.MaxValue));
@@ -1675,7 +1667,8 @@ namespace Tests.DataProvider
 					Assert.That(res[0].Field16N, Is.EqualTo(ushort.MaxValue));
 					Assert.That(res[0].Field32N, Is.EqualTo(uint.MaxValue));
 					Assert.That(res[0].Field64N, Is.EqualTo(ulong.MaxValue));
-				});
+				}
+
 				table.Delete();
 
 				// test parameter (+materialization)
@@ -1686,7 +1679,7 @@ namespace Tests.DataProvider
 				Assert.That(db.LastQuery!, Does.Not.Contain("18446744073709551615"));
 				res = table.ToArray();
 				Assert.That(res, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Field16, Is.EqualTo(ushort.MaxValue));
 					Assert.That(res[0].Field32, Is.EqualTo(uint.MaxValue));
@@ -1694,7 +1687,7 @@ namespace Tests.DataProvider
 					Assert.That(res[0].Field16N, Is.EqualTo(ushort.MaxValue));
 					Assert.That(res[0].Field32N, Is.EqualTo(uint.MaxValue));
 					Assert.That(res[0].Field64N, Is.EqualTo(ulong.MaxValue));
-				});
+				}
 
 				// test schema
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new LinqToDB.SchemaProvider.GetSchemaOptions()
@@ -1705,75 +1698,69 @@ namespace Tests.DataProvider
 				});
 
 				Assert.That(schema.Tables, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(schema.Tables[0].TableName, Is.EqualTo(nameof(UIntTable)));
 					Assert.That(schema.Tables[0].Columns, Has.Count.EqualTo(6));
-				});
+				}
 
 				var column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field16));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(column.ColumnType, Is.EqualTo("integer"));
 					Assert.That(column.DataType, Is.EqualTo(DataType.Int32));
 					Assert.That(column.MemberType, Is.EqualTo("int"));
 					Assert.That(column.SystemType, Is.EqualTo(typeof(int)));
-				});
+				}
 
 				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field32));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(column.ColumnType, Is.EqualTo("bigint"));
 					Assert.That(column.DataType, Is.EqualTo(DataType.Int64));
 					Assert.That(column.MemberType, Is.EqualTo("long"));
 					Assert.That(column.SystemType, Is.EqualTo(typeof(long)));
-				});
+				}
 
 				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field64));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(column.ColumnType, Is.EqualTo("numeric(20,0)"));
 					Assert.That(column.DataType, Is.EqualTo(DataType.Decimal));
 					Assert.That(column.MemberType, Is.EqualTo("decimal"));
 					Assert.That(column.Precision, Is.EqualTo(20));
-					Assert.That(column.Scale, Is.EqualTo(0));
+					Assert.That(column.Scale, Is.Zero);
 					Assert.That(column.SystemType, Is.EqualTo(typeof(decimal)));
-				});
+				}
 
 				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field16N));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(column.ColumnType, Is.EqualTo("integer"));
 					Assert.That(column.DataType, Is.EqualTo(DataType.Int32));
 					Assert.That(column.MemberType, Is.EqualTo("int?"));
 					Assert.That(column.SystemType, Is.EqualTo(typeof(int)));
-				});
+				}
 
 				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field32N));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(column.ColumnType, Is.EqualTo("bigint"));
 					Assert.That(column.DataType, Is.EqualTo(DataType.Int64));
 					Assert.That(column.MemberType, Is.EqualTo("long?"));
 					Assert.That(column.SystemType, Is.EqualTo(typeof(long)));
-				});
+				}
 
 				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field64N));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(column.ColumnType, Is.EqualTo("numeric(20,0)"));
 					Assert.That(column.DataType, Is.EqualTo(DataType.Decimal));
 					Assert.That(column.MemberType, Is.EqualTo("decimal?"));
 					Assert.That(column.Precision, Is.EqualTo(20));
-					Assert.That(column.Scale, Is.EqualTo(0));
+					Assert.That(column.Scale, Is.Zero);
 					Assert.That(column.SystemType, Is.EqualTo(typeof(decimal)));
-				});
+				}
 			}
 		}
 
@@ -1835,8 +1822,7 @@ namespace Tests.DataProvider
 				var result = table.OrderBy(_ => _.Id).ToArray();
 
 				Assert.That(result, Has.Length.EqualTo(2));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Id, Is.EqualTo(1));
 					Assert.That(result[0].Byte, Is.Null);
@@ -1873,7 +1859,7 @@ namespace Tests.DataProvider
 					Assert.That(result[1].UInt32T, Is.EqualTo(uint.MaxValue));
 					Assert.That(result[1].Int64T, Is.EqualTo(long.MaxValue));
 					Assert.That(result[1].UInt64T, Is.EqualTo(ulong.MaxValue));
-				});
+				}
 			}
 		}
 
@@ -1913,8 +1899,7 @@ namespace Tests.DataProvider
 				var result = await table.OrderBy(_ => _.Id).ToArrayAsync();
 
 				Assert.That(result, Has.Length.EqualTo(2));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Id, Is.EqualTo(1));
 					Assert.That(result[0].Byte, Is.Null);
@@ -1951,7 +1936,7 @@ namespace Tests.DataProvider
 					Assert.That(result[1].UInt32T, Is.EqualTo(uint.MaxValue));
 					Assert.That(result[1].Int64T, Is.EqualTo(long.MaxValue));
 					Assert.That(result[1].UInt64T, Is.EqualTo(ulong.MaxValue));
-				});
+				}
 			}
 		}
 
@@ -1994,14 +1979,13 @@ namespace Tests.DataProvider
 				});
 
 				var record = table.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.DateRangeInclusive, Is.EqualTo(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 4), false)));
 					Assert.That(record.DateRangeExclusive, Is.EqualTo(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 4), true, new DateTime(2000, 3, 3), false)));
 					Assert.That(record.TSRange, Is.EqualTo(range3));
 					Assert.That(record.TSTZRange, Is.EqualTo(range4));
-				});
+				}
 			}
 		}
 
@@ -2402,22 +2386,22 @@ $function$
 			if (db is DataConnection)
 			{
 				Assert.That(data, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Value1, Is.EqualTo(value1));
 					Assert.That(data[0].Value2, Is.EqualTo(value2));
 					Assert.That(data[1].Value1, Is.EqualTo(value2));
 					Assert.That(data[1].Value2, Is.EqualTo(value1));
-				});
+				}
 			}
 			else
 			{
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Value1, Is.EqualTo(value1));
 					Assert.That(data[0].Value2, Is.EqualTo(value2));
-				});
+				}
 			}
 		}
 
@@ -2828,8 +2812,7 @@ $function$
 					var result = db.GetTable<Issue4487Table>().OrderBy(r => r.Id).ToArray();
 
 					Assert.That(result, Has.Length.EqualTo(3));
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(result[0].Id, Is.EqualTo(1));
 						Assert.That(result[0].Value, Is.EqualTo(Issue4487Enum.Type1));
@@ -2842,7 +2825,7 @@ $function$
 						Assert.That(result[2].Id, Is.EqualTo(3));
 						Assert.That(result[2].Value, Is.Null);
 						Assert.That(result[2].Values, Is.EqualTo(new Issue4487Enum[] { Issue4487Enum.Type1, Issue4487Enum.Type2 }));
-					});
+					}
 				}
 				finally
 				{
@@ -3173,8 +3156,7 @@ $function$
 				Json  = /*lang=json,strict*/ "{  \"field\": 123}",
 				Jsonb = /*lang=json,strict*/ "{   \"field\": 123}",
 			}]);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(tb.Count(r => r.Text == r.Json), Is.EqualTo(1));
 				Assert.That(tb.Count(r => r.Text == r.Jsonb), Is.EqualTo(1));
@@ -3186,7 +3168,7 @@ $function$
 				Assert.That(tb.Count(r => r.Json == r.Text), Is.EqualTo(1));
 				Assert.That(tb.Count(r => r.Jsonb == r.Text), Is.EqualTo(1));
 				Assert.That(tb.Count(r => r.Jsonb == r.Json), Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -3199,8 +3181,7 @@ $function$
 				Json  = /*lang=json,strict*/ "{  \"field\": 123}",
 				Jsonb = /*lang=json,strict*/ "{   \"field\": 123}",
 			}]);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(tb.Count(r => r.Text == r.Json), Is.EqualTo(1));
 				Assert.That(tb.Count(r => r.Text == r.Jsonb), Is.EqualTo(1));
@@ -3212,7 +3193,7 @@ $function$
 				Assert.That(tb.Count(r => r.Json == r.Text), Is.EqualTo(1));
 				Assert.That(tb.Count(r => r.Jsonb == r.Text), Is.EqualTo(1));
 				Assert.That(tb.Count(r => r.Jsonb == r.Json), Is.EqualTo(1));
-			});
+			}
 		}
 	}
 

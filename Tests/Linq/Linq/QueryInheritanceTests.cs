@@ -273,7 +273,7 @@ namespace Tests.Linq
 
 				Assert.That(list, Is.Not.Empty);
 				Assert.That(list, Has.Count.EqualTo(expected.Count()));
-				Assert.That(list.Except(expected).Count(), Is.EqualTo(0));
+				Assert.That(list.Except(expected).Count(), Is.Zero);
 			}
 		}
 

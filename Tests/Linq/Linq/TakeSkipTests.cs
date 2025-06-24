@@ -907,7 +907,7 @@ namespace Tests.Linq
 					var res = query.ToList();
 
 					Assert.That(res, Has.Count.EqualTo(2));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res[0].BatchId, Is.EqualTo(2));
 						Assert.That(res[0].Value, Is.EqualTo("V2"));
@@ -915,7 +915,7 @@ namespace Tests.Linq
 						Assert.That(res[1].Value, Is.EqualTo("V3"));
 						Assert.That(res[0].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:20 GMT", DateTimeFormatInfo.InvariantInfo)));
 						Assert.That(res[1].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:35 GMT", DateTimeFormatInfo.InvariantInfo)));
-					});
+					}
 
 					CheckTakeGlobalParams(db);
 				}

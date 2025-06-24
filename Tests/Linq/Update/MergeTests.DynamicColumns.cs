@@ -97,13 +97,12 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(2));
 
 					Assert.That(result, Has.Count.EqualTo(3));
-				});
+				}
 
 				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
 				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
@@ -135,13 +134,12 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(2));
 
 					Assert.That(result, Has.Count.EqualTo(3));
-				});
+				}
 
 				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
 				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
@@ -203,13 +201,12 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(4));
 
 					Assert.That(result, Has.Count.EqualTo(5));
-				});
+				}
 
 				AssertDynamicRow(InitialTargetData[0], result[0], null, null);
 				AssertDynamicRow(InitialTargetData[1], result[1], null, null);
@@ -299,13 +296,12 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = table.OrderBy(_ => _.Id).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(3));
-				});
+				}
 
 				AssertRow(InitialTargetData[1], result[0], null, null);
 				AssertRow(InitialTargetData[2], result[1], null, 203);
@@ -347,8 +343,7 @@ namespace Tests.xUpdate
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[2].Id, Is.EqualTo(6));
 					Assert.That(result[2].Field1, Is.Null);
@@ -363,7 +358,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.Null);
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -401,8 +396,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 				AssertRow(InitialTargetData[3], result[3], null, null);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[4].Id, Is.EqualTo(InitialSourceData[2].Id + 10));
 					Assert.That(result[4].Field1, Is.EqualTo(123));
@@ -417,7 +411,7 @@ namespace Tests.xUpdate
 					Assert.That(result[5].Field3, Is.Null);
 					Assert.That(result[5].Field4, Is.EqualTo(999));
 					Assert.That(result[5].Field5, Is.EqualTo(888));
-				});
+				}
 			}
 		}
 
@@ -438,13 +432,12 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = table.OrderBy(_ => Sql.Property<int>(_, "Id")).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(3));
-				});
+				}
 
 				AssertDynamicRow(InitialTargetData[1], result[0], null, null);
 				AssertDynamicRow(InitialTargetData[2], result[1], null, 203);
@@ -454,7 +447,7 @@ namespace Tests.xUpdate
 
 		private void AssertDynamicRow(TestMapping1 expected, DynamicColumns1 actual, int? exprected3, int? exprected4)
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(actual.ExtendedProperties["Id"], Is.EqualTo(expected.Id));
 				Assert.That(actual.ExtendedProperties["Field1"], Is.EqualTo(expected.Field1));
@@ -462,7 +455,7 @@ namespace Tests.xUpdate
 				Assert.That(actual.ExtendedProperties["Field3"], Is.EqualTo(exprected3));
 				Assert.That(actual.ExtendedProperties["Field4"], Is.EqualTo(exprected4));
 				Assert.That(actual.ExtendedProperties["Field5"], Is.Null);
-			});
+			}
 		}
 	}
 }
