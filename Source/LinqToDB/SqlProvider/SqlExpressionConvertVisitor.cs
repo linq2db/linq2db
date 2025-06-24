@@ -1282,7 +1282,7 @@ namespace LinqToDB.SqlProvider
 							element.SystemType,
 							element.Expr1,
 							element.Operation,
-							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, new DbDataType(typeof(string), DataType.VarChar, null, len.Value))),
+							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, QueryHelper.GetDbDataType(element.Expr1, MappingSchema).WithLength(len.Value))),
 							element.Precedence);
 					}
 
@@ -1295,7 +1295,7 @@ namespace LinqToDB.SqlProvider
 
 						return new SqlBinaryExpression(
 							element.SystemType,
-							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, new DbDataType(typeof(string), DataType.VarChar, null, len.Value))),
+							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, QueryHelper.GetDbDataType(element.Expr2, MappingSchema).WithLength(len.Value))),
 							element.Operation,
 							element.Expr2,
 							element.Precedence);
