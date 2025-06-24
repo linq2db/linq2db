@@ -1498,6 +1498,7 @@ namespace LinqToDB.Remote
 						var elem = (SqlFragment)e;
 
 						Append(elem.Expr);
+						Append(elem.Precedence);
 						Append(elem.Parameters);
 
 						break;
@@ -2561,9 +2562,10 @@ namespace LinqToDB.Remote
 					case QueryElementType.SqlFragment:
 					{
 						var expr       = ReadString()!;
+						var precedence = ReadInt();
 						var parameters = ReadArray<ISqlExpression>()!;
 
-						obj = new SqlFragment(expr, parameters);
+						obj = new SqlFragment(expr, precedence, parameters);
 
 						break;
 					}

@@ -10,9 +10,17 @@ namespace LinqToDB.SqlQuery
 	/// </summary>
 	public class SqlFragment : SqlExpressionBase
 	{
+		private const int DefaultPrecedence = SqlQuery.Precedence.Primary;
+
 		public SqlFragment(string expr, params ISqlExpression[] parameters)
+			: this(expr, DefaultPrecedence, parameters)
+		{
+		}
+
+		public SqlFragment(string expr, int precedence, params ISqlExpression[] parameters)
 		{
 			Expr       = expr;
+			Precedence = precedence;
 			Parameters = parameters;
 		}
 
@@ -69,6 +77,8 @@ namespace LinqToDB.SqlQuery
 
 			var hashCode = Expr.GetHashCode();
 
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Precedence.GetHashCode());
+
 			for (var i = 0; i < Parameters.Length; i++)
 				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
 
@@ -83,6 +93,7 @@ namespace LinqToDB.SqlQuery
 				return true;
 
 			if (other is not SqlFragment expr
+				|| Precedence        != expr.Precedence
 				|| Expr              != expr.Expr
 				|| Parameters.Length != expr.Parameters.Length)
 				return false;
@@ -96,7 +107,7 @@ namespace LinqToDB.SqlQuery
 
 		public override bool CanBeNullable(NullabilityContext nullability) => false;
 
-		public override int  Precedence  => SqlQuery.Precedence.Primary;
+		public override int Precedence   { get; }
 		public override Type? SystemType => null;
 		#endregion
 	}

@@ -1405,7 +1405,7 @@ namespace LinqToDB.SqlQuery
 					if (ShouldReplace(element) || parameters != element.Parameters)
 					{
 						return NotifyReplaced(
-							new SqlFragment(element.Expr, parameters != element.Parameters ? parameters : parameters.ToArray()),
+							new SqlFragment(element.Expr, element.Precedence, parameters != element.Parameters ? parameters : parameters.ToArray()),
 							element);
 					}
 
