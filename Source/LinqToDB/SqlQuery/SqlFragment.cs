@@ -10,7 +10,7 @@ namespace LinqToDB.SqlQuery
 	/// </summary>
 	public class SqlFragment : SqlExpressionBase
 	{
-		private const int DefaultPrecedence = SqlQuery.Precedence.Primary;
+		private const int DefaultPrecedence = SqlQuery.Precedence.Unknown;
 
 		public SqlFragment(string expr, params ISqlExpression[] parameters)
 			: this(expr, DefaultPrecedence, parameters)
