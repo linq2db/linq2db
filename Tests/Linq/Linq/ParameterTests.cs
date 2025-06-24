@@ -43,7 +43,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				int? id = null;
-				Assert.That(db.Person.Where(_ => _.ID == id).Count(), Is.EqualTo(0));
+				Assert.That(db.Person.Where(_ => _.ID == id).Count(), Is.Zero);
 
 				id = 1;
 				Assert.That(db.Person.Where(_ => _.ID == id).Count(), Is.EqualTo(1));
@@ -71,12 +71,11 @@ namespace Tests.Linq
 					select t;
 
 				var queryInlined = query.InlineParameters();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(1));
 					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
-				});
+				}
 			}
 		}
 
@@ -92,12 +91,11 @@ namespace Tests.Linq
 
 				var queryInlined = query.InlineParameters().Skip(1).Take(2);
 				query = query.Skip(1).Take(2);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(3));
 					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
-				});
+				}
 			}
 		}
 
@@ -456,34 +454,34 @@ namespace Tests.Linq
 					Issue404? usage = null;
 					var allUsages = !usage.HasValue;
 					var res1 = Test()!;
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res1.Id, Is.EqualTo(1));
 						Assert.That(res1.Values!, Has.Count.EqualTo(3));
 						Assert.That(res1.Values!.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(3));
-					});
+					}
 
 					usage = Issue404.Value1;
 					allUsages = false;
 					var res2 = Test()!;
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res2.Id, Is.EqualTo(1));
 						Assert.That(res2.Values!, Has.Count.EqualTo(2));
 						Assert.That(res2.Values!.Where(v => v.Usage == usage).Count(), Is.EqualTo(2));
 						Assert.That(res2.Values!.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(2));
-					});
+					}
 
 					usage = Issue404.Value2;
 					allUsages = false;
 					var res3 = Test()!;
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res2.Id, Is.EqualTo(1));
 						Assert.That(res3.Values!, Has.Count.EqualTo(1));
 						Assert.That(res3.Values!.Where(v => v.Usage == usage).Count(), Is.EqualTo(1));
 						Assert.That(res3.Values!.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(1));
-					});
+					}
 
 					FirstTable? Test()
 					{
@@ -1350,13 +1348,13 @@ namespace Tests.Linq
 				var persons = Query(db);
 
 				Assert.That(persons, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(persons[0].ID, Is.EqualTo(1));
 					Assert.That(_cnt1, Is.EqualTo(1));
 					Assert.That(_cnt2, Is.EqualTo(1));
 					Assert.That(_cnt3, Is.EqualTo(1));
-				});
+				}
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1365,7 +1363,7 @@ namespace Tests.Linq
 				persons = Query(db);
 
 				Assert.That(persons, Has.Count.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
 					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
@@ -1373,7 +1371,7 @@ namespace Tests.Linq
 					Assert.That(_cnt1, Is.EqualTo(1));
 					Assert.That(_cnt2, Is.EqualTo(1));
 					Assert.That(_cnt3, Is.EqualTo(1));
-				});
+				}
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1382,14 +1380,14 @@ namespace Tests.Linq
 				persons = Query(db);
 
 				Assert.That(persons, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 					Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
 					Assert.That(_cnt1, Is.EqualTo(1));
 					Assert.That(_cnt2, Is.EqualTo(1));
 					Assert.That(_cnt3, Is.EqualTo(1));
-				});
+				}
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1398,13 +1396,13 @@ namespace Tests.Linq
 				persons = Query(db);
 
 				Assert.That(persons, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(persons[0].ID, Is.EqualTo(1));
 					Assert.That(_cnt1, Is.EqualTo(1));
 					Assert.That(_cnt2, Is.EqualTo(1));
 					Assert.That(_cnt3, Is.EqualTo(1));
-				});
+				}
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1413,14 +1411,14 @@ namespace Tests.Linq
 				persons = Query(db);
 
 				Assert.That(persons, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 					Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
 					Assert.That(_cnt1, Is.EqualTo(1));
 					Assert.That(_cnt2, Is.EqualTo(1));
 					Assert.That(_cnt3, Is.EqualTo(1));
-				});
+				}
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1429,7 +1427,7 @@ namespace Tests.Linq
 				persons = Query(db);
 
 				Assert.That(persons, Has.Count.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
 					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
@@ -1437,7 +1435,7 @@ namespace Tests.Linq
 					Assert.That(_cnt1, Is.EqualTo(1));
 					Assert.That(_cnt2, Is.EqualTo(1));
 					Assert.That(_cnt3, Is.EqualTo(1));
-				});
+				}
 			}
 
 			List<Person> Query(ITestDataContext db)
@@ -1659,22 +1657,22 @@ namespace Tests.Linq
 				var persons = Query(db);
 
 				Assert.That(persons, Has.Count.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(persons.All(p => p.ID != _param), Is.True);
 					Assert.That(_cnt, Is.EqualTo(1));
-				});
+				}
 
 				_cnt    = 0;
 				_param  = 2;
 				persons = Query(db);
 
 				Assert.That(persons, Has.Count.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(persons.All(p => p.ID != _param), Is.True);
 					Assert.That(_cnt, Is.EqualTo(1));
-				});
+				}
 			}
 
 			List<Person> Query(ITestDataContext db)
@@ -1961,15 +1959,14 @@ namespace Tests.Linq
 				}
 
 				var record = tb.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.Value1, Is.EqualTo(f1.Value));
 					Assert.That(record.Value2, Is.EqualTo(f2.Value));
 					Assert.That(record.Value3, Is.EqualTo(f3.Value));
 					Assert.That(record.Value4, Is.EqualTo(f4.Value));
 					Assert.That(record.Value5, Is.EqualTo(f5.Value));
-				});
+				}
 			}
 		}
 

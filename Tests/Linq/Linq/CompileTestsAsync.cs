@@ -70,11 +70,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Id, Is.EqualTo(2));
 					Assert.That(result.Value, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -94,11 +94,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Id, Is.EqualTo(2));
 					Assert.That(result.Value, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -118,11 +118,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = (await query(db, 2, CancellationToken.None))!;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Id, Is.EqualTo(2));
 					Assert.That(result.Value, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -142,11 +142,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = (await query(db, 2, CancellationToken.None))!;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Id, Is.EqualTo(2));
 					Assert.That(result.Value, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -166,11 +166,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Id, Is.EqualTo(2));
 					Assert.That(result.Value, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -198,11 +198,11 @@ namespace Tests.Linq
 					).SingleAsync(c => c.Id == id, token));
 
 				var result = await query(db, 2, CancellationToken.None);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Id, Is.EqualTo(2));
 					Assert.That(result.Value, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -222,11 +222,11 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(GenerateData()))
 			{
 				var result = (await query(db, 2, CancellationToken.None))!;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Id, Is.EqualTo(2));
 					Assert.That(result.Value, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -254,11 +254,11 @@ namespace Tests.Linq
 					).SingleOrDefaultAsync(c => c.Id == id, token));
 
 				var result = (await query(db, 2, CancellationToken.None))!;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Id, Is.EqualTo(2));
 					Assert.That(result.Value, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 

@@ -10,21 +10,21 @@ namespace Tests.Common
 		[Test]
 		public void FromString1()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Converter.ChangeType("11", typeof(int)), Is.EqualTo(11));
 				Assert.That(Converter.ChangeType("12", typeof(int)), Is.EqualTo(12));
-			});
+			}
 		}
 
 		[Test]
 		public void FromString2()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Converter.ChangeTypeTo<int>("11"), Is.EqualTo(11));
 				Assert.That(Converter.ChangeTypeTo<int>("12"), Is.EqualTo(12));
-			});
+			}
 		}
 	}
 }

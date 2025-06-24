@@ -18,12 +18,12 @@ namespace Tests.UserTests
 		{
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(InheritanceParent[0].GetType(), Is.EqualTo(typeof(InheritanceParentBase)));
 					Assert.That(InheritanceParent[1].GetType(), Is.EqualTo(typeof(InheritanceParent1)));
 					Assert.That(InheritanceParent[2].GetType(), Is.EqualTo(typeof(InheritanceParent2)));
-				});
+				}
 
 				AreEqual(InheritanceParent, db.InheritanceParent);
 				AreEqual(InheritanceChild,  db.InheritanceChild);

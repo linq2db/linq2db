@@ -150,23 +150,22 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(tb.Where(r => IsTrue(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsTrue(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => IsTrue(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsTrue(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsTrue(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsTrue(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsTrue(Equal(r.Null, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsTrue(Equal(r.One, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsTrue(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsTrue(Equal(r.Zero, r.Null))).Count(), Is.Zero);
 
-				Assert.That(tb.Where(r => IsNotTrue(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsNotTrue(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNotTrue(Equal(r.One, r.One))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsNotTrue(Equal(r.Zero, r.Zero))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => IsNotTrue(Equal(r.Null, r.Null))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNotTrue(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNotTrue(Equal(r.One, r.Null))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNotTrue(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(1));
-			});
+			}
 		}
 
 		// Supported: DB2, FB3+, MySQL, PostgreSQL, SQLite
@@ -188,23 +187,22 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(tb.Where(r => IsFalse(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsFalse(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsFalse(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsFalse(Equal(r.One, r.One))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsFalse(Equal(r.Zero, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsFalse(Equal(r.Null, r.Null))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => IsFalse(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => IsFalse(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsFalse(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsFalse(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsFalse(Equal(r.Zero, r.Null))).Count(), Is.Zero);
 
 				Assert.That(tb.Where(r => IsNotFalse(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNotFalse(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNotFalse(Equal(r.Null, r.Null))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => IsNotFalse(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNotFalse(Equal(r.One, r.Zero))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => IsNotFalse(Equal(r.One, r.Null))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNotFalse(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(1));
-			});
+			}
 		}
 
 		// Supported: Firebird3+, MySQL, PostgreSQL
@@ -228,23 +226,22 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(tb.Where(r => IsUnknown(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsUnknown(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsUnknown(Equal(r.One, r.One))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsUnknown(Equal(r.Zero, r.Zero))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => IsUnknown(Equal(r.Null, r.Null))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => IsUnknown(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsUnknown(Equal(r.One, r.Zero))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => IsUnknown(Equal(r.One, r.Null))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsUnknown(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(1));
 
 				Assert.That(tb.Where(r => IsNotUnknown(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNotUnknown(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => IsNotUnknown(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNotUnknown(Equal(r.Null, r.Null))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => IsNotUnknown(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => IsNotUnknown(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsNotUnknown(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
-			});
+				Assert.That(tb.Where(r => IsNotUnknown(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsNotUnknown(Equal(r.Zero, r.Null))).Count(), Is.Zero);
+			}
 		}
 
 		// Supported: Access, ClickHouse, DB2, Firebird3+, MySql, PostgreSQL, SQLite
@@ -262,23 +259,22 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(tb.Where(r => IsNull(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsNull(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNull(Equal(r.One, r.One))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsNull(Equal(r.Zero, r.Zero))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => IsNull(Equal(r.Null, r.Null))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => IsNull(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNull(Equal(r.One, r.Zero))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => IsNull(Equal(r.One, r.Null))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNull(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(1));
 
 				Assert.That(tb.Where(r => IsNotNull(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNotNull(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => IsNotNull(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNotNull(Equal(r.Null, r.Null))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => IsNotNull(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => IsNotNull(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsNotNull(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
-			});
+				Assert.That(tb.Where(r => IsNotNull(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsNotNull(Equal(r.Zero, r.Null))).Count(), Is.Zero);
+			}
 		}
 
 		// Supported: Access, ClickHouse, DB2, Firebird3+, MySQL, PostgreSQL, SQLite
@@ -296,23 +292,22 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.Null, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.One, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualTrue(Equal(r.Zero, r.Null))).Count(), Is.Zero);
 
-				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.One, r.One))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.Zero, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.Null, r.Null))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
-			});
+				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualTrue(Equal(r.Zero, r.Null))).Count(), Is.Zero);
+			}
 		}
 
 		// Supported: Access, ClickHouse, DB2, Firebird3+, MySQL, PostgreSQL, SQLite
@@ -330,23 +325,22 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.One, r.One))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.Zero, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.Null, r.Null))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualFalse(Equal(r.Zero, r.Null))).Count(), Is.Zero);
 
 				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
-			});
+				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.Null, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.One, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualFalse(Equal(r.Zero, r.Null))).Count(), Is.Zero);
+			}
 		}
 
 		// Supported: Firebird3+
@@ -372,23 +366,22 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.One, r.One))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.Zero, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.Null, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.One, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualUnknown(Equal(r.Zero, r.Null))).Count(), Is.Zero);
 
-				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
-			});
+				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.One, r.One))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.Zero, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.Null, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.One, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualUnknown(Equal(r.Zero, r.Null))).Count(), Is.Zero);
+			}
 		}
 
 		// Supported: ACCESS, CH, DB2, FB3+, MYSQL, PGSQL, SQLITE
@@ -406,23 +399,22 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.Null, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.One, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualCalculatedTrue(Equal(r.Zero, r.Null))).Count(), Is.Zero);
 
-				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.One, r.One))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.Zero, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.Null, r.Null))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
-			});
+				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualCalculatedTrue(Equal(r.Zero, r.Null))).Count(), Is.Zero);
+			}
 		}
 
 		// Supported: ACCESS, CH, DB2, FB3+, MYSQL, PGSQL, SQLITE
@@ -440,23 +432,22 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.One, r.One))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.Zero, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.Null, r.Null))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.One, r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualCalculatedFalse(Equal(r.Zero, r.Null))).Count(), Is.Zero);
 
 				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.One, r.One))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
-			});
+				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.Null, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.One, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualCalculatedFalse(Equal(r.Zero, r.Null))).Count(), Is.Zero);
+			}
 		}
 
 		// Supported: ACCESS, CH, DB2, FB3+, MYSQL, PGSQL, SQLITE
@@ -474,23 +465,22 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.One, r.One))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.Zero, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.Null, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.One, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == EqualCalculatedUnknown(Equal(r.Zero, r.Null))).Count(), Is.Zero);
 
-				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.One, r.One))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.Zero, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.Null, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.One, r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.One, r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.Zero, r.Null))).Count(), Is.EqualTo(0));
-			});
+				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.One, r.One))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.Zero, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.Null, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.One, r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.One, r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => true == NotEqualCalculatedUnknown(Equal(r.Zero, r.Null))).Count(), Is.Zero);
+			}
 		}
 
 		// Supported: DB2, Firebird, PostgreSQL, SQLite, SQLServer2022
@@ -513,12 +503,11 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(tb.Where(r => IsDistinctFrom(r.One, r.One)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsDistinctFrom(r.Zero, r.Zero)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsDistinctFrom(r.Null, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsDistinctFrom(r.One, r.One)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsDistinctFrom(r.Zero, r.Zero)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsDistinctFrom(r.Null, r.Null)).Count(), Is.Zero);
 				Assert.That(tb.Where(r => IsDistinctFrom(r.One, r.Zero)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsDistinctFrom(r.One, r.Null)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsDistinctFrom(r.Zero, r.Null)).Count(), Is.EqualTo(1));
@@ -526,10 +515,10 @@ namespace Tests.Linq
 				Assert.That(tb.Where(r => IsNotDistinctFrom(r.One, r.One)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNotDistinctFrom(r.Zero, r.Zero)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNotDistinctFrom(r.Null, r.Null)).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => IsNotDistinctFrom(r.One, r.Zero)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsNotDistinctFrom(r.One, r.Null)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsNotDistinctFrom(r.Zero, r.Null)).Count(), Is.EqualTo(0));
-			});
+				Assert.That(tb.Where(r => IsNotDistinctFrom(r.One, r.Zero)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsNotDistinctFrom(r.One, r.Null)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsNotDistinctFrom(r.Zero, r.Null)).Count(), Is.Zero);
+			}
 		}
 
 		// Supported: MySQL
@@ -555,23 +544,22 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(tb.Where(r => NullSaveEqual(r.One, r.One)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => NullSaveEqual(r.Zero, r.Zero)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => NullSaveEqual(r.Null, r.Null)).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => NullSaveEqual(r.One, r.Zero)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => NullSaveEqual(r.One, r.Null)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => NullSaveEqual(r.Zero, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => NullSaveEqual(r.One, r.Zero)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => NullSaveEqual(r.One, r.Null)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => NullSaveEqual(r.Zero, r.Null)).Count(), Is.Zero);
 
-				Assert.That(tb.Where(r => NotNullSaveEqual(r.One, r.One)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => NotNullSaveEqual(r.Zero, r.Zero)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => NotNullSaveEqual(r.Null, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => NotNullSaveEqual(r.One, r.One)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => NotNullSaveEqual(r.Zero, r.Zero)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => NotNullSaveEqual(r.Null, r.Null)).Count(), Is.Zero);
 				Assert.That(tb.Where(r => NotNullSaveEqual(r.One, r.Zero)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => NotNullSaveEqual(r.One, r.Null)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => NotNullSaveEqual(r.Zero, r.Null)).Count(), Is.EqualTo(1));
-			});
+			}
 		}
 
 		// Supported: SQLite
@@ -595,23 +583,22 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(tb.Where(r => IsPredicate(r.One, r.One)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsPredicate(r.Zero, r.Zero)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsPredicate(r.Null, r.Null)).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => IsPredicate(r.One, r.Zero)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsPredicate(r.One, r.Null)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsPredicate(r.Zero, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsPredicate(r.One, r.Zero)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsPredicate(r.One, r.Null)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsPredicate(r.Zero, r.Null)).Count(), Is.Zero);
 
-				Assert.That(tb.Where(r => IsNotPredicate(r.One, r.One)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsNotPredicate(r.Zero, r.Zero)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsNotPredicate(r.Null, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNotPredicate(r.One, r.One)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsNotPredicate(r.Zero, r.Zero)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsNotPredicate(r.Null, r.Null)).Count(), Is.Zero);
 				Assert.That(tb.Where(r => IsNotPredicate(r.One, r.Zero)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNotPredicate(r.One, r.Null)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNotPredicate(r.Zero, r.Null)).Count(), Is.EqualTo(1));
-			});
+			}
 		}
 
 		// Supported: DB2, Oracle
@@ -635,23 +622,22 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(tb.Where(r => IsDistinctByDecode(r.One, r.One)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsDistinctByDecode(r.Zero, r.Zero)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsDistinctByDecode(r.Null, r.Null)).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => IsDistinctByDecode(r.One, r.Zero)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsDistinctByDecode(r.One, r.Null)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsDistinctByDecode(r.Zero, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsDistinctByDecode(r.One, r.Zero)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsDistinctByDecode(r.One, r.Null)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsDistinctByDecode(r.Zero, r.Null)).Count(), Is.Zero);
 
-				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.One, r.One)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.Zero, r.Zero)).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.Null, r.Null)).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.One, r.One)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.Zero, r.Zero)).Count(), Is.Zero);
+				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.Null, r.Null)).Count(), Is.Zero);
 				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.One, r.Zero)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.One, r.Null)).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => IsNotDistinctByDecode(r.Zero, r.Null)).Count(), Is.EqualTo(1));
-			});
+			}
 		}
 
 		// While test itself works for almost all databases, approach makes sense only for
@@ -670,8 +656,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.One)))).Count(), Is.EqualTo(1));
 				AssertIntersect();
@@ -679,18 +664,18 @@ namespace Tests.Linq
 				AssertIntersect();
 				Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.Null).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(1));
 				AssertIntersect();
-				Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.Zero)))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.Zero)))).Count(), Is.Zero);
 				AssertIntersect();
-				Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.Zero);
 				AssertIntersect();
-				Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.Zero).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => Exists(db.SelectQuery(() => r.Zero).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.Zero);
 				AssertIntersect();
 
-				Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.One)))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.One)))).Count(), Is.Zero);
 				AssertIntersect();
-				Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.Zero).Intersect(db.SelectQuery(() => r.Zero)))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.Zero).Intersect(db.SelectQuery(() => r.Zero)))).Count(), Is.Zero);
 				AssertIntersect();
-				Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.Null).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.Null).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.Zero);
 				AssertIntersect();
 				Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.One).Intersect(db.SelectQuery(() => r.Zero)))).Count(), Is.EqualTo(1));
 				AssertIntersect();
@@ -698,7 +683,7 @@ namespace Tests.Linq
 				AssertIntersect();
 				Assert.That(tb.Where(r => NotExists(db.SelectQuery(() => r.Zero).Intersect(db.SelectQuery(() => r.Null)))).Count(), Is.EqualTo(1));
 				AssertIntersect();
-			});
+			}
 
 			void AssertIntersect()
 			{
@@ -724,23 +709,22 @@ namespace Tests.Linq
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(tb.Where(r => Equal(IsNull(r.One), IsNull(r.One))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => Equal(IsNull(r.One), IsNull(r.Zero))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => Equal(IsNull(r.One), IsNull(r.Null))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => Equal(IsNull(r.Zero), IsNull(r.Null))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => Equal(IsNull(r.One), IsNull(r.Null))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => Equal(IsNull(r.Zero), IsNull(r.Null))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => Equal(IsNull(r.Zero), IsNull(r.Zero))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => Equal(IsNull(r.Null), IsNull(r.Null))).Count(), Is.EqualTo(1));
 
-				Assert.That(tb.Where(r => NotEqual(IsNull(r.One), IsNull(r.One))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => NotEqual(IsNull(r.One), IsNull(r.Zero))).Count(), Is.EqualTo(0));
+				Assert.That(tb.Where(r => NotEqual(IsNull(r.One), IsNull(r.One))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => NotEqual(IsNull(r.One), IsNull(r.Zero))).Count(), Is.Zero);
 				Assert.That(tb.Where(r => NotEqual(IsNull(r.One), IsNull(r.Null))).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(r => NotEqual(IsNull(r.Zero), IsNull(r.Null))).Count(), Is.EqualTo(1));
-				Assert.That(tb.Where(r => NotEqual(IsNull(r.Zero), IsNull(r.Zero))).Count(), Is.EqualTo(0));
-				Assert.That(tb.Where(r => NotEqual(IsNull(r.Null), IsNull(r.Null))).Count(), Is.EqualTo(0));
-			});
+				Assert.That(tb.Where(r => NotEqual(IsNull(r.Zero), IsNull(r.Zero))).Count(), Is.Zero);
+				Assert.That(tb.Where(r => NotEqual(IsNull(r.Null), IsNull(r.Null))).Count(), Is.Zero);
+			}
 		}
 
 		// Supported: Access, ClickHouse, DB2, FB3+, IFX, MYSQL, PGSQL, SQLITE
@@ -765,7 +749,7 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-			Assert.That(tb.Where(r => AsIs(r.False)).Count(), Is.EqualTo(0));
+			Assert.That(tb.Where(r => AsIs(r.False)).Count(), Is.Zero);
 
 			if (context.IsAnyOf(ProviderName.Firebird25, TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase))
 				Assert.That(db.LastQuery, Does.Contain(" = "));
@@ -780,7 +764,7 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 
-			Assert.That(tb.Where(r => AsIs(r.BoolNull)).Count(), Is.EqualTo(0));
+			Assert.That(tb.Where(r => AsIs(r.BoolNull)).Count(), Is.Zero);
 
 			if (context.IsAnyOf(ProviderName.Firebird25, TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase))
 				Assert.That(db.LastQuery, Does.Contain(" = "));
