@@ -362,7 +362,7 @@ namespace Tests.DataProvider
 				var records = t.OrderBy(_ => _.Id).ToList();
 
 				Assert.That(records, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(records[0].Id, Is.EqualTo(1));
 					Assert.That(records[0].HomeLocation!.IsNull, Is.True);
@@ -371,7 +371,7 @@ namespace Tests.DataProvider
 #if NETFRAMEWORK
 					Assert.That(Issue1836.Data[1].HomeLocation!.STEquals(records[1].HomeLocation).IsTrue, Is.True);
 #endif
-				});
+				}
 			}
 		}
 
@@ -495,23 +495,22 @@ namespace Tests.DataProvider
 				db.InlineParameters = true;
 
 				var data = new LiteralsTestTable<TValue>[] { new() { Value = value } }.AsQueryable(db).ToArray();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Value, Is.EqualTo(expected));
 					Assert.That(interceptor.Parameters, Is.Empty);
-				});
+				}
 
 				db.InlineParameters = false;
 
 				data = (from x in db.FromSqlScalar<int>($"select 1 as one")
 					   from y in new LiteralsTestTable<TValue>[] { new() { Value = value } }
 					   select y).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Value, Is.EqualTo(expected));
 					Assert.That(interceptor.Parameters, Has.Length.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -549,23 +548,22 @@ namespace Tests.DataProvider
 				db.InlineParameters = true;
 
 				var data = new LiteralsTestTable<TValue>[] { new() { Value = value } }.AsQueryable(db).ToArray();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Value, Is.EqualTo(expected));
 					Assert.That(interceptor.Parameters, Is.Empty);
-				});
+				}
 
 				db.InlineParameters = false;
 
 				data = (from x in db.FromSqlScalar<int>($"select 1 as one")
 					   from y in new LiteralsTestTable<TValue>[] { new() { Value = value } }
 					   select y).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Value, Is.EqualTo(expected));
 					Assert.That(interceptor.Parameters, Has.Length.EqualTo(1));
-				});
+				}
 			}
 		}
 #endif

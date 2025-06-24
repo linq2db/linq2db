@@ -488,12 +488,12 @@ namespace Tests.Linq
 					{
 						DenseRank1     = Sql.Ext.DenseRank(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(q.ToArray(), Is.Not.Empty);
 
 					Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC)"));
-				});
+				}
 			}
 		}
 
@@ -1342,12 +1342,11 @@ namespace Tests.Linq
 						q.ParentID,
 						MaxValue = Sql.Ext.Min(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
 					};
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(q1.EnumQueries().Count(), Is.EqualTo(2));
 					Assert.That(q2.EnumQueries().Count(), Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
@@ -1397,8 +1396,7 @@ namespace Tests.Linq
 				var res = q.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// BTW, order from original query behaves differently for
 					// Oracle, PostgreSQL, DB2 vs Informix, SQL Server
@@ -1410,7 +1408,7 @@ namespace Tests.Linq
 					Assert.That(res[2].PreviousId, Is.EqualTo(6));
 					Assert.That(res[3].Id, Is.Null);
 					Assert.That(res[3].PreviousId, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1444,8 +1442,7 @@ namespace Tests.Linq
 				var res = q.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Id, Is.EqualTo(5));
 					Assert.That(res[0].PreviousId, Is.EqualTo(6));
@@ -1455,7 +1452,7 @@ namespace Tests.Linq
 					Assert.That(res[2].PreviousId, Is.Null);
 					Assert.That(res[3].Id, Is.Null);
 					Assert.That(res[3].PreviousId, Is.EqualTo(-1));
-				});
+				}
 			}
 		}
 
@@ -1484,8 +1481,7 @@ namespace Tests.Linq
 				var res = q.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Id, Is.EqualTo(5));
 					Assert.That(res[0].FirstRespect, Is.Null);
@@ -1510,7 +1506,7 @@ namespace Tests.Linq
 					Assert.That(res[3].FirstIgnore, Is.Null);
 					Assert.That(res[3].LastRespect, Is.Null);
 					Assert.That(res[3].LastIgnore, Is.EqualTo(6));
-				});
+				}
 			}
 		}
 
@@ -1541,8 +1537,7 @@ namespace Tests.Linq
 				var res = q.AsEnumerable().OrderBy(r => r.Id).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Id, Is.Null);
 					Assert.That(res[0].PreviousId, Is.Null);
@@ -1552,7 +1547,7 @@ namespace Tests.Linq
 					Assert.That(res[2].PreviousId, Is.Null);
 					Assert.That(res[3].Id, Is.EqualTo(6));
 					Assert.That(res[3].PreviousId, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1584,8 +1579,7 @@ namespace Tests.Linq
 				var res = q.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Id, Is.EqualTo(5));
 					Assert.That(res[0].PreviousId, Is.EqualTo(5));
@@ -1595,7 +1589,7 @@ namespace Tests.Linq
 					Assert.That(res[2].PreviousId, Is.Null);
 					Assert.That(res[3].Id, Is.Null);
 					Assert.That(res[3].PreviousId, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1632,8 +1626,7 @@ namespace Tests.Linq
 				var res = q.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Id, Is.Null);
 					Assert.That(res[0].PreviousId, Is.Null);
@@ -1643,7 +1636,7 @@ namespace Tests.Linq
 					Assert.That(res[2].PreviousId, Is.Null);
 					Assert.That(res[3].Id, Is.EqualTo(5));
 					Assert.That(res[3].PreviousId, Is.Null);
-				});
+				}
 			}
 		}
 

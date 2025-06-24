@@ -178,13 +178,12 @@ namespace Tests.Linq
 
 				var sql = query.ToSqlQuery().Sql;
 				BaselinesManager.LogQuery(sql);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(CountOccurrences(sql, tableName), Is.EqualTo(2));
 					Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
 					Assert.That(CountOccurrences(sql, schemaName), Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -210,13 +209,12 @@ namespace Tests.Linq
 
 				var sql = query.ToSqlQuery().Sql;
 				BaselinesManager.LogQuery(sql);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(CountOccurrences(sql, tableName), Is.EqualTo(2));
 					Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
 					Assert.That(CountOccurrences(sql, schemaName), Is.EqualTo(2));
-				});
+				}
 			}
 		}
 

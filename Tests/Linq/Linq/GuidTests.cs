@@ -56,14 +56,14 @@ namespace Tests.Linq
 				select t;
 
 			var lC = qryC.ToList();
-			Assert.That(lC, Has.Count.EqualTo(0));
+			Assert.That(lC, Has.Count.Zero);
 
 			var qryD = from t in table
 				where t.Id.ToString().ToLower().StartsWith("8f4-53")
 				select t;
 
 			var lD = qryD.ToList();
-			Assert.That(lD, Has.Count.EqualTo(0));
+			Assert.That(lD, Has.Count.Zero);
 		}
 
 		[Test]

@@ -411,7 +411,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
-			if (this == other)
+			if (ReferenceEquals(this, other))
 				return true;
 
 			return other is SqlDataType type && Type.Equals(type.Type);

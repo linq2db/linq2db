@@ -279,18 +279,16 @@ namespace Tests.UserTests
 			if (throws && context.IsRemote())
 			{
 #if NETFRAMEWORK
-				Assert.ThrowsAsync<FaultException>(() => operation(db, table, schemaName, dbName, serverName));
+				await Assert.ThatAsync(() => operation(db, table, schemaName, dbName, serverName), Throws.InstanceOf<FaultException>());
 #else
-				Assert.ThrowsAsync<RpcException>(() => operation(db, table, schemaName, dbName, serverName));
+				await Assert.ThatAsync(() => operation(db, table, schemaName, dbName, serverName), Throws.InstanceOf<RpcException>());
 #endif
 			}
 			else if (throws)
 			{
 				if (throwsSqlException)
 				{
-					Assert.ThrowsAsync(
-						((SqlServerDataProvider)((DataConnection)db).DataProvider).Adapter.SqlExceptionType,
-						() => operation(db, table, schemaName, dbName, serverName));
+					await Assert.ThatAsync(() => operation(db, table, schemaName, dbName, serverName), Throws.InstanceOf(((SqlServerDataProvider)((DataConnection)db).DataProvider).Adapter.SqlExceptionType));
 				}
 				else if (throwsHanaException)
 				{
@@ -318,7 +316,7 @@ namespace Tests.UserTests
 				}
 				else
 				{
-					Assert.ThrowsAsync<LinqToDBException>(() => operation(db, table, schemaName, dbName, serverName));
+					await Assert.ThatAsync(() => operation(db, table, schemaName, dbName, serverName), Throws.InstanceOf<LinqToDBException>());
 				}
 			}
 			else

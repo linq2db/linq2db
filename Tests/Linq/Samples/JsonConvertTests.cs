@@ -174,13 +174,13 @@ namespace Tests.Samples
 
 				var objects = table.Where(t => Json.Value(t.Data!.Property1) == "Pr1")
 					.ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.LastQuery!, Does.Not.Contain("IS NULL"));
 
 					Assert.That(objects, Has.Length.EqualTo(1));
-				});
+				}
+
 				Assert.That(objects[0].Data!.Property1, Is.EqualTo("Pr1"));
 			}
 		}

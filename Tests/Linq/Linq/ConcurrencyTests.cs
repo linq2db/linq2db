@@ -80,14 +80,14 @@ namespace Tests.Linq
 			record.Stamp--;
 			record.Value = "value 3";
 			cnt = db.UpdateOptimistic(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp++;
 			record.Value = "value 2";
 			AssertData(record);
 			record.Stamp--;
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp++;
 			AssertData(record);
 
@@ -100,12 +100,12 @@ namespace Tests.Linq
 				var data = t.ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(record.Id));
 					Assert.That(data[0].Value, Is.EqualTo(record.Value));
 					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
-				});
+				}
 			}
 		}
 
@@ -151,14 +151,14 @@ namespace Tests.Linq
 			record.Stamp--;
 			record.Value = "value 3";
 			cnt = await db.UpdateOptimisticAsync(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp++;
 			record.Value = "value 2";
 			AssertData(record);
 			record.Stamp--;
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp++;
 			AssertData(record);
 
@@ -171,12 +171,12 @@ namespace Tests.Linq
 				var data = t.ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(record.Id));
 					Assert.That(data[0].Value, Is.EqualTo(record.Value));
 					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
-				});
+				}
 			}
 		}
 
@@ -209,7 +209,7 @@ namespace Tests.Linq
 
 			record.Value = "value 1";
 			cnt = t.Where(r => r.Id == 2).UpdateOptimistic(record);
-			if (!skipCnt) Assert.That(cnt, Is.EqualTo(0));
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Value = "initial";
 			AssertData(record);
 
@@ -220,7 +220,7 @@ namespace Tests.Linq
 			AssertData(record);
 
 			cnt = t.Where(r => r.Id == 2).DeleteOptimistic(record);
-			if (!skipCnt) Assert.That(cnt, Is.EqualTo(0));
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			AssertData(record);
 
 			cnt = t.Where(r => r.Id == 1).DeleteOptimistic(record);
@@ -232,12 +232,12 @@ namespace Tests.Linq
 				var data = t.ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(record.Id));
 					Assert.That(data[0].Value, Is.EqualTo(record.Value));
 					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
-				});
+				}
 			}
 		}
 
@@ -270,7 +270,7 @@ namespace Tests.Linq
 
 			record.Value = "value 1";
 			cnt = await t.Where(r => r.Id == 2).UpdateOptimisticAsync(record);
-			if (!skipCnt) Assert.That(cnt, Is.EqualTo(0));
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Value = "initial";
 			AssertData(record);
 
@@ -281,7 +281,7 @@ namespace Tests.Linq
 			AssertData(record);
 
 			cnt = await t.Where(r => r.Id == 2).DeleteOptimisticAsync(record);
-			if (!skipCnt) Assert.That(cnt, Is.EqualTo(0));
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			AssertData(record);
 
 			cnt = await t.Where(r => r.Id == 1).DeleteOptimisticAsync(record);
@@ -293,12 +293,12 @@ namespace Tests.Linq
 				var data = t.ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(record.Id));
 					Assert.That(data[0].Value, Is.EqualTo(record.Value));
 					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
-				});
+				}
 			}
 		}
 
@@ -344,14 +344,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp = Guid.NewGuid();
 			cnt = db.UpdateOptimistic(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = Guid.NewGuid();
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -364,11 +364,11 @@ namespace Tests.Linq
 				var data = t.ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(record.Id));
 					Assert.That(data[0].Value, Is.EqualTo(record.Value));
-				});
+				}
 
 				if (equals)
 					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
@@ -422,14 +422,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp = Guid.NewGuid().ToString();
 			cnt = db.UpdateOptimistic(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = Guid.NewGuid().ToString();
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -442,11 +442,11 @@ namespace Tests.Linq
 				var data = t.ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(record.Id));
 					Assert.That(data[0].Value, Is.EqualTo(record.Value));
-				});
+				}
 
 				if (equals)
 					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
@@ -504,14 +504,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp = TestData.Guid2.ToByteArray();
 			cnt = db.UpdateOptimistic(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = TestData.Guid3.ToByteArray();
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -524,11 +524,11 @@ namespace Tests.Linq
 				var data = t.ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(record.Id));
 					Assert.That(data[0].Value, Is.EqualTo(record.Value));
-				});
+				}
 
 				if (equals)
 					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
@@ -581,14 +581,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp = Guid.NewGuid();
 			cnt = await db.UpdateOptimisticAsync(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = Guid.NewGuid();
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -601,11 +601,11 @@ namespace Tests.Linq
 				var data = t.ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(record.Id));
 					Assert.That(data[0].Value, Is.EqualTo(record.Value));
-				});
+				}
 
 				if (equals)
 					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
@@ -658,14 +658,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp = "unknown-value";
 			cnt = db.UpdateOptimistic(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = "unknown-value";
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -678,11 +678,11 @@ namespace Tests.Linq
 				var data = t.ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(record.Id));
 					Assert.That(data[0].Value, Is.EqualTo(record.Value));
-				});
+				}
 
 				if (equals)
 					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
@@ -735,14 +735,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp = "unknown-value";
 			cnt = await db.UpdateOptimisticAsync(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = "unknown-value";
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -755,11 +755,11 @@ namespace Tests.Linq
 				var data = t.ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(record.Id));
 					Assert.That(data[0].Value, Is.EqualTo(record.Value));
-				});
+				}
 
 				if (equals)
 					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
@@ -813,14 +813,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 			cnt = db.UpdateOptimistic(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -833,11 +833,11 @@ namespace Tests.Linq
 				var data = t.ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(record.Id));
 					Assert.That(data[0].Value, Is.EqualTo(record.Value));
-				});
+				}
 
 				if (equals)
 					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
@@ -891,14 +891,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 			cnt = await db.UpdateOptimisticAsync(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -911,11 +911,11 @@ namespace Tests.Linq
 				var data = t.ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(record.Id));
 					Assert.That(data[0].Value, Is.EqualTo(record.Value));
-				});
+				}
 
 				if (equals)
 					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
@@ -969,14 +969,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 			cnt = t.WhereKeyOptimistic(record).Update(r => new ConcurrencyTable<byte[]>() { Value = record.Value });
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 
 			cnt = t.WhereKeyOptimistic(record).Delete();
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -989,11 +989,11 @@ namespace Tests.Linq
 				var data = t.ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(record.Id));
 					Assert.That(data[0].Value, Is.EqualTo(record.Value));
-				});
+				}
 
 				if (equals)
 					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));

@@ -75,12 +75,11 @@ namespace Tests.Linq
 		public void EnumValue1()
 		{
 			var value = ConvertTo<TypeValue>.From(1);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(value, Is.EqualTo(TypeValue.Value1));
 				Assert.That((int)value, Is.EqualTo(10));
-			});
+			}
 		}
 
 		[Test]
@@ -201,11 +200,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(e.ParentID, Is.EqualTo(1));
 					Assert.That(e.Value.Value1, Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -215,11 +214,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1 && p.Value.Value1 == 1);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(e.ParentID, Is.EqualTo(1));
 					Assert.That(e.Value.Value1, Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -550,7 +549,7 @@ namespace Tests.Linq
 				var data = table.OrderBy(r => r.Id).ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(1));
 					Assert.That(data[0].Value, Is.EqualTo("One"));
@@ -558,12 +557,12 @@ namespace Tests.Linq
 					Assert.That(data[1].Id, Is.EqualTo(2));
 					Assert.That(data[1].Value, Is.EqualTo("Two"));
 					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
-				});
+				}
 
 				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
 				Assert.That(proj, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(proj[0].Id, Is.EqualTo(1));
 					Assert.That(proj[0].Value, Is.EqualTo("One"));
@@ -571,7 +570,7 @@ namespace Tests.Linq
 					Assert.That(proj[1].Id, Is.EqualTo(2));
 					Assert.That(proj[1].Value, Is.EqualTo("Two"));
 					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
-				});
+				}
 			}
 		}
 
@@ -595,7 +594,7 @@ namespace Tests.Linq
 				var data = table.OrderBy(r => r.Id).ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(1));
 					Assert.That(data[0].Value, Is.EqualTo("One"));
@@ -603,12 +602,12 @@ namespace Tests.Linq
 					Assert.That(data[1].Id, Is.EqualTo(2));
 					Assert.That(data[1].Value, Is.EqualTo("Two"));
 					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
-				});
+				}
 
 				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
 				Assert.That(proj, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(proj[0].Id, Is.EqualTo(1));
 					Assert.That(proj[0].Value, Is.EqualTo("One"));
@@ -616,7 +615,7 @@ namespace Tests.Linq
 					Assert.That(proj[1].Id, Is.EqualTo(2));
 					Assert.That(proj[1].Value, Is.EqualTo("Two"));
 					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
-				});
+				}
 			}
 		}
 
@@ -639,7 +638,7 @@ namespace Tests.Linq
 				var data = table.OrderBy(r => r.Id).ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(1));
 					Assert.That(data[0].Value, Is.EqualTo("One"));
@@ -647,12 +646,12 @@ namespace Tests.Linq
 					Assert.That(data[1].Id, Is.EqualTo(2));
 					Assert.That(data[1].Value, Is.EqualTo("Two"));
 					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
-				});
+				}
 
 				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
 				Assert.That(proj, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(proj[0].Id, Is.EqualTo(1));
 					Assert.That(proj[0].Value, Is.EqualTo("One"));
@@ -660,7 +659,7 @@ namespace Tests.Linq
 					Assert.That(proj[1].Id, Is.EqualTo(2));
 					Assert.That(proj[1].Value, Is.EqualTo("Two"));
 					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
-				});
+				}
 			}
 		}
 
@@ -1107,7 +1106,7 @@ namespace Tests.Linq
 
 			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
 
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
@@ -1119,7 +1118,7 @@ namespace Tests.Linq
 
 			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
 
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
@@ -1154,7 +1153,7 @@ namespace Tests.Linq
 
 			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
 
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
@@ -1344,12 +1343,12 @@ namespace Tests.Linq
 			else
 			{
 				Assert.That(res, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Value, Is.False);
 					Assert.That(res[1].Value, Is.False);
 					Assert.That(res[2].Value, Is.False);
-				});
+				}
 			}
 		}
 
@@ -1378,12 +1377,12 @@ namespace Tests.Linq
 			else
 			{
 				Assert.That(res, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Value, Is.False);
 					Assert.That(res[1].Value, Is.False);
 					Assert.That(res[2].Value, Is.False);
-				});
+				}
 			}
 		}
 
@@ -1414,12 +1413,12 @@ namespace Tests.Linq
 			else
 			{
 				Assert.That(res, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Value, Is.False);
 					Assert.That(res[1].Value, Is.False);
 					Assert.That(res[2].Value, Is.False);
-				});
+				}
 			}
 		}
 
