@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Async;
 using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
 

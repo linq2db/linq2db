@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Transactions;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;

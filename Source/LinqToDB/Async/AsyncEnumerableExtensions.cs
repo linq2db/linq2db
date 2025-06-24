@@ -4,13 +4,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Async
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+namespace LinqToDB.Internal.Async
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 {
 	// Do not expose to public surface, will conflict with other libraries
 	/// <summary>
 	/// Contains custom extension methods for <see cref="IAsyncEnumerable{T}"/> interface.
 	/// </summary>
-	internal static class AsyncEnumerableExtensions
+	static class AsyncEnumerableExtensions
 	{
 		/// <summary>
 		///     Asynchronously creates a <see cref="List{T}" /> from <see cref="IAsyncEnumerable{T}" />
