@@ -5,9 +5,9 @@ using System.Globalization;
 using System.Linq;
 
 using LinqToDB.CodeModel;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Metadata;
 using LinqToDB.Scaffold;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataModel

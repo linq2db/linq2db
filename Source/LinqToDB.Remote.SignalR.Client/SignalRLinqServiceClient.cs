@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace LinqToDB.Remote.SignalR
 {
+	[SuppressMessage("Design", "MA0048:File name must match type name")]
 	sealed class Container<T>(T @object)
 	{
 		public T Object { get; } = @object;

@@ -5,11 +5,9 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -358,7 +356,7 @@ namespace Tests.Linq
 
 				dataTable.AcceptChanges();
 
-				var param = new SqlParameter(new LinqToDB.Common.DbDataType(dataTable.GetType() ?? typeof(object), "IntTableType"), parameterName, dataTable);
+				var param = new SqlParameter(new DbDataType(dataTable.GetType() ?? typeof(object), "IntTableType"), parameterName, dataTable);
 
 				builder.AddParameter("values", param);
 			}

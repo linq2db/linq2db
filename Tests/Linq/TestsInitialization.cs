@@ -5,7 +5,7 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.DataProvider.ClickHouse;
-using LinqToDB.Tools;
+using LinqToDB.Metrics;
 using LinqToDB.Tools.Activity;
 
 using NUnit.Framework;

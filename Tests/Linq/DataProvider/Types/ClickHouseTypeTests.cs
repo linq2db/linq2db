@@ -5,7 +5,6 @@ using System.Numerics;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

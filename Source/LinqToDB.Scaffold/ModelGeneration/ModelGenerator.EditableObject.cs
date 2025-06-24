@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 #pragma warning disable CA1305
@@ -7,15 +6,6 @@ using System.Linq;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
-	/// <summary>
-	/// For internal use.
-	/// </summary>
-	public interface IEditableObjectProperty : IProperty
-	{
-		public bool   IsEditable  { get; set; }
-		public string IsDirtyText { get; set; }
-	}
-
 	/// <summary>
 	/// For internal use.
 	/// </summary>

@@ -95,7 +95,7 @@ namespace LinqToDB.CommandLine
 			if (options.Count > 0)
 			{
 				foreach (var kvp in options)
-					Console.Error.WriteLine($"{Name} command miss '{kvp.Key.Name}' option handler");
+					await Console.Error.WriteLineAsync($"{Name} command miss '{kvp.Key.Name}' option handler").ConfigureAwait(false);
 
 				// throw exception as it is implementation bug, not bad input or other expected error
 				throw new InvalidOperationException($"Not all options handled by {Name} command");
@@ -399,7 +399,7 @@ Provider could be downloaded from:
 			// currently we support multiarch only for Windows
 			if (!OperatingSystem.IsWindows())
 			{
-				Console.Out.WriteLine($"'{General.Architecture.Name}' parameter ignored for non-Windows system");
+				await Console.Out.WriteLineAsync($"'{General.Architecture.Name}' parameter ignored for non-Windows system").ConfigureAwait(false);
 				return null;
 			}
 

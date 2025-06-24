@@ -1,18 +1,8 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
-	/// <summary>
-	/// For internal use.
-	/// </summary>
-	public interface IPropertyValidation : IProperty
-	{
-		bool CustomValidation { get; set; }
-		bool ValidateProperty { get; set; }
-	}
-
 	/// <summary>
 	/// For internal use.
 	/// </summary>

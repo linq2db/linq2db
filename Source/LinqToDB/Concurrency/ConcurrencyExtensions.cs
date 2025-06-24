@@ -4,11 +4,13 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common.Internal;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.Reflection;
+using LinqToDB.Model;
 
 namespace LinqToDB.Concurrency
 {

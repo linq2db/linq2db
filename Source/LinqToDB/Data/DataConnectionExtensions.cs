@@ -2,25 +2,23 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.DataProvider;
-using LinqToDB.Tools;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {
-	sealed class RowByRowBulkCopy : BasicBulkCopy
-	{
-	}
-
 	/// <summary>
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
 	[PublicAPI]
-	public static partial class DataConnectionExtensions
+	public static class DataConnectionExtensions
 	{
 		#region SetCommand
 
@@ -2580,7 +2578,7 @@ namespace LinqToDB.Data
 
 			if (options.BulkCopyType == BulkCopyType.RowByRow && !table.TryGetDataConnection(out dataConnection))
 			{
-				return CallMetrics(() =>
+			return CallMetrics(() =>
 					new RowByRowBulkCopy().BulkCopyAsync(
 						BulkCopyType.RowByRow,
 						table,
@@ -2796,4 +2794,7 @@ namespace LinqToDB.Data
 
 		#endregion
 	}
+
+	[SuppressMessage("Design", "MA0048:File name must match type name")]
+	sealed class RowByRowBulkCopy : BasicBulkCopy;
 }

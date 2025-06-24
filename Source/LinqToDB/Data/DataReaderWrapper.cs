@@ -3,7 +3,8 @@ using System.Data.Common;
 using System.Threading.Tasks;
 
 using LinqToDB.Interceptors;
-using LinqToDB.Tools;
+using LinqToDB.Internal.Interceptors;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {

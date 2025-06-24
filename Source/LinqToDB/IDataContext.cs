@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB
 {

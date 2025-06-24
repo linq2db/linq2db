@@ -2,10 +2,6 @@
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	public interface IFirebirdExtensions
-	{
-	}
-
 	public static class FirebirdExtensions
 	{
 		public static IFirebirdExtensions? Firebird(this Sql.ISqlExtension? ext) => null;

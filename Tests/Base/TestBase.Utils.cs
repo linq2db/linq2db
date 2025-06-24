@@ -4,8 +4,8 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.Informix;
-using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal.DataProvider.Informix;
+using LinqToDB.Internal.DataProvider.SqlServer;
 
 using Tests.Model;
 using Tests.Tools;

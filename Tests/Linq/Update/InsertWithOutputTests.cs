@@ -4,8 +4,8 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Async;
 using LinqToDB.Common;
+using LinqToDB.Internal.Async;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 

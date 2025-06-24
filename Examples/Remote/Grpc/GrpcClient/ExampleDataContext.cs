@@ -1,8 +1,6 @@
 ﻿using System.Net.Http;
+
 using Grpc.Net.Client;
-using LinqToDB;
-using LinqToDB.Remote;
-using LinqToDB.Remote.Grpc;
 
 namespace DataModels
 {

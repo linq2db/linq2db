@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 
 using NUnit.Framework;

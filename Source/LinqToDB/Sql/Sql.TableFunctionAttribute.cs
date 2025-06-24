@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 // ReSharper disable CheckNamespace
@@ -71,7 +72,7 @@ namespace LinqToDB
 				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter, false, out var error)!;
 
 				if (error != null)
-					throw Expressions.SqlErrorExpression.EnsureError(error).CreateException();
+					throw Internal.Expressions.SqlErrorExpression.EnsureError(error).CreateException();
 			}
 
 			public override string GetObjectID()
