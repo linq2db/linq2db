@@ -288,13 +288,12 @@ namespace Tests.xUpdate
 				AssertRowCount(1, rows, context);
 
 				var row = db.GetTable<AllType>().OrderByDescending(_ => _.ID).Take(1).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(row.charDataType, Is.EqualTo('\0'));
 					Assert.That(row.ncharDataType, Is.EqualTo("\0"));
 					Assert.That(row.nvarcharDataType, Is.EqualTo("test\0it"));
-				});
+				}
 			}
 		}
 	}

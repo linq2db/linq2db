@@ -77,8 +77,7 @@ namespace Tests.UserTests
 				};
 
 			var result = queryWorksCorrectly.Take(1).ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result, Has.Count.EqualTo(1), "Expected exactly one result row.");
 				var row = result.First();
@@ -89,7 +88,7 @@ namespace Tests.UserTests
 
 				// Verify that ReshipSale is null.
 				Assert.That(row.ReshipSale, Is.Null, "ReshipSale should be null.");
-			});
+			}
 		}
 
 		/// <summary>
@@ -133,8 +132,7 @@ namespace Tests.UserTests
 				};
 
 			var result = queryFailsNotNull.Take(1).ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result, Has.Count.EqualTo(1), "Expected exactly one result row.");
 				var row = result.First();
@@ -146,7 +144,7 @@ namespace Tests.UserTests
 
 				// Expected behavior: ReshipSale should be null because ReshipSaleId is null.
 				Assert.That(row.ReshipSale, Is.Null, "ReshipSale dictionary should be null when ReshipSaleId is null.");
-			});
+			}
 		}
 
 		/// <summary>
@@ -190,8 +188,7 @@ namespace Tests.UserTests
 				};
 
 			var result = queryFailsNull.Take(1).ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result, Has.Count.EqualTo(1), "Expected exactly one result row.");
 				var row = result.First();
@@ -203,7 +200,7 @@ namespace Tests.UserTests
 				Assert.That(row.OriginalSale, Is.Not.Null, "OriginalSale dictionary should not be null.");
 				Assert.That(row.OriginalSale.ContainsKey("Id"), Is.True, "OriginalSale dictionary should contain key 'Id'.");
 				Assert.That(row.OriginalSale["Id"], Is.EqualTo(43757), "OriginalSale dictionary should have Id 43757.");
-			});
+			}
 		}
 	}
 }

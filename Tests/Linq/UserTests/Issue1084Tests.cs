@@ -103,13 +103,13 @@ namespace Tests.UserTests
 
 				var res = result.ToList();
 				Assert.That(res, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Default, Is.False);
 					Assert.That(res[1].Default, Is.False);
 					Assert.That(res[0].Copy, Is.True);
 					Assert.That(res[1].Copy, Is.True);
-				});
+				}
 			}
 		}
 

@@ -1120,11 +1120,11 @@ namespace Tests.xUpdate
 					Assert.That(records, Is.EqualTo(1));
 
 				Assert.That(patients, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(patients[0].PersonID, Is.EqualTo(id));
 					Assert.That(patients[0].Diagnosis, Is.EqualTo("negative"));
-				});
+				}
 
 				records = db.Patient.InsertOrUpdate(
 					() => new Patient
@@ -1138,17 +1138,13 @@ namespace Tests.xUpdate
 
 				using (new DisableLogging())
 					patients = db.Patient.Where(p => p.PersonID == id).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(records, Is.LessThanOrEqualTo(0));
 					Assert.That(patients, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(patients[0].PersonID, Is.EqualTo(id));
 					Assert.That(patients[0].Diagnosis, Is.EqualTo("negative"));
-				});
+				}
 			}
 		}
 
@@ -1464,13 +1460,12 @@ namespace Tests.xUpdate
 				db.Insert(p);
 
 				var inserted = db.GetTable<ComplexPerson>().Single(p2 => p2.ID > id || p2.ID == 0);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(inserted.Name.FirstName, Is.EqualTo(p.Name.FirstName));
 					Assert.That(inserted.Name.LastName, Is.EqualTo(p.Name.LastName));
 					Assert.That(inserted.Gender, Is.EqualTo(p.Gender));
-				});
+				}
 			}
 		}
 
@@ -1523,8 +1518,7 @@ namespace Tests.xUpdate
 				try
 				{
 					db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(db.Person
 											.Insert(() => new Person
@@ -1535,7 +1529,7 @@ namespace Tests.xUpdate
 											}), Is.EqualTo(1));
 
 						Assert.That(db.Person.Count(p => p.FirstName.StartsWith("Insert14")), Is.EqualTo(1));
-					});
+					}
 				}
 				finally
 				{
@@ -1745,12 +1739,11 @@ namespace Tests.xUpdate
 					db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
 
 					var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(table.TableName, Is.EqualTo(tableName));
 						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					});
+					}
 
 					var person = new Person()
 					{
@@ -1767,12 +1760,12 @@ namespace Tests.xUpdate
 						var newId2 = db.InsertWithIdentity(person, tableName: tableName, schemaName: schemaName);
 
 						var newCount = table.Count();
-						Assert.Multiple(() =>
+						using (Assert.EnterMultipleScope())
 						{
 							Assert.That(newCount, Is.EqualTo(3));
 
 							Assert.That(newId2, Is.Not.EqualTo(newId1));
-						});
+						}
 
 						var integritycount = table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).Count();
 						Assert.That(integritycount, Is.EqualTo(3));
@@ -1798,12 +1791,11 @@ namespace Tests.xUpdate
 				try
 				{
 					var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(table.TableName, Is.EqualTo(tableName));
 						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					});
+					}
 
 					var person = new Person()
 					{
@@ -1820,12 +1812,12 @@ namespace Tests.xUpdate
 						var newId2 = await db.InsertWithIdentityAsync(person, tableName: tableName, schemaName: schemaName);
 
 						var newCount = await table.CountAsync();
-						Assert.Multiple(() =>
+						using (Assert.EnterMultipleScope())
 						{
 							Assert.That(newCount, Is.EqualTo(3));
 
 							Assert.That(newId2, Is.Not.EqualTo(newId1));
-						});
+						}
 
 						var integritycount = await table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).CountAsync();
 						Assert.That(integritycount, Is.EqualTo(3));
@@ -1853,11 +1845,11 @@ namespace Tests.xUpdate
 
 				try
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(table.TableName, Is.EqualTo(tableName));
 						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					});
+					}
 
 					var person1 = new Patient()
 					{
@@ -1900,11 +1892,11 @@ namespace Tests.xUpdate
 				var table = await db.CreateTableAsync<Patient>(tableName, schemaName: schemaName);
 				try
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(table.TableName, Is.EqualTo(tableName));
 						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					});
+					}
 
 					var person1 = new Patient()
 					{
@@ -2106,13 +2098,12 @@ namespace Tests.xUpdate
 			});
 
 			var entity = table.Single(e => e.Id == 1);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(affected, Is.EqualTo(1));
 				Assert.That(entity.Name, Is.EqualTo("test"));
 				Assert.That(entity.IsDeleted, Is.False);
-			});
+			}
 		}
 
 		[Test]
@@ -2142,12 +2133,11 @@ namespace Tests.xUpdate
 				});
 
 			var entities = table.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(affected, Is.EqualTo(1));
 				Assert.That(entities, Has.Count.EqualTo(2));
-			});
+			}
 		}
 
 		[Test]
@@ -2174,12 +2164,11 @@ namespace Tests.xUpdate
 				.Insert();
 
 			var entities = table.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(affected, Is.EqualTo(1));
 				Assert.That(entities, Has.Count.EqualTo(2));
-			});
+			}
 		}
   
 		#region InsertIfNotExists (https://github.com/linq2db/linq2db/issues/3005)
@@ -2227,12 +2216,11 @@ namespace Tests.xUpdate
 						Name = "test"
 					},
 					p => new TestInsertOrReplaceInfo() { });
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
 					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				});
+				}
 			}
 		}
 
@@ -2258,12 +2246,11 @@ namespace Tests.xUpdate
 					},
 					p => new TestInsertOrReplaceInfo() { },
 					() => new TestInsertOrReplaceInfo() { Id = 1 });
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
 					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				});
+				}
 			}
 		}
 
@@ -2287,12 +2274,11 @@ namespace Tests.xUpdate
 						Name = "test"
 					},
 					p => new TestInsertOrReplaceInfo());
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
 					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				});
+				}
 			}
 		}
 
@@ -2318,12 +2304,11 @@ namespace Tests.xUpdate
 					},
 					p => new TestInsertOrReplaceInfo(),
 					() => new TestInsertOrReplaceInfo() { Id = 1 });
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
 					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				});
+				}
 			}
 		}
 
@@ -2347,12 +2332,11 @@ namespace Tests.xUpdate
 						Name = "test"
 					},
 					p => null);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
 					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				});
+				}
 			}
 		}
 
@@ -2378,12 +2362,11 @@ namespace Tests.xUpdate
 					},
 					p => null,
 					() => new TestInsertOrReplaceInfo() { Id = 1 });
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
 					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				});
+				}
 			}
 		}
 
@@ -2407,12 +2390,11 @@ namespace Tests.xUpdate
 						Name = "test"
 					},
 					null);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
 					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				});
+				}
 			}
 		}
 
@@ -2438,12 +2420,11 @@ namespace Tests.xUpdate
 					},
 					null,
 					() => new TestInsertOrReplaceInfo() { Id = 1 });
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
 					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				});
+				}
 			}
 		}
 		#endregion
@@ -2475,13 +2456,13 @@ namespace Tests.xUpdate
 				db.InsertOrReplace(item);
 
 				var res = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(res.Name, Is.EqualTo("Test1"));
 					Assert.That(res.CreatedBy, Is.EqualTo(user));
 					Assert.That(res.UpdatedBy, Is.Null);
-				});
+				}
 
 				item.Name      = "Test2";
 				item.UpdatedBy = user;
@@ -2489,13 +2470,13 @@ namespace Tests.xUpdate
 				db.InsertOrReplace(item);
 
 				res = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(res.Name, Is.EqualTo("Test2"));
 					Assert.That(res.CreatedBy, Is.EqualTo(user));
 					Assert.That(res.UpdatedBy, Is.EqualTo(user));
-				});
+				}
 			}
 		}
 		#endregion
