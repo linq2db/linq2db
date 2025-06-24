@@ -994,12 +994,12 @@ namespace Tests.DataProvider
 		[Table("sqlite_master")]
 		sealed class SQLiteMaster
 		{
-			public string Name { get; set; } = null!;
+			[Column] public string Name { get; set; } = null!;
 		}
 
 		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4986")]
-		public void Issue4986Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/discussions/4985")]
+		public void CrossApplyJoin([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
