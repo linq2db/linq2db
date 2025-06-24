@@ -4104,7 +4104,7 @@ namespace LinqToDB.Linq.Builder
 					if (predicate == null)
 					{
 						predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-							compareNullsAsValues
+							compareNullsAsValues && (lOriginal.CanBeNullable(nullability) || rOriginal.CanBeNullable(nullability))
 								? op == SqlPredicate.Operator.Equal
 								: null);
 					}

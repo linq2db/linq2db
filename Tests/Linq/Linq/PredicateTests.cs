@@ -838,11 +838,11 @@ namespace Tests.Linq
 
 			db.InlineParameters = inline;
 
-			var True = true;
-			var False = false;
-			bool? TrueN = true;
+			var   True   = true;
+			var   False  = false;
+			bool? TrueN  = true;
 			bool? FalseN = false;
-			bool? Null = null;
+			bool? Null   = null;
 
 			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == True));
 			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == TrueN));

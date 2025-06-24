@@ -346,7 +346,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			public override bool CanInvert(NullabilityContext nullability) => UnknownAsValue is not null;
+			public override bool CanInvert(NullabilityContext nullability) => true;
 
 			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
