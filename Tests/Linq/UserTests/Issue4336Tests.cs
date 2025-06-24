@@ -4,7 +4,11 @@ using System.Linq;
 
 using FluentAssertions;
 
+#if NETFRAMEWORK
+using IBM.Data.DB2;
+#else
 using IBM.Data.Db2;
+#endif
 
 using LinqToDB;
 using LinqToDB.Mapping;

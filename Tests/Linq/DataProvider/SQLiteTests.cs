@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.Linq;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -16,6 +15,8 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 
 using Tests.Model;
+
+using Binary = System.Data.Linq.Binary;
 
 namespace Tests.DataProvider
 {
