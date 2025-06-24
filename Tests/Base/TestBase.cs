@@ -14,7 +14,7 @@ using Tests.Model;
 
 namespace Tests
 {
-	public partial class TestBase
+	public abstract partial class TestBase
 	{
 		const int TRACES_LIMIT = 50000;
 
