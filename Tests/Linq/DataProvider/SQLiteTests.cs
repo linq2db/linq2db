@@ -982,5 +982,36 @@ namespace Tests.DataProvider
 			}
 		}
 		#endregion
+
+		[Sql.TableFunction("pragma_table_info")]
+		static ITable<PragmaTableInfoTable> PragmaTableInfo(string tableName) => throw new InvalidOperationException();
+
+		sealed class PragmaTableInfoTable
+		{
+			public string Name { get; set; } = null!;
+		}
+
+		[Table("sqlite_master")]
+		sealed class SQLiteMaster
+		{
+			public string Name { get; set; } = null!;
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4986")]
+		public void Issue4986Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from sqliteMaster in db.GetTable<SQLiteMaster>()
+						from pragmaTableInfo in PragmaTableInfo(sqliteMaster.Name)
+						select new
+						{
+							TableName = sqliteMaster.Name,
+							PrimaryKeyColumn = pragmaTableInfo.Name
+						};
+
+			_ = query.ToArray();
+		}
 	}
 }

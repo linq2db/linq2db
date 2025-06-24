@@ -99,8 +99,8 @@ namespace LinqToDB.Linq.Translation
 			}
 
 			return translationContext.CreatePlaceholder(
-				translationContext.CurrentSelectQuery, 
-				new SqlCastExpression(objPlaceholder.Sql, toType, null), 
+				translationContext.CurrentSelectQuery,
+				new SqlCastExpression(objPlaceholder.Sql, toType, null),
 				methodCall);
 		}
 
