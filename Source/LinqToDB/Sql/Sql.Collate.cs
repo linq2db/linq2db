@@ -2,11 +2,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB
 {
-	using Expressions;
-	using SqlQuery;
-
 	public static partial class Sql
 	{
 		/// <summary>
@@ -25,7 +25,7 @@ namespace LinqToDB
 
 		internal sealed class NamedCollationBuilder : IExtensionCallBuilder
 		{
-			private static readonly Regex _collationValidator = new Regex(@"^[a-zA-Z0-9_\.-@]+$", RegexOptions.Compiled);
+			private static readonly Regex _collationValidator = new Regex(@"^[a-zA-Z0-9_\.\-@]+$", RegexOptions.Compiled);
 
 			public void Build(ISqExtensionBuilder builder)
 			{

@@ -5,14 +5,14 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
+using LinqToDB.Async;
+using LinqToDB.Common.Internal;
+using LinqToDB.Configuration;
+using LinqToDB.Data.RetryPolicy;
+using LinqToDB.DataProvider;
+
 namespace LinqToDB.Data
 {
-	using Async;
-	using Common.Internal;
-	using Configuration;
-	using DataProvider;
-	using RetryPolicy;
-
 	public partial class DataConnection
 	{
 		static class Configuration
@@ -38,7 +38,7 @@ namespace LinqToDB.Data
 		static ILinqToDBSettings? _defaultSettings;
 
 		/// <summary>
-		/// Gets or sets default connection settings. By default contains settings from linq2db configuration section from configuration file (not supported by .Net Core).
+		/// Gets or sets default connection settings. By default, contains settings from linq2db configuration section from configuration file (not supported by .Net Core).
 		/// <seealso cref="ILinqToDBSettings"/>
 		/// </summary>
 		public static ILinqToDBSettings? DefaultSettings
@@ -217,7 +217,7 @@ namespace LinqToDB.Data
 				foreach (var provider in section.DataProviders)
 				{
 					var dataProviderType = Type.GetType(provider.TypeName, true)!;
-					var providerInstance = (IDataProviderFactory)Activator.CreateInstance(dataProviderType)!;
+					var providerInstance = ActivatorExt.CreateInstance<IDataProviderFactory>(dataProviderType);
 
 					if (!string.IsNullOrEmpty(provider.Name))
 						AddDataProvider(provider.Name!, providerInstance.GetDataProvider(provider.Attributes));
@@ -483,12 +483,14 @@ namespace LinqToDB.Data
 		{
 			get
 			{
+				CheckAndThrowOnDisposed();
+
 				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
 				{
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
-						.Add(ConfigurationString ?? ConnectionString ?? Connection.ConnectionString)
+						.Add(ConfigurationString)
 						.Add(Options)
 						.Add(GetType())
 						.CreateID();
@@ -519,7 +521,8 @@ namespace LinqToDB.Data
 				}
 
 				var dataProvider = options.DataProviderFactory == null ? options.DataProvider : options.DataProviderFactory(options);
-				var doSave       = true;
+
+				var doSave = true;
 
 				switch (
 				          options.ConfigurationString,
@@ -642,7 +645,6 @@ namespace LinqToDB.Data
 
 				IAsyncDbConnection WrapConnection(DbConnection connection)
 				{
-					// TODO: IT Look into.
 					return connection is IAsyncDbConnection asyncDbConnection
 						? asyncDbConnection
 						: AsyncFactory.CreateAndSetDataContext(dataConnection, connection);
@@ -651,7 +653,9 @@ namespace LinqToDB.Data
 
 			public static void Apply(DataConnection dataConnection, RetryPolicyOptions options)
 			{
+#pragma warning disable CS0618 // Type or member is obsolete
 				dataConnection.RetryPolicy = options.RetryPolicy ?? options.Factory?.Invoke(dataConnection);
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			public static void Apply(DataConnection dataConnection, DataContextOptions options)
@@ -665,9 +669,13 @@ namespace LinqToDB.Data
 
 			public static void Apply(DataConnection dataConnection, QueryTraceOptions options)
 			{
-				if (options.OnTrace    != null) dataConnection.OnTraceConnection        = options.OnTrace;
-				if (options.TraceLevel != null) dataConnection.TraceSwitchConnection    = new("DataConnection", "DataConnection trace switch") {Level = options.TraceLevel.Value};
+#pragma warning disable CS0618 // Type or member is obsolete
+				if (options.OnTrace    != null) dataConnection.OnTraceConnection     = options.OnTrace;
 				if (options.WriteTrace != null) dataConnection.WriteTraceLineConnection = options.WriteTrace;
+
+				if      (options.TraceSwitch != null) dataConnection.TraceSwitchConnection = options.TraceSwitch;
+				else if (options.TraceLevel  != null) dataConnection.TraceSwitchConnection = new("DataConnection", "DataConnection trace switch") {Level = options.TraceLevel.Value};
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 		}
 	}

@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
+
 using NUnit.Framework;
+
+using Tests.Model;
+using Tests.UserTests;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Async;
-
-	using Model;
-	using UserTests;
-
 	[TestFixture]
 	public class AsyncTests : TestBase
 	{
@@ -283,13 +284,6 @@ namespace Tests.Linq
 				}
 				catch (OperationCanceledException)
 				{
-#if !NETFRAMEWORK
-					if (context.IsAnyOf(TestProvName.AllOracleManaged) && !context.IsRemote())
-					{
-						Assert.Fail("Update test. Oracle developers evolved");
-					}
-#endif
-
 					// this casts any exception that inherits from OperationCanceledException
 					//   to a OperationCanceledException to pass the assert check above
 					//   (needed for TaskCanceledException)
@@ -301,6 +295,44 @@ namespace Tests.Linq
 					throw new OperationCanceledException();
 				}
 			});
+		}
+
+		[Test]
+		public async Task ToLookupAsyncTest([DataSources] string context)
+		{
+			await using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				orderby c.ParentID, c.ChildID
+				select c;
+
+			var g1 = (await q.ToListAsync()).ToLookup(c => c.ParentID);
+			var g2 = await db.Child.ToLookupAsync(c => c.ParentID);
+
+			Assert.That(g1, Has.Count.EqualTo(g2.Count));
+
+			foreach (var g in g1)
+				AreEqual(g1[g.Key], g2[g.Key]);
+		}
+
+		[Test]
+		public async Task ToLookupElementAsyncTest([DataSources] string context)
+		{
+			await using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				orderby c.ParentID, c.ChildID
+				select c;
+
+			var g1 = (await q.ToListAsync()).ToLookup(c => c.ParentID, c => c.ChildID);
+			var g2 = await db.Child.ToLookupAsync(c => c.ParentID, c => c.ChildID);
+
+			Assert.That(g1, Has.Count.EqualTo(g2.Count));
+
+			foreach (var g in g1)
+				AreEqual(g1[g.Key], g2[g.Key]);
 		}
 	}
 }

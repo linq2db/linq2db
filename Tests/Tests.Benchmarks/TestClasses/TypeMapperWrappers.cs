@@ -3,7 +3,8 @@ using System.Collections;
 using System.Data;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using LinqToDB.Expressions;
+
+using LinqToDB.Expressions.Types;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
@@ -284,45 +285,45 @@ namespace LinqToDB.Benchmarks.TypeMapping
 				= new LambdaExpression[]
 			{
 				// [0]: QuoteIdentifier
-				(Expression<Func<TestClass2, string, string>>)((TestClass2 this_, string identifier)       => this_.QuoteIdentifier(identifier)),
+				(Expression<Func<TestClass2, string, string>>)((this_, identifier) => this_.QuoteIdentifier(identifier)),
 				// [1]: Add
-				(Expression<Func<TestClass2, TestClass2, TestClass2>>)((TestClass2 this_, TestClass2 item) => this_.Add(item)),
+				(Expression<Func<TestClass2, TestClass2, TestClass2>>)((this_, item) => this_.Add(item)),
 				// [2]: GetEnumerator
-				(Expression<Func<TestClass2, IEnumerable>>)((TestClass2 this_)                             => this_.GetEnumerator()),
+				(Expression<Func<TestClass2, IEnumerable>>)(this_ => this_.GetEnumerator()),
 				// [3]: CreateDatabase
-				(Expression<Action<TestClass2>>)((TestClass2 this_)                                        => this_.CreateDatabase()),
+				(Expression<Action<TestClass2>>)(this_ => this_.CreateDatabase()),
 				// [4]: Dispose
-				(Expression<Action<TestClass2>>)((TestClass2 this_)                                        => this_.Dispose()),
+				(Expression<Action<TestClass2>>)(this_ => this_.Dispose()),
 				// [5]: WriteToServer
-				(Expression<Action<TestClass2, IDataReader>>)((TestClass2 this_, IDataReader rd)           => this_.WriteToServer(rd)),
+				(Expression<Action<TestClass2, IDataReader>>)((this_, rd) => this_.WriteToServer(rd)),
 				// [6]: get IntProperty
-				(Expression<Func<TestClass2, int>>)((TestClass2 this_)                                     => this_.IntProperty),
+				(Expression<Func<TestClass2, int>>)(this_ => this_.IntProperty),
 				// [7]: get StringProperty
-				(Expression<Func<TestClass2, string?>>)((TestClass2 this_)                                 => this_.StringProperty),
+				(Expression<Func<TestClass2, string?>>)(this_ => this_.StringProperty),
 				// [8]: get BooleanProperty
-				(Expression<Func<TestClass2, bool>>)((TestClass2 this_)                                    => this_.BooleanProperty),
+				(Expression<Func<TestClass2, bool>>)(this_ => this_.BooleanProperty),
 				// [9]: get WrapperProperty
-				(Expression<Func<TestClass2, TestClass2?>>)((TestClass2 this_)                             => this_.WrapperProperty),
+				(Expression<Func<TestClass2, TestClass2?>>)(this_ => this_.WrapperProperty),
 				// [10]: get EnumProperty
-				(Expression<Func<TestClass2, TestEnum>>)((TestClass2 this_)                                => this_.EnumProperty),
+				(Expression<Func<TestClass2, TestEnum>>)(this_ => this_.EnumProperty),
 				// [11]: get VersionProperty
-				(Expression<Func<TestClass2, Version?>>)((TestClass2 this_)                                => this_.VersionProperty),
+				(Expression<Func<TestClass2, Version?>>)(this_ => this_.VersionProperty),
 				// [12]: get LongProperty
-				(Expression<Func<TestClass2, long>>)((TestClass2 this_)                                    => this_.LongProperty),
+				(Expression<Func<TestClass2, long>>)(this_ => this_.LongProperty),
 				// [13]: set IntProperty
-				PropertySetter((TestClass2 this_)                                                          => this_.IntProperty),
+				PropertySetter((TestClass2 this_) => this_.IntProperty),
 				// [14]: set StringProperty
-				PropertySetter((TestClass2 this_)                                                          => this_.StringProperty),
+				PropertySetter((TestClass2 this_) => this_.StringProperty),
 				// [15]: set BooleanProperty
-				PropertySetter((TestClass2 this_)                                                          => this_.BooleanProperty),
+				PropertySetter((TestClass2 this_) => this_.BooleanProperty),
 				// [16]: set WrapperProperty
-				PropertySetter((TestClass2 this_)                                                          => this_.WrapperProperty),
+				PropertySetter((TestClass2 this_) => this_.WrapperProperty),
 				// [17]: TestEnumConvert
-				(Expression<Func<TestClass2, TestEnum, TestEnum>>)((TestClass2 this_, TestEnum value)      => this_.TestEnumConvert(value)),
+				(Expression<Func<TestClass2, TestEnum, TestEnum>>)((this_, value) => this_.TestEnumConvert(value)),
 				// [18]: TestEnum2Convert
-				(Expression<Func<TestClass2, TestEnum2, TestEnum2>>)((TestClass2 this_, TestEnum2 value)   => this_.TestEnum2Convert(value)),
+				(Expression<Func<TestClass2, TestEnum2, TestEnum2>>)((this_, value) => this_.TestEnum2Convert(value)),
 				// [19]: TestEnum3Convert
-				(Expression<Func<TestClass2, TestEnum3, TestEnum3>>)((TestClass2 this_, TestEnum3 value)   => this_.TestEnum3Convert(value)),
+				(Expression<Func<TestClass2, TestEnum3, TestEnum3>>)((this_, value) => this_.TestEnum3Convert(value)),
 			};
 
 			public TestClass2(object instance, Delegate[] wrappers) : base(instance, wrappers)

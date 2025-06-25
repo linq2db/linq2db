@@ -7,10 +7,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	/// <summary>
 	/// Tests:
 	///
@@ -270,14 +270,13 @@ namespace Tests.Linq
 					.LoadWith(x => ((Dog)x.TestAnimal!).Bla)
 					.OrderBy(x => x.Id)
 					.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data.First().TestAnimal, Is.Null);
 					Assert.That(((Dog)data.Skip(1).First().TestAnimal!).Bla, Is.Not.Null);
 					Assert.That(((Dog)data.Skip(1).First().TestAnimal!).DogName!.First, Is.Not.Null);
 					Assert.That(((Dog)data.Skip(1).First().TestAnimal!).DogName!.Second, Is.Not.Null);
-				});
+				}
 			}
 		}
 
@@ -294,12 +293,11 @@ namespace Tests.Linq
 			{
 				InsertData(db);
 				var data = db.GetTable<Dog>().ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].DogName!.First, Is.Not.Null);
 					Assert.That(data[0].DogName!.Second, Is.Not.Null);
-				});
+				}
 			}
 		}
 
@@ -316,8 +314,7 @@ namespace Tests.Linq
 			{
 				InsertData(db);
 				var d = new Dog() { AnimalType = AnimalType.Big, AnimalType2 = AnimalType2.Big };
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.GetTable<Dog>().First(x => x.AnimalType == AnimalType.Big), Is.Not.Null);
 					Assert.That(db.GetTable<Dog>().First(x => x.AnimalType == d.AnimalType), Is.Not.Null);
@@ -328,7 +325,7 @@ namespace Tests.Linq
 					Assert.That(db.GetTable<Animal>().First(x => x is SuperWildAnimal), Is.Not.Null);
 
 					Assert.That(db.GetTable<Test>().First(x => x.TestAnimal is Dog && ((Dog)x.TestAnimal).EyeId == 1), Is.Not.Null);
-				});
+				}
 			}
 		}
 
@@ -398,14 +395,14 @@ namespace Tests.Linq
 				{
 					var data = db.GetTable<Person>().FirstOrDefault(_ => _.FirstName == "test_inherited_insert")!;
 					Assert.That(data, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(data.ID, Is.EqualTo(person.ID));
 						Assert.That(data.FirstName, Is.EqualTo(person.FirstName));
 						Assert.That(data.LastName, Is.EqualTo(person.LastName));
 						Assert.That(data.MiddleName, Is.EqualTo(person.MiddleName));
 						Assert.That(data.Gender, Is.EqualTo(person.Gender));
-					});
+					}
 				}
 			}
 		}
@@ -449,11 +446,11 @@ namespace Tests.Linq
 
 					var data = db.GetTable<Eye>().Where(_ => _.Id == 123).FirstOrDefault()!;
 					Assert.That(data, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(data.Id, Is.EqualTo(eye.Id));
 						Assert.That(data.Xy, Is.EqualTo(eye.Xy));
-					});
+					}
 				}
 			}
 		}
@@ -505,7 +502,7 @@ namespace Tests.Linq
 
 					var data = db.GetTable<Dog>().Where(_ => _.Id == 666).FirstOrDefault()!;
 					Assert.That(data, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(data.Id, Is.EqualTo(dog.Id));
 						Assert.That(data.AnimalType, Is.EqualTo(dog.AnimalType));
@@ -514,7 +511,7 @@ namespace Tests.Linq
 						Assert.That(data.DogName!.First, Is.EqualTo(dog.DogName.First));
 						Assert.That(data.DogName!.Second, Is.EqualTo(dog.DogName.Second));
 						Assert.That(data.EyeId, Is.EqualTo(dog.EyeId));
-					});
+					}
 				}
 			}
 		}

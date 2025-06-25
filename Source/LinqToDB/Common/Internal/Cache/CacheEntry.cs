@@ -87,6 +87,7 @@ namespace LinqToDB.Common.Internal.Cache
 						value,
 						"The sliding expiration value must be positive.");
 				}
+
 				_slidingExpiration = value;
 			}
 		}
@@ -227,6 +228,7 @@ namespace LinqToDB.Common.Internal.Cache
 					}
 				}
 			}
+
 			return false;
 		}
 
@@ -307,7 +309,7 @@ namespace LinqToDB.Common.Internal.Cache
 				{
 					registration.EvictionCallback?.Invoke(entry.Key, entry.Value, entry.EvictionReason, registration.State);
 				}
-				catch (Exception)
+				catch
 				{
 					// This will be invoked on a background thread, don't let it throw.
 					// TODO: LOG

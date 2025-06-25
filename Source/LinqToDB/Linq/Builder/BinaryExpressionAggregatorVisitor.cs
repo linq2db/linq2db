@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-
 	sealed class BinaryExpressionAggregatorVisitor : ExpressionVisitorBase
 	{
 		public static readonly ExpressionVisitor Instance = new BinaryExpressionAggregatorVisitor();

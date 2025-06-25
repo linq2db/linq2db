@@ -1,6 +1,8 @@
 ﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -40,12 +42,11 @@ namespace Tests.UserTests
 				});
 
 				var record = t.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.SomeValue1, Is.EqualTo(4));
 					Assert.That(record.SomeValue2, Is.EqualTo(4));
-				});
+				}
 			}
 		}
 
@@ -68,12 +69,11 @@ namespace Tests.UserTests
 				});
 
 				var record = t.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.SomeValue1, Is.EqualTo(4));
 					Assert.That(record.SomeValue2, Is.EqualTo(4));
-				});
+				}
 			}
 		}
 
@@ -99,12 +99,11 @@ namespace Tests.UserTests
 				db.Update(record);
 
 				record = t.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.SomeValue1, Is.EqualTo(16));
 					Assert.That(record.SomeValue2, Is.EqualTo(16));
-				});
+				}
 			}
 		}
 
@@ -130,24 +129,22 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = t.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.SomeValue1, Is.EqualTo(16));
 					Assert.That(record.SomeValue2, Is.EqualTo(8));
-				});
+				}
 
 				var param = 4;
 				t.Set(r => r.SomeValue2, () => param)
 					.Update();
 
 				record = t.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.SomeValue1, Is.EqualTo(16));
 					Assert.That(record.SomeValue2, Is.EqualTo(16));
-				});
+				}
 			}
 		}
 	}

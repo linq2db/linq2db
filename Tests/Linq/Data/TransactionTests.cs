@@ -1,40 +1,39 @@
 ﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Data
 {
-	using Model;
-
 	[TestFixture]
 	public class TransactionTests : TestBase
 	{
 		[Test]
 		public async Task DataContextBeginTransactionAsync([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = new DataContext(context))
-			using (new RestoreBaseTables(db))
+			using var db = new DataContext(context);
+			using var ts = new RestoreBaseTables(db);
+
+			// ensure connection opened and test results not affected by OpenAsync
+			using var ks = new KeepConnectionAliveScope(db);
+
+			await db.GetTable<Parent>().ToListAsync();
+
+			var tid = Environment.CurrentManagedThreadId;
+
+			using (await db.BeginTransactionAsync())
 			{
-				// ensure connection opened and test results not affected by OpenAsync
-				db.KeepConnectionAlive = true;
-				await db.GetTable<Parent>().ToListAsync();
+				// perform synchonously to not mess with BeginTransactionAsync testing
+				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
-				var tid = Environment.CurrentManagedThreadId;
-
-				using (await db.BeginTransactionAsync())
-				{
-					// perform synchonously to not mess with BeginTransactionAsync testing
-					db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
-
-					if (tid == Environment.CurrentManagedThreadId)
-						Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
-				}
+				if (tid == Environment.CurrentManagedThreadId)
+					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}
 

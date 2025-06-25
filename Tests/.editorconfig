@@ -10,13 +10,6 @@ dotnet_diagnostic.CA1852.severity = none # CA1852: Seal internal types
 # ReSharper properties
 resharper_space_before_new_parentheses = true
 
-# nobody asked for this analyzer to trigger in tests...
-dotnet_public_api_analyzer.require_api_files = false
-dotnet_diagnostic.RS0016.severity = none
-dotnet_diagnostic.RS0026.severity = none
-dotnet_diagnostic.RS0027.severity = none
-dotnet_diagnostic.RS0037.severity = none
-
 dotnet_diagnostic.CA1044.severity = none # CA1044: Properties should not be write only
 dotnet_diagnostic.CA1055.severity = none # CA1045: Url in name - url in type...
 dotnet_diagnostic.CA1058.severity = none # CA1058: Types should not extend certain base types
@@ -31,6 +24,8 @@ dotnet_diagnostic.CA1860.severity = none # CA1860: Avoid using 'Enumerable.Any()
 dotnet_diagnostic.CA1861.severity = none # CA1861: Avoid constant arrays as arguments
 dotnet_diagnostic.CA1862.severity = none # CA1862: prefer the string comparison method with StringComparison argument
 dotnet_diagnostic.CA2237.severity = none # CA2237: Mark ISerializable types with SerializableAttribute
+
+dotnet_diagnostic.MA0169.severity = none
 
 [*.vb]
 dotnet_diagnostic.CA2224.severity = none # CA2224: Override Equals on overloading operator equals // https://github.com/dotnet/roslyn-analyzers/issues/6778

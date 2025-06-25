@@ -1,9 +1,10 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
@@ -72,8 +73,7 @@ namespace Tests.UserTests
 				var s = sp.GetSchema(db);
 				var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals("ColumnOrderTest", StringComparison.OrdinalIgnoreCase))!;
 				Assert.That(table, Is.Not.Null);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// Confirm order of specified fields only
 					Assert.That(table.Columns[0].ColumnName.ToLowerInvariant(), Is.EqualTo("recordid"));
@@ -82,7 +82,7 @@ namespace Tests.UserTests
 					Assert.That(table.Columns[3].ColumnName.ToLowerInvariant(), Is.EqualTo("key"));
 					Assert.That(table.Columns[6].ColumnName.ToLowerInvariant(), Is.EqualTo("audit1id"));
 					Assert.That(table.Columns[7].ColumnName.ToLowerInvariant(), Is.EqualTo("audit2id"));
-				});
+				}
 
 				// Confirm that unordered fields are in the right range of positions
 				string[] unordered = new[] { "name", "code" };
@@ -121,8 +121,7 @@ namespace Tests.UserTests
 					var s = sp.GetSchema(db);
 					var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals(nameof(FluentMapping), StringComparison.OrdinalIgnoreCase))!;
 					Assert.That(table, Is.Not.Null);
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						// Confirm order of specified fields only
 						Assert.That(table.Columns[0].ColumnName.ToLowerInvariant(), Is.EqualTo("recordid"));
@@ -131,7 +130,7 @@ namespace Tests.UserTests
 						Assert.That(table.Columns[3].ColumnName.ToLowerInvariant(), Is.EqualTo("key"));
 						Assert.That(table.Columns[6].ColumnName.ToLowerInvariant(), Is.EqualTo("audit1id"));
 						Assert.That(table.Columns[7].ColumnName.ToLowerInvariant(), Is.EqualTo("audit2id"));
-					});
+					}
 
 					// Confirm that unordered fields are in the right range of positions
 					string[] unordered = new[] { "unordered1", "unordered2" };

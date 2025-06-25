@@ -1,5 +1,8 @@
 ﻿using System.Linq;
+
 using LinqToDB;
+using LinqToDB.Tools;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -50,6 +53,22 @@ namespace Tests.Linq
 				var result = query.ToArray();
 				Assert.That(result, Has.Length.EqualTo(1));
 			}
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = "Cannot use the collection from a GroupJoin as an expression.")]
+		public void LeftJoinGroupTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+				join c in db.Child on p.Value1 equals c.ParentID into g
+				from c in g.DefaultIfEmpty()
+				where g == null
+				select p.ParentID;
+
+			_ = q.ToSqlQuery().Sql;
 		}
 	}
 }

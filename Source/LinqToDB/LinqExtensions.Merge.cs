@@ -4,17 +4,17 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.Reflection;
+
+using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
 namespace LinqToDB
 {
-	using Expressions;
-	using Linq;
-	using Async;
-	using Reflection;
-
-	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
-
 	public static partial class LinqExtensions
 	{
 
@@ -922,6 +922,7 @@ namespace LinqToDB
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputExpression">Output record constructor expression.
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Sequence of records returned by output.</returns>
 		/// <remarks>
@@ -929,6 +930,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
 		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
+		/// <item>PostgreSQL 17+ (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IEnumerable<TOutput> MergeWithOutput<TTarget,TSource,TOutput>(
@@ -958,6 +960,7 @@ namespace LinqToDB
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputExpression">Output record constructor expression.
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new, <typeparamref name="TSource"/> source.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Sequence of records returned by output.</returns>
 		/// <remarks>
@@ -965,6 +968,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
 		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
+		/// <item>PostgreSQL 17+ (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IEnumerable<TOutput> MergeWithOutput<TTarget,TSource,TOutput>(
@@ -994,6 +998,7 @@ namespace LinqToDB
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputExpression">Output record constructor expression.
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new.        		
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Async sequence of records returned by output.</returns>
 		/// <remarks>
@@ -1001,6 +1006,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
 		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
+		/// <item>PostgreSQL 17+ (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> MergeWithOutputAsync<TTarget, TSource, TOutput>(
@@ -1030,6 +1036,7 @@ namespace LinqToDB
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputExpression">Output record constructor expression.
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new, <typeparamref name="TSource"/> source.        		
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Async sequence of records returned by output.</returns>
 		/// <remarks>
@@ -1037,6 +1044,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
 		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
+		/// <item>PostgreSQL 17+ (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> MergeWithOutputAsync<TTarget,TSource,TOutput>(
@@ -1067,7 +1075,8 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputTable">Table which should handle output result.</param>
 		/// <param name="outputExpression">Output record constructor expression.
-		/// Expression supports only record new expression with field initializers.</param>
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new.
+        /// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
 		/// <remarks>
 		/// Database support:
@@ -1108,7 +1117,8 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputTable">Table which should handle output result.</param>
 		/// <param name="outputExpression">Output record constructor expression.
-		/// Expression supports only record new expression with field initializers.</param>
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new, <typeparamref name="TSource"/> source.
+        /// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
 		/// <remarks>
 		/// Database support:
@@ -1149,8 +1159,9 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputTable">Table which should handle output result.</param>
 		/// <param name="outputExpression">Output record constructor expression.
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new.
 		/// Expression supports only record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
 		/// <remarks>
 		/// Database support:
@@ -1193,8 +1204,9 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputTable">Table which should handle output result.</param>
 		/// <param name="outputExpression">Output record constructor expression.
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new, <typeparamref name="TSource"/> source.
 		/// Expression supports only record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
 		/// <remarks>
 		/// Database support:

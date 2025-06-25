@@ -1,8 +1,9 @@
 ﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -145,7 +146,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		private static SampleClass[] GenerateData()
 		{
 			return Enumerable.Range(1, 1).Select(i => new SampleClass() { Id = i, Value = i * 100 }).ToArray();
@@ -209,9 +209,9 @@ namespace Tests.Linq
 				: 0);
 
 			var res = query.ToArray();
-			Assert.That(res[0], Is.EqualTo(0));
+			Assert.That(res[0], Is.Zero);
 			res = query.ToArray();
-			Assert.That(res[0], Is.EqualTo(0));
+			Assert.That(res[0], Is.Zero);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2494")]
@@ -227,7 +227,7 @@ namespace Tests.Linq
 			var res = query.ToArray();
 			Assert.That(res[0], Is.EqualTo(1));
 			res = query.ToArray();
-			Assert.That(res[0], Is.EqualTo(0));
+			Assert.That(res[0], Is.Zero);
 		}
 
 		[Table]

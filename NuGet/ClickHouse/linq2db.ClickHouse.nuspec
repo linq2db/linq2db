@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!-- %T4% -->
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata minClientVersion="3.3.0">
+		<id>linq2db.ClickHouse</id>
+		<title>LINQ to DB T4 Scaffold Templates for ClickHouse</title>
+		<tags>ClickHouse</tags>
+	</metadata>
+	<files>
+		<file src="t4bin\MySqlConnector.dll"                            target="tools" />
+		<file src="t4bin\System.Memory.dll"                             target="tools" />
+		<file src="t4bin\System.Buffers.dll"                            target="tools" />
+		<file src="t4bin\System.Threading.Tasks.Extensions.dll"         target="tools" />
+		<file src="t4bin\System.Diagnostics.DiagnosticSource.dll"       target="tools" />
+		<file src="t4bin\Microsoft.Extensions.Logging.Abstractions.dll" target="tools" />
+		<file src="t4bin\ClickHouse.Client.dll"                         target="tools" />
+		<file src="t4bin\Microsoft.Extensions.Http.dll"                 target="tools" />
+		<file src="t4bin\System.Text.Json.dll"                          target="tools" />
+		<file src="t4bin\NodaTime.dll"                                  target="tools" />
+	</files>
+</package>

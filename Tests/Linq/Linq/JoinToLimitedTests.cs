@@ -3,7 +3,6 @@
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 
 using NUnit.Framework;
 
@@ -12,6 +11,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class JoinToLimitedTests : TestBase
 	{
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void LeftJoinToTop([DataSources] string context)
 		{
@@ -27,13 +27,11 @@ namespace Tests.Linq
 					from c in cg.OrderByDescending(x => x.ChildID).DefaultIfEmpty().Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqToDBException>();
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void LeftJoinToTopWhere([DataSources] string context)
 		{
@@ -47,10 +45,7 @@ namespace Tests.Linq
 					from c in db.Child.Where(x => x.ParentID == o.ParentID).OrderByDescending(x => x.ChildID).DefaultIfEmpty().Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqToDBException>();
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -92,6 +87,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void LeftJoinLimited2([DataSources] string context)
 		{
@@ -107,10 +103,7 @@ namespace Tests.Linq
 					from c in cg.OrderByDescending(x => x.ChildID).Take(1).DefaultIfEmpty()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqToDBException>();
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -205,6 +198,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void InnerJoinToTop([DataSources] string context)
 		{
@@ -220,13 +214,11 @@ namespace Tests.Linq
 					from c in cg.OrderByDescending(x => x.ChildID).Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqToDBException>();
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void InnerJoinToTopWhere([DataSources] string context)
 		{
@@ -240,10 +232,7 @@ namespace Tests.Linq
 					from c in db.Child.Where(x => x.ParentID == o.ParentID).OrderByDescending(x => x.ChildID).Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqToDBException>();
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -285,6 +274,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void InnerJoinLimited2([DataSources] string context)
 		{
@@ -300,10 +290,7 @@ namespace Tests.Linq
 					from c in cg.OrderByDescending(x => x.ChildID).Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqToDBException>();
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 

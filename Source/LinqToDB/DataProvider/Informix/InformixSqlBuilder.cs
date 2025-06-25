@@ -5,13 +5,13 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	sealed partial class InformixSqlBuilder : BasicSqlBuilder
 	{
 		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
@@ -336,6 +336,7 @@ namespace LinqToDB.DataProvider.Informix
 				BuildExpression(value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
 				StringBuilder.Append(InlineComma);
 			}
+
 			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
 			StringBuilder.Append(')');
 		}
@@ -393,6 +394,38 @@ namespace LinqToDB.DataProvider.Informix
 			}
 
 			base.BuildParameter(parameter);
+		}
+
+		protected override void BuildInListPredicate(SqlPredicate.InList predicate)
+		{
+			// IFX doesn't support `NULL [NOT] IN`
+			if (predicate.Expr1 is SqlParameter { IsQueryParameter: false } parameter)
+			{
+				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				if (paramValue.ProviderValue == null)
+				{
+					var nullExpr = new SqlCastExpression(new SqlValue(paramValue.DbDataType, null), paramValue.DbDataType, null, isMandatory: true);
+					predicate    = new SqlPredicate.InList(nullExpr, predicate.WithNull, predicate.IsNot, predicate.Values);
+				}
+			}
+
+			base.BuildInListPredicate(predicate);
+		}
+
+		protected override void BuildInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		{
+			// IFX doesn't support `NULL [NOT] IN`
+			if (predicate.Expr1 is SqlParameter { IsQueryParameter: false } parameter)
+			{
+				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				if (paramValue.ProviderValue == null)
+				{
+					var nullExpr = new SqlCastExpression(new SqlValue(paramValue.DbDataType, null), paramValue.DbDataType, null, isMandatory: true);
+					predicate    = new SqlPredicate.InSubQuery(nullExpr, predicate.IsNot, predicate.SubQuery, predicate.DoNotConvert);
+				}
+			}
+
+			base.BuildInSubQueryPredicate(predicate);
 		}
 	}
 }

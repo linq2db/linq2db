@@ -1,10 +1,13 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -687,6 +690,44 @@ namespace Tests.Linq
 				// TODO: https://github.com/linq2db/linq2db/issues/2842
 				//AreEqual(clientQuery, serverQuery);
 			}
+		}
+
+		[Test]
+		public void TestAsSqlBoolTranslation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Select(() => Coalesce(Sql.AsSql(true), Sql.AsSql(false)));
+
+			Assert.That(result, Is.True);
+		}
+
+		[Test]
+		public void TestNoAsSqlBoolTranslation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Select(() => Coalesce(true, false));
+
+			Assert.That(result, Is.True);
+		}
+
+		[Sql.Expression("IIF({0} IS NULL, {1}, {0})", CanBeNull = false, IgnoreGenericParameters = true, ServerSideOnly = true, Configuration = ProviderName.Access)]
+		[Sql.Function("COALESCE", CanBeNull = false, IgnoreGenericParameters = true, ServerSideOnly = true)]
+		static T Coalesce<T>(T value, T defaultValue) => throw new ServerSideOnlyException(nameof(Coalesce));
+
+		[Sql.Function("CONTAINS", ServerSideOnly = true, CanBeNull = false, InlineParameters = false, PreferServerSide = true, IsPredicate = true)]
+		static bool FtxContains(string columnOrColumns, string search) => throw new InvalidOperationException();
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4933")]
+		public void IssueFunctionPredicate([IncludeDataSources(TestProvName.AllNorthwind)] string context)
+		{
+			using var db = new NorthwindDB(context);
+
+			_ = db.Product.Where(p => FtxContains(p.ProductName, "some")).ToArray();
+
+			Assert.That(db.LastQuery, Does.Not.Contain(" = "));
 		}
 	}
 }

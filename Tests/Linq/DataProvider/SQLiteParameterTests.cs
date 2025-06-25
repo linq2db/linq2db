@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.DataProvider
@@ -55,15 +57,14 @@ namespace Tests.DataProvider
 						select t;
 
 			query.ToArray();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 #pragma warning disable CS0618 // Type or member is obsolete
 				Assert.That(query.GetStatement().CollectParameters(), Is.Empty);
 #pragma warning restore CS0618 // Type or member is obsolete
 
 				Assert.That(query.ToSqlQuery().Sql, Does.Not.Contain("DateTime("));
-			});
+			}
 		}
 
 		[Test]
@@ -93,7 +94,6 @@ namespace Tests.DataProvider
 					where t1.DoubleValue == double.MinValue && t1.FloatValue == float.MinValue
 					select t1
 				);
-
 
 				AreEqualWithComparer(expected, actual);
 			}

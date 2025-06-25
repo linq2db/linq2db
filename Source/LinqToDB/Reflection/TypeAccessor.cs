@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 
+using LinqToDB.Common.Internal;
+
 namespace LinqToDB.Reflection
 {
 	[DebuggerDisplay("Type = {" + nameof(Type) + "}")]
@@ -79,7 +81,7 @@ namespace LinqToDB.Reflection
 
 			var accessorType = typeof(TypeAccessor<>).MakeGenericType(type);
 
-			accessor = (TypeAccessor)Activator.CreateInstance(accessorType, true)!;
+			accessor = ActivatorExt.CreateInstance<TypeAccessor>(accessorType, true);
 
 			_accessors[type] = accessor;
 

@@ -4,16 +4,15 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Linq;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.Mapping;
-	using Model;
-
 	[TestFixture]
 	public class SubQueryTests : TestBase
 	{
@@ -886,7 +885,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		#region Issue 4458
 		[Table]
 		sealed class Issue4458Item
@@ -991,12 +989,12 @@ namespace Tests.Linq
 
 			var result = filteredByScore.ToArray();
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ItemId, Is.EqualTo("1"));
 				Assert.That(result[0].TotalAvailable, Is.EqualTo(10));
 				Assert.That(result[0].Reviews.Count(), Is.EqualTo(2));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
@@ -1022,12 +1020,12 @@ namespace Tests.Linq
 
 			var result = filteredByScore.ToArray();
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ItemId, Is.EqualTo("1"));
 				Assert.That(result[0].TotalAvailable, Is.EqualTo(10));
 				Assert.That(result[0].Reviews.Count(), Is.EqualTo(2));
-			});
+			}
 		}
 		#endregion
 
@@ -1265,6 +1263,180 @@ namespace Tests.Linq
 			public int ScanId = scanId;
 		}
 
+		#endregion
+
+		// technically it is not correct as such rownum generation is not guaranteed to follow query ordering
+		// that's why many dbs disabled and only sqlserver and oracle work
+		[Test]
+		public void PreserveOrderInSubqueryWithWindowFunction_WithOrder([DataSources(
+			TestProvName.AllSqlServer2008Minus, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase,
+			TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllDB2
+			)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Person
+				.OrderBy(p => p.FirstName)
+				.Select(r =>
+				new
+				{
+					r.ID,
+					RowNumber = Sql.Ext.RowNumber().Over().OrderBy(db.Select(() => "unordered")).ToValue()
+				})
+				.Take(100)
+				.Join(db.Person, r => r.ID, r => r.ID, (r, n) => new { r.RowNumber, n.ID })
+				.Where(r => r.ID == 2)
+				.Single();
+
+			Assert.That(result.RowNumber, Is.EqualTo(4));
+		}
+
+		[Test]
+		public void PreserveOrderInSubqueryWithWindowFunction_NoOrdering([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Person
+				.Select(r =>
+				new
+				{
+					r.ID,
+					RowNumber = Sql.Ext.RowNumber().Over().OrderBy(r.FirstName).ToValue()
+				})
+				.Join(db.Person, r => r.ID, r => r.ID, (r, n) => new { r.RowNumber, n.ID })
+				.Where(r => r.ID == 2)
+				.Single();
+
+			Assert.That(result.RowNumber, Is.EqualTo(4));
+		}
+
+		#region Issue 4751
+
+		public class Trp004
+		{
+			public int Id { get; set; }
+
+			[Column(Length = 10)] public string? CarNo { get; set; }
+			[Column(Length = 10)] public string? RuleNo { get; set; }
+			[Column(Length = 10)] public string? LastWorkVal { get; set; }
+			[Column(Length = 10)] public string? LastDate { get; set; }
+			[Column(Length = 10)] public string? RealLastWorkVal { get; set; }
+			[Column(Length = 10)] public string? RealLastDate { get; set; }
+			[Column(Length = 10)] public string? Status { get; set; }
+			[Column(Length = 10)] public string? TelNo { get; set; }
+			[Column(Length = 10)] public string? RecCreator { get; set; }
+			[Column(Length = 10)] public string? RecCreateTime { get; set; }
+			[Column(Length = 10)] public string? RecRevisor { get; set; }
+			[Column(Length = 10)] public string? RecReviseTime { get; set; }
+		}
+
+		public class Tdm100
+		{
+			public int Id { get; set; }
+
+			[Column(Length = 10)] public string? CarSelf { get; set; }
+			[Column(Length = 10)] public string? CarNo { get; set; }
+			[Column(Length = 10)] public string? CarBrand { get; set; }
+			[Column(Length = 10)] public string? RateWgt { get; set; }
+			[Column(Length = 10)] public string? MastLeve { get; set; }
+			[Column(Length = 10)] public string? ForkPole { get; set; }
+			[Column(Length = 10)] public string? ForkPoleLen { get; set; }
+		}
+
+		public class Trp003
+		{
+			public int Id { get; set; }
+
+			[Column(Length = 10)] public string? RuleNo { get; set; }
+			[Column(Length = 10)] public string? RuleName { get; set; }
+			[Column(Length = 10)] public string? RuleType { get; set; }
+			[Column(Length = 10)] public string? RuleVal { get; set; }
+			[Column(Length = 10)] public string? RuleUnit { get; set; }
+			[Column(Length = 10)] public string? Remark { get; set; }
+		}
+
+		public class Trp0041
+		{
+			public int Id { get; set; }
+
+			[Column(Length = 10)] public string? CarNo { get; set; }
+			[Column(Length = 10)] public string? FirstVal { get; set; }
+		}
+
+		class Rp002_R_GetPageList_Dto()
+		{
+			public int Id { get; set; }
+
+			public string? CarNo { get; set; }
+			public string? CarSelf { get; set; }
+			public string? CarBrand { get; set; }
+			public string? RateWgt { get; set; }
+			public string? MastLeve { get; set; }
+			public string? ForkPole { get; set; }
+			public string? FirstVal { get; set; }
+			public string? TelNo { get; set; }
+			public string? RuleNo { get; set; }
+			public string? RuleName { get; set; }
+			public string? RuleType { get; set; }
+			public string? RuleVal { get; set; }
+			public string? RuleUnit { get; set; }
+			public string? RecCreator { get; set; }
+			public string? RecCreateTime { get; set; }
+			public string? RecRevisor { get; set; }
+			public string? RecReviseTime { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4751")]
+		public void Issue4751Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
+			using var tb1 = db.CreateLocalTable<Tdm100>();
+			using var tb2 = db.CreateLocalTable<Trp004>();
+			using var tb3 = db.CreateLocalTable<Trp003>();
+			using var tb4 = db.CreateLocalTable<Trp0041>();
+
+			var hasRule = string.Empty;
+			string? carNo = null;
+			string? carBrand = null;
+
+			var query = (from t1 in tb1
+						 from t2 in tb2.LeftJoin(x => x.CarNo == t1.CarNo)
+						 from t3 in tb3.LeftJoin(x => x.RuleNo == t2.RuleNo)
+						 from t4 in tb4.LeftJoin(x => x.CarNo == t1.CarNo)
+
+						 orderby t1.CarNo
+						 select new Rp002_R_GetPageList_Dto()
+						 {
+							 Id = t1.Id,
+							 CarNo = t1.CarNo,
+							 CarSelf = t1.CarSelf,
+							 CarBrand = t1.CarBrand,
+							 RateWgt = t1.RateWgt,
+							 MastLeve = t1.MastLeve,
+							 ForkPole = t1.ForkPole,
+							 FirstVal = t4.FirstVal,
+							 TelNo = t2.TelNo,
+							 RuleNo = t2.RuleNo,
+							 RuleName = t3.RuleName,
+							 RuleType = t3.RuleType,
+							 RuleVal = t3.RuleVal,
+							 RuleUnit = t3.RuleUnit,
+							 RecCreator =t2.RecCreator,
+							 RecCreateTime = t2.RecCreateTime,
+							 RecRevisor = t2.RecRevisor,
+							 RecReviseTime = t2.RecReviseTime
+						 });
+
+			IQueryable<Rp002_R_GetPageList_Dto> query2;
+
+			query2 = (from t in query.AsSubQuery() select t);
+
+			var query3 = query2.Where(x => x.CarNo!.Contains(carNo!) && x.CarBrand!.Contains(carBrand!));
+
+			var items = query3.Skip(20).Take(10).ToList();
+			var totalCount = query3.Count();
+		}
 		#endregion
 	}
 }

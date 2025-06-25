@@ -4,10 +4,10 @@ using LinqToDB;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class SelectManyTests : TestBase
 	{
@@ -226,12 +226,11 @@ namespace Tests.Linq
 				Assert.That(list, Has.Count.EqualTo(1));
 
 				var person = list[0].p;
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(person.ID, Is.EqualTo(1));
 					Assert.That(person.FirstName, Is.EqualTo("John"));
-				});
+				}
 			}
 		}
 
@@ -264,11 +263,11 @@ namespace Tests.Linq
 
 			foreach (var person in q)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(person.ID, Is.EqualTo(1));
 					Assert.That(person.FirstName, Is.EqualTo("John"));
-				});
+				}
 			}
 		}
 

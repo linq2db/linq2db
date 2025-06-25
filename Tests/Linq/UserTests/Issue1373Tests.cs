@@ -1,9 +1,11 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using System.Linq;
 
 namespace Tests.UserTests
 {
@@ -276,7 +278,7 @@ namespace Tests.UserTests
 		{
 			var result = db.GetTable<Issue1363CustomRecord>().OrderBy(_ => _.Id).ToArray();
 			Assert.That(result, Has.Length.EqualTo(3));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[0].Field1, Is.Null);
@@ -284,7 +286,8 @@ namespace Tests.UserTests
 				Assert.That(result[1].Field1, Is.Null);
 				Assert.That(result[2].Id, Is.EqualTo(3));
 				Assert.That(result[2].Field1, Is.Not.Null);
-			});
+			}
+
 			Assert.That(result[2].Field1!.Field1, Is.EqualTo("test"));
 		}
 	}

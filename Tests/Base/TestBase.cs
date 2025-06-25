@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -9,11 +10,11 @@ using LinqToDB.Data;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 
+using Tests.Model;
+
 namespace Tests
 {
-	using Model;
-
-	public partial class TestBase
+	public abstract partial class TestBase
 	{
 		const int TRACES_LIMIT = 50000;
 
@@ -44,13 +45,20 @@ namespace Tests
 					var ctx = CustomTestContext.Get();
 					if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
 					{
-						var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
-						if (trace == null)
+						static StringBuilder GetTraceBuilder(CustomTestContext ctx)
 						{
-							trace = new StringBuilder();
-							ctx.Set(CustomTestContext.TRACE, trace);
+							var builder = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+							if (builder is not null)
+								return builder;
+
+							builder = new();
+							ctx.Set(CustomTestContext.TRACE, builder);
+							return builder;
 						}
 
+						var trace = GetTraceBuilder(ctx);
+
+						// necessary for multi-threaded tests like `Issue1398Tests.cs`
 						lock (trace)
 							trace.AppendLine($"{name}: {message}");
 
@@ -61,15 +69,16 @@ namespace Tests
 							Debug.WriteLine(message, name);
 						}
 
-						traceCount++;
+						Interlocked.Increment(ref traceCount);
 					}
 				};
 
 				Configuration.Linq.TraceMapperExpression = false;
 				// Configuration.Linq.GenerateExpressionTest  = true;
-				var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
 
 #if NETFRAMEWORK
+				var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.CodeBase.Replace("file:///", ""))!;
+
 				// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
 				try
 				{
@@ -79,6 +88,8 @@ namespace Tests
 				{
 					// ignore
 				}
+#else
+				var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
 #endif
 
 				Environment.CurrentDirectory = assemblyPath;

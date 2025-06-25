@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -42,7 +44,7 @@ namespace Tests.UserTests
 					.DefaultIfEmpty(0)
 					.MaxAsync();
 
-				Assert.That(value2, Is.EqualTo(0));
+				Assert.That(value2, Is.Zero);
 
 				var value3 = await db.GetTable<TestClass>()
 					.Where(x => x.Id == 0)

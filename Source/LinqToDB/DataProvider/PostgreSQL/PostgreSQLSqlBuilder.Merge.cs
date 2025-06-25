@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using SqlQuery;
-
 	public partial class PostgreSQLSqlBuilder
 	{
 		// we enable MERGE in base pgsql builder class intentionally
@@ -13,7 +12,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		// (e.g. to use non-merge insertorreplace implementation)
 
 		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,
-			IReadOnlyList<ISqlExpression[]>                                      rows, int row, int column)
+			IReadOnlyList<List<ISqlExpression>>                                      rows, int row, int column)
 		{
 			return row < 0
 				|| (row == 0

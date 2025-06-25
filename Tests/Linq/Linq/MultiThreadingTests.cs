@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
+﻿using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using Newtonsoft.Json;
+
 using NUnit.Framework;
+
 using Tests.xUpdate;
 
 namespace Tests.Linq
@@ -125,7 +123,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MergeInsert([MergeTests.MergeDataContextSource(false, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void MergeInsert([MergeDataContextSource(false, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
@@ -225,7 +223,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		/*
 		[Test]
 		public void EagerLoadingX([DataSources(false)] string context, [Values(1, 2, 3)] int p)
@@ -284,7 +281,6 @@ namespace Tests.Linq
 			}
 		}
 		*/
-
 
 	}
 }

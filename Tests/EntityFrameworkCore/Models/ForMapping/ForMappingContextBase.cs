@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace LinqToDB.EntityFrameworkCore.Tests.Models.ForMapping
 {
@@ -20,5 +21,24 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.ForMapping
 		public DbSet<WithInheritanceA> WithInheritanceA { get; set; } = null!;
 		public DbSet<WithInheritanceA1> WithInheritanceA1 { get; set; } = null!;
 		public DbSet<WithInheritanceA2> WithInheritanceA2 { get; set; } = null!;
+
+		public DbSet<SkipModesTable> SkipModes { get; set; } = null!;
+
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
+		{
+			base.OnModelCreating(modelBuilder);
+
+			modelBuilder.Entity<SkipModesTable>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+
+				b.Property(e => e.UpdateOnly).Metadata.SetBeforeSaveBehavior(PropertySaveBehavior.Ignore);
+				b.Property(e => e.InsertOnly).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+
+				var m = b.Property(e => e.ReadOnly).Metadata;
+				m.SetBeforeSaveBehavior(PropertySaveBehavior.Ignore);
+				m.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+			});
+		}
 	}
 }

@@ -8,7 +8,7 @@
   - [Passing Into Constructor](#passing-into-constructor)
   - [Using Config File (.NET Framework)](#using-config-file-net-framework)
   - [Using Connection String Settings Provider](#using-connection-string-settings-provider)
-  - [Use with ASP.NET Core](#use-with-aspnet-core-and-dependency-injection)
+  - [Use with ASP.NET Core and Dependency Injection](#use-with-aspnet-core-and-dependency-injection)
 - [Define **POCO** class](#define-poco-class)
   - [Configuration using mapping attributes](#configuration-using-mapping-attributes)
   - [Fluent Configuration](#fluent-configuration)
@@ -57,7 +57,7 @@ Code examples and demos can be found [here](https://github.com/linq2db/examples)
 
 ### Related Linq To DB and 3rd-party projects
 
-- [linq2db.EntityFrameworkCore](https://github.com/linq2db/linq2db.EntityFrameworkCore) (adds support for linq2db functionality in EF.Core projects)
+- [linq2db.EntityFrameworkCore](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB.EntityFrameworkCore) (adds support for linq2db functionality in EF.Core projects)
 - [LinqToDB.Identity](https://github.com/linq2db/LinqToDB.Identity) - ASP.NET Core Identity provider using Linq To DB
 - [LINQPad Driver](https://github.com/linq2db/linq2db.LINQPad)
 - [DB2 iSeries Provider](https://github.com/LinqToDB4iSeries/Linq2DB4iSeries)
@@ -225,7 +225,7 @@ With fluent approach you can configure only things that require it explicitly. A
 // Never create new mapping schema for each connection as
 // it will seriously harm performance
 var myFluentMappings = new MappingSchema();
-var builder          = mappingSchema.GetFluentMappingBuilder();
+var builder          = new FluentMappingBuilder(mappingSchema);
 
 builder.Entity<Product>()
     .HasTableName("Products")

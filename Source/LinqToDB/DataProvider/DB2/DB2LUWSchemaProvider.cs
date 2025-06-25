@@ -5,12 +5,12 @@ using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	// Known Issues:
 	// - CommandBehavior.SchemaOnly doesn't return schema for stored procedures
 	class DB2LUWSchemaProvider : SchemaProviderBase
@@ -25,12 +25,19 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		readonly HashSet<string?> _systemSchemas =
-			GetHashSet(new [] {"SYSCAT", "SYSFUN", "SYSIBM", "SYSIBMADM", "SYSPROC", "SYSPUBLIC", "SYSSTAT", "SYSTOOLS" },
+			GetHashSet(["SYSCAT", "SYSFUN", "SYSIBM", "SYSIBMADM", "SYSPROC", "SYSPUBLIC", "SYSSTAT", "SYSTOOLS"],
 				StringComparer.OrdinalIgnoreCase);
+
+		protected override void InitProvider(DataConnection dataConnection, GetSchemaOptions options)
+		{
+			base.InitProvider(dataConnection, options);
+
+			DefaultSchema = options.DefaultSchema ?? dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
+		}
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			DataTypesSchema = dataConnection.Connection.GetSchema("DataTypes");
+			DataTypesSchema = dataConnection.OpenDbConnection().GetSchema("DataTypes");
 
 			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
@@ -48,30 +55,31 @@ namespace LinqToDB.DataProvider.DB2
 				.ToList();
 		}
 
-		protected string? CurrentSchema { get; private set; }
+		protected string? DefaultSchema { get; private set; }
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			LoadCurrentSchema(dataConnection);
+			var connection = dataConnection.OpenDbConnection();
+			var database   = connection.Database;
 
-			var tables = dataConnection.Connection.GetSchema("Tables");
+			var tables = connection.GetSchema("Tables");
 
 			return
 			(
 				from t in tables.AsEnumerable()
 				where _tableTypes.Contains(t.Field<string>("TABLE_TYPE"))
-				let catalog = dataConnection.Connection.Database
+				let catalog = database
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
 				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
-				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == CurrentSchema
+				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == DefaultSchema
 				select new TableInfo
 				{
 					TableID            = catalog + '.' + schema + '.' + name,
 					CatalogName        = catalog,
 					SchemaName         = schema,
 					TableName          = name,
-					IsDefaultSchema    = string.IsNullOrEmpty(schema),
+					IsDefaultSchema    = schema                        == DefaultSchema,
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					Description        = t.Field<string>("REMARKS"),
 					IsProviderSpecific = system || _systemSchemas.Contains(schema)
@@ -79,21 +87,18 @@ namespace LinqToDB.DataProvider.DB2
 			).ToList();
 		}
 
-		protected void LoadCurrentSchema(DataConnection dataConnection)
-		{
-			CurrentSchema ??= dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
-		}
-
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
+			var database = dataConnection.OpenDbConnection().Database;
+
 			return
 			(
 				from pk in dataConnection.Query(
 					rd => new
 					{
 						// IMPORTANT: reader calls must be ordered to support SequentialAccess
-						id   = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1),
+						id   = database + "." + rd.ToString(0) + "." + rd.ToString(1),
 						name = rd.ToString(2),
 						cols = rd.ToString(3)!.Split('+').Skip(1).ToArray(),
 					},@"
@@ -139,10 +144,12 @@ FROM
 WHERE
 	" + GetSchemaFilter("TABSCHEMA");
 
+			var database = dataConnection.OpenDbConnection().Database;
+
 			return _columns = dataConnection.Query(rd =>
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var tableId     = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1);
+					var tableId     = database + "." + rd.ToString(0) + "." + rd.ToString(1);
 					var name        = rd.ToString(2)!;
 					var size        = Converter.ChangeTypeTo<int?>(rd[3]);
 					var scale       = Converter.ChangeTypeTo<int?>(rd[4]);
@@ -207,14 +214,16 @@ WHERE
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
+			var database = dataConnection.OpenDbConnection().Database;
+
 			return dataConnection
 				.Query(rd => new
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					name         = rd.ToString(0)!,
-					thisTable    = dataConnection.Connection.Database + "." + rd.ToString(1)  + "." + rd.ToString(2),
+					thisTable    = database + "." + rd.ToString(1)  + "." + rd.ToString(2),
 					thisColumns  = rd.ToString(3)!,
-					otherTable   = dataConnection.Connection.Database + "." + rd.ToString(4)  + "." + rd.ToString(5),
+					otherTable   = database + "." + rd.ToString(4)  + "." + rd.ToString(5),
 					otherColumns = rd.ToString(6)!,
 				},@"
 SELECT
@@ -382,7 +391,7 @@ WHERE
 
 		protected override string GetDataSourceName(DataConnection dbConnection)
 		{
-			var str = dbConnection.Connection.ConnectionString;
+			var str = dbConnection.OpenDbConnection().ConnectionString;
 
 			var host = str?.Split(';')
 				.Select(s =>
@@ -402,8 +411,6 @@ WHERE
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			LoadCurrentSchema(dataConnection);
-
 			var sql = @"
 SELECT * FROM (
 	SELECT
@@ -473,7 +480,7 @@ ORDER BY OBJECTMODULENAME, PROCSCHEMA, PROCNAME, PARM_COUNT";
 						};
 					},
 					sql)
-				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == CurrentSchema)
+				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == DefaultSchema)
 				.ToList();
 		}
 
@@ -569,7 +576,7 @@ FROM
 				return sql;
 			}
 
-			return $"{schemaNameField} = '{CurrentSchema}'";
+			return $"{schemaNameField} = '{DefaultSchema}'";
 		}
 
 		protected override string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)

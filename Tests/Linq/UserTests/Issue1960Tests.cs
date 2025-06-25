@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -60,14 +62,13 @@ namespace Tests.UserTests
 					DateTime = dtValue
 				});
 				var record = t.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.Decimal1, Is.EqualTo(decValue));
 					Assert.That(record.Decimal2, Is.EqualTo(decValue));
 					Assert.That(record.Decimal3, Is.EqualTo(decValue));
 					Assert.That(record.DateTime, Is.EqualTo(dtValue));
-				});
+				}
 			}
 		}
 	}

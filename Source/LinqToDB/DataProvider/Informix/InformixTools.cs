@@ -1,10 +1,9 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
+
+using LinqToDB.Data;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Data;
-
 	public static class InformixTools
 	{
 		internal static InformixProviderDetector ProviderDetector = new();
@@ -15,26 +14,29 @@ namespace LinqToDB.DataProvider.Informix
 			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider(InformixProvider provider = InformixProvider.AutoDetect, string? connectionString = null)
+		public static IDataProvider GetDataProvider(InformixProvider provider = InformixProvider.AutoDetect, string? connectionString = null, DbConnection? connection = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection), provider, default);
 		}
 
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString, InformixProvider provider = InformixProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString);
+			return new DataConnection(new DataOptions()
+				.UseConnectionString(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString));
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, InformixProvider provider = InformixProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection);
+			return new DataConnection(new DataOptions()
+				.UseConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection));
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction, InformixProvider provider = InformixProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction);
+			return new DataConnection(new DataOptions()
+				.UseTransaction(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction));
 		}
 
 		#endregion

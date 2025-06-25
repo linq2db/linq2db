@@ -129,61 +129,21 @@ M:System.TimeOnly.Parse(System.String); use overload with IFormatProvider parame
 M:System.TimeOnly.ParseExact(System.ReadOnlySpan{System.Char},System.String[]); use overload with IFormatProvider parameter
 M:System.TimeOnly.ParseExact(System.String,System.String); use overload with IFormatProvider parameter
 M:System.TimeOnly.ParseExact(System.String,System.String[]); use overload with IFormatProvider parameter
-M:System.Byte.Parse(System.String); use overload with IFormatProvider parameter
 M:System.Byte.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
-M:System.Byte.TryParse(System.ReadOnlySpan{System.Byte},System.Byte@); use overload with IFormatProvider parameter
-M:System.Byte.TryParse(System.ReadOnlySpan{System.Char},System.Byte@); use overload with IFormatProvider parameter
-M:System.Byte.TryParse(System.String,System.Byte@); use overload with IFormatProvider parameter
-M:System.Byte.ToString; use overload with IFormatProvider parameter
 M:System.Byte.ToString(System.String); use overload with IFormatProvider parameter
-M:System.SByte.Parse(System.String); use overload with IFormatProvider parameter
 M:System.SByte.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
-M:System.SByte.TryParse(System.ReadOnlySpan{System.Byte},System.SByte@); use overload with IFormatProvider parameter
-M:System.SByte.TryParse(System.ReadOnlySpan{System.Char},System.SByte@); use overload with IFormatProvider parameter
-M:System.SByte.TryParse(System.String,System.SByte@); use overload with IFormatProvider parameter
-M:System.SByte.ToString; use overload with IFormatProvider parameter
 M:System.SByte.ToString(System.String); use overload with IFormatProvider parameter
-M:System.Int16.Parse(System.String); use overload with IFormatProvider parameter
 M:System.Int16.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
-M:System.Int16.TryParse(System.ReadOnlySpan{System.Byte},System.Int16@); use overload with IFormatProvider parameter
-M:System.Int16.TryParse(System.ReadOnlySpan{System.Char},System.Int16@); use overload with IFormatProvider parameter
-M:System.Int16.TryParse(System.String,System.Int16@); use overload with IFormatProvider parameter
-M:System.Int16.ToString; use overload with IFormatProvider parameter
 M:System.Int16.ToString(System.String); use overload with IFormatProvider parameter
-M:System.UInt16.Parse(System.String); use overload with IFormatProvider parameter
 M:System.UInt16.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
-M:System.UInt16.TryParse(System.ReadOnlySpan{System.Byte},System.UInt16@); use overload with IFormatProvider parameter
-M:System.UInt16.TryParse(System.ReadOnlySpan{System.Char},System.UInt16@); use overload with IFormatProvider parameter
-M:System.UInt16.TryParse(System.String,System.UInt16@); use overload with IFormatProvider parameter
-M:System.UInt16.ToString; use overload with IFormatProvider parameter
 M:System.UInt16.ToString(System.String); use overload with IFormatProvider parameter
-M:System.Int32.Parse(System.String); use overload with IFormatProvider parameter
 M:System.Int32.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
-M:System.Int32.TryParse(System.ReadOnlySpan{System.Byte},System.Int32@); use overload with IFormatProvider parameter
-M:System.Int32.TryParse(System.ReadOnlySpan{System.Char},System.Int32@); use overload with IFormatProvider parameter
-M:System.Int32.TryParse(System.String,System.Int32@); use overload with IFormatProvider parameter
-M:System.Int32.ToString; use overload with IFormatProvider parameter
 M:System.Int32.ToString(System.String); use overload with IFormatProvider parameter
-M:System.UInt32.Parse(System.String); use overload with IFormatProvider parameter
 M:System.UInt32.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
-M:System.UInt32.TryParse(System.ReadOnlySpan{System.Byte},System.UInt32@); use overload with IFormatProvider parameter
-M:System.UInt32.TryParse(System.ReadOnlySpan{System.Char},System.UInt32@); use overload with IFormatProvider parameter
-M:System.UInt32.TryParse(System.String,System.UInt32@); use overload with IFormatProvider parameter
-M:System.UInt32.ToString; use overload with IFormatProvider parameter
 M:System.UInt32.ToString(System.String); use overload with IFormatProvider parameter
-M:System.Int64.Parse(System.String); use overload with IFormatProvider parameter
 M:System.Int64.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
-M:System.Int64.TryParse(System.ReadOnlySpan{System.Byte},System.Int64@); use overload with IFormatProvider parameter
-M:System.Int64.TryParse(System.ReadOnlySpan{System.Char},System.Int64@); use overload with IFormatProvider parameter
-M:System.Int64.TryParse(System.String,System.Int64@); use overload with IFormatProvider parameter
-M:System.Int64.ToString; use overload with IFormatProvider parameter
 M:System.Int64.ToString(System.String); use overload with IFormatProvider parameter
-M:System.UInt64.Parse(System.String); use overload with IFormatProvider parameter
 M:System.UInt64.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
-M:System.UInt64.TryParse(System.ReadOnlySpan{System.Byte},System.UInt64@); use overload with IFormatProvider parameter
-M:System.UInt64.TryParse(System.ReadOnlySpan{System.Char},System.UInt64@); use overload with IFormatProvider parameter
-M:System.UInt64.TryParse(System.String,System.UInt64@); use overload with IFormatProvider parameter
-M:System.UInt64.ToString; use overload with IFormatProvider parameter
 M:System.UInt64.ToString(System.String); use overload with IFormatProvider parameter
 M:System.Decimal.Parse(System.String); use overload with IFormatProvider parameter
 M:System.Decimal.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
@@ -206,17 +166,9 @@ M:System.Double.TryParse(System.ReadOnlySpan{System.Char},System.Double@); use o
 M:System.Double.TryParse(System.String,System.Double@); use overload with IFormatProvider parameter
 M:System.Double.ToString; use overload with IFormatProvider parameter
 M:System.Double.ToString(System.String); use overload with IFormatProvider parameter
-M:System.Text.StringBuilder.Append(System.Byte); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.Append(System.Decimal); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.Append(System.Double); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Append(System.Int16); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Append(System.Int32); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Append(System.Int64); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Append(System.SByte); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.Append(System.Single); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Append(System.UInt16); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Append(System.UInt32); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Append(System.UInt64); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.Append(System.Object); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.AppendFormat(System.String,System.Object); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.AppendFormat(System.String,System.Object,System.Object); use explicit formatting with IFormatProvider
@@ -226,18 +178,10 @@ M:System.Text.StringBuilder.AppendJoin(System.Char,System.Object[]); use explici
 M:System.Text.StringBuilder.AppendJoin(System.String,System.Object[]); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.AppendJoin``1(System.Char,System.Collections.Generic.IEnumerable{``0}); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.AppendJoin``1(System.String,System.Collections.Generic.IEnumerable{``0}); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Insert(System.Int32,System.Byte); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.Insert(System.Int32,System.Decimal); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.Insert(System.Int32,System.Double); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Insert(System.Int32,System.Int16); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Insert(System.Int32,System.Int32); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Insert(System.Int32,System.Int64); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.Insert(System.Int32,System.Object); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Insert(System.Int32,System.SByte); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.Insert(System.Int32,System.Single); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Insert(System.Int32,System.UInt16); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Insert(System.Int32,System.UInt32); use explicit formatting with IFormatProvider
-M:System.Text.StringBuilder.Insert(System.Int32,System.UInt64); use explicit formatting with IFormatProvider
 M:System.Text.StringBuilder.Append(System.Text.StringBuilder.AppendInterpolatedStringHandler@); use overload with IFormatProvider parameter
 M:System.Text.StringBuilder.AppendLine(System.Text.StringBuilder.AppendInterpolatedStringHandler@); use overload with IFormatProvider parameter
 M:System.String.Format(System.String,System.Object); use overload with IFormatProvider parameter
@@ -298,3 +242,32 @@ M:System.Linq.Expressions.Expression`1.Compile(System.Runtime.CompilerServices.D
 M:System.Linq.Expressions.LambdaExpression.Compile; use CompileExpression extension
 M:System.Linq.Expressions.LambdaExpression.Compile(System.Boolean); are u sure you need it?
 M:System.Linq.Expressions.LambdaExpression.Compile(System.Runtime.CompilerServices.DebugInfoGenerator); are u sure you need it?
+
+// ban reflection-based APIs that should be called indirectly to unwrap TargetInvocationException
+M:System.Delegate.DynamicInvoke(System.Object[]); Use DynamicInvokeExt extension
+M:System.Reflection.ConstructorInfo.Invoke(System.Object[]); Use InvokeExt extension
+M:System.Reflection.ConstructorInfo.Invoke(System.Reflection.BindingFlags,System.Reflection.Binder,System.Object[],System.Globalization.CultureInfo); Use InvokeExt extension (TODO 03:implement when needed)
+M:System.Reflection.ConstructorInvoker.Invoke; Use InvokeExt extension (TODO 04:implement when needed)
+M:System.Reflection.ConstructorInvoker.Invoke(System.Object,System.Object,System.Object,System.Object); Use InvokeExt extension (TODO 05:implement when needed)
+M:System.Reflection.ConstructorInvoker.Invoke(System.Object,System.Object,System.Object); Use InvokeExt extension (TODO 06:implement when needed)
+M:System.Reflection.ConstructorInvoker.Invoke(System.Object,System.Object); Use InvokeExt extension (TODO 07:implement when needed)
+M:System.Reflection.ConstructorInvoker.Invoke(System.Object); Use InvokeExt extension (TODO 08:implement when needed)
+M:System.Reflection.ConstructorInvoker.Invoke(System.Span{System.Object}); Use InvokeExt extension (TODO 09:implement when needed)
+M:System.Reflection.MethodBase.Invoke(System.Object,System.Object[]); Use InvokeExt extension
+M:System.Reflection.MethodBase.Invoke(System.Object,System.Reflection.BindingFlags,System.Reflection.Binder,System.Object[],System.Globalization.CultureInfo); Use InvokeExt extension (TODO 11:implement when needed)
+M:System.Reflection.MethodInvoker.Invoke(System.Object,System.Object,System.Object,System.Object,System.Object); Use InvokeExt extension (TODO 12:implement when needed)
+M:System.Reflection.MethodInvoker.Invoke(System.Object,System.Object,System.Object,System.Object); Use InvokeExt extension (TODO 13:implement when needed)
+M:System.Reflection.MethodInvoker.Invoke(System.Object,System.Object,System.Object); Use InvokeExt extension (TODO 14:implement when needed)
+M:System.Reflection.MethodInvoker.Invoke(System.Object,System.Object); Use InvokeExt extension (TODO 15:implement when needed)
+M:System.Reflection.MethodInvoker.Invoke(System.Object,System.Span{System.Object}); Use InvokeExt extension (TODO 16:implement when needed)
+M:System.Reflection.MethodInvoker.Invoke(System.Object); Use InvokeExt extension (TODO 17:implement when needed)
+M:System.Activator.CreateInstance(System.String,System.String,System.Boolean,System.Reflection.BindingFlags,System.Reflection.Binder,System.Object[],System.Globalization.CultureInfo,System.Object[]); Use CreateInstanceExt extension (TODO 18:implement when needed)
+M:System.Activator.CreateInstance(System.String,System.String,System.Object[]); Use CreateInstanceExt extension (TODO 19:implement when needed)
+M:System.Activator.CreateInstance(System.String,System.String); Use CreateInstanceExt extension (TODO 20:implement when needed)
+M:System.Activator.CreateInstance(System.Type,System.Boolean); Use ActivatorExt.CreateInstance extension
+M:System.Activator.CreateInstance(System.Type,System.Object[],System.Object[]); Use CreateInstanceExt extension (TODO 22:implement when needed)
+M:System.Activator.CreateInstance(System.Type,System.Object[]); Use ActivatorExt.CreateInstance extension
+M:System.Activator.CreateInstance(System.Type,System.Reflection.BindingFlags,System.Reflection.Binder,System.Object[],System.Globalization.CultureInfo,System.Object[]); Use CreateInstanceExt extension (TODO 24:implement when needed)
+M:System.Activator.CreateInstance(System.Type,System.Reflection.BindingFlags,System.Reflection.Binder,System.Object[],System.Globalization.CultureInfo); Use CreateInstanceExt extension (TODO 25:implement when needed)
+M:System.Activator.CreateInstance(System.Type); Use ActivatorExt.CreateInstance extension
+M:System.Activator.CreateInstance``1; Use CreateInstanceExt extension (TODO 27:implement when needed)

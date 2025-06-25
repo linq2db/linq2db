@@ -1,72 +1,11 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"   #>
 <#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                 #>
 <#@ output extension=".generated.cs"                                                           #>
-<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\Microsoft.SqlServer.Types.dll"      #>
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.SqlServer.ttinclude" once="true" #>
 <#@ include file="..\Shared.ttinclude"                                             once="true" #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude" once="true" #>
 <#
-	// File settings
-//	EnforceModelNullability             = true;                   // #nullable enable
-//	EnableNullableReferenceTypes        = true;                   // #nullable enable
-
-	// DataContext settings
-	NamespaceName                       = "Default.SqlServer";    // DataContext class namespace name
-//	DataContextName                     = "TestDataDB";           // DataContext class name
-//	BaseDataContextClass                = "MyDataContext";        // name of the base DataContext class
-//	GenerateDatabaseInfo                = true;                   // adds comment contained database info
-//	GenerateFindExtensions              = true;                   // generate Find(...) extension methods
-//	GenerateViews                       = true;                   // generate views
-
-	// Schema settings
-//	GenerateSchemaAsType                = false;                  // generate database schema as type (db.MySchema.MyTable)
-//	SchemaNameSuffix                    = "Schema";               // schema type name suffix
-//	SchemaDataContextTypeName           = "DataContext";          // schema DataContext type name
-//	PrefixTableMappingWithSchema        = true;                   // add schema name as prefix to table type name
-//	PrefixTableMappingForDefaultSchema  = false;                  // add default schema name as prefix to table type name
-
-	// Constructors
-//	GenerateConstructors                = true;                   // generate constructors
-//	DefaultConfiguration                = "SqlServer";            // use default configuration
-//	GetDataOptionsMethod                = "GetDataOptions({0})";  // constructors call user defined methods that returns DataOptions
-//	GenerateDataOptionsConstructors     = true;                   // generate data options constructors
-
-	// Entity class settings
-//	BaseEntityClass                     = "MyEntity";             // entity base class
-//	ServerName                          = "ServerName";           // specified server name
-//	DatabaseName                        = "DatabaseName";         // specified database name
-//	OneToManyAssociationType            = "IEnumerable<{0}>";     // association base type
-//	GenerateDatabaseName                = ;                       // generate database name
-//	GenerateDatabaseNameFromTable       = ;                       // generate database name from TableSchema.CatalogName
-//	GenerateAssociations                = true;                   // generate associations
-//	GenerateBackReferences              = true;                   // generate back references
-//	GenerateAssociationExtensions       = false;                  // generate associations as extension methods
-//	IncludeDefaultSchema                = true;                   // generated default schema name, such as 'dbo'
-
-	// Column settings
-//	GenerateObsoleteAttributeForAliases = false;                  // add ObsoleteAttribute to alias members
-//	GenerateDataTypes                   = false;                  // generate column DataType
-//	GenerateLengthProperty              = null;                   // generate column length
-//	GeneratePrecisionProperty           = null;                   // generate column precision
-//	GenerateScaleProperty               = null;                   // generate column scale
-//	GenerateDbTypes                     = false;                  // generate column DbType
-//	IsCompactColumns                    = true;                   // compact mode of column generation
-//	IsCompactColumnAliases              = true;                   // compact mode of alias column generation
-
-	// Identifier normalization
-//	PluralizeClassNames                 = ;                       // pluralize class names
-//	SingularizeClassNames               = true;                   // singularize class names
-//	PluralizeDataContextPropertyNames   = true;                   // pluralize DataContext property names
-//	SingularizeDataContextPropertyNames = ;                       // singularize DataContext property names
-//	PluralizeForeignKeyNames            = true;                   // pluralize foreign key names
-//	SingularizeForeignKeyNames          = true;                   // singularize foreign key names
-//	NormalizeNames                      = true;                   // normalize names containing '_', lower case first letters, etc
-//	NormalizeNamesWithoutUnderscores    = ;                       // normalize names without underscores
-
-	// Stored procedures
-//	ReplaceSimilarTables                = true;                   // when generate stored procedure results, use the same type if types are similar
-//	GenerateProcedureErrors             = true;                   // generate stored procedure metadata errors
-//	GenerateProcedureResultAsList       = false;                  // generate stored procedure result as List<T>
-//	GenerateProceduresOnTypedContext    = true;                   // generate stored procedures on typed context
+	NamespaceName     = "Default.SqlServer"; // DataContext class namespace name
+	GenerateDataTypes = true;
 
 	LoadSqlServerMetadata(GetConnectionString("SqlServer.2019"));
 

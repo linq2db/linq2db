@@ -3,11 +3,11 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	[BuildsMethodCall("DefaultIfEmpty")]
 	sealed class DefaultIfEmptyBuilder : MethodCallBuilder
 	{
@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequenceRef  = new ContextRefExpression(sequence.ElementType, sequence);
 			var translated   = builder.BuildSqlExpression(sequence, sequenceRef);
-			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(translated);
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(translated, false);
 
 			var nullability = NullabilityContext.GetContext(nullabilitySequence.SelectQuery);
 			var notNull = placeholders
@@ -70,7 +70,9 @@ namespace LinqToDB.Linq.Builder
 
 				defaultValue ??= Expression.Default(methodCall.Method.GetGenericArguments()[0]);
 
-				var defaultValueContext = new SelectContext(buildInfo.Parent,
+				var defaultValueContext = new SelectContext(
+					builder.GetTranslationModifier(),
+					buildInfo.Parent,
 					builder,
 					null,
 					defaultValue,

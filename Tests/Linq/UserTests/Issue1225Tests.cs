@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using LinqToDB;
-	using LinqToDB.Mapping;
-
 	[TestFixture]
 	public class Issue1225Tests : TestBase
 	{
@@ -103,11 +104,12 @@ namespace Tests.UserTests
 
 					Assert.That(res, Has.Length.EqualTo(2));
 					Assert.That(res[0].Container, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res[0].Container.Value, Is.EqualTo(2));
 						Assert.That(res[1].Container, Is.Not.Null);
-					});
+					}
+
 					Assert.That(res[1].Container.Value, Is.Null);
 				}
 			}

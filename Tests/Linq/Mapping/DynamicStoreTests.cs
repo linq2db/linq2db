@@ -1,12 +1,13 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.Mapping
 {
@@ -366,19 +367,15 @@ namespace Tests.Mapping
 				obj.Values.Add("Name", "test_name");
 				db.Insert(obj);
 
-
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].Values, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
-				});
+				}
 			}
 		}
 
@@ -401,19 +398,15 @@ namespace Tests.Mapping
 				obj.Values.Add("Name", "test_name");
 				db.Insert(obj);
 
-
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].Values, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
-				});
+				}
 			}
 		}
 
@@ -438,20 +431,16 @@ namespace Tests.Mapping
 				obj.SQLiteValues.Add("Name", "test_name");
 				db.Insert(obj);
 
-
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].Values, Is.Empty);
 					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
-				});
+				}
 			}
 		}
 
@@ -474,17 +463,14 @@ namespace Tests.Mapping
 
 				var data = db.GetTable<AttributeMetadataBasedStore>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].Values, Is.Empty);
 					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
-				});
+				}
 			}
 		}
 
@@ -509,16 +495,13 @@ namespace Tests.Mapping
 
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].Values, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
-				});
+				}
 			}
 		}
 
@@ -541,17 +524,14 @@ namespace Tests.Mapping
 
 				var data = db.GetTable<InstanceGetterSetterMethods>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].SQLiteValues, Is.Empty);
 					Assert.That(data[0].Values, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
-				});
+				}
 			}
 		}
 
@@ -578,23 +558,17 @@ namespace Tests.Mapping
 
 				var data = db.GetTable<StaticGetterSetterMethods>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].SQLiteValues, Is.Empty);
 					Assert.That(data[0].Values, Is.Empty);
 					Assert.That(StaticGetterSetterMethods.InstanceValues, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(StaticGetterSetterMethods.InstanceValues.Keys.Single(), Is.EqualTo(5));
 					Assert.That(StaticGetterSetterMethods.InstanceValues[5], Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(StaticGetterSetterMethods.InstanceValues[5].Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(StaticGetterSetterMethods.InstanceValues[5]["Name"], Is.EqualTo("test_name"));
-				});
+				}
 			}
 		}
 
@@ -617,17 +591,14 @@ namespace Tests.Mapping
 
 				var data = db.GetTable<InstanceGetterSetterExpressionMethods>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].SQLiteValues, Is.Empty);
 					Assert.That(data[0].Values, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
-				});
+				}
 			}
 		}
 
@@ -655,23 +626,17 @@ namespace Tests.Mapping
 
 				var data = db.GetTable<StaticGetterSetterExpressionMethods>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].SQLiteValues, Is.Empty);
 					Assert.That(data[0].Values, Is.Empty);
 					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues.Keys.Single(), Is.EqualTo(5));
 					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues[5], Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues[5].Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues[5]["Name"], Is.EqualTo("test_name"));
-				});
+				}
 			}
 		}
 
@@ -694,17 +659,14 @@ namespace Tests.Mapping
 
 				var data = db.GetTable<SQLiteInstanceGetterSetterMethods>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].Values, Is.Empty);
 					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
-				});
+				}
 			}
 		}
 
@@ -727,17 +689,14 @@ namespace Tests.Mapping
 
 				var data = db.GetTable<GetterSetterVsStorageMethods1>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].Values, Is.Empty);
 					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
-				});
+				}
 			}
 		}
 
@@ -760,17 +719,14 @@ namespace Tests.Mapping
 
 				var data = db.GetTable<GetterSetterVsStorageMethods2>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].Values, Is.Empty);
 					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
-				});
+				}
 			}
 		}
 
@@ -820,23 +776,17 @@ namespace Tests.Mapping
 
 				var data = db.GetTable<CustomSetterGetterBase>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].SQLiteValues, Is.Empty);
 					Assert.That(data[0].Values, Is.Empty);
 					Assert.That(storage, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(storage.Keys.Single(), Is.EqualTo(5));
 					Assert.That(storage[5], Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(storage[5].Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(storage[5]["Name"], Is.EqualTo("test_name"));
-				});
+				}
 			}
 		}
 
@@ -878,17 +828,14 @@ namespace Tests.Mapping
 
 				var data = db.GetTable<AttributeMetadataBasedStore>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].Values, Is.Empty);
 					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("me_default"));
-				});
+				}
 			}
 		}
 
@@ -911,17 +858,14 @@ namespace Tests.Mapping
 
 				var data = db.GetTable<InstanceGetterSetterMethods>().ToList();
 				Assert.That(data, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(5));
 					Assert.That(data[0].SQLiteValues, Is.Empty);
 					Assert.That(data[0].Values, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
 					Assert.That(data[0].Values["Name"], Is.EqualTo("accessor_def"));
-				});
+				}
 			}
 		}
 
@@ -1054,11 +998,11 @@ namespace Tests.Mapping
 			var result = db.FromSql<DbEntity>("SELECT * FROM Person WHERE PersonID = 1").ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Properties.ContainsKey("FirstName"), Is.True);
 				Assert.That(result[0].Properties["FirstName"], Is.EqualTo("John"));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -1070,11 +1014,11 @@ namespace Tests.Mapping
 			var result = db.Query<DbEntity>("SELECT * FROM Person WHERE PersonID = 1").ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Properties.ContainsKey("FirstName"), Is.True);
 				Assert.That(result[0].Properties["FirstName"], Is.EqualTo("John"));
-			});
+			}
 		}
 
 		[Table("Person")]

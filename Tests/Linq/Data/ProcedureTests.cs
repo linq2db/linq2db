@@ -1,18 +1,19 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Data
 {
-	using LinqToDB;
-	using LinqToDB.Data;
-	using LinqToDB.DataProvider.SqlServer;
-	using LinqToDB.Mapping;
-	using Model;
-
 	[TestFixture]
 	public class ProcedureTests : TestBase
 	{
@@ -42,12 +43,11 @@ namespace Tests.Data
 				var p1 = PersonSelectByKeyLowercaseColumns(db, context, 1).First();
 				var p2 = db.Query<Person>("SELECT PersonID, FirstName FROM Person WHERE PersonID = @id", new { id = 1 }).First();
 				var p3 = PersonSelectByKey(db, context, 1).First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(p2.FirstName, Is.EqualTo(p1.FirstName));
 					Assert.That(p3.FirstName, Is.EqualTo(p1.FirstName));
-				});
+				}
 			}
 		}
 
@@ -111,8 +111,7 @@ namespace Tests.Data
 
 				var set22 = db.QueryProc<VariableResult>("[VariableResults]",
 					new DataParameter("@ReturnFullRow", 1)).First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(set1.Code, Is.EqualTo(2));
 					Assert.That(set1.Value1, Is.EqualTo("v"));
@@ -124,7 +123,7 @@ namespace Tests.Data
 
 					Assert.That(set11, Is.EqualTo(set1));
 					Assert.That(set22, Is.EqualTo(set2));
-				});
+				}
 			}
 		}
 
@@ -144,8 +143,7 @@ namespace Tests.Data
 
 				var set22 = db.QueryProc<VariableResult>("[VariableResults]",
 					new { ReturnFullRow = 1 }).First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(set1.Code, Is.EqualTo(2));
 					Assert.That(set1.Value1, Is.EqualTo("v"));
@@ -157,7 +155,7 @@ namespace Tests.Data
 
 					Assert.That(set11, Is.EqualTo(set1));
 					Assert.That(set22, Is.EqualTo(set2));
-				});
+				}
 			}
 		}
 
@@ -170,19 +168,18 @@ namespace Tests.Data
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var persons = db.QueryProc<Person>("QueryProcParameters", input, output1, output2);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.Null);
 					Assert.That(output2.Value, Is.Null);
-				});
+				}
 
 				persons.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.EqualTo(2));
 					Assert.That(output2.Value, Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
@@ -195,19 +192,18 @@ namespace Tests.Data
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var persons = await db.QueryProcAsync<Person>("QueryProcParameters", input, output1, output2);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.Null);
 					Assert.That(output2.Value, Is.Null);
-				});
+				}
 
 				persons.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.EqualTo(2));
 					Assert.That(output2.Value, Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
@@ -222,12 +218,11 @@ namespace Tests.Data
 				var persons = db.QueryProc(new Person(), "QueryProcParameters", input, output1, output2);
 
 				persons.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.EqualTo(2));
 					Assert.That(output2.Value, Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
@@ -240,19 +235,18 @@ namespace Tests.Data
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var persons = await db.QueryProcAsync(new Person(), "QueryProcParameters", input, output1, output2);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.Null);
 					Assert.That(output2.Value, Is.Null);
-				});
+				}
 
 				persons.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.EqualTo(2));
 					Assert.That(output2.Value, Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
@@ -265,19 +259,18 @@ namespace Tests.Data
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var persons = db.QueryProc(reader => new Person(), "QueryProcParameters", input, output1, output2);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.Null);
 					Assert.That(output2.Value, Is.Null);
-				});
+				}
 
 				persons.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.EqualTo(2));
 					Assert.That(output2.Value, Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
@@ -290,19 +283,18 @@ namespace Tests.Data
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var persons = await db.QueryProcAsync(reader => new Person(), "QueryProcParameters", input, output1, output2);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.Null);
 					Assert.That(output2.Value, Is.Null);
-				});
+				}
 
 				persons.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.EqualTo(2));
 					Assert.That(output2.Value, Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
@@ -322,12 +314,12 @@ namespace Tests.Data
 				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var output3 = new DataParameter("output3", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				db.QueryProcMultiple<Person>("QueryProcMultipleParameters", input, output1, output2, output3);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.EqualTo(2));
 					Assert.That(output2.Value, Is.EqualTo(3));
 					Assert.That(output3.Value, Is.EqualTo(4));
-				});
+				}
 			}
 		}
 
@@ -341,12 +333,12 @@ namespace Tests.Data
 				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var output3 = new DataParameter("output3", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				await db.QueryProcMultipleAsync<Person>("QueryProcMultipleParameters", input, output1, output2, output3);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.EqualTo(2));
 					Assert.That(output2.Value, Is.EqualTo(3));
 					Assert.That(output3.Value, Is.EqualTo(4));
-				});
+				}
 			}
 		}
 
@@ -358,11 +350,11 @@ namespace Tests.Data
 				var input = DataParameter.Int32("input", 1);
 				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var result = db.ExecuteProc("ExecuteProcIntParameters", input, output);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Value, Is.EqualTo(2));
 					Assert.That(result, Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -374,11 +366,11 @@ namespace Tests.Data
 				var input = DataParameter.Int32("input", 1);
 				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var result = await db.ExecuteProcAsync("ExecuteProcIntParameters", input, output);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Value, Is.EqualTo(2));
 					Assert.That(result, Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -390,11 +382,11 @@ namespace Tests.Data
 				var input = DataParameter.Int32("input", 1);
 				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var result = db.ExecuteProc<string>("ExecuteProcStringParameters", input, output);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Value, Is.EqualTo(2));
 					Assert.That(result, Is.EqualTo("издрасте"));
-				});
+				}
 			}
 		}
 
@@ -406,11 +398,11 @@ namespace Tests.Data
 				var input = DataParameter.Int32("input", 1);
 				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var result = await db.ExecuteProcAsync<string>("ExecuteProcStringParameters", input, output);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Value, Is.EqualTo(2));
 					Assert.That(result, Is.EqualTo("издрасте"));
-				});
+				}
 			}
 		}
 
@@ -423,21 +415,22 @@ namespace Tests.Data
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var reader = new CommandInfo(db, "QueryProcParameters", input, output1, output2).ExecuteReaderProc();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.Null);
 					Assert.That(output2.Value, Is.Null);
-				});
+				}
+
 				using (reader)
 					while (reader.Reader!.Read())
 					{
 					}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.EqualTo(2));
 					Assert.That(output2.Value, Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
@@ -450,21 +443,22 @@ namespace Tests.Data
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
 				var reader = await new CommandInfo(db, "QueryProcParameters", input, output1, output2).ExecuteReaderProcAsync();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.Null);
 					Assert.That(output2.Value, Is.Null);
-				});
+				}
+
 				await using (reader)
 					while (await reader.Reader!.ReadAsync())
 					{
 					}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output1.Value, Is.EqualTo(2));
 					Assert.That(output2.Value, Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
@@ -481,12 +475,11 @@ namespace Tests.Data
 			var persons = db.QueryProc(reader => new Person(), "QueryProcParameters", input, output1, output2);
 
 			persons.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(interceptor.OnClosedCount, Is.EqualTo(closeAfterUse ? 1 : 0));
-				Assert.That(interceptor.OnClosedAsyncCount, Is.EqualTo(0));
-			});
+				Assert.That(interceptor.OnClosedAsyncCount, Is.Zero);
+			}
 		}
 	}
 }

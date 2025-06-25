@@ -1,11 +1,10 @@
-﻿using System;
+﻿using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Extensions;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class DB2SqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public DB2SqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
@@ -40,7 +39,8 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			switch (func.Name)
 			{
-				case "Millisecond"   : return Div(new SqlFunction(func.SystemType, "Microsecond", func.Parameters), 1000);
+				case PseudoFunctions.LENGTH: return func.WithName("CHAR_LENGTH");
+				case "Millisecond"   :       return Div(new SqlFunction(func.SystemType, "Microsecond", func.Parameters), 1000);
 				case "SmallDateTime" :
 				case "DateTime"      :
 				case "DateTime2"     : return new SqlFunction(func.SystemType, "TimeStamp", func.Parameters);
@@ -117,5 +117,18 @@ namespace LinqToDB.DataProvider.DB2
 
 			return base.ConvertConversion(cast);
 		}
+
+		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
+		{
+			var columnExpression = base.WrapColumnExpression(expr);
+
+			if (columnExpression.SystemType == typeof(bool)
+				&& QueryHelper.IsBoolean(columnExpression))
+			{
+				columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
+	}
+
+			return columnExpression;
+}
 	}
 }

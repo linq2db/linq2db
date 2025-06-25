@@ -1,9 +1,9 @@
 ﻿using System;
 
+using LinqToDB.Common.Internal;
+
 namespace LinqToDB.Mapping
 {
-	using Common.Internal;
-
 	/// <summary>
 	/// Defines to which type linq2db should map record based on discriminator value. You can apply this attribute to
 	/// a base class or insterface, implemented by all child classes.

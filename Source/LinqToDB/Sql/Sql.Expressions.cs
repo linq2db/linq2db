@@ -2,21 +2,19 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB
 {
-	using Common;
-	using Common.Internal;
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	public partial class Sql
 	{
 		private sealed class FieldsExprBuilderDirect : IExtensionCallBuilder
@@ -66,7 +64,7 @@ namespace LinqToDB
 					var name = column.ColumnName;
 
 					if (qualified)
-						name = builder.DataContext.CreateSqlProvider().ConvertInline(name, ConvertType.NameToQueryField);
+						name = builder.DataContext.CreateSqlBuilder().ConvertInline(name, ConvertType.NameToQueryField);
 
 					builder.ResultExpression = new SqlValue(name);
 				}
@@ -96,7 +94,7 @@ namespace LinqToDB
 					var name = field.PhysicalName;
 
 					if (qualified)
-						name = builder.DataContext.CreateSqlProvider().ConvertInline(name, ConvertType.NameToQueryField);
+						name = builder.DataContext.CreateSqlBuilder().ConvertInline(name, ConvertType.NameToQueryField);
 
 					builder.ResultExpression = new SqlValue(name);
 				}
@@ -121,7 +119,7 @@ namespace LinqToDB
 			var result = column.ColumnName;
 			if (qualified)
 			{
-				var sqlBuilder = table.DataContext.CreateSqlProvider();
+				var sqlBuilder = table.DataContext.CreateSqlBuilder();
 				result         = sqlBuilder.ConvertInline(result, ConvertType.NameToQueryField);
 			}
 
@@ -282,7 +280,7 @@ namespace LinqToDB
 				var tableExpr    = builder.EvaluateExpression(builder.Arguments[0]);
 				var tableType    = ((MethodInfo)builder.Member).GetGenericArguments()[0];
 				var helperType   = typeof(TableHelper<>).MakeGenericType(tableType);
-				var tableHelper  = (TableHelper)Activator.CreateInstance(helperType, tableExpr)!;
+				var tableHelper  = ActivatorExt.CreateInstance<TableHelper>(helperType, tableExpr);
 				var qualified    = builder.Arguments.Length <= 1 ? TableQualification.Full : builder.GetValue<TableQualification>(1);
 				var isExpression = builder.Member.Name == "TableExpr";
 
@@ -313,7 +311,7 @@ namespace LinqToDB
 					if (qualified != TableQualification.None)
 					{
 						using var sb = Pools.StringBuilder.Allocate();
-						builder.DataContext.CreateSqlProvider().BuildObjectName(
+						builder.DataContext.CreateSqlBuilder().BuildObjectName(
 							sb.Value,
 							new SqlObjectName(
 								name,
@@ -351,7 +349,7 @@ namespace LinqToDB
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
-					builder.DataContext.CreateSqlProvider().BuildObjectName(
+					builder.DataContext.CreateSqlBuilder().BuildObjectName(
 						sb.Value,
 						new SqlObjectName(
 							sqlTable.TableName.Name,
@@ -435,7 +433,7 @@ namespace LinqToDB
 
 			if (qualification != TableQualification.None)
 			{
-				var sqlBuilder = table.DataContext.CreateSqlProvider();
+				var sqlBuilder = table.DataContext.CreateSqlBuilder();
 				using var sb   = Pools.StringBuilder.Allocate();
 				sqlBuilder.BuildObjectName(
 					sb.Value,
@@ -476,7 +474,7 @@ namespace LinqToDB
 
 			if (qualification != TableQualification.None)
 			{
-				var sqlBuilder = table.DataContext.CreateSqlProvider();
+				var sqlBuilder = table.DataContext.CreateSqlBuilder();
 				using var sb   = Pools.StringBuilder.Allocate();
 
 				sqlBuilder.BuildObjectName(

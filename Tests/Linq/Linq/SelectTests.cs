@@ -2,22 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
-using LinqToDB.Reflection;
 using LinqToDB.Mapping;
+using LinqToDB.Reflection;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
-	using Model;
-
 	[TestFixture]
 	public class SelectTests : TestBase
 	{
@@ -188,11 +190,11 @@ namespace Tests.Linq
 						.Select(p2 => new        { ID = p2.ID / "22".Length, p2.FirstName })
 
 				).ToList().First(p => p.ID == 1);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(person.ID, Is.EqualTo(1));
 					Assert.That(person.FirstName, Is.EqualTo("John"));
-				});
+				}
 			}
 		}
 
@@ -342,13 +344,12 @@ namespace Tests.Linq
 					}
 
 				).ToList().First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(q.ID, Is.EqualTo(1));
 					Assert.That(q.FirstName, Is.EqualTo("John"));
 					Assert.That(q.MiddleName, Is.EqualTo("None"));
-				});
+				}
 			}
 		}
 
@@ -370,14 +371,13 @@ namespace Tests.Linq
 					}
 
 				).ToList().First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(q.ID, Is.EqualTo(1));
 					Assert.That(q.FirstName, Is.EqualTo("John"));
 					Assert.That(q.LastName, Is.EqualTo("Pupkin"));
 					Assert.That(q.MiddleName, Is.EqualTo("None"));
-				});
+				}
 			}
 		}
 
@@ -396,31 +396,27 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				if (db is DataConnection)
-				{
-					((DataConnection)db).AddMappingSchema(_myMapSchema);
+				db.AddMappingSchema(_myMapSchema);
 
-					var q = (
+				var q = (
 
-						from p in db.Person
-						where p.ID == 1
-						select new
-						{
-							p.ID,
-							FirstName  = p.MiddleName ?? p.FirstName  ?? "None",
-							LastName   = p.LastName   ?? p.FirstName  ?? "None",
-							MiddleName = p.MiddleName ?? p.MiddleName ?? "None"
-						}
-
-					).ToList().First();
-
-					Assert.Multiple(() =>
+					from p in db.Person
+					where p.ID == 1
+					select new
 					{
-						Assert.That(q.ID, Is.EqualTo(1));
-						Assert.That(q.FirstName, Is.EqualTo("John"));
-						Assert.That(q.LastName, Is.EqualTo("Pupkin"));
-						Assert.That(q.MiddleName, Is.EqualTo("None"));
-					});
+						p.ID,
+						FirstName  = p.MiddleName ?? p.FirstName  ?? "None",
+						LastName   = p.LastName   ?? p.FirstName  ?? "None",
+						MiddleName = p.MiddleName ?? p.MiddleName ?? "None"
+					}
+
+				).ToList().First();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(q.ID, Is.EqualTo(1));
+					Assert.That(q.FirstName, Is.EqualTo("John"));
+					Assert.That(q.LastName, Is.EqualTo("Pupkin"));
+					Assert.That(q.MiddleName, Is.EqualTo("None"));
 				}
 			}
 		}
@@ -567,13 +563,12 @@ namespace Tests.Linq
 					q.Select(
 						(m, i) =>
 							ConvertString(m.Parent!.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(lines[0], Is.EqualTo("7.77.True.0"));
 					Assert.That(lines[1], Is.EqualTo("6.66.False.1"));
 					Assert.That(lines[2], Is.EqualTo("6.65.True.2"));
-				});
+				}
 
 				q =
 					db.Child
@@ -701,12 +696,11 @@ namespace Tests.Linq
 				q.ToArray();
 
 				var sql = q.ToSqlQuery().Sql;
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sql, Does.Not.Contain("First"));
 					Assert.That(sql, Does.Contain("LastName"));
-				});
+				}
 			}
 		}
 
@@ -716,13 +710,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var r = db.GetTable<ComplexPerson>().First(_ => _.ID == 1);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r.Name.FirstName, Is.EqualTo("John"));
 					Assert.That(r.Name.MiddleName, Is.Null);
 					Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
-				});
+				}
 			}
 		}
 
@@ -732,13 +725,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var r = db.GetTable<ComplexPerson2>().First(_ => _.ID == 1);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r.Name.FirstName, Is.EqualTo("John"));
 					Assert.That(r.Name.MiddleName, Is.Null);
 					Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
-				});
+				}
 			}
 		}
 
@@ -759,13 +751,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, ms))
 			{
 				var r = db.GetTable<ComplexPerson3>().First(_ => _.ID == 1);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r.Name.FirstName, Is.EqualTo("John"));
 					Assert.That(r.Name.MiddleName, Is.Null);
 					Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
-				});
+				}
 			}
 		}
 
@@ -1003,7 +994,6 @@ namespace Tests.Linq
 			internal string? InternalStr { get; set; }
 		}
 
-
 		[Test]
 		public void InternalFieldProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -1054,18 +1044,15 @@ namespace Tests.Linq
 				var person = db.Query<ComplexPerson>(sql).FirstOrDefault()!;
 
 				Assert.That(person, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(person.ID, Is.EqualTo(3));
 					Assert.That(person.Gender, Is.EqualTo(Gender.Female));
 					Assert.That(person.Name, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(person.Name.FirstName, Is.EqualTo("Jane"));
 					Assert.That(person.Name.MiddleName, Is.Null);
 					Assert.That(person.Name.LastName, Is.EqualTo("Doe"));
-				});
+				}
 			}
 		}
 
@@ -1143,12 +1130,11 @@ namespace Tests.Linq
 
 				query = query.OrderByDescending(c => c.Child!.Id);
 				var result = query.ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Child, Is.Not.Null);
 					Assert.That(result[1].Child, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1170,7 +1156,7 @@ namespace Tests.Linq
 				from c in db.Child
 				select new IntermediateChildResult { ParentId = c.ParentID, Child = includeChild ? c : null };
 
-			var cacheMissCount = Query<IntermediateChildResult>.CacheMissCount;
+			var cacheMissCount = query.GetCacheMissCount();
 
 			var result = query.ToArray().First();
 
@@ -1198,10 +1184,9 @@ namespace Tests.Linq
 
 			if (iteration > 1)
 			{
-				Query<IntermediateChildResult>.CacheMissCount.Should().Be(cacheMissCount);
+				query.GetCacheMissCount().Should().Be(cacheMissCount);
 			}
 		}
-
 
 		[Test]
 		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -1235,31 +1220,24 @@ namespace Tests.Linq
 					};
 
 				var result = query.OrderBy(_ => _.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Child1, Is.Not.Null);
 					Assert.That(result[1].Child1, Is.Null);
 
 					Assert.That(result[0].Child2, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[0].Child2.Id, Is.EqualTo(1));
 					Assert.That(result[0].Child2.Value, Is.EqualTo("Value 1"));
 					Assert.That(result[1].Child2, Is.Null);
 
 					Assert.That(result[0].Child3, Is.Not.Null);
 					Assert.That(result[1].Child3, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[1].Child3.Id, Is.EqualTo(4));
 					Assert.That(result[1].Child3.Value, Is.EqualTo("Generated"));
 
 					Assert.That(result[0].Child4, Is.Null);
 					Assert.That(result[1].Child4, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1490,6 +1468,48 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexer([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderByDescending(p => p.ID)
+				.Select((p, idx) => new { p.FirstName, p.LastName, Index = idx })
+				.Where(x => x.Index > 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexerAfterGroupBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.GroupBy(p => p.ID)
+				.OrderByDescending(g => g.Key)
+				.Select((g, idx) => new { g.Key, Index = idx })
+				.Where(x => x.Index > 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_OrderByRequiredForIndexing)]
+		public void SelectWithIndexerNoOrder([DataSources(TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Select((p, idx) => new { p.FirstName, Index = idx })
+				.Where(x => x.Index > 1);
+
+			AssertQuery(query);
+		}
+
 		public class Table1788
 		{
 			[PrimaryKey]
@@ -1502,8 +1522,8 @@ namespace Tests.Linq
 			{
 				return new Table1788[]
 				{
-					new () { Id = 1, Value1 = 11 }, 
-					new () { Id = 2, Value1 = 22 }, 
+					new () { Id = 1, Value1 = 11 },
+					new () { Id = 2, Value1 = 22 },
 					new () { Id = 3, Value1 = 33 }
 				};
 			}
@@ -1520,7 +1540,7 @@ namespace Tests.Linq
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
 					select new
 					{
-						f1 = Sql.ToNullable(l.Value1).HasValue, 
+						f1 = Sql.ToNullable(l.Value1).HasValue,
 						f2 = Sql.ToNullable(l.Value1)
 					};
 
@@ -1548,9 +1568,9 @@ namespace Tests.Linq
 				var results =
 					from p in table
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
-					select new 
-					{ 
-						f1 = Sql.ToNullable(l.Value1) != null, 
+					select new
+					{
+						f1 = Sql.ToNullable(l.Value1) != null,
 						f2 = Sql.ToNullable(l.Value1)
 					};
 
@@ -1569,7 +1589,6 @@ namespace Tests.Linq
 			}
 		}
 
-		
 		[Test]
 		public void Issue1788Test3([DataSources] string context)
 		{
@@ -1579,8 +1598,8 @@ namespace Tests.Linq
 				var results =
 					from p in table
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
-					select new 
-					{ 
+					select new
+					{
 #pragma warning disable CS0472 // comparison of non-null int? with null
 						f1 = ((int?)l.Value1) != null,
 #pragma warning restore CS0472
@@ -1611,8 +1630,8 @@ namespace Tests.Linq
 				var results =
 					from p in table
 					from l in table.LeftJoin(l => l.Id == p.Id + 1)
-					select new 
-					{ 
+					select new
+					{
 						f1 = ((int?)l.Value1).HasValue,
 						f2 = (int?)l.Value1
 					};
@@ -1631,7 +1650,6 @@ namespace Tests.Linq
 					results);
 			}
 		}
-		
 
 		[Test]
 		public void OuterApplyTest(
@@ -1665,7 +1683,6 @@ namespace Tests.Linq
 				 	.Distinct()
 				 	.OrderBy(_ => _.Parent.ParentID);
 
-
 				var expectedQuery =
 					from p in Parent
 					from c1 in Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
@@ -1696,12 +1713,12 @@ namespace Tests.Linq
 					var item = actual[i];
 					if (item.Child1 != null)
 					{
-						Assert.Multiple(() =>
+						using (Assert.EnterMultipleScope())
 						{
 							Assert.That(item.ChildDictionary1[item.Child1.ChildID], Is.EqualTo(item.Child1.ParentID));
 							Assert.That(item.ChildDictionary2["ChildID"], Is.EqualTo(item.Child1.ChildID));
 							Assert.That(item.ChildDictionary2["ParentID"], Is.EqualTo(item.Child1.ParentID));
-						});
+						}
 					}
 				}
 			}
@@ -1811,7 +1828,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Table("test_mapping_column_2_prop")]
 		public partial class TestMappingColumn1PropInfo
 		{
@@ -1916,16 +1932,15 @@ namespace Tests.Linq
 			p1.All(p => ReferenceEquals(p.Reference, reference)).Should().BeTrue();
 
 			reference = new Parent() { ParentID = 1002 };
-			var cacheMissCount = Query<Person>.CacheMissCount;
+			var cacheMissCount = db.Person.GetCacheMissCount();
 
 			var p2 = query.ToList();
 
 			p2.All(p => ReferenceEquals(p.Reference, reference)).Should().BeTrue();
 
-			Query<Person>.CacheMissCount.Should().Be(cacheMissCount);
+			db.Person.GetCacheMissCount().Should().Be(cacheMissCount);
 
 		}
-		
 
 		#endregion
 
@@ -1966,12 +1981,12 @@ namespace Tests.Linq
 			// suppressSequentialAccess: true to avoid interceptor added twice
 			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(InheritanceParent[0].GetType(), Is.EqualTo(typeof(InheritanceParentBase)));
 					Assert.That(InheritanceParent[1].GetType(), Is.EqualTo(typeof(InheritanceParent1)));
 					Assert.That(InheritanceParent[2].GetType(), Is.EqualTo(typeof(InheritanceParent2)));
-				});
+				}
 
 				AreEqual(InheritanceParent, db.InheritanceParent);
 				AreEqual(InheritanceChild, db.InheritanceChild);
@@ -2178,11 +2193,11 @@ namespace Tests.Linq
 					};
 
 			var res = q.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res.All(r => r.LastName == null), Is.True);
 				Assert.That(res.All(r => r.Gender == default), Is.True);
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]
@@ -2204,11 +2219,11 @@ namespace Tests.Linq
 					};
 
 			var res = q.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res.All(r => r.LastName == null), Is.True);
 				Assert.That(res.All(r => r.Gender == default), Is.True);
-			});
+			}
 		}
 	}
 }

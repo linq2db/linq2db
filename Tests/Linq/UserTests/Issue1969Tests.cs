@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -56,11 +58,11 @@ namespace Tests.UserTests
 				var res = query.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].CountOf, Is.EqualTo(2));
 					Assert.That(res[1].CountOf, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 	}

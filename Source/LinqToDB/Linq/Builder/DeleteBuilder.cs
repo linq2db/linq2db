@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	[BuildsMethodCall(
 		nameof(LinqExtensions.Delete),
 		nameof(LinqExtensions.DeleteWithOutput),
@@ -70,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 				var outputSelectQuery = new SelectQuery();
 
 				deletedContext = new AnchorContext(null,
-					new TableBuilder.TableContext(builder, sequence.MappingSchema, outputSelectQuery, deletedTable, false),
+					new TableBuilder.TableContext(sequence.TranslationModifier, builder, sequence.MappingSchema, outputSelectQuery, deletedTable, false),
 					SqlAnchor.AnchorKindEnum.Deleted);
 
 				if (deleteType == DeleteContext.DeleteTypeEnum.DeleteOutputInto)
@@ -83,11 +83,12 @@ namespace LinqToDB.Linq.Builder
 						throw new InvalidOperationException();
 
 					var destinationRef = new ContextRefExpression(destinationContext.ObjectType, destinationContext);
+					var sourceRef      = SequenceHelper.CreateRef(sequence);
 
 					var outputBody = SequenceHelper.PrepareBody(outputExpression, deletedContext);
 
 					var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
-					UpdateBuilder.ParseSetter(builder, destinationRef, outputBody, outputExpressions);
+					UpdateBuilder.ParseSetter(builder, destinationRef, sourceRef, outputBody, outputExpressions);
 
 					UpdateBuilder.InitializeSetExpressions(builder, destinationContext, sequence, outputExpressions, deleteStatement.Output.OutputItems, createColumns : false);
 
@@ -177,6 +178,7 @@ namespace LinqToDB.Linq.Builder
 
 						var selectContext     = new SelectContext(Parent, outputBody, QuerySequence, false);
 						var outputRef         = new ContextRefExpression(path.Type, selectContext);
+						var sourceRef         = SequenceHelper.CreateRef(QuerySequence);
 						var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 
 						var sqlExpr = Builder.BuildSqlExpression(selectContext, outputRef);
@@ -185,7 +187,7 @@ namespace LinqToDB.Linq.Builder
 						if (sqlExpr is SqlPlaceholderExpression)
 							outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr, false));
 						else
-							UpdateBuilder.ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
+							UpdateBuilder.ParseSetter(Builder, outputRef, sourceRef, sqlExpr, outputExpressions);
 
 						var setItems = new List<SqlSetExpression>();
 						UpdateBuilder.InitializeSetExpressions(Builder, selectContext, selectContext, outputExpressions, setItems, createColumns : false);

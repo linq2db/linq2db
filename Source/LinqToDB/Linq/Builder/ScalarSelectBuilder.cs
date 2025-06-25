@@ -1,25 +1,26 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
-	[BuildsExpression(ExpressionType.Lambda)]
-	sealed class ScalarSelectBuilder : ISequenceBuilder
+	[BuildsMethodCall("Select")]
+	sealed class ScalarSelectBuilder : MethodCallBuilder
 	{
-		public static bool CanBuild(Expression expr, BuildInfo info, ExpressionBuilder builder)
-			=> ((LambdaExpression)expr).Parameters.Count == 0;
 
-		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder) 
+			=> call.IsSameGenericMethod(Methods.LinqToDB.Select);
+
+		public override bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo) => true;
+
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return BuildSequenceResult.FromContext(new ScalarSelectContext(builder, buildInfo.Expression.UnwrapLambda().Body, buildInfo.SelectQuery));
+			return BuildSequenceResult.FromContext(new ScalarSelectContext(builder.GetTranslationModifier(), builder, methodCall.Arguments[1].UnwrapLambda().Body, buildInfo.SelectQuery));
 		}
-
-		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
-			=> true;
 
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 		sealed class ScalarSelectContext : BuildContextBase
@@ -29,7 +30,8 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression Body { get; }
 
-			public ScalarSelectContext(ExpressionBuilder builder, Expression body, SelectQuery selectQuery) : base(builder, body.Type, selectQuery)
+			public ScalarSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, Expression body, SelectQuery selectQuery) 
+				: base(translationModifier, builder, body.Type, selectQuery)
 			{
 				Body = body;
 			}
@@ -47,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new ScalarSelectContext(Builder, context.CloneExpression(Body), context.CloneElement(SelectQuery));
+				return new ScalarSelectContext(TranslationModifier, Builder, context.CloneExpression(Body), context.CloneElement(SelectQuery));
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)

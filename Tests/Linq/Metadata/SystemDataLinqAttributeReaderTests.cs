@@ -1,9 +1,11 @@
 ﻿#if NETFRAMEWORK
-using LinqToDB;
-using LinqToDB.Metadata;
-using NUnit.Framework;
 using System.ComponentModel;
 using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Metadata;
+
+using NUnit.Framework;
 
 namespace Tests.Metadata
 {
@@ -111,11 +113,11 @@ namespace Tests.Metadata
 
 			Assert.That(attrs, Is.Not.Null);
 			Assert.That(attrs, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(attrs[0].Name, Is.EqualTo("Shippers"));
 				Assert.That(attrs[0].Schema, Is.EqualTo("dbo"));
-			});
+			}
 		}
 
 		[Test]

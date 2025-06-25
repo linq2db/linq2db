@@ -7,10 +7,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.UserTests
 {
-	using Model;
-
 	[TestFixture]
 	public class Issue693Tests : TestBase
 	{
@@ -103,12 +103,11 @@ namespace Tests.UserTests
 
 				var obj3 = db.GetTable<Entity533>().First(_ => _.ID == id1);
 				var obj4 = db.GetTable<Entity533>().First(_ => _.ID == id2);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(obj4.MiddleName, Is.Null);
 					Assert.That(obj3.MiddleName, Is.Not.Null);
-				});
+				}
 			}
 		}
 	}

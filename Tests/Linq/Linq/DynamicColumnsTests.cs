@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Reflection;
+using System.Text.Json;
 
 using LinqToDB;
 using LinqToDB.DataProvider.Firebird;
@@ -11,12 +11,10 @@ using LinqToDB.Metadata;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.Data;
-
-	using Model;
-
 	[TestFixture]
 	public class DynamicColumnsTests : TestBase
 	{
@@ -416,12 +414,12 @@ namespace Tests.Linq
 					};
 
 				var result = query.ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].NI, Is.EqualTo(77));
 					Assert.That(result[0].Count, Is.EqualTo(2));
-				});
+				}
+
 				Assert.That(result[0].Sum, Is.EqualTo(10));
 			}
 		}
@@ -666,6 +664,7 @@ namespace Tests.Linq
 					.IsExpression(row => Sql.Expr<float?>(colExpr), isColumn: true)
 					;
 			}
+
 			fm.Build();
 
 			var id = 0;
@@ -693,11 +692,11 @@ namespace Tests.Linq
 			var testRows = db.GetTable<TestJsonRead>().ToArray();
 			foreach (var testRow in testRows)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(testData, Does.ContainKey(testRow.Id));
 					Assert.That(testRow.Values, Has.Count.EqualTo(readColCount));
-				});
+				}
 			}
 		}
 
@@ -716,6 +715,7 @@ namespace Tests.Linq
 					.IsExpression(row => Sql.Expr<string?>(colExpr), isColumn: true)
 					;
 			}
+
 			fm.Build();
 
 			var id = 0;
@@ -743,11 +743,11 @@ namespace Tests.Linq
 			var testRows = db.GetTable<TestJsonRead>().ToArray();
 			foreach (var testRow in testRows)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(testData, Does.ContainKey(testRow.Id));
 					Assert.That(testRow.Values, Has.Count.EqualTo(readColCount));
-				});
+				}
 			}
 		}
 
@@ -865,5 +865,39 @@ namespace Tests.Linq
 				return $".{nameof(CustomMetadataReader)}";
 			}
 		}
+
+		#region Issue 4770
+
+		sealed class Issue4770Person
+		{
+			public long Id { get; set; }
+			public Issue4770Address? Address { get; set; }
+			public string ?TestPostcode { get; set; }
+		}
+
+		sealed class Issue4770Address
+		{
+			public string? Postcode { get; set; }
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4770")]
+		public void Issue4770([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			var fb = new FluentMappingBuilder(ms);
+			fb.Entity<Issue4770Person>()
+				.Property(c => c.Id).IsPrimaryKey()
+				.Property(c => c.Address!.Postcode).IsExpression(c => Sql.Upper(Sql.Property<string>(c, "Postcode")), true).IsColumn()
+				.Property(c => c.TestPostcode).IsExpression(c => Sql.Upper(Sql.Property<string>(c, "Postcode")), true);
+
+			fb.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<Issue4770Person>();
+
+			tb.ToArray();
+		}
+		#endregion
 	}
 }

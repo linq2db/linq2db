@@ -5,17 +5,20 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.SqlQuery
 {
-	using SqlProvider;
-	using Common;
-	using Mapping;
-	using Common.Internal;
-
 	public static partial class QueryHelper
 	{
 		internal static ObjectPool<SelectQueryOptimizerVisitor> SelectOptimizer =
 			new(() => new SelectQueryOptimizerVisitor(), v => v.Cleanup(), 100);
+
+		internal static ObjectPool<AggregationCheckVisitor> AggregationCheckVisitors =
+			new(() => new AggregationCheckVisitor(), v => v.Cleanup(), 100);
 
 		sealed class IsDependsOnSourcesContext
 		{
@@ -133,6 +136,7 @@ namespace LinqToDB.SqlQuery
 			{
 				return true;
 			}
+
 			return false;
 		}
 
@@ -253,6 +257,7 @@ namespace LinqToDB.SqlQuery
 						if (descriptor != null)
 							return descriptor;
 					}
+
 					break;
 				}
 				case QueryElementType.SqlCondition:
@@ -276,6 +281,7 @@ namespace LinqToDB.SqlQuery
 					return GetColumnDescriptor(caseExpression.ElseExpression);
 				}
 			}
+
 			return null;
 		}
 
@@ -348,8 +354,8 @@ namespace LinqToDB.SqlQuery
 					.WithSystemType(result.SystemType)
 					.WithDbType(result.DbType ?? fromSchema.DbType)
 					.WithLength(result.Length ?? fromSchema.Length)
-					.WithLength(result.Precision ?? fromSchema.Precision)
-					.WithLength(result.Scale ?? fromSchema.Scale);
+					.WithPrecision(result.Precision ?? fromSchema.Precision)
+					.WithScale(result.Scale ?? fromSchema.Scale);
 			}
 
 			return result;
@@ -445,6 +451,7 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 				}
+
 				return true;
 			});
 		}
@@ -477,6 +484,7 @@ namespace LinqToDB.SqlQuery
 						return false;
 					}
 				}
+
 				return true;
 			});
 		}
@@ -485,7 +493,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (sqlExpression is { Parameters: [var p] }
 				&& sqlExpression.Expr.Trim() == "{0}" 
-				&& (!checkNullability || sqlExpression.CanBeNull == p.CanBeNullable(NullabilityContext.NonQuery)))
+				&& (!checkNullability || sqlExpression.CanBeNullable(NullabilityContext.NonQuery) == p.CanBeNullable(NullabilityContext.NonQuery)))
 			{
 				if (p is SqlExpression argExpression)
 					return IsTransitiveExpression(argExpression, checkNullability);
@@ -621,6 +629,7 @@ namespace LinqToDB.SqlQuery
 
 				return true;
 			}
+
 			return false;
 		}
 
@@ -662,8 +671,9 @@ namespace LinqToDB.SqlQuery
 			if (whereClause.SearchCondition.IsOr)
 			{
 				var old = whereClause.SearchCondition;
-				whereClause.SearchCondition = new SqlSearchCondition(false, old);
+				whereClause.SearchCondition = new SqlSearchCondition(false, canBeUnknown: null, old);
 			}
+
 			return whereClause.SearchCondition;
 		}
 
@@ -677,8 +687,9 @@ namespace LinqToDB.SqlQuery
 			if (whereClause.SearchCondition.IsOr)
 			{
 				var old = whereClause.SearchCondition;
-				whereClause.SearchCondition = new SqlSearchCondition(false, old);
+				whereClause.SearchCondition = new SqlSearchCondition(false, canBeUnknown: null, old);
 			}
+
 			return whereClause.SearchCondition;
 		}
 
@@ -692,8 +703,9 @@ namespace LinqToDB.SqlQuery
 			if (joinedTable.Condition.IsOr)
 			{
 				var old = joinedTable.Condition;
-				joinedTable.Condition = new SqlSearchCondition(false, old);
+				joinedTable.Condition = new SqlSearchCondition(false, canBeUnknown: null, old);
 			}
+
 			return joinedTable.Condition;
 		}
 
@@ -846,56 +858,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 		/// <summary>
-		/// Converts ORDER BY DISTINCT to GROUP BY equivalent
-		/// </summary>
-		/// <param name="select"></param>
-		/// <param name="flags"></param>
-		/// <returns></returns>
-		public static bool TryConvertOrderedDistinctToGroupBy(SelectQuery select, SqlProviderFlags flags)
-		{
-			if (!select.Select.IsDistinct || select.OrderBy.IsEmpty)
-				return false;
-
-			var nonProjecting = select.Select.OrderBy.Items.Select(static i => i.Expression)
-				.Except(select.Select.Columns.Select(static c => c.Expression))
-				.ToList();
-
-			if (nonProjecting.Count > 0)
-			{
-				if (!flags.IsOrderByAggregateFunctionsSupported)
-					throw new LinqToDBException("Cannot convert sequence to SQL. DISTINCT with ORDER BY not supported.");
-
-				// converting to Group By
-
-				var newOrderItems = new SqlOrderByItem[select.Select.OrderBy.Items.Count];
-				for (var i = 0; i < newOrderItems.Length; i++)
-				{
-					var oi = select.Select.OrderBy.Items[i];
-					newOrderItems[i] = !nonProjecting.Contains(oi.Expression)
-							? oi
-							: new SqlOrderByItem(
-								new SqlFunction(oi.Expression.SystemType!, !oi.IsDescending ? "MIN" : "MAX", true, oi.Expression),
-								oi.IsDescending, oi.IsPositioned);
-				}
-
-				select.Select.OrderBy.Items.Clear();
-				select.Select.OrderBy.Items.AddRange(newOrderItems);
-
-				// add only missing group items
-				var currentGroupItems = new HashSet<ISqlExpression>(select.Select.GroupBy.Items);
-				foreach (var c in select.Select.Columns)
-					if (!currentGroupItems.Contains(c.Expression))
-						select.Select.GroupBy.Items.Add(c.Expression);
-
-				select.Select.IsDistinct = false;
-
-				return true;
-			}
-
-			return false;
-		}
-
-		/// <summary>
 		/// Detects when we can remove order
 		/// </summary>
 		/// <param name="selectQuery"></param>
@@ -982,6 +944,7 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 				}
+
 				break;
 			}
 
@@ -1313,6 +1276,101 @@ namespace LinqToDB.SqlQuery
 			};
 		}
 
+		internal class AggregationCheckVisitor : QueryElementVisitor
+		{
+			public bool IsAggregation { get; set; }
+			public bool IsWindow      { get; set; }
+			public bool HasReference  { get; set; }
+
+			public AggregationCheckVisitor() : base(VisitMode.ReadOnly)
+			{
+			}
+
+			public void Cleanup()
+			{
+				IsAggregation = false;
+				IsWindow      = false;
+				HasReference  = false;
+			}
+
+			[return : NotNullIfNotNull(nameof(element))]
+			public override IQueryElement? Visit(IQueryElement? element)
+			{
+				// if we already found aggregation or window function, we can stop
+				if (IsAggregation && IsWindow && HasReference)
+					return element;
+
+				return base.Visit(element);
+			}
+
+			protected override IQueryElement VisitSqlFunction(SqlFunction element)
+			{
+				var isAggregation = IsAggregationFunction(element);
+				var isWindow      = IsWindowFunction(element);
+
+				IsAggregation = IsAggregation || isAggregation;
+				IsWindow      = IsWindow      || isWindow;
+
+				if (isAggregation || isWindow)
+				{
+					return element;
+				}
+
+				return base.VisitSqlFunction(element);
+			}
+
+			protected override IQueryElement VisitSqlExpression(SqlExpression element)
+			{
+				var isAggregation = IsAggregationFunction(element);
+				var isWindow      = IsWindowFunction(element);
+
+				IsAggregation = IsAggregation || isAggregation;
+				IsWindow      = IsWindow      || isWindow;
+
+				if (isAggregation || isWindow)
+				{
+					return element;
+				}
+
+				return base.VisitSqlExpression(element);
+			}
+
+			protected override IQueryElement VisitSqlFieldReference(SqlField element)
+			{
+				HasReference = true;
+				return base.VisitSqlFieldReference(element);
+			}
+
+			protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
+			{
+				HasReference = true;
+				return base.VisitSqlColumnReference(element);
+			}
+		}
+
+		public static bool IsAggregationQuery(SelectQuery selectQuery)
+		{
+			using var visitorRef = AggregationCheckVisitors.Allocate();
+
+			var visitor        = visitorRef.Value;
+			var hasAggregation = false;
+			foreach (var column in selectQuery.Select.Columns)
+			{
+				visitor.Cleanup();
+				visitor.Visit(column.Expression);
+
+				if (visitor.HasReference)
+					return false;
+
+				if (visitor.IsAggregation)
+				{
+					hasAggregation = true;
+				}
+			}
+
+			return hasAggregation;
+		}
+
 		public static bool IsWindowFunction(IQueryElement expr)
 		{
 			if (expr is SqlExpression expression)
@@ -1524,7 +1582,7 @@ namespace LinqToDB.SqlQuery
 				var predicate = sc.Predicates[index];
 				if (predicate is SqlPredicate.ExprExpr exprExpr)
 				{
-					if (exprExpr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual && exprExpr.WithNull != null)
+					if (exprExpr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual && exprExpr.UnknownAsValue != null)
 					{
 						predicate = new SqlPredicate.ExprExpr(exprExpr.Expr1, exprExpr.Operator, exprExpr.Expr2, null);
 					}
@@ -1540,14 +1598,16 @@ namespace LinqToDB.SqlQuery
 			return newSc;
 		}
 
-		public static bool CalcCanBeNull(bool? canBeNull, ParametersNullabilityType isNullable, IEnumerable<bool> nullInfo)
+		public static bool CalcCanBeNull(Type? type, bool? canBeNull, ParametersNullabilityType isNullable, IEnumerable<bool> nullInfo)
 		{
 			if (canBeNull != null)
 				return canBeNull.Value;
 
+			if (isNullable == ParametersNullabilityType.Undefined)
+				return type == null ? true : SqlDataType.TypeCanBeNull(type);
+
 			switch (isNullable)
 			{
-				case ParametersNullabilityType.Undefined              : return true;
 				case ParametersNullabilityType.Nullable               : return true;
 				case ParametersNullabilityType.NotNullable            : return false;
 			}
@@ -1620,24 +1680,17 @@ namespace LinqToDB.SqlQuery
 			return expr;
 		}
 
-		public static bool CanBeNullableOrUnknown(this ISqlExpression expr, NullabilityContext nullabilityContext)
+		public static bool CanBeNullableOrUnknown(this ISqlExpression expr, NullabilityContext nullabilityContext, bool withoutUnknownErased)
 		{
 			if (expr is ISqlPredicate predicate)
-				return predicate.CanBeUnknown(nullabilityContext);
+				return predicate.CanBeUnknown(nullabilityContext, withoutUnknownErased);
 
 			return expr.CanBeNullable(nullabilityContext);
 		}
 
-		public static bool NeedsEqualityWithNull(ISqlExpression expr1, SqlPredicate.Operator op, ISqlExpression expr2, NullabilityContext nullabilityContext)
+		public static bool IsPredicate(this ISqlExpression expr)
 		{
-			// we cannot relax it to:
-			// ==: nullable && nullable
-			// !=: nullable XOR nullable
-			// see test GroupByAggregate
-			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
-				return expr1.CanBeNullableOrUnknown(nullabilityContext) || expr2.CanBeNullableOrUnknown(nullabilityContext);
-
-			return false;
+			return expr is ISqlPredicate or SqlExpression { IsPredicate: true };
 		}
 
 		public static ISqlExpression UnwrapCastAndNullability(ISqlExpression expr)
@@ -1760,6 +1813,63 @@ namespace LinqToDB.SqlQuery
 				else if (x is SqlValue v)
 					values.Add(v);
 			});
+		}
+
+		/// <summary>
+		/// Merges predicates from <paramref name="child"/> and <paramref name="parent"/> into new or <paramref name="parent"/> condition and return result.
+		/// </summary>
+		internal static SqlSearchCondition MergeConditions(SqlSearchCondition parent, SqlSearchCondition child)
+		{
+			if (parent.IsAnd)
+			{
+				if (child.IsAnd)
+					parent.Predicates.InsertRange(0, child.Predicates);
+				else
+					parent.Predicates.Insert(0, new SqlSearchCondition(true, canBeUnknown: null, child.Predicates));
+
+				return parent;
+			}
+			else
+			{
+				if (child.IsAnd)
+					return new SqlSearchCondition(false, canBeUnknown: null, [..child.Predicates, parent]);
+				else
+					return new SqlSearchCondition(false, canBeUnknown: null, child, parent);
+			}
+		}
+
+		/// <summary>
+		/// Returns <c>true</c> if expression typed by predicate (returns SQL BOOLEAN-typed value).
+		/// </summary>
+		public static bool IsBoolean(ISqlExpression expr, bool includeFields = false)
+		{
+			expr = UnwrapNullablity(expr);
+
+			if (expr is ISqlPredicate)
+				return true;
+
+			if (expr is SqlCaseExpression caseExpr)
+			{
+				foreach (var cs in caseExpr.Cases)
+				{
+					if (IsBoolean(cs.ResultExpression))
+						return true;
+				}
+
+				if (caseExpr.ElseExpression != null && IsBoolean(caseExpr.ElseExpression))
+					return true;
+			}
+
+			if (expr is SqlConditionExpression condExpr
+				&& (IsBoolean(condExpr.TrueValue) || IsBoolean(condExpr.FalseValue)))
+			{
+				return true;
+			}
+
+			if (includeFields && expr is SqlField or SqlColumn)
+				return true;
+
+			return false;
 		}
 	}
 }

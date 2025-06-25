@@ -2,9 +2,12 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.Data
@@ -31,18 +34,15 @@ namespace Tests.Data
 					 "select * from Patient;" +
 					 "select top 1 * from Patient;"
 				);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.AllDoctors.Any(), Is.True);
 					Assert.That(res.AllPatients.Any(), Is.True);
 					Assert.That(res.AllPersons.Any(), Is.True);
-					Assert.That(res.FirstPatient, Is.Not.EqualTo(null));
-				});
-				Assert.Multiple(() =>
-				{
+					Assert.That(res.FirstPatient, Is.Not.Null);
 					Assert.That(res.FirstPatient!.Diagnosis, Is.EqualTo("Hallucination with Paranoid Bugs' Delirium of Persecution"));
 					Assert.That(res.FirstPatient.PersonID, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -57,18 +57,15 @@ namespace Tests.Data
 					"select * from Patient;" +
 					"select top 1 * from Patient;"
 				);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.AllDoctors.Any(), Is.True);
 					Assert.That(res.AllPatients.Any(), Is.True);
 					Assert.That(res.AllPersons.Any(), Is.True);
-					Assert.That(res.FirstPatient, Is.Not.EqualTo(null));
-				});
-				Assert.Multiple(() =>
-				{
+					Assert.That(res.FirstPatient, Is.Not.Null);
 					Assert.That(res.FirstPatient!.Diagnosis, Is.EqualTo("Hallucination with Paranoid Bugs' Delirium of Persecution"));
 					Assert.That(res.FirstPatient.PersonID, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -91,18 +88,15 @@ namespace Tests.Data
 					 "select * from Patient;" +
 					 "select top 1 * from Patient;"
 				);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.AllDoctors.Any(), Is.True);
 					Assert.That(res.AllPatients.Any(), Is.True);
 					Assert.That(res.AllPersons.Any(), Is.True);
-					Assert.That(res.FirstPatient, Is.Not.EqualTo(null));
-				});
-				Assert.Multiple(() =>
-				{
+					Assert.That(res.FirstPatient, Is.Not.Null);
 					Assert.That(res.FirstPatient!.Diagnosis, Is.EqualTo("Hallucination with Paranoid Bugs' Delirium of Persecution"));
 					Assert.That(res.FirstPatient.PersonID, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -117,21 +111,17 @@ namespace Tests.Data
 					"select * from Patient;" +
 					"select top 1 * from Patient;"
 				);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.AllDoctors.Any(), Is.True);
 					Assert.That(res.AllPatients.Any(), Is.True);
 					Assert.That(res.AllPersons.Any(), Is.True);
-					Assert.That(res.FirstPatient, Is.Not.EqualTo(null));
-				});
-				Assert.Multiple(() =>
-				{
+					Assert.That(res.FirstPatient, Is.Not.Null);
 					Assert.That(res.FirstPatient!.Diagnosis, Is.EqualTo("Hallucination with Paranoid Bugs' Delirium of Persecution"));
 					Assert.That(res.FirstPatient.PersonID, Is.EqualTo(2));
-				});
+				}
 			}
 		}
-
 
 		[Table]
 		sealed class ProcedureMultipleResultExample
@@ -154,23 +144,19 @@ namespace Tests.Data
 					"PersonSearch",
 					new DataParameter("nameFilter", "Jane")
 				);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.DoctorFound, Is.False);
 					Assert.That(res.MatchingPersonIds, Has.Count.EqualTo(1));
 					Assert.That(res.MatchingPersons.Count(), Is.EqualTo(1));
-					Assert.That(res.MatchingPatients.Count(), Is.EqualTo(0));
+					Assert.That(res.MatchingPatients.Count(), Is.Zero);
 					Assert.That(res.MatchingPersons2, Has.Length.EqualTo(1));
 					Assert.That(res.MatchCount, Is.EqualTo(1));
 					Assert.That(res.MatchingPerson, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(res.MatchingPerson.FirstName, Is.EqualTo("Jane"));
 					Assert.That(res.MatchingPerson.LastName, Is.EqualTo("Doe"));
 					Assert.That(res.MatchingPerson.Gender, Is.EqualTo(Gender.Female));
-				});
+				}
 			}
 		}
 
@@ -183,23 +169,19 @@ namespace Tests.Data
 					"PersonSearch",
 					new { nameFilter = "Jane" }
 				);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.DoctorFound, Is.False);
 					Assert.That(res.MatchingPersonIds, Has.Count.EqualTo(1));
 					Assert.That(res.MatchingPersons.Count(), Is.EqualTo(1));
-					Assert.That(res.MatchingPatients.Count(), Is.EqualTo(0));
+					Assert.That(res.MatchingPatients.Count(), Is.Zero);
 					Assert.That(res.MatchingPersons2, Has.Length.EqualTo(1));
 					Assert.That(res.MatchCount, Is.EqualTo(1));
 					Assert.That(res.MatchingPerson, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(res.MatchingPerson.FirstName, Is.EqualTo("Jane"));
 					Assert.That(res.MatchingPerson.LastName, Is.EqualTo("Doe"));
 					Assert.That(res.MatchingPerson.Gender, Is.EqualTo(Gender.Female));
-				});
+				}
 			}
 		}
 
@@ -212,23 +194,19 @@ namespace Tests.Data
 					"PersonSearch",
 					new DataParameter("nameFilter", "Jane")
 				);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.DoctorFound, Is.False);
 					Assert.That(res.MatchingPersonIds, Has.Count.EqualTo(1));
 					Assert.That(res.MatchingPersons.Count(), Is.EqualTo(1));
-					Assert.That(res.MatchingPatients.Count(), Is.EqualTo(0));
+					Assert.That(res.MatchingPatients.Count(), Is.Zero);
 					Assert.That(res.MatchingPersons2, Has.Length.EqualTo(1));
 					Assert.That(res.MatchCount, Is.EqualTo(1));
 					Assert.That(res.MatchingPerson, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(res.MatchingPerson.FirstName, Is.EqualTo("Jane"));
 					Assert.That(res.MatchingPerson.LastName, Is.EqualTo("Doe"));
 					Assert.That(res.MatchingPerson.Gender, Is.EqualTo(Gender.Female));
-				});
+				}
 			}
 		}
 
@@ -242,23 +220,19 @@ namespace Tests.Data
 					CancellationToken.None,
 					new { nameFilter = "Jane" }
 				);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.DoctorFound, Is.False);
 					Assert.That(res.MatchingPersonIds, Has.Count.EqualTo(1));
 					Assert.That(res.MatchingPersons.Count(), Is.EqualTo(1));
-					Assert.That(res.MatchingPatients.Count(), Is.EqualTo(0));
+					Assert.That(res.MatchingPatients.Count(), Is.Zero);
 					Assert.That(res.MatchingPersons2, Has.Length.EqualTo(1));
 					Assert.That(res.MatchCount, Is.EqualTo(1));
 					Assert.That(res.MatchingPerson, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(res.MatchingPerson.FirstName, Is.EqualTo("Jane"));
 					Assert.That(res.MatchingPerson.LastName, Is.EqualTo("Doe"));
 					Assert.That(res.MatchingPerson.Gender, Is.EqualTo(Gender.Female));
-				});
+				}
 			}
 		}
 
@@ -271,23 +245,19 @@ namespace Tests.Data
 					"PersonSearch",
 					new DataParameter("nameFilter", "Pupkin")
 				);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.DoctorFound, Is.True);
 					Assert.That(res.MatchingPersonIds, Has.Count.EqualTo(1));
 					Assert.That(res.MatchingPersons.Count(), Is.EqualTo(1));
-					Assert.That(res.MatchingPatients.Count(), Is.EqualTo(0));
+					Assert.That(res.MatchingPatients.Count(), Is.Zero);
 					Assert.That(res.MatchingPersons2, Has.Length.EqualTo(1));
 					Assert.That(res.MatchCount, Is.EqualTo(1));
 					Assert.That(res.MatchingPerson, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(res.MatchingPerson.FirstName, Is.EqualTo("John"));
 					Assert.That(res.MatchingPerson.LastName, Is.EqualTo("Pupkin"));
 					Assert.That(res.MatchingPerson.Gender, Is.EqualTo(Gender.Male));
-				});
+				}
 			}
 		}
 
@@ -300,26 +270,21 @@ namespace Tests.Data
 					"PersonSearch",
 					new DataParameter("nameFilter", "Pupkin")
 				);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.DoctorFound, Is.True);
 					Assert.That(res.MatchingPersonIds, Has.Count.EqualTo(1));
 					Assert.That(res.MatchingPersons.Count(), Is.EqualTo(1));
-					Assert.That(res.MatchingPatients.Count(), Is.EqualTo(0));
+					Assert.That(res.MatchingPatients.Count(), Is.Zero);
 					Assert.That(res.MatchingPersons2, Has.Length.EqualTo(1));
 					Assert.That(res.MatchCount, Is.EqualTo(1));
 					Assert.That(res.MatchingPerson, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(res.MatchingPerson.FirstName, Is.EqualTo("John"));
 					Assert.That(res.MatchingPerson.LastName, Is.EqualTo("Pupkin"));
 					Assert.That(res.MatchingPerson.Gender, Is.EqualTo(Gender.Male));
-				});
+				}
 			}
 		}
-
 
 		[Table]
 		sealed class ProcedureMultipleResultExampleWithoutAttributes
@@ -342,23 +307,19 @@ namespace Tests.Data
 					"PersonSearch",
 					new DataParameter("nameFilter", "Jane")
 				);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.DoctorFound, Is.False);
 					Assert.That(res.MatchingPersonIds, Has.Count.EqualTo(1));
 					Assert.That(res.MatchingPersons.Count(), Is.EqualTo(1));
-					Assert.That(res.MatchingPatients.Count(), Is.EqualTo(0));
+					Assert.That(res.MatchingPatients.Count(), Is.Zero);
 					Assert.That(res.MatchingPersons2, Has.Length.EqualTo(1));
 					Assert.That(res.MatchCount, Is.EqualTo(1));
 					Assert.That(res.MatchingPerson, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(res.MatchingPerson.FirstName, Is.EqualTo("Jane"));
 					Assert.That(res.MatchingPerson.LastName, Is.EqualTo("Doe"));
 					Assert.That(res.MatchingPerson.Gender, Is.EqualTo(Gender.Female));
-				});
+				}
 			}
 		}
 
@@ -371,23 +332,19 @@ namespace Tests.Data
 					"PersonSearch",
 					new DataParameter("nameFilter", "Jane")
 				);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.DoctorFound, Is.False);
 					Assert.That(res.MatchingPersonIds, Has.Count.EqualTo(1));
 					Assert.That(res.MatchingPersons.Count(), Is.EqualTo(1));
-					Assert.That(res.MatchingPatients.Count(), Is.EqualTo(0));
+					Assert.That(res.MatchingPatients.Count(), Is.Zero);
 					Assert.That(res.MatchingPersons2, Has.Length.EqualTo(1));
 					Assert.That(res.MatchCount, Is.EqualTo(1));
 					Assert.That(res.MatchingPerson, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(res.MatchingPerson.FirstName, Is.EqualTo("Jane"));
 					Assert.That(res.MatchingPerson.LastName, Is.EqualTo("Doe"));
 					Assert.That(res.MatchingPerson.Gender, Is.EqualTo(Gender.Female));
-				});
+				}
 			}
 		}
 

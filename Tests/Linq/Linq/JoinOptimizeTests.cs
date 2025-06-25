@@ -6,10 +6,10 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class JoinOptimizeTests : TestBase
 	{
@@ -96,31 +96,30 @@ namespace Tests.Linq
 						OrderID2 = o2.OrderID,
 						OrderID3 = o3.OrderID,
 					};
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(q2, Is.EqualTo(q));
 
 					Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1));
-				});
+				}
 
 				var proj1 = q.Select(v => v.OrderID);
 				proj1.ToArray();
 				var sq1 = proj1.GetSelectQuery();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sq1.GetTableSource().Joins, Has.Count.EqualTo(1));
 					Assert.That(sq1.GetWhere().Predicates, Is.Empty);
-				});
+				}
 
 				var proj2 = q.Select(v => v.OrderDate);
 				proj2.ToArray();
 				var sq2 = proj2.GetSelectQuery();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sq2.GetTableSource().Joins, Has.Count.EqualTo(1));
 					Assert.That(sq2.GetWhere().Predicates, Is.Empty);
-				});
+				}
 			}
 		}
 
@@ -220,11 +219,11 @@ namespace Tests.Linq
 				Assert.That(q2, Is.EqualTo(q));
 
 				var ts = q.GetTableSource();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(ts.Joins.Count(j => j.JoinType == JoinType.Inner), Is.EqualTo(2));
 					Assert.That(ts.Joins.Count(j => j.JoinType == JoinType.Left), Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
@@ -357,22 +356,21 @@ namespace Tests.Linq
 
 				var sql = q.GetSelectQuery();
 				Assert.That(sql.GetTableSource().Joins, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sql.GetTableSource().Joins.First().Condition.Predicates, Has.Count.EqualTo(2));
 					Assert.That(sql.GetWhere().Predicates, Is.Empty);
-				});
+				}
 
 				var proj1 = q.Select(v => v.OrderID);
 				var sql1 = proj1.GetSelectQuery();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sql1.GetTableSource().Joins, Has.Count.EqualTo(1));
 					Assert.That(sql1.GetWhere().Predicates, Is.Empty);
-				});
+				}
 			}
 		}
-
 
 		[Test]
 		public void InnerJoin3([NorthwindDataContext] string context)
@@ -573,7 +571,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Table(Name = "Person")]
 		public class PersonEntity
 		{
@@ -585,7 +582,6 @@ namespace Tests.Linq
 			[Column]
 			public string? Name { get; set; }
 		}
-
 
 		[Table(Name = "Adress")]
 		public class AdressEntity
@@ -641,5 +637,179 @@ namespace Tests.Linq
 				Assert.That(query.GetTableSource().Joins, Has.Count.EqualTo(1));
 			}
 		}
+
+		#region Isue 4790
+		class Issue4790Client
+		{
+			public int     Id   { get; set; }
+			public string? Name { get; set; }
+		}
+
+		class Issue4790ClientWithKey
+		{
+			[PrimaryKey]
+			public int     Id   { get; set; }
+			public string? Name { get; set; }
+		}
+
+		class Issue4790Bill : IIssue4790Bill
+		{
+			public int  Id       { get; set; }
+			public int? IdClient { get; set; }
+
+			[Association(ThisKey = nameof(IdClient), OtherKey = nameof(Client.Id), CanBeNull = false)]
+			public Issue4790Client Client { get; set; } = null!;
+
+			[Association(ThisKey = nameof(IdClient), OtherKey = nameof(Issue4790ClientWithKey.Id), CanBeNull = false)]
+			public Issue4790ClientWithKey KeyedClient { get; set; } = null!;
+		}
+
+		interface IIssue4790Bill
+		{
+			int  Id       { get; set; }
+			int? IdClient { get; set; }
+
+			public Issue4790Client        Client      { get; set; }
+			public Issue4790ClientWithKey KeyedClient { get; set; }
+		}
+
+		class Issue4790Position : IIssue4790Position
+		{
+			public int Id { get; set; }
+			public int? IdBill { get; set; }
+
+			[Association(ThisKey = nameof(IdBill), OtherKey = nameof(Issue4790Bill.Id), CanBeNull = false)]
+			public Issue4790Bill Bill { get; set; } = null!;
+		}
+
+		interface IIssue4790Position
+		{
+			int Id { get; set; }
+			int? IdBill { get; set; }
+
+			public Issue4790Bill Bill { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4790")]
+		public void Issue4790Test_Association_NoKey([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue4790Client>();
+			using var t2 = db.CreateLocalTable<Issue4790Bill>();
+
+			var query = from bill in Filter(db.GetTable<Issue4790Bill>(), "Abc") select new { bill.Client.Name };
+
+			query.ToArray();
+
+			var sql = query.GetSelectQuery();
+			Assert.That(sql.GetTableSource().Joins, Has.Count.EqualTo(1));
+
+			static IQueryable<TBill> Filter<TBill>(IQueryable<TBill> query, string clientName)
+				where TBill : IIssue4790Bill
+			{
+				return query.Where(b => b.Client.Name == clientName);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4790")]
+		public void Issue4790Test_Join_NoKey([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue4790Client>();
+			using var t2 = db.CreateLocalTable<Issue4790Bill>();
+
+			var query = from bill in Filter(db, db.GetTable<Issue4790Bill>(), "Abc")
+						join client in t1
+						on bill.IdClient equals client.Id
+						select client.Name;
+
+			query.ToArray();
+
+			var sql = query.GetSelectQuery();
+			// we cannot remove explicit join if we don't known cardinality
+			Assert.That(sql.GetTableSource().Joins, Has.Count.EqualTo(2));
+
+			static IQueryable<TBill> Filter<TBill>(IDataContext db, IQueryable< TBill> query, string clientName)
+				where TBill : IIssue4790Bill
+			{
+				return from bill in query
+					   join client in db.GetTable<Issue4790Client>()
+					   on bill.IdClient equals client.Id
+					   where client.Name == clientName
+					   select bill;
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4790")]
+		public void Issue4790Test_Association_WithKey([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue4790ClientWithKey>();
+			using var t2 = db.CreateLocalTable<Issue4790Bill>();
+
+			var query = from bill in Filter(db.GetTable<Issue4790Bill>(), "Abc") select new { bill.KeyedClient.Name };
+
+			query.ToArray();
+
+			var sql = query.GetSelectQuery();
+			Assert.That(sql.GetTableSource().Joins, Has.Count.EqualTo(1));
+
+			static IQueryable<TBill> Filter<TBill>(IQueryable<TBill> query, string clientName)
+				where TBill : IIssue4790Bill
+			{
+				return query.Where(b => b.KeyedClient.Name == clientName);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4790")]
+		public void Issue4790Test_Join_WithKey([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue4790ClientWithKey>();
+			using var t2 = db.CreateLocalTable<Issue4790Bill>();
+
+			var query = from bill in Filter(db, db.GetTable<Issue4790Bill>(), "Abc")
+						join client in t1
+						on bill.IdClient equals client.Id
+						select client.Name;
+
+			query.ToArray();
+
+			var sql = query.GetSelectQuery();
+			Assert.That(sql.GetTableSource().Joins, Has.Count.EqualTo(1));
+
+			static IQueryable<TBill> Filter<TBill>(IDataContext db, IQueryable<TBill> query, string clientName)
+				where TBill : IIssue4790Bill
+			{
+				return from bill in query
+					   join client in db.GetTable<Issue4790ClientWithKey>()
+					   on bill.IdClient equals client.Id
+					   where client.Name == clientName
+					   select bill;
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4790")]
+		public void Issue4790Test_Association_Nested([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue4790Client>();
+			using var t2 = db.CreateLocalTable<Issue4790Bill>();
+			using var t3 = db.CreateLocalTable<Issue4790Position>();
+
+			var query = from position in Filter(db.GetTable<Issue4790Position>(), "Abc") select new { position.Bill.Client.Name };
+
+			query.ToArray();
+
+			var sql = query.GetSelectQuery();
+			Assert.That(sql.GetTableSource().Joins, Has.Count.EqualTo(2));
+
+			static IQueryable<TPosition> Filter<TPosition>(IQueryable<TPosition> query, string clientName)
+				where TPosition : IIssue4790Position
+			{
+				return query.Where(p => p.Bill.Client.Name == clientName);
+			}
+		}
+		#endregion
 	}
 }

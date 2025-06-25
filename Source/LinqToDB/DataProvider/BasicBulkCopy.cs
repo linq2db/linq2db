@@ -11,13 +11,13 @@ using System.Threading.Tasks;
 using System.Text;
 #endif
 
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider
 {
-	using Data;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class BasicBulkCopy
 	{
 		protected virtual int? MaxMultipleRows => null;
@@ -107,7 +107,7 @@ namespace LinqToDB.DataProvider
 			return RowByRowCopyAsync(table, options, source, cancellationToken);
 		}
 
-		protected virtual BulkCopyRowsCopied RowByRowCopy<T>(ITable<T> table, DataOptions dataOptions, IEnumerable<T> source)
+		protected BulkCopyRowsCopied RowByRowCopy<T>(ITable<T> table, DataOptions dataOptions, IEnumerable<T> source)
 			where T : notnull
 		{
 			var options = dataOptions.BulkCopyOptions;
@@ -442,6 +442,7 @@ namespace LinqToDB.DataProvider
 						helper.StringBuilder.Length = helper.LastRowStringIndex;
 						helper.RowsCopied.RowsCopied--;
 					}
+
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false))
 					{
@@ -450,6 +451,7 @@ namespace LinqToDB.DataProvider
 
 						return helper.RowsCopied;
 					}
+
 					if (needRemove && !isSingle)
 					{
 						addFunction(helper, item!, from);
@@ -503,6 +505,7 @@ namespace LinqToDB.DataProvider
 						helper.StringBuilder.Length = helper.LastRowStringIndex;
 						helper.RowsCopied.RowsCopied--;
 					}
+
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false))
 					{
@@ -511,6 +514,7 @@ namespace LinqToDB.DataProvider
 
 						return helper.RowsCopied;
 					}
+
 					if (needRemove && !isSingle)
 					{
 						addFunction(helper, item!, from);

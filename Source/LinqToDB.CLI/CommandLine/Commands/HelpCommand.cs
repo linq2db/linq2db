@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
+
 using LinqToDB.Naming;
 
 namespace LinqToDB.CommandLine
@@ -23,7 +25,7 @@ namespace LinqToDB.CommandLine
 		{
 		}
 
-		public override int Execute(
+		public override ValueTask<int> Execute(
 			CliController                  controller,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
@@ -35,7 +37,7 @@ namespace LinqToDB.CommandLine
 				// "dotnet linq2db"
 				// "dotnet linq2db help"
 				PrintGeneralHelp(controller, Array.Empty<string>());
-				return StatusCodes.SUCCESS;
+				return new(StatusCodes.SUCCESS);
 			}
 
 			// handle command-specific help requests (except help command itself):
@@ -50,7 +52,7 @@ namespace LinqToDB.CommandLine
 						{
 							// request for command help for known non-help command - print specific command help
 							PrintCommandHelp(command, unknownArgs);
-							return StatusCodes.SUCCESS;
+							return new(StatusCodes.SUCCESS);
 						}
 					}
 				}
@@ -58,13 +60,13 @@ namespace LinqToDB.CommandLine
 				// help request for unknown command:
 				// dotnet linq2db help <unknown-command>
 				PrintGeneralHelp(controller, new[] { rawArgs[1] });
-				return StatusCodes.INVALID_ARGUMENTS;
+				return new(StatusCodes.INVALID_ARGUMENTS);
 			}
 
 			// all other cases - print default help and error message:
 			// "dotnet linq2db help <whatever> <arguments> <here>"
 			PrintGeneralHelp(controller, rawArgs);
-			return StatusCodes.INVALID_ARGUMENTS;
+			return new(StatusCodes.INVALID_ARGUMENTS);
 		}
 
 		/// <summary>
@@ -250,6 +252,7 @@ namespace LinqToDB.CommandLine
 					Console.Out.WriteLine("{0}   default: {1}", indent, booleanOption.Default ? "true" : "false");
 					Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, booleanOption.T4Default ? "true" : "false");
 				}
+
 				if (option is StringCliOption stringOption)
 				{
 					if (stringOption.Default != null)
@@ -304,6 +307,7 @@ namespace LinqToDB.CommandLine
 				foreach (var example in option.Examples)
 					Console.Out.WriteLine("{0}{0}   {1}", indent, example);
 			}
+
 			if (option.JsonExamples != null)
 			{
 				Console.Out.WriteLine("{0}   JSON examples:", indent);
@@ -359,6 +363,7 @@ namespace LinqToDB.CommandLine
 				default                              :
 					throw new InvalidOperationException($"Unknown casing option: {options.Casing}");
 			}
+
 			printJsonProperty(indent, "case", value);
 
 			switch (options.Pluralization)
@@ -370,6 +375,7 @@ namespace LinqToDB.CommandLine
 				default                                 :
 					throw new InvalidOperationException($"Unknown pluralization option: {options.Pluralization}");
 			}
+
 			printJsonProperty(indent, "pluralization", value);
 
 			printJsonProperty(indent, "prefix", options.Prefix == null ? "null" : $"\"{options.Prefix}\"");
@@ -383,6 +389,7 @@ namespace LinqToDB.CommandLine
 				default:
 					throw new InvalidOperationException($"Unknown transformation option: {options.Transformation}");
 			}
+
 			printJsonProperty(indent, "transformation", value);
 
 			printJsonProperty(indent, "pluralize_if_ends_with_word_only", options.PluralizeOnlyIfLastWordIsText ? "true" : "false");

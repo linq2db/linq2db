@@ -4,10 +4,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common.Internal;
+
 namespace LinqToDB.Data
 {
-	using Common.Internal;
-
 	/// <summary>
 	/// Tracing information for the <see cref="DataConnection"/> events.
 	/// </summary>
@@ -111,7 +111,10 @@ namespace LinqToDB.Data
 					using var sbv    = Pools.StringBuilder.Allocate();
 					var sb           = sbv.Value;
 
-					sb.Append("-- ").Append(DataConnection.ConfigurationString);
+					sb.Append("--");
+
+					if (DataConnection.ConfigurationString != null)
+						sb.Append(' ').Append(DataConnection.ConfigurationString);
 
 					if (DataConnection.ConfigurationString != DataConnection.DataProvider.Name)
 						sb.Append(' ').Append(DataConnection.DataProvider.Name);
@@ -119,8 +122,22 @@ namespace LinqToDB.Data
 					if (DataConnection.DataProvider.Name != sqlProvider.Name)
 						sb.Append(' ').Append(sqlProvider.Name);
 
+					if (IsAsync || DataConnection.Tag is not null)
+						sb.Append(" (");
+
 					if (IsAsync)
-						sb.Append(" (asynchronously)");
+					{
+						sb.Append("asynchronously");
+
+						if (DataConnection.Tag is not null)
+							sb.Append(", ");
+					}
+
+					if (DataConnection.Tag is not null)
+						sb.Append(DataConnection.Tag);
+
+					if (IsAsync || DataConnection.Tag is not null)
+						sb.Append(')');
 
 					sb.AppendLine();
 
@@ -128,7 +145,7 @@ namespace LinqToDB.Data
 
 					sb.AppendLine(Command.CommandText);
 
-					while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
+					while (sb[^1] is '\n' or '\r')
 						sb.Length--;
 
 					sb.AppendLine();

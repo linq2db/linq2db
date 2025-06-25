@@ -57,7 +57,7 @@ namespace Tests.Mapping
 					new { ID = 2, Data = "***HHH***"},
 					new { ID = 3, Data = "***VVV***"}
 				],
-				db1.GetTable<TrimTestTable>().OrderBy(_ => _.ID).Select(r => new { r.ID, r.Data}));
+				db1.GetTable<TrimTestTable>().OrderBy(r => r.ID).Select(r => new { r.ID, r.Data}));
 		}
 
 		[Test]

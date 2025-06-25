@@ -9,22 +9,23 @@ using System.Threading.Tasks;
 using System.Transactions;
 
 using LinqToDB;
-using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
+using LinqToDB.Remote;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Data
 {
-	using Model;
-
 	[TestFixture]
 	public class DataConnectionTests : TestBase
 	{
@@ -34,13 +35,14 @@ namespace Tests.Data
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider     = DataConnection.GetDataProvider(context);
 
-			using (var conn = new DataConnection(dataProvider, connectionString))
+			using (var conn = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString)))
 			{
-				Assert.Multiple(() =>
+				var connection = conn.OpenDbConnection();
+				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(connection.State,         Is.EqualTo(ConnectionState.Open));
 					Assert.That(conn.ConfigurationString, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -49,11 +51,12 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				Assert.Multiple(() =>
+				var connection = conn.OpenDbConnection();
+				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 					Assert.That(conn.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
-				});
+				}
 			}
 		}
 
@@ -67,11 +70,12 @@ namespace Tests.Data
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				var connection = conn.OpenDbConnection();
+				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 					Assert.That(conn.ConfigurationString, Is.EqualTo(context));
-				});
+				}
 
 				if (context.EndsWith(".2005"))
 				{
@@ -273,18 +277,16 @@ namespace Tests.Data
 					(args, cn) => opened = true,
 					null,
 					async (args, cn, се) => await Task.Run(() => openedAsync = true)));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(opened, Is.False);
 					Assert.That(openedAsync, Is.False);
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
-				});
-				Assert.Multiple(() =>
-				{
+
+					var connection = conn.OpenDbConnection();
+					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
 					Assert.That(opened, Is.True);
 					Assert.That(openedAsync, Is.False);
-				});
+				}
 			}
 		}
 
@@ -300,18 +302,18 @@ namespace Tests.Data
 					(args, cn) => opened = true,
 					null,
 					async (args, cn, ct) => await Task.Run(() => openedAsync = true, ct)));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(opened, Is.False);
 					Assert.That(openedAsync, Is.False);
-				});
+				}
+
 				await conn.SelectAsync(() => 1);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(opened, Is.False);
 					Assert.That(openedAsync, Is.True);
-				});
+				}
 			}
 		}
 
@@ -320,7 +322,8 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				var connection = conn.OpenDbConnection();
+				Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 			}
 		}
 
@@ -337,23 +340,23 @@ namespace Tests.Data
 		public void TestServiceCollection1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var collection = new ServiceCollection();
-			collection.AddLinqToDB((serviceProvider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDB((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<IDataContext>()!;
-			Assert.Multiple(() =>
+			var con = provider.GetRequiredService<IDataContext>();
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(con is DataConnection, Is.True);
+				Assert.That(con, Is.InstanceOf<DataConnection>());
 				Assert.That(((DataConnection)con).ConfigurationString, Is.EqualTo(context));
-			});
+			}
 		}
 
 		[Test]
 		public void TestServiceCollection2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var collection = new ServiceCollection();
-			collection.AddLinqToDBContext<DataConnection>((serviceProvider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDBContext<DataConnection>((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<DataConnection>()!;
+			var con = provider.GetRequiredService<DataConnection>();
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
 
@@ -362,9 +365,25 @@ namespace Tests.Data
 		{
 			var collection = new ServiceCollection();
 			collection.AddTransient<DummyService>();
-			collection.AddLinqToDBContext<DbConnection3>((serviceProvider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDBContext<DbConnection3>((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<DbConnection3>()!;
+			var con = provider.GetRequiredService<DbConnection3>();
+			Assert.That(con.ConfigurationString, Is.EqualTo(context));
+		}
+
+		[Test]
+		public void TestServiceCollection4([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var collection = new ServiceCollection();
+
+			collection
+				.AddTransient<DummyService>()
+				.AddLinqToDBContext<DbConnection4>(serviceProvider => new DbConnection4(new DataOptions<IDataContext>(new DataOptions().UseConfiguration(context))));
+
+			var provider = collection.BuildServiceProvider();
+			var con      = provider.GetRequiredService<DbConnection4>();
+			_            = provider.GetRequiredService<IDataContextFactory<DbConnection4>>();
+
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
 
@@ -372,9 +391,9 @@ namespace Tests.Data
 		public void TestServiceCollection_Issue4326_Positive([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var collection = new ServiceCollection();
-			collection.AddLinqToDBContext<IDataContext, DbConnection1>((serviceProvider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDBContext<IDataContext, DbConnection1>((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<IDataContext>()!;
+			var con = provider.GetRequiredService<IDataContext>();
 			Assert.That(con, Is.TypeOf<DbConnection1>());
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
@@ -383,9 +402,9 @@ namespace Tests.Data
 		public void TestServiceCollection_Issue4326_Compat([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var collection = new ServiceCollection();
-			collection.AddLinqToDBContext<IDataContext, DbConnection4>((serviceProvider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDBContext<IDataContext, DbConnection4>((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<IDataContext>()!;
+			var con = provider.GetRequiredService<IDataContext>();
 			Assert.That(con, Is.TypeOf<DbConnection4>());
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
@@ -424,11 +443,11 @@ namespace Tests.Data
 		{
 			public DbConnection5(DataOptions options) : base(options)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(options.DataContextOptions.CommandTimeout, Is.EqualTo(91));
 					Assert.That(CommandTimeout,                            Is.EqualTo(91));
-				});
+				}
 			}
 		}
 
@@ -437,10 +456,10 @@ namespace Tests.Data
 		{
 			var collection = new ServiceCollection();
 
-			collection.AddLinqToDBContext<DbConnection5>((_, options) => options.UseConfigurationString(context).UseCommandTimeout(91));
+			collection.AddLinqToDBContext<DbConnection5>((_, options) => options.UseConfiguration(context).UseCommandTimeout(91));
 
 			var provider = collection.BuildServiceProvider();
-			var con      = provider.GetService<DbConnection5>()!;
+			var con      = provider.GetRequiredService<DbConnection5>();
 
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
@@ -449,24 +468,82 @@ namespace Tests.Data
 		public void TestSettingsPerDb([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var collection = new ServiceCollection();
-			collection.AddLinqToDBContext<DbConnection1>((provider, options) => options.UseConfigurationString(context));
+			collection.AddLinqToDBContext<DbConnection1>((provider, options) => options.UseConfiguration(context));
 			collection.AddLinqToDBContext<DbConnection2>((provider, options) => options);
 
 			var serviceProvider = collection.BuildServiceProvider();
-			var c1 = serviceProvider.GetService<DbConnection1>()!;
-			var c2 = serviceProvider.GetService<DbConnection2>()!;
-			Assert.Multiple(() =>
+			var c1 = serviceProvider.GetRequiredService<DbConnection1>();
+			var c2 = serviceProvider.GetRequiredService<DbConnection2>();
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(c1.ConfigurationString, Is.EqualTo(context));
 				Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
-			});
+			}
 		}
+
+		#region issue 4811
+		[Test]
+		public void Issue4811Test1()
+		{
+			var collection = new ServiceCollection();
+			var cs1 = "cs1";
+			var cs2 = "cs2";
+
+			collection.AddLinqToDBContext<DbConnection1>((provider, options) => options.UseConnectionString(ProviderName.SqlServer2022, cs1));
+			collection.AddLinqToDBContext<DbConnection2>((provider, options) => options.UseConnectionString(ProviderName.SqlServer2022, cs2));
+
+			var serviceProvider = collection.BuildServiceProvider();
+			var c1 = serviceProvider.GetRequiredService<DbConnection1>();
+			var c2 = serviceProvider.GetRequiredService<DbConnection2>();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(c1.ConnectionString, Is.EqualTo(cs1));
+				Assert.That(c2.ConnectionString, Is.EqualTo(cs2));
+			}
+		}
+
+		public class DbConnection11 : DataConnection
+		{
+			public DbConnection11(DataOptions options) : base(options)
+			{
+			}
+		}
+
+		public class DbConnection12 : DataConnection
+		{
+			public DbConnection12(DataOptions options) : base(options)
+			{
+			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4811")]
+		public void Issue4811Test2()
+		{
+			var collection = new ServiceCollection();
+			var cs1 = "cs1";
+			var cs2 = "cs2";
+
+			collection.AddLinqToDBContext<DbConnection11>((provider, options) => options.UseConnectionString(ProviderName.SqlServer2022, cs1));
+			collection.AddLinqToDBContext<DbConnection12>((provider, options) => options.UseConnectionString(ProviderName.SqlServer2022, cs2));
+
+			var serviceProvider = collection.BuildServiceProvider();
+			var c1 = serviceProvider.GetRequiredService<DbConnection11>();
+			var c2 = serviceProvider.GetRequiredService<DbConnection12>();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(c1.ConnectionString, Is.EqualTo(cs1));
+				Assert.That(c2.ConnectionString, Is.EqualTo(cs2));
+			}
+		}
+
+		#endregion
 
 		// informix connection limits interfere with test
 		[Test]
 		public void MultipleConnectionsTest([DataSources(TestProvName.AllInformix)] string context)
 		{
-			using var psr = new Tests.Remote.ServerContainer.PortStatusRestorer(_serverContainer, false);
+			using var psr = new Tests.Remote.ServerContainer.PortStatusRestorer(GetServerContainer(), false);
 
 			using (new DisableBaseline("Multi-threading"))
 			{
@@ -558,18 +635,15 @@ namespace Tests.Data
 						openAsync = true;
 					}, ct),
 					null));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(open, Is.False);
 					Assert.That(openAsync, Is.False);
-					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
-				});
-				Assert.Multiple(() =>
-				{
+					var connection = conn.OpenDbConnection();
+					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
 					Assert.That(open, Is.True);
 					Assert.That(openAsync, Is.False);
-				});
+				}
 			}
 		}
 
@@ -593,22 +667,23 @@ namespace Tests.Data
 								openAsync = true;
 					}, ct),
 					null));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(open, Is.False);
 					Assert.That(openAsync, Is.False);
-				});
+				}
+
 				await conn.SelectAsync(() => 1);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(open, Is.False);
 					Assert.That(openAsync, Is.True);
-				});
+				}
 			}
 		}
 
 		[Test]
+		[Explicit]
 		public void CommandTimeoutTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -835,7 +910,7 @@ namespace Tests.Data
 					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
 					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
 					{
-						db.Connection.EnlistTransaction(Transaction.Current);
+						db.OpenDbConnection().EnlistTransaction(Transaction.Current);
 						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
 
 						Transaction.Current!.Rollback();
@@ -846,11 +921,11 @@ namespace Tests.Data
 					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
 
 					Assert.That(ids, Has.Length.EqualTo(2));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(ids[0], Is.EqualTo(1));
 						Assert.That(ids[1], Is.EqualTo(3));
-					});
+					}
 				}
 			}
 			finally
@@ -883,7 +958,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -892,7 +967,7 @@ namespace Tests.Data
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.CreateCommand())
+				using (var cmd = db.OpenDbConnection().CreateCommand())
 				{
 					cmd.CommandText = sql;
 					using (var reader1 = cmd.ExecuteReader())
@@ -916,11 +991,11 @@ namespace Tests.Data
 					}
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.GreaterThan(0));
 					Assert.That(cnt2, Is.EqualTo(cnt1));
-				});
+				}
 			}
 		}
 
@@ -936,14 +1011,14 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				db.Person.ToList();
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.CreateCommand())
+				using (var cmd = db.OpenDbConnection().CreateCommand())
 				{
 					cmd.CommandText = sql;
 					try
@@ -981,7 +1056,7 @@ namespace Tests.Data
 		// Informix : IBM.Data.Informix
 		// ORACLE   : Oracle.DataAccess
 		// ORACLE   : Oracle.ManagedDataAccess(.Core)
-		// SAP HANA : Sap.Data.Hana.v4.5/Sap.Data.Hana.Core.v2.1
+		// SAP HANA : Sap.Data.Hana.*
 		// SAP HANA : System.Data.Odbc
 		// SQLCE    : System.Data.SqlServerCe
 		// SQLITE   : System.Data.Sqlite
@@ -1011,7 +1086,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -1020,7 +1095,7 @@ namespace Tests.Data
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.CreateCommand())
+				using (var cmd = db.OpenDbConnection().CreateCommand())
 				{
 					cmd.CommandText = sql;
 					using (var reader1 = cmd.ExecuteReader())
@@ -1030,7 +1105,7 @@ namespace Tests.Data
 							cnt2++;
 
 							// open another reader on new command
-							using (var cmd2 = db.CreateCommand())
+							using (var cmd2 = db.OpenDbConnection().CreateCommand())
 							{
 								var cnt3 = 0;
 								cmd2.CommandText = sql;
@@ -1049,11 +1124,11 @@ namespace Tests.Data
 					}
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.GreaterThan(0));
 					Assert.That(cnt2, Is.EqualTo(cnt1));
-				});
+				}
 			}
 		}
 
@@ -1075,14 +1150,14 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				db.Person.ToList();
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				using (var cmd = db.CreateCommand())
+				using (var cmd = db.OpenDbConnection().CreateCommand())
 				{
 					cmd.CommandText = sql;
 					try
@@ -1092,7 +1167,7 @@ namespace Tests.Data
 							while (reader1.Read())
 							{
 								// open another reader on new command
-								using (var cmd2 = db.CreateCommand())
+								using (var cmd2 = db.OpenDbConnection().CreateCommand())
 								{
 									cmd2.CommandText = sql;
 
@@ -1124,7 +1199,7 @@ namespace Tests.Data
 		// Informix : IBM.Data.Informix
 		// ORACLE   : Oracle.DataAccess
 		// ORACLE   : Oracle.ManagedDataAccess(.Core)
-		// SAP HANA : Sap.Data.Hana.v4.5/Sap.Data.Hana.Core.v2.1
+		// SAP HANA : Sap.Data.Hana.*
 		// SAP HANA : System.Data.Odbc
 		// SQLCE    : System.Data.SqlServerCe
 		// SQLITE   : System.Data.Sqlite
@@ -1152,7 +1227,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -1161,7 +1236,7 @@ namespace Tests.Data
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				var cmd = db.CreateCommand();
+				var cmd = db.OpenDbConnection().CreateCommand();
 				cmd.CommandText = sql;
 				using (var reader1 = cmd.ExecuteReader())
 				{
@@ -1171,7 +1246,7 @@ namespace Tests.Data
 						cnt2++;
 
 						// open another reader on new command
-						using (var cmd2 = db.CreateCommand())
+						using (var cmd2 = db.OpenDbConnection().CreateCommand())
 						{
 							var cnt3 = 0;
 							cmd2.CommandText = sql;
@@ -1189,11 +1264,11 @@ namespace Tests.Data
 					}
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.GreaterThan(0));
 					Assert.That(cnt2, Is.EqualTo(cnt1));
-				});
+				}
 			}
 		}
 
@@ -1214,14 +1289,14 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				db.Person.ToList();
 				var sql = db.LastQuery!;
 
 				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
-				var cmd = db.CreateCommand();
+				var cmd = db.OpenDbConnection().CreateCommand();
 				cmd.CommandText = sql;
 				using (var reader1 = cmd.ExecuteReader())
 				{
@@ -1231,7 +1306,7 @@ namespace Tests.Data
 						while (reader1.Read())
 						{
 							// open another reader on new command
-							using (var cmd2 = db.CreateCommand())
+							using (var cmd2 = db.OpenDbConnection().CreateCommand())
 							{
 								cmd2.CommandText = sql;
 
@@ -1266,7 +1341,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = db.Person.Count();
@@ -1277,11 +1352,11 @@ namespace Tests.Data
 					cnt2++;
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.GreaterThan(0));
 					Assert.That(cnt2, Is.EqualTo(cnt1));
-				});
+				}
 			}
 		}
 
@@ -1296,7 +1371,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS enabled");
 
 				var failed = false;
@@ -1357,7 +1432,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && !IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS not enabled");
 
 				var cnt1 = await db.Person.CountAsync();
@@ -1368,11 +1443,11 @@ namespace Tests.Data
 					cnt2++;
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.GreaterThan(0));
 					Assert.That(cnt2, Is.EqualTo(cnt1));
-				});
+				}
 			}
 		}
 
@@ -1387,7 +1462,7 @@ namespace Tests.Data
 		{
 			using (var db = GetDataConnection(context))
 			{
-				if (db.DataProvider is SqlServerDataProvider && db.IsMarsEnabled)
+				if (db.DataProvider is SqlServerDataProvider && IsSqlServerMarsEnabled(db))
 					Assert.Ignore("MARS enabled");
 
 				var failed = false;

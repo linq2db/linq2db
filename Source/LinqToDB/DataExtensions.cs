@@ -8,16 +8,17 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Expressions.Internal;
-	using Mapping;
-	using SqlQuery;
-
 	/// <summary>
 	/// Data context extension methods.
 	/// </summary>
@@ -77,8 +78,11 @@ namespace LinqToDB
 
 				for (var i = 0; i < parameters.Length; i++)
 				{
-					var type = pis[i].ParameterType;
-					args.Add(Expression.Constant(parameters[i], (type.IsByRef ? type.GetElementType() : type)!));
+					var        type    = pis[i].ParameterType;
+					Expression argExpr = Expression.Constant(parameters[i], (type.IsByRef ? type.GetElementType() : type)!);
+					argExpr = SequenceHelper.WrapAsParameter(argExpr);
+
+					args.Add(argExpr);
 				}
 
 				expr = Expression.Call(instance == null ? null : Expression.Constant(instance), methodInfo, args);
@@ -1459,6 +1463,7 @@ namespace LinqToDB
 							return paramExpr;
 					}
 				}
+
 				return e;
 			});
 
@@ -1498,10 +1503,15 @@ namespace LinqToDB
 		{
 			var argumentsExpr = Expression.NewArrayInit(typeof(object), arguments.Select(p =>
 			{
-				Expression constant = Expression.Constant(p, p?.GetType() ?? typeof(object));
-				if (constant.Type != typeof(object))
-					constant = Expression.Convert(constant, typeof(object));
-				return constant;
+				if (p == null)
+					return Expression.Constant(null, typeof(object));
+				
+				var argumentType    = p.GetType();
+				var valueExpression = SequenceHelper.WrapAsParameter(Expression.Constant(p, argumentType));
+				if (valueExpression.Type != typeof(object))
+					valueExpression = Expression.Convert(valueExpression, typeof(object));
+
+				return valueExpression;
 			}));
 
 			return argumentsExpr;
@@ -1565,6 +1575,12 @@ namespace LinqToDB
 		///         you supply will automatically be converted to a DbParameter -
 		///         <code>context.FromSqlScalar&lt;Blogs&gt;($"UNNEST({array})");</code>
 		///     </para>
+		///		<para>
+		///			An alias for the scalar value will be generated automatically with the name <c>value</c>. For most databases, the following SQL will be generated:
+		///			<code>SELECT t.value FROM (SELECT '1') AS t(value)</code>
+		///			For databases that do not support this syntax, ensure that your query provides an alias for the column named <c>value</c> to allow correct translation, for example:
+		///			<code>SELECT t.value FROM (SELECT '1' AS value) AS t</code>
+		///		</para>
 		/// </summary>
 		/// <typeparam name="TEntity">Source query record type.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>

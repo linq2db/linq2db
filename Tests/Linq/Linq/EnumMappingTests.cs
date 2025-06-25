@@ -3,15 +3,15 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
-	using Model;
-
 	[TestFixture]
 	public class EnumMappingTests : TestBase
 	{
@@ -1130,11 +1130,11 @@ namespace Tests.Linq
 
 				Assert.That(result, Has.Length.EqualTo(1));
 				Assert.That(result[0].Target, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Target!.Value.TargetID, Is.EqualTo(10));
 					Assert.That(result[0].Target!.Value.TargetType, Is.EqualTo(TestEnum1.Value2));
-				});
+				}
 			}
 		}
 
@@ -1182,11 +1182,11 @@ namespace Tests.Linq
 
 				Assert.That(result, Has.Length.EqualTo(1));
 				Assert.That(result[0].Target, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Target!.Value.TargetID, Is.EqualTo(10));
 					Assert.That(result[0].Target!.Value.TargetType, Is.EqualTo(TestEnum2.Value2));
-				});
+				}
 			}
 		}
 
@@ -1427,15 +1427,10 @@ namespace Tests.Linq
 
 				var records = db.GetTable<NullableTestTable01>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
 				var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(records, Has.Length.EqualTo(3));
 					Assert.That(rawRecords, Has.Length.EqualTo(3));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(records[0].Id, Is.EqualTo(RID));
 					Assert.That(rawRecords[0].Id, Is.EqualTo(RID));
 					Assert.That(records[0].Value, Is.EqualTo(NullableEnum01.Value1));
@@ -1451,7 +1446,7 @@ namespace Tests.Linq
 					// for non-nullable enum on read null value mapped
 					Assert.That(records[2].Value, Is.EqualTo(NullableEnum01.Value3));
 					Assert.That(rawRecords[2].Int32, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1486,15 +1481,10 @@ namespace Tests.Linq
 
 				var records = db.GetTable<NullableTestTable02>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
 				var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(records, Has.Length.EqualTo(4));
 					Assert.That(rawRecords, Has.Length.EqualTo(4));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(records[0].Id, Is.EqualTo(RID));
 					Assert.That(rawRecords[0].Id, Is.EqualTo(RID));
 					Assert.That(records[0].Value, Is.EqualTo(NullableEnum01.Value1));
@@ -1515,7 +1505,7 @@ namespace Tests.Linq
 					Assert.That(rawRecords[3].Id, Is.EqualTo(RID + 3));
 					Assert.That(records[3].Value, Is.Null);
 					Assert.That(rawRecords[3].Int32, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1545,15 +1535,10 @@ namespace Tests.Linq
 
 				var records = db.GetTable<NullableTestTable03>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
 				var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(records, Has.Length.EqualTo(3));
 					Assert.That(rawRecords, Has.Length.EqualTo(3));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(records[0].Id, Is.EqualTo(RID));
 					Assert.That(rawRecords[0].Id, Is.EqualTo(RID));
 					Assert.That(records[0].Value, Is.EqualTo(NullableEnum02.Value1));
@@ -1569,7 +1554,7 @@ namespace Tests.Linq
 					// for non-nullable enum on read null value mapped
 					Assert.That(records[2].Value, Is.EqualTo(NullableEnum02.Value3));
 					Assert.That(rawRecords[2].String, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1604,15 +1589,10 @@ namespace Tests.Linq
 
 				var records = db.GetTable<NullableTestTable04>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
 				var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(records, Has.Length.EqualTo(4));
 					Assert.That(rawRecords, Has.Length.EqualTo(4));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(records[0].Id, Is.EqualTo(RID));
 					Assert.That(rawRecords[0].Id, Is.EqualTo(RID));
 					Assert.That(records[0].Value, Is.EqualTo(NullableEnum02.Value1));
@@ -1633,7 +1613,7 @@ namespace Tests.Linq
 					Assert.That(rawRecords[3].Id, Is.EqualTo(RID + 3));
 					Assert.That(records[3].Value, Is.Null);
 					Assert.That(rawRecords[3].Int32, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1663,15 +1643,10 @@ namespace Tests.Linq
 
 				var records = db.GetTable<NullableTestTable05>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
 				var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(records, Has.Length.EqualTo(3));
 					Assert.That(rawRecords, Has.Length.EqualTo(3));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(records[0].Id, Is.EqualTo(RID));
 					Assert.That(rawRecords[0].Id, Is.EqualTo(RID));
 					Assert.That(records[0].Value, Is.EqualTo(NullableEnum03.Value1));
@@ -1680,14 +1655,14 @@ namespace Tests.Linq
 					Assert.That(records[1].Id, Is.EqualTo(RID + 1));
 					Assert.That(rawRecords[1].Id, Is.EqualTo(RID + 1));
 					Assert.That(records[1].Value, Is.EqualTo(NullableEnum03.Value2));
-					Assert.That(rawRecords[1].Int32, Is.EqualTo(0));
+					Assert.That(rawRecords[1].Int32, Is.Zero);
 
 					Assert.That(records[2].Id, Is.EqualTo(RID + 2));
 					Assert.That(rawRecords[2].Id, Is.EqualTo(RID + 2));
 					// for non-nullable enum on read null value mapped
 					Assert.That(records[2].Value, Is.EqualTo(NullableEnum03.Value3));
 					Assert.That(rawRecords[2].Int32, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1722,15 +1697,10 @@ namespace Tests.Linq
 
 				var records = db.GetTable<NullableTestTable06>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
 				var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(records, Has.Length.EqualTo(4));
 					Assert.That(rawRecords, Has.Length.EqualTo(4));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(records[0].Id, Is.EqualTo(RID));
 					Assert.That(rawRecords[0].Id, Is.EqualTo(RID));
 					Assert.That(records[0].Value, Is.EqualTo(NullableEnum03.Value1));
@@ -1739,7 +1709,7 @@ namespace Tests.Linq
 					Assert.That(records[1].Id, Is.EqualTo(RID + 1));
 					Assert.That(rawRecords[1].Id, Is.EqualTo(RID + 1));
 					Assert.That(records[1].Value, Is.EqualTo(NullableEnum03.Value2));
-					Assert.That(rawRecords[1].Int32, Is.EqualTo(0));
+					Assert.That(rawRecords[1].Int32, Is.Zero);
 
 					Assert.That(records[2].Id, Is.EqualTo(RID + 2));
 					Assert.That(rawRecords[2].Id, Is.EqualTo(RID + 2));
@@ -1751,7 +1721,7 @@ namespace Tests.Linq
 					Assert.That(rawRecords[3].Id, Is.EqualTo(RID + 3));
 					Assert.That(records[3].Value, Is.Null);
 					Assert.That(rawRecords[3].Int32, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1839,17 +1809,13 @@ namespace Tests.Linq
 
 					var res = table.Where(e => SomeComparison(e.SomeText, Issue1622Enum.Value1)).Single();
 					var res2 = table.Where(e => e.Id == 1).Single();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(item.Id, Is.EqualTo(res.Id));
 						Assert.That(item.SomeText, Is.EqualTo(res.SomeText));
-					});
-					Assert.Multiple(() =>
-					{
 						Assert.That(item.Id, Is.EqualTo(res2.Id));
 						Assert.That(item.SomeText, Is.EqualTo(res2.SomeText));
-					});
+					}
 				}
 			}
 		}
@@ -1913,12 +1879,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property1 < CharEnum.B).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(res.Property1, Is.EqualTo(CharEnum.A));
-				});
+				}
 			}
 		}
 
@@ -1929,12 +1894,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property1 <= CharEnum.A).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(res.Property1, Is.EqualTo(CharEnum.A));
-				});
+				}
 			}
 		}
 
@@ -1945,12 +1909,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property1 > CharEnum.B).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(3));
 					Assert.That(res.Property1, Is.EqualTo(CharEnum.C));
-				});
+				}
 			}
 		}
 
@@ -1961,12 +1924,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property1 >= CharEnum.C).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(3));
 					Assert.That(res.Property1, Is.EqualTo(CharEnum.C));
-				});
+				}
 			}
 		}
 
@@ -1977,12 +1939,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property2 < CharEnum.B).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(res.Property2, Is.EqualTo(CharEnum.A));
-				});
+				}
 			}
 		}
 
@@ -1993,12 +1954,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property2 <= CharEnum.A).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(res.Property2, Is.EqualTo(CharEnum.A));
-				});
+				}
 			}
 		}
 
@@ -2009,12 +1969,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property2 > CharEnum.B).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(3));
 					Assert.That(res.Property2, Is.EqualTo(CharEnum.C));
-				});
+				}
 			}
 		}
 
@@ -2025,12 +1984,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property2 >= CharEnum.C).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(3));
 					Assert.That(res.Property2, Is.EqualTo(CharEnum.C));
-				});
+				}
 			}
 		}
 
@@ -2041,12 +1999,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property3 < CharEnumS.B).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(res.Property3, Is.EqualTo(CharEnumS.A));
-				});
+				}
 			}
 		}
 
@@ -2057,12 +2014,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property3 <= CharEnumS.A).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(res.Property3, Is.EqualTo(CharEnumS.A));
-				});
+				}
 			}
 		}
 
@@ -2073,12 +2029,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property3 > CharEnumS.B).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(3));
 					Assert.That(res.Property3, Is.EqualTo(CharEnumS.C));
-				});
+				}
 			}
 		}
 
@@ -2089,12 +2044,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property3 >= CharEnumS.C).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(3));
 					Assert.That(res.Property3, Is.EqualTo(CharEnumS.C));
-				});
+				}
 			}
 		}
 
@@ -2105,12 +2059,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property4 < CharEnumS.B).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(res.Property4, Is.EqualTo(CharEnumS.A));
-				});
+				}
 			}
 		}
 
@@ -2121,12 +2074,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property4 <= CharEnumS.A).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(res.Property4, Is.EqualTo(CharEnumS.A));
-				});
+				}
 			}
 		}
 
@@ -2137,12 +2089,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property4 > CharEnumS.B).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(3));
 					Assert.That(res.Property4, Is.EqualTo(CharEnumS.C));
-				});
+				}
 			}
 		}
 
@@ -2153,12 +2104,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property4 >= CharEnumS.C).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(3));
 					Assert.That(res.Property4, Is.EqualTo(CharEnumS.C));
-				});
+				}
 			}
 		}
 
@@ -2169,12 +2119,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property5 < CharEnumL.B).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(res.Property5, Is.EqualTo(CharEnumL.A));
-				});
+				}
 			}
 		}
 
@@ -2185,12 +2134,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property5 <= CharEnumL.A).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(res.Property5, Is.EqualTo(CharEnumL.A));
-				});
+				}
 			}
 		}
 
@@ -2201,12 +2149,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property5 > CharEnumL.B).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(3));
 					Assert.That(res.Property5, Is.EqualTo(CharEnumL.C));
-				});
+				}
 			}
 		}
 
@@ -2217,12 +2164,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property5 >= CharEnumL.C).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(3));
 					Assert.That(res.Property5, Is.EqualTo(CharEnumL.C));
-				});
+				}
 			}
 		}
 
@@ -2233,12 +2179,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property6 < CharEnumL.B).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(res.Property6, Is.EqualTo(CharEnumL.A));
-				});
+				}
 			}
 		}
 
@@ -2249,12 +2194,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property6 <= CharEnumL.A).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(res.Property6, Is.EqualTo(CharEnumL.A));
-				});
+				}
 			}
 		}
 
@@ -2265,12 +2209,11 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property6 > CharEnumL.B).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(3));
 					Assert.That(res.Property6, Is.EqualTo(CharEnumL.C));
-				});
+				}
 			}
 		}
 
@@ -2281,12 +2224,79 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
 			{
 				var res = table.Where(_ => _.Property6 >= CharEnumL.C).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(3));
 					Assert.That(res.Property6, Is.EqualTo(CharEnumL.C));
-				});
+				}
+			}
+		}
+
+		enum EnumChar
+		{
+			[MapValue("A")] Value1 = 1,
+			[MapValue("B")] Value2 = 2,
+		}
+
+		[Table]
+		class EnumCharTable
+		{
+			[Column(DbType="char(1)", DataType=DataType.Char, Length=1), Nullable] 
+			public EnumChar? EnumValue { get; set; }
+
+			[Column]
+			public int? IntValue { get; set; }
+
+			[Column]
+			public double? DoubleValue { get; set; }
+		}
+
+		[Test]
+		public void TestEqualityFromObject([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db  = GetDataContext(context);
+			
+			EnumCharTable[] items =
+			[
+				new () { EnumValue = EnumChar.Value1, IntValue = 1, DoubleValue    = 1.0 },
+				new () { EnumValue = null, IntValue            = null, DoubleValue = null },
+			];
+
+			using var tmp = db.CreateLocalTable(items);
+
+			object? charValue      = "A";
+			object? intValue       = 1;
+			object? stringIntValue = "1";
+			object? doubleValue    = 1.0;
+
+			CheckCount();
+
+			charValue      = null;
+			intValue       = null;
+			stringIntValue = null;
+			doubleValue    = null;
+
+			CheckCount();
+
+			void CheckCount()
+			{
+				var count = tmp.Count(t =>
+					t.EnumValue.Equals(charValue)
+					&& t.EnumValue.Equals(intValue)
+					&& t.IntValue.Equals(stringIntValue)
+					&& t.DoubleValue.Equals(doubleValue)
+				);
+
+				Assert.That(count, Is.EqualTo(1));
+
+				count = db.GetTable<EnumCharTable>().Count(t =>
+					charValue!.Equals(t.EnumValue)
+					&& intValue!.Equals(t.EnumValue)
+					&& stringIntValue!.Equals(t.IntValue)
+					&& doubleValue!.Equals(t.DoubleValue)
+				);
+
+				Assert.That(count, Is.EqualTo(1));
 			}
 		}
 	}

@@ -5,14 +5,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.Tools.Mapper;
+
 namespace LinqToDB.Tools.EntityServices
 {
-	using Common;
-	using LinqToDB.Expressions;
-	using Mapper;
-	using Mapping;
-	using Reflection;
-
 	interface IEntityMap
 	{
 		void        MapEntity(EntityCreatedEventArgs args);
@@ -22,7 +23,7 @@ namespace LinqToDB.Tools.EntityServices
 	public class EntityMap<T> : IEntityMap
 		where T : class
 	{
-		readonly object _syncRoot = new ();
+		readonly Lock _syncRoot = new ();
 
 		public EntityMap(IDataContext dataContext)
 		{
@@ -152,7 +153,7 @@ namespace LinqToDB.Tools.EntityServices
 
 			var keyComparer = _keyComparers.GetOrAdd(
 				key.GetType(),
-				type => (IKeyComparer)Activator.CreateInstance(typeof(KeyComparer<>).MakeGenericType(typeof(T), type))!);
+				type => ActivatorExt.CreateInstance<IKeyComparer>(typeof(KeyComparer<>).MakeGenericType(typeof(T), type)));
 
 			var entity = keyComparer.MapKey(context.MappingSchema, key);
 

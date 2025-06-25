@@ -4,6 +4,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 using Tests.Model;
@@ -462,11 +463,11 @@ namespace Tests.Linq
 
 					Assert.That(records, Has.Count.EqualTo(1));
 					Assert.That(records[0].NVarChar, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(records[0].NVarChar!.Value, Is.EqualTo(value));
 						Assert.That(sql, Does.Contain("NVarChar -- String"));
-					});
+					}
 				}
 			}
 		}
@@ -494,11 +495,11 @@ namespace Tests.Linq
 
 					Assert.That(records, Has.Count.EqualTo(1));
 					Assert.That(records[0].VarChar, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(records[0].VarChar!.Value, Is.EqualTo(value));
 						Assert.That(sql, Contains.Substring(" VarChar -- AnsiString"));
-					});
+					}
 				}
 			}
 		}
@@ -529,11 +530,11 @@ namespace Tests.Linq
 
 					Assert.That(records, Has.Count.EqualTo(1));
 					Assert.That(records[0].VarBinary, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(records[0].VarBinary!.Value, Is.EqualTo(value));
 						Assert.That(sql, Does.Contain("VarBinary -- Binary"));
-					});
+					}
 				}
 			}
 		}
@@ -706,11 +707,11 @@ namespace Tests.Linq
 
 					Assert.That(records, Has.Count.EqualTo(1));
 					Assert.That(records[0].NVarChar, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(records[0].NVarChar!.Value, Is.EqualTo(value));
 						Assert.That(sql, Does.Contain("NVarChar(5000) -- String"));
-					});
+					}
 				}
 			}
 		}
@@ -738,11 +739,11 @@ namespace Tests.Linq
 
 					Assert.That(records, Has.Count.EqualTo(1));
 					Assert.That(records[0].VarChar, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(records[0].VarChar!.Value, Is.EqualTo(value));
 						Assert.That(sql, Does.Contain(" VarChar(10000) -- AnsiString"));
-					});
+					}
 				}
 			}
 		}
@@ -773,11 +774,11 @@ namespace Tests.Linq
 
 					Assert.That(records, Has.Count.EqualTo(1));
 					Assert.That(records[0].VarBinary, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(records[0].VarBinary!.Value, Is.EqualTo(value));
 						Assert.That(sql, Does.Contain("VarBinary(10000) -- Binary"));
-					});
+					}
 				}
 			}
 		}

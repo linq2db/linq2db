@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.DataProvider.Firebird
-{
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+﻿using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataProvider.Firebird
+{
 	public class FirebirdSqlOptimizer : BasicSqlOptimizer
 	{
 		public FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
@@ -86,7 +86,12 @@
 			// When CAST is needed:
 			// - in select column expression at any position (except nested subquery): select, subquery, merge source
 			// - in composite expression in insert or update setter: insert, update, merge (not always, in some cases it works)
-
+			// - in binary expression (Issue4963 test)
+			//
+			// Most sad part of it is that if you look at firebird repository, you will notice
+			// that they waste a lot of their (and their users') time to introduce more and more
+			// heuristics to guess parameter type from query context instead of adding parameter
+			// type information to protocol like it should be...
 			var visitor = new WrapParametersVisitor(VisitMode.Modify);
 
 			statement = (SqlStatement)visitor.WrapParameters(statement,
@@ -94,7 +99,8 @@
 				WrapParametersVisitor.WrapFlags.InUpdateSet      |
 				WrapParametersVisitor.WrapFlags.InInsertOrUpdate |
 				WrapParametersVisitor.WrapFlags.InOutput         |
-				WrapParametersVisitor.WrapFlags.InMerge);
+				WrapParametersVisitor.WrapFlags.InMerge          |
+				WrapParametersVisitor.WrapFlags.InBinary);
 
 			return statement;
 		}

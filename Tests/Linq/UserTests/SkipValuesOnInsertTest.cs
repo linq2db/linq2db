@@ -1,6 +1,8 @@
 ﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -241,7 +243,7 @@ namespace Tests.UserTests
 					var r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1)!;
 
 					Assert.That(r, Is.Not.Null);
-					Assert.That(r.Age, Is.EqualTo(0));
+					Assert.That(r.Age, Is.Zero);
 				}
 			}
 		}

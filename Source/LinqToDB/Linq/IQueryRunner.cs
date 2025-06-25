@@ -4,10 +4,10 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.Linq
 {
-	using Data;
-
 	public interface IQueryRunner: IDisposable, IAsyncDisposable
 	{
 		/// <summary>
@@ -50,7 +50,7 @@ namespace LinqToDB.Linq
 		/// </summary>
 		/// <returns>Query SQL text with parameters.</returns>
 		IReadOnlyList<QuerySql> GetSqlText();
-		
+
 		IQueryExpressions Expressions      { get; }
 		IDataContext      DataContext      { get; }
 		object?[]?        Parameters       { get; }

@@ -6,17 +6,16 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
+using static Tests.xUpdate.MergeTests;
+
 namespace Tests.Linq
 {
-	using Model;
-
-	using static Tests.xUpdate.MergeTests;
-
 	[TestFixture]
 	public class InheritanceTests : TestBase
 	{
@@ -339,11 +338,12 @@ namespace Tests.Linq
 				foreach (var item in list)
 				{
 					Assert.That(item, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(item.Order, Is.Not.Null);
 						Assert.That(item.Product, Is.Not.Null);
-					});
+					}
+
 					Assert.That(
 						 item.Product.Discontinued && item.Product is Northwind.DiscontinuedProduct ||
 						!item.Product.Discontinued && item.Product is Northwind.ActiveProduct, Is.True);
@@ -358,14 +358,14 @@ namespace Tests.Linq
 			{
 				var result   = db.Product.         Select(x => x is Northwind.DiscontinuedProduct ? x : null).ToList();
 				var expected = db.Product.ToList().Select(x => x is Northwind.DiscontinuedProduct ? x : null).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result, Is.Not.Empty);
 					Assert.That(expected, Has.Count.EqualTo(result.Count));
-				});
+				}
+
 				Assert.That(result, Does.Contain(null));
-				Assert.That(result.Select(x => x == null ? (int?)null : x.ProductID).Except(expected.Select(x => x == null ? (int?)null : x.ProductID)).Count(), Is.EqualTo(0));
+				Assert.That(result.Select(x => x == null ? (int?)null : x.ProductID).Except(expected.Select(x => x == null ? (int?)null : x.ProductID)).Count(), Is.Zero);
 			}
 		}
 
@@ -381,7 +381,7 @@ namespace Tests.Linq
 
 				Assert.That(list, Is.Not.Empty);
 				Assert.That(list, Has.Count.EqualTo(expected.Count()));
-				Assert.That(list.Except(expected).Count(), Is.EqualTo(0));
+				Assert.That(list.Except(expected).Count(), Is.Zero);
 			}
 		}
 
@@ -394,12 +394,11 @@ namespace Tests.Linq
 
 				var result   = db.Product.Where(x => x is Northwind.DiscontinuedProduct).ToList();
 				var expected = dd.Product.Where(x => x is Northwind.DiscontinuedProduct).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result, Is.Not.Empty);
 					Assert.That(expected, Has.Count.EqualTo(result.Count));
-				});
+				}
 			}
 		}
 
@@ -726,18 +725,18 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(BaseTable.Data))
 			{
 					var baseTableRecordById = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(baseTableRecordById?.Id, Is.EqualTo(1));
 					Assert.That(baseTableRecordById?.Value, Is.EqualTo(100));
-				});
+				}
 
 				var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.Value == 100);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(baseTableRecordWithValuePredicate?.Id, Is.EqualTo(1));
 					Assert.That(baseTableRecordWithValuePredicate?.Value, Is.EqualTo(100));
-				});
+				}
 			}
 		}
 
@@ -748,18 +747,18 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(BaseTable.Data))
 			{
 				var baseTableRecordById = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(baseTableRecordById?.Id, Is.EqualTo(1));
 					Assert.That(baseTableRecordById?.Value, Is.EqualTo(100));
-				});
+				}
 
 				var baseTableRecordWithValuePredicate = db.GetTable<BaseTable>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == 100);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(baseTableRecordWithValuePredicate?.Id, Is.EqualTo(1));
 					Assert.That(baseTableRecordWithValuePredicate?.Value, Is.EqualTo(100));
-				});
+				}
 			}
 		}
 
@@ -773,15 +772,14 @@ namespace Tests.Linq
 				var baseTableRecord    = db.GetTable<BaseTable2>().FirstOrDefault(x => x.Id == 1 && x.Value == 100);
 				//var derivedTableRecord = db.GetTable<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.Value == (100 * -1 ));
 				var derivedTableRecord = db.GetTable<BaseTable2>().OfType<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.Value == (100 * -1 ));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(baseTableRecord?.Id, Is.EqualTo(1));
 					Assert.That(baseTableRecord?.Value, Is.EqualTo(100));
 
 					Assert.That(derivedTableRecord?.Id, Is.EqualTo(1));
 					Assert.That(derivedTableRecord?.Value * -1, Is.EqualTo(100));
-				});
+				}
 			}
 		}
 
@@ -795,15 +793,14 @@ namespace Tests.Linq
 				var baseTableRecord    = db.GetTable<BaseTable2>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == 100);
 				//var derivedTableRecord = db.GetTable<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == (100 * -1 ));
 				var derivedTableRecord = db.GetTable<BaseTable2>().OfType<DerivedTable2>().FirstOrDefault(x => x.Id == 1 && x.GetValue() == (100 * -1 ));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(baseTableRecord?.Id, Is.EqualTo(1));
 					Assert.That(baseTableRecord?.Value, Is.EqualTo(100));
 
 					Assert.That(derivedTableRecord?.Id, Is.EqualTo(1));
 					Assert.That(derivedTableRecord?.Value * -1, Is.EqualTo(100));
-				});
+				}
 			}
 		}
 		#endregion
@@ -848,17 +845,14 @@ namespace Tests.Linq
 			var data = tb.OrderBy(r => r.Id).ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
 				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00001"));
 				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00001"));
 				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Something"));
-			});
+			}
 
 			displayDevice.SerialNumber = "Disp00002";
 			tvDevice.SerialNumber      = "TV00002";
@@ -870,17 +864,14 @@ namespace Tests.Linq
 			data = tb.OrderBy(r => r.Id).ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
 				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00002"));
 				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00002"));
 				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Anything"));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4280")]
@@ -898,17 +889,14 @@ namespace Tests.Linq
 			var data = tb.OrderBy(r => r.Id).ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
 				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00001"));
 				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00001"));
 				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Something"));
-			});
+			}
 
 			displayDevice.SerialNumber = "Disp00002";
 			tvDevice.SerialNumber      = "TV00002";
@@ -920,17 +908,14 @@ namespace Tests.Linq
 			data = tb.OrderBy(r => r.Id).ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0], Is.InstanceOf<Issue4280T1>());
 				Assert.That(data[1], Is.InstanceOf<Issue4280T2>());
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(data[0].SerialNumber, Is.EqualTo("Disp00002"));
 				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00002"));
 				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Anything"));
-			});
+			}
 		}
 		#endregion
 
@@ -949,11 +934,11 @@ namespace Tests.Linq
 			Assert.That(items, Has.Count.EqualTo(1));
 			Assert.That(items[0], Is.InstanceOf<Issue4460GrandChild>());
 			var gc = (Issue4460GrandChild)items[0];
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(gc.Name, Is.EqualTo("Tom"));
 				Assert.That(gc.Surname, Is.EqualTo("Black"));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
@@ -969,11 +954,11 @@ namespace Tests.Linq
 			Assert.That(items, Has.Count.EqualTo(1));
 			Assert.That(items[0], Is.InstanceOf<Issue4460GrandChild>());
 			var gc = (Issue4460GrandChild)items[0];
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(gc.Name, Is.EqualTo("Tom"));
 				Assert.That(gc.Surname, Is.EqualTo("Black"));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
@@ -994,11 +979,11 @@ namespace Tests.Linq
 			Assert.That(res, Has.Count.EqualTo(1));
 			Assert.That(res[0], Is.InstanceOf<Issue4460GrandChild>());
 			var gc = (Issue4460GrandChild)res[0];
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(gc.Name, Is.EqualTo("Tom"));
 				Assert.That(gc.Surname, Is.EqualTo("Black"));
-			});
+			}
 		}
 
 		[Table("Issue4460Table")]
@@ -1041,18 +1026,19 @@ namespace Tests.Linq
 
 			Assert.That(res[0], Is.InstanceOf<Issue4460TicketChild>());
 			var child = (Issue4460TicketChild)res[0];
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(child.Code, Is.EqualTo("Code1"));
 
 				Assert.That(res[1], Is.InstanceOf<Issue4460TicketChild2>());
-			});
+			}
+
 			var child2 = (Issue4460TicketChild2)res[1];
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(child2.Code, Is.EqualTo("Code2"));
 				Assert.That(child2.Price, Is.EqualTo(123));
-			});
+			}
 		}
 
 		[Table("Tickets")]
@@ -1158,25 +1144,26 @@ namespace Tests.Linq
 
 			var res = db.GetTable<Issue4460_4_Base>()
 				.OrderBy(r => r.Id)
-				.Where(e => e is Issue4460_4_BaseChild ? additionalFlag || e.Id != default : e.Id != default).ToArray();
+				.Where(e => e is Issue4460_4_BaseChild ? additionalFlag || e.Id != default : e.Id == default).ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(2));
 
 			Assert.That(res[0], Is.InstanceOf<Issue4460_4_Child>());
 			var child = (Issue4460_4_Child)res[0];
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(child.Code, Is.EqualTo("Child"));
 				Assert.That(child.Name, Is.EqualTo("Jane"));
 
 				Assert.That(res[1], Is.InstanceOf<Issue4460_4_Child2>());
-			});
+			}
+
 			var child2 = (Issue4460_4_Child2)res[1];
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(child2.Code, Is.EqualTo("Child2"));
 				Assert.That(child2.Age, Is.EqualTo(10));
-			});
+			}
 		}
 
 		[Table(Name = "Base")]
@@ -1330,16 +1317,17 @@ namespace Tests.Linq
 
 			Assert.That(result[0], Is.InstanceOf<Issue4364_ConcreteBaseThingAlpha>());
 			var item1 = (Issue4364_ConcreteBaseThingAlpha)(object)result[0]!;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(item1.Id, Is.EqualTo(1));
 				Assert.That(item1.Type, Is.EqualTo(1));
 				Assert.That(item1.BaseField, Is.EqualTo(2));
 
 				Assert.That(result[1], Is.InstanceOf<Issue4364_ConcreteBaseThingBeta>());
-			});
+			}
+
 			var item2 = (Issue4364_ConcreteBaseThingBeta)(object)result[1]!;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(item2.Id, Is.EqualTo(2));
 				Assert.That(item2.Type, Is.EqualTo(2));
@@ -1347,9 +1335,10 @@ namespace Tests.Linq
 				Assert.That(item2.ConcreteField, Is.EqualTo(4));
 
 				Assert.That(result[2], Is.InstanceOf<Issue4364_ConcreteIntermediateThingOne>());
-			});
+			}
+
 			var item3 = (Issue4364_ConcreteIntermediateThingOne)(object)result[2]!;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(item3.Id, Is.EqualTo(3));
 				Assert.That(item3.Type, Is.EqualTo(101));
@@ -1358,15 +1347,16 @@ namespace Tests.Linq
 				Assert.That(item3.IntermediateField, Is.EqualTo(6));
 
 				Assert.That(result[3], Is.InstanceOf<Issue4364_ConcreteIntermediateThingTwo>());
-			});
+			}
+
 			var item4 = (Issue4364_ConcreteIntermediateThingTwo)(object)result[3]!;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(item4.Id, Is.EqualTo(4));
 				Assert.That(item4.Type, Is.EqualTo(102));
 				Assert.That(item3.BaseField, Is.EqualTo(5));
 				Assert.That(item4.IntermediateField, Is.EqualTo(6));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -1428,14 +1418,14 @@ namespace Tests.Linq
 			Assert.That(item, Is.InstanceOf<Issue4364_ConcreteIntermediateThingOne>());
 
 			var item3 = (Issue4364_ConcreteIntermediateThingOne)item;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(item3.Id, Is.EqualTo(3));
 				Assert.That(item3.Type, Is.EqualTo(101));
 				Assert.That(item3.BaseField, Is.EqualTo(4));
 				Assert.That(item3.ConcreteField, Is.EqualTo(5));
 				Assert.That(item3.IntermediateField, Is.EqualTo(333));
-			});
+			}
 		}
 
 		static void TestJoinedAll(IDataContext db, IQueryable<Issue4364_BaseThing> table)
@@ -1455,8 +1445,7 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(4));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Type, Is.EqualTo(1));
 				Assert.That(result[0].FullName, Is.EqualTo("Person 4"));
@@ -1469,7 +1458,7 @@ namespace Tests.Linq
 
 				Assert.That(result[3].Type, Is.EqualTo(102));
 				Assert.That(result[3].FullName, Is.EqualTo("Person 3"));
-			});
+			}
 		}
 
 		static void TestJoined<T>(IDataContext db, IQueryable<T> table)
@@ -1490,15 +1479,14 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Type, Is.EqualTo(101));
 				Assert.That(result[0].FullName, Is.EqualTo("Person 2"));
 
 				Assert.That(result[1].Type, Is.EqualTo(102));
 				Assert.That(result[1].FullName, Is.EqualTo("Person 3"));
-			});
+			}
 		}
 
 		static void TestUpdateAndFindBase(IQueryable<Issue4364_BaseThing> table)
@@ -1512,14 +1500,14 @@ namespace Tests.Linq
 			Assert.That(item, Is.InstanceOf<Issue4364_ConcreteIntermediateThingOne>());
 
 			var item3 = (Issue4364_ConcreteIntermediateThingOne)item;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(item3.Id, Is.EqualTo(3));
 				Assert.That(item3.Type, Is.EqualTo(101));
 				Assert.That(item3.BaseField, Is.EqualTo(4));
 				Assert.That(item3.ConcreteField, Is.EqualTo(5));
 				Assert.That(item3.IntermediateField, Is.EqualTo(333));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -1654,7 +1642,7 @@ namespace Tests.Linq
 
 			Assert.That(result[0], Is.InstanceOf<Issue4364_ConcreteIntermediateThingOne>());
 			var item3 = (Issue4364_ConcreteIntermediateThingOne)(object)result[0]!;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(item3.Id, Is.EqualTo(3));
 				Assert.That(item3.Type, Is.EqualTo(101));
@@ -1663,15 +1651,16 @@ namespace Tests.Linq
 				Assert.That(item3.IntermediateField, Is.EqualTo(6));
 
 				Assert.That(result[1], Is.InstanceOf<Issue4364_ConcreteIntermediateThingTwo>());
-			});
+			}
+
 			var item4 = (Issue4364_ConcreteIntermediateThingTwo)(object)result[1]!;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(item4.Id, Is.EqualTo(4));
 				Assert.That(item4.Type, Is.EqualTo(102));
 				Assert.That(item3.BaseField, Is.EqualTo(5));
 				Assert.That(item4.IntermediateField, Is.EqualTo(6));
-			});
+			}
 		}
 
 		[Table(IsColumnAttributeRequired = false)]
@@ -1792,21 +1781,17 @@ namespace Tests.Linq
 
 			Assert.That(result, Has.Length.EqualTo(1));
 			Assert.That(result[0], Is.InstanceOf<CreateTable1>());
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[0].Type, Is.EqualTo(1));
 				Assert.That(((CreateTable1)result[0]).Field1, Is.EqualTo(1));
 
-
 				Assert.That(result[1], Is.InstanceOf<CreateTable2>());
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(result[1].Id, Is.EqualTo(2));
 				Assert.That(result[1].Type, Is.EqualTo(2));
 				Assert.That(((CreateTable2)result[1]).Field2, Is.EqualTo(2));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -1901,7 +1886,6 @@ namespace Tests.Linq
 			public int ChildId { get; set; }
 		}
 
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3891")]
 		public void Issue3891AttributesMapping([InsertOrUpdateDataSources] string context)
 		{
@@ -1924,17 +1908,14 @@ namespace Tests.Linq
 			var res = tb.Single();
 			Assert.That(res, Is.InstanceOf<ChildBase>());
 			var cb = (ChildBase)res;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(cb.Id, Is.EqualTo(1));
 				Assert.That(cb.ChildId, Is.EqualTo(2));
 				Assert.That(cb.Name, Is.Not.Null);
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(cb.Name!.First, Is.EqualTo("First"));
 				Assert.That(cb.Name.Second, Is.EqualTo("Second"));
-			});
+			}
 
 			child.Name.First = "First1";
 			db.Update(child);
@@ -1942,17 +1923,14 @@ namespace Tests.Linq
 			res = tb.Single();
 			Assert.That(res, Is.InstanceOf<ChildBase>());
 			cb = (ChildBase)res;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(cb.Id, Is.EqualTo(1));
 				Assert.That(cb.ChildId, Is.EqualTo(2));
 				Assert.That(cb.Name, Is.Not.Null);
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(cb.Name!.First, Is.EqualTo("First1"));
 				Assert.That(cb.Name.Second, Is.EqualTo("Second"));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3891")]
@@ -1990,17 +1968,14 @@ namespace Tests.Linq
 			var res = tb.Single();
 			Assert.That(res, Is.InstanceOf<ChildBase2>());
 			var cb = (ChildBase2)res;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(cb.Id, Is.EqualTo(1));
 				Assert.That(cb.ChildId, Is.EqualTo(2));
 				Assert.That(cb.Name, Is.Not.Null);
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(cb.Name!.First, Is.EqualTo("First"));
 				Assert.That(cb.Name.Second, Is.EqualTo("Second"));
-			});
+			}
 
 			child.Name.First = "First1";
 			db.Update(child);
@@ -2008,17 +1983,14 @@ namespace Tests.Linq
 			res = tb.Single();
 			Assert.That(res, Is.InstanceOf<ChildBase2>());
 			cb = (ChildBase2)res;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(cb.Id, Is.EqualTo(1));
 				Assert.That(cb.ChildId, Is.EqualTo(2));
 				Assert.That(cb.Name, Is.Not.Null);
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(cb.Name!.First, Is.EqualTo("First1"));
 				Assert.That(cb.Name.Second, Is.EqualTo("Second"));
-			});
+			}
 		}
 		#endregion
 
@@ -2196,7 +2168,7 @@ namespace Tests.Linq
 			var result = db.GetTable<BaseClass>().ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(6));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.OfType<Child1>().Count(), Is.EqualTo(3));
 				Assert.That(result.OfType<Grandchild11>().Count(), Is.EqualTo(1));
@@ -2204,7 +2176,7 @@ namespace Tests.Linq
 				Assert.That(result.OfType<Child2>().Count(), Is.EqualTo(3));
 				Assert.That(result.OfType<Grandchild21>().Count(), Is.EqualTo(1));
 				Assert.That(result.OfType<Grandchild22>().Count(), Is.EqualTo(1));
-			});
+			}
 
 			var gc11 = result.OfType<Grandchild11>().Single();
 			var gc12 = result.OfType<Grandchild12>().Single();
@@ -2212,8 +2184,7 @@ namespace Tests.Linq
 			var gc22 = result.OfType<Grandchild22>().Single();
 			var c1 = (Child1)result.Where(r => r.GetType() == typeof(Child1)).Single();
 			var c2 = (Child2)result.Where(r => r.GetType() == typeof(Child2)).Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(c1.Child1Field, Is.EqualTo(11));
 				Assert.That(c2.Child2Field, Is.EqualTo(12));
@@ -2225,7 +2196,7 @@ namespace Tests.Linq
 				Assert.That(gc21.Child2Field, Is.EqualTo(25));
 				Assert.That(gc22.Grandchild22Field, Is.EqualTo(16));
 				Assert.That(gc22.Child2Field, Is.EqualTo(26));
-			});
+			}
 		}
 
 		[Test]
@@ -2237,7 +2208,7 @@ namespace Tests.Linq
 			var result = db.GetTable<BaseClass>().ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(6));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.OfType<Child1>().Count(), Is.EqualTo(3));
 				Assert.That(result.OfType<Grandchild11>().Count(), Is.EqualTo(1));
@@ -2245,7 +2216,7 @@ namespace Tests.Linq
 				Assert.That(result.OfType<Child2>().Count(), Is.EqualTo(3));
 				Assert.That(result.OfType<Grandchild21>().Count(), Is.EqualTo(1));
 				Assert.That(result.OfType<Grandchild22>().Count(), Is.EqualTo(1));
-			});
+			}
 		}
 
 		[ActiveIssue("Partial mapping is not supported for now")]
@@ -2258,12 +2229,12 @@ namespace Tests.Linq
 			var result = db.GetTable<SubBaseClass>().ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(3));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.OfType<SubChild1>().Count(), Is.EqualTo(3));
 				Assert.That(result.OfType<SubGrandchild11>().Count(), Is.EqualTo(1));
 				Assert.That(result.OfType<SubGrandchild12>().Count(), Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -2275,12 +2246,12 @@ namespace Tests.Linq
 			var result = db.GetTable<SubWithDefaultBaseClass>().ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(6));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.OfType<SubWithDefaultChild1>().Count(), Is.EqualTo(6));
 				Assert.That(result.OfType<SubWithDefaultGrandchild11>().Count(), Is.EqualTo(1));
 				Assert.That(result.OfType<SubWithDefaultGrandchild12>().Count(), Is.EqualTo(1));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -2297,12 +2268,12 @@ namespace Tests.Linq
 			var result = db.GetTable<BaseClass>().OrderBy(_ => _.Id).ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(3));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[1].Id, Is.EqualTo(2));
 				Assert.That(result[2].Id, Is.EqualTo(3));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -2319,12 +2290,12 @@ namespace Tests.Linq
 			var result = db.GetTable<BaseClass>().OrderBy(_ => _.Id).ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(3));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[1].Id, Is.EqualTo(2));
 				Assert.That(result[2].Id, Is.EqualTo(3));
-			});
+			}
 		}
 
 		#endregion

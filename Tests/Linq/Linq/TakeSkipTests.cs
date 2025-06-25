@@ -8,15 +8,14 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class TakeSkipTests : TestBase
 	{
@@ -55,7 +54,7 @@ namespace Tests.Linq
 					CheckTakeGlobalParams(db);
 				}
 
-				var currentCacheMissCount = Query<Child>.CacheMissCount;
+				var currentCacheMissCount = db.Child.GetCacheMissCount();
 
 				for (var i = 2; i <= 3; i++)
 				{
@@ -63,7 +62,7 @@ namespace Tests.Linq
 					CheckTakeGlobalParams(db);
 				}
 
-				Assert.That(Query<Child>.CacheMissCount, Is.EqualTo(currentCacheMissCount));
+				Assert.That(db.Child.GetCacheMissCount(), Is.EqualTo(currentCacheMissCount));
 			}
 		}
 
@@ -78,7 +77,7 @@ namespace Tests.Linq
 					CheckTakeGlobalParams(db);
 				}
 
-				var currentCacheMissCount = Query<Child>.CacheMissCount;
+				var currentCacheMissCount = db.Child.GetCacheMissCount();
 
 				for (var i = 2; i <= 3; i++)
 				{
@@ -86,7 +85,7 @@ namespace Tests.Linq
 					CheckTakeGlobalParams(db);
 				}
 
-				Assert.That(Query<Child>.CacheMissCount, Is.EqualTo(currentCacheMissCount));
+				Assert.That(db.Child.GetCacheMissCount(), Is.EqualTo(currentCacheMissCount));
 			}
 		}
 
@@ -251,11 +250,11 @@ namespace Tests.Linq
 			{
 				AreEqual(Child.OrderBy(_ => _.ChildID).Skip(3), db.Child.OrderBy(_ => _.ChildID).Skip(3));
 
-				var currentCacheMissCount = Query<Child>.CacheMissCount;
+				var currentCacheMissCount = db.Child.GetCacheMissCount();
 
 				AreEqual(Child.OrderBy(_ => _.ChildID).Skip(4), db.Child.OrderBy(_ => _.ChildID).Skip(4));
 
-				Assert.That(Query<Child>.CacheMissCount, Is.EqualTo(currentCacheMissCount));
+				Assert.That(db.Child.GetCacheMissCount(), Is.EqualTo(currentCacheMissCount));
 			}
 		}
 
@@ -730,13 +729,13 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters)))
 			{
-				var missCount = Query<Person>.CacheMissCount;
+				var missCount = db.Person.GetCacheMissCount();
 				Assert.That(
 					db.Person.OrderBy(p => p.LastName).ElementAtOrDefault(idx), Is.EqualTo(Person.   OrderBy(p => p.LastName).ElementAtOrDefault(idx)));
 				CheckTakeGlobalParams(db);
 
 				if (idx == 3)
-					Assert.That(missCount, Is.EqualTo(Query<Person>.CacheMissCount));
+					Assert.That(missCount, Is.EqualTo(db.Person.GetCacheMissCount()));
 			}
 		}
 
@@ -907,7 +906,7 @@ namespace Tests.Linq
 					var res = query.ToList();
 
 					Assert.That(res, Has.Count.EqualTo(2));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res[0].BatchId, Is.EqualTo(2));
 						Assert.That(res[0].Value, Is.EqualTo("V2"));
@@ -915,13 +914,12 @@ namespace Tests.Linq
 						Assert.That(res[1].Value, Is.EqualTo("V3"));
 						Assert.That(res[0].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:20 GMT", DateTimeFormatInfo.InvariantInfo)));
 						Assert.That(res[1].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:35 GMT", DateTimeFormatInfo.InvariantInfo)));
-					});
+					}
 
 					CheckTakeGlobalParams(db);
 				}
 			}
 		}
-
 
 		sealed class TakeSkipClass
 		{
@@ -981,7 +979,6 @@ namespace Tests.Linq
 				CheckTakeGlobalParams(db);
 			}
 		}
-
 
 		[Test]
 		public void DistinctTakeTest([DataSources] string context, [Values] bool withParameters)
@@ -1077,6 +1074,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1115,6 +1113,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1159,6 +1158,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1203,6 +1203,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1297,7 +1298,7 @@ namespace Tests.Linq
 			{
 				for (int i = 1; i <= 2; i++)
 				{
-					var missCount = Query<TakeSkipClass>.CacheMissCount;
+					var missCount = tempTable.GetCacheMissCount();
 
 					var actual = tempTable
 						.OrderBy(t => t.Value)
@@ -1320,7 +1321,7 @@ namespace Tests.Linq
 					}
 
 					if (i == 2)
-						Assert.That(missCount, Is.EqualTo(Query<TakeSkipClass>.CacheMissCount));
+						Assert.That(missCount, Is.EqualTo(tempTable.GetCacheMissCount()));
 
 				}
 			}
@@ -1454,6 +1455,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1500,6 +1502,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1551,6 +1554,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1602,6 +1606,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1611,7 +1616,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var cacheMissCount = Query<Parent>.CacheMissCount;
+			var cacheMissCount = db.Parent.GetCacheMissCount();
 
 			var result = db.Parent
 				.OrderBy(t => t.Value1)
@@ -1620,7 +1625,7 @@ namespace Tests.Linq
 				.ToArray();
 
 			if (skip > 1 || take > 1)
-				Query<Parent>.CacheMissCount.Should().Be(cacheMissCount);
+				db.Parent.GetCacheMissCount().Should().Be(cacheMissCount);
 		}
 	}
 }

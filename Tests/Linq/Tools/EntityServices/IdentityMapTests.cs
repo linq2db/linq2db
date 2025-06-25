@@ -10,12 +10,10 @@ using LinqToDB.Tools.EntityServices;
 
 using NUnit.Framework;
 
-using Tests.Linq;
+using Tests.Model;
 
 namespace Tests.Tools.EntityServices
 {
-	using Model;
-
 	[TestFixture]
 	public class IdentityMapTests : TestBase
 	{
@@ -28,8 +26,7 @@ namespace Tests.Tools.EntityServices
 				var p1 = db.Person.First(p => p.ID == 1);
 				var p2 = db.Person.First(p => p.ID == 1);
 				var p3 = db.Person.First(p => p.ID == 2);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(p2, Is.SameAs(p1));
 
@@ -40,13 +37,12 @@ namespace Tests.Tools.EntityServices
 						new { Entity = p1, StoreCount = 2, CacheCount = 0 },
 						new { Entity = p3, StoreCount = 1, CacheCount = 0 },
 						}));
-				});
+				}
 
 				var c1 = db.Child.First(p => p.ParentID == 1 && p.ChildID == 11);
 				var c2 = db.Child.First(p => p.ParentID == 1 && p.ChildID == 11);
 				var c3 = db.Child.First(p => p.ParentID == 2 && p.ChildID == 21);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(c2, Is.SameAs(c1));
 
@@ -57,7 +53,7 @@ namespace Tests.Tools.EntityServices
 						new { Entity = c1, StoreCount = 2, CacheCount = 0 },
 						new { Entity = c3, StoreCount = 1, CacheCount = 0 },
 						}));
-				});
+				}
 			}
 		}
 
@@ -70,12 +66,11 @@ namespace Tests.Tools.EntityServices
 				var p1 = db.Person.First(p => p.ID == 1);
 				var p2 = map.GetEntity<Person>(1);
 				var p3 = map.GetEntity<Person>(new { ID = 1 });
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(p2, Is.SameAs(p1));
 					Assert.That(p3, Is.SameAs(p1));
-				});
+				}
 
 				var p4 = map.GetEntity<Person>(2)!;
 				var p5 = map.GetEntity<Person>(new { ID = 3L })!;

@@ -1,11 +1,9 @@
-﻿using System;
+﻿using LinqToDB.Interceptors;
+
+using LinqToDB.Interceptors.Internal;
 
 namespace LinqToDB.Remote
 {
-	using Interceptors;
-
-	using Interceptors.Internal;
-
 	public abstract partial class RemoteDataContextBase :
 		IInterceptable<IDataContextInterceptor>,
 		IInterceptable<IEntityServiceInterceptor>,
@@ -26,12 +24,16 @@ namespace LinqToDB.Remote
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
+			ThrowOnDisposed();
+
 			this.AddInterceptorImpl(interceptor);
 		}
 
 		/// <inheritdoc cref="IDataContext.RemoveInterceptor(IInterceptor)"/>
 		public void RemoveInterceptor(IInterceptor interceptor)
 		{
+			ThrowOnDisposed();
+
 			this.RemoveInterceptorImpl(interceptor);
 		}
 	}

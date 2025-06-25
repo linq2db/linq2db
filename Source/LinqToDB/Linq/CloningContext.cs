@@ -4,18 +4,28 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Linq.Builder;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq
 {
-	using Builder;
-	using Common;
-	using LinqToDB.Expressions;
-	using SqlQuery;
-	
 	class CloningContext
 	{
 		Dictionary<IQueryElement, IQueryElement> _queryElements    = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 		Dictionary<IBuildContext, IBuildContext> _buildContexts    = new ();
 		HashSet<IBuildContext>                   _currentlyCloning = new ();
+
+		public void CloneElements<TElement>(IEnumerable<TElement>? queryElements)
+			where TElement : IQueryElement
+		{
+			if (queryElements != null)
+			{
+				foreach (var element in queryElements)
+					CloneElement(element);
+			}
+		}
 
 		[return: NotNullIfNotNull(nameof(context))]
 		public TContext? CorrectContext<TContext>(TContext? context)
@@ -143,6 +153,16 @@ namespace LinqToDB.Linq
 		public void RegisterCloned(IBuildContext oldContext, IBuildContext newContext)
 		{
 			_buildContexts[oldContext] = newContext;
+		}
+
+		public bool IsCloned(IBuildContext context)
+		{
+			return _buildContexts.ContainsKey(context);
+		}
+
+		public bool IsCloned(IQueryElement element)
+		{
+			return _queryElements.ContainsKey(element);
 		}
 
 		[return: NotNullIfNotNull(nameof(buildContext))]

@@ -1,21 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class GroupByTests : TestBase
 	{
@@ -36,12 +34,11 @@ namespace Tests.Linq
 			for (var i = 0; i < list.Count; i++)
 			{
 				var values = list[i].OrderBy(c => c.ChildID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list[i].Key, Is.EqualTo(i + 1));
 					Assert.That(values, Has.Count.EqualTo(i + 1));
-				});
+				}
 
 				for (var j = 0; j < values.Count; j++)
 					Assert.That(values[j].ChildID, Is.EqualTo((i + 1) * 10 + j + 1));
@@ -122,12 +119,11 @@ namespace Tests.Linq
 			{
 				var q    = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, ch => ch.GrandChildID);
 				var list = q.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(list[0].Count(), Is.Not.EqualTo(0));
+					Assert.That(list[0].Count(), Is.Not.Zero);
 					Assert.That(list, Has.Count.EqualTo(8));
-				});
+				}
 			}
 		}
 
@@ -878,7 +874,7 @@ namespace Tests.Linq
 					DistinctWithFilter       = g.Select(x => x.DataValue).Distinct().Count(x => x % 2 == 0),
 					FilterDistinct           = g.Select(x => x.DataValue).Where(x => x      % 2 == 0).Distinct().Count(),
 					FilterDistinctWithFilter = g.Select(x => x.DataValue).Where(x => x      % 2 == 0).Distinct().Count(x => x % 2 == 0),
-					
+
 					SubFilter           = filtered.Count(),
 					SubFilterDistinct   = filteredDistinct.Count(),
 					SubNoFilterDistinct = nonfilteredDistinct.Count(),
@@ -896,7 +892,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
-			var query = 
+			var query =
 				from t in table
 				group t by new { t.GroupId }  into g
 				select new
@@ -941,7 +937,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void MaxInGroup([DataSources] string context)
@@ -969,7 +964,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void AverageInGroup([DataSources] string context)
@@ -979,7 +973,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
-			var query = 
+			var query =
 				from t in table
 				where t.DataValue != null
 				group t by t.GroupId into g
@@ -997,7 +991,6 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 
 		[Test]
 		public void SelectMax([DataSources] string context)
@@ -1055,7 +1048,7 @@ namespace Tests.Linq
 		public void Max1([DataSources] string context)
 		{
 			var expected = Child.Max(c => c.ChildID);
-			Assert.That(expected, Is.Not.EqualTo(0));
+			Assert.That(expected, Is.Not.Zero);
 
 			using (var db = GetDataContext(context))
 				Assert.That(db.Child.Max(c => c.ChildID), Is.EqualTo(expected));
@@ -1397,11 +1390,47 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void GroupByAggregate21([NorthwindDataContext] string context)
+		{
+			using (var db = new NorthwindDB(new DataOptions().UseConfiguration(context).UseGuardGrouping(false)))
+			{
+				var dd = GetNorthwindAsList(context);
+				AreEqual(
+					(
+						from c in dd.Customer
+						group c by c.Orders.Count > 0 && c.Orders.Average(o => o.Freight) == 33.25m
+					).ToList().Select(k => k.Key),
+					(
+						from c in db.Customer
+						group c by c.Orders.Average(o => o.Freight) == 33.25m
+					).ToList().Select(k => k.Key));
+			}
+		}
+
+		[Test]
+		public void GroupByAggregate22([NorthwindDataContext] string context)
+		{
+			using (var db = new NorthwindDB(new DataOptions().UseConfiguration(context).UseGuardGrouping(false)))
+			{
+				var dd = GetNorthwindAsList(context);
+				AreEqual(
+					(
+						from c in dd.Customer
+						group c by c.Orders.Count > 0 && c.Orders.Average(o => o.Freight) != 33.25m
+					).ToList().Select(k => k.Key),
+					(
+						from c in db.Customer
+						group c by c.Orders.Average(o => o.Freight) != 33.25m
+					).ToList().Select(k => k.Key));
+			}
+		}
+
+		[Test]
 		public void GroupByAggregate3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
-			var query = 
+			var query =
 				from p in db.Parent
 				group p by p.Children.Average(c => c.ParentID) > 3
 				into g
@@ -1833,39 +1862,39 @@ namespace Tests.Linq
 
 			// aggregates (except count) return null on empty set
 			var result = query.AsSubQuery().Where(r => r.Min != 0).Count();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result, Is.EqualTo(1));
 				Assert.That(db.LastQuery, Contains.Substring("IS NULL"));
-			});
+			}
 
 			result = query.AsSubQuery().Where(r => r.Max != 0).Count();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result, Is.EqualTo(1));
 				Assert.That(db.LastQuery, Contains.Substring("IS NULL"));
-			});
+			}
 
 			result = query.AsSubQuery().Where(r => r.Avg != 0).Count();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result, Is.EqualTo(1));
 				Assert.That(db.LastQuery, Contains.Substring("IS NULL"));
-			});
+			}
 
 			result = query.AsSubQuery().Where(r => r.Sum != 0).Count();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result, Is.EqualTo(1));
 				Assert.That(db.LastQuery, Contains.Substring("IS NULL"));
-			});
+			}
 
 			result = query.AsSubQuery().Where(r => r.Count != 0).Count();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result, Is.EqualTo(0));
+				Assert.That(result, Is.Zero);
 				Assert.That(db.LastQuery, Does.Not.Contains("IS NULL"));
-			});
+			}
 		}
 
 		[Test]
@@ -2161,12 +2190,11 @@ namespace Tests.Linq
 				Assert.DoesNotThrow(() => query2.ToArray());
 
 				var orderItems = query2.GetSelectQuery().OrderBy.Items;
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(orderItems, Has.Count.EqualTo(1));
 					Assert.That(QueryHelper.GetUnderlyingField(orderItems[0].Expression)!.Name, Is.EqualTo("ParentID"));
-				});
+				}
 			}
 		}
 
@@ -2437,13 +2465,13 @@ namespace Tests.Linq
 				var x = q.ToList().OrderBy(_ => _.Count).ToArray();
 
 				Assert.That(x, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(x[0].IsDelisted, Is.True);
 					Assert.That(x[0].Count, Is.EqualTo(1));
 					Assert.That(x[1].IsDelisted, Is.False);
 					Assert.That(x[1].Count, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -2489,8 +2517,7 @@ namespace Tests.Linq
 				var res = query.ToList().OrderBy(_ => _.SiteID).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].SiteID, Is.EqualTo(1));
 					Assert.That(res[0].Total, Is.EqualTo(3));
@@ -2506,8 +2533,8 @@ namespace Tests.Linq
 
 					Assert.That(res[3].SiteID, Is.EqualTo(4));
 					Assert.That(res[3].Total, Is.EqualTo(1));
-					Assert.That(res[3].Inactive, Is.EqualTo(0));
-				});
+					Assert.That(res[3].Inactive, Is.Zero);
+				}
 			}
 		}
 
@@ -2537,69 +2564,58 @@ namespace Tests.Linq
 		[Test]
 		public void Issue2306Test1([DataSources] string context)
 		{
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
-
-			Query.ClearCaches();
 		}
 
 		[Test]
 		public void Issue2306Test2([DataSources] string context)
 		{
-			Query.ClearCaches();
-
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
-
-			Query.ClearCaches();
 		}
 
 		[Test]
 		public void Issue2306Test3([DataSources] string context)
 		{
-			Query.ClearCaches();
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true).UseDisableQueryCache(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
-			Query.ClearCaches();
 		}
 
 		[Test]
@@ -2730,12 +2746,11 @@ namespace Tests.Linq
 			query.ToList();
 
 			var sql = query.GetSelectQuery();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(sql.GroupBy.Items, Has.Count.EqualTo(2));
 				Assert.That(sql.SetOperators[0].SelectQuery.GroupBy.Items, Has.Count.EqualTo(2));
-			});
+			}
 		}
 
 		[Test]
@@ -2752,12 +2767,12 @@ namespace Tests.Linq
 			query.ToList();
 
 			var ast = query.GetSelectQuery();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ast.GroupBy.Items, Is.Empty);
 				Assert.That(ast.From.Tables, Has.Count.EqualTo(1));
-			});
+			}
+
 			if (ast.From.Tables[0] is not SqlTableSource source)
 			{
 				Assert.Fail("fail");
@@ -2836,7 +2851,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue4098WithCte([CteTests.CteContextSource] string context)
+		public void Issue4098WithCte([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2888,7 +2903,7 @@ namespace Tests.Linq
 						  }).ToList().OrderBy(r => r.INVESTORID).ToArray();
 
 			Assert.That(retval, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(retval[0].INVESTORID, Is.EqualTo("inv1"));
 				Assert.That(retval[0].PAYMENTAMOUNT, Is.EqualTo(100));
@@ -2896,7 +2911,7 @@ namespace Tests.Linq
 				Assert.That(retval[1].INVESTORID, Is.EqualTo("inv2"));
 				Assert.That(retval[1].PAYMENTAMOUNT, Is.EqualTo(200));
 				Assert.That(retval[1].TOTALUNITS, Is.EqualTo(700));
-			});
+			}
 		}
 
 		[Test]
@@ -2950,7 +2965,7 @@ namespace Tests.Linq
 						  }).ToList().OrderBy(r => r.INVESTORID).ToArray();
 
 			Assert.That(retval, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(retval[0].INVESTORID, Is.EqualTo("inv1"));
 				Assert.That(retval[0].PAYMENTAMOUNT, Is.EqualTo(100));
@@ -2958,7 +2973,7 @@ namespace Tests.Linq
 				Assert.That(retval[1].INVESTORID, Is.EqualTo("inv2"));
 				Assert.That(retval[1].PAYMENTAMOUNT, Is.EqualTo(200));
 				Assert.That(retval[1].TOTALUNITS, Is.EqualTo(700));
-			});
+			}
 		}
 		#endregion
 
@@ -3045,7 +3060,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		public void GroupByInOuterApply([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -3056,7 +3070,7 @@ namespace Tests.Linq
 				let cItems = p.Children.GroupBy(c => c.ParentID, (key, grouped) => new { Id = key, Count = grouped.Count() })
 				select new
 				{
-					p.ParentID, 
+					p.ParentID,
 					First = cItems.OrderBy(x => x.Count).ThenBy(x => x.Id).FirstOrDefault()
 				};
 
@@ -3428,14 +3442,10 @@ namespace Tests.Linq
 				}).ToList();
 
 			Assert.That(results, Has.Count.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(results[0].data, Has.Count.EqualTo(1));
 				Assert.That(results[1].data, Has.Count.EqualTo(1));
-			});
-
-			Assert.Multiple(() =>
-			{
 				Assert.That(results[0].data[0].id, Is.EqualTo(id));
 				Assert.That(results[0].data[0].reference, Is.Null);
 				Assert.That(results[0].data[0].cnt.count, Is.EqualTo(1));
@@ -3449,7 +3459,7 @@ namespace Tests.Linq
 				Assert.That(results[1].data[0].cnt.percents, Is.EqualTo(100));
 				Assert.That(results[1].data[0].x.hours, Is.EqualTo(now.Hour));
 				Assert.That(results[1].data[0].x.minutes, Is.EqualTo(now.Minute));
-			});
+			}
 		}
 
 		[Test]
@@ -3517,14 +3527,10 @@ namespace Tests.Linq
 				}).ToList();
 
 			Assert.That(results, Has.Count.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(results[0].data, Has.Count.EqualTo(1));
 				Assert.That(results[1].data, Has.Count.EqualTo(1));
-			});
-
-			Assert.Multiple(() =>
-			{
 				Assert.That(results[0].data[0].id, Is.EqualTo(id));
 				Assert.That(results[0].data[0].reference, Is.Null);
 				Assert.That(results[0].data[0].cnt.count, Is.EqualTo(1));
@@ -3538,7 +3544,7 @@ namespace Tests.Linq
 				Assert.That(results[1].data[0].cnt.percents, Is.EqualTo(100));
 				Assert.That(results[1].data[0].x.hours, Is.EqualTo(now.Hour));
 				Assert.That(results[1].data[0].x.minutes, Is.EqualTo(now.Minute));
-			});
+			}
 		}
 
 		[Sql.Expression("COUNT_BIG(*) * 100E0 / SUM(COUNT_BIG(*)) OVER()", ServerSideOnly = true, Precedence = Precedence.Multiplicative, IsWindowFunction = true)]
@@ -3696,6 +3702,117 @@ namespace Tests.Linq
 			query.ToList();
 
 			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+		}
+
+		[Test]
+		public void Issue_HavingConditionTranslation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var results = db
+				.GetTable<Person>()
+				.GroupBy(_ => _.MiddleName)
+				.Having(_ => _.Key == null || _.Key != "Unknown")
+				.Select(_ => new { _.Key, Count = Sql.Ext.Count().ToValue() })
+				.ToList();
+
+			var nullValue = results.SingleOrDefault(r => r.Key == null);
+			var koValue   = results.SingleOrDefault(r => r.Key == "Ko");
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(results, Has.Count.EqualTo(2));
+				Assert.That(nullValue, Is.Not.Null);
+				Assert.That(nullValue!.Count, Is.EqualTo(3));
+				Assert.That(koValue, Is.Not.Null);
+			}
+
+			Assert.That(koValue.Count, Is.EqualTo(1));
+		}
+
+		[Test]
+		public void Issue_PlaceholderDuplicate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.GetTable<Person>()
+				.GroupBy(r => new
+				{
+					key = r.ID,
+					sort = r.ID,
+				})
+				.Select(r => new
+				{
+					Key = r.Key.key,
+					Sort = r.Key.sort,
+					label = "label"
+				})
+				.OrderBy(r => r.Sort)
+				.Take(100)
+				.ToList();
+		}
+
+		[Test]
+		public void Issue_UnusedColumnsElimination([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.GetTable<Person>()
+				.GroupBy(r => new
+				{
+					key = r.ID,
+					sort = r.ID,
+				})
+				.Select(r => new
+				{
+					Key = r.Key.key,
+					Sort = r.Key.sort,
+					label = "label"
+				})
+				.LongCount();
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
+		[Test]
+		public void Issue_FilterByOrderedGroupBy([DataSources] string context)
+		{
+			using var db  = GetDataContext(context);
+
+			var grp =
+			(
+				from c in db.Child
+				group c by c.ParentID into g
+				select new
+				{
+					ParentID = g.Key,
+					Max      = g.Max(x => x.ChildID)
+				}
+				into g
+				orderby g.Max descending
+				select g
+			)
+			.Take(2);
+
+			var query =
+				from t in db.Child
+				where t.ParentID.In(grp.Select(x => x.ParentID))
+				select t;
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void InsertFirstFromGroup([DataSources(false, TestProvName.AllFirebird, TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var t1 = db.CreateLocalTable("temp_table_1", [new { ID = 1, Value = ""}]);
+			using var t2 = db.CreateTempTable("temp_table_2",
+				from c in t1
+				group c by c.ID into gr
+				select new
+				{
+					gr.First().Value,
+				});
 		}
 	}
 }

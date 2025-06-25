@@ -1,6 +1,8 @@
 ﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -45,13 +47,13 @@ namespace Tests.UserTests
 					.ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(1));
 					Assert.That(data[0].Decimal1, Is.EqualTo(123.456m));
-					Assert.That(data[0].Decimal2, Is.EqualTo(0m));
+					Assert.That(data[0].Decimal2, Is.Zero);
 					Assert.That(data[0].Decimal3, Is.EqualTo(0.1m));
-					Assert.That(data[0].Int1, Is.EqualTo(0));
+					Assert.That(data[0].Int1, Is.Zero);
 					Assert.That(data[0].Int2, Is.EqualTo(22));
 					Assert.That(data[1].Id, Is.EqualTo(2));
 					Assert.That(data[1].Decimal1, Is.EqualTo(-123.456m));
@@ -59,7 +61,7 @@ namespace Tests.UserTests
 					Assert.That(data[1].Decimal3, Is.EqualTo(3523.2352m));
 					Assert.That(data[1].Int1, Is.EqualTo(-123));
 					Assert.That(data[1].Int2, Is.EqualTo(345));
-				});
+				}
 			}
 		}
 	}

@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
+
+using Newtonsoft.Json.Linq;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class AnalyticTests : TestBase
 	{
@@ -65,7 +68,6 @@ namespace Tests.Linq
 						LongCount11 = Sql.Ext.LongCount(p.ParentID, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Rows.ValuePreceding(1).ToValue(),
 						LongCount12 = Sql.Ext.LongCount(p.ParentID, Sql.AggregateModifier.None).Over().PartitionBy(p.Value1).OrderByDesc(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 						LongCount14 = Sql.Ext.LongCount().Over().ToValue(),
-
 
 						Combination = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ToValue() +
 									  Sql.Sqrt(Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue()) +
@@ -485,12 +487,12 @@ namespace Tests.Linq
 					{
 						DenseRank1     = Sql.Ext.DenseRank(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(q.ToArray(), Is.Not.Empty);
 
 					Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC)"));
-				});
+				}
 			}
 		}
 
@@ -1233,7 +1235,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void TestVarianceOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
@@ -1340,12 +1341,11 @@ namespace Tests.Linq
 						q.ParentID,
 						MaxValue = Sql.Ext.Min(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
 					};
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(q1.EnumQueries().Count(), Is.EqualTo(2));
 					Assert.That(q2.EnumQueries().Count(), Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
@@ -1395,8 +1395,7 @@ namespace Tests.Linq
 				var res = q.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// BTW, order from original query behaves differently for
 					// Oracle, PostgreSQL, DB2 vs Informix, SQL Server
@@ -1408,7 +1407,7 @@ namespace Tests.Linq
 					Assert.That(res[2].PreviousId, Is.EqualTo(6));
 					Assert.That(res[3].Id, Is.Null);
 					Assert.That(res[3].PreviousId, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1442,8 +1441,7 @@ namespace Tests.Linq
 				var res = q.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Id, Is.EqualTo(5));
 					Assert.That(res[0].PreviousId, Is.EqualTo(6));
@@ -1453,7 +1451,7 @@ namespace Tests.Linq
 					Assert.That(res[2].PreviousId, Is.Null);
 					Assert.That(res[3].Id, Is.Null);
 					Assert.That(res[3].PreviousId, Is.EqualTo(-1));
-				});
+				}
 			}
 		}
 
@@ -1482,8 +1480,7 @@ namespace Tests.Linq
 				var res = q.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Id, Is.EqualTo(5));
 					Assert.That(res[0].FirstRespect, Is.Null);
@@ -1508,7 +1505,7 @@ namespace Tests.Linq
 					Assert.That(res[3].FirstIgnore, Is.Null);
 					Assert.That(res[3].LastRespect, Is.Null);
 					Assert.That(res[3].LastIgnore, Is.EqualTo(6));
-				});
+				}
 			}
 		}
 
@@ -1539,8 +1536,7 @@ namespace Tests.Linq
 				var res = q.AsEnumerable().OrderBy(r => r.Id).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Id, Is.Null);
 					Assert.That(res[0].PreviousId, Is.Null);
@@ -1550,7 +1546,7 @@ namespace Tests.Linq
 					Assert.That(res[2].PreviousId, Is.Null);
 					Assert.That(res[3].Id, Is.EqualTo(6));
 					Assert.That(res[3].PreviousId, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1582,8 +1578,7 @@ namespace Tests.Linq
 				var res = q.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Id, Is.EqualTo(5));
 					Assert.That(res[0].PreviousId, Is.EqualTo(5));
@@ -1593,7 +1588,7 @@ namespace Tests.Linq
 					Assert.That(res[2].PreviousId, Is.Null);
 					Assert.That(res[3].Id, Is.Null);
 					Assert.That(res[3].PreviousId, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1630,8 +1625,7 @@ namespace Tests.Linq
 				var res = q.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Id, Is.Null);
 					Assert.That(res[0].PreviousId, Is.Null);
@@ -1641,7 +1635,7 @@ namespace Tests.Linq
 					Assert.That(res[2].PreviousId, Is.Null);
 					Assert.That(res[3].Id, Is.EqualTo(5));
 					Assert.That(res[3].PreviousId, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1852,7 +1846,6 @@ namespace Tests.Linq
 
 				Assert.That(leads, Is.EqualTo(new[] { "Two", "None" }).AsCollection);
 
-
 				var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 1, "None")
 												 	.Over().OrderBy(p.ProcessID).ToValue())
 								.ToArray();
@@ -2029,5 +2022,175 @@ namespace Tests.Linq
 				 })
 				 .ToArray();
 		}
+
+		#region Issue 4870
+		sealed class Issue4870Document
+		{
+			public int      Id               { get; set; }
+			public int      TemplateId       { get; set; }
+			public int      EmployerNumber   { get; set; }
+			[Column(DataType = DataType.NVarChar)]
+			public JObject  FieldResultsJson { get; set; } = null!;
+			public string   Path             { get; set; } = null!;
+			public DateTime DateCreated      { get; set; }
+		}
+
+		[Sql.Expression("concat('{{',string_agg(concat('\"', {0}, '\"', ': {{', '\"DateCreated\":\"', cast({2} as datetime2), '\", \"Link\":\"', {3}, '\",\"fields\":',  {1}), '}},'), '}}}}') ", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 1, 2, 3, 4 })]
+		static JObject AggregateDocumentFields(
+			IEnumerable<Issue4870Document> objs,
+			Expression<Func<Issue4870Document, int?>> templateId,
+			Expression<Func<Issue4870Document, JObject>> fieldResultsJson,
+			Expression<Func<Issue4870Document, DateTime?>> DateCreated,
+			Expression<Func<Issue4870Document, string>> Link)
+		{
+			throw new InvalidOperationException();
+		}
+
+		[Sql.Expression("concat('{{',string_agg(concat('\"', {1}, '\"', ': {{', '\"DateCreated\":\"', cast({3} as datetime2), '\", \"Link\":\"', {4}, '\",\"fields\":',  {2}), '}},'), '}}}}') ", ServerSideOnly = true, IsAggregate = true)]
+		static JObject AggregateDocumentFieldsNoIndeces(
+			IEnumerable<Issue4870Document> objs,
+			Expression<Func<Issue4870Document, int?>> templateId,
+			Expression<Func<Issue4870Document, JObject>> fieldResultsJson,
+			Expression<Func<Issue4870Document, DateTime?>> DateCreated,
+			Expression<Func<Issue4870Document, string>> Link)
+		{
+			throw new InvalidOperationException();
+		}
+
+		[Sql.Extension("concat('{{',string_agg(concat('\"', {templateId}, '\"', ': {{', '\"DateCreated\":\"', cast({DateCreated} as datetime2), '\", \"Link\":\"', {Link}, '\",\"fields\":',  {fieldResultsJson}), '}},'), '}}}}') ", ServerSideOnly = true, IsAggregate = true)]
+		static JObject AggregateDocumentFieldsExtension(
+			IEnumerable<Issue4870Document> objs,
+			[ExprParameter] Expression<Func<Issue4870Document, int?>> templateId,
+			[ExprParameter] Expression<Func<Issue4870Document, JObject>> fieldResultsJson,
+			[ExprParameter] Expression<Func<Issue4870Document, DateTime?>> DateCreated,
+			[ExprParameter] Expression<Func<Issue4870Document, string>> Link)
+		{
+			throw new InvalidOperationException();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4870")]
+		public void Issue4870Test_Original([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4870Document>();
+
+			var documentRank = tb
+				.Select(dr => new
+				{
+					EmployerDocument = dr,
+					Rank = Sql.Ext.Rank()
+						.Over()
+						.PartitionBy(dr.Id, dr.TemplateId)
+						.OrderByDesc(dr.Id)
+						.ToValue()
+				});
+
+			var documentCombinedJson = documentRank
+				.Where(dr => dr.Rank == 1)
+				.Select(r => r.EmployerDocument)
+				.GroupBy(doc => new { doc.EmployerNumber, doc.Id})
+				.Select(g => new
+				{
+					ID = g.Key.Id,
+					EmployerNumber = g.Key.EmployerNumber,
+					DocumentFields = AggregateDocumentFields(g, adf => adf.TemplateId, adf => adf.FieldResultsJson, adf => adf.DateCreated, adf => adf.Path)
+				});
+
+			documentCombinedJson.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4870")]
+		public void Issue4870Test_NoArgIndeces([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4870Document>();
+
+			var documentRank = tb
+				.Select(dr => new
+				{
+					EmployerDocument = dr,
+					Rank = Sql.Ext.Rank()
+						.Over()
+						.PartitionBy(dr.Id, dr.TemplateId)
+						.OrderByDesc(dr.Id)
+						.ToValue()
+				});
+
+			var documentCombinedJson = documentRank
+				.Where(dr => dr.Rank == 1)
+				.Select(r => r.EmployerDocument)
+				.GroupBy(doc => new { doc.EmployerNumber, doc.Id})
+				.Select(g => new
+				{
+					ID = g.Key.Id,
+					EmployerNumber = g.Key.EmployerNumber,
+					DocumentFields = AggregateDocumentFieldsNoIndeces(g, adf => adf.TemplateId, adf => adf.FieldResultsJson, adf => adf.DateCreated, adf => adf.Path)
+				});
+
+			documentCombinedJson.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4870")]
+		public void Issue4870Test_Extension([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4870Document>();
+
+			var documentRank = tb
+				.Select(dr => new
+				{
+					EmployerDocument = dr,
+					Rank = Sql.Ext.Rank()
+						.Over()
+						.PartitionBy(dr.Id, dr.TemplateId)
+						.OrderByDesc(dr.Id)
+						.ToValue()
+				});
+
+			var documentCombinedJson = documentRank
+				.Where(dr => dr.Rank == 1)
+				.Select(r => r.EmployerDocument)
+				.GroupBy(doc => new { doc.EmployerNumber, doc.Id})
+				.Select(g => new
+				{
+					ID = g.Key.Id,
+					EmployerNumber = g.Key.EmployerNumber,
+					DocumentFields = AggregateDocumentFieldsExtension(g, adf => adf.TemplateId, adf => adf.FieldResultsJson, adf => adf.DateCreated, adf => adf.Path)
+				});
+
+			documentCombinedJson.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4870")]
+		public void Issue4870Test_ExistingApi([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4870Document>();
+
+			var documentRank = tb
+				.Select(dr => new
+				{
+					EmployerDocument = dr,
+					Rank = Sql.Ext.Rank()
+						.Over()
+						.PartitionBy(dr.Id, dr.TemplateId)
+						.OrderByDesc(dr.Id)
+						.ToValue()
+				});
+
+			var documentCombinedJson = documentRank
+				.Where(dr => dr.Rank == 1)
+				.Select(r => r.EmployerDocument)
+				.GroupBy(doc => new { doc.EmployerNumber, doc.Id})
+				.Select(g => new
+				{
+					ID = g.Key.Id,
+					EmployerNumber = g.Key.EmployerNumber,
+					DocumentFields = SqlFn.Concat("{", g.StringAggregate("},", r => SqlFn.Concat("\"", r.TemplateId.ToString(), "\"", ": { \"DateCreated\": \"", r.DateCreated.ToString(), "\", \"Link\":\"", r.Path, "\",\"fields\":", r.FieldResultsJson.ToString())).ToValue(), "}}")
+				});
+
+			documentCombinedJson.ToArray();
+		}
+		#endregion
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
 using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
@@ -17,7 +18,6 @@ namespace LinqToDB.Benchmarks
 		private static IConfig Create()
 		{
 			var netfx = Job.Default.WithRuntime(ClrRuntime.Net462).WithDefault().AsBaseline();
-			var net60 = Job.Default.WithRuntime(CoreRuntime.Core60).WithDefault();
 			var net80 = Job.Default.WithRuntime(CoreRuntime.Core80).WithDefault();
 			var net90 = Job.Default.WithRuntime(CoreRuntime.Core90).WithDefault();
 
@@ -29,8 +29,8 @@ namespace LinqToDB.Benchmarks
 				.WithOptions       (ConfigOptions.DisableLogFile)
 				.AddExporter       (MarkdownExporter.GitHub)
 				.AddDiagnoser      (MemoryDiagnoser.Default)
-				.WithArtifactsPath (@"..\..\..")
-				.AddJob            (netfx, net60, net80, net90);
+				.WithArtifactsPath (@"..\..\..\..\..\Tests\Tests.Benchmarks")
+				.AddJob            (netfx, net80, net90);
 		}
 
 		private static Job WithDefault(this Job job)

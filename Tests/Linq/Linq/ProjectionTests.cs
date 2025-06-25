@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -106,12 +108,12 @@ namespace Tests.Linq
 				var result = query.ToList();
 
 				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].y, Is.EqualTo(1));
 					Assert.That(result[0].x.value, Is.Null);
 					Assert.That(result[0].x.id, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -148,12 +150,12 @@ namespace Tests.Linq
 				var result = query.ToList();
 
 				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].y, Is.EqualTo(1));
 					Assert.That(result[0].x.value, Is.Null);
 					Assert.That(result[0].x.id, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -188,12 +190,12 @@ namespace Tests.Linq
 				var result = query.ToList();
 
 				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].y, Is.EqualTo(1));
 					Assert.That(result[0].x.value, Is.Null);
 					Assert.That(result[0].x.id, Is.Null);
-				});
+				}
 			}
 		}
 	}

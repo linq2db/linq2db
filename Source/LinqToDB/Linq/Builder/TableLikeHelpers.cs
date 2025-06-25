@@ -4,13 +4,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Common;
-	using LinqToDB.Expressions;
-	using LinqToDB.Extensions;
-	using LinqToDB.SqlQuery;
-
 	static class TableLikeHelpers
 	{
 		public static string? GenerateColumnAlias(ISqlExpression sqlExpression)
@@ -98,8 +98,9 @@ namespace LinqToDB.Linq.Builder
 					var placeholderIndex = updatedPlaceholder.Index!.Value;
 					var field = RegisterFieldMapping(fields, placeholderIndex, () =>
 					{
-						var alias = GenerateColumnAlias(updatedPlaceholder.TrackingPath!) ?? GenerateColumnAlias(updatedPlaceholder.Sql);
+						var alias    = GenerateColumnAlias(updatedPlaceholder.TrackingPath!) ?? GenerateColumnAlias(updatedPlaceholder.Sql);
 						var dataType = QueryHelper.GetDbDataType(updatedPlaceholder.Sql, subQueryContext.MappingSchema);
+						var basedOn  = QueryHelper.GetUnderlyingField(updatedPlaceholder.Sql);
 
 						SqlField newField;
 						var      isNullable = updatedPlaceholder.Sql.CanBeNullable(nullabilityContext);
@@ -117,7 +118,8 @@ namespace LinqToDB.Linq.Builder
 							newField = new SqlField(dataType, alias, isNullable);
 						}
 
-						newField.Table = parentTable;
+						newField.Table   = parentTable;
+						newField.BasedOn = basedOn;
 						return newField;
 					});
 
@@ -158,7 +160,7 @@ namespace LinqToDB.Linq.Builder
 					var index = ctx.placeholders.IndexOf(placeholder);
 					if (index >= 0)
 					{
-						return ctx.newPlaceholders[index];
+						return ctx.newPlaceholders[index].WithType(e.Type);
 					}
 				}
 

@@ -1,9 +1,10 @@
-﻿using LinqToDB;
-using LinqToDB.Data;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
-using Tests.Model;
+
+using LinqToDB;
+using LinqToDB.Data;
+
+using NUnit.Framework;
 
 // ReSharper disable once CheckNamespace
 namespace Tests.xUpdate
@@ -328,12 +329,11 @@ namespace Tests.xUpdate
 					.OnTargetKey()
 					.DeleteWhenNotMatchedBySourceAnd(t => t.Id == param)
 					.Merge();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 					Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -359,12 +359,11 @@ namespace Tests.xUpdate
 							Field1 = t.Field1
 						})
 					.Merge();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 					Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 

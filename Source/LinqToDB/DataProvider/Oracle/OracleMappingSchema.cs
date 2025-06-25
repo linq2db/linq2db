@@ -4,13 +4,13 @@ using System.Globalization;
 using System.Linq.Expressions;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	public sealed class OracleMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
@@ -76,7 +76,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SetValueToSqlConverter(typeof(byte[]),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Binary)v).ToArray()));
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			SetValueToSqlConverter(typeof(DateOnly),       (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
 #endif
 
@@ -178,6 +178,7 @@ namespace LinqToDB.DataProvider.Oracle
 						case >= 7: format = TIMESTAMP7_FORMAT; break;
 						default  : format = TIMESTAMP6_FORMAT; break;
 					}
+
 					break;
 				case DataType.DateTimeOffset:
 					// just use UTC literal
@@ -194,6 +195,7 @@ namespace LinqToDB.DataProvider.Oracle
 						case >= 7: format = TIMESTAMPTZ7_FORMAT; break;
 						default  : format = TIMESTAMPTZ6_FORMAT; break;
 					}
+
 					break;
 				case DataType.DateTime:
 				default:
@@ -204,7 +206,7 @@ namespace LinqToDB.DataProvider.Oracle
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dataType, DateOnly value)
 		{
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);

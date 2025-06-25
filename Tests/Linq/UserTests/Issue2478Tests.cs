@@ -1,6 +1,9 @@
 ﻿using System.Linq;
+
 using LinqToDB;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.UserTests
@@ -21,7 +24,6 @@ namespace Tests.UserTests
 						into g
 						select new { Count = g.Count(), Sum = g.Sum(_ => _.ChildID) })
 					select new { p.ParentID, Count = c == null ? 0 : c.Count, Sum = c == null ? 0 : c.Sum };
-
 
 				var result = query.ToArray();
 				var cnt    = query.Count();
@@ -87,7 +89,6 @@ namespace Tests.UserTests
 						select new { Count = g.Count(), Sum = g.Sum(_ => _.ChildID) })
 					select new { p.ParentID, Count = c == null ? 0 : c.Count, Sum = c == null ? 0 : c.Sum };
 
-
 				var result = query.ToArray();
 				var cnt    = query.Count();
 				
@@ -132,13 +133,12 @@ namespace Tests.UserTests
 
 				var result = query.ToArray();
 				var cnt    = query.Count();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query.ToSqlQuery().Sql, Does.Not.Contain("EXISTS"));
 
 					Assert.That(cnt, Is.EqualTo(result.Length));
-				});
+				}
 			}
 		}
 

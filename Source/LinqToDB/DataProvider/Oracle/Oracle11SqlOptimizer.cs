@@ -1,12 +1,12 @@
-﻿using System;
+﻿using System.Net;
+
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class Oracle11SqlOptimizer : BasicSqlOptimizer
 	{
 		public Oracle11SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
@@ -42,11 +42,11 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				case QueryElementType.ExprExprPredicate:
 				{
-					var (a, op, b, withNull) = (SqlPredicate.ExprExpr)element;
+					var (a, op, b, unknownAsValue) = (SqlPredicate.ExprExpr)element;
 
-					// This condition matches OracleSqlExpressionConvertVisitor.ConvertExprExprPredicate, 
+					// This condition matches OracleSqlExpressionConvertVisitor.ConvertExprExprPredicate,
 					// where we transform empty strings "" into null-handling expressions.
-					if (withNull != null ||
+					if (unknownAsValue != null ||
 						(dataOptions.LinqOptions.CompareNulls != CompareNulls.LikeSql &&
 							op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
 					{
@@ -55,6 +55,7 @@ namespace LinqToDB.DataProvider.Oracle
 						if (IsTextType(b, mappingSchema) && b.CanBeEvaluated(true))
 							return true;
 					}
+
 					break;
 				}
 			}
@@ -94,8 +95,12 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					if (query.Select.TakeValue == null && query.Select.SkipValue == null)
 						return 0;
+
 					if (query.Select.SkipValue != null)
 						return 2;
+
+					if (QueryHelper.IsAggregationQuery(query))
+						return 1;
 
 					if (query.Select.TakeValue != null && query.Select.OrderBy.IsEmpty && query.GroupBy.IsEmpty && !query.Select.IsDistinct)
 					{

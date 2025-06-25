@@ -3,12 +3,12 @@ using System.Data.Linq;
 using System.Globalization;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
-
 	public class SQLiteMappingSchema : LockedMappingSchema
 	{
 		internal const string DATE_FORMAT_RAW  = "yyyy-MM-dd";
@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.SQLite
 			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 #endif
 
@@ -80,7 +80,7 @@ namespace LinqToDB.DataProvider.SQLite
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
 		{
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);

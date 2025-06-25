@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Threading;
 
 using OdbcType = LinqToDB.DataProvider.OdbcProviderAdapter.OdbcType;
 using OleDbType = LinqToDB.DataProvider.OleDbProviderAdapter.OleDbType;
@@ -9,8 +10,8 @@ namespace LinqToDB.DataProvider.Access
 {
 	public class AccessProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _oledbSyncRoot = new ();
-		private static readonly object _odbcSyncRoot  = new ();
+		private static readonly Lock _oledbSyncRoot = new ();
+		private static readonly Lock _odbcSyncRoot  = new ();
 
 		private static AccessProviderAdapter? _oledbProvider;
 		private static AccessProviderAdapter? _odbcProvider;

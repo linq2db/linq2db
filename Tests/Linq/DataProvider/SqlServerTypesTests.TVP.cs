@@ -2,22 +2,15 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-
-using Microsoft.SqlServer.Server;
 
 using NUnit.Framework;
 
 using Tests.Model;
-
-using SqlDataRecordMS = Microsoft.Data.SqlClient.Server.SqlDataRecord;
-using SqlMetaDataMS = Microsoft.Data.SqlClient.Server.SqlMetaData;
 
 namespace Tests.DataProvider
 {
@@ -60,7 +53,11 @@ namespace Tests.DataProvider
 				yield return new ParameterFactory("DataTable", _ => GetDataTable());
 
 				// as IEnumerable<SqlDataRecord>
-				yield return new ParameterFactory("SqlDataRecords", _ => _.Connection is Microsoft.Data.SqlClient.SqlConnection ? (object)SqlServerTestUtils.GetSqlDataRecordsMS() : SqlServerTestUtils.GetSqlDataRecords());
+				yield return new ParameterFactory("SqlDataRecords", db =>
+				{
+					var connection = db.OpenDbConnection();
+					return connection is Microsoft.Data.SqlClient.SqlConnection ? (object)SqlServerTestUtils.GetSqlDataRecordsMS() : SqlServerTestUtils.GetSqlDataRecords();
+				});
 
 				// TODO: doesn't work now as DbDataReader converted to Lst<object> of DbDataRecordInternal somewhere in linq2db
 				// before we can pass it to provider
@@ -126,11 +123,9 @@ namespace Tests.DataProvider
 			throw new InvalidOperationException();
 		}
 
-		static readonly MethodInfo _methodInfo = MemberHelper.MethodOf(() => TableValue(null!));
-
 		private static ITable<SqlServerTestUtils.TVPRecord> TableValue(IDataContext ctx, DataParameter p)
 		{
-			return ctx.GetTable<SqlServerTestUtils.TVPRecord>(null, _methodInfo, p);
+			return ctx.TableFromExpression<SqlServerTestUtils.TVPRecord>(() => TableValue(p));
 		}
 
 		[Test]
@@ -196,19 +191,15 @@ namespace Tests.DataProvider
 					.Merge();
 
 				var data = table.OrderBy(_ => _.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(2));
 					Assert.That(data, Has.Length.EqualTo(2));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].Id, Is.EqualTo(1));
 					Assert.That(data[0].Name, Is.EqualTo("Value1"));
 					Assert.That(data[1].Id, Is.EqualTo(2));
 					Assert.That(data[1].Name, Is.EqualTo("Value2"));
-				});
+				}
 			}
 		}
 

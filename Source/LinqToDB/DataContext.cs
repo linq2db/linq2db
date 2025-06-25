@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
@@ -8,17 +9,17 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.Infrastructure;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.Tools;
+
 namespace LinqToDB
 {
-	using Common.Internal;
-	using Data;
-	using DataProvider;
-	using Infrastructure;
-	using Linq;
-	using Mapping;
-	using SqlProvider;
-	using Tools;
-
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
@@ -26,6 +27,8 @@ namespace LinqToDB
 	public partial class DataContext : IDataContext, IInfrastructure<IServiceProvider>
 	{
 		bool _disposed;
+
+		#region .ctors
 
 		/// <summary>
 		/// Creates data context using default database configuration.
@@ -54,6 +57,8 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation.</param>
 		/// <param name="connectionString">Database connection string.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataContext(new DataOptions().UseConnectionString(dataProvider, connectionString))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataContext(IDataProvider dataProvider, string connectionString)
 			: this(new DataOptions()
 				.UseConnectionString(
@@ -67,6 +72,8 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7. Instead use: new DataContext(new DataOptions().UseConnectionString(providerName, connectionString))"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataContext( string providerName, string connectionString)
 			: this(new DataOptions()
 				.UseConnectionString(
@@ -87,6 +94,8 @@ namespace LinqToDB
 			Options.Apply(this);
 		}
 
+		#endregion
+
 		/// <summary>
 		/// Current DataContext options
 		/// </summary>
@@ -95,6 +104,12 @@ namespace LinqToDB
 		/// Gets initial value for database connection configuration name.
 		/// </summary>
 		public string?       ConfigurationString { get; private set; }
+
+		public void AddMappingSchema(MappingSchema mappingSchema)
+		{
+			MappingSchema    = MappingSchema.CombineSchemas(mappingSchema, MappingSchema);
+			_configurationID = null;
+		}
 
 		/// <summary>
 		/// Gets initial value for database connection string.
@@ -112,20 +127,21 @@ namespace LinqToDB
 		int  _msID;
 		int? _configurationID;
 		/// <summary>
-		/// Gets or sets ContextID.
+		/// Gets context configuration ID.
 		/// </summary>
-		public int           ConfigurationID
+		int IConfigurationID.ConfigurationID
 		{
 			// can we just delegate it to underlying DataConnection?
 			get
 			{
+				AssertDisposed();
+
 				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
 				{
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
-						// GetDataConnection :-/
-						.Add(ConfigurationString ?? ConnectionString ?? GetDataConnection().Connection.ConnectionString)
+						.Add(ConfigurationString)
 						.Add(Options)
 						.Add(GetType())
 						.CreateID();
@@ -147,7 +163,13 @@ namespace LinqToDB
 		/// <summary>
 		/// Contains text of last command, sent to database using current context.
 		/// </summary>
-		public string?       LastQuery           { get; set; }
+		public string?       LastQuery
+		{
+			get;
+			// TODO: Mark private in v7 and remove warning suppressions from callers
+			[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
+			set;
+		}
 
 		/// <summary>
 		/// Gets or sets trace handler, used for data connection instance.
@@ -156,30 +178,60 @@ namespace LinqToDB
 
 		private bool _keepConnectionAlive;
 		/// <summary>
-		/// Gets or sets option to dispose underlying connection after use.
+		/// Gets flag indicating wether context should dispose underlying connection after use or not.
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public  bool  KeepConnectionAlive
 		{
 			get => _keepConnectionAlive;
-			set
-			{
-				_keepConnectionAlive = value;
-
-				if (value == false)
-					ReleaseQuery();
-			}
+			// TODO: Remove in v7
+			[Obsolete("This API scheduled for removal in v7. To set KeepAlive value use SetKeepAlive or SetKeepAliveAsync methods"), EditorBrowsable(EditorBrowsableState.Never)]
+			set => SetKeepConnectionAlive(value);
 		}
 
+		/// <summary>
+		/// Sets connection management behavior to specify if context should dispose underlying connection after use or not.
+		/// </summary>
+		public void SetKeepConnectionAlive(bool keepAlive)
+		{
+			AssertDisposed();
+
+			_keepConnectionAlive = keepAlive;
+
+			if (keepAlive == false)
+				ReleaseQuery();
+		}
+
+		/// <summary>
+		/// Sets connection management behavior to specify if context should dispose underlying connection after use or not.
+		/// </summary>
+		public Task SetKeepConnectionAliveAsync(bool keepAlive)
+		{
+			AssertDisposed();
+
+			_keepConnectionAlive = keepAlive;
+
+			if (keepAlive == false)
+				return ReleaseQueryAsync();
+
+			return Task.CompletedTask;
+		}
+
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		private bool? _isMarsEnabled;
 		/// <summary>
 		/// Gets or sets status of Multiple Active Result Sets (MARS) feature. This feature available only for
 		/// SQL Azure and SQL Server 2005+.
 		/// </summary>
+		// TODO: Remove in v7
+		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public bool   IsMarsEnabled
 		{
 			get
 			{
+				AssertDisposed();
+
 				if (_isMarsEnabled == null)
 				{
 					if (_dataConnection == null)
@@ -200,6 +252,8 @@ namespace LinqToDB
 		{
 			get
 			{
+				AssertDisposed();
+
 				if (_dataConnection != null)
 					return _dataConnection.QueryHints;
 
@@ -215,6 +269,8 @@ namespace LinqToDB
 		{
 			get
 			{
+				AssertDisposed();
+
 				if (_dataConnection != null)
 					return _dataConnection.NextQueryHints;
 
@@ -245,11 +301,15 @@ namespace LinqToDB
 			get => _commandTimeout ?? -1;
 			set
 			{
+				AssertDisposed();
+
 				if (value < 0)
 				{
-					_commandTimeout = null;
-					if (_dataConnection != null)
-						_dataConnection.CommandTimeout = -1;
+#if NET8_0_OR_GREATER
+					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout or ResetCommandTimeoutAsync methods instead.");
+#else
+					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout method instead.");
+#endif
 				}
 				else
 				{
@@ -259,6 +319,37 @@ namespace LinqToDB
 				}
 			}
 		}
+
+		/// <summary>
+		/// Resets command timeout to provider or connection defaults.
+		/// Note that default provider/connection timeout is not the same value as timeout value you can specify upon context configuration.
+		/// </summary>
+		public void ResetCommandTimeout()
+		{
+			// because DbConnection.CommandTimeout doesn't allow user to reset timeout, we must re-create command instead
+			// some providers support in-place reset logic (at least SqlClient has ResetCommandTimeout() API), but taking into account how
+			// rare this operation it doesn't make sense to add provider-specific reset operation support to IDataProvider interface
+			_commandTimeout = null;
+
+#pragma warning disable CS0618 // Type or member is obsolete
+			_dataConnection?.ResetCommandTimeout();
+#pragma warning restore CS0618 // Type or member is obsolete
+		}
+
+#if NET8_0_OR_GREATER
+		/// <summary>
+		/// Sets command timeout to default connection value.
+		/// Note that default provider/connection timeout is not the same value as timeout value you can specify upon context configuration.
+		/// </summary>
+		public ValueTask ResetCommandTimeoutAsync()
+		{
+			_commandTimeout = null;
+
+#pragma warning disable CS0618 // Type or member is obsolete
+			return _dataConnection?.ResetCommandTimeoutAsync() ?? default;
+#pragma warning restore CS0618 // Type or member is obsolete
+		}
+#endif
 
 		/// <summary>
 		/// Underlying active database connection.
@@ -271,7 +362,12 @@ namespace LinqToDB
 		/// Creates instance of <see cref="DataConnection"/> class, used by context internally.
 		/// </summary>
 		/// <returns>New <see cref="DataConnection"/> instance.</returns>
-		protected virtual DataConnection CreateDataConnection(DataOptions options) => new(options);
+		protected virtual DataConnection CreateDataConnection(DataOptions options)
+		{
+			AssertDisposed();
+
+			return new(options);
+		}
 
 		/// <summary>
 		/// Returns associated database connection <see cref="DataConnection"/> or create new connection, if connection
@@ -302,7 +398,9 @@ namespace LinqToDB
 				}
 
 				if (OnTraceConnection != null)
+#pragma warning disable CS0618 // Type or member is obsolete
 					_dataConnection.OnTraceConnection = OnTraceConnection;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 				_dataConnection.OnRemoveInterceptor += RemoveInterceptor;
 			}
@@ -314,7 +412,7 @@ namespace LinqToDB
 		{
 			if (_disposed)
 				// GetType().FullName to support inherited types
-				throw new ObjectDisposedException(GetType().FullName);
+				throw new ObjectDisposedException(GetType().FullName, "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 
 		/// <summary>
@@ -324,9 +422,13 @@ namespace LinqToDB
 		/// </summary>
 		internal void ReleaseQuery()
 		{
+			AssertDisposed();
+
 			if (_dataConnection != null)
 			{
+#pragma warning disable CS0618 // Type or member is obsolete
 				LastQuery = _dataConnection.LastQuery;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
 				{
@@ -347,9 +449,13 @@ namespace LinqToDB
 		/// </summary>
 		internal async Task ReleaseQueryAsync()
 		{
+			AssertDisposed();
+
 			if (_dataConnection != null)
 			{
+#pragma warning disable CS0618 // Type or member is obsolete
 				LastQuery = _dataConnection.LastQuery;
+#pragma warning restore CS0618 // Type or member is obsolete
 
 				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
 				{
@@ -363,7 +469,7 @@ namespace LinqToDB
 			}
 		}
 
-		Func<ISqlBuilder>               IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema, Options);
+		Func<ISqlBuilder>               IDataContext.CreateSqlBuilder => () => DataProvider.CreateSqlBuilder(MappingSchema, Options);
 		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer       => DataProvider.GetSqlOptimizer;
 		Type                            IDataContext.DataReaderType        => DataProvider.DataReaderType;
 		SqlProviderFlags                IDataContext.SqlProviderFlags      => DataProvider.SqlProviderFlags;
@@ -371,6 +477,8 @@ namespace LinqToDB
 
 		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
+			AssertDisposed();
+
 			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 
@@ -386,8 +494,9 @@ namespace LinqToDB
 		/// </summary>
 		protected virtual void Dispose(bool disposing)
 		{
-			_disposed = true;
 			((IDataContext)this).Close();
+
+			_disposed = true;
 		}
 
 		public async ValueTask DisposeAsync()
@@ -398,10 +507,11 @@ namespace LinqToDB
 		/// <summary>
 		/// Closes underlying connection.
 		/// </summary>
-		protected virtual ValueTask DisposeAsync(bool disposing)
+		protected virtual async ValueTask DisposeAsync(bool disposing)
 		{
+			await ((IDataContext)this).CloseAsync().ConfigureAwait(false);
+
 			_disposed = true;
-			return new ValueTask(((IDataContext)this).CloseAsync());
 		}
 
 		void IDataContext.Close()
@@ -456,6 +566,8 @@ namespace LinqToDB
 		/// <returns>Database transaction object.</returns>
 		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)
 		{
+			AssertDisposed();
+
 			var dct = new DataContextTransaction(this);
 
 			dct.BeginTransaction(level);
@@ -470,6 +582,8 @@ namespace LinqToDB
 		/// <returns>Database transaction object.</returns>
 		public virtual DataContextTransaction BeginTransaction()
 		{
+			AssertDisposed();
+
 			var dct = new DataContextTransaction(this);
 
 			dct.BeginTransaction();
@@ -486,6 +600,8 @@ namespace LinqToDB
 		/// <returns>Database transaction object.</returns>
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
 		{
+			AssertDisposed();
+
 			var dct = new DataContextTransaction(this);
 
 			await dct.BeginTransactionAsync(level, cancellationToken).ConfigureAwait(false);
@@ -501,6 +617,8 @@ namespace LinqToDB
 		/// <returns>Database transaction object.</returns>
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
+			AssertDisposed();
+
 			var dct = new DataContextTransaction(this);
 
 			await dct.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
@@ -510,6 +628,8 @@ namespace LinqToDB
 
 		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 		{
+			AssertDisposed();
+
 			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, parametersContext, queryNumber, expressions, parameters, preambles));
 		}
 

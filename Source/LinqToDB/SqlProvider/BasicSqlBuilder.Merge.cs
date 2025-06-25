@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using LinqToDB.Common;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using SqlQuery;
-
 	public abstract partial class BasicSqlBuilder
 	{
 		/// <summary>
@@ -265,9 +265,9 @@ namespace LinqToDB.SqlProvider
 		/// <param name="row">Index of data row to check. Could contain -1 to indicate that this is a check for empty source NULL value.</param>
 		/// <param name="column">Index of data column to check in row.</param>
 		/// <returns>Returns <c>true</c>, if generated SQL should include type information for value at specified position, otherwise <c>false</c> returned.</returns>
-		protected virtual bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column) => false;
+		protected virtual bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows, int row, int column) => false;
 
-		private void BuildValuesAsSelectsUnion(IList<SqlField> sourceFields, SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows)
+		private void BuildValuesAsSelectsUnion(IList<SqlField> sourceFields, SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows)
 		{
 			var columnTypes = new DbDataType[sourceFields.Count];
 			for (var i = 0; i < sourceFields.Count; i++)
@@ -292,14 +292,14 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append("\tSELECT ");
 
 				var row = rows[i];
-				for (var j = 0; j < row.Length; j++)
+				for (var fieldIndex = 0; fieldIndex < row.Count; fieldIndex++)
 				{
-					var value = row[j];
-					if (j > 0)
+					var value = row[fieldIndex];
+					if (fieldIndex > 0)
 						StringBuilder.Append(InlineComma);
 
-					if (IsSqlValuesTableValueTypeRequired(source, rows, i, j))
-						BuildTypedExpression(columnTypes[j], value);
+					if (IsSqlValuesTableValueTypeRequired(source, rows, i, fieldIndex))
+						BuildTypedExpression(columnTypes[fieldIndex], value);
 					else
 						BuildExpression(value);
 
@@ -307,7 +307,7 @@ namespace LinqToDB.SqlProvider
 					if (RequiresConstantColumnAliases || i == 0)
 					{
 						StringBuilder.Append(" AS ");
-						Convert(StringBuilder, sourceFields[j].PhysicalName, ConvertType.NameToQueryField);
+						Convert(StringBuilder, sourceFields[fieldIndex].PhysicalName, ConvertType.NameToQueryField);
 					}
 				}
 
@@ -368,7 +368,7 @@ namespace LinqToDB.SqlProvider
 			return true;
 		}
 
-		protected void BuildValues(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows)
+		protected void BuildValues(SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows)
 		{
 			if (rows.Count == 0)
 				return;
@@ -435,10 +435,32 @@ namespace LinqToDB.SqlProvider
 		{
 			StringBuilder.Append("USING ");
 
-			if (merge.Source.SourceQuery != null)
-				BuildMergeSourceQuery(nullability, merge.Source);
-			else
+			var buildAsEnumerable = merge.Source.SourceEnumerable != null;
+			if (buildAsEnumerable)
+			{
+				if (merge.Source.SourceQuery != null)
+				{
+					if (!merge.Source.SourceQuery.IsSimple || merge.Source.SourceQuery.Select.Columns.Count != merge.Source.SourceFields.Count)
+						buildAsEnumerable = false;
+					else
+					{
+						for (var i = 0; i < merge.Source.SourceQuery.Select.Columns.Count; i++)
+						{
+							var columnExp = merge.Source.SourceQuery.Select.Columns[i].Expression;
+							if (columnExp is not SqlField)
+							{
+								buildAsEnumerable = false;
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			if (buildAsEnumerable)
 				BuildMergeSourceEnumerable(nullability, merge);
+			else
+				BuildMergeSourceQuery(nullability, merge.Source);
 
 			StringBuilder.AppendLine();
 		}

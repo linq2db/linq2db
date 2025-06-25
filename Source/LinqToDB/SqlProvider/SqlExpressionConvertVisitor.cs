@@ -4,27 +4,30 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+using LinqToDB.SqlQuery.Visitors;
+
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using Extensions;
-	using Linq;
-	using Mapping;
-	using SqlQuery;
-	using SqlQuery.Visitors;
-
 	public class SqlExpressionConvertVisitor : SqlQueryVisitor
 	{
-		protected bool            IsInsideNot;
-		protected bool            VisitQueries;
+		protected bool VisitQueries;
 
-		protected OptimizationContext OptimizationContext = default!;
-		protected NullabilityContext  NullabilityContext  = default!;
+		protected bool IsInsidePredicate { get; private set; }
+
+		protected OptimizationContext   OptimizationContext = default!;
+		protected NullabilityContext    NullabilityContext  = default!;
+		protected ISqlExpressionFactory Factory => OptimizationContext.Factory;
 
 		protected EvaluationContext EvaluationContext => OptimizationContext.EvaluationContext;
 		protected DataOptions       DataOptions       => OptimizationContext.DataOptions;
 		protected MappingSchema     MappingSchema     => OptimizationContext.MappingSchema;
-		protected SqlProviderFlags? SqlProviderFlags  => OptimizationContext.SqlProviderFlags;
+		protected SqlProviderFlags  SqlProviderFlags  => OptimizationContext.SqlProviderFlags;
 
 		public SqlExpressionConvertVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
 		{
@@ -34,11 +37,10 @@ namespace LinqToDB.SqlProvider
 		protected virtual bool SupportsNullInColumn              => true;
 		protected virtual bool SupportsDistinctAsExistsIntersect => false;
 
-		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries, bool isInsideNot)
+		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries)
 		{
 			Cleanup();
 
-			IsInsideNot         = isInsideNot;
 			OptimizationContext = optimizationContext;
 			NullabilityContext  = nullabilityContext;
 			VisitQueries        = visitQueries;
@@ -55,15 +57,35 @@ namespace LinqToDB.SqlProvider
 
 			OptimizationContext = default!;
 			NullabilityContext  = default!;
-			IsInsideNot         = default;
 			VisitQueries        = default;
+			IsInsidePredicate   = false;
+		}
+
+		[return: NotNullIfNotNull(nameof(element))]
+		public override IQueryElement? Visit(IQueryElement? element)
+		{
+			if (element == null)
+				return element;
+
+			var saveIsInsidePredicate = IsInsidePredicate;
+
+			if (element is not SqlNullabilityExpression and not ISqlPredicate)
+			{
+				IsInsidePredicate = false;
+			}
+
+			var newElement = base.Visit(element);
+
+			IsInsidePredicate = saveIsInsidePredicate;
+
+			return newElement;
 		}
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
 			var newElement = base.VisitSqlColumnExpression(column, expression);
 
-			newElement = WrapBooleanExpression(newElement, includeFields: false);
+			newElement = WrapBooleanExpression(newElement, includeFields: false, withNull: column.CanBeNullable(NullabilityContext));
 			if (!ReferenceEquals(newElement, expression))
 				expression = (ISqlExpression)Visit(Optimize(newElement));
 
@@ -145,12 +167,8 @@ namespace LinqToDB.SqlProvider
 			if (!VisitQueries)
 				return selectQuery;
 
-			var saveIsInsideNot = IsInsideNot;
-			IsInsideNot = false;
-
 			var newQuery = base.VisitSqlQuery(selectQuery);
 
-			IsInsideNot = saveIsInsideNot;
 			return newQuery;
 		}
 
@@ -169,14 +187,14 @@ namespace LinqToDB.SqlProvider
 			}
 			else
 			{
-				if (SqlProviderFlags?.SupportsBooleanType == false || QueryHelper.GetColumnDescriptor(predicate.Expr1)?.ValueConverter != null)
+				if (!SqlProviderFlags.SupportsBooleanType || QueryHelper.GetColumnDescriptor(predicate.Expr1)?.ValueConverter != null)
 				{
 					var unwrapped = QueryHelper.UnwrapNullablity(predicate.Expr1);
 					if (unwrapped is SqlCastExpression castExpression)
 					{
 						newResult = ConvertCastToPredicate(castExpression);
 					}
-					else if (unwrapped is SqlExpression { IsPredicate: true })
+					else if (unwrapped is SqlExpression { IsPredicate: true } or SqlValue { Value: null })
 					{
 						// do nothing
 					}
@@ -222,19 +240,18 @@ namespace LinqToDB.SqlProvider
 
 		protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
 		{
-			var saveIsInsideNot = IsInsideNot;
-			IsInsideNot = true;
-
 			var saveInner    = predicate.Predicate;
+
+			var saveInsidePredicate = IsInsidePredicate;
+			IsInsidePredicate = true;
 			var newPredicate = base.VisitNotPredicate(predicate);
+			IsInsidePredicate = saveInsidePredicate;
 
 			if (!ReferenceEquals(newPredicate, predicate) || !ReferenceEquals(saveInner, predicate.Predicate))
 			{
 				newPredicate = Optimize(newPredicate);
 				return Visit(newPredicate);
 			}
-
-			IsInsideNot = saveIsInsideNot;
 
 			return newPredicate;
 		}
@@ -261,12 +278,15 @@ namespace LinqToDB.SqlProvider
 
 		protected IQueryElement Optimize(IQueryElement element)
 		{
-			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, OptimizationContext.MappingSchema, element, VisitQueries, IsInsideNot, reduceBinary : false);
+			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, OptimizationContext.MappingSchema, element, VisitQueries, reducePredicates : false);
 		}
 
 		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
-			var newElement = base.VisitExprExprPredicate(predicate);
+			var saveInsidePredicate = IsInsidePredicate;
+			IsInsidePredicate       = true;
+			var newElement          = base.VisitExprExprPredicate(predicate);
+			IsInsidePredicate       = saveInsidePredicate;
 
 			if (!ReferenceEquals(newElement, predicate))
 			{
@@ -309,7 +329,7 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newPredicate, predicate))
 				return Visit(newPredicate);
 
-			if (SqlProviderFlags is { IsDistinctFromSupported: false })
+			if (!SqlProviderFlags.IsDistinctFromSupported)
 			{
 				var converted = SupportsDistinctAsExistsIntersect
 					? ConvertIsDistinctPredicateAsIntersect(predicate)
@@ -372,10 +392,6 @@ namespace LinqToDB.SqlProvider
 			var unwrapped = QueryHelper.UnwrapNullablity(predicate.Expr1);
 			if (unwrapped.ElementType == QueryElementType.SqlRow)
 			{
-				// Do not convert for remote context
-				if (SqlProviderFlags == null)
-					return predicate;
-
 				var newPredicate = ConvertRowExprExpr(predicate, EvaluationContext);
 				if (!ReferenceEquals(newPredicate, predicate))
 				{
@@ -383,22 +399,114 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
+			var expr1IsNullable = predicate.Expr1.CanBeNullableOrUnknown(NullabilityContext, false);
+			var expr2IsNullable = predicate.Expr2.CanBeNullableOrUnknown(NullabilityContext, false);
+
+			// ExprExpr optimization over complex arguments
+			// to avoid "complex_expression IS NULL" checks when possible by reducing NULL to UnknownAsValue
+			if (predicate.UnknownAsValue != null && (expr1IsNullable || expr2IsNullable))
+			{
+				var expr1IsComplexWithUnknown = IsComplexNullable(predicate.Expr1);
+				var expr2IsComplexWithUnknown = IsComplexNullable(predicate.Expr2);
+
+				if (expr1IsComplexWithUnknown || expr2IsComplexWithUnknown)
+				{
+					switch (predicate.Operator)
+					{
+						case SqlPredicate.Operator.Equal:
+						{
+							if (IsInsidePredicate && (expr1IsNullable ^ expr2IsNullable))
+							{
+								// convert A == B where only A or B is null (and complex expression) to
+								// IIF(A == B, true, false)
+								return WrapCondition(false);
+							}
+
+							break;
+						}
+
+						case SqlPredicate.Operator.NotEqual:
+						{
+							if (expr1IsNullable ^ expr2IsNullable)
+							{
+								// convert A != B where only A or B is null (and complex expression) to
+								// IIF(A == B, false, true)
+								return WrapCondition(true);
+							}
+
+							break;
+						}
+
+						default:
+						{
+							if ((IsInsidePredicate || predicate.UnknownAsValue == true) && (expr1IsNullable || expr2IsNullable))
+							{
+								// convert A == B where only A or B is null (and complex expression) to
+								// IIF(A op B, true, false)
+								// or
+								// IIF(A inverted_op B, false, true)
+								return WrapCondition(predicate.UnknownAsValue.Value);
+							}
+
+							break;
+						}
+					}
+				}
+
+				ISqlPredicate WrapCondition(bool invert)
+				{
+					var trueValue  = new SqlValue(true);
+					var falseValue = new SqlValue(false);
+
+					var exprExpr = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, predicate.Expr2, null);
+					var condition = !invert
+						? new SqlConditionExpression(exprExpr, trueValue, falseValue)
+						: new SqlConditionExpression(exprExpr.Invert(NullabilityContext), falseValue, trueValue);
+
+					if (!SqlProviderFlags.SupportsBooleanType)
+						return new SqlPredicate.IsTrue(condition, trueValue, falseValue, null, false);
+					else
+						return new SqlPredicate.Expr(condition);
+				}
+
+				bool IsComplexNullable(ISqlExpression expr)
+				{
+					if (!QueryHelper.CanBeNullableOrUnknown(expr, NullabilityContext, false))
+						return false;
+
+					// decide on level of condition complexity to use IIF(cond, true, false)
+					// istead of IS NULL checks
+					return null != predicate.Find(static e =>
+					{
+						return e.ElementType is QueryElementType.SqlQuery;
+					});
+				}
+			}
+
 			// convert bool_exp_1 == bool_expr_2 to (x ? 1 : 0) == (y ? 1 : 0)
 			// for providers that doesn't support boolean(predicate) comparison
 			// or for predicates that could return UNKNOWN
 			// Alternative could be to use IS [NOT] DISTINCT FROM predicate
-			if (SqlProviderFlags is { SupportsPredicatesComparison: false }
-				|| QueryHelper.NeedsEqualityWithNull(predicate.Expr1, predicate.Operator, predicate.Expr2, NullabilityContext))
+			if (!SqlProviderFlags.SupportsPredicatesComparison
+				// Operator check added as we perform optimization only for boolean operands, which cannot be used with non-equality operators
+				|| (predicate.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual && (expr1IsNullable || expr2IsNullable)))
 			{
-				if (QueryHelper.UnwrapNullablity(predicate.Expr2) is not (SqlValue or SqlParameter) && QueryHelper.UnwrapNullablity(predicate.Expr1) is not (SqlValue or SqlParameter))
-				{
-					var expr1 = WrapBooleanExpression(predicate.Expr1, includeFields : true);
-					var expr2 = WrapBooleanExpression(predicate.Expr2, includeFields : true);
+				var expr1IsPredicate = QueryHelper.UnwrapNullablity(predicate.Expr1).IsPredicate();
+				var expr2IsPredicate = QueryHelper.UnwrapNullablity(predicate.Expr2).IsPredicate();
 
-					if (!ReferenceEquals(expr1, predicate.Expr1) || !ReferenceEquals(expr2, predicate.Expr2))
-					{
-						return new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.WithNull);
-					}
+				var expr1IsConstant = QueryHelper.UnwrapNullablity(predicate.Expr1) is (SqlValue or SqlParameter { IsQueryParameter: false });
+				var expr2IsConstant = QueryHelper.UnwrapNullablity(predicate.Expr2) is (SqlValue or SqlParameter { IsQueryParameter: false });
+
+				var expr1 = expr1IsPredicate && !expr2IsConstant
+					? WrapBooleanExpression(predicate.Expr1, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
+					: predicate.Expr1;
+				var expr2 = expr2IsPredicate && !expr1IsConstant
+					? WrapBooleanExpression(predicate.Expr2, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
+					: predicate.Expr2;
+
+				if (!ReferenceEquals(expr1, predicate.Expr1) || !ReferenceEquals(expr2, predicate.Expr2))
+				{
+					return new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.UnknownAsValue);
 				}
 			}
 
@@ -787,6 +895,7 @@ namespace LinqToDB.SqlProvider
 			{
 				newElement = Visit(Optimize(newElement));
 			}
+
 			return newElement;
 		}
 
@@ -802,6 +911,7 @@ namespace LinqToDB.SqlProvider
 			{
 				newElement = Visit(Optimize(newElement));
 			}
+
 			return newElement;
 		}
 
@@ -817,6 +927,7 @@ namespace LinqToDB.SqlProvider
 			{
 				newElement = Visit(Optimize(newElement));
 			}
+
 			return newElement;
 		}
 
@@ -832,6 +943,7 @@ namespace LinqToDB.SqlProvider
 			{
 				newElement = Visit(Optimize(newElement));
 			}
+
 			return newElement;
 		}
 
@@ -842,12 +954,9 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			if (SqlProviderFlags != null)
+			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Between) && QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRowExpression)
 			{
-				if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Between) && QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRowExpression)
-				{
-					return Visit(Optimize(ConvertBetweenPredicate(predicate)));
-				}
+				return Visit(Optimize(ConvertBetweenPredicate(predicate)));
 			}
 
 			return newElement;
@@ -859,10 +968,6 @@ namespace LinqToDB.SqlProvider
 				return base.VisitInSubQueryPredicate(predicate);
 
 			var newPredicate = base.VisitInSubQueryPredicate(predicate);
-
-			// preparing for remoting
-			if (SqlProviderFlags == null)
-				return newPredicate;
 
 			if (!ReferenceEquals(newPredicate, predicate))
 				return Visit(newPredicate);
@@ -947,7 +1052,7 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			var wrapped = newElement.Expression == null ? null : WrapBooleanExpression(newElement.Expression, includeFields : false);
+			var wrapped = newElement.Expression == null ? null : WrapBooleanExpression(newElement.Expression, includeFields : false, withNull: newElement.Column.CanBeNullable(NullabilityContext));
 
 			if (!ReferenceEquals(wrapped, newElement.Expression))
 			{
@@ -1007,11 +1112,8 @@ namespace LinqToDB.SqlProvider
 
 		public virtual ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			if (SqlProviderFlags == null)
-				return element;
-
 			var type = QueryHelper.GetDbDataType(element.Expressions[0], MappingSchema);
-			return new SqlFunction(type, "Coalesce", element.Expressions);
+			return new SqlFunction(type, "Coalesce", parametersNullability: ParametersNullabilityType.IfAllParametersNullable, element.Expressions);
 		}
 
 		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element)
@@ -1046,7 +1148,8 @@ namespace LinqToDB.SqlProvider
 
 				case PseudoFunctions.TO_LOWER: return func.WithName("Lower");
 				case PseudoFunctions.TO_UPPER: return func.WithName("Upper");
-				case PseudoFunctions.REPLACE:  return func.WithName("Replace");
+				case PseudoFunctions.REPLACE : return func.WithName("Replace");
+				case PseudoFunctions.LENGTH  : return func.WithName("Length");
 			}
 
 			return func;
@@ -1087,7 +1190,7 @@ namespace LinqToDB.SqlProvider
 
 		static SelectQuery WrapIfNeeded(SelectQuery selectQuery)
 		{
-			if (selectQuery.Select.HasModifier || !selectQuery.GroupBy.IsEmpty || selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			if (selectQuery.Select.HasModifier || !selectQuery.GroupBy.IsEmpty || QueryHelper.IsAggregationQuery(selectQuery))
 			{
 				var newQuery = new SelectQuery();
 				newQuery.From.Tables.Add(new SqlTableSource(selectQuery, null));
@@ -1207,8 +1310,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
 		{
-			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : true);
-			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : true);
+			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : false);
+			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : false);
 
 			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
 			{
@@ -1245,27 +1348,54 @@ namespace LinqToDB.SqlProvider
 			return newElement;
 		}
 
-		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr, bool includeFields)
+		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr, bool includeFields, bool forceConvert = false, bool withNull = true)
 		{
-			if (SqlProviderFlags == null)
-				return expr;
-
-			if (expr.SystemType == typeof(bool))
+			if (expr.SystemType == typeof(bool)
+				|| expr.SystemType == typeof(bool?))
 			{
 				var unwrapped = QueryHelper.UnwrapNullablity(expr);
-				if (unwrapped is ISqlPredicate || includeFields && unwrapped.ElementType is QueryElementType.Column or QueryElementType.SqlField)
+
+				var wrap = includeFields && unwrapped.ElementType is QueryElementType.Column or QueryElementType.SqlField;
+				if (!wrap && unwrapped.IsPredicate())
 				{
-					var predicate = unwrapped as ISqlPredicate ?? ConvertToBooleanSearchCondition(expr);
+					if (unwrapped.TryEvaluateExpression(EvaluationContext, out var res))
+					{
+						if (res is bool booleanValue)
+						{
+							return new SqlValue(booleanValue);
+						}
+						else if (res is null)
+						{
+							return new SqlValue(typeof(bool?), null);
+						}
+					}
+
+					wrap = !SqlProviderFlags.SupportsBooleanType || (!withNull && unwrapped.CanBeNullableOrUnknown(NullabilityContext, withoutUnknownErased: true)) || forceConvert;
+				}
+
+				if (wrap)
+				{
+					var predicate = unwrapped as ISqlPredicate;
+					if (predicate == null && unwrapped is SqlExpression { IsPredicate: true })
+						predicate = new SqlPredicate.Expr(expr);
+					if (predicate == null)
+						predicate = ConvertToBooleanSearchCondition(expr);
 
 					var trueValue  = new SqlValue(true);
 					var falseValue = new SqlValue(false);
 
-					if (expr.CanBeNullable(NullabilityContext))
+					if ((forceConvert || !SqlProviderFlags.SupportsBooleanType) && withNull && expr.CanBeNullableOrUnknown(NullabilityContext, false))
 					{
-						var conditionExpr = new SqlConditionExpression(predicate, trueValue, falseValue);
-						expr = new SqlConditionExpression(new SqlPredicate.IsNull(expr, false), new SqlValue(QueryHelper.GetDbDataType(expr, MappingSchema), null), conditionExpr);
+						var toType = QueryHelper.GetDbDataType(expr, MappingSchema);
+
+						expr = new SqlCaseExpression(toType,
+							new SqlCaseExpression.CaseItem[]
+							{
+								new(predicate, trueValue),
+								new(new SqlPredicate.Not(predicate), falseValue)
+							}, new SqlValue(toType, null));
 					}
-					else
+					else if (!withNull || !SqlProviderFlags.SupportsBooleanType || forceConvert)
 					{
 						expr = new SqlConditionExpression(predicate, trueValue, falseValue);
 					}
@@ -1346,9 +1476,6 @@ namespace LinqToDB.SqlProvider
 
 		protected ISqlPredicate ConvertRowExprExpr(SqlPredicate.ExprExpr predicate, EvaluationContext context)
 		{
-			if (SqlProviderFlags == null)
-				return predicate;
-
 			var op = predicate.Operator;
 			var feature = op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual
 				? RowFeature.Equality
@@ -1397,14 +1524,14 @@ namespace LinqToDB.SqlProvider
 
 			// Default ExprExpr translation is ok
 			// We always disable CompareNullsAsValues behavior when comparing SqlRow.
-			return predicate.WithNull == null
+			return predicate.UnknownAsValue == null
 				? predicate
-				: new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, expr2, withNull: null);
+				: new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, expr2, unknownAsValue: null);
 		}
 
 		bool ConvertRowIsNullPredicate(SqlRowExpression sqlRow, bool IsNot, [NotNullWhen(true)] out ISqlPredicate? rowIsNullFallback)
 		{
-			if (SqlProviderFlags != null && !SqlProviderFlags!.RowConstructorSupport.HasFlag(RowFeature.IsNull))
+			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.IsNull))
 			{
 				rowIsNullFallback = RowIsNullFallback(sqlRow, IsNot);
 				return true;
@@ -1416,9 +1543,6 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual ISqlPredicate ConvertRowInList(SqlPredicate.InList predicate)
 		{
-			if (SqlProviderFlags == null)
-				return predicate;
-
 			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.In))
 			{
 				var left    = predicate.Expr1;
@@ -1426,7 +1550,7 @@ namespace LinqToDB.SqlProvider
 				var isOr    = !predicate.IsNot;
 				var rewrite = new SqlSearchCondition(isOr);
 				foreach (var item in predicate.Values)
-					rewrite.Predicates.Add(new SqlPredicate.ExprExpr(left, op, item, withNull: null));
+					rewrite.Predicates.Add(new SqlPredicate.ExprExpr(left, op, item, unknownAsValue: null));
 				return rewrite;
 			}
 
@@ -1469,7 +1593,7 @@ namespace LinqToDB.SqlProvider
 					                                   b.TryEvaluateExpression(context, out     val) && val == null
 						? SqlPredicate.Operator.GreaterOrEqual
 						: op;
-					return new SqlPredicate.ExprExpr(a, nullSafeOp, b, withNull: null);
+					return new SqlPredicate.ExprExpr(a, nullSafeOp, b, unknownAsValue: null);
 				});
 
 				foreach (var comp in compares)
@@ -1495,10 +1619,10 @@ namespace LinqToDB.SqlProvider
 					var sub = new SqlSearchCondition();
 					for (int j = 0; j < i; j++)
 					{
-						sub.Add(new SqlPredicate.ExprExpr(values1[j], SqlPredicate.Operator.Equal, values2[j], withNull : null));
+						sub.Add(new SqlPredicate.ExprExpr(values1[j], SqlPredicate.Operator.Equal, values2[j], unknownAsValue: null));
 					}
 
-					sub.Add(new SqlPredicate.ExprExpr(values1[i], i == values1.Length - 1 ? op : strictOp, values2[i], withNull: null));
+					sub.Add(new SqlPredicate.ExprExpr(values1[i], i == values1.Length - 1 ? op : strictOp, values2[i], unknownAsValue: null));
 
 					rewrite.Add(sub);
 				}
@@ -1662,18 +1786,29 @@ namespace LinqToDB.SqlProvider
 		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlCoalesceExpression coalesce, string funcName, bool supportsParameters = true)
 		{
 			var last = coalesce.Expressions[^1];
-			if (!supportsParameters && last is SqlParameter p1)
-				p1.IsQueryParameter = false;
+			MarkParameters(last);
 
 			for (int i = coalesce.Expressions.Length - 2; i >= 0; i--)
 			{
 				var param = coalesce.Expressions[i];
-				if (!supportsParameters && param is SqlParameter p2)
-					p2.IsQueryParameter = false;
+				MarkParameters(param);
 
 				last = new SqlFunction(coalesce.SystemType!, funcName, param, last);
 			}
+
 			return last;
+
+			void MarkParameters(ISqlExpression expr)
+			{
+				if (supportsParameters)
+					return;
+
+				expr.VisitAll(e =>
+				{
+					if (e is SqlParameter param)
+						param.IsQueryParameter = false;
+				});
+			}
 		}
 
 		protected static bool IsDateDataType(DbDataType dataType, string typeName)

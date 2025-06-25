@@ -6,13 +6,12 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Mapping;
-
 	public class SqlDataType : ISqlExpression, IEquatable<SqlDataType>
 	{
 		#region Init
@@ -412,7 +411,7 @@ namespace LinqToDB.SqlQuery
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
-			if (this == other)
+			if (ReferenceEquals(this, other))
 				return true;
 
 			return other is SqlDataType type && Type.Equals(type.Type);

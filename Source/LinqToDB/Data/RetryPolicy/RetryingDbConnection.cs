@@ -4,12 +4,11 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Async;
+
 namespace LinqToDB.Data.RetryPolicy
 {
-	using Async;
-	using Configuration;
-
-	sealed class RetryingDbConnection : IAsyncDbConnection, IProxy<DbConnection>
+	sealed class RetryingDbConnection : IAsyncDbConnection
 	{
 		readonly DataConnection     _dataConnection;
 		readonly IAsyncDbConnection _connection;
@@ -21,10 +20,6 @@ namespace LinqToDB.Data.RetryPolicy
 			_connection     = connection;
 			_policy         = policy;
 		}
-
-		#region IProxy<DbConnection>
-		DbConnection IProxy<DbConnection>.UnderlyingObject => _connection.Connection;
-		#endregion
 
 		#region IDisposable
 		void IDisposable.Dispose() => _connection.Dispose();

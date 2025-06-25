@@ -65,6 +65,7 @@ namespace LinqToDB.SqlQuery
 							firstField = false;
 							writer.AppendElement(field);
 						}
+
 						writer.AppendLine(")");
 					}
 					else
@@ -107,15 +108,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return null;
-		}
-
-		public void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
-		{
-			foreach (var c in Clauses)
-			{
-				if (c.Body != null)
-					c.Body = func(context, c.Body);
-			}
 		}
 	}
 }

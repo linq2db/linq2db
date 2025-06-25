@@ -4,20 +4,13 @@
 		<id>linq2db.FSharp</id>
 		<title>LINQ to DB F# Services</title>
 		<description>LINQ to DB F# Services adds support for F#-specific features to Linq To DB.</description>
-		<summary />
-		<tags>
-			linq fsharp linq2db LinqToDB aspnetcore ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle PostgreSQL DB2 Informix SapHana
-		</tags>
-		<readme>README.md</readme>
+		<tags>fsharp aspnetcore</tags>
 		<dependencies>
 			<group targetFramework="net462">
 				<dependency id="linq2db"     version="6.0.0"   />
-				<dependency id="FSharp.Core" version="8.0.403" />
+				<dependency id="FSharp.Core" version="9.0.300" />
 			</group>
 			<group targetFramework="netstandard2.0">
-				<dependency id="linq2db"     version="6.0.0"   />
-			</group>
-			<group targetFramework="net6.0">
 				<dependency id="linq2db"     version="6.0.0"   />
 			</group>
 			<group targetFramework="net8.0">
@@ -30,22 +23,19 @@
 	</metadata>
 
 	<files>
-		<file src="..\..\NuGet\README.FSharp.md"                                     target="README.md"           />
+		<file src="NuGet\README.FSharp.md"                                    target="README.md"           />
 
-		<file src="..\bin\LinqToDB.FSharp\Release\net462\linq2db.FSharp.pdb"         target="lib\net462\"         />
-		<file src="..\bin\LinqToDB.FSharp\Release\net462\linq2db.FSharp.xml"         target="lib\net462\"         />
-		<file src="..\bin\LinqToDB.FSharp\Release\net462\linq2db.FSharp.dll"         target="lib\net462\"         />
-		<file src="..\bin\LinqToDB.FSharp\Release\netstandard2.0\linq2db.FSharp.pdb" target="lib\netstandard2.0\" />
-		<file src="..\bin\LinqToDB.FSharp\Release\netstandard2.0\linq2db.FSharp.xml" target="lib\netstandard2.0\" />
-		<file src="..\bin\LinqToDB.FSharp\Release\netstandard2.0\linq2db.FSharp.dll" target="lib\netstandard2.0\" />
-		<file src="..\bin\LinqToDB.FSharp\Release\net6.0\linq2db.FSharp.pdb"         target="lib\net6.0\"         />
-		<file src="..\bin\LinqToDB.FSharp\Release\net6.0\linq2db.FSharp.xml"         target="lib\net6.0\"         />
-		<file src="..\bin\LinqToDB.FSharp\Release\net6.0\linq2db.FSharp.dll"         target="lib\net6.0\"         />
-		<file src="..\bin\LinqToDB.FSharp\Release\net8.0\linq2db.FSharp.pdb"         target="lib\net8.0\"         />
-		<file src="..\bin\LinqToDB.FSharp\Release\net8.0\linq2db.FSharp.xml"         target="lib\net8.0\"         />
-		<file src="..\bin\LinqToDB.FSharp\Release\net8.0\linq2db.FSharp.dll"         target="lib\net8.0\"         />
-		<file src="..\bin\LinqToDB.FSharp\Release\net9.0\linq2db.FSharp.pdb"         target="lib\net9.0\"         />
-		<file src="..\bin\LinqToDB.FSharp\Release\net9.0\linq2db.FSharp.xml"         target="lib\net9.0\"         />
-		<file src="..\bin\LinqToDB.FSharp\Release\net9.0\linq2db.FSharp.dll"         target="lib\net9.0\"         />
+		<file src="bin\LinqToDB.FSharp\{0}\net462\linq2db.FSharp.pdb"         target="lib\net462\"         />
+		<file src="bin\LinqToDB.FSharp\{0}\net462\linq2db.FSharp.xml"         target="lib\net462\"         />
+		<file src="bin\LinqToDB.FSharp\{0}\net462\linq2db.FSharp.dll"         target="lib\net462\"         />
+		<file src="bin\LinqToDB.FSharp\{0}\netstandard2.0\linq2db.FSharp.pdb" target="lib\netstandard2.0\" />
+		<file src="bin\LinqToDB.FSharp\{0}\netstandard2.0\linq2db.FSharp.xml" target="lib\netstandard2.0\" />
+		<file src="bin\LinqToDB.FSharp\{0}\netstandard2.0\linq2db.FSharp.dll" target="lib\netstandard2.0\" />
+		<file src="bin\LinqToDB.FSharp\{0}\net8.0\linq2db.FSharp.pdb"         target="lib\net8.0\"         />
+		<file src="bin\LinqToDB.FSharp\{0}\net8.0\linq2db.FSharp.xml"         target="lib\net8.0\"         />
+		<file src="bin\LinqToDB.FSharp\{0}\net8.0\linq2db.FSharp.dll"         target="lib\net8.0\"         />
+		<file src="bin\LinqToDB.FSharp\{0}\net9.0\linq2db.FSharp.pdb"         target="lib\net9.0\"         />
+		<file src="bin\LinqToDB.FSharp\{0}\net9.0\linq2db.FSharp.xml"         target="lib\net9.0\"         />
+		<file src="bin\LinqToDB.FSharp\{0}\net9.0\linq2db.FSharp.dll"         target="lib\net9.0\"         />
 	</files>
 </package>

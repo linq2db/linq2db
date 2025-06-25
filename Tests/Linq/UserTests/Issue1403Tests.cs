@@ -1,7 +1,9 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using System.Linq;
 
 namespace Tests.UserTests
 {
@@ -55,12 +57,11 @@ namespace Tests.UserTests
 				});
 
 				var events = table.First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(events.EventId, Is.EqualTo(1));
 					Assert.That(events.EventDescription, Is.EqualTo("New event"));
-				});
+				}
 			}
 		}
 
@@ -77,12 +78,11 @@ namespace Tests.UserTests
 				});
 
 				var events = table.First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(events.EventId, Is.EqualTo(1));
 					Assert.That(events.EventDescription, Is.EqualTo("New event"));
-				});
+				}
 			}
 		}
 
@@ -99,12 +99,11 @@ namespace Tests.UserTests
 				});
 
 				var events = table.First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(events.EventId, Is.EqualTo(1));
 					Assert.That(events.EventDescription, Is.EqualTo("New event"));
-				});
+				}
 			}
 		}
 	}

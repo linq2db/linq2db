@@ -7,12 +7,12 @@ using System.Net.Sockets;
 using System.Numerics;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
-
 	sealed class ClickHouseMappingSchema : LockedMappingSchema
 	{
 		// we need defaults for length/precision/scale for some types if used didn't specified them
@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			AddScalarType(typeof(BigInteger), DataType.Int256);
 			AddScalarType(typeof(byte[])    , DataType.VarBinary);
 			AddScalarType(typeof(string)    , DataType.NVarChar);
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			AddScalarType(typeof(DateOnly)  , DataType.Date32);
 #endif
 
@@ -52,7 +52,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpan      (sb, dt, (TimeSpan)v));
 			SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTime      (sb, dt, (DateTime)v));
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffset(sb, dt, (DateTimeOffset)v));
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateOnly      (sb, dt, (DateOnly)v));
 #endif
 			SetValueToSqlConverter(typeof(byte)          , (sb,dt,_,v) => ConvertByte          (sb, dt, (byte)v));
@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			// conversions to DateTimeOffset
 			SetConvertExpression((DateTime v) => new DateTimeOffset(v.Ticks, default));
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			SetConvertExpression((DateOnly       v) => new DateTimeOffset(v.ToDateTime(TimeOnly.MinValue), default));
 			SetConvertExpression((DateTimeOffset v) => new DateOnly(v.Year, v.Month, v.Day));
 #endif
@@ -564,7 +564,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		private static void ConvertDateOnly(StringBuilder sb, SqlDataType dt, DateOnly value)
 		{
 			switch (dt.Type.DataType)
@@ -609,12 +609,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			switch (dt.Type.DataType)
 			{
-				case DataType.Decimal32 : BuildDecimal32Literal(sb, value, scale);         return;
+				case DataType.Int32     : BuildDecimal32Literal(sb, value, 0);      return;
+				case DataType.Decimal32 : BuildDecimal32Literal(sb, value, scale);  return;
 				case DataType.Undefined :
-				case DataType.Decimal64 : BuildDecimal64Literal(sb, value, scale);         return;
-				case DataType.Decimal128: BuildDecimal128Literal(sb, value, scale);        return;
-				case DataType.Decimal256: BuildDecimal256Literal(sb, value, scale);        return;
-				case DataType.Int32     : BuildInt32Literal     (sb, checked((int)value)); return;
+				case DataType.Decimal64 : BuildDecimal64Literal(sb, value, scale);  return;
+				case DataType.Decimal128: BuildDecimal128Literal(sb, value, scale); return;
+				case DataType.Decimal256: BuildDecimal256Literal(sb, value, scale); return;
 			}
 
 			throw new LinqToDBConvertException($"Unsupported Decimal type mapping: {dt.Type.DataType}");

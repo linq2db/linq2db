@@ -3,7 +3,6 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 
 namespace Tests.Model
@@ -16,7 +15,7 @@ namespace Tests.Model
 		{
 		}
 
-		public TestDataConnection(Func<DataOptions,DataOptions> optionsSetter) : base(optionsSetter)
+		public TestDataConnection(Func<DataOptions,DataOptions> optionsSetter) : base(optionsSetter(new DataOptions()))
 		{
 		}
 

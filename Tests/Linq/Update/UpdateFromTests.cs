@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.xUpdate
@@ -41,7 +43,6 @@ namespace Tests.xUpdate
 			[Column] public int Value2 { get; set; }
 			[Column] public int Value3 { get; set; }
 		}
-
 
 		private UpdatedEntities[] GenerateData()
 		{
@@ -458,13 +459,12 @@ namespace Tests.xUpdate
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11)
 					.Select(v => new {v.Value1, v.Value2, v.Value3})
 					.First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(updatedValue.Value1, Is.EqualTo(36));
 					Assert.That(updatedValue.Value2, Is.EqualTo(36));
 					Assert.That(updatedValue.Value3, Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -494,13 +494,12 @@ namespace Tests.xUpdate
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11)
 					.Select(v => new {v.Value1, v.Value2, v.Value3})
 					.First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(updatedValue.Value1, Is.EqualTo(36));
 					Assert.That(updatedValue.Value2, Is.EqualTo(36));
 					Assert.That(updatedValue.Value3, Is.EqualTo(1));
-				});
+				}
 			}
 		}
 

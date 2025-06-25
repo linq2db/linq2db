@@ -6,14 +6,15 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Expressions
 {
-	using Common.Internal;
-	using Extensions;
-	using Linq;
-	using Internal;
-	using Mapping;
-
 	/// <summary>
 	/// Internal API.
 	/// </summary>
@@ -132,6 +133,27 @@ namespace LinqToDB.Expressions
 					var unaryExpression = (UnaryExpression)ex;
 					if (unaryExpression.Type == typeof(object))
 						return unaryExpression.Operand.UnwrapConvertToObject();
+					break;
+				}
+			}
+
+			return ex;
+		}
+
+		[return: NotNullIfNotNull(nameof(ex))]
+		public static Expression? UnwrapConvertToNotObject(this Expression? ex)
+		{
+			if (ex == null)
+				return null;
+
+			switch (ex.NodeType)
+			{
+				case ExpressionType.ConvertChecked:
+				case ExpressionType.Convert:
+				{
+					var unaryExpression = (UnaryExpression)ex;
+					if (unaryExpression.Operand.Type != typeof(object) && unaryExpression.Method == null)
+						return unaryExpression.Operand.UnwrapConvertToNotObject();
 					break;
 				}
 			}

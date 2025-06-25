@@ -1,6 +1,9 @@
 ﻿using System.Linq;
+
 using LinqToDB;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.xUpdate
@@ -25,13 +28,12 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(5));
-				});
+				}
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -59,13 +61,12 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(5));
-				});
+				}
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -168,13 +169,12 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(5));
-				});
+				}
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -207,19 +207,14 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<MPatient>().OrderBy(_ => _.PersonID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(1));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[0].PersonID, Is.EqualTo(IdentityPatients[0].PersonID));
 					Assert.That(result[0].Diagnosis, Is.EqualTo(IdentityPatients[0].Diagnosis));
-				});
+				}
 			}
 		}
 
@@ -252,13 +247,12 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(7));
-				});
+				}
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -266,15 +260,14 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[3], result[3]);
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[6].ID, Is.EqualTo(IdentityPersons[5].ID + 1));
 					Assert.That(result[6].Gender, Is.EqualTo(Gender.Unknown));
 					Assert.That(result[6].FirstName, Is.EqualTo("sick"));
 					Assert.That(result[6].LastName, Is.EqualTo("Inserted 2"));
 					Assert.That(result[6].MiddleName, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -308,13 +301,12 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(7));
-				});
+				}
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -322,15 +314,14 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[3], result[3]);
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[6].ID, Is.EqualTo(IdentityPersons[5].ID + 1));
 					Assert.That(result[6].Gender, Is.EqualTo(Gender.Unknown));
 					Assert.That(result[6].FirstName, Is.EqualTo("sick"));
 					Assert.That(result[6].LastName, Is.EqualTo("Inserted 2"));
 					Assert.That(result[6].MiddleName, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -372,15 +363,14 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[3], result[3]);
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[6].ID, Is.EqualTo(IdentityPersons[5].ID + 1));
 					Assert.That(result[6].Gender, Is.EqualTo(Gender.Male));
 					Assert.That(result[6].FirstName, Is.EqualTo("Inserted 1"));
 					Assert.That(result[6].LastName, Is.EqualTo("Inserted 2"));
 					Assert.That(result[6].MiddleName, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -420,15 +410,14 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
 					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
 					Assert.That(result[3].FirstName, Is.EqualTo(IdentityPersons[3].FirstName));
 					Assert.That(result[3].LastName, Is.EqualTo(IdentityPersons[3].LastName));
 					Assert.That(result[3].MiddleName, Is.EqualTo("R.I.P."));
-				});
+				}
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
@@ -467,15 +456,14 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
 					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
 					Assert.That(result[3].FirstName, Is.EqualTo("first 4"));
 					Assert.That(result[3].LastName, Is.EqualTo("last very sick"));
 					Assert.That(result[3].MiddleName, Is.EqualTo("first very sick"));
-				});
+				}
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
@@ -505,25 +493,23 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(6));
-				});
+				}
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[2].ID, Is.EqualTo(IdentityPersons[2].ID));
 					Assert.That(result[2].Gender, Is.EqualTo(IdentityPersons[2].Gender));
 					Assert.That(result[2].FirstName, Is.EqualTo("Updated"));
 					Assert.That(result[2].LastName, Is.EqualTo("sick"));
 					Assert.That(result[2].MiddleName, Is.EqualTo(IdentityPersons[2].MiddleName));
-				});
+				}
 
 				AssertPerson(IdentityPersons[3], result[3]);
 				AssertPerson(IdentityPersons[4], result[4]);
@@ -553,26 +539,24 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(6));
-				});
+				}
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
 					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
 					Assert.That(result[3].FirstName, Is.EqualTo("Updated"));
 					Assert.That(result[3].LastName, Is.EqualTo(IdentityPersons[3].LastName));
 					Assert.That(result[3].MiddleName, Is.EqualTo(IdentityPersons[3].MiddleName));
-				});
+				}
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
@@ -614,15 +598,14 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
 					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
 					Assert.That(result[3].FirstName, Is.EqualTo("first 4"));
 					Assert.That(result[3].LastName, Is.EqualTo("Updated"));
 					Assert.That(result[3].MiddleName, Is.EqualTo(IdentityPersons[3].MiddleName));
-				});
+				}
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
@@ -647,13 +630,12 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(5));
-				});
+				}
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -686,19 +668,14 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<MPatient>().OrderBy(_ => _.PersonID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(1));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[0].PersonID, Is.EqualTo(IdentityPatients[0].PersonID));
 					Assert.That(result[0].Diagnosis, Is.EqualTo(IdentityPatients[0].Diagnosis));
-				});
+				}
 			}
 		}
 
@@ -733,13 +710,12 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(7));
-				});
+				}
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -747,15 +723,14 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[3], result[3]);
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[6].ID, Is.EqualTo(IdentityPersons[5].ID + 1));
 					Assert.That(result[6].Gender, Is.EqualTo(Gender.Unknown));
 					Assert.That(result[6].FirstName, Is.EqualTo("sick"));
 					Assert.That(result[6].LastName, Is.EqualTo("Inserted 2"));
 					Assert.That(result[6].MiddleName, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -789,13 +764,12 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(7));
-				});
+				}
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -803,15 +777,14 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[3], result[3]);
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[6].ID, Is.EqualTo(IdentityPersons[5].ID + 1));
 					Assert.That(result[6].Gender, Is.EqualTo(Gender.Unknown));
 					Assert.That(result[6].FirstName, Is.EqualTo("sick"));
 					Assert.That(result[6].LastName, Is.EqualTo("Inserted 2"));
 					Assert.That(result[6].MiddleName, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -855,15 +828,14 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[3], result[3]);
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[6].ID, Is.EqualTo(IdentityPersons[5].ID + 1));
 					Assert.That(result[6].Gender, Is.EqualTo(Gender.Male));
 					Assert.That(result[6].FirstName, Is.EqualTo("Inserted 1"));
 					Assert.That(result[6].LastName, Is.EqualTo("Inserted 2"));
 					Assert.That(result[6].MiddleName, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -903,15 +875,14 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
 					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
 					Assert.That(result[3].FirstName, Is.EqualTo(IdentityPersons[3].FirstName));
 					Assert.That(result[3].LastName, Is.EqualTo(IdentityPersons[3].LastName));
 					Assert.That(result[3].MiddleName, Is.EqualTo("R.I.P."));
-				});
+				}
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
@@ -949,15 +920,14 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
 					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
 					Assert.That(result[3].FirstName, Is.EqualTo("first 4"));
 					Assert.That(result[3].LastName, Is.EqualTo("last very sick"));
 					Assert.That(result[3].MiddleName, Is.EqualTo("first very sick"));
-				});
+				}
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
@@ -988,25 +958,23 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(6));
-				});
+				}
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[2].ID, Is.EqualTo(IdentityPersons[2].ID));
 					Assert.That(result[2].Gender, Is.EqualTo(IdentityPersons[2].Gender));
 					Assert.That(result[2].FirstName, Is.EqualTo("Updated"));
 					Assert.That(result[2].LastName, Is.EqualTo("sick"));
 					Assert.That(result[2].MiddleName, Is.EqualTo(IdentityPersons[2].MiddleName));
-				});
+				}
 
 				AssertPerson(IdentityPersons[3], result[3]);
 				AssertPerson(IdentityPersons[4], result[4]);
@@ -1037,26 +1005,24 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(rows, Is.EqualTo(1));
 
 					Assert.That(result, Has.Count.EqualTo(6));
-				});
+				}
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
 					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
 					Assert.That(result[3].FirstName, Is.EqualTo("Updated"));
 					Assert.That(result[3].LastName, Is.EqualTo(IdentityPersons[3].LastName));
 					Assert.That(result[3].MiddleName, Is.EqualTo(IdentityPersons[3].MiddleName));
-				});
+				}
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
@@ -1098,15 +1064,14 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
 					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
 					Assert.That(result[3].FirstName, Is.EqualTo(IdentityPersons[3].FirstName));
 					Assert.That(result[3].LastName, Is.EqualTo(IdentityPersons[3].LastName));
 					Assert.That(result[3].MiddleName, Is.EqualTo("Updated"));
-				});
+				}
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
@@ -1126,13 +1091,12 @@ namespace Tests.xUpdate
 				var patients = db.GetTable<MPatient>().OrderBy(_ => _.PersonID).ToList();
 				var doctors = db.GetTable<MDoctor>().OrderBy(_ => _.PersonID).ToList();
 				var persons = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(persons, Has.Count.EqualTo(IdentityPersons.Length));
 					Assert.That(patients, Has.Count.EqualTo(IdentityPatients.Length));
 					Assert.That(doctors, Has.Count.EqualTo(IdentityDoctors.Length));
-				});
+				}
 
 				for (var i = 0; i < persons.Count; i++)
 				{
@@ -1141,20 +1105,20 @@ namespace Tests.xUpdate
 
 				for (var i = 0; i < patients.Count; i++)
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(patients[i].PersonID, Is.EqualTo(IdentityPatients[i].PersonID));
 						Assert.That(patients[i].Diagnosis, Is.EqualTo(IdentityPatients[i].Diagnosis));
-					});
+					}
 				}
 
 				for (var i = 0; i < doctors.Count; i++)
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(doctors[i].PersonID, Is.EqualTo(IdentityDoctors[i].PersonID));
 						Assert.That(doctors[i].Taxonomy, Is.EqualTo(IdentityDoctors[i].Taxonomy));
-					});
+					}
 				}
 			}
 		}

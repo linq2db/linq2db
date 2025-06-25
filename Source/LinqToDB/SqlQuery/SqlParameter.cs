@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-
 	public class SqlParameter : SqlExpressionBase
 	{
 		public SqlParameter(DbDataType type, string? name, object? value)
@@ -32,6 +32,9 @@ namespace LinqToDB.SqlQuery
 		internal int?       AccessorId       { get; set; }
 
 		public object? Value     { get; }
+		/// <summary>
+		/// Enable parameter wrapping with type-cast. Ignored when <see cref="IsQueryParameter"/> is <c>false</c>.
+		/// </summary>
 		public bool    NeedsCast { get; set; }
 
 		public object? CorrectParameterValue(object? rawValue)

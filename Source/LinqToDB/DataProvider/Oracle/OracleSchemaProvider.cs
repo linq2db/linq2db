@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
+using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Data;
+
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	// Missing features:
 	// - function with ref_cursor return type returns object, need to find out how to map it
 	sealed class OracleSchemaProvider : SchemaProviderBase
@@ -39,7 +38,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override string GetDataSourceName(DataConnection dbConnection)
 		{
-			var connection = _provider.TryGetProviderConnection(dbConnection, dbConnection.Connection);
+			var connection = _provider.TryGetProviderConnection(dbConnection, dbConnection.OpenDbConnection());
 			if (connection == null)
 				return string.Empty;
 
@@ -48,7 +47,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			var connection = _provider.TryGetProviderConnection(dbConnection, dbConnection.Connection);
+			var connection = _provider.TryGetProviderConnection(dbConnection, dbConnection.OpenDbConnection());
 			if (connection == null)
 				return string.Empty;
 

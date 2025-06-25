@@ -5,12 +5,12 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+
 namespace LinqToDB.SchemaProvider
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
 		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, int? length, int? precision, int? scale);
@@ -44,6 +44,7 @@ namespace LinqToDB.SchemaProvider
 		protected string? BuildSchemaFilter(GetSchemaOptions? options, string defaultSchema, Action<StringBuilder, string> stringLiteralBuilder)
 		{
 			var schemas = new HashSet<string>();
+
 			schemas.Add(defaultSchema);
 
 			if (options != null)
@@ -95,9 +96,9 @@ namespace LinqToDB.SchemaProvider
 			ExcludedCatalogs      = GetHashSet(options.ExcludedCatalogs, options.StringComparer);
 			GenerateChar1AsString = options.GenerateChar1AsString;
 
-			var dbConnection = dataConnection.Connection;
+			var dbConnection = dataConnection.OpenDbConnection();
 
-			InitProvider(dataConnection);
+			InitProvider(dataConnection, options);
 
 			DataTypesDic                                 = new Dictionary<string,DataTypeInfo>(StringComparer.OrdinalIgnoreCase);
 			ProviderSpecificDataTypesDic                 = new Dictionary<string,DataTypeInfo>(StringComparer.OrdinalIgnoreCase);
@@ -107,7 +108,7 @@ namespace LinqToDB.SchemaProvider
 			foreach (var dt in GetDataTypes(dataConnection))
 				if (dt.ProviderSpecific)
 				{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					ProviderSpecificDataTypesDic.TryAdd(dt.TypeName, dt);
 					ProviderSpecificDataTypesByProviderDbTypeDic.TryAdd(dt.ProviderDbType, dt);
 #else
@@ -119,7 +120,7 @@ namespace LinqToDB.SchemaProvider
 				}
 				else
 				{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					DataTypesDic.TryAdd(dt.TypeName, dt);
 					DataTypesByProviderDbTypeDic.TryAdd(dt.ProviderDbType, dt);
 #else
@@ -569,10 +570,10 @@ namespace LinqToDB.SchemaProvider
 			).ToList();
 		}
 
-		protected virtual string GetDataSourceName(DataConnection dbConnection) => dbConnection.Connection.DataSource;
-		protected virtual string GetDatabaseName  (DataConnection dbConnection) => dbConnection.Connection.Database;
+		protected virtual string GetDataSourceName(DataConnection dbConnection) => dbConnection.OpenDbConnection().DataSource;
+		protected virtual string GetDatabaseName  (DataConnection dbConnection) => dbConnection.OpenDbConnection().Database;
 
-		protected virtual void InitProvider(DataConnection dataConnection)
+		protected virtual void InitProvider(DataConnection dataConnection, GetSchemaOptions options)
 		{
 		}
 
@@ -583,7 +584,7 @@ namespace LinqToDB.SchemaProvider
 		/// <returns>List of database data types.</returns>
 		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			DataTypesSchema = dataConnection.Connection.GetSchema("DataTypes");
+			DataTypesSchema = dataConnection.OpenDbConnection().GetSchema("DataTypes");
 
 			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo

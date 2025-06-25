@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests
@@ -170,33 +172,22 @@ namespace Tests
 								StartPositionDescription = exerciseStartDescription != null ? exerciseStartDescription.Content : exercise.Startexpl,
 							};
 
-
 				var result = query.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Id, Is.EqualTo(3441));
 					Assert.That(result[0].Equipments, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[0].Equipments.Any(x => x.Object.Id == 41), Is.True);
 
 					Assert.That(result[1].Id, Is.EqualTo(3440));
 					Assert.That(result[1].Equipments, Has.Count.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[1].Equipments.Any(x => x.Object.Id == 59), Is.True);
 
 					Assert.That(result[2].Id, Is.EqualTo(3438));
 					Assert.That(result[2].Equipments, Has.Count.EqualTo(2));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[2].Equipments.Any(x => x.Object.Id == 50), Is.True);
 					Assert.That(result[2].Equipments.Any(x => x.Object.Id == 83), Is.True);
-				});
+				}
 			}
 		}
 	}

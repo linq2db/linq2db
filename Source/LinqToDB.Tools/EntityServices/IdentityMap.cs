@@ -6,10 +6,11 @@ using System.Linq;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Interceptors;
+
 namespace LinqToDB.Tools.EntityServices
 {
-	using Interceptors;
-
 	[PublicAPI]
 	public class IdentityMap : EntityServiceInterceptor, IDisposable
 	{
@@ -26,7 +27,7 @@ namespace LinqToDB.Tools.EntityServices
 		{
 			return _entityMapDic.GetOrAdd(
 				entityType,
-				key => (IEntityMap)Activator.CreateInstance(typeof(EntityMap<>).MakeGenericType(key), _dataContext)!);
+				key => ActivatorExt.CreateInstance<IEntityMap>(typeof(EntityMap<>).MakeGenericType(key), _dataContext));
 		}
 
 		public IEnumerable GetEntities(Type entityType)

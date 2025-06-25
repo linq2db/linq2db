@@ -3,7 +3,6 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -36,7 +35,6 @@ namespace Tests.Linq
 						!new[] { 111, 222 }.Contains(gc3.GrandChildID!.Value)
 				select new { p.ParentID, gc3 };
 
-
 				var test = result.GenerateTestString();
 
 				TestContext.Out.WriteLine(test);
@@ -54,7 +52,6 @@ namespace Tests.Linq
 					from gc1 in db.Person
 					where gc1.Gender == Model.Gender.Male
 					select gc1;
-
 
 				var test = q2.GenerateTestString();
 
@@ -76,6 +73,8 @@ namespace Tests.Linq
 
 			// this works
 			TestUtils.DeleteTestCases();
+
+			// explicitly generate test as query now doesn't fail generation
 			var testCase = query.GenerateTestString();
 			Assert.That(testCase, Is.Not.Null);
 			// ignore generated exception
@@ -83,22 +82,12 @@ namespace Tests.Linq
 			Assert.That(testCase, Does.Not.Contain("Exception"));
 
 			TestUtils.DeleteTestCases();
-			Query<Entity>.ClearCache();
-			Assert.That(() => query.ToArray(), Throws.Exception);
-
-			testCase = TestUtils.GetLastTestCase();
-			Assert.That(testCase, Is.Not.Null);
-
-			// ignore generated exception
-			testCase = testCase!.Replace("throw new NotImplementedException", string.Empty);
-			Assert.That(testCase, Does.Not.Contain("Exception"));
 		}
 
 		[Table("entities")]
 		sealed class Entity
 		{
-			[Column("position")]
-			[NotNull]
+			[Column("position", CanBeNull = false)]
 			public Vector3 Position { get; set; } = null!;
 		}
 

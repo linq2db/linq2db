@@ -13,12 +13,11 @@ using System.Xml;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Extensions
 {
-	using Common;
-	using Common.Internal;
-	using Reflection;
-
 	[PublicAPI]
 	public static class ReflectionExtensions
 	{
@@ -332,6 +331,53 @@ namespace LinqToDB.Extensions
 					TargetMethods    = [],
 					InterfaceMethods = []
 				};
+			}
+		}
+
+		public static MemberInfo? GetImplementation(this Type concreteType, MemberInfo interfaceMember)
+		{
+			if (interfaceMember.DeclaringType is null or { IsInterface: false })
+				throw new ArgumentException("Member must be declared on an interface", nameof(interfaceMember));
+
+			var interfaceType = interfaceMember.DeclaringType!;
+			var map           = concreteType.GetInterfaceMapEx(interfaceType);
+
+			return interfaceMember switch
+			{
+				MethodInfo method     => FindMethod(map, method),
+				PropertyInfo property => FindPropertyMethod(map, concreteType, property),
+				_                     => null,
+			};
+
+			static MethodInfo? FindMethod(in InterfaceMapping map, MethodInfo? target)
+			{
+				if (target is not null)
+				{
+					for (int i = 0; i < map.InterfaceMethods.Length; i++)
+					{
+						if (map.InterfaceMethods[i] == target)
+							return map.TargetMethods[i];
+					}
+				}
+
+				return null;
+			}
+
+			static MemberInfo? FindPropertyMethod(in InterfaceMapping map, Type concreteType, PropertyInfo property)
+			{
+				// Check both get and set methods
+				var targetGet = FindMethod(map, property.GetMethod);
+				var targetSet = FindMethod(map, property.SetMethod);
+
+				// Find matching property in concrete type by methods
+				foreach (var prop in concreteType.GetProperties(
+							 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+				{
+					if (prop.GetMethod == targetGet || prop.SetMethod == targetSet)
+						return prop;
+				}
+
+				return null;
 			}
 		}
 
@@ -713,32 +759,6 @@ namespace LinqToDB.Extensions
 			});
 		}
 
-		/// <summary>
-		/// Gets a value indicating whether a type can be used as a db primitive.
-		/// </summary>
-		/// <param name="type">A <see cref="Type"/> instance. </param>
-		/// <param name="checkArrayElementType">True if needed to check element type for arrays</param>
-		/// <returns> True, if the type parameter is a primitive type; otherwise, False.</returns>
-		/// <remarks><see cref="System.String"/>. <see cref="Stream"/>.
-		/// <see cref="XmlReader"/>. <see cref="XmlDocument"/>. are specially handled by the library
-		/// and, therefore, can be treated as scalar types.</remarks>
-		public static bool IsScalar(this Type type, bool checkArrayElementType = true)
-		{
-			if (type == typeof(byte[]))
-				return true;
-
-			while (checkArrayElementType && type.IsArray)
-				type = type.GetElementType()!;
-
-			return type.IsValueType
-				|| type == typeof(string)
-				|| type == typeof(Binary)
-				|| type == typeof(Stream)
-				|| type == typeof(XmlReader)
-				|| type == typeof(XmlDocument)
-				;
-		}
-
 		///<summary>
 		/// Returns an array of Type objects that represent the type arguments
 		/// of a generic type or the type parameters of a generic type definition.
@@ -839,11 +859,11 @@ namespace LinqToDB.Extensions
 			if (type.IsNullableType())
 				return null;
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			return RuntimeHelpers.GetUninitializedObject(type);
 #else
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);
-			var helper = (IGetDefaultValueHelper)Activator.CreateInstance(dtype)!;
+			var helper = ActivatorExt.CreateInstance<IGetDefaultValueHelper>(dtype);
 
 			return helper.GetDefaultValue();
 #endif
@@ -1081,6 +1101,7 @@ namespace LinqToDB.Extensions
 						if (p.GetMethod?.GetBaseDefinition() == baseDefinition)
 							return p;
 				}
+
 				if (property.SetMethod != null)
 				{
 					var baseDefinition = property.SetMethod.GetBaseDefinition();

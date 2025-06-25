@@ -3,16 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class DateTimeFunctionsTests : TestBase
 	{
@@ -98,11 +96,11 @@ namespace Tests.Linq
 		public void CurrentTimestampUtcClientSide()
 		{
 			var delta = Sql.CurrentTimestampUtc - DateTime.UtcNow;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(delta.Between(TimeSpan.FromSeconds(-1), TimeSpan.FromSeconds(1)), Is.True);
 				Assert.That(Sql.CurrentTimestampUtc.Kind, Is.EqualTo(DateTimeKind.Utc));
-			});
+			}
 		}
 
 		[Test]
@@ -225,12 +223,11 @@ namespace Tests.Linq
 #pragma warning restore CS8073 // The result of the expression is always the same since a value of this type is never equal to 'null'
 
 				var result = q.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result, Has.Count.EqualTo(1));
 					Assert.That(db.LastQuery, Does.Not.Contain("NULL"));
-				});
+				}
 			}
 		}
 
@@ -1633,7 +1630,7 @@ namespace Tests.Linq
 		public void DateTimeAddTimeSpan([DataSources(ProviderName.SQLiteMS)] string context, [ValueSource(nameof(TimespansForTest))] TimeSpan? ts)
 		{
 			// something wrong with retrieving DateTime values for SQLite
-			if (context.StartsWith("SQLite") && context.EndsWith(".LinqService"))
+			if (context.IsAnyOf(TestProvName.AllSQLite) && context.IsRemote())
 				return;
 
 			using (var db = GetDataContext(context))
@@ -1650,7 +1647,6 @@ namespace Tests.Linq
 						DateTimeNullable = t.DateTimeNullable + ts,
 						DateTime2 = t.DateTime2 + ts,
 						DateTime2Nullable = t.DateTime2Nullable + ts,
-
 
 						M_DateTime = t.DateTime - ts,
 						M_DateTimeNullable = t.DateTimeNullable - ts,
@@ -1698,7 +1694,6 @@ namespace Tests.Linq
 
 						DateTimeOffset = t.DateTimeOffset + ts,
 						DateTimeOffsetNullable = t.DateTimeOffsetNullable + ts,
-
 
 						M_DateTimeOffset = t.DateTimeOffset - ts,
 						M_DateTimeOffsetNullable = t.DateTimeOffsetNullable - ts,

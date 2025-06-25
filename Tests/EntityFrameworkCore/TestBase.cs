@@ -80,8 +80,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			// as EF generates SQL differently, we cannot share baselines
 #if NETFRAMEWORK
 			BaselinesManager.Dump(".EF31");
-#elif NET6_0
-			BaselinesManager.Dump(".EF6");
 #elif NET8_0
 			BaselinesManager.Dump(".EF8");
 #elif NET9_0
@@ -148,18 +146,16 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				}
 			}
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(exceptExpected, Is.EqualTo(0), $"Expected Was{Environment.NewLine}{message}");
-				Assert.That(exceptResult, Is.EqualTo(0), $"Expect Result{Environment.NewLine}{message}");
-			});
+				Assert.That(exceptExpected, Is.Zero, $"Expected Was{Environment.NewLine}{message}");
+				Assert.That(exceptResult, Is.Zero, $"Expect Result{Environment.NewLine}{message}");
+			}
 		}
 
 		// use TFM-specific suffix to avoid database conflicts on parallel runs
 #if NETFRAMEWORK
 		private const string DB_SUFFIX = "ef31";
-#elif NET6_0
-		private const string DB_SUFFIX = "ef6";
 #elif NET8_0
 		private const string DB_SUFFIX = "ef8";
 #elif NET9_0
@@ -167,7 +163,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 #else
 #error Unknown framework
 #endif
-
 
 		protected virtual string GetConnectionString(string provider)
 		{

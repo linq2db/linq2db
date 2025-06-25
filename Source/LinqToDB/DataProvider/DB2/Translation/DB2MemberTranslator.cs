@@ -1,15 +1,39 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq.Expressions;
+
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.DB2.Translation
 {
-	using Common;
-	using Linq.Translation;
-	using SqlQuery;
-
 	public class DB2MemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new DB2MathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -60,14 +84,14 @@ namespace LinqToDB.DataProvider.DB2.Translation
 		{
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
-				DbDataType          resulType,
-				ISqlExpression      year,
-				ISqlExpression      month,
-				ISqlExpression      day,
-				ISqlExpression?     hour,
-				ISqlExpression?     minute,
-				ISqlExpression?     second,
-				ISqlExpression?     millisecond)
+				DbDataType resulType,
+				ISqlExpression year,
+				ISqlExpression month,
+				ISqlExpression day,
+				ISqlExpression? hour,
+				ISqlExpression? minute,
+				ISqlExpression? second,
+				ISqlExpression? millisecond)
 			{
 				var factory        = translationContext.ExpressionFactory;
 				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.NVarChar);
@@ -88,6 +112,7 @@ namespace LinqToDB.DataProvider.DB2.Translation
 					}
 
 					return factory.Function(stringDataType, "LPad",
+						ParametersNullabilityType.SameAsFirstParameter,
 						CastToLength(expression, padSize),
 						factory.Value(intDataType, padSize),
 						factory.Value(stringDataType, "0"));
@@ -103,13 +128,13 @@ namespace LinqToDB.DataProvider.DB2.Translation
 
 				if (hour != null || minute != null || second != null || millisecond != null)
 				{
-					hour        ??= factory.Value(intDataType, 0);
-					minute      ??= factory.Value(intDataType, 0);
-					second      ??= factory.Value(intDataType, 0);
+					hour ??= factory.Value(intDataType, 0);
+					minute ??= factory.Value(intDataType, 0);
+					second ??= factory.Value(intDataType, 0);
 					millisecond ??= factory.Value(intDataType, 0);
 
 					resultExpression = factory.Concat(
-						resultExpression, 
+						resultExpression,
 						factory.Value(stringDataType, " "),
 						PartExpression(hour, 2), factory.Value(stringDataType, ":"),
 						PartExpression(minute, 2), factory.Value(stringDataType, ":"),
@@ -146,7 +171,7 @@ namespace LinqToDB.DataProvider.DB2.Translation
 							factory.Increment(
 								factory.Sub(intDataType,
 									factory.Function(dataTimeType, "Trunc", dateTimeExpression),
-									factory.Function(dataTimeType, "Trunc", dateTimeExpression, factory.Value("IW"))
+									factory.Function(dataTimeType, "Trunc", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value("IW"))
 								)
 							),
 							factory.Value(7));
@@ -171,7 +196,8 @@ namespace LinqToDB.DataProvider.DB2.Translation
 				}
 				else
 				{
-					resultExpression = factory.Function(intDataType, "To_Number", factory.Function(dataTimeType, "To_Char", dateTimeExpression, factory.Value(partStr)));
+					resultExpression = factory.Function(intDataType, "To_Number",
+						factory.Function(dataTimeType, "To_Char", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(partStr)));
 
 					if (datepart == Sql.DateParts.Millisecond)
 					{
@@ -199,7 +225,7 @@ namespace LinqToDB.DataProvider.DB2.Translation
 					case Sql.DateParts.Year: expStr = "YEAR"; break;
 					case Sql.DateParts.Quarter:
 					{
-						expStr             = "MONTH";
+						expStr = "MONTH";
 						incrementValueExpr = factory.Multiply(incrementValueType, increment, 3);
 						break;
 					}
@@ -209,7 +235,7 @@ namespace LinqToDB.DataProvider.DB2.Translation
 					case Sql.DateParts.Day: expStr = "DAY"; break;
 					case Sql.DateParts.Week:
 					{
-						expStr             = "DAY";
+						expStr = "DAY";
 						incrementValueExpr = factory.Multiply(incrementValueType, increment, 7);
 						break;
 					}
@@ -218,7 +244,7 @@ namespace LinqToDB.DataProvider.DB2.Translation
 					case Sql.DateParts.Second: expStr = "SECOND"; break;
 					case Sql.DateParts.Millisecond:
 					{
-						expStr             = "MICROSECONDS";
+						expStr = "MICROSECONDS";
 						incrementValueExpr = factory.Multiply(doubleDataType, increment, 1000.0);
 						break;
 					}
@@ -261,19 +287,51 @@ namespace LinqToDB.DataProvider.DB2.Translation
 			}
 		}
 
-		protected override IMemberTranslator CreateSqlTypesTranslator()
+		public class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			return new SqlTypesTranslation();
 		}
 
-		protected override IMemberTranslator CreateDateMemberTranslator()
+		// Same as SQLite
+		class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
-			return new DateFunctionsTranslator();
-		}
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// 	lower((substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12)))
 
-		protected override IMemberTranslator CreateMathMemberTranslator()
-		{
-			return new DB2MathMemberTranslator();
+				var factory      = translationContext.ExpressionFactory;
+				var stringDbType = factory.GetDbDataType(typeof(string));
+				var hexExpr      = factory.Function(stringDbType, "hex", guidExpr);
+
+				var dividerExpr = factory.Value(stringDbType, "-");
+
+				var resultExpression = factory.ToLower(
+					factory.Concat(
+						SubString(hexExpr, 7, 2),
+						SubString(hexExpr, 5, 2),
+						SubString(hexExpr, 3, 2),
+						SubString(hexExpr, 1, 2),
+						dividerExpr,
+						SubString(hexExpr, 11, 2),
+						SubString(hexExpr, 9,  2),
+						dividerExpr,
+						SubString(hexExpr, 15, 2),
+						SubString(hexExpr, 13, 2),
+						dividerExpr,
+						SubString(hexExpr, 17, 4),
+						dividerExpr,
+						SubString(hexExpr, 21, 12)
+					)
+				);
+
+				resultExpression = factory.Condition(factory.IsNullPredicate(guidExpr), factory.Value<string?>(stringDbType, null), factory.NotNull(resultExpression));
+
+				return resultExpression;
+
+				ISqlExpression SubString(ISqlExpression expression, int pos, int length)
+				{
+					return factory.Function(stringDbType, "substr", expression, factory.Value(pos), factory.Value(length));
+				}
+			}
 		}
 	}
 }

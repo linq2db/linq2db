@@ -2,12 +2,12 @@
 using System.Globalization;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.MySql.Translation
 {
-	using Common;
-	using SqlQuery;
-	using Linq.Translation;
-
 	public class MySqlMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		class SqlTypesTranslation : SqlTypesTranslationDefault
@@ -87,8 +87,10 @@ namespace LinqToDB.DataProvider.MySql.Translation
 					case Sql.DateParts.Week: partStr = "week"; break;
 					case Sql.DateParts.WeekDay:
 					{
-						var addDaysFunc = factory.Function(factory.GetDbDataType(dateTimeExpression), "Date_Add", dateTimeExpression,
-							factory.Fragment(intDataType, "interval {0} day", factory.Value(intDataType, 1)));
+						var addDaysFunc = factory.Function(factory.GetDbDataType(dateTimeExpression), "Date_Add",
+							ParametersNullabilityType.SameAsFirstParameter,
+							dateTimeExpression,
+							factory.NotNullFragment(intDataType, "interval 1 day"));
 
 						var weekDayFunc = factory.Function(intDataType, "WeekDay", addDaysFunc);
 
@@ -174,6 +176,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 					}
 
 					return factory.Function(stringDataType, "LPad",
+						ParametersNullabilityType.SameAsFirstParameter,
 						CastToLength(expression, padSize),
 						factory.Value(intDataType, padSize),
 						factory.Value(stringDataType, "0"));
@@ -197,7 +200,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 					PartExpression(millisecond, 3)
 				);
 
-				resultExpression = factory.Function(resulType, "STR_TO_DATE", resultExpression, factory.Value(stringDataType, "%Y-%m-%d %H:%i:%s.%f"));
+				resultExpression = factory.Function(resulType, "STR_TO_DATE", ParametersNullabilityType.SameAsFirstParameter, resultExpression, factory.Value(stringDataType, "%Y-%m-%d %H:%i:%s.%f"));
 
 				return resultExpression;
 			}
@@ -210,6 +213,26 @@ namespace LinqToDB.DataProvider.MySql.Translation
 			}
 		}
 
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+		}
+
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// Lower(Cast({0} as CHAR(36)))
+
+				var factory        = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(36);
+
+				var cast    = factory.Cast(guidExpr, stringDataType);
+				var toLower = factory.ToLower(cast);
+
+				return toLower;
+			}
+		}
+
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();
@@ -218,6 +241,16 @@ namespace LinqToDB.DataProvider.MySql.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

@@ -3,9 +3,13 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.EntityFrameworkCore</AssemblyName>
 		<RootNamespace>LinqToDB.EntityFrameworkCore</RootNamespace>
-		<TargetFrameworks>netstandard2.0;net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
 
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+
+		<Title>Linq to DB EntityFrameworkCore</Title>
+		<Description>Linq to DB Extensions for Entity Framework Core</Description>
+		<Product>$(Title)</Product>
 
 		<!--EF1001: use of internal EF API-->
 		<NoWarn>EF1001</NoWarn>
@@ -14,11 +18,6 @@
 	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
 		<AssemblyVersion>$(EF3Version)</AssemblyVersion>
 		<DefineConstants>EF31;$(DefineConstants)</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
-		<AssemblyVersion>$(EF6Version)</AssemblyVersion>
-		<DefineConstants>EF6;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">

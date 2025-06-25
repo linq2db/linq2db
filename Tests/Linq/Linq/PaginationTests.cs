@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -39,23 +40,22 @@ namespace Tests.Linq
 
 				var byKey1 = query.GetPageByCondition(pageSize, x => x.Id == pagination1.Items[1].Id);
 				var byKey2 = query.GetPageByCondition(pageSize, x => x.Id == pagination2.Items[pageSize - 1].Id, true);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(byKey1.Page, Is.EqualTo(pagination1.Page));
 					Assert.That(byKey1.TotalCount, Is.EqualTo(pagination1.TotalCount));
 
 					Assert.That(byKey2.Page, Is.EqualTo(pagination2.Page));
 					Assert.That(byKey2.TotalCount, Is.EqualTo(pagination2.TotalCount));
-				});
+				}
 
 				var pageNumber1 = query.GetPageNumberByCondition(pageSize, x => x.Id == pagination1.Items[1].Id);
 				var pageNumber2 = query.GetPageNumberByCondition(pageSize, x => x.Id == pagination2.Items[pageSize - 1].Id, true);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(pageNumber1, Is.EqualTo(pagination1.Page));
 					Assert.That(pageNumber2, Is.EqualTo(pagination2.Page));
-				});
+				}
 
 				AreEqualWithComparer(pagination1.Items, byKey1.Items);
 				AreEqualWithComparer(pagination2.Items, byKey2.Items);
@@ -76,24 +76,22 @@ namespace Tests.Linq
 
 				var byKey1 = await query.GetPageByConditionAsync(pageSize, x => x.Id == pagination1.Items[1].Id);
 				var byKey2 = await query.GetPageByConditionAsync(pageSize, x => x.Id == pagination2.Items[pageSize - 1].Id, true);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(byKey1.Page, Is.EqualTo(pagination1.Page));
 					Assert.That(byKey1.TotalCount, Is.EqualTo(pagination1.TotalCount));
 
 					Assert.That(byKey2.Page, Is.EqualTo(pagination2.Page));
 					Assert.That(byKey2.TotalCount, Is.EqualTo(pagination2.TotalCount));
-				});
+				}
 
 				var pageNumber1 = await query.GetPageNumberByConditionAsync(pageSize, x => x.Id == pagination1.Items[1].Id);
 				var pageNumber2 = await query.GetPageNumberByConditionAsync(pageSize, x => x.Id == pagination2.Items[pageSize - 1].Id, true);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(pageNumber1, Is.EqualTo(pagination1.Page));
 					Assert.That(pageNumber2, Is.EqualTo(pagination2.Page));
-				});
+				}
 
 				AreEqualWithComparer(pagination1.Items, byKey1.Items);
 				AreEqualWithComparer(pagination2.Items, byKey2.Items);
@@ -114,24 +112,22 @@ namespace Tests.Linq
 
 				var byKey1 = query.GetPageByCondition(pageSize, x => x.Id == pagination1.Items[1].Id);
 				var byKey2 = query.GetPageByCondition(pageSize, x => x.Id == pagination2.Items[pageSize - 1].Id, true);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(byKey1.Page, Is.EqualTo(pagination1.Page));
 					Assert.That(byKey1.TotalCount, Is.EqualTo(pagination1.TotalCount));
 
 					Assert.That(byKey2.Page, Is.EqualTo(pagination2.Page));
 					Assert.That(byKey2.TotalCount, Is.EqualTo(pagination2.TotalCount));
-				});
+				}
 
 				var pageNumber1 = query.GetPageNumberByCondition(pageSize, x => x.Id == pagination1.Items[1].Id);
 				var pageNumber2 = query.GetPageNumberByCondition(pageSize, x => x.Id == pagination2.Items[pageSize - 1].Id, true);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(pageNumber1, Is.EqualTo(pagination1.Page));
 					Assert.That(pageNumber2, Is.EqualTo(pagination2.Page));
-				});
+				}
 
 				AreEqualWithComparer(pagination1.Items, byKey1.Items);
 				AreEqualWithComparer(pagination2.Items, byKey2.Items);

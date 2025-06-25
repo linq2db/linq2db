@@ -3,13 +3,13 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	sealed class SqlCeSqlBuilder : BasicSqlBuilder
 	{
 		public SqlCeSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override bool OffsetFirst                   => true;
 		protected override bool IsValuesSyntaxSupported       => false;
-		protected override bool SupportsColumnAliasesInSource => true;
+		protected override bool SupportsColumnAliasesInSource => false;
 		protected override bool RequiresConstantColumnAliases => true;
 
 		protected override bool CanSkipRootAliases(SqlStatement statement)
@@ -91,6 +91,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				case DataType.Char          : base.BuildDataTypeFromDataType(new DbDataType(typeof(char), DataType.NChar, null, type.Length), forCreateTable, canBeNull); return;
 				case DataType.VarChar       : base.BuildDataTypeFromDataType(new DbDataType(typeof(string), DataType.NVarChar, null, type.Length), forCreateTable, canBeNull); return;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)");                                                                          return;
+				case DataType.Money         : StringBuilder.Append("MONEY");                                                                                   return;
 				case DataType.DateTime2     :
 				case DataType.Time          :
 				case DataType.Date          :

@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using SqlQuery;
-
 	abstract partial class DB2SqlBuilderBase
 	{
 		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,
-			IReadOnlyList<ISqlExpression[]>                                      rows, int row, int column)
+			IReadOnlyList<List<ISqlExpression>>                                      rows, int row, int column)
 		{
 			/* DB2 doesn't like NULLs without type information
 			 : ERROR [42610] [IBM][DB2/NT64] SQL0418N  The statement was not processed because the statement

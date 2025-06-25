@@ -1,14 +1,34 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.PostgreSQL.Translation
 {
-	using Common;
-	using SqlQuery;
-	using Linq.Translation;
-
 	public class PostgreSQLMemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new MathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertTinyInt(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -70,7 +90,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 					{
 						// Cast(To_Char({date}, 'MS') as int
 
-						var toCharExpression = factory.Function(factory.GetDbDataType(typeof(string)), "To_Char", dateTimeExpression, factory.Value("MS"));
+						var toCharExpression = factory.Function(factory.GetDbDataType(typeof(string)), "To_Char",ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value("MS"));
 						var castExpression   = factory.Cast(toCharExpression, intDbType);
 
 						return castExpression;
@@ -112,7 +132,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				var factory = translationContext.ExpressionFactory;
 
-				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", factory.Value("day"), dateExpression);
+				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", ParametersNullabilityType.SameAsSecondParameter, factory.Value("day"), dateExpression);
 
 				return dateTruncExpression;
 			}
@@ -125,7 +145,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				var atTimeZone = factory.Fragment(factory.GetDbDataType(dateExpression), "{0} AT TIME ZONE {1}", dateExpression, factory.Value("UTC"));
 
-				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", factory.Value("day"), atTimeZone);
+				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", ParametersNullabilityType.SameAsSecondParameter, factory.Value("day"), atTimeZone);
 
 				dateTruncExpression = factory.Cast(dateTruncExpression, factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.Date));
 
@@ -139,7 +159,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				ISqlExpression ToInterval(ISqlExpression numberExpression, string intervalKind)
 				{
-					var intervalExpr = factory.Fragment(intervalType, "Interval {0}", factory.Value(intervalKind));
+					var intervalExpr = factory.NotNullFragment(intervalType, "Interval {0}", factory.Value(intervalKind));
 
 					return factory.Multiply(intervalType, numberExpression, intervalExpr);
 				}
@@ -232,21 +252,19 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 			}
 		}
 
-
-		protected override IMemberTranslator CreateSqlTypesTranslator()
+		class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
-			return new SqlTypesTranslation();
-		}
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// Cast({0} as VarChar(36))
 
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new DateFunctionsTranslator();
-		}
+				var factory        = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.VarChar).WithLength(36);
 
-		protected override IMemberTranslator CreateMathMemberTranslator()
-		{
-			return new MathMemberTranslator();
+				var cast  = factory.Cast(guidExpr, stringDataType);
+				
+				return cast;
+			}
 		}
-
 	}
 }

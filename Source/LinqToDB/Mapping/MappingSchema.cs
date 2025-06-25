@@ -4,29 +4,30 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Common.Internal.Cache;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Extensions;
+using LinqToDB.Metadata;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Mapping
 {
-	using Data;
-	using Common;
-	using Common.Internal;
-	using Common.Internal.Cache;
-	using Expressions;
-	using Extensions;
-	using Metadata;
-	using SqlProvider;
-	using SqlQuery;
-
 	/// <summary>
 	/// Mapping schema.
 	/// </summary>
@@ -45,7 +46,7 @@ namespace LinqToDB.Mapping
 				(ms1, ms2),
 				static entry =>
 				{
-					entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 					return new MappingSchema(entry.Key.ms1, entry.Key.ms2);
 				});
 		}
@@ -161,7 +162,7 @@ namespace LinqToDB.Mapping
 			(_cache, _firstOnlyCache) = CreateAttributeCaches();
 		}
 
-		object _syncRoot = new();
+		Lock _syncRoot = new();
 		internal readonly MappingSchemaInfo[] Schemas;
 		readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
 
@@ -243,6 +244,7 @@ namespace LinqToDB.Mapping
 						{
 							Schemas[0].SetDefaultValue(type, value, resetId: false);
 						}
+
 						return value;
 					}
 				}
@@ -302,6 +304,7 @@ namespace LinqToDB.Mapping
 						{
 							Schemas[0].SetCanBeNull(type, true, resetId: false);
 						}
+
 						return true;
 					}
 				}
@@ -1385,7 +1388,7 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(DateTime),        DataType.DateTime2);
 				AddScalarType(typeof(DateTimeOffset),  DataType.DateTimeOffset);
 				AddScalarType(typeof(TimeSpan),        DataType.Time);
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				AddScalarType(typeof(DateOnly),        DataType.Date);
 #endif
 				AddScalarType(typeof(byte[]),          DataType.VarBinary);
@@ -1412,7 +1415,7 @@ namespace LinqToDB.Mapping
 
 				// explicitly specify old ToString client-side conversions for some types after we added support for ToString(InvariantCulture) to conversion generators
 				SetConverter<DateTime, string>(static v => v.ToString("yyyy-MM-dd hh:mm:ss", DateTimeFormatInfo.InvariantInfo));
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				SetConverter<DateOnly, string>(static v => v.ToString("yyyy-MM-dd", DateTimeFormatInfo.InvariantInfo));
 #endif
 
@@ -1468,7 +1471,7 @@ namespace LinqToDB.Mapping
 			{
 				type = type.ToNullableUnderlying();
 
-				if (type.IsEnum || type.IsPrimitive || (Configuration.IsStructIsScalarType && type.IsValueType))
+				if (type.IsEnum || type.IsPrimitive || (Common.Configuration.IsStructIsScalarType && type.IsValueType))
 					ret = true;
 			}
 
@@ -1788,7 +1791,7 @@ namespace LinqToDB.Mapping
 				(mappingSchema: this, callback: onEntityDescriptorCreated ?? EntityDescriptorCreatedCallback),
 				static (o, context) =>
 				{
-					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 					var edNew = new EntityDescriptor(context.mappingSchema, o.Key.entityType, context.callback);
 					context.callback?.Invoke(context.mappingSchema, edNew);
 					return edNew;
@@ -1834,6 +1837,7 @@ namespace LinqToDB.Mapping
 				if (type != null)
 					return type;
 			}
+
 			return null;
 		}
 

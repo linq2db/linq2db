@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 
+using LinqToDB.Extensions;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Extensions;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class MySqlSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public MySqlSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
@@ -130,5 +130,16 @@ namespace LinqToDB.DataProvider.MySql
 			return ConvertSearchStringPredicateViaLike(predicate);
 		}
 
+		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
+		{
+			switch (func)
+			{
+				case { Name: PseudoFunctions.LENGTH }:
+					return func.WithName("CHAR_LENGTH");
+
+				default:
+					return base.ConvertSqlFunction(func);
+			}
+		}
 	}
 }

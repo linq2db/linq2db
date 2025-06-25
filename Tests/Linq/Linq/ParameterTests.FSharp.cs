@@ -1,8 +1,6 @@
 ﻿using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.FSharp;
 
 using NUnit.Framework;
 
@@ -23,12 +21,11 @@ namespace Tests.Linq
 
 				p = "Tester";
 				var person2 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(person1.FirstName, Is.EqualTo("John"));
 					Assert.That(person2.FirstName, Is.EqualTo("Tester"));
-				});
+				}
 			}
 		}
 

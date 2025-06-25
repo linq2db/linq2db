@@ -3,12 +3,11 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Access.Translation
 {
-	using Linq.Translation;
-
 	public class AccessMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		class SqlTypesTranslation : SqlTypesTranslationDefault
@@ -118,8 +117,9 @@ namespace LinqToDB.DataProvider.Access.Translation
 						}
 
 						return factory.Function(stringDataType, "Format",
+							ParametersNullabilityType.SameAsFirstParameter,
 							expression,
-							factory.Function(stringDataType, "String", factory.Value(stringDataType, "0"), factory.Value(intDataType, padSize))
+							factory.Function(stringDataType, "String", ParametersNullabilityType.NotNullable, factory.Value(stringDataType, "0"), factory.Value(intDataType, padSize))
 						);
 					}
 
@@ -245,6 +245,42 @@ namespace LinqToDB.DataProvider.Access.Translation
 
 		}
 
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var valueTypeString = factory.GetDbDataType(value);
+				var valueTypeInt    = factory.GetDbDataType(typeof(int));
+
+				var lengthValue = TranslateLength(translationContext, translationFlags, value);
+				if (lengthValue == null)
+					return null;
+
+				var valueSymbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
+				var fillingString     = factory.Function(valueTypeString, "STRING", valueSymbolsToAdd, paddingChar);
+
+				return factory.Concat(fillingString, value);
+			}
+		}
+
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// LCase(Mid(CStr({0}), 2, 36))
+
+				var factory      = translationContext.ExpressionFactory;
+				var stringDbType = factory.GetDbDataType(typeof(string));
+
+				var cStrExpression = factory.Function(stringDbType, "CStr", guidExpr);
+				var midExpression  = factory.Function(stringDbType, "Mid", cStrExpression, factory.Value(2), factory.Value(36));
+				var toLower        = factory.ToLower(midExpression);
+
+				return toLower;
+			}
+		}
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -259,6 +295,16 @@ namespace LinqToDB.DataProvider.Access.Translation
 		protected override IMemberTranslator CreateMathMemberTranslator()
 		{
 			return new MathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
 		}
 	}
 }

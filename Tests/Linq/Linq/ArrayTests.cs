@@ -1,4 +1,4 @@
-﻿#if NET6_0_OR_GREATER
+﻿#if NET8_0_OR_GREATER
 using System;
 #endif
 using System.Linq;
@@ -9,10 +9,10 @@ using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class ArrayTests : TestBase
 	{
@@ -55,25 +55,25 @@ namespace Tests.Linq
 			Assert.That(tableSchema.Columns, Has.Count.EqualTo(3));
 
 			var column = tableSchema.Columns.Single(c => c.ColumnName == nameof(ArrayTable.Numbers));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(column.SystemType, Is.EqualTo(typeof(int[])));
 				Assert.That(column.IsNullable, Is.True);
-			});
+			}
 
 			column = tableSchema.Columns.Single(c => c.ColumnName == nameof(ArrayTable.StringEnums));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(column.SystemType, Is.EqualTo(typeof(string[])));
 				Assert.That(column.IsNullable, Is.True);
-			});
+			}
 
 			column = tableSchema.Columns.Single(c => c.ColumnName == nameof(ArrayTable.IntEnums));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(column.SystemType, Is.EqualTo(typeof(int[])));
 				Assert.That(column.IsNullable, Is.True);
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -93,13 +93,12 @@ namespace Tests.Linq
 			db.Insert(record);
 
 			var result = tb.Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Numbers, Is.EqualTo(record.Numbers));
 				Assert.That(result.StringEnums, Is.EqualTo(record.StringEnums));
 				Assert.That(result.IntEnums, Is.EqualTo(record.IntEnums));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -125,13 +124,12 @@ namespace Tests.Linq
 				.Update();
 
 			var result = tb.Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Numbers, Is.EqualTo(new[] { 4, 5, 6 }));
 				Assert.That(result.StringEnums, Is.Null);
 				Assert.That(result.IntEnums, Is.EqualTo(new[] { SimpleEnum.Value2, SimpleEnum.Value1, SimpleEnum.Value1 }));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -151,20 +149,19 @@ namespace Tests.Linq
 			db.Insert(record);
 
 			var result = tb.Where(r => r.Numbers!.Contains(5)).Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Numbers, Is.EqualTo(record.Numbers));
 				Assert.That(result.StringEnums, Is.EqualTo(record.StringEnums));
 				Assert.That(result.IntEnums, Is.EqualTo(record.IntEnums));
-			});
+			}
 
 			result = tb.Where(r => r.Numbers!.Contains(6)).SingleOrDefault();
 
 			Assert.That(result, Is.Null);
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3929")]
 		public void TestDateOnly([DataSources] string context)

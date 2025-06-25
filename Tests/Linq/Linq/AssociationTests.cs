@@ -7,18 +7,17 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 
+using JetBrains.Annotations;
+
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using JetBrains.Annotations;
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class AssociationTests : TestBase
 	{
@@ -380,12 +379,11 @@ namespace Tests.Linq
 					select t.Middle == null ? null : t.Middle.Bottom;
 
 				var list = q.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list[0], Is.Not.Null);
 					Assert.That(list[1], Is.Null);
-				});
+				}
 			}
 		}
 
@@ -403,12 +401,11 @@ namespace Tests.Linq
 					select t.Middle!.Bottom;
 
 				var list = q.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list[0], Is.Not.Null);
 					Assert.That(list[1], Is.Null);
-				});
+				}
 			}
 		}
 
@@ -426,12 +423,11 @@ namespace Tests.Linq
 					select t.Middle!.Bottom1;
 
 				var list = q.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list[0], Is.Not.Null);
 					Assert.That(list[1], Is.Null);
-				});
+				}
 			}
 		}
 
@@ -696,7 +692,7 @@ namespace Tests.Linq
 
 			public static Expression<Action<ParentContainer, Parent>> SetParentValue()
 			{
-				return static (ParentContainer container, Parent value) => container.SetValue(value);
+				return static (container, value) => container.SetValue(value);
 			}
 		}
 
@@ -749,7 +745,7 @@ namespace Tests.Linq
 
 			public static Expression<Action<ChildrenContainer<Child>, IEnumerable<Child>>> SetChildrenValue()
 			{
-				return static (ChildrenContainer<Child> container, IEnumerable<Child> value) => container.SetValue(value);
+				return static (container, value) => container.SetValue(value);
 			}
 		}
 
@@ -785,12 +781,11 @@ namespace Tests.Linq
 					select t.MiddleGeneric == null ? null : t.MiddleGeneric.Bottom;
 
 				var list = q.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list[0], Is.Not.Null);
 					Assert.That(list[1], Is.Null);
-				});
+				}
 			}
 		}
 
@@ -815,12 +810,11 @@ namespace Tests.Linq
 					select t.MiddleRuntime == null ? null : t.MiddleRuntime.Bottom;
 
 				var list = q.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list[0], Is.Not.Null);
 					Assert.That(list[1], Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1031,7 +1025,6 @@ namespace Tests.Linq
 						.Select(c => c!.ChildID));
 		}
 
-
 		[Test]
 		public void AssociationExpressionMethod([DataSources] string context)
 		{
@@ -1097,11 +1090,11 @@ namespace Tests.Linq
 			var result = query.ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ParentID, Is.EqualTo(1));
 				Assert.That(result[1].ParentID, Is.Null);
-			});
+			}
 		}
 
 		[Test]
@@ -1146,12 +1139,11 @@ namespace Tests.Linq
 			using var child  = db.CreateLocalTable(childData);
 
 			var query = parent.Select(p => p.ChildOuter!.ParentID);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(query.Count(), Is.EqualTo(2));
 				Assert.That(query.GetTableSource().Joins, Has.Count.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -1169,12 +1161,12 @@ namespace Tests.Linq
 				.Where(с => AssociationExtension.ContainsNullable(
 					db
 						.GetTable<ComplexParent>()
-						.Where(_ => _.ParentID == id.Value)
-						.SelectMany(_ => _.Children())
-						.Select(_ => _.Parent)
+						.Where(p => p.ParentID == id.Value)
+						.SelectMany(p => p.Children())
+						.Select(c => c.Parent)
 						// this fails without ConvertFlags.Key support
-						.Where(_ => _ != null)
-						.Select(_ => _!.ParentID),
+						.Where(c => c != null)
+						.Select(c => c!.ParentID),
 					id1))
 				.OrderBy(с => с.ChildID)
 				.Select(с => (int?)с.ChildID)
@@ -1284,16 +1276,23 @@ namespace Tests.Linq
 		[Test]
 		public void Issue845Test([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			using (db.CreateLocalTable<Employee>())
-			using (db.CreateLocalTable<Department>())
-			{
-				var result = db.GetTable<Employee>()
-					.Select(e => new { e.Id, e.Department!.Name })
-					.ToList();
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable<Employee>();
+			using var t2 = db.CreateLocalTable<Department>();
 
+			var result = db.GetTable<Employee>()
+				.Select(e => new { e.Id, e.Department!.Name })
+				.ToList();
+
+			if (context.IsAnyOf(TestProvName.AllSqlServer))
+			{
 				Assert.That(db.LastQuery!, Does.Not.Contain(" NOT"));
 				Assert.That(db.LastQuery!, Does.Contain("AND [a_Department].[Deleted] = 0"));
+			}
+			else
+			{
+				Assert.That(db.LastQuery!, Does.Contain(" NOT"));
+				Assert.That(db.LastQuery!, Does.Not.Contain(" = 0"));
 			}
 		}
 
@@ -1398,14 +1397,14 @@ namespace Tests.Linq
 				var res = query.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].t.Id, Is.EqualTo(1));
 					Assert.That(res[0].t.TargetName, Is.EqualTo("bda.Requests"));
 					Assert.That(res[0].ActualStage.Id, Is.EqualTo(1));
 					Assert.That(res[0].ActualStage.TaskId, Is.EqualTo(1));
-					Assert.That(res[0].ActualStage.Actual, Is.EqualTo(true));
-				});
+					Assert.That(res[0].ActualStage.Actual, Is.True);
+				}
 			}
 		}
 
@@ -1424,7 +1423,7 @@ namespace Tests.Linq
 			[Association(ExpressionPredicate = nameof(OwnerPredicate), CanBeNull = true)]
 			public Issue2981OwnerEntity? Owner { get; set; }
 
-			public static Expression<Func<T, Issue2981OwnerEntity, bool>> OwnerPredicate { get; set; } = (T entity, Issue2981OwnerEntity owner) => entity.OwnerId == owner.Id;
+			public static Expression<Func<T, Issue2981OwnerEntity, bool>> OwnerPredicate { get; set; } = (entity, owner) => entity.OwnerId == owner.Id;
 		}
 
 		[Table]
@@ -1450,7 +1449,6 @@ namespace Tests.Linq
 				new Issue2981Entity {OwnerId = 2}
 			});
 			using var t2 = db.CreateLocalTable(new[] {new Issue2981OwnerEntity {Id = 1}});
-
 
 			var res = t1.Select(r => new {r.OwnerId, Id = (int?)r.Owner!.Id})
 				.OrderBy(_ => _.OwnerId)
@@ -1586,7 +1584,7 @@ namespace Tests.Linq
 				.ToList();
 
 			Assert.That(result, Has.Count.EqualTo(3));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[1].Id, Is.EqualTo(2));
@@ -1594,7 +1592,7 @@ namespace Tests.Linq
 				Assert.That(result[0].Reason, Is.Null);
 				Assert.That(result[1].Reason, Is.Null);
 				Assert.That(result[2].Reason == "прст1" || result[2].Reason == "прст2", Is.True);
-			});
+			}
 		}
 
 		[Test]
@@ -1620,7 +1618,7 @@ namespace Tests.Linq
 				.ToList();
 
 			Assert.That(result, Has.Count.EqualTo(3));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[1].Id, Is.EqualTo(2));
@@ -1628,7 +1626,7 @@ namespace Tests.Linq
 				Assert.That(result[0].Reason, Is.EqualTo(string.Empty));
 				Assert.That(result[1].Reason, Is.EqualTo(string.Empty));
 				Assert.That(result[2].Reason == "прст1" || result[2].Reason == "прст2", Is.True);
-			});
+			}
 		}
 
 		[Test]
@@ -1654,7 +1652,7 @@ namespace Tests.Linq
 				.ToList();
 
 			Assert.That(result, Has.Count.EqualTo(3));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[1].Id, Is.EqualTo(2));
@@ -1662,7 +1660,7 @@ namespace Tests.Linq
 				Assert.That(result[0].Reason, Is.Null);
 				Assert.That(result[1].Reason, Is.Null);
 				Assert.That(result[2].Reason == "прст1" || result[2].Reason == "прст2", Is.True);
-			});
+			}
 		}
 		#endregion
 
@@ -1897,7 +1895,6 @@ namespace Tests.Linq
 		}
 
 		#endregion
-
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2022")]
 		public void TestAssociationAliasEscaping([DataSources(false)] string context)

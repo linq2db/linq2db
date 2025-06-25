@@ -1,6 +1,8 @@
 ﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -72,11 +74,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -96,11 +98,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -120,11 +122,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -144,11 +146,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -166,11 +168,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -188,11 +190,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -210,11 +212,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -232,11 +234,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -254,11 +256,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -274,11 +276,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -298,11 +300,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -322,11 +324,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -346,11 +348,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -370,11 +372,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -392,11 +394,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -414,11 +416,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -437,11 +439,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -459,11 +461,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -481,11 +483,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 
@@ -501,11 +503,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
 					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
-				});
+				}
 			}
 		}
 

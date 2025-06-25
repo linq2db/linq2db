@@ -1,11 +1,11 @@
 ﻿using System;
 
+using LinqToDB.Common;
+
+using LinqToDB.Mapping;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-
-	using Mapping;
-
 	public class SqlField : SqlExpressionBase
 	{
 		internal static SqlField All(ISqlTableSource table)
@@ -95,6 +95,8 @@ namespace LinqToDB.SqlQuery
 		public string?           CreateFormat      { get; set; }
 		public int?              CreateOrder       { get; set; }
 
+		public SqlField? BasedOn { get; set; }
+
 		public ISqlTableSource?  Table             { get; set; }
 		public ColumnDescriptor  ColumnDescriptor  { get; set; } = null!; // TODO: not true, we probably should introduce something else for non-column fields
 
@@ -149,6 +151,23 @@ namespace LinqToDB.SqlQuery
 			var field = new SqlField(fieldName, fieldName);
 			field.Type = dataType;
 			return field;
+		}
+
+		public void Assign(SqlField source)
+		{
+			Type             = source.Type;
+			Alias            = source.Alias;
+			Name             = source.Name;
+			PhysicalName     = source.PhysicalName;
+			CanBeNull        = source.CanBeNull;
+			IsPrimaryKey     = source.IsPrimaryKey;
+			PrimaryKeyOrder  = source.PrimaryKeyOrder;
+			IsIdentity       = source.IsIdentity;
+			IsInsertable     = source.IsInsertable;
+			IsUpdatable      = source.IsUpdatable;
+			CreateFormat     = source.CreateFormat;
+			CreateOrder      = source.CreateOrder;
+			IsDynamic        = source.IsDynamic;
 		}
 	}
 }

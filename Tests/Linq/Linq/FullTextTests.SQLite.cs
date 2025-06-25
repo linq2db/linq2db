@@ -1,8 +1,10 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+
+using LinqToDB;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using System.Linq;
 
 namespace Tests.Linq
 {
@@ -54,11 +56,11 @@ namespace Tests.Linq
 				{
 					var results = query.ToList();
 					Assert.That(results, Has.Count.EqualTo(1));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(results[0].text1, Is.EqualTo("looking for something?"));
 						Assert.That(results[0].text2, Is.EqualTo("found it!"));
-					});
+					}
 				}
 				else
 				{
@@ -87,11 +89,11 @@ namespace Tests.Linq
 
 				var results = query.ToList();
 				Assert.That(results, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].text1, Is.EqualTo("looking for something?"));
 					Assert.That(results[0].text2, Is.EqualTo("found it!"));
-				});
+				}
 			}
 		}
 
@@ -105,11 +107,11 @@ namespace Tests.Linq
 
 				var results = query.ToList();
 				Assert.That(results, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].text1, Is.EqualTo("record not found"));
 					Assert.That(results[0].text2, Is.EqualTo("empty"));
-				});
+				}
 			}
 		}
 
@@ -124,11 +126,11 @@ namespace Tests.Linq
 				{
 					var results = query.ToList();
 					Assert.That(results, Has.Count.EqualTo(1));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(results[0].text1, Is.EqualTo("record not found"));
 						Assert.That(results[0].text2, Is.EqualTo("empty"));
-					});
+					}
 				}
 				else
 				{
@@ -152,11 +154,12 @@ namespace Tests.Linq
 				//query.ToArray();
 
 				var command = query.ToSqlQuery();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(command.Sql, Does.Contain("[FTS5_TABLE](@"));
 					Assert.That(command.Parameters, Has.Count.EqualTo(1));
-				});
+				}
+
 				Assert.That(command.Parameters[0].Value, Is.EqualTo("found"));
 			}
 		}
@@ -172,11 +175,11 @@ namespace Tests.Linq
 				{
 					var results = query.ToList();
 					Assert.That(results, Has.Count.EqualTo(1));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(results[0].text1, Is.EqualTo("record not found"));
 						Assert.That(results[0].text2, Is.EqualTo("empty"));
-					});
+					}
 				}
 				else
 				{
@@ -217,13 +220,13 @@ namespace Tests.Linq
 
 				var results = query.ToList();
 				Assert.That(results, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].text1, Is.EqualTo("looking for something?"));
 					Assert.That(results[0].offsets, Is.EqualTo("1 0 0 5"));
 					Assert.That(results[1].text1, Is.EqualTo("record not found"));
 					Assert.That(results[1].offsets, Is.EqualTo("0 0 11 5"));
-				});
+				}
 			}
 		}
 
@@ -554,17 +557,14 @@ namespace Tests.Linq
 				}
 				finally
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(db.LastQuery, Is.EqualTo("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rowid, [text1], [text2]) VALUES('delete', 2, @p0, @p1)"));
 
 						Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(2));
-					});
-					Assert.Multiple(() =>
-					{
 						Assert.That(commandInterceptor.Parameters.Any(p => p.Value!.Equals("one")), Is.True);
 						Assert.That(commandInterceptor.Parameters.Any(p => p.Value!.Equals("two")), Is.True);
-					});
+					}
 				}
 			}
 		}
@@ -699,12 +699,13 @@ namespace Tests.Linq
 				}
 				finally
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(db.LastQuery, Is.EqualTo("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rank) VALUES('rank', @rank)"));
 
 						Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(1));
-					});
+					}
+
 					Assert.That(commandInterceptor.Parameters[0].Value, Is.EqualTo("strange('function\")"));
 				}
 			}

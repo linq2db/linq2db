@@ -7,10 +7,10 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.UserTests
 {
-	using Model;
-
 	[TestFixture]
 	public class Issue445Tests : TestBase
 	{
@@ -122,6 +122,7 @@ namespace Tests.UserTests
 		//}
 
 		[Test]
+		[Explicit("Too slow")]
 		public void ConnectionPoolException1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (new DisableBaseline("Output depends on pool size"))

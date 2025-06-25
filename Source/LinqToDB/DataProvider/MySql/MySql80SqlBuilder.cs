@@ -1,23 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Globalization;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
+
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using Extensions;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	sealed class MySql80SqlBuilder : MySqlSqlBuilder
 	{
 		public MySql80SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
+
+		protected override bool SupportsColumnAliasesInSource => true;
 
 		MySql80SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{

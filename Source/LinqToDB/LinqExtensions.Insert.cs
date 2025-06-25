@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Async;
+using LinqToDB.Linq;
 
 namespace LinqToDB
 {
-	using Async;
-	using Linq;
-
 	public static partial class LinqExtensions
 	{
 
@@ -524,7 +526,8 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in Linq To DB 7")]
+		// TODO: Remove in v7
+		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static Task<TTarget[]> InsertWithOutputAsync<TSource, TTarget>(
 							IQueryable<TSource> source,
 							ITable<TTarget> target,
@@ -657,7 +660,8 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in Linq To DB 7")]
+		// TODO: Remove in v7
+		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static Task<TOutput[]> InsertWithOutputAsync<TSource, TTarget, TOutput>(
 							IQueryable<TSource> source,
 							ITable<TTarget> target,

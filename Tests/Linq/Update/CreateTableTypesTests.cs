@@ -2,23 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+
 using JetBrains.Annotations;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
+using ColumnBuilder = System.Action<LinqToDB.Mapping.EntityMappingBuilder<Tests.xUpdate.CreateTableTypesTests.CreateTableTypes>>;
+using DefaultValueBuilder = System.Action<string, Tests.xUpdate.CreateTableTypesTests.CreateTableTypes>;
+using ValueBuilder = System.Action<Tests.xUpdate.CreateTableTypesTests.CreateTableTypes>;
+
 // ReSharper disable once CheckNamespace
 namespace Tests.xUpdate
 {
-	using ColumnBuilder       = Action<EntityMappingBuilder<CreateTableTypesTests.CreateTableTypes>>;
-	using ValueBuilder        = Action<CreateTableTypesTests.CreateTableTypes>;
-	using DefaultValueBuilder = Action<string, CreateTableTypesTests.CreateTableTypes>;
-
 	[TestFixture]
 	public class CreateTableTypesTests : TestBase
 	{
@@ -166,8 +166,6 @@ namespace Tests.xUpdate
 				Assert.Ignore("test case is not valid");
 			}
 
-			Query.ClearCaches();
-
 			var ms = new MappingSchema();
 			var entity = new FluentMappingBuilder(ms)
 				.Entity<CreateTableTypes>()
@@ -188,7 +186,7 @@ namespace Tests.xUpdate
 				});
 			ms.SetConverter<string, List<(uint, string)>?>(_ => JsonSerializer.Deserialize<List<(uint, string)>>(_, options));
 
-			using (var db    = GetDataContext(context, ms))
+			using (var db    = GetDataContext(context, o => o.UseMappingSchema(ms).UseDisableQueryCache(true)))
 			using (var table = db.CreateLocalTable<CreateTableTypes>())
 			{
 				var defaultValue = new CreateTableTypes { Id = 1 };

@@ -2,14 +2,13 @@
 
 using LinqToDB;
 using LinqToDB.DataProvider.Oracle;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class ParserTests : TestBase
 	{
@@ -37,12 +36,12 @@ namespace Tests.Linq
 		{
 			using (var db = new TestDataConnection())
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.OracleXmlTable<Person>(() => "<xml/>"), Is.Not.Null);
 					Assert.That(db.OracleXmlTable<Person>("<xml/>"), Is.Not.Null);
 					Assert.That(db.OracleXmlTable(new[] { new Person() }), Is.Not.Null);
-				});
+				}
 			}
 		}
 	}

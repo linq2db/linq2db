@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -85,7 +87,6 @@ namespace Tests.Linq
 			return result;
 		}
 
-
 		[Test]
 		public void AsSubQueryTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -166,7 +167,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void DistinctOptimization([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -191,7 +191,7 @@ namespace Tests.Linq
 
 				var projected = query.Select(p => p.s);
 				projected.ToArray();
-				Assert.That(projected.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(0));
+				Assert.That(projected.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.Zero);
 			}
 		}
 
@@ -405,15 +405,14 @@ namespace Tests.Linq
 				var selectQuery = query.EnumQueries().Single();
 				var table = selectQuery.From.Tables[0];
 				var joinedTable = table.Joins[0].Table;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(joinedTable.HasUniqueKeys && table.HasUniqueKeys, Is.True);
 
 					Assert.That(joinedTable.UniqueKeys.Count + table.UniqueKeys.Count, Is.EqualTo(2));
-				});
+				}
 			}
 		}
-
 
 		[Test]
 		public void UniqueKeysAndSubqueries([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)

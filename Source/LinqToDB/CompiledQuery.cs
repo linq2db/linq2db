@@ -2,17 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
+
 namespace LinqToDB
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Linq.Builder;
-
 	/// <summary>
 	/// Provides API for compilation and caching of queries for reuse.
 	/// </summary>
@@ -24,7 +26,7 @@ namespace LinqToDB
 			_query = query;
 		}
 
-		readonly object                   _sync = new ();
+		readonly Lock                     _sync = new ();
 		readonly LambdaExpression         _query;
 		volatile Func<object?[],object?[]?,object?>? _compiledQuery;
 
@@ -104,7 +106,7 @@ namespace LinqToDB
 							{
 								var type = expr.Type.GetGenericArguments()[0];
 
-								var helper = (ITableHelper)Activator.CreateInstance(typeof(TableHelper<>).MakeGenericType(type))!;
+								var helper = ActivatorExt.CreateInstance<ITableHelper>(typeof(TableHelper<>).MakeGenericType(type));
 
 								return helper.CallTable(context.query, expr, context.ps, context.preambles, MethodType.ElementAsync);
 							}
@@ -115,8 +117,8 @@ namespace LinqToDB
 										typeof(IEnumerable<>);
 
 								var qtype  = type.GetGenericType(expr.Type);
-								var helper = (ITableHelper)Activator.CreateInstance(
-									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArguments()[0]))!;
+								var helper = ActivatorExt.CreateInstance<ITableHelper>(
+									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArguments()[0]));
 
 								return helper.CallTable(context.query, expr, context.ps, context.preambles, qtype != null ? MethodType.Queryable : MethodType.Element);
 							}
@@ -130,9 +132,9 @@ namespace LinqToDB
 					case ExpressionType.MemberAccess :
 						if (typeof(ITable<>).IsSameOrParentOf(pi.Type))
 						{
-							var helper = (ITableHelper)Activator
-								.CreateInstance(typeof(TableHelper<>)
-								.MakeGenericType(pi.Type.GetGenericArguments()[0]))!;
+							var helper = ActivatorExt
+								.CreateInstance<ITableHelper>(typeof(TableHelper<>)
+								.MakeGenericType(pi.Type.GetGenericArguments()[0]));
 							return helper.CallTable(context.query, pi, context.ps, context.preambles, MethodType.Queryable);
 						}
 

@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Tests.Model;
 
 #region ReSharper disable
 // ReSharper disable ConvertToConstant.Local
@@ -15,9 +19,6 @@ using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB.Common;
-	using Model;
-
 	[TestFixture]
 //	[Order(10000)]
 	public class UpdateTests : TestBase
@@ -111,13 +112,12 @@ namespace Tests.xUpdate
 				var id = 1001;
 
 				db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
 					Assert.That(db.Child.Where(c => c.ChildID == id && c.Parent!.Value1 == 1).Update(c => new Child { ChildID = c.ChildID + 1 }), Is.EqualTo(1));
 					Assert.That(db.Child.Count(c => c.ChildID == id + 1), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -130,8 +130,7 @@ namespace Tests.xUpdate
 				var id = 1001;
 
 				db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
 					Assert.That(db.Child
@@ -139,7 +138,7 @@ namespace Tests.xUpdate
 								.Set(c => c.ChildID, c => c.ChildID + 1)
 							.Update(), Is.EqualTo(1));
 					Assert.That(db.Child.Count(c => c.ChildID == id + 1), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -168,8 +167,7 @@ namespace Tests.xUpdate
 				var id = 1001;
 
 				await db.Child.InsertAsync(() => new Child { ParentID = 1, ChildID = id });
-
-				Assert.Multiple(async () =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(await db.Child.CountAsync(c => c.ChildID == id), Is.EqualTo(1));
 					Assert.That(await db.Child
@@ -177,7 +175,7 @@ namespace Tests.xUpdate
 								.Set(c => c.ChildID, c => c.ChildID + 1)
 							.UpdateAsync(), Is.EqualTo(1));
 					Assert.That(await db.Child.CountAsync(c => c.ChildID == id + 1), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -190,8 +188,7 @@ namespace Tests.xUpdate
 				var id = 1001;
 
 				db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
 					Assert.That(db.Child
@@ -199,7 +196,7 @@ namespace Tests.xUpdate
 								.Set(c => c.ChildID, () => id + 1)
 							.Update(), Is.EqualTo(1));
 					Assert.That(db.Child.Count(c => c.ChildID == id + 1), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -297,13 +294,12 @@ namespace Tests.xUpdate
 						join p in db.Parent on c.ParentID equals p.ParentID
 						where c.ChildID == id && c.Parent!.Value1 == 1
 						select new { c, p };
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
 					Assert.That(q.Update(db.Child, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }), Is.EqualTo(1));
 					Assert.That(db.Child.Count(c => c.ChildID == id + 1), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -329,13 +325,12 @@ namespace Tests.xUpdate
 						join p in db.Parent on c.ParentID equals p.ParentID
 						where c.ChildID == id && c.Parent!.Value1 == 1
 						select new { c, p };
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
 					Assert.That(q.Update(q => q.c, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }), Is.EqualTo(1));
 					Assert.That(db.Child.Count(c => c.ChildID == id + 1), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -361,13 +356,12 @@ namespace Tests.xUpdate
 						join c in db.Child on p.ParentID equals c.ParentID
 						where c.ChildID == id && c.Parent!.Value1 == 1
 						select new { c, p };
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
 					Assert.That(q.Update(db.Child, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }), Is.EqualTo(1));
 					Assert.That(db.Child.Count(c => c.ChildID == id + 1), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -392,13 +386,12 @@ namespace Tests.xUpdate
 						join c in db.Child on p.ParentID equals c.ParentID
 						where c.ChildID == id && c.Parent!.Value1 == 1
 						select new { c, p };
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
 					Assert.That(q.Update(q => q.c, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }), Is.EqualTo(1));
 					Assert.That(db.Child.Count(c => c.ChildID == id + 1), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -574,21 +567,20 @@ namespace Tests.xUpdate
 				db.Update(p, (a, b) => columsToUpdate.Contains(b.ColumnName));
 
 				var updatedPerson = db.GetTable<Person>().Where(x => x.ID == p.ID).Single();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(updatedPerson.LastName, Is.EqualTo("whatever"));
 					Assert.That(updatedPerson.FirstName, Is.EqualTo(newName));
-				});
+				}
 
 				// test for cached update query - must update both columns
 				db.Update(p);
 				updatedPerson = db.GetTable<Person>().Where(_ => _.ID == p.ID).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(updatedPerson.LastName, Is.EqualTo(newName));
 					Assert.That(updatedPerson.FirstName, Is.EqualTo(newName));
-				});
+				}
 			}
 		}
 
@@ -980,12 +972,11 @@ namespace Tests.xUpdate
 				var uq = q.AsUpdatable();
 
 				uq = uq.Set(c => c.ChildID, c => c.ChildID + 1);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(uq.Update(), Is.EqualTo(1));
 					Assert.That(db.Child.Count(c => c.ChildID == id + 1), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -1007,12 +998,11 @@ namespace Tests.xUpdate
 
 				uq = uq.Set(c => c.ChildID, c => c.ChildID + 1);
 				uq = uq.Set(c => c.ChildID, c => c.ChildID + 2);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(uq.Update(), Is.EqualTo(1));
 					Assert.That(db.Child.Count(c => c.ChildID == id + 2), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -1358,12 +1348,11 @@ namespace Tests.xUpdate
 					;
 
 				var udt = db.Types.Single(t => t.ID == ldt.ID);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(udt.MoneyValue, Is.Not.EqualTo(ldt.MoneyValue));
 					Assert.That(udt.SmallIntValue, Is.Not.EqualTo(ldt.SmallIntValue));
-				});
+				}
 			}
 		}
 
@@ -1398,13 +1387,12 @@ namespace Tests.xUpdate
 				;
 
 			var udt = db.Types.Single(t => t.ID == id);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				// MySql doesn't know how update should work
 				Assert.That(udt.MoneyValue, Is.EqualTo(100));
 				Assert.That(udt.SmallIntValue, Is.EqualTo(context.IsAnyOf(TestProvName.AllMySql) ? 100 : 200));
-			});
+			}
 		}
 
 		[Test]
@@ -1421,12 +1409,11 @@ namespace Tests.xUpdate
 			using (var db = GetDataContext(context))
 			{
 				var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(table.TableName, Is.EqualTo(tableName));
 					Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-				});
+				}
 
 				var person = new Person()
 				{
@@ -1449,7 +1436,7 @@ namespace Tests.xUpdate
 				var updatedPerson = table.Single();
 				Assert.That(updatedPerson.MiddleName, Is.EqualTo("None"));
 
-				if (db is DataConnection { Connection: FirebirdSql.Data.FirebirdClient.FbConnection })
+				if (db is DataConnection dc && dc.OpenDbConnection() is FirebirdSql.Data.FirebirdClient.FbConnection)
 					db.Close();
 
 				table.Drop();
@@ -1470,12 +1457,11 @@ namespace Tests.xUpdate
 			using (var db = GetDataContext(context))
 			{
 				var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(table.TableName, Is.EqualTo(tableName));
 					Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-				});
+				}
 
 				var person = new Person()
 				{
@@ -1952,15 +1938,14 @@ namespace Tests.xUpdate
 					.Update();
 
 				var result = table.ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Items1, Is.EqualTo("T1" + str));
 					Assert.That(result[0].Items2, Is.EqualTo("Z1" + str));
 
 					Assert.That(result[1].Items1, Is.EqualTo("T2" + str));
 					Assert.That(result[1].Items2, Is.EqualTo("Z2" + str));
-				});
+				}
 
 			}
 		}
@@ -1986,15 +1971,14 @@ namespace Tests.xUpdate
 					.Update();
 
 				var result = table.OrderBy(_ => _.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Items1, Is.EqualTo("T1" + str));
 					Assert.That(result[0].Items2, Is.EqualTo("Z1" + str));
 
 					Assert.That(result[1].Items1, Is.EqualTo("T2" + str));
 					Assert.That(result[1].Items2, Is.EqualTo("Z2" + str));
-				});
+				}
 
 			}
 		}
@@ -2054,14 +2038,13 @@ namespace Tests.xUpdate
 						});
 
 				var data = main.OrderBy(_ => _.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));
-				});
+				}
 			}
 		}
 
@@ -2082,14 +2065,13 @@ namespace Tests.xUpdate
 						});
 
 				var data = main.OrderBy(_ => _.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));
-				});
+				}
 			}
 		}
 
@@ -2110,14 +2092,13 @@ namespace Tests.xUpdate
 					});
 
 				var data = main.OrderBy(_ => _.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));
-				});
+				}
 			}
 		}
 
@@ -2138,14 +2119,13 @@ namespace Tests.xUpdate
 					});
 
 				var data = main.OrderBy(_ => _.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));
-				});
+				}
 			}
 		}
 

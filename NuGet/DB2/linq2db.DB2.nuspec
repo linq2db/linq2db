@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- %T4% -->
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata minClientVersion="3.3.0">
+		<id>linq2db.DB2</id>
+		<title>LINQ to DB T4 Scaffold Templates for IBM DB2</title>
+		<tags>DB2 LUW IBM</tags>
+	</metadata>
+	<files>
+		<file src="t4bin\IBM.Data.DB2.DLL" target="tools"           />
+		<file src="t4bin\clidriver\**"     target="tools\clidriver" />
+	</files>
+</package>

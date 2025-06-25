@@ -8,8 +8,6 @@ using Microsoft.EntityFrameworkCore;
 
 using NUnit.Framework;
 
-using Tests;
-
 namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	[TestFixture]
@@ -66,7 +64,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				var items = query.Take(2).ToLinqToDB().ToArray();
 			}
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(_testCommandInterceptor.HasInterceptorBeenInvoked, Is.True);
 				Assert.That(_testConnectionInterceptor.HasInterceptorBeenInvoked, Is.True);
@@ -75,7 +73,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				//the following check is false because linq2db context is never closed together
 				//with the EF core context
 				Assert.That(_testDataContextInterceptor.HasInterceptorBeenInvoked, Is.False);
-			});
+			}
 		}
 
 		[Test]
@@ -94,13 +92,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				var items2 = query.Take(2).ToLinqToDB(linqToDBContext).ToArray();
 			}
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(_testCommandInterceptor.HasInterceptorBeenInvoked, Is.True);
 				Assert.That(_testDataContextInterceptor.HasInterceptorBeenInvoked, Is.True);
 				Assert.That(_testConnectionInterceptor.HasInterceptorBeenInvoked, Is.True);
 				Assert.That(_testEntityServiceInterceptor.HasInterceptorBeenInvoked, Is.True);
-			});
+			}
 		}
 
 		[Test]

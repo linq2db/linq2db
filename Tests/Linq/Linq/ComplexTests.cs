@@ -5,15 +5,15 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.Data;
-	using Model;
-
 	[TestFixture]
 	public class ComplexTests : TestBase
 	{
@@ -577,17 +577,14 @@ namespace Tests.Linq
 				var result = users.ToList();
 
 				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Name, Is.EqualTo(User.TestData[0].Name));
 					Assert.That(result[0].Residence, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[0].Residence!.Building, Is.EqualTo(User.TestData[0].Residence!.Building));
 					Assert.That(result[0].Residence!.City, Is.EqualTo(User.TestData[0].Residence!.City));
 					Assert.That(result[0].Residence!.Street, Is.EqualTo(User.TestData[0].Residence!.Street));
-				});
+				}
 			}
 		}
 
@@ -598,18 +595,14 @@ namespace Tests.Linq
 			using var users = db.CreateLocalTable(User.TestData);
 
 			var record = users.Where(u => u.Residence == User.TestData[0].Residence).Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(record.Name, Is.EqualTo("Freddy"));
 				Assert.That(record.Residence, Is.Not.Null);
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(record.Residence!.Building, Is.EqualTo(User.TestData[0].Residence!.Building));
 				Assert.That(record.Residence.City, Is.EqualTo(User.TestData[0].Residence!.City));
 				Assert.That(record.Residence.Street, Is.EqualTo(User.TestData[0].Residence!.Street));
-			});
+			}
 		}
 
 		struct AddressStruct : IEquatable<AddressStruct>
@@ -684,14 +677,13 @@ namespace Tests.Linq
 			using var users = db.CreateLocalTable(UserStruct.TestData);
 
 			var record = users.Where(u => u.Residence == UserStruct.TestData[0].Residence).Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(record.Name, Is.EqualTo("Freddy"));
 				Assert.That(record.Residence!.Building, Is.EqualTo(UserStruct.TestData[0].Residence.Building));
 				Assert.That(record.Residence.City, Is.EqualTo(UserStruct.TestData[0].Residence.City));
 				Assert.That(record.Residence.Street, Is.EqualTo(UserStruct.TestData[0].Residence.Street));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2874")]
@@ -703,12 +695,12 @@ namespace Tests.Linq
 			var residence = users.Select(u => u.Residence).Distinct().Single();
 
 			Assert.That(residence, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(residence!.Building, Is.EqualTo(User.TestData[0].Residence!.Building));
 				Assert.That(residence.City, Is.EqualTo(User.TestData[0].Residence!.City));
 				Assert.That(residence.Street, Is.EqualTo(User.TestData[0].Residence!.Street));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2874")]
@@ -721,13 +713,12 @@ namespace Tests.Linq
 			using var users = db.CreateLocalTable(UserStruct.TestData);
 
 			var residence = users.Select(u => u.Residence).Distinct().Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(residence.Building, Is.EqualTo(UserStruct.TestData[0].Residence.Building));
 				Assert.That(residence.City, Is.EqualTo(UserStruct.TestData[0].Residence.City));
 				Assert.That(residence.Street, Is.EqualTo(UserStruct.TestData[0].Residence.Street));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
@@ -764,16 +755,14 @@ namespace Tests.Linq
 			var records = tb.LoadWith(t => t.Parent!.Parent).OrderBy(r => r.Id).ToArray();
 
 			Assert.That(records.Count, Is.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(records[0].Parent, Is.Null);
 				Assert.That(records[1].Parent, Is.Not.Null);
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(records[1].Parent!.ParentId, Is.EqualTo(1));
 				Assert.That(records[1].Parent!.Parent, Is.Not.Null);
-			});
+			}
+
 			Assert.That(records[1].Parent!.Parent!.Id, Is.EqualTo(1));
 		}
 

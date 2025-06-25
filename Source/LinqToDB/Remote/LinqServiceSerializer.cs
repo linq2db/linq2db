@@ -8,13 +8,14 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Remote
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-	using SqlQuery;
-
 	static class LinqServiceSerializer
 	{
 		#region Public Members
@@ -70,7 +71,7 @@ namespace LinqToDB.Remote
 			protected readonly Dictionary<object,string> DelayedObjects = new (Utils.ObjectReferenceEqualityComparer<object>.Default);
 			protected int                                Index;
 
-			protected readonly Dictionary<SqlValuesTable, IReadOnlyList<ISqlExpression[]>> EnumerableData = new ();
+			protected readonly Dictionary<SqlValuesTable, IReadOnlyList<List<ISqlExpression>>> EnumerableData = new ();
 
 			protected SerializerBase(MappingSchema serializationMappingSchema)
 			{
@@ -136,7 +137,7 @@ namespace LinqToDB.Remote
 				Builder.Append(' ').Append(value.HasValue ? '1' : '0');
 
 				if (value.HasValue)
-					Builder.Append(CultureInfo.InvariantCulture, $"{value.Value}");
+					Builder.Append(value.Value);
 			}
 
 			protected void Append(Type? value)
@@ -242,7 +243,7 @@ namespace LinqToDB.Remote
 
 						Builder.Append(CultureInfo.InvariantCulture, $"{idx} {TypeIndex}");
 
-						Append(Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
+						Append(Common.Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
 					}
 
 					Builder.AppendLine();
@@ -569,7 +570,7 @@ namespace LinqToDB.Remote
 					{
 						if (!_arrayDeserializers.TryGetValue(elem, out deserializer))
 						{
-							var helper = (IDeserializerHelper)Activator.CreateInstance(typeof(DeserializerHelper<>).MakeGenericType(elem))!;
+							var helper = ActivatorExt.CreateInstance<IDeserializerHelper>(typeof(DeserializerHelper<>).MakeGenericType(elem));
 							_arrayDeserializers.Add(elem, deserializer = helper.GetArray);
 						}
 					}
@@ -614,7 +615,7 @@ namespace LinqToDB.Remote
 						type = LinqService.TypeResolver(str);
 						if (type == null)
 						{
-							if (Configuration.LinqService.ThrowUnresolvedTypeException)
+							if (Common.Configuration.LinqService.ThrowUnresolvedTypeException)
 								throw new LinqToDBException(
 									$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.");
 
@@ -705,7 +706,7 @@ namespace LinqToDB.Remote
 				protected override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
 				{
 					VisitElements(element.Fields, VisitMode.ReadOnly);
-					VisitListOfArrays(element.Rows, VisitMode.ReadOnly);
+					VisitListOfLists(element.Rows, VisitMode.ReadOnly);
 					return element;
 				}
 
@@ -1065,6 +1066,7 @@ namespace LinqToDB.Remote
 							Append(elem.SourceID);
 							Append(elem.Alias);
 							Append(elem.ObjectType);
+							Append(elem.IsScalar);
 
 							Append(ObjectIndices[elem.All]);
 							Append(elem.Fields.Count);
@@ -1125,7 +1127,7 @@ namespace LinqToDB.Remote
 							Append(elem.Expr1);
 							Append((int)elem.Operator);
 							Append(elem.Expr2);
-							Append(elem.WithNull == null ? 3 : elem.WithNull.Value ? 1 : 0);
+							Append(elem.UnknownAsValue);
 
 							break;
 						}
@@ -1174,7 +1176,7 @@ namespace LinqToDB.Remote
 							Append(elem.IsNot);
 							Append(elem.TrueValue);
 							Append(elem.FalseValue);
-							Append(elem.WithNull == null ? 3 : elem.WithNull.Value ? 1 : 0);
+							Append(elem.WithNull);
 
 							break;
 						}
@@ -1219,7 +1221,7 @@ namespace LinqToDB.Remote
 							Append(elem.Expr1);
 							Append(elem.IsNot);
 							Append(elem.Values);
-							Append(elem.WithNull == null ? 3 : elem.WithNull.Value ? 1 : 0);
+							Append(elem.WithNull);
 
 							break;
 						}
@@ -1280,6 +1282,7 @@ namespace LinqToDB.Remote
 					case QueryElementType.SearchCondition :
 						{
 							Append(((SqlSearchCondition)e).IsOr);
+							Append(((SqlSearchCondition)e).CanReturnUnknown);
 							Append(((SqlSearchCondition)e).Predicates);
 							break;
 						}
@@ -2041,9 +2044,10 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.SqlRawSqlTable :
 						{
-							var sourceID           = ReadInt();
-							var alias              = ReadString()!;
-							var objectType         = ReadType()!;
+							var sourceID   = ReadInt();
+							var alias      = ReadString()!;
+							var objectType = ReadType()!;
+							var isScalar   = ReadBool();
 
 							var all    = Read<SqlField>()!;
 							var fields = ReadArray<SqlField>()!;
@@ -2056,7 +2060,7 @@ namespace LinqToDB.Remote
 							var parameters = ReadArray<ISqlExpression>()!;
 							var extensions = ReadList<SqlQueryExtension>();
 
-							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, parameters)
+							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, isScalar, parameters)
 							{
 								SqlQueryExtensions = extensions
 							};
@@ -2099,12 +2103,12 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.ExprExprPredicate :
 						{
-							var expr1     = Read<ISqlExpression>()!;
-							var @operator = (SqlPredicate.Operator)ReadInt();
-							var expr2     = Read<ISqlExpression>()!;
-							var withNull  = ReadInt();
+							var expr1        = Read<ISqlExpression>()!;
+							var @operator    = (SqlPredicate.Operator)ReadInt();
+							var expr2        = Read<ISqlExpression>()!;
+							var unknownValue = ReadNullableBool();
 
-							obj = new SqlPredicate.ExprExpr(expr1, @operator, expr2, withNull == 3 ? null : withNull == 1);
+							obj = new SqlPredicate.ExprExpr(expr1, @operator, expr2, unknownValue);
 
 							break;
 						}
@@ -2151,9 +2155,9 @@ namespace LinqToDB.Remote
 							var isNot = ReadBool();
 							var trueValue  = Read<ISqlExpression>()!;
 							var falseValue = Read<ISqlExpression>()!;
-							var withNull   = ReadInt();
+							var withNull   = ReadNullableBool();
 
-							obj = new SqlPredicate.IsTrue(expr1, trueValue, falseValue, withNull == 3 ? null : withNull == 1, isNot);
+							obj = new SqlPredicate.IsTrue(expr1, trueValue, falseValue, withNull, isNot);
 
 							break;
 						}
@@ -2196,9 +2200,9 @@ namespace LinqToDB.Remote
 							var expr1  = Read<ISqlExpression>()!;
 							var isNot  = ReadBool();
 							var values = ReadList<ISqlExpression>()!;
-							var withNull = ReadInt();
+							var withNull = ReadNullableBool();
 
-							obj = new SqlPredicate.InList(expr1, withNull == 3 ? null : withNull == 1, isNot, values);
+							obj = new SqlPredicate.InList(expr1, withNull, isNot, values);
 
 							break;
 						}
@@ -2269,7 +2273,7 @@ namespace LinqToDB.Remote
 						}
 
 					case QueryElementType.SearchCondition :
-						obj = new SqlSearchCondition(ReadBool(), ReadArray<ISqlPredicate>()!);
+						obj = new SqlSearchCondition(ReadBool(), ReadNullableBool(), ReadArray<ISqlPredicate>()!);
 						break;
 
 					case QueryElementType.TableSource :
@@ -2646,12 +2650,12 @@ namespace LinqToDB.Remote
 							var fields    = ReadArray<SqlField>()!;
 
 							var rowsCount = ReadInt();
-							var rows      = new List<ISqlExpression[]>(rowsCount);
+							var rows      = new List<List<ISqlExpression>>(rowsCount);
 
 							for (var i = 0; i < rowsCount; i++)
-								rows.Add(ReadArray<ISqlExpression>()!);
+								rows.Add(ReadList<ISqlExpression>()!);
 
-							obj = new SqlValuesTable(fields, null, rows);
+							obj = new SqlValuesTable(fields, rows);
 
 							break;
 						}
@@ -2829,7 +2833,7 @@ namespace LinqToDB.Remote
 
 				foreach (var type in result.FieldTypes)
 				{
-					Append(Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
+					Append(Common.Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
 					Builder.AppendLine();
 				}
 
@@ -2875,6 +2879,7 @@ namespace LinqToDB.Remote
 				NextLine();
 
 				for (var i = 0; i < fieldCount;  i++) { result.FieldNames  [i] = ReadString()!;              NextLine(); }
+
 				for (var i = 0; i < fieldCount;  i++) { result.FieldTypes  [i] = ResolveType(ReadString())!; NextLine(); }
 
 				for (var n = 0; n < result.RowCount; n++)
@@ -2975,7 +2980,7 @@ namespace LinqToDB.Remote
 			{
 				if (!_arrayTypes.TryGetValue(elementType, out arrayType))
 				{
-					var helper = (IArrayHelper)Activator.CreateInstance(typeof(ArrayHelper<>).MakeGenericType(elementType))!;
+					var helper = ActivatorExt.CreateInstance<IArrayHelper>(typeof(ArrayHelper<>).MakeGenericType(elementType));
 					_arrayTypes.Add(elementType, arrayType = helper.GetArrayType());
 				}
 			}
@@ -2991,7 +2996,7 @@ namespace LinqToDB.Remote
 			{
 				if (!_arrayConverters.TryGetValue(elementType, out converter))
 				{
-					var helper = (IArrayHelper)Activator.CreateInstance(typeof(ArrayHelper<>).MakeGenericType(elementType))!;
+					var helper = ActivatorExt.CreateInstance<IArrayHelper>(typeof(ArrayHelper<>).MakeGenericType(elementType));
 					_arrayConverters.Add(elementType, converter = helper.ConvertToArray);
 				}
 			}

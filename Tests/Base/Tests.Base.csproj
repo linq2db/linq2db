@@ -3,15 +3,21 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.Base</AssemblyName>
 		<RootNamespace>Tests</RootNamespace>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net9.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<ProjectCapability Remove="TestContainer" />
 
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Remote.SignalR.Server\LinqToDB.Remote.SignalR.Server.csproj" />
 
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="NUnit.Analyzers" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
+		<ProjectReference Include="..\..\Source\LinqToDB.Remote.HttpClient.Server\LinqToDB.Remote.HttpClient.Server.csproj" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net462' ">
@@ -20,9 +26,13 @@
 
 		<PackageReference Include="MiniProfiler.Shared" />
 		<PackageReference Include="System.Text.Json" />
+		<PackageReference Include="Microsoft.AspNetCore" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
 		<PackageReference Include="MiniProfiler.Minimal" />
 	</ItemGroup>

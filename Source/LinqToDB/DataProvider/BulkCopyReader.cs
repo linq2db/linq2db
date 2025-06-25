@@ -6,16 +6,16 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
+
+using LinqToDB.Async;
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider
 {
-	using Async;
-	using Common;
-	using Data;
-	using Mapping;
-
 	public class BulkCopyReader<T> : BulkCopyReader, IAsyncDisposable
 	{
 		readonly IEnumerator<T>?      _enumerator;
@@ -63,7 +63,7 @@ namespace LinqToDB.DataProvider
 			}
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 #pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		public override ValueTask DisposeAsync()
 #pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose

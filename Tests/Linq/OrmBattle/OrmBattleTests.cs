@@ -12,21 +12,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+
+using LinqToDB;
 
 using NUnit.Framework;
 
-using LinqToDB;
+using Tests.Model;
+using Tests.OrmBattle.Helper;
 
 using static Tests.Model.Northwind;
 
 namespace Tests.OrmBattle
 {
-	using System.Diagnostics.CodeAnalysis;
-
-	using Tests.Model;
-	using Tests.OrmBattle.Helper;
-
 	[TestFixture]
 	public sealed class OrmBattleTests : TestBase
 	{
@@ -89,11 +88,11 @@ namespace Tests.OrmBattle
 				where o.ShipCity == "Seattle"
 				select o;
 			var list = result.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(list, Has.Count.EqualTo(14));
 				Assert.That(expected.Except(list), Is.Empty);
-			});
+			}
 		}
 
 		[Test]
@@ -108,19 +107,19 @@ namespace Tests.OrmBattle
 				where o.ShipCity == city
 				select o;
 			var list = result.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(list, Has.Count.EqualTo(14));
 				Assert.That(expected.Except(list), Is.Empty);
-			});
+			}
 
 			city = "Rio de Janeiro";
 			list = result.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(list, Has.Count.EqualTo(34));
 				Assert.That(expected.Except(list), Is.Empty);
-			});
+			}
 		}
 
 		[Test]
@@ -256,11 +255,11 @@ namespace Tests.OrmBattle
 			var expected = from o in Order
 				select o.ShipRegion;
 			var list = result.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(list, Has.Count.EqualTo(expected.Count()));
 				Assert.That(expected.Except(list), Is.Empty);
-			});
+			}
 		}
 
 		[Test]
@@ -272,11 +271,11 @@ namespace Tests.OrmBattle
 			var expected = from o in Order
 				select o.ShipRegion == "WA";
 			var list = result.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(list, Has.Count.EqualTo(expected.Count()));
 				Assert.That(expected.Except(list), Is.Empty);
-			});
+			}
 		}
 
 		[Test]
@@ -334,11 +333,11 @@ namespace Tests.OrmBattle
 			var expected = from o in Order
 				select new {OrderID = o.OrderID, o.OrderDate, o.Freight};
 			var list = result.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(list, Has.Count.EqualTo(expected.Count()));
-				Assert.That(expected.Except(list).Count(), Is.EqualTo(0));
-			});
+				Assert.That(expected.Except(list).Count(), Is.Zero);
+			}
 		}
 
 		[Test]
@@ -464,11 +463,11 @@ namespace Tests.OrmBattle
 				orderby o.OrderDate, o.OrderID
 				select o).Take(10);
 			var list = result.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(list, Has.Count.EqualTo(10));
 				Assert.That(expected.SequenceEqual(list), Is.True);
-			});
+			}
 		}
 
 		[Test]
@@ -482,11 +481,11 @@ namespace Tests.OrmBattle
 				orderby o.OrderDate, o.OrderID
 				select o).Skip(10);
 			var list = result.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(list, Has.Count.EqualTo(820));
 				Assert.That(expected.SequenceEqual(list), Is.True);
-			});
+			}
 		}
 
 		[Test]
@@ -500,11 +499,11 @@ namespace Tests.OrmBattle
 				orderby o.OrderDate, o.OrderID
 				select o).Skip(10).Take(10);
 			var list = result.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(list, Has.Count.EqualTo(10));
 				Assert.That(expected.SequenceEqual(list), Is.True);
-			});
+			}
 		}
 
 		[Test]
@@ -553,11 +552,11 @@ namespace Tests.OrmBattle
 				.Skip(10);
 			var originalList = original.ToList();
 			var resultList = result.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(resultList, Has.Count.EqualTo(originalList.Count));
 				Assert.That(originalList.SequenceEqual(resultList), Is.True);
-			});
+			}
 		}
 
 		#endregion
@@ -579,11 +578,11 @@ namespace Tests.OrmBattle
 
 			var list = result.ToList();
 			var expectedList = expected.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(list, Has.Count.EqualTo(expectedList.Count));
 				Assert.That(expected.SequenceEqual(list), Is.True);
-			});
+			}
 		}
 
 		[Test]
@@ -599,11 +598,11 @@ namespace Tests.OrmBattle
 				orderby o.OrderDate, o.OrderID
 				select o).Take(10);
 			var list = result.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(list, Has.Count.EqualTo(10));
 				Assert.That(expected.SequenceEqual(list), Is.True);
-			});
+			}
 		}
 
 		[Test]
@@ -1005,11 +1004,11 @@ namespace Tests.OrmBattle
 			var list = result.ToList();
 			Assert.That(list, Is.Not.Empty);
 			Assert.That(list, Has.Count.EqualTo(expected.Count()));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(list.Except(expected).Count(), Is.EqualTo(0));
+				Assert.That(list.Except(expected).Count(), Is.Zero);
 				Assert.That(list, Does.Contain(null));
-			});
+			}
 		}
 
 		[Test]
@@ -1044,7 +1043,7 @@ namespace Tests.OrmBattle
 			var list = result.ToList();
 			Assert.That(list, Is.Not.Empty);
 			Assert.That(list, Has.Count.EqualTo(expected.Count()));
-			Assert.That(list.Except(expected).Count(), Is.EqualTo(0));
+			Assert.That(list.Except(expected).Count(), Is.Zero);
 		}
 
 		#endregion
@@ -1179,12 +1178,11 @@ namespace Tests.OrmBattle
 				Customers.Where(c => c == o.Customer).All(c => c.CompanyName.StartsWith("A")) ||
 				Employees.Where(e => e == o.Employee).All(e => e.FirstName.EndsWith("t"))
 				select o;
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(expected.Except(result).Count(), Is.EqualTo(0));
+				Assert.That(expected.Except(result).Count(), Is.Zero);
 				Assert.That(result.ToList(), Has.Count.EqualTo(366));
-			});
+			}
 		}
 
 		[Test]
@@ -1213,11 +1211,11 @@ namespace Tests.OrmBattle
 						.Select(o => o.Customer)
 						.Contains(c)
 				};
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(expected.Except(resultList).Count(), Is.EqualTo(0));
-				Assert.That(resultList.Count(i => i.HasNewOrder), Is.EqualTo(0));
-			});
+				Assert.That(expected.Except(resultList).Count(), Is.Zero);
+				Assert.That(resultList.Count(i => i.HasNewOrder), Is.Zero);
+			}
 		}
 
 		[Test]
@@ -1226,11 +1224,11 @@ namespace Tests.OrmBattle
 			using var db = Setup(context);
 			var result = db.Customer.Where(c => c.Orders.Any(o => o.Freight > 400)).ToList();
 			var expected = Customers.Where(c => c.Orders.Any(o => o.Freight > 400));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(expected.Except(result).Count(), Is.EqualTo(0));
+				Assert.That(expected.Except(result).Count(), Is.Zero);
 				Assert.That(result.ToList(), Has.Count.EqualTo(10));
-			});
+			}
 		}
 
 		[Test]
@@ -1283,7 +1281,7 @@ namespace Tests.OrmBattle
 			var result = db.Customer.Where(c => db.Order.Count(o => o.Customer!.CustomerID == c.CustomerID) > 5);
 			var expected = Customers.Where(c => Order.Count(o => o.Customer!.CustomerID == c.CustomerID) > 5);
 
-			Assert.That(expected.Except(result).Count(), Is.EqualTo(0));
+			Assert.That(expected.Except(result).Count(), Is.Zero);
 		}
 
 		[Test]
@@ -1412,11 +1410,11 @@ namespace Tests.OrmBattle
 			foreach (var anonymous in list)
 			{
 				Assert.That(anonymous, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(anonymous.Order, Is.Not.Null);
 					Assert.That(anonymous.Product, Is.Not.Null);
-				});
+				}
 			}
 		}
 
@@ -1480,7 +1478,7 @@ namespace Tests.OrmBattle
 						customers.Where(k => k.CompanyName.Substring(0, 1) == country.Substring(0, 1)))
 				.SelectMany(k => k);
 
-			Assert.That(expected.Except(result).Count(), Is.EqualTo(0));
+			Assert.That(expected.Except(result).Count(), Is.Zero);
 		}
 
 		[Test]

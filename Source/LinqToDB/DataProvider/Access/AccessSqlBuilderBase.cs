@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	abstract class AccessSqlBuilderBase : BasicSqlBuilder
 	{
 		protected AccessSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
@@ -46,9 +46,10 @@ namespace LinqToDB.DataProvider.Access
 			}
 		}
 
-		public override    bool IsNestedJoinSupported   => false;
-		public override    bool WrapJoinCondition       => true;
-		protected override bool IsValuesSyntaxSupported => false;
+		public override    bool IsNestedJoinSupported         => false;
+		public override    bool WrapJoinCondition             => true;
+		protected override bool IsValuesSyntaxSupported       => false;
+		protected override bool SupportsColumnAliasesInSource => false;
 
 		#region Skip / Take Support
 

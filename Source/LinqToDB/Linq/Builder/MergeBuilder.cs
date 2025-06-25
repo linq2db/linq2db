@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
+using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
-	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
-
 	[BuildsMethodCall(
 		nameof(LinqExtensions.Merge), 
 		nameof(LinqExtensions.MergeWithOutput), 
@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 				mergeContext.OutputContext = outputContext;
 
 				var selectQuery        = outputContext.SelectQuery;
-				var actionFieldContext = new SingleExpressionContext(builder, actionField, selectQuery);
+				var actionFieldContext = new SingleExpressionContext(builder.GetTranslationModifier(), builder, actionField, selectQuery);
 
 				IBuildContext? sourceTableContext = null;
 
@@ -99,7 +99,7 @@ namespace LinqToDB.Linq.Builder
 					var destinationRef = new ContextRefExpression(methodCall.Method.GetGenericArguments()[2], destination);
 
 					var outputSetters = new List<UpdateBuilder.SetExpressionEnvelope>();
-					UpdateBuilder.ParseSetter(builder, destinationRef, outputExpression, outputSetters);
+					UpdateBuilder.ParseSetter(builder, destinationRef, destinationRef, outputExpression, outputSetters);
 					UpdateBuilder.InitializeSetExpressions(builder, mergeContext.SourceContext,
 						mergeContext.TargetContext, outputSetters, mergeContext.Merge.Output.OutputItems, createColumns : false);
 
@@ -138,6 +138,7 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					var cloningContext      = new CloningContext();
+					cloningContext.CloneElements(builder.GetCteClauses());
 					var targetContext       = source.TargetContextRef.BuildContext;
 					var clonedTargetContext = cloningContext.CloneContext(targetContext);
 					var clonedContextRef    = source.TargetContextRef.WithContext(clonedTargetContext);
@@ -171,6 +172,7 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				var cloningContext      = new CloningContext();
+				cloningContext.CloneElements(builder.GetCteClauses());
 				var targetContext       = source.TargetContextRef.BuildContext;
 				var clonedTargetContext = cloningContext.CloneContext(targetContext);
 				var clonedContextRef    = source.TargetContextRef.WithContext(clonedTargetContext);

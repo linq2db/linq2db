@@ -1,10 +1,10 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
-<#@ output extension=".generated.cs"                                                         #>
-<#@ include file="..\Shared.ttinclude"                                          once="true"  #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Access.ttinclude" once="true"  #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"   #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                 #>
+<#@ output extension=".generated.cs"                                                           #>
+<#@ include file="$(LinqToDBT4AccessTemplatesPath)LinqToDB.Access.ttinclude" once="true"       #>
+<#@ include file="..\Shared.ttinclude"                                 once="true"             #>
 <#
-	NamespaceName = "AccessODBCDataContext";
-
+	NamespaceName     = "AccessODBCDataContext";
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
 	DataContextName   = "TestDataDB";
@@ -12,6 +12,5 @@
 	var path          = $@"{artifactsPath}\bin\Tests\Debug\net462\Database\TestData.ODBC.mdb";
 
 	LoadAccessMetadata($"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={path};ExtendedAnsiSQL=1");
-
 	GenerateModel();
 #>

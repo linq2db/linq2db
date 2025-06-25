@@ -1,13 +1,14 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq.Expressions;
+
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.Linq;
 
 namespace LinqToDB
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using Linq;
-
 	/// <param name="PreloadGroups">
 	/// Controls how group data for LINQ queries ended with GroupBy will be loaded:
 	/// - if <c>true</c> - group data will be loaded together with main query, resulting in 1 + N queries, where N - number of groups;
@@ -153,8 +154,8 @@ namespace LinqToDB
 	/// </param>
 	public sealed record LinqOptions
 	(
-		// TODO: V7 Remove
-		[property: Obsolete("This API doesn't have effect anymore and will be removed in future")]
+		// TODO: Remove in v7
+		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		bool         PreloadGroups           = false,
 		bool         IgnoreEmptyUpdate       = false,
 		bool         GenerateExpressionTest  = false,
@@ -165,11 +166,11 @@ namespace LinqToDB
 		bool         GuardGrouping           = true,
 		bool         DisableQueryCache       = false,
 		TimeSpan?    CacheSlidingExpiration  = default,
-		// TODO: V7 Remove
-		[property: Obsolete("This API doesn't have effect anymore and will be removed in future")]
+		// TODO: Remove in v7
+		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		bool         PreferApply             = true,
-		// TODO: V7 Remove
-		[property: Obsolete("This API doesn't have effect anymore and will be removed in future")]
+		// TODO: Remove in v7
+		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		bool         KeepDistinctOrdered     = true,
 		bool         ParameterizeTakeSkip    = true,
 		bool         EnableContextSchemaEdit = false,

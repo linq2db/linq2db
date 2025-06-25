@@ -1,6 +1,8 @@
 ﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -61,15 +63,14 @@ namespace Tests.UserTests
 				var list = q.ToList();
 
 				Assert.That(list, Has.Count.EqualTo(2));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list[0].Value, Is.EqualTo("Testing"));
 					Assert.That(list[0].Ids, Is.EqualTo(values));
 
 					Assert.That(list[1].Value, Is.EqualTo("Testing"));
 					Assert.That(list[1].Ids, Is.EqualTo(values));
-				});
+				}
 			}
 		}
 

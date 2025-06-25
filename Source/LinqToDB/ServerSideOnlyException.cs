@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace LinqToDB
 {
@@ -8,7 +9,8 @@ namespace LinqToDB
 	[Serializable]
 	public class ServerSideOnlyException : Exception
 	{
-		[Obsolete("Use constructor with with parameter")]
+		// don't remove, we just want to guard users from using it explicitly
+		[Obsolete("Use constructor with parameter"), EditorBrowsable(EditorBrowsableState.Never)]
 		public ServerSideOnlyException()
 			: base("Cannot call server-side API on client.")
 		{

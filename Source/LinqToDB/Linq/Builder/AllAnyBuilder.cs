@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	[BuildsMethodCall("All", "Any")]
 	[BuildsMethodCall("AllAsync", "AnyAsync", CanBuildName = nameof(CanBuildAsyncMethod))]
 	internal sealed class AllAnyBuilder : MethodCallBuilder
@@ -86,7 +86,7 @@ namespace LinqToDB.Linq.Builder
 
 				var predicate = new SqlPredicate.Exists(_methodCall.Method.Name.StartsWith("All"), Sequence.SelectQuery);
 				
-				var innerSql = ExpressionBuilder.CreatePlaceholder(Parent?.SelectQuery ?? SelectQuery, new SqlSearchCondition(false, predicate), path, convertType: typeof(bool));
+				var innerSql = ExpressionBuilder.CreatePlaceholder(Parent?.SelectQuery ?? SelectQuery, new SqlSearchCondition(false, canBeUnknown: null, predicate), path, convertType: typeof(bool));
 
 				_innerSql = innerSql;
 

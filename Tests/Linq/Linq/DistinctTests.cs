@@ -3,16 +3,14 @@
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class DistinctTests : TestBase
 	{
@@ -195,14 +193,14 @@ namespace Tests.Linq
 				var res = t.Select(_ => new { _.F1, _.F2 }).Distinct().OrderByDescending(_ => _.F1).Select(_ => _.F2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(5));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0], Is.EqualTo("8"));
 					Assert.That(res[1], Is.EqualTo("5"));
 					Assert.That(res[2], Is.EqualTo("4"));
 					Assert.That(res[3], Is.EqualTo("3"));
 					Assert.That(res[4], Is.EqualTo("2"));
-				});
+				}
 			}
 		}
 
@@ -215,11 +213,11 @@ namespace Tests.Linq
 				var res = t.Select(_ => new { _.F1, _.F2 }).Distinct().OrderByDescending(_ => _.F1).Select(_ => _.F2).Skip(1).Take(2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0], Is.EqualTo("5"));
 					Assert.That(res[1], Is.EqualTo("4"));
-				});
+				}
 			}
 		}
 
@@ -232,11 +230,11 @@ namespace Tests.Linq
 				var res = t.Select(_ => new { _.F1, _.F2 }).Distinct().OrderByDescending(_ => _.F1).Select(_ => _.F2).Take(2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0], Is.EqualTo("8"));
 					Assert.That(res[1], Is.EqualTo("5"));
-				});
+				}
 			}
 		}
 
@@ -249,12 +247,12 @@ namespace Tests.Linq
 				var res = t.Select(_ => new { _.F1, _.F2 }).Distinct().OrderByDescending(_ => _.F1).Select(_ => _.F2).Skip(2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0], Is.EqualTo("4"));
 					Assert.That(res[1], Is.EqualTo("3"));
 					Assert.That(res[2], Is.EqualTo("2"));
-				});
+				}
 			}
 		}
 
@@ -267,7 +265,7 @@ namespace Tests.Linq
 				var res = t.OrderByDescending(_ => _.F3).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(5));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// ordering optimized out for non-selected column and not preserved
 					Assert.That(res, Contains.Item("2"));
@@ -275,7 +273,7 @@ namespace Tests.Linq
 					Assert.That(res, Contains.Item("4"));
 					Assert.That(res, Contains.Item("8"));
 					Assert.That(res, Contains.Item("5"));
-				});
+				}
 			}
 		}
 
@@ -288,11 +286,11 @@ namespace Tests.Linq
 				var res = t.OrderByDescending(_ => _.F3).Select(_ => new { _.F1, _.F2 }).Distinct().OrderBy(_ => _.F1).Select(_ => _.F2).Skip(1).Take(2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0], Is.EqualTo("3"));
 					Assert.That(res[1], Is.EqualTo("4"));
-				});
+				}
 			}
 		}
 
@@ -305,11 +303,11 @@ namespace Tests.Linq
 				var res = t.OrderByDescending(_ => _.F3).Select(_ => new { _.F1, _.F2 }).Distinct().OrderBy(_ => _.F1).Select(_ => _.F2).Take(2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0], Is.EqualTo("2"));
 					Assert.That(res[1], Is.EqualTo("3"));
-				});
+				}
 			}
 		}
 
@@ -322,12 +320,12 @@ namespace Tests.Linq
 				var res = t.OrderByDescending(_ => _.F3).Select(_ => new { _.F1, _.F2 }).Distinct().OrderBy(r => r.F1).Select(_ => _.F2).Skip(2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0], Is.EqualTo("4"));
 					Assert.That(res[1], Is.EqualTo("5"));
 					Assert.That(res[2], Is.EqualTo("8"));
-				});
+				}
 			}
 		}
 
@@ -342,13 +340,13 @@ namespace Tests.Linq
 				var res = t.OrderByDescending(_ => _.F3).Skip(1).Take(4).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// order not preserved
 					Assert.That(res, Contains.Item("3"));
 					Assert.That(res, Contains.Item("4"));
 					Assert.That(res, Contains.Item("8"));
-				});
+				}
 			}
 		}
 
@@ -362,14 +360,14 @@ namespace Tests.Linq
 				var res = t.OrderByDescending(_ => _.F3).Take(5).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// ordering not guaranteed
 					Assert.That(res, Contains.Item("2"));
 					Assert.That(res, Contains.Item("3"));
 					Assert.That(res, Contains.Item("4"));
 					Assert.That(res, Contains.Item("8"));
-				});
+				}
 			}
 		}
 
@@ -384,7 +382,7 @@ namespace Tests.Linq
 				var res = t.OrderByDescending(_ => _.F3).Skip(2).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(5));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// ordering not preserved
 					Assert.That(res, Contains.Item("4"));
@@ -392,7 +390,7 @@ namespace Tests.Linq
 					Assert.That(res, Contains.Item("3"));
 					Assert.That(res, Contains.Item("5"));
 					Assert.That(res, Contains.Item("2"));
-				});
+				}
 			}
 		}
 
@@ -405,14 +403,14 @@ namespace Tests.Linq
 			var res = t.OrderByDescending(r => r.F1).ThenBy(r => r.F3).ThenBy(r => r.F2).Select(r => new { r.F1, r.F2 }).Distinct().ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(5));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].F2, Is.EqualTo("8"));
 				Assert.That(res[1].F2, Is.EqualTo("5"));
 				Assert.That(res[2].F2, Is.EqualTo("4"));
 				Assert.That(res[3].F2, Is.EqualTo("3"));
 				Assert.That(res[4].F2, Is.EqualTo("2"));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
@@ -424,14 +422,92 @@ namespace Tests.Linq
 			var res = t.OrderByDescending(r => r.F1).Select(r => new { r.F1, r.F2 }).Distinct().ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(5));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].F2, Is.EqualTo("8"));
 				Assert.That(res[1].F2, Is.EqualTo("5"));
 				Assert.That(res[2].F2, Is.EqualTo("4"));
 				Assert.That(res[3].F2, Is.EqualTo("3"));
 				Assert.That(res[4].F2, Is.EqualTo("2"));
-			});
+			}
+		}
+
+		sealed class Level1
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Level2.FK2))]
+			public Level2 Lvl2 { get; set; } = null!;
+
+			public static readonly Level1[] Data =
+			[
+				new Level1() { Id = 1 }
+			];
+		}
+
+		sealed class Level2
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int FK2 { get; set; }
+			public int FK3 { get; set; }
+
+			[Association(ThisKey = nameof(FK3), OtherKey = nameof(Level3.Id))]
+			public Level3 Lvl3 { get; set; } = null!;
+
+			[Association(ThisKey = nameof(FK3), OtherKey = nameof(Level3AllNull.Id))]
+			public Level3AllNull Lvl3AllNull { get; set; } = null!;
+
+			public static readonly Level2[] Data =
+			[
+				new Level2() { Id = 11, FK2 = 1, FK3 = 21 },
+				new Level2() { Id = 12, FK2 = 1, FK3 = 21 }
+			];
+		}
+
+		sealed class Level3
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int Value { get; set; }
+
+			public static readonly Level3[] Data =
+			[
+				new Level3() { Id = 21 },
+				new Level3() { Id = 22 }
+			];
+		}
+
+		sealed class Level3AllNull
+		{
+			public int? Id { get; set; }
+			public int? Value { get; set; }
+
+			public static readonly Level3AllNull[] Data =
+			[
+				new Level3AllNull() { Id = 21 },
+				new Level3AllNull() { Id = 22 }
+			];
+		}
+
+		[Test]
+		public void DistinctSelectsUnusedColumn([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Level1.Data);
+			using var t2 = db.CreateLocalTable(Level2.Data);
+			using var t3 = db.CreateLocalTable(Level3.Data);
+
+			t1.Select(c => c.Lvl2.Lvl3).Where(p => p.Id == 21).Distinct().Select(p => p.Value).Single();
+		}
+
+		[Test]
+		public void DistinctSelectsUnusedColumn_Nullable([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Level1.Data);
+			using var t2 = db.CreateLocalTable(Level2.Data);
+			using var t3 = db.CreateLocalTable(Level3AllNull.Data);
+
+			t1.Select(c => c.Lvl2.Lvl3AllNull).Where(p => p.Id == 21).Distinct().Select(p => p.Value).Single();
 		}
 	}
 }

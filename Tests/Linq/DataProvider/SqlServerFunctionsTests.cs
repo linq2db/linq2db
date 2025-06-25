@@ -77,7 +77,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.NestLevel);
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -86,7 +86,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Options);
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -108,11 +108,8 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void ServiceNameTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void ServiceNameTest([IncludeDataSources(TestProvName.AllSqlServerNoAzure)] string context)
 		{
-			if (context == "SqlAzure")
-				return;
-
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ServiceName);
 			Console.WriteLine(result);
@@ -125,7 +122,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SpID);
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -337,7 +334,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Parse<decimal>("345,98", "de-DE"));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(346m));
+			Assert.That(result, Is.EqualTo(345.98m));
 		}
 
 		[Test]
@@ -526,7 +523,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryParse<decimal>("345,98", "de-DE"));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(346m));
+			Assert.That(result, Is.EqualTo(345.98m));
 		}
 
 		#endregion
@@ -1160,7 +1157,7 @@ namespace Tests.DataProvider
 		public void OpenJson1([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.GetTable<SqlFn.JsonData>(null, LinqToDB.Linq.MethodHelper.GetMethodInfo(SqlFn.OpenJson, string.Empty), /*lang=json,strict*/ "{ \"test\" : 1 }").ToArray();
+			var result = db.QueryFromExpression(() => SqlFn.OpenJson(/*lang=json,strict*/ "{ \"test\" : 1 }")).ToArray();
 			Console.WriteLine(result);
 
 			var expected = new[]
@@ -1175,7 +1172,7 @@ namespace Tests.DataProvider
 		public void OpenJson2([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.GetTable<SqlFn.JsonData>(null, LinqToDB.Linq.MethodHelper.GetMethodInfo(SqlFn.OpenJson, string.Empty, string.Empty), /*lang=json,strict*/ "{ \"test\" : [ 10, 20 ] }", "$.test").ToArray();
+			var result = db.QueryFromExpression(() => SqlFn.OpenJson(/*lang=json,strict*/ "{ \"test\" : [ 10, 20 ] }", "$.test")).ToArray();
 			Console.WriteLine(result);
 
 			var expected = new[]
@@ -1191,7 +1188,7 @@ namespace Tests.DataProvider
 		public void OpenJson3([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.GetTable<SqlFn.JsonData>(null, LinqToDB.Linq.MethodHelper.GetMethodInfo(SqlFn.OpenJson, string.Empty), "[ 10, 20, 30, 40, 50, 60, 70 ]")
+			var result = db.QueryFromExpression(() => SqlFn.OpenJson(/*lang=json,strict*/ "[ 10, 20, 30, 40, 50, 60, 70 ]"))
 				.Where(jd => jd.Key != "2")
 				.Where(jd => jd.Value != "60")
 				.Select(jd => jd.Value)
@@ -1305,7 +1302,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Atn2(10, 100));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -1332,7 +1329,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Cot(1));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -1583,11 +1580,11 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.DatabasePropertyEx(SqlFn.DbName(), SqlFn.DatabasePropertyName.Version));
 			Console.WriteLine(result);
 			Assert.That(result, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result, Is.TypeOf<int>());
 				Assert.That((int)result, Is.GreaterThan(600));
-			});
+			}
 		}
 
 		[Test]
@@ -1689,7 +1686,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.FileGroupProperty("PRIMARY", SqlFn.FileGroupPropertyName.IsReadOnly));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -1724,7 +1721,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.FullTextServiceProperty(SqlFn.FullTextServicePropertyName.IsFulltextInstalled));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0).Or.EqualTo(1));
+			Assert.That(result, Is.Zero.Or.EqualTo(1));
 		}
 
 		[Test]
@@ -1762,11 +1759,11 @@ namespace Tests.DataProvider
 			Console.WriteLine(result);
 
 			Assert.That(result, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result, Is.TypeOf<long>());
 				Assert.That((long)result, Is.GreaterThan(0L));
-			});
+			}
 		}
 
 		[Test]
@@ -1838,7 +1835,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ObjectProperty(SqlFn.ObjectID("dbo.Person"), SqlFn.ObjectPropertyName.HasDeleteTrigger));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -1900,7 +1897,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ScopeIdentity());
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -2362,7 +2359,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TransactionCount);
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -2377,7 +2374,7 @@ namespace Tests.DataProvider
 			var result = q.First();
 
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2393,7 +2390,7 @@ namespace Tests.DataProvider
 			var result = q.First();
 
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2408,7 +2405,7 @@ namespace Tests.DataProvider
 			var result = q.First();
 
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2424,7 +2421,7 @@ namespace Tests.DataProvider
 			var result = q.First();
 
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2468,7 +2465,7 @@ namespace Tests.DataProvider
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.CurrentTransactionID());
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2607,7 +2604,7 @@ namespace Tests.DataProvider
 			db.RollbackTransaction();
 			result = db.Select(() => SqlFn.XactState());
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		#endregion

@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Linq;
-using System.Security.Cryptography;
+
 using LinqToDB;
 using LinqToDB.Data;
 
@@ -16,6 +15,8 @@ namespace Tests
 	{
 		protected void ResetPersonIdentity(string context)
 		{
+			using var _ = new DisableBaseline("Test support code");
+
 			var provider = GetProviderName(context, out var _);
 
 			var lastValue = 4;
@@ -102,7 +103,9 @@ CREATE COLUMN TABLE ""Person"" (
 						sql = new[] { $"sp_chgattribute Person, 'identity_burn_max', 0, '{lastValue}'" };
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllSQLite):
-						sql = new[] { $"UPDATE sqlite_sequence SET seq = {lastValue} WHERE name = 'Person'" };
+						// specify schema explicitly because after temp table creation (Issue4671Test)
+						// default schema for this table changes to temp on windows (sqlite bug?)
+						sql = new[] { $"UPDATE main.sqlite_sequence SET seq = {lastValue} WHERE name = 'Person'" };
 						break;
 					default:
 						Console.WriteLine($"Unknown provider: {provider}");
@@ -122,6 +125,8 @@ CREATE COLUMN TABLE ""Person"" (
 
 		protected void ResetAllTypesIdentity(string context)
 		{
+			using var _ = new DisableBaseline("Test support code");
+
 			var provider = GetProviderName(context, out var _);
 
 			var lastValue = 2;
@@ -233,7 +238,9 @@ CREATE COLUMN TABLE ""AllTypes""
 						};
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllSQLite):
-						sql = new[] { $"UPDATE sqlite_sequence SET seq = {lastValue} WHERE name = 'AllTypes'" };
+						// specify schema explicitly because after temp table creation (Issue4671Test)
+						// default schema for this table changes to temp on windows (sqlite bug?)
+						sql = new[] { $"UPDATE main.sqlite_sequence SET seq = {lastValue} WHERE name = 'AllTypes'" };
 						break;
 				}
 			}
@@ -250,6 +257,8 @@ CREATE COLUMN TABLE ""AllTypes""
 
 		protected void ResetTestSequence(string context)
 		{
+			using var _ = new DisableBaseline("Test support code");
+
 			var provider = GetProviderName(context, out var _);
 
 			var lastValue = 0;

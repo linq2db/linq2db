@@ -2,15 +2,17 @@
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
+
+using LinqToDB.Common;
+using LinqToDB.DataProvider.DB2;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
-	using DB2;
-	using Expressions;
-	using Extensions;
-	using Mapping;
-
 	// Note on informix providers: there are actually 3 providers:
 	// - SQLI Provider(IBM.Data.Informix) : netfx only, no bulk copy
 	// - IDS Provider (IBM.Data.Informix) : netfx only, has bulk copy. Basically it is IBM.Data.DB2 with Ifx type names
@@ -24,8 +26,8 @@ namespace LinqToDB.DataProvider.Informix
 		public const string IfxProviderFactoryName = "IBM.Data.Informix";
 		public const string IfxTypesNamespace      = "IBM.Data.Informix";
 
-		private static readonly object _ifxSyncRoot = new ();
-		private static readonly object _db2SyncRoot = new ();
+		private static readonly Lock _ifxSyncRoot = new ();
+		private static readonly Lock _db2SyncRoot = new ();
 
 		private static InformixProviderAdapter? _ifxAdapter;
 		private static InformixProviderAdapter? _db2Adapter;
@@ -205,7 +207,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		private static InformixProviderAdapter CreateIfxAdapter()
 		{
-			var assembly = Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
+			var assembly = Common.Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {IfxAssemblyName}");
 
@@ -259,7 +261,7 @@ namespace LinqToDB.DataProvider.Informix
 			else
 				typeMapper.FinalizeMappings();
 
-			var connectionFactory = typeMapper.BuildTypedFactory<string, IfxConnection, DbConnection>((string connectionString) => new IfxConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, IfxConnection, DbConnection>(connectionString => new IfxConnection(connectionString));
 
 			var paramMapper   = typeMapper.Type<IfxParameter>();
 			var dbTypeBuilder = paramMapper.Member(p => p.IfxType);
@@ -400,17 +402,17 @@ namespace LinqToDB.DataProvider.Informix
 				= new LambdaExpression[]
 			{
 				// [0]: Dispose
-				(Expression<Action<IfxBulkCopy>>                                  )((IfxBulkCopy this_                    ) => ((IDisposable)this_).Dispose()),
+				(Expression<Action<IfxBulkCopy>>                                  )(this_ => ((IDisposable)this_).Dispose()),
 				// [1]: WriteToServer
-				(Expression<Action<IfxBulkCopy, IDataReader>>                     )((IfxBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
+				(Expression<Action<IfxBulkCopy, IDataReader>>                     )((this_, reader) => this_.WriteToServer(reader)),
 				// [2]: get NotifyAfter
-				(Expression<Func<IfxBulkCopy, int>>                               )((IfxBulkCopy this_                    ) => this_.NotifyAfter),
+				(Expression<Func<IfxBulkCopy, int>>                               )(this_ => this_.NotifyAfter),
 				// [3]: get BulkCopyTimeout
-				(Expression<Func<IfxBulkCopy, int>>                               )((IfxBulkCopy this_                    ) => this_.BulkCopyTimeout),
+				(Expression<Func<IfxBulkCopy, int>>                               )(this_ => this_.BulkCopyTimeout),
 				// [4]: get DestinationTableName
-				(Expression<Func<IfxBulkCopy, string?>>                           )((IfxBulkCopy this_                    ) => this_.DestinationTableName),
+				(Expression<Func<IfxBulkCopy, string?>>                           )(this_ => this_.DestinationTableName),
 				// [5]: get ColumnMappings
-				(Expression<Func<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>>)((IfxBulkCopy this_                    ) => this_.ColumnMappings),
+				(Expression<Func<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>>)(this_ => this_.ColumnMappings),
 				// [6]: set NotifyAfter
 				PropertySetter((IfxBulkCopy this_) => this_.NotifyAfter),
 				// [7]: set BulkCopyTimeout
@@ -477,9 +479,9 @@ namespace LinqToDB.DataProvider.Informix
 				= new LambdaExpression[]
 			{
 				// [0]: get RowsCopied
-				(Expression<Func<IfxRowsCopiedEventArgs, int>> )((IfxRowsCopiedEventArgs this_) => this_.RowsCopied),
+				(Expression<Func<IfxRowsCopiedEventArgs, int>> )(this_ => this_.RowsCopied),
 				// [1]: get Abort
-				(Expression<Func<IfxRowsCopiedEventArgs, bool>>)((IfxRowsCopiedEventArgs this_) => this_.Abort),
+				(Expression<Func<IfxRowsCopiedEventArgs, bool>>)(this_ => this_.Abort),
 				// [2]: set Abort
 				PropertySetter((IfxRowsCopiedEventArgs this_) => this_.Abort),
 			};
@@ -507,7 +509,7 @@ namespace LinqToDB.DataProvider.Informix
 				= new LambdaExpression[]
 			{
 				// [0]: Add
-				(Expression<Func<IfxBulkCopyColumnMappingCollection, IfxBulkCopyColumnMapping, IfxBulkCopyColumnMapping>>)((IfxBulkCopyColumnMappingCollection this_, IfxBulkCopyColumnMapping column) => this_.Add(column)),
+				(Expression<Func<IfxBulkCopyColumnMappingCollection, IfxBulkCopyColumnMapping, IfxBulkCopyColumnMapping>>)((this_, column) => this_.Add(column)),
 			};
 
 			public IfxBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)

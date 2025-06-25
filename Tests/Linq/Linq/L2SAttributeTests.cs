@@ -3,18 +3,17 @@ using System.Data.Linq.Mapping;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Metadata;
 
 using NUnit.Framework;
+
+using Tests.Model;
 
 using ColumnAttribute = System.Data.Linq.Mapping.ColumnAttribute;
 using TableAttribute = System.Data.Linq.Mapping.TableAttribute;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Metadata;
-
-	using Model;
-
 	[Table(Name = "Person")]
 	public class L2SPersons
 	{

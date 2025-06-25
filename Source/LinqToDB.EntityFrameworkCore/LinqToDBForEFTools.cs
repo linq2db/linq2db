@@ -8,6 +8,16 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Async;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.EntityFrameworkCore.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+using LinqToDB.Metadata;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -17,15 +27,6 @@ using Microsoft.Extensions.Logging;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Async;
-	using Data;
-	using DataProvider;
-	using Expressions;
-	using Internal;
-	using Linq;
-	using Mapping;
-	using Metadata;
-
 	/// <summary>
 	/// EF Core <see cref="DbContext"/> extensions to call LINQ To DB functionality.
 	/// </summary>
@@ -63,8 +64,8 @@ namespace LinqToDB.EntityFrameworkCore
 				var dc = CreateLinqToDBContext(context);
 				var newExpression = queryable.Expression;
 
-				var result = (IQueryable)instantiator.MakeGenericMethod(queryable.ElementType)
-					.Invoke(null, [dc, newExpression])!;
+				var result = instantiator.MakeGenericMethod(queryable.ElementType)
+					.InvokeExt<IQueryable>(null, [dc, newExpression]);
 
 				if (prev != null)
 					result = prev(result);
@@ -221,8 +222,26 @@ namespace LinqToDB.EntityFrameworkCore
 			DataOptions? dataOptions)
 		{
 			var converterSelector = accessor?.GetService<IValueConverterSelector>();
-
-			return Implementation.GetMappingSchema(model, GetMetadataReader(model, accessor), converterSelector, dataOptions);
+			var mappingSource = accessor?.GetService<IRelationalTypeMappingSource>();
+			
+			return Implementation.GetMappingSchema(model, mappingSource, GetMetadataReader(model, accessor), converterSelector, dataOptions);
+		}
+		
+		/// <summary>
+		/// Creates mapping schema using provided EF Core data model.
+		/// </summary>
+		/// <param name="model">EF Core data model.</param>
+		/// <param name="mappingSource">EF Core mapping source.</param>
+		/// <param name="converterSelector">EF Core converter selector.</param>
+		/// <param name="dataOptions">Linq To DB context options.</param>
+		/// <returns>Mapping schema for provided EF Core model.</returns>
+		public static MappingSchema GetMappingSchema(
+			IModel                        model,
+			IRelationalTypeMappingSource? mappingSource,
+			IValueConverterSelector?      converterSelector,
+			DataOptions?                  dataOptions)
+		{
+			return Implementation.GetMappingSchema(model, mappingSource, GetMetadataReader(model, null), converterSelector, dataOptions);
 		}
 
 		/// <summary>
@@ -247,19 +266,6 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <param name="transaction">Optional transaction instance, to which created connection should be attached.
 		/// If not specified, will use current <see cref="DbContext"/> transaction if it available.</param>
 		/// <returns>LINQ To DB <see cref="DataConnection"/> instance.</returns>
-		[Obsolete($"Use {nameof(CreateLinqToDBConnection)} overload.")]
-		public static DataConnection CreateLinqToDbConnection(this DbContext context,
-			IDbContextTransaction? transaction = null)
-			=> CreateLinqToDBConnection(context, transaction);
-
-		/// <summary>
-		/// Creates LINQ To DB <see cref="DataConnection"/> instance, attached to provided
-		/// EF Core <see cref="DbContext"/> instance connection and transaction.
-		/// </summary>
-		/// <param name="context">EF Core <see cref="DbContext"/> instance.</param>
-		/// <param name="transaction">Optional transaction instance, to which created connection should be attached.
-		/// If not specified, will use current <see cref="DbContext"/> transaction if it available.</param>
-		/// <returns>LINQ To DB <see cref="DataConnection"/> instance.</returns>
 		public static DataConnection CreateLinqToDBConnection(this DbContext context,
 			IDbContextTransaction? transaction = null)
 		{
@@ -267,7 +273,8 @@ namespace LinqToDB.EntityFrameworkCore
 
 			var info    = GetEFProviderInfo(context);
 			var options = context.GetLinqToDBOptions() ?? new DataOptions();
-			options     = AddMappingSchema(options, GetMappingSchema(context.Model, context, options));
+			options     = options.UseAdditionalMappingSchema(GetMappingSchema(context.Model, context, options));
+			options     = EnableTracing(options, CreateLogger(info.Options));
 
 			DataConnection? dc = null;
 
@@ -298,20 +305,19 @@ namespace LinqToDB.EntityFrameworkCore
 				}
 			}
 
-			var logger = CreateLogger(info.Options);
-			if (logger != null)
-				EnableTracing(dc, logger);
-
 			return dc;
 		}
 
 		private static readonly TraceSwitch _defaultTraceSwitch =
 			new("DataConnection", "DataConnection trace switch", TraceLevel.Info.ToString());
 
-		static void EnableTracing(DataConnection dc, ILogger logger)
+		static DataOptions EnableTracing(DataOptions options, ILogger? logger)
 		{
-			dc.OnTraceConnection = t => Implementation.LogConnectionTrace(t, logger);
-			dc.TraceSwitchConnection = _defaultTraceSwitch;
+			return logger == null
+				? options
+				: options
+					.UseTracing(t => Implementation.LogConnectionTrace(t, logger))
+					.UseTraceSwitch(_defaultTraceSwitch);
 		}
 
 		/// <summary>
@@ -330,17 +336,6 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <param name="context">EF Core database context.</param>
 		/// <param name="transaction">Transaction instance.</param>
 		/// <returns>Linq To DB data context.</returns>
-		[Obsolete($"Use {nameof(CreateLinqToDBContext)} overload.")]
-		public static IDataContext CreateLinqToDbContext(this DbContext context,
-			IDbContextTransaction? transaction = null)
-			=> CreateLinqToDBContext(context, transaction);
-
-		/// <summary>
-		/// Creates Linq To DB data context for EF Core database context.
-		/// </summary>
-		/// <param name="context">EF Core database context.</param>
-		/// <param name="transaction">Transaction instance.</param>
-		/// <returns>Linq To DB data context.</returns>
 		public static IDataContext CreateLinqToDBContext(this DbContext context,
 			IDbContextTransaction? transaction = null)
 		{
@@ -348,7 +343,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			var info    = GetEFProviderInfo(context);
 			var options = context.GetLinqToDBOptions() ?? new DataOptions();
-			options     = AddMappingSchema(options, GetMappingSchema(context.Model, context, options));
+			options     = options.UseAdditionalMappingSchema(GetMappingSchema(context.Model, context, options));
 
 			DataConnection? dc = null;
 
@@ -357,6 +352,7 @@ namespace LinqToDB.EntityFrameworkCore
 			var connectionInfo = GetConnectionInfo(info);
 			var provider       = GetDataProvider(options, info, connectionInfo);
 			var logger         = CreateLogger(info.Options);
+			options            = EnableTracing(options, logger);
 
 			if (transaction != null)
 			{
@@ -383,30 +379,17 @@ namespace LinqToDB.EntityFrameworkCore
 
 					if (mappingSchema != null)
 						dataContext.MappingSchema = mappingSchema;
-					
+
 					if (logger != null)
 						dataContext.OnTraceConnection = t => Implementation.LogConnectionTrace(t, logger);
-						
+
 					return dataContext;
 					*/
 				}
 			}
 
-			if (logger != null)
-				EnableTracing(dc, logger);
-
 			return dc;
 		}
-
-		/// <summary>
-		/// Creates LINQ To DB <see cref="DataConnection"/> instance that creates new database connection using connection
-		/// information from EF Core <see cref="DbContext"/> instance.
-		/// </summary>
-		/// <param name="context">EF Core <see cref="DbContext"/> instance.</param>
-		/// <returns>LINQ To DB <see cref="DataConnection"/> instance.</returns>
-		[Obsolete($"Use {nameof(CreateLinqToDBConnectionDetached)} overload.")]
-		public static DataConnection CreateLinq2DbConnectionDetached(this DbContext context)
-			=> CreateLinqToDBConnectionDetached(context);
 
 		/// <summary>
 		/// Creates LINQ To DB <see cref="DataConnection"/> instance that creates new database connection using connection
@@ -423,19 +406,17 @@ namespace LinqToDB.EntityFrameworkCore
 			var options        = context.GetLinqToDBOptions() ?? new DataOptions();
 			var dataProvider   = GetDataProvider(options, info, connectionInfo);
 
-			options = AddMappingSchema(options, GetMappingSchema(context.Model, context, options))
+			options = options
+				.UseAdditionalMappingSchema(GetMappingSchema(context.Model, context, options))
 				.UseDataProvider(dataProvider)
 				.UseConnectionString(connectionInfo.ConnectionString!);
 
-			var dc = new LinqToDBForEFToolsDataConnection(context, options, context.Model, TransformExpression);
-			var logger = CreateLogger(info.Options);
+			options = EnableTracing(options, CreateLogger(info.Options));
 
-			if (logger != null)
-				EnableTracing(dc, logger);
+			var dc = new LinqToDBForEFToolsDataConnection(context, options, context.Model, TransformExpression);
 
 			return dc;
 		}
-
 
 		static readonly ConcurrentDictionary<Type, Func<DbConnection, string>> _connectionStringExtractors = new();
 
@@ -475,16 +456,6 @@ namespace LinqToDB.EntityFrameworkCore
 		/// </summary>
 		/// <param name="options">EF Core <see cref="DbContextOptions"/> instance.</param>
 		/// <returns>New LINQ To DB <see cref="DataConnection"/> instance.</returns>
-		[Obsolete($"Use {nameof(CreateLinqToDBConnection)} overload.")]
-		public static DataConnection CreateLinqToDbConnection(this DbContextOptions options)
-			=> CreateLinqToDBConnection(options);
-
-		/// <summary>
-		/// Creates new LINQ To DB <see cref="DataConnection"/> instance using connectivity information from
-		/// EF Core <see cref="DbContextOptions"/> instance.
-		/// </summary>
-		/// <param name="options">EF Core <see cref="DbContextOptions"/> instance.</param>
-		/// <returns>New LINQ To DB <see cref="DataConnection"/> instance.</returns>
 		public static DataConnection CreateLinqToDBConnection(this DbContextOptions options)
 		{
 			var info = GetEFProviderInfo(options);
@@ -497,9 +468,10 @@ namespace LinqToDB.EntityFrameworkCore
 			var model          = GetModel(options);
 
 			if (model != null)
-				dataOptions = AddMappingSchema(dataOptions, GetMappingSchema(model, null, dataOptions));
+				dataOptions = dataOptions.UseAdditionalMappingSchema(GetMappingSchema(model, null, dataOptions));
 
 			dataOptions = dataOptions.UseDataProvider(dataProvider);
+			dataOptions = EnableTracing(dataOptions, CreateLogger(info.Options));
 
 			if (connectionInfo.Connection != null)
 			{
@@ -514,10 +486,6 @@ namespace LinqToDB.EntityFrameworkCore
 
 			if (dc == null)
 				throw new LinqToDBForEFToolsException($"Can not extract connection information from {nameof(DbContextOptions)}");
-
-			var logger = CreateLogger(info.Options);
-			if (logger != null)
-				EnableTracing(dc, logger);
 
 			return dc;
 		}
@@ -587,20 +555,12 @@ namespace LinqToDB.EntityFrameworkCore
 
 		/// <summary>
 		/// Enables attaching entities to change tracker.
-		/// Entities will be attached only if AsNoTracking() is not used in query and DbContext is configured to track entities. 
+		/// Entities will be attached only if AsNoTracking() is not used in query and DbContext is configured to track entities.
 		/// </summary>
 		public static bool EnableChangeTracker
-		{ 
+		{
 			get => Implementation.EnableChangeTracker;
 			set => Implementation.EnableChangeTracker = value;
-		}
-
-		private static DataOptions AddMappingSchema(DataOptions dataOptions, MappingSchema mappingSchema)
-		{
-			if (dataOptions.ConnectionOptions.MappingSchema != null)
-				return dataOptions.UseMappingSchema(MappingSchema.CombineSchemas(dataOptions.ConnectionOptions.MappingSchema, mappingSchema));
-
-			return dataOptions.UseMappingSchema(mappingSchema);
 		}
 	}
 }

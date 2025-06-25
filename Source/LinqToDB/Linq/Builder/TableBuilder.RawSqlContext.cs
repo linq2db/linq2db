@@ -1,20 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Internal;
-	using Mapping;
-	using SqlQuery;
-
 	partial class TableBuilder
 	{
 		class SimpleSelectContext : BuildContextBase
 		{
-			public SimpleSelectContext(ExpressionBuilder builder, Type elementType, SelectQuery selectQuery) : base(builder, elementType, selectQuery)
+			public SimpleSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, Type elementType, SelectQuery selectQuery) 
+				: base(translationModifier, builder, elementType, selectQuery)
 			{
 			}
 
@@ -53,7 +55,7 @@ namespace LinqToDB.Linq.Builder
 
 			var sqlArguments = new ISqlExpression[arguments.Count];
 
-			var context = buildInfo.Parent ?? new SimpleSelectContext(builder, typeof(object), buildInfo.SelectQuery);
+			var context = buildInfo.Parent ?? new SimpleSelectContext(builder.GetTranslationModifier(), builder, typeof(object), buildInfo.SelectQuery);
 
 			for (var i = 0; i < arguments.Count; i++)
 			{
@@ -63,7 +65,7 @@ namespace LinqToDB.Linq.Builder
 				sqlArguments[i] = arg;
 			}
 
-			return BuildSequenceResult.FromContext(new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], isScalar, format, sqlArguments));
+			return BuildSequenceResult.FromContext(new RawSqlContext(builder.GetTranslationModifier(), builder, buildInfo, methodCall.Method.GetGenericArguments()[0], isScalar, format, sqlArguments));
 		}
 
 		public static void PrepareRawSqlArguments(Expression formatArg, Expression? parametersArg, out string format, out IReadOnlyList<Expression> arguments)
@@ -148,14 +150,44 @@ namespace LinqToDB.Linq.Builder
 		//TODO: We have to separate TableContext in proper hierarchy
 		sealed class RawSqlContext : TableContext
 		{
-			public RawSqlContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, bool isScalar, string sql, ISqlExpression[] parameters)
-				: base(builder, builder.MappingSchema, buildInfo, new SqlRawSqlTable(builder.MappingSchema.GetEntityDescriptor(originalType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated), sql, parameters))
+			public bool IsScalar { get; }
+
+			public RawSqlContext(TranslationModifier translationModifier, ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, bool isScalar, string sql, ISqlExpression[] parameters)
+				: base(translationModifier, builder, builder.MappingSchema, buildInfo, new SqlRawSqlTable(builder.MappingSchema.GetEntityDescriptor(originalType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated), sql, isScalar, parameters))
 			{
-				// Marking All field as not nullable for satisfying DefaultIfEmptyBuilder
+				IsScalar = isScalar;
+
 				if (isScalar)
 				{
+					// Marking All field as not nullable for satisfying DefaultIfEmptyBuilder
 					SqlTable.CanBeNull = false;
+
+					var dbDataType = MappingSchema.GetDbDataType(originalType);
+					var field      = new SqlField(dbDataType, "value", true);
+					SqlTable.Add(field);
 				}
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (IsScalar && flags.IsSqlOrExpression() && SequenceHelper.IsSameContext(path, this))
+				{
+					var table = (SqlRawSqlTable)SqlTable;
+
+					//TODO: It is strictly coupled with SQLBuilder logic. Maybe we can unify. Feels like we should refactor this logic
+
+					// in case when we have alias placeholder we should not generate any fields
+					if (table.Parameters.All(p => p.ElementType != QueryElementType.SqlAliasPlaceholder))
+					{
+						var sql = SqlTable.Fields.FirstOrDefault(f => f.Name == "value");
+						if (sql != null)
+						{
+							return ExpressionBuilder.CreatePlaceholder(this, sql, path);
+						}
+					}
+				}
+
+				return base.MakeExpression(path, flags);
 			}
 		}
 	}

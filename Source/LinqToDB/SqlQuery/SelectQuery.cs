@@ -6,8 +6,6 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	using Remote;
-
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
 	public class SelectQuery : SqlExpressionBase, ISqlTableSource
 	{

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -85,8 +84,7 @@ namespace Tests.UserTests
 				.ThenLoad(i => i.Chain.ChainPoints)
 				.OrderBy (i => i.Id)
 				.ToList();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(items.Select(r => new { r.Id }), Is.EquivalentTo(data1.Select(r => new { r.Id })));
 				Assert.That(items[0].PipeLineChains.Select(r => new { r.LineId, r.ChainId }), Is.EquivalentTo(data2.Take(1).Select(r => new { r.LineId, r.ChainId })));
@@ -96,7 +94,7 @@ namespace Tests.UserTests
 
 				Assert.That(items[0].PipeLineChains.SelectMany(c => c.Chain.ChainPoints!).Select(c => new { c.ElementId }), Is.EquivalentTo(data4.Take(1).Select(r => new { r.ElementId })));
 				Assert.That(items[1].PipeLineChains.SelectMany(c => c.Chain.ChainPoints!).Select(c => new { c.ElementId }), Is.EquivalentTo(data4.Skip(1).Select(r => new { r.ElementId })));
-			});
+			}
 		}
 	}
 }

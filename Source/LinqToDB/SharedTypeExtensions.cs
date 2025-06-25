@@ -11,14 +11,12 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace LinqToDB
-{
+using LinqToDB.Common.Internal;
 
 #pragma warning disable RS0030
 
-	using Async;
-	using Common;
-
+namespace LinqToDB
+{
 	[DebuggerStepThrough]
 	internal static class SharedTypeExtensions
 	{
@@ -54,15 +52,6 @@ namespace LinqToDB
 		public static bool IsValidEntityType(this Type type)
 			=> type is { IsClass: true, IsArray: false }
 				&& type != typeof(string);
-
-		public static bool IsValidComplexType(this Type type)
-			=> !type.IsArray
-				&& !type.IsInterface
-				&& !IsScalarType(type);
-
-		public static bool IsScalarType(this Type type)
-			=> type == typeof(string)
-				|| CommonTypeDictionary.ContainsKey(type);
 
 		public static bool IsPropertyBagType(/*[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] */ this Type type)
 		{
@@ -386,12 +375,12 @@ namespace LinqToDB
 	#pragma warning disable IDE0034 // Simplify 'default' expression - default causes default(object)
 			{ typeof(int), default(int) },
 			{ typeof(Guid), default(Guid) },
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			{ typeof(DateOnly), default(DateOnly) },
 #endif
 			{ typeof(DateTime), default(DateTime) },
 			{ typeof(DateTimeOffset), default(DateTimeOffset) },
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			{ typeof(TimeOnly), default(TimeOnly) },
 #endif
 			{ typeof(long), default(long) },
@@ -422,7 +411,7 @@ namespace LinqToDB
 			// for all value types.
 			return CommonTypeDictionary.TryGetValue(type, out var value)
 				? value
-				: Activator.CreateInstance(type);
+				: ActivatorExt.CreateInstance(type);
 		}
 
 		/*[RequiresUnreferencedCode("Gets all types from the given assembly - unsafe for trimming")]*/

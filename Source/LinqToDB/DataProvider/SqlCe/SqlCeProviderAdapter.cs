@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Data.SqlTypes;
 using System.Linq.Expressions;
+using System.Threading;
+
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using LinqToDB.Expressions;
-
 	public class SqlCeProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new object();
+		private static readonly Lock _syncRoot = new();
 		private static SqlCeProviderAdapter? _instance;
 
 		public const string AssemblyName        = "System.Data.SqlServerCe";
@@ -26,19 +29,22 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			Action<DbParameter, SqlDbType>   dbTypeSetter,
 			Func  <DbParameter, SqlDbType>   dbTypeGetter,
-			Func  <string,      SqlCeEngine> sqlCeEngineCreator)
+			Func  <string,      SqlCeEngine> sqlCeEngineCreator,
+			LambdaExpression getDecimal)
 		{
-			ConnectionType  = connectionType;
-			DataReaderType  = dataReaderType;
-			ParameterType   = parameterType;
-			CommandType     = commandType;
-			TransactionType = transactionType;
+			ConnectionType     = connectionType;
+			DataReaderType     = dataReaderType;
+			ParameterType      = parameterType;
+			CommandType        = commandType;
+			TransactionType    = transactionType;
 			_connectionFactory = connectionFactory;
 
 			SetDbType = dbTypeSetter;
 			GetDbType = dbTypeGetter;
 
 			CreateSqlCeEngine = sqlCeEngineCreator;
+
+			GetDecimalExpression = getDecimal;
 		}
 
 #region IDynamicProviderAdapter
@@ -58,6 +64,8 @@ namespace LinqToDB.DataProvider.SqlCe
 		public Func  <DbParameter, SqlDbType> GetDbType { get; }
 
 		public Func<string, SqlCeEngine> CreateSqlCeEngine { get; }
+
+		public LambdaExpression GetDecimalExpression { get; }
 
 		public static SqlCeProviderAdapter GetInstance()
 		{
@@ -81,6 +89,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 						var typeMapper = new TypeMapper();
 						typeMapper.RegisterTypeWrapper<SqlCeConnection>(connectionType);
+						typeMapper.RegisterTypeWrapper<SqlCeDataReader>(dataReaderType);
 						typeMapper.RegisterTypeWrapper<SqlCeEngine>(sqlCeEngine);
 						typeMapper.RegisterTypeWrapper<SqlCeParameter>(parameterType);
 						typeMapper.FinalizeMappings();
@@ -89,7 +98,7 @@ namespace LinqToDB.DataProvider.SqlCe
 						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
 						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
 
-						var connectionFactory = typeMapper.BuildTypedFactory<string, SqlCeConnection, DbConnection>((string connectionString) => new SqlCeConnection(connectionString));
+						var connectionFactory = typeMapper.BuildTypedFactory<string, SqlCeConnection, DbConnection>(connectionString => new SqlCeConnection(connectionString));
 
 						_instance = new SqlCeProviderAdapter(
 							connectionType,
@@ -100,11 +109,38 @@ namespace LinqToDB.DataProvider.SqlCe
 							connectionFactory,
 							typeSetter,
 							typeGetter,
-							typeMapper.BuildWrappedFactory((string connectionString) => new SqlCeEngine(connectionString))!);
+							typeMapper.BuildWrappedFactory((string connectionString) => new SqlCeEngine(connectionString))!,
+							typeMapper.MapLambda((SqlCeDataReader rd, int ordinal) => ConvertToDecimal(rd.GetSqlDecimal(ordinal))));
 					}
 			}
 
 			return _instance;
+		}
+
+		static decimal ConvertToDecimal(SqlDecimal sqlDecimal)
+		{
+			// workaround bug in GetDecimal implementation not trimming scale value but throwing overflow exception
+
+			try
+			{
+				// this is what provider acutally do in GetDecimal
+				return (decimal)sqlDecimal;
+			}
+			catch
+			{
+				// if it doesn't work - try to trim data in decimal part
+				// will throw for out-of-range values as expected
+				var precision = 29;
+				var scale = sqlDecimal.Precision - sqlDecimal.Scale >= 29 ? 1 : 29 - (sqlDecimal.Precision - sqlDecimal.Scale);
+				try
+				{
+					return (decimal)SqlDecimal.ConvertToPrecScale(sqlDecimal, precision, scale);
+				}
+				catch
+				{
+					return (decimal)SqlDecimal.ConvertToPrecScale(sqlDecimal, precision, scale - 1);
+				}
+			}
 		}
 
 		#region Wrappers
@@ -116,9 +152,9 @@ namespace LinqToDB.DataProvider.SqlCe
 				= new LambdaExpression[]
 			{
 				// [0]: CreateDatabase
-				(Expression<Action<SqlCeEngine>>)((SqlCeEngine this_) => this_.CreateDatabase()),
+				(Expression<Action<SqlCeEngine>>)(this_ => this_.CreateDatabase()),
 				// [1]: Dispose
-				(Expression<Action<SqlCeEngine>>)((SqlCeEngine this_) => this_.Dispose()),
+				(Expression<Action<SqlCeEngine>>)(this_ => this_.Dispose()),
 			};
 
 			public SqlCeEngine(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -141,6 +177,12 @@ namespace LinqToDB.DataProvider.SqlCe
 		private sealed class SqlCeConnection
 		{
 			public SqlCeConnection(string connectionString) => throw new NotImplementedException();
+		}
+
+		[Wrapper]
+		private sealed class SqlCeDataReader
+		{
+			public SqlDecimal GetSqlDecimal(int ordinal) => throw new NotImplementedException();
 		}
 
 		#endregion

@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
+
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	[BuildsMethodCall("Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll")]
 	internal sealed class SetOperationBuilder : MethodCallBuilder
 	{
@@ -272,7 +270,9 @@ namespace LinqToDB.Linq.Builder
 
 			Expression MergeProjections(Expression path, Expression projection1, Expression projection2, ProjectFlags flags)
 			{
-				if (TryMergeProjections(projection1, projection2, flags, out var merged))
+				var helper = new MergeProjectionHelper(Builder, MappingSchema, TryMergeViaDifferencePredicate);
+
+				if (helper.TryMergeProjections(projection1, projection2, flags, out var merged))
 					return merged;
 
 				if (TryMergeViaDifferencePredicate(projection1, projection2, out merged))
@@ -418,172 +418,6 @@ namespace LinqToDB.Linq.Builder
 				return null;
 			}
 
-			bool TryMergeProjections(Expression projection1, Expression projection2, ProjectFlags flags, [NotNullWhen(true)] out Expression? merged)
-			{
-				merged = null;
-
-				if (projection1.Type != projection2.Type)
-				{
-					if (projection1.Type.UnwrapNullableType() != projection2.Type.UnwrapNullableType())
-						return false;
-				}
-
-				if (ExpressionEqualityComparer.Instance.Equals(projection1, projection2))
-				{
-					merged = projection1;
-					return true;
-				}
-
-				if (SequenceHelper.UnwrapDefaultIfEmpty(projection1) is SqlGenericConstructorExpression generic1 &&
-				    SequenceHelper.UnwrapDefaultIfEmpty(projection2) is SqlGenericConstructorExpression generic2)
-				{
-					if (generic1.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
-					{
-						if (generic2.ConstructType != SqlGenericConstructorExpression.CreateType.Full)
-						{
-							var constructed = Builder.TryConstruct(MappingSchema, generic1, flags);
-							if (constructed == null)
-								return false;
-							if (TryMergeProjections(Builder.ParseGenericConstructor(constructed, flags, null), generic2, flags, out merged))
-								return true;
-							return false;
-						}
-					}
-
-					if (generic2.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
-					{
-						if (generic1.ConstructType != SqlGenericConstructorExpression.CreateType.Full)
-						{
-							var constructed = Builder.TryConstruct(MappingSchema, generic2, flags);
-							if (constructed == null)
-								return false;
-							if (TryMergeProjections(generic1, Builder.ParseGenericConstructor(constructed, flags, null), flags, out merged))
-								return true;
-							return false;
-						}
-					}
-
-					var resultAssignments = new List<SqlGenericConstructorExpression.Assignment>(generic1.Assignments.Count);
-
-					foreach (var a1 in generic1.Assignments)
-					{
-						var found = generic2.Assignments.FirstOrDefault(a2 =>
-							MemberInfoComparer.Instance.Equals(a2.MemberInfo, a1.MemberInfo));
-
-						if (found == null)
-						{
-							if (a1.Expression is not SqlPathExpression)
-								return false;
-							resultAssignments.Add(a1);
-						}
-						else if (!TryMergeProjections(a1.Expression, found.Expression, flags, out var mergedAssignment))
-							return false;
-						else
-							resultAssignments.Add(a1.WithExpression(mergedAssignment));
-					}
-
-					foreach (var a2 in generic2.Assignments)
-					{
-						var found = generic1.Assignments.FirstOrDefault(a1 =>
-							MemberInfoComparer.Instance.Equals(a2.MemberInfo, a1.MemberInfo));
-
-						if (found == null)
-						{
-							if (a2.Expression is not SqlPathExpression)
-								return false;
-							resultAssignments.Add(a2);
-						}
-					}
-
-					if (generic1.Parameters.Count != generic2.Parameters.Count)
-					{
-						return false;
-					}
-
-					var resultGeneric = generic1.ReplaceAssignments(resultAssignments.AsReadOnly());
-
-					if (generic1.Parameters.Count > 0)
-					{
-						var resultParameters = new List<SqlGenericConstructorExpression.Parameter>(generic1.Parameters.Count);
-
-						for (int i = 0; i < generic1.Parameters.Count; i++)
-						{
-							if (!TryMergeProjections(generic1.Parameters[i].Expression,
-								    generic2.Parameters[i].Expression, flags, out var mergedAssignment))
-								return false;
-
-							resultParameters.Add(generic1.Parameters[i].WithExpression(mergedAssignment));
-						}
-
-						resultGeneric = resultGeneric.ReplaceParameters(resultParameters.AsReadOnly());
-					}
-
-					if (Builder.TryConstruct(MappingSchema, resultGeneric, flags) == null)
-						return false;
-
-					merged = resultGeneric;
-					return true;
-				}
-
-				if (projection1 is ConditionalExpression cond1 && projection2 is ConditionalExpression cond2)
-				{
-					if (!ExpressionEqualityComparer.Instance.Equals(cond1.Test, cond2.Test))
-						return false;
-
-					if (!TryMergeProjections(cond1.IfTrue, cond2.IfTrue, flags, out var ifTrueMerged) ||
-					    !TryMergeProjections(cond1.IfFalse, cond2.IfFalse, flags, out var ifFalseMerged))
-					{
-						return false;
-					}
-
-					merged = cond1.Update(cond1.Test, ifTrueMerged, ifFalseMerged);
-					return true;
-				}
-
-				if (projection1 is SqlPathExpression && IsNullValueOrSqlNull(projection2))
-				{
-					merged = projection1;
-					return true;
-				}
-
-				if (projection2 is SqlPathExpression && IsNullValueOrSqlNull(projection1))
-				{
-					merged = projection2;
-					return true;
-				}
-
-				if (projection1.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
-				{
-					if (TryMergeProjections(((UnaryExpression)projection1).Operand, projection2, flags, out merged))
-					{
-						if (merged.Type != projection1.Type)
-						{
-							merged = Expression.Convert(merged, projection1.Type);
-						}
-
-						return true;
-					}
-				}
-
-				if (projection2.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
-				{
-					if (TryMergeProjections(projection1, ((UnaryExpression)projection2).Operand, flags, out merged))
-					{
-						if (merged.Type != projection2.Type)
-						{
-							merged = Expression.Convert(merged, projection2.Type);
-						}
-
-						return true;
-					}
-				}
-
-				if (TryMergeViaDifferencePredicate(projection1, projection2, out merged))
-					return true;
-
-				return false;
-			}
-
 			class PathComparer : IEqualityComparer<Expression[]>
 			{
 				public static readonly PathComparer Instance = new PathComparer();
@@ -622,12 +456,14 @@ namespace LinqToDB.Linq.Builder
 				error = null;
 				var ref1 = new ContextRefExpression(ElementType, _sequence1);
 
-				if (!BuildProjectionExpression(ref1, _sequence1, out var projection1, out var placeholders1, out var eager1, out error))
+				var helper = new MergeProjectionHelper(Builder, MappingSchema);
+
+				if (!helper.BuildProjectionExpression(ref1, _sequence1, out var projection1, out var placeholders1, out var eager1, out error))
 					return false;
 
 				var ref2 = new ContextRefExpression(ElementType, _sequence2);
 
-				if (!BuildProjectionExpression(ref2, _sequence2, out var projection2, out var placeholders2, out var eager2, out error))
+				if (!helper.BuildProjectionExpression(ref2, _sequence2, out var projection2, out var placeholders2, out var eager2, out error))
 					return false;
 
 				_projection1 = projection1;
@@ -1176,63 +1012,14 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			bool BuildProjectionExpression(
-				Expression                                                                                path, 
-				IBuildContext                                                                             context,
-				[NotNullWhen(true)] out  Expression?                                                      projection,
-				[NotNullWhen(true)] out  List<(SqlPlaceholderExpression placeholder, Expression[] path)>? foundPlaceholders,
-				[NotNullWhen(true)] out  List<SqlEagerLoadExpression>?                                    foundEager,
-				[NotNullWhen(false)] out SqlErrorExpression?                                              error)
-			{
-				var correctedPath = SequenceHelper.ReplaceContext(path, this, context);
-
-				var current = correctedPath;
-				do
-				{
-					var projected = Builder.BuildSqlExpression(context, current, buildPurpose: BuildPurpose.Expression, buildFlags: BuildFlags.ForceDefaultIfEmpty | BuildFlags.ForSetProjection | BuildFlags.ResetPrevious);
-
-					error = SequenceHelper.FindError(projected);
-
-					if (error != null)
-					{
-						projection = null;
-						foundPlaceholders = null;
-						foundEager = null;
-						return false;
-					}
-
-					projected = Builder.BuildExtractExpression(context, projected);
-
-
-					var lambdaResolver = new LambdaResolveVisitor(context, BuildPurpose.Sql, true);
-					projected = lambdaResolver.Visit(projected);
-
-					var optimizer = new ExpressionOptimizerVisitor();
-					projected = optimizer.Visit(projected);
-
-					projected = SequenceHelper.RemoveMarkers(projected);
-
-					if (ExpressionEqualityComparer.Instance.Equals(projected, current))
-						break;
-
-					current = projected;
-				} while (true);
-
-				var pathBuilder = new ExpressionPathVisitor();
-				var withPath    = pathBuilder.Visit(current);
-
-				foundPlaceholders = pathBuilder.FoundPlaceholders;
-				foundEager = pathBuilder.FoundEager;
-				projection = withPath;
-
-				return true;
-			}
-
 			public override IBuildContext Clone(CloningContext context)
 			{
 				var cloned = new SetOperationContext(_setOperation, context.CloneElement(SelectQuery),
 					context.CloneContext(_sequence1), context.CloneContext(_sequence2),
-					context.CloneExpression(_methodCall));
+					context.CloneExpression(_methodCall))
+				{
+					LoadWithRoot = LoadWithRoot
+				};
 
 				// for correct updating self-references below
 				context.RegisterCloned(this, cloned);
@@ -1300,8 +1087,7 @@ namespace LinqToDB.Linq.Builder
 				return SubQuery;
 			}
 
-			public LoadWithInfo  LoadWithRoot { get; set; } = new();
-			public MemberInfo[]? LoadWithPath { get; set; }
+			public LoadWithEntity? LoadWithRoot { get; set; }
 		}
 
 		#endregion

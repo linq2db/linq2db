@@ -1,9 +1,10 @@
-﻿using System;
-using System.Data.Odbc;
+﻿using System.Data.Odbc;
 using System.Data.OleDb;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -37,8 +38,7 @@ namespace Tests.UserTests
 			{
 				var asParam = "[0-9]";
 				var asParamUnterm = "[0";
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(table.Where(r => r.Value!.EndsWith("]")).Select(r => r.Id).Single(), Is.EqualTo(5));
 					Assert.That(table.Where(r => r.Value!.StartsWith("]")).Select(r => r.Id).Single(), Is.EqualTo(6));
@@ -54,7 +54,7 @@ namespace Tests.UserTests
 					Assert.That(table.Where(r => r.Value!.Contains("[0-9]")).ToList(), Has.Count.EqualTo(1));
 
 					Assert.That(table.Where(r => r.Value!.Contains("6")).ToList(), Has.Count.EqualTo(1));
-				});
+				}
 
 				if (context.IsAnyOf(TestProvName.AllAccessOleDb))
 				{
@@ -75,11 +75,11 @@ namespace Tests.UserTests
 				}
 
 				var expected = context.IsAnyOf(TestProvName.AllClickHouse) ? 0 : 1;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(table.Where(r => Sql.Like(r.Value, "[0-9]")).ToList(), Has.Count.EqualTo(expected));
 					Assert.That(table.Where(r => Sql.Like(r.Value, asParam)).ToList(), Has.Count.EqualTo(expected));
-				});
+				}
 			}
 		}
 		

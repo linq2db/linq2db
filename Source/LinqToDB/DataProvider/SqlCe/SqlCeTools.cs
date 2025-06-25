@@ -2,11 +2,10 @@
 using System.Data.Common;
 using System.Reflection;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Configuration;
-	using Data;
-
 	public static class SqlCeTools
 	{
 		enum Fake { };
@@ -40,17 +39,20 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public static DataConnection CreateDataConnection(string connectionString)
 		{
-			return new DataConnection(_sqlCeDataProvider.Value, connectionString);
+			return new DataConnection(new DataOptions()
+				.UseConnectionString(_sqlCeDataProvider.Value, connectionString));
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection)
 		{
-			return new DataConnection(_sqlCeDataProvider.Value, connection);
+			return new DataConnection(new DataOptions()
+				.UseConnection(_sqlCeDataProvider.Value, connection));
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction)
 		{
-			return new DataConnection(_sqlCeDataProvider.Value, transaction);
+			return new DataConnection(new DataOptions()
+				.UseTransaction(_sqlCeDataProvider.Value, transaction));
 		}
 
 		#endregion

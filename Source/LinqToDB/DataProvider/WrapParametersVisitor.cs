@@ -1,10 +1,10 @@
 ﻿using System;
 
+using LinqToDB.SqlQuery;
+using LinqToDB.SqlQuery.Visitors;
+
 namespace LinqToDB.DataProvider
 {
-	using SqlQuery;
-	using SqlQuery.Visitors;
-
 	public class WrapParametersVisitor : SqlQueryVisitor
 	{
 		bool      _needCast;
@@ -23,8 +23,7 @@ namespace LinqToDB.DataProvider
 			InInsertOrUpdate = 1 << 4,
 			InOutput         = 1 << 5,
 			InMerge          = 1 << 6,
-
-			All = InSelect | InUpdateSet | InInsertValue | InInsertOrUpdate | InOutput | InMerge
+			InBinary         = 1 << 7,
 		}
 	
 		public WrapParametersVisitor(VisitMode visitMode) : base(visitMode, null)
@@ -133,7 +132,7 @@ namespace LinqToDB.DataProvider
 
 		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			using var scope = NeedCast(!_inModifier);
+			using var scope = NeedCast(!_inModifier && _wrapFlags.HasFlag(WrapFlags.InBinary));
 			return base.VisitSqlBinaryExpression(element);
 		}
 

@@ -3,8 +3,8 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Mapping;
 using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -19,51 +19,47 @@ namespace Tests.Linq
 		[Test]
 		public void ConditionalWithBinary([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				using (var table = db.CreateLocalTable(OptimizationData.Seed()))
-				{
-					CheckPredicate(table, x => (x.IntVlaue == 1 ? 3 : 4) == 3);
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(OptimizationData.Seed());
 
-					CheckPredicate(table, x => (x.IntVlaue == 1 ? null : false) == true);
-					CheckPredicate(table, x => (x.IntVlaue == 1 ? null : true)  == true);
+			CheckPredicate(table, x => (x.IntVlaue == 1 ? 3 : 4) == 3);
 
-					CheckPredicate(table, x => (x.BoolValue ? true : false)         == true);
-					CheckPredicate(table, x => (x.BoolValue == true ? null : true)  == true);
-					CheckPredicate(table, x => (x.BoolValue == true ? true : false) == true);
+			CheckPredicate(table, x => (x.IntVlaue == 1 ? null : false) == true);
+			CheckPredicate(table, x => (x.IntVlaue == 1 ? null : true) == true);
 
-					CheckPredicate(table, x => (x.StringValueNullable == null ? 1 : x.StringValueNullable != null ? 2 : 3) == 2);
+			CheckPredicate(table, x => (x.BoolValue ? true : false) == true);
+			CheckPredicate(table, x => (x.BoolValue == true ? null : true) == true);
+			CheckPredicate(table, x => (x.BoolValue == true ? true : false) == true);
 
-					CheckPredicate(table, x => (x.StringValueNullable == null ? 2 : x.StringValueNullable != null ? 1 : 3) == 2);
+			CheckPredicate(table, x => (x.StringValueNullable == null ? 1 : x.StringValueNullable != null ? 2 : 3) == 2);
 
-					// Full optimization
-					CheckPredicate(table, x => (x.StringValueNullable == null ? 2 : x.StringValueNullable != null ? 1 : 3) > 3);
-					CheckPredicate(table, x => (x.StringValueNullable == null ? 2 : x.StringValueNullable != null ? 1 : 3) >= 1);
+			CheckPredicate(table, x => (x.StringValueNullable == null ? 2 : x.StringValueNullable != null ? 1 : 3) == 2);
 
-					CheckPredicate(table, x => (x.StringValueNullable == null ? 2 : x.StringValueNullable != null ? 1 : 3) > 1);
+			// Full optimization
+			CheckPredicate(table, x => (x.StringValueNullable == null ? 2 : x.StringValueNullable != null ? 1 : 3) > 3);
+			CheckPredicate(table, x => (x.StringValueNullable == null ? 2 : x.StringValueNullable != null ? 1 : 3) >= 1);
 
-					CheckPredicate(table, x => (x.StringValueNullable == null ? 1 : x.StringValueNullable != null ? 2 : 3) != 2);
+			CheckPredicate(table, x => (x.StringValueNullable == null ? 2 : x.StringValueNullable != null ? 1 : 3) > 1);
 
-					CheckPredicate(table, x => ((x.StringValueNullable != null) ? (x.StringValueNullable == "2" ? 2 : 10) : (x.StringValueNullable == null) ? 3 : 1) == 2);
+			CheckPredicate(table, x => (x.StringValueNullable == null ? 1 : x.StringValueNullable != null ? 2 : 3) != 2);
 
+			CheckPredicate(table, x => ((x.StringValueNullable != null) ? (x.StringValueNullable == "2" ? 2 : 10) : (x.StringValueNullable == null) ? 3 : 1) == 2);
 
-					CheckPredicate(table, x => (x.IntVlaue < 4 ? 4 : x.IntVlaue) == 0, false, false);
-					CheckPredicate(table, x => (x.IntVlaue < 4 ? 4 : x.IntVlaue) != 0);
+			CheckPredicate(table, x => (x.IntVlaue < 4 ? 4 : x.IntVlaue) == 0, false, false);
+			CheckPredicate(table, x => (x.IntVlaue < 4 ? 4 : x.IntVlaue) != 0);
 
-					CheckPredicate(table, x => (x.IntVlaue < 4 ? 4 : x.IntVlaue) > 0);
+			CheckPredicate(table, x => (x.IntVlaue < 4 ? 4 : x.IntVlaue) > 0);
 
-					CheckPredicate(table, x => (x.IntVlaue < 4 ? 4 : x.IntVlaue) < 0);
-					CheckPredicate(table, x => (x.IntVlaue < 4 ? 4 : x.IntVlaue) >= 0);
-					CheckPredicate(table, x => (x.IntVlaue < 4 ? 4 : x.IntVlaue) <= 0);
+			CheckPredicate(table, x => (x.IntVlaue < 4 ? 4 : x.IntVlaue) < 0);
+			CheckPredicate(table, x => (x.IntVlaue < 4 ? 4 : x.IntVlaue) >= 0);
+			CheckPredicate(table, x => (x.IntVlaue < 4 ? 4 : x.IntVlaue) <= 0);
 
-					CheckPredicate(table, x => (x.IntVlaue >= 4 ? x.IntVlaue : 4) == 0);
-					CheckPredicate(table, x => (x.IntVlaue >= 4 ? x.IntVlaue : 4) != 0);
-					CheckPredicate(table, x => (x.IntVlaue >= 4 ? x.IntVlaue : 4) > 0);
-					CheckPredicate(table, x => (x.IntVlaue >= 4 ? x.IntVlaue : 4) < 0);
-					CheckPredicate(table, x => (x.IntVlaue >= 4 ? x.IntVlaue : 4) >= 0);
-					CheckPredicate(table, x => (x.IntVlaue >= 4 ? x.IntVlaue : 4) <= 0);
-				}
-			}
+			CheckPredicate(table, x => (x.IntVlaue >= 4 ? x.IntVlaue : 4) == 0);
+			CheckPredicate(table, x => (x.IntVlaue >= 4 ? x.IntVlaue : 4) != 0);
+			CheckPredicate(table, x => (x.IntVlaue >= 4 ? x.IntVlaue : 4) > 0);
+			CheckPredicate(table, x => (x.IntVlaue >= 4 ? x.IntVlaue : 4) < 0);
+			CheckPredicate(table, x => (x.IntVlaue >= 4 ? x.IntVlaue : 4) >= 0);
+			CheckPredicate(table, x => (x.IntVlaue >= 4 ? x.IntVlaue : 4) <= 0);
 		}
 
 		#region Helpers

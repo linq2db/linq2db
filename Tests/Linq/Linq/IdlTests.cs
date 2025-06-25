@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Mapping;
 using LinqToDB.Extensions;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public partial class IdlTests : TestBase
 	{
@@ -304,11 +304,12 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.Patient.Where(x => x.PersonID < 0).Select(x => (int?)x.PersonID).Max(), Is.Null);
 					Assert.That(db.Patient.Where(x => x.PersonID < 0).Max(x => (int?)x.PersonID), Is.Null);
-				});
+				}
+
 				Assert.Catch<InvalidOperationException>(
 					() => db.Patient.Where(x => x.PersonID < 0).Select(x => x.PersonID).Max());
 				Assert.Catch<InvalidOperationException>(
@@ -324,12 +325,11 @@ namespace Tests.Linq
 				var ds = new IdlPatientSource(db);
 				var r1 = ds.Patients().ToList();
 				var r2 = ds.Persons().ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r1, Is.Not.Empty);
 					Assert.That(r2, Is.Not.Empty);
-				});
+				}
 
 				var r3 = ds.Patients().ToIdlPatientEx(ds);
 				var r4 = r3.ToList();

@@ -4,15 +4,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Data;
-	using Expressions;
-	using Extensions;
-	using Reflection;
-	using SqlQuery;
-
 	/// <summary>
 	/// Stores mapping entity column descriptor.
 	/// </summary>
@@ -160,7 +160,7 @@ namespace LinqToDB.Mapping
 			if (na != null)
 				return na.CanBeNull;
 
-			if (Configuration.UseNullableTypesMetadata && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable))
+			if (Common.Configuration.UseNullableTypesMetadata && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable))
 				return isNullable;
 
 			if (IsIdentity)
@@ -691,9 +691,12 @@ namespace LinqToDB.Mapping
 				else
 				{
 					// For DataType.Enum we do not provide any additional conversion
-					if (valueConverter == null && includingEnum && dbDataType.DataType != DataType.Enum)
+					if (valueConverter == null && includingEnum && dbDataType.DataType != DataType.Enum && getterExpr.Type.ToNullableUnderlying().IsEnum)
 					{
-						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, getterExpr.Type);
+						var type = dbDataType.SystemType != typeof(object) && !dbDataType.SystemType.ToNullableUnderlying().IsEnum
+							? dbDataType.SystemType
+							: Converter.GetDefaultMappingFromEnumType(mappingSchema, getterExpr.Type);
+
 						if (type != null)
 						{
 							var enumConverter = mappingSchema.GetConvertExpression(getterExpr.Type, type, conversionType: ConversionType.ToDatabase)!;

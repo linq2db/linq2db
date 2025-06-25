@@ -1,5 +1,4 @@
-﻿using System;
-using System.ServiceModel;
+﻿using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading;
 using System.Threading.Tasks;
@@ -79,6 +78,8 @@ namespace LinqToDB.Remote.Wcf
 			cancellationToken.ThrowIfCancellationRequested();
 			return Channel.ExecuteBatchAsync(configuration, queryData);
 		}
+
+		string? ILinqService.RemoteClientTag { get; set; } = "Wсf";
 
 		#endregion
 	}

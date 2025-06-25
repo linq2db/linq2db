@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -67,7 +69,6 @@ namespace Tests.Linq
 
 			[Column] public int  SubId   { get; set; }
 
-
 			[Association(ThisKey = nameof(SubId), OtherKey = nameof(SubEntitity.Id), CanBeNull = true)]
 			public SubEntitity SubItem { get; set; } = null!;
 
@@ -101,7 +102,6 @@ namespace Tests.Linq
 					.ToArray();
 			}
 		}
-
 
 		static void GenericTest<T>(IDataContext db)
 		where T: class, ISample
@@ -166,12 +166,11 @@ namespace Tests.Linq
 			db.Insert(entity);
 
 			var record = tb.Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(record.ID, Is.EqualTo(1));
 				Assert.That(record.Value, Is.EqualTo(2));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -198,12 +197,11 @@ namespace Tests.Linq
 			db.Update(newEntity);
 
 			var record = tb.Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(record.ID, Is.EqualTo(1));
 				Assert.That(record.Value, Is.EqualTo(3));
-			});
+			}
 		}
 
 		[Table("Parent")]
@@ -238,8 +236,7 @@ namespace Tests.Linq
 			var result = query.ToList();
 
 			Assert.That(result, Has.Count.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ID, Is.EqualTo(2));
 				Assert.That(result[0].Details.ID, Is.EqualTo(2));
@@ -250,7 +247,7 @@ namespace Tests.Linq
 				Assert.That(result[1].Details.ID, Is.EqualTo(3));
 				Assert.That(result[1].Details, Is.TypeOf<Details>());
 				Assert.That(((Details)result[1].Details).Value, Is.EqualTo(3));
-			});
+			}
 		}
 
 		class Projection2
@@ -274,8 +271,7 @@ namespace Tests.Linq
 			var result = query.ToList();
 
 			Assert.That(result, Has.Count.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ID, Is.EqualTo(2));
 				Assert.That(result[0].Details.ParentID, Is.EqualTo(2));
@@ -284,7 +280,7 @@ namespace Tests.Linq
 				Assert.That(result[1].ID, Is.EqualTo(3));
 				Assert.That(result[1].Details.ParentID, Is.EqualTo(3));
 				Assert.That(result[1].Details.Value1, Is.EqualTo(3));
-			});
+			}
 		}
 	}
 }

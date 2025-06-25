@@ -1,14 +1,11 @@
-﻿using System;
-using System.Data.Common;
-using System.Linq;
+﻿using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
-using LinqToDB.Interceptors;
-using LinqToDB.Linq;
-using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -22,7 +19,6 @@ namespace Tests.UserTests
 			[Column("id2")] public int ID2 { get; set; } // integer
 			[Column("id3")] public int ID3 { get; set; } // integer
 		}
-
 
 		[Table]
 		public class T2
@@ -56,39 +52,31 @@ namespace Tests.UserTests
 
 			if (myId == 2)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Key, Is.EqualTo(1));
 
 					Assert.That(groupResult, Has.Length.EqualTo(1));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(groupResult[0].s.ID, Is.EqualTo(1));
 					Assert.That(groupResult[0].s.ID2, Is.EqualTo(2));
-					Assert.That(groupResult[0].s.ID3, Is.EqualTo(0));
+					Assert.That(groupResult[0].s.ID3, Is.Zero);
 					Assert.That(groupResult[0].order.ID, Is.EqualTo(1));
 					Assert.That(groupResult[0].order.ID2, Is.EqualTo(2));
-				});
+				}
 			}
 			else
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Key, Is.EqualTo(2));
 
 					Assert.That(groupResult, Has.Length.EqualTo(1));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(groupResult[0].s.ID, Is.EqualTo(2));
 					Assert.That(groupResult[0].s.ID2, Is.EqualTo(85));
-					Assert.That(groupResult[0].s.ID3, Is.EqualTo(0));
+					Assert.That(groupResult[0].s.ID3, Is.Zero);
 					Assert.That(groupResult[0].order.ID, Is.EqualTo(2));
 					Assert.That(groupResult[0].order.ID2, Is.EqualTo(85));
-				});
+				}
 			}
 		}
 	}

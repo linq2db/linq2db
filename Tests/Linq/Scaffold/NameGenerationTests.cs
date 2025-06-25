@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+
 using LinqToDB.Naming;
-using LinqToDB.Reflection;
 using LinqToDB.Scaffold.Internal;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Scaffold
@@ -92,12 +93,11 @@ namespace Tests.Scaffold
 				fkName,
 				transformation,
 				defaultSchemas);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(sourceSideAssociationName, Is.EqualTo(expectedSourceName));
 				Assert.That(targetSideAssociationName, Is.EqualTo(expectedTargetName));
-			});
+			}
 		}
 	}
 }

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Reflection;
+
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
-using Microsoft.Data.SqlClient;
+
 using NUnit.Framework;
 
 namespace Tests.Reflection
@@ -14,24 +15,22 @@ namespace Tests.Reflection
 		public void PropertyAttributeInheritanceTest()
 		{
 			var prop = typeof(Derived).GetProperty(nameof(Base.Property))!;
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(prop.HasAttribute<MyAttribute>(false), Is.False);
 				Assert.That(prop.HasAttribute<MyAttribute>(true), Is.True);
-			});
+			}
 		}
 
 		[Test]
 		public void EventAttributeInheritanceTest()
 		{
 			var ev = typeof(Derived).GetEvent(nameof(Base.Event))!;
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ev.HasAttribute<MyAttribute>(false), Is.False);
 				Assert.That(ev.HasAttribute<MyAttribute>(true), Is.True);
-			});
+			}
 		}
 
 		public class Base

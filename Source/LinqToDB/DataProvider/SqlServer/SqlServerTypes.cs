@@ -2,12 +2,12 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Expressions;
-	using Mapping;
-
 	internal static class SqlServerTypes
 	{
 		public const string AssemblyName   = "Microsoft.SqlServer.Types";
@@ -26,7 +26,10 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (assembly != null)
 					return LoadTypes(assembly);
 			}
-			catch { }
+			catch
+			{
+				// ignore
+			}
 
 			return [];
 		}, true);
@@ -37,7 +40,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				return UpdateTypes(Assembly.Load(AssemblyName));
 			}
-			catch { }
+			catch
+			{
+				// ignore
+			}
 
 			return false;
 		}
@@ -53,7 +59,10 @@ namespace LinqToDB.DataProvider.SqlServer
 					return true;
 				}
 			}
-			catch { }
+			catch
+			{
+				// ignore
+			}
 
 			return false;
 		}
@@ -62,13 +71,13 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var types = new TypeInfo[3];
 
-			types[0] = loadType(SqlHierarchyIdType);
-			types[1] = loadType(SqlGeographyType);
-			types[2] = loadType(SqlGeometryType);
+			types[0] = LoadType(SqlHierarchyIdType);
+			types[1] = LoadType(SqlGeographyType);
+			types[2] = LoadType(SqlGeometryType);
 
 			return types;
 
-			TypeInfo loadType(string typeName)
+			TypeInfo LoadType(string typeName)
 			{
 				var type = assembly.GetType($"{TypesNamespace}.{typeName}", true)!;
 

@@ -4,12 +4,12 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	// https://docs.microsoft.com/en-us/dotnet/framework/data/adonet/odbc-schema-collections
 	// unused tables:
 	// DataSourceInformation - database settings
@@ -31,9 +31,10 @@ namespace LinqToDB.DataProvider.Access
 		{
 			// tables and views has same schema, only difference in TABLE_TYPE
 			// views also include SELECT procedures, including procedures with parameters(!)
-			var tables = dataConnection.Connection.GetSchema("Tables");
-			var views  = dataConnection.Connection.GetSchema("Views");
-			var procs  = dataConnection.Connection.GetSchema("Procedures");
+			var dbConnection = dataConnection.OpenDbConnection();
+			var tables       = dbConnection.GetSchema("Tables");
+			var views        = dbConnection.GetSchema("Views");
+			var procs        = dbConnection.GetSchema("Procedures");
 
 			var procIds = new HashSet<string>(
 				procs.AsEnumerable().Select(p => $"{p.Field<string>("PROCEDURE_CAT")}.{p.Field<string>("PROCEDURE_SCHEM")}.{p.Field<string>("PROCEDURE_NAME")}"));
@@ -73,7 +74,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = dataConnection.Connection.GetSchema("Columns");
+			var cs = dataConnection.OpenDbConnection().GetSchema("Columns");
 
 			return
 			(
@@ -100,7 +101,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var ps = dataConnection.Connection.GetSchema("Procedures");
+			var ps = dataConnection.OpenDbConnection().GetSchema("Procedures");
 
 			return
 			(
@@ -121,7 +122,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
-			var ps = dataConnection.Connection.GetSchema("ProcedureParameters");
+			var ps = dataConnection.OpenDbConnection().GetSchema("ProcedureParameters");
 			return
 			(
 				from p in ps.AsEnumerable()
@@ -150,7 +151,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
 		{
-			return dataConnection.Connection.GetSchema("ProcedureColumns", new[] { null, null, commandText.TrimStart('[').TrimEnd(']') });
+			return dataConnection.OpenDbConnection().GetSchema("ProcedureColumns", new[] { null, null, commandText.TrimStart('[').TrimEnd(']') });
 		}
 
 		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)

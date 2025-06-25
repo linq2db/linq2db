@@ -1,11 +1,8 @@
-﻿using System;
+﻿using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using LinqToDB.Extensions;
-	using LinqToDB.SqlProvider;
-	using LinqToDB.SqlQuery;
-
 	public class SybaseSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public SybaseSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
@@ -31,7 +28,7 @@ namespace LinqToDB.DataProvider.Sybase
 				var stype = cast.Expression.SystemType!.ToUnderlying();
 
 				if (stype == typeof(DateTime)
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 							|| stype == typeof(DateOnly)
 #endif
 				   )
@@ -65,6 +62,9 @@ namespace LinqToDB.DataProvider.Sybase
 				case { Name: PseudoFunctions.REPLACE }:
 					return func.WithName("Str_Replace");
 
+				case { Name: PseudoFunctions.LENGTH }:
+					return func.WithName("CHAR_LENGTH");
+
 				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
@@ -86,14 +86,12 @@ namespace LinqToDB.DataProvider.Sybase
 						var p0, var p1, _,
 						SqlValue { Value: string @string, ValueType: var valueType }
 					],
-					SystemType: var type,
-					Precedence: var precedence,
+					Type: var type
 				} when string.IsNullOrEmpty(@string):
 					return new SqlFunction(
 						type,
 						"Stuff",
-						false,
-						precedence,
+						ParametersNullabilityType.SameAsFirstParameter,
 						p0,
 						p1,
 						p1,

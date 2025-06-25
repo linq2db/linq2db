@@ -4,14 +4,14 @@ using System.Data.Common;
 using System.Globalization;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
 	{
 		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
@@ -28,9 +28,10 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
-		protected override bool   IsRecursiveCteKeywordRequired   => true;
-		public    override bool   IsNestedJoinParenthesisRequired => true;
-		protected override bool   IsValuesSyntaxSupported         => false;
+		protected override bool IsRecursiveCteKeywordRequired   => true;
+		public    override bool IsNestedJoinParenthesisRequired => true;
+		protected override bool IsValuesSyntaxSupported         => false;
+		protected override bool SupportsColumnAliasesInSource   => false;
 
 		protected override bool CanSkipRootAliases(SqlStatement statement)
 		{
@@ -388,7 +389,8 @@ namespace LinqToDB.DataProvider.MySql
 					AppendIndent();
 					BuildExpression(expr.Column, false, true);
 					StringBuilder.Append(" = ");
-					BuildExpression(expr.Expression!, false, true);
+					var convertedExpr = ConvertElement(expr.Expression!);
+					BuildExpression(convertedExpr, false, true);
 				}
 
 				Indent--;
@@ -464,7 +466,39 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			BuildDropTableStatementIfExists(dropTable);
+			BuildTag(dropTable);
+
+			AppendIndent().Append(IsTemporaryTable(dropTable.Table.TableOptions) ? "DROP TEMPORARY TABLE " : "DROP TABLE ");
+
+			if (dropTable.Table.TableOptions.HasDropIfExists())
+				StringBuilder.Append("IF EXISTS ");
+
+			BuildPhysicalTable(dropTable.Table!, null);
+			StringBuilder.AppendLine();
+		}
+
+		private static bool IsTemporaryTable(TableOptions tableOptions)
+		{
+			if (tableOptions.IsTemporaryOptionSet())
+			{
+				var tempOptions = tableOptions & TableOptions.IsTemporaryOptionSet;
+
+				switch (tempOptions)
+				{
+					case TableOptions.IsTemporary                                                                              :
+					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					case                                                                     TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                     :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						return true;
+					default:
+						throw new InvalidOperationException($"Incompatible table options '{tempOptions}'");
+				}
+			}
+
+			return false;
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
@@ -516,31 +550,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
-
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                              :
-					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-					case                                                                     TableOptions.IsLocalTemporaryData :
-					case                            TableOptions.IsLocalTemporaryStructure                                     :
-					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						command = "CREATE TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
-
-			StringBuilder.Append(command);
+			StringBuilder.Append(IsTemporaryTable(table.TableOptions) ? "CREATE TEMPORARY TABLE " : "CREATE TABLE ");
 
 			if (table.TableOptions.HasCreateIfNotExists())
 				StringBuilder.Append("IF NOT EXISTS ");

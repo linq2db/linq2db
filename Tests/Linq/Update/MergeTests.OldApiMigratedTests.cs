@@ -8,10 +8,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.xUpdate
 {
-	using Model;
-
 	// Regression tests converted from tests for previous version of Merge API to new API.
 	public partial class MergeTests
 	{
@@ -288,13 +288,12 @@ namespace Tests.xUpdate
 				AssertRowCount(1, rows, context);
 
 				var row = db.GetTable<AllType>().OrderByDescending(_ => _.ID).Take(1).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(row.charDataType, Is.EqualTo('\0'));
 					Assert.That(row.ncharDataType, Is.EqualTo("\0"));
 					Assert.That(row.nvarcharDataType, Is.EqualTo("test\0it"));
-				});
+				}
 			}
 		}
 	}

@@ -2,14 +2,39 @@
 using System.Globalization;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Sybase.Translation
 {
-	using Common;
-	using SqlQuery;
-	using Linq.Translation;
-
 	public class SybaseMemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new SybaseStingMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new SybaseMathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertDateTime2(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -50,7 +75,10 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 				var factory   = translationContext.ExpressionFactory;
 				var intDbType = factory.GetDbDataType(typeof(int));
 
-				var resultExpression = factory.Function(intDbType, "DatePart", factory.Fragment(intDbType, partStr), dateTimeExpression);
+				var resultExpression = factory.Function(intDbType, "DatePart",
+					ParametersNullabilityType.SameAsSecondParameter,
+					factory.NotNullFragment(intDbType, partStr),
+					dateTimeExpression);
 
 				return resultExpression;
 			}
@@ -68,7 +96,10 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 					return null;
 				}
 
-				var resultExpression = factory.Function(dateType, "DateAdd", factory.Fragment(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
+				var resultExpression = factory.Function(dateType, "DateAdd",
+					factory.NotNullFragment(factory.GetDbDataType(typeof(string)), partStr),
+					increment,
+					dateTimeExpression);
 				return resultExpression;
 			}
 
@@ -101,6 +132,7 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 					}
 
 					return factory.Function(stringDataType, "RIGHT",
+						ParametersNullabilityType.NotNullable,
 						factory.Concat(factory.Value(stringDataType, "0"), CastToLength(expression, padSize)),
 						factory.Value(intDataType, padSize));
 				}
@@ -146,7 +178,7 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "GetDate");
+				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "GetDate", ParametersNullabilityType.NotNullable);
 			}
 		}
 
@@ -163,35 +195,8 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 			}
 		}
 
-		class SybaseStingMemberTranslator : StringMemberTranslatorBase
+		public class SybaseStingMemberTranslator : StringMemberTranslatorBase
 		{
-			public override ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue,
-				ISqlExpression newValue)
-			{
-				var func = base.TranslateReplace(translationContext, methodCall, translationFlags, value, oldValue, newValue) as SqlFunction;
-
-				return func?.WithName("Str_Replace");
-			}
-		}
-
-		protected override IMemberTranslator CreateSqlTypesTranslator()
-		{
-			return new SqlTypesTranslation();
-		}
-
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new DateFunctionsTranslator();
-		}
-
-		protected override IMemberTranslator CreateStringMemberTranslator()
-		{
-			return new SybaseStingMemberTranslator();
-		}
-
-		protected override IMemberTranslator CreateMathMemberTranslator()
-		{
-			return new SybaseMathMemberTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
@@ -200,6 +205,22 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID", factory.Value(1));
 
 			return timePart;
+		}
+
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// Lower(Convert(NVarChar(36), {0}))
+
+				var factory        = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.NVarChar).WithLength(36);
+
+				var cast    = factory.Cast(guidExpr, stringDataType);
+				var toLower = factory.ToLower(cast);
+
+				return toLower;
+			}
 		}
 	}
 }

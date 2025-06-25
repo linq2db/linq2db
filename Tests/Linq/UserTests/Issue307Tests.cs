@@ -1,14 +1,14 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.UserTests
 {
-	using Model;
-
 	[TestFixture]
 	public class Issue307Tests : TestBase
 	{
@@ -70,12 +70,11 @@ namespace Tests.UserTests
 					id = db.InsertWithInt32Identity(obj);
 
 				var obj2 = db.GetTable<Entity307>().First(_ => _.ID == id);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(obj2.MiddleName, Is.Null);
 					Assert.That(obj2.FirstName, Is.EqualTo(obj.FirstName));
-				});
+				}
 			}
 		}
 	}

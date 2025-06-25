@@ -1,5 +1,0 @@
-<#@ include file="LinqToDB.SqlServer.ttinclude" once="true" #>
-<#
-	LinqToDB.DataProvider.SqlServer.SqlServerTools.ResolveSqlTypes(
-		typeof(Microsoft.SqlServer.Types.SqlGeography).Assembly);
-#>

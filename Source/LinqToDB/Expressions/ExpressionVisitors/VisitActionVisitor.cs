@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Expressions.ExpressionVisitors
 {
 	internal readonly struct VisitActionVisitor<TContext>
 	{
@@ -313,6 +313,11 @@ namespace LinqToDB.Expressions
 			else if (expr is SqlReaderIsNullExpression isNullExpression)
 			{
 				Visit(isNullExpression.Placeholder);
+			}
+			else if (expr is SqlDefaultIfEmptyExpression defaultIfEmpty)
+			{
+				Visit(defaultIfEmpty.InnerExpression);
+				Visit(defaultIfEmpty.NotNullExpressions);
 			}
 			else if (expr is SqlAdjustTypeExpression adjustType)
 			{

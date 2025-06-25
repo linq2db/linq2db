@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Data;
+using LinqToDB.Tools;
+
 using AsyncDisposableWrapper = LinqToDB.Tools.ActivityService.AsyncDisposableWrapper;
 
 namespace LinqToDB.Async
 {
-	using Data;
-	using Tools;
-
 	/// <summary>
 	/// Implements <see cref="IAsyncDbConnection"/> wrapper over <see cref="DbConnection"/> instance with
 	/// synchronous implementation of asynchronous methods.
@@ -76,7 +76,7 @@ namespace LinqToDB.Async
 
 		public virtual Task CloseAsync()
 		{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionCloseAsync)?.AddQueryInfo(DataConnection, Connection, null);
 
 			if (a is null)
@@ -109,7 +109,7 @@ namespace LinqToDB.Async
 			return AsyncFactory.CreateAndSetDataContext(DataConnection, Connection.BeginTransaction(isolationLevel));
 		}
 
-#if !NET6_0_OR_GREATER
+#if !NET8_0_OR_GREATER
 
 		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
 		{

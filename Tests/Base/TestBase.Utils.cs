@@ -1,20 +1,28 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Informix;
+using LinqToDB.DataProvider.SqlServer;
+
+using Tests.Model;
+using Tests.Tools;
 
 namespace Tests
 {
-	using System.Collections.Generic;
-
-	using Model;
-	using Tools;
-
 	public partial class TestBase
 	{
 		protected internal const string LinqServiceSuffix = ".LinqService";
+
+		protected static bool IsSqlServerMarsEnabled(DataConnection dc)
+		{
+			// good-enough check for tests
+			return dc.DataProvider is SqlServerDataProvider
+				&& dc.ConnectionString is string cs
+				&& cs.Contains("MultipleActiveResultSets=True", StringComparison.OrdinalIgnoreCase);
+		}
 
 		protected static char GetParameterToken(string context)
 		{
@@ -135,7 +143,7 @@ namespace Tests
 				;
 		}
 
-		protected static TempTable<T> CreateTempTable<T>(IDataContext db, string tableName, string context)
+		protected static Tests.Tools.TempTable<T> CreateTempTable<T>(IDataContext db, string tableName, string context)
 			where T : notnull
 		{
 			return TempTable.Create<T>(db, GetTempTableName(tableName, context));

@@ -5,19 +5,19 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Interceptors;
+using LinqToDB.Interceptors.Internal;
+using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 namespace LinqToDB.Data
 {
-	using Expressions;
-	using Extensions;
-	using Interceptors.Internal;
-	using Interceptors;
-	using Linq.Builder;
-	using Linq;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-	using Tools;
-
 	internal abstract class EntityConstructorBase
 	{
 		public MappingSchema MappingSchema { get; private set; } = default!;
@@ -27,7 +27,7 @@ namespace LinqToDB.Data
 
 		#region Entity Construction
 
-		public virtual List<LoadWithInfo>? GetTableLoadWith(Expression path)
+		public virtual LoadWithEntity? GetTableLoadWith(Expression path)
 		{
 			return null;
 		}
@@ -54,6 +54,7 @@ namespace LinqToDB.Data
 						else if (purpose == FullEntityPurpose.Update)
 							valid = !c.SkipOnUpdate;
 					}
+
 					return valid;
 				}).ToList();
 			}
@@ -167,24 +168,29 @@ namespace LinqToDB.Data
 			{
 				var loadWith = GetTableLoadWith(currentPath);
 
-				if (loadWith?.Count > 0)
+				if (loadWith?.MembersToLoad?.Count > 0)
 				{
 					var assignedMembers = new HashSet<MemberInfo>(MemberInfoComparer.Instance);
 
-					foreach (var info in loadWith)
+					foreach (var info in loadWith.MembersToLoad)
 					{
 						if (!info.ShouldLoad)
 							continue;
 
 						var memberInfo = info.MemberInfo;
 
-						if (memberInfo == null || !assignedMembers.Add(memberInfo))
+						if (!assignedMembers.Add(memberInfo))
 							continue;
 
-						var expression = Expression.MakeMemberAccess(currentPath, memberInfo);
+						var currentMember = currentPath.Type.GetMemberEx(memberInfo);
+
+						if (currentMember == null)
+							continue;
+
+						var expression = Expression.MakeMemberAccess(currentPath, currentMember);
 
 						members.Add(
-							new SqlGenericConstructorExpression.Assignment(memberInfo, expression, true, true));
+							new SqlGenericConstructorExpression.Assignment(currentMember, expression, true, true));
 					}
 				}
 			}
@@ -400,6 +406,7 @@ namespace LinqToDB.Data
 						}
 					}
 				}
+
 				newExpression = Expression.New(constructorInfo!, parameterValues);
 			}
 

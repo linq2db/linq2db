@@ -12,16 +12,16 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.DataProvider;
+using LinqToDB.Extensions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using Common.Internal;
-	using DataProvider;
-	using Extensions;
-	using Infrastructure;
-	using Mapping;
-	using SqlQuery;
-
 	public abstract partial class BasicSqlBuilder : ISqlBuilder
 	{
 		#region Init
@@ -70,7 +70,6 @@ namespace LinqToDB.SqlProvider
 		#region Build Flags
 
 		bool _disableAlias;
-		bool _isInsideNot;
 		int  _binaryOptimized;
 
 		#endregion
@@ -145,16 +144,16 @@ namespace LinqToDB.SqlProvider
 		public T? ConvertElement<T>(T? element)
 			where T : class, IQueryElement
 		{
-			return OptimizationContext.OptimizeAndConvert(element, NullabilityContext, _isInsideNot);
+			return OptimizationContext.OptimizeAndConvert(element, NullabilityContext);
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
-		public IQueryElement? Optimize(IQueryElement? element, bool reduceBinary)
+		public IQueryElement? Optimize(IQueryElement? element, bool reducePredicates)
 		{
 			if (element == null)
 				return null;
 
-			return OptimizationContext.Optimize(element, NullabilityContext, _isInsideNot, reduceBinary);
+			return OptimizationContext.Optimize(element, NullabilityContext, reducePredicates);
 		}
 
 		#endregion
@@ -259,9 +258,6 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.GetIsSkipSupportedFlag(takeExpr, skipExpr)
 				&& skipExpr != null)
 				throw new LinqToDBException(ErrorHelper.Error_Skip_in_Subquery);
-
-			if (!SqlProviderFlags.IsTakeSupported && takeExpr != null)
-				throw new LinqToDBException($"Take for subqueries is not supported by the '{Name}' provider.");
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0,
@@ -640,6 +636,7 @@ namespace LinqToDB.SqlProvider
 							firstField = false;
 							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 						}
+
 						StringBuilder.AppendLine(")");
 					}
 					else
@@ -712,7 +709,7 @@ namespace LinqToDB.SqlProvider
 				first = false;
 
 				var addAlias = true;
-				var expr     = ConvertElement(col.Expression);
+				var expr     = (ISqlExpression)Optimize(col.Expression, reducePredicates: true);
 
 				AppendIndent();
 				BuildColumnExpression(selectQuery, expr, col.Alias, ref addAlias);
@@ -1048,7 +1045,7 @@ namespace LinqToDB.SqlProvider
 						first = false;
 
 						AppendIndent();
-						BuildExpression(ConvertElement(expr.Expression!));
+						BuildExpression(ConvertElement(expr).Expression!);
 					}
 
 					Indent--;
@@ -1565,7 +1562,7 @@ namespace LinqToDB.SqlProvider
 				}
 				else
 				{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					StringBuilder.Append(field.StringBuilder);
 #else
 					StringBuilder.Append(field.StringBuilder.ToString());
@@ -1787,6 +1784,16 @@ namespace LinqToDB.SqlProvider
 					if (appendParentheses)
 						AppendIndent().Append(')');
 
+					if (rawSqlTable.IsScalar && alias != null && SupportsColumnAliasesInSource && buildAlias != false)
+					{
+						StringBuilder.Append(' ');
+						BuildObjectName(StringBuilder, new(alias), ConvertType.NameToQueryFieldAlias, true, TableOptions.NotSet);
+						StringBuilder.Append('(');
+						BuildExpression(rawSqlTable.Fields.First(), buildTableName: false, checkParentheses: false);
+						StringBuilder.Append(')');
+						buildAlias = false;
+					}
+
 					break;
 
 				case QueryElementType.SqlValuesTable:
@@ -1947,17 +1954,7 @@ namespace LinqToDB.SqlProvider
 
 		protected static ISqlExtensionBuilder GetExtensionBuilder(Type builderType)
 		{
-			return _extensionBuilders.GetOrAdd(
-				builderType,
-				type =>
-				{
-					var inst = Activator.CreateInstance(type);
-
-					if (inst is not ISqlExtensionBuilder builder)
-						throw new LinqToDBException($"Type '{builderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
-
-					return builder;
-				});
+			return _extensionBuilders.GetOrAdd(builderType, ActivatorExt.CreateInstance<ISqlExtensionBuilder>);
 		}
 
 		protected void BuildTableExtensions(
@@ -2261,17 +2258,25 @@ namespace LinqToDB.SqlProvider
 
 			var orderBy = ConvertElement(selectQuery.OrderBy);
 
+			IReadOnlyList<SqlOrderByItem> nonConstant = orderBy.Items.All(i => !QueryHelper.IsConstantFast(i.Expression))
+				? orderBy.Items
+				: orderBy.Items.Where(i => !QueryHelper.IsConstantFast(i.Expression))
+					.ToList();
+
+			if (nonConstant.Count == 0)
+				return;
+
 			AppendIndent();
 
 			StringBuilder.Append("ORDER BY").AppendLine();
 
 			Indent++;
 
-			for (var i = 0; i < orderBy.Items.Count; i++)
+			for (var i = 0; i < nonConstant.Count; i++)
 			{
 				AppendIndent();
 
-				var item            = orderBy.Items[i];
+				var item            = nonConstant[i];
 				var orderExpression = item.Expression;
 
 				if (item.IsPositioned)
@@ -2288,7 +2293,7 @@ namespace LinqToDB.SqlProvider
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");
 
-				if (i + 1 < orderBy.Items.Count)
+				if (i + 1 < nonConstant.Count)
 					StringBuilder.AppendLine(Comma);
 				else
 					StringBuilder.AppendLine();
@@ -2319,7 +2324,7 @@ namespace LinqToDB.SqlProvider
 			=> skipExpression != null && SqlProviderFlags.GetIsSkipSupportedFlag(takeExpression, skipExpression);
 
 		protected bool NeedTake(ISqlExpression? takeExpression)
-			=> takeExpression != null && SqlProviderFlags.IsTakeSupported;
+			=> takeExpression != null;
 
 		protected virtual void BuildSkipFirst(SelectQuery selectQuery)
 		{
@@ -2501,20 +2506,11 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.InSubQueryPredicate:
-					{
-						BuildExpression(GetPrecedence((SqlPredicate.InSubQuery)predicate), ((SqlPredicate.InSubQuery)predicate).Expr1);
-						StringBuilder.Append(((SqlPredicate.InSubQuery)predicate).IsNot ? " NOT IN " : " IN ");
-						BuildExpression(GetPrecedence((SqlPredicate.InSubQuery)predicate), ((SqlPredicate.InSubQuery)predicate).SubQuery);
-					}
-
+					BuildInSubQueryPredicate((SqlPredicate.InSubQuery)predicate);
 					break;
 
 				case QueryElementType.InListPredicate:
-					BuildInListPredicate(predicate);
-					break;
-
-				case QueryElementType.IsTruePredicate:
-					BuildPredicate(((SqlPredicate.IsTrue)predicate).Reduce(NullabilityContext, _isInsideNot));
+					BuildInListPredicate((SqlPredicate.InList)predicate);
 					break;
 
 				case QueryElementType.ExistsPredicate:
@@ -2532,12 +2528,7 @@ namespace LinqToDB.SqlProvider
 
 						StringBuilder.Append("NOT ");
 
-						var saveIsInsideNot = _isInsideNot;
-						_isInsideNot = true;
-
 						BuildPredicate(p.Precedence, GetPrecedence(p.Predicate), p.Predicate);
-
-						_isInsideNot = saveIsInsideNot;
 
 						break;
 					}
@@ -2640,10 +2631,16 @@ namespace LinqToDB.SqlProvider
 			};
 		}
 
-		void BuildInListPredicate(ISqlPredicate predicate)
+		protected virtual void BuildInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
-			var p      = (SqlPredicate.InList)predicate;
-			var values = p.Values;
+			BuildExpression(GetPrecedence(predicate), predicate.Expr1);
+			StringBuilder.Append((predicate).IsNot ? " NOT IN " : " IN ");
+			BuildExpression(GetPrecedence(predicate), predicate.SubQuery);
+		}
+
+		protected virtual void BuildInListPredicate(SqlPredicate.InList predicate)
+		{
+			var values = predicate.Values;
 
 			// Handle x.In(IEnumerable variable)
 			if (values.Count == 1 && values[0] is SqlParameter pr)
@@ -2658,7 +2655,7 @@ namespace LinqToDB.SqlProvider
 					case string:
 						break;
 					case IEnumerable items:
-						if (p.Expr1 is ISqlTableSource table)
+						if (predicate.Expr1 is ISqlTableSource table)
 							TableSourceIn(table, items);
 						else
 							InValues(items);
@@ -2685,8 +2682,8 @@ namespace LinqToDB.SqlProvider
 						if (firstValue)
 						{
 							firstValue = false;
-							BuildExpression(GetPrecedence(p), keys[0]);
-							StringBuilder.Append(p.IsNot ? " NOT IN (" : " IN (");
+							BuildExpression(GetPrecedence(predicate), keys[0]);
+							StringBuilder.Append(predicate.IsNot ? " NOT IN (" : " IN (");
 						}
 
 						var field = GetUnderlayingField(keys[0]);
@@ -2718,7 +2715,7 @@ namespace LinqToDB.SqlProvider
 							var field = GetUnderlayingField(key);
 							var value = field.ColumnDescriptor.MemberAccessor.GetValue(item!);
 
-							BuildExpression(GetPrecedence(p), key);
+							BuildExpression(GetPrecedence(predicate), key);
 
 							if (value == null)
 							{
@@ -2750,7 +2747,7 @@ namespace LinqToDB.SqlProvider
 				}
 
 				if (firstValue)
-					BuildPredicate(SqlPredicate.MakeBool(p.IsNot));
+					BuildPredicate(SqlPredicate.MakeBool(predicate.IsNot));
 				else
 					StringBuilder.Remove(StringBuilder.Length - 2, 2).Append(')');
 			}
@@ -2759,12 +2756,12 @@ namespace LinqToDB.SqlProvider
 			{
 				var firstValue    = true;
 				var len           = StringBuilder.Length;
-				var checkNull     = p.WithNull != null;
+				var checkNull     = predicate.WithNull != null;
 				var hasNull       = false;
 				var count         = 0;
 				var multipleParts = false;
 
-				var dbDataType = QueryHelper.GetDbDataType(p.Expr1, MappingSchema);
+				var dbDataType = QueryHelper.GetDbDataType(predicate.Expr1, MappingSchema);
 
 				foreach (object? value in values)
 				{
@@ -2777,7 +2774,7 @@ namespace LinqToDB.SqlProvider
 						firstValue = true;
 						RemoveInlineComma()
 							.Append(')')
-							.Append(p.IsNot ? " AND " : " OR ");
+							.Append(predicate.IsNot ? " AND " : " OR ");
 					}
 
 					object? val = value;
@@ -2797,8 +2794,8 @@ namespace LinqToDB.SqlProvider
 					if (firstValue)
 					{
 						firstValue = false;
-						BuildExpression(GetPrecedence(p), p.Expr1);
-						StringBuilder.Append(p.IsNot ? " NOT IN (" : " IN (");
+						BuildExpression(GetPrecedence(predicate), predicate.Expr1);
+						StringBuilder.Append(predicate.IsNot ? " NOT IN (" : " IN (");
 					}
 
 					if (value is ISqlExpression expression)
@@ -2813,8 +2810,8 @@ namespace LinqToDB.SqlProvider
 				{
 					// Nothing was built, because the values contained only null values, or nothing at all.
 					BuildPredicate(hasNull ?
-						new SqlPredicate.IsNull(p.Expr1, p.IsNot) :
-						SqlPredicate.MakeBool(p.IsNot));
+						new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot) :
+						SqlPredicate.MakeBool(predicate.IsNot));
 				}
 				else
 				{
@@ -2822,14 +2819,14 @@ namespace LinqToDB.SqlProvider
 
 					if (hasNull)
 					{
-						StringBuilder.Append(p.IsNot ? " AND " : " OR ");
-						BuildPredicate(new SqlPredicate.IsNull(p.Expr1, p.IsNot));
+						StringBuilder.Append(predicate.IsNot ? " AND " : " OR ");
+						BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot));
 						multipleParts = true;
 					}
-					else if (p.WithNull == true && p.Expr1.ShouldCheckForNull(NullabilityContext))
+					else if (predicate.WithNull == true && predicate.Expr1.ShouldCheckForNull(NullabilityContext))
 					{
 						StringBuilder.Append(" OR ");
-						BuildPredicate(new SqlPredicate.IsNull(p.Expr1, false));
+						BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, false));
 						multipleParts = true;
 					}
 				}
@@ -2845,7 +2842,7 @@ namespace LinqToDB.SqlProvider
 				return searchCondition;
 
 			var condition = ConvertElement(searchCondition);
-			var optimized = Optimize(condition, true);
+			var optimized = Optimize(condition, reducePredicates: true);
 
 			if (optimized is SqlSearchCondition optimizedCondition)
 				condition = optimizedCondition;
@@ -2859,7 +2856,7 @@ namespace LinqToDB.SqlProvider
 		{
 			if (_binaryOptimized == 0)
 			{
-				var optimized = Optimize(predicate, true);
+				var optimized = Optimize(predicate, reducePredicates: true);
 				if (!ReferenceEquals(optimized, predicate))
 				{
 					predicate  = (ISqlPredicate)optimized;
@@ -3457,7 +3454,9 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
 			var saveStep = BuildStep;
-			BuildStep = Step.TypedExpression;
+			// TODO: Step.TypedExpression should be removed/reworked as it doesn't work with nested expressions
+			// e.g. see Issue4963 test for Firebird
+			BuildStep = value is SqlParameter ? Step.TypedExpression : BuildStep;
 
 			StringBuilder.Append("CAST(");
 			BuildExpression(value);
@@ -3476,6 +3475,7 @@ namespace LinqToDB.SqlProvider
 				BuildExpression(value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
 				StringBuilder.Append(InlineComma);
 			}
+
 			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
 			StringBuilder.Append(')');
 		}
@@ -3504,6 +3504,7 @@ namespace LinqToDB.SqlProvider
 					{
 						throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 					}
+
 					BuildParameter(new SqlParameter(dataType.Value, "value", value));
 				}
 			}
@@ -4056,35 +4057,38 @@ namespace LinqToDB.SqlProvider
 
 		private bool PrintParameterValue(StringBuilder sb, object? value)
 		{
+			var maxBinaryLogging = Common.Configuration.MaxBinaryParameterLengthLogging;
+			var maxStringLogging = Common.Configuration.MaxStringParameterLengthLogging;
+
 			if (value is byte[] bytes &&
-				Configuration.MaxBinaryParameterLengthLogging >= 0 &&
-				bytes.Length > Configuration.MaxBinaryParameterLengthLogging &&
+				maxBinaryLogging >= 0 &&
+				bytes.Length > maxBinaryLogging &&
 				MappingSchema.ValueToSqlConverter.CanConvert(typeof(byte[])))
 			{
-				var trimmed = new byte[Configuration.MaxBinaryParameterLengthLogging];
-				Array.Copy(bytes, 0, trimmed, 0, Configuration.MaxBinaryParameterLengthLogging);
+				var trimmed = new byte[maxBinaryLogging];
+				Array.Copy(bytes, 0, trimmed, 0, maxBinaryLogging);
 				MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
 				return true;
 			}
 			else if (value is Binary binaryData &&
-					 Configuration.MaxBinaryParameterLengthLogging >= 0 &&
-					 binaryData.Length > Configuration.MaxBinaryParameterLengthLogging &&
+					 maxBinaryLogging >= 0 &&
+					 binaryData.Length > maxBinaryLogging &&
 					 MappingSchema.ValueToSqlConverter.CanConvert(typeof(Binary)))
 			{
 				//We aren't going to create a new Binary here,
 				//since ValueToSql always just .ToArray() anyway
-				var trimmed = new byte[Configuration.MaxBinaryParameterLengthLogging];
-				Array.Copy(binaryData.ToArray(), 0, trimmed, 0, Configuration.MaxBinaryParameterLengthLogging);
+				var trimmed = new byte[maxBinaryLogging];
+				Array.Copy(binaryData.ToArray(), 0, trimmed, 0, maxBinaryLogging);
 				MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
 				MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
 				return true;
 			}
 			else if (value is string s &&
-					 Configuration.MaxStringParameterLengthLogging >= 0 &&
-					 s.Length > Configuration.MaxStringParameterLengthLogging &&
+					 maxStringLogging >= 0 &&
+					 s.Length > maxStringLogging &&
 					 MappingSchema.ValueToSqlConverter.CanConvert(typeof(string)))
 			{
-				var trimmed = s.Substring(0, Configuration.MaxStringParameterLengthLogging);
+				var trimmed = s.Substring(0, maxStringLogging);
 				MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
 				return true;
 			}
@@ -4116,7 +4120,7 @@ namespace LinqToDB.SqlProvider
 			}
 			else if (value is IEnumerable collection)
 			{
-				var limit   = Configuration.MaxArrayParameterLengthLogging >= 0 ? Configuration.MaxArrayParameterLengthLogging : int.MaxValue;
+				var limit   = Common.Configuration.MaxArrayParameterLengthLogging >= 0 ? Common.Configuration.MaxArrayParameterLengthLogging : int.MaxValue;
 				var trimmed = false;
 				var pos     = 0;
 
@@ -4135,6 +4139,7 @@ namespace LinqToDB.SqlProvider
 
 					trimmed = PrintParameterValue(sb, item) || trimmed;
 				}
+
 				sb.Append('}');
 
 				return trimmed;

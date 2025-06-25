@@ -1,10 +1,7 @@
 ﻿#nullable enable
 abstract LinqToDB.Configuration.ElementCollectionBase<T>.GetElementKey(T! element) -> object!
 const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.AssemblyName = "IBM.Data.DB2" -> string!
-const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.AssemblyNameOld = null -> string?
 const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.ClientNamespace = "IBM.Data.DB2" -> string!
-const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.ClientNamespaceOld = null -> string?
-const LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.AssemblyName = "Sap.Data.Hana.v4.5" -> string!
 LinqToDB.Configuration.DataProviderElement
 LinqToDB.Configuration.DataProviderElement.DataProviderElement() -> void
 LinqToDB.Configuration.DataProviderElement.Default.get -> bool
@@ -52,6 +49,7 @@ override LinqToDB.DataProvider.SapHana.SapHanaOptions.<Clone>$() -> LinqToDB.Dat
 override LinqToDB.DataProvider.SqlCe.SqlCeOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SqlCe.SqlCeOptions!>!
 override LinqToDB.DataProvider.SQLite.SQLiteOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SQLite.SQLiteOptions!>!
 override LinqToDB.DataProvider.SqlServer.SqlServerOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SqlServer.SqlServerOptions!>!
+override LinqToDB.DataProvider.SqlServer.SqlServerOptions.Equals(object? obj) -> bool
 override LinqToDB.DataProvider.Sybase.SybaseOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Sybase.SybaseOptions!>!
 override LinqToDB.Mapping.MappingAttribute.Equals(object? obj) -> bool
 override LinqToDB.Mapping.MappingAttribute.GetHashCode() -> int

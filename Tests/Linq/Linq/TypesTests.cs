@@ -7,17 +7,16 @@ using System.Linq.Expressions;
 using System.Threading;
 
 using LinqToDB;
-using LinqToDB.Mapping;
+using LinqToDB.Data;
 using LinqToDB.Extensions;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
-	using LinqToDB.Data;
-	using Model;
-
 	[TestFixture]
 	public class TypesTests : TestBase
 	{
@@ -456,7 +455,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/72532", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void DateTimeArray1([DataSources] string context)
 		{
@@ -466,7 +464,6 @@ namespace Tests.Linq
 											from t in db.Types2 where new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100) }.Contains(t.DateTimeValue) select t);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/72532", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void DateTimeArray2([DataSources(TestProvName.AllAccessOleDb)] string context)
 		{
@@ -478,7 +475,6 @@ namespace Tests.Linq
 											from t in db.Types2 where arr.Contains(t.DateTimeValue) select t);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/72532", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void DateTimeArray3([DataSources(TestProvName.AllAccessOleDb)] string context)
 		{
@@ -553,11 +549,11 @@ namespace Tests.Linq
 				var person = db.Person.Single(p => p.FirstName == "擊敗奴隸" && p.LastName == "Юникодкин");
 
 				Assert.That(person, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(person.FirstName, Is.EqualTo("擊敗奴隸"));
 					Assert.That(person.LastName, Is.EqualTo("Юникодкин"));
-				});
+				}
 			}
 		}
 
@@ -785,7 +781,6 @@ namespace Tests.Linq
 			[Column("realDataType", Configuration = ProviderName.Sybase)]
 			public float? floatDataType { get; set; }
 
-
 			[Column]
 			[Column("DOUBLEDATATYPE", Configuration = ProviderName.DB2)]
 			[Column("realDataType"  , Configuration = ProviderName.Access)]
@@ -878,25 +873,27 @@ namespace Tests.Linq
 					.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].floatDataType, Is.NaN);
 					Assert.That(res[0].doubleDataType, Is.NaN);
 
 					Assert.That(res[1].floatDataType, Is.Not.Null);
 					Assert.That(res[1].doubleDataType, Is.Not.Null);
-				});
+				}
+
 				if (skipFloatInf)
 					Assert.That(res[0].floatDataType, Is.NaN);
 				else
 					Assert.That(float.IsNegativeInfinity(res[1].floatDataType!.Value), Is.True);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(double.IsNegativeInfinity(res[1].doubleDataType!.Value), Is.True);
 
 					Assert.That(res[2].floatDataType, Is.Not.Null);
 					Assert.That(res[2].doubleDataType, Is.Not.Null);
-				});
+				}
+
 				if (skipFloatInf)
 					Assert.That(res[0].floatDataType, Is.NaN);
 				else
@@ -924,19 +921,21 @@ namespace Tests.Linq
 							 Double = Sql.AsSql(v.Double / param),
 						 })
 						 .Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Integer, Is.EqualTo(Issue4469Table.Data[0].Integer / param));
 				Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Decimal / param, 5)));
 				Assert.That(result.Double, Is.EqualTo(Issue4469Table.Data[0].Double / param));
-			});
+			}
 		}
 
 		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
 		public void Issue4469Test2([DataSources] string context, [Values] bool inline)
 		{
+			if (context.IsAnyOf(TestProvName.AllFirebirdLess4) && !inline)
+				Assert.Ignore("Hard-to-workaround overflow bug");
+
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(Issue4469Table.Data);
 			db.InlineParameters = inline;
@@ -948,16 +947,15 @@ namespace Tests.Linq
 						  {
 							  Integer = Sql.AsSql(v.Integer / param),
 							  Decimal = Sql.AsSql(v.Decimal / param),
-							  Double = Sql.AsSql(v.Double / (double)param),
+							  Double  = Sql.AsSql(v.Double / (double)param),
 						  })
 						 .Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Math.Round(result.Integer, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Integer / param, 5)));
 				Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Decimal / param, 5)));
 				Assert.That(result.Double, Is.EqualTo(Issue4469Table.Data[0].Double / (double)param));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
@@ -977,13 +975,12 @@ namespace Tests.Linq
 							  Double = Sql.AsSql(v.Double / param),
 						  })
 						 .Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(Math.Round(result.Integer, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Integer / param, 5)));
 				Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round((double)Issue4469Table.Data[0].Decimal / param, 5)));
 				Assert.That(Math.Round(result.Double, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Double / param, 5)));
-			});
+			}
 		}
 
 		sealed class Issue4469Table

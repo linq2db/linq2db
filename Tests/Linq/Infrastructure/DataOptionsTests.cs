@@ -5,26 +5,17 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Common.Internal;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.MySql;
-using LinqToDB.DataProvider.SQLite;
-using LinqToDB.DataProvider.Access;
-using LinqToDB.DataProvider.ClickHouse;
-using LinqToDB.DataProvider.DB2;
-using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.DataProvider.Informix;
-using LinqToDB.DataProvider.SapHana;
-using LinqToDB.DataProvider.Sybase;
 using LinqToDB.Mapping;
 
 using Microsoft.Data.SqlClient;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Infrastructure
 {
-	using Model;
-
 	[TestFixture]
 	public class DataOptionsTests : TestBase
 	{
@@ -72,11 +63,13 @@ namespace Tests.Infrastructure
 
 			Assert.That(s1, Is.Null);
 
+			var connection = db.TryGetDbConnection();
+			Assert.That(connection, Is.Not.Null);
+
 			using var db1 = new TestDataConnection(db.Options
-				.UseConnection   (db.DataProvider, db.Connection, false)
+				.UseConnection   (db.DataProvider, connection, false)
 				.UseMappingSchema(db.MappingSchema)
 				.UseTracing(ti => s1 = ti.SqlText));
-
 
 			_child = db1.Child.ToList();
 
@@ -134,14 +127,13 @@ namespace Tests.Infrastructure
 			using (var dc = new DataConnection(options))
 			{
 				dc.GetTable<Person>().ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(syncBeforeCalled, Is.True);
 					Assert.That(syncAfterCalled, Is.True);
 					Assert.That(asyncBeforeCalled, Is.False);
 					Assert.That(asyncAfterCalled, Is.False);
-				});
+				}
 			}
 
 			syncBeforeCalled  = false;
@@ -151,14 +143,13 @@ namespace Tests.Infrastructure
 			using (var dc = new DataConnection(options))
 			{
 				await dc.GetTable<Person>().ToListAsync();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(syncBeforeCalled, Is.False);
 					Assert.That(syncAfterCalled, Is.False);
 					Assert.That(asyncBeforeCalled, Is.True);
 					Assert.That(asyncAfterCalled, Is.True);
-				});
+				}
 			}
 
 			syncBeforeCalled  = false;
@@ -168,14 +159,13 @@ namespace Tests.Infrastructure
 			using (var dc = new DataContext(options))
 			{
 				dc.GetTable<Person>().ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(syncBeforeCalled, Is.True);
 					Assert.That(syncAfterCalled, Is.True);
 					Assert.That(asyncBeforeCalled, Is.False);
 					Assert.That(asyncAfterCalled, Is.False);
-				});
+				}
 			}
 
 			syncBeforeCalled  = false;
@@ -185,14 +175,13 @@ namespace Tests.Infrastructure
 			using (var dc = new DataContext(options))
 			{
 				await dc.GetTable<Person>().ToListAsync();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(syncBeforeCalled, Is.False);
 					Assert.That(syncAfterCalled, Is.False);
 					Assert.That(asyncBeforeCalled, Is.True);
 					Assert.That(asyncAfterCalled, Is.True);
-				});
+				}
 			}
 
 			// test sync only handlers
@@ -215,12 +204,11 @@ namespace Tests.Infrastructure
 			using (var dc = new DataConnection(options))
 			{
 				dc.GetTable<Person>().ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(beforeCalled, Is.True);
 					Assert.That(afterCalled, Is.True);
-				});
+				}
 			}
 
 			beforeCalled = false;
@@ -228,12 +216,11 @@ namespace Tests.Infrastructure
 			using (var dc = new DataConnection(options))
 			{
 				await dc.GetTable<Person>().ToListAsync();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(beforeCalled, Is.True);
 					Assert.That(afterCalled, Is.True);
-				});
+				}
 			}
 
 			beforeCalled = false;
@@ -241,12 +228,11 @@ namespace Tests.Infrastructure
 			using (var dc = new DataContext(options))
 			{
 				dc.GetTable<Person>().ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(beforeCalled, Is.True);
 					Assert.That(afterCalled, Is.True);
-				});
+				}
 			}
 
 			beforeCalled = false;
@@ -254,12 +240,11 @@ namespace Tests.Infrastructure
 			using (var dc = new DataContext(options))
 			{
 				await dc.GetTable<Person>().ToListAsync();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(beforeCalled, Is.True);
 					Assert.That(afterCalled, Is.True);
-				});
+				}
 			}
 
 			// test use from provider detector
@@ -280,12 +265,11 @@ namespace Tests.Infrastructure
 			using (var dc = new DataConnection(options))
 			{
 				dc.GetTable<Person>().ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(beforeCallCnt, Is.EqualTo(2));
 					Assert.That(afterCallCnt, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -315,11 +299,12 @@ namespace Tests.Infrastructure
 					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(globalTriggered, Is.True);
 					Assert.That(localTriggrered, Is.False);
-				});
+				}
+
 				globalTriggered = false;
 
 				// local handler set
@@ -332,11 +317,12 @@ namespace Tests.Infrastructure
 					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(globalTriggered, Is.False);
 					Assert.That(localTriggrered, Is.True);
-				});
+				}
+
 				localTriggrered = false;
 
 				// descriptor cached
@@ -345,11 +331,11 @@ namespace Tests.Infrastructure
 					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(globalTriggered, Is.False);
 					Assert.That(localTriggrered, Is.False);
-				});
+				}
 
 				// cache miss
 				using (var db = GetDataContext(context, new MappingSchema("name1")))
@@ -357,11 +343,12 @@ namespace Tests.Infrastructure
 					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(globalTriggered, Is.True);
 					Assert.That(localTriggrered, Is.False);
-				});
+				}
+
 				globalTriggered = false;
 
 				// no handlers
@@ -371,11 +358,11 @@ namespace Tests.Infrastructure
 					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(globalTriggered, Is.False);
 					Assert.That(localTriggrered, Is.False);
-				});
+				}
 			}
 			finally
 			{

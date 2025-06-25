@@ -1,12 +1,12 @@
 ﻿using System;
 
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Extensions;
-	using Linq;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class AccessSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public AccessSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
@@ -77,8 +77,8 @@ namespace LinqToDB.DataProvider.Access
 					{
 						var indexExpr = new SqlBinaryExpression(typeof(int),
 							new SqlBinaryExpression(typeof(int),
-								new SqlFunction(typeof(int), "Length", predicate.Expr1), "-",
-								new SqlFunction(typeof(int), "Length", predicate.Expr2)), "+",
+								Factory.Length(predicate.Expr1), "-",
+								Factory.Length(predicate.Expr2)), "+",
 							new SqlValue(1));
 
 						subStrPredicate =
@@ -111,7 +111,7 @@ namespace LinqToDB.DataProvider.Access
 
 				if (subStrPredicate != null)
 				{
-					result = new SqlSearchCondition(predicate.IsNot, like, subStrPredicate.MakeNot(predicate.IsNot));
+					result = new SqlSearchCondition(predicate.IsNot, canBeUnknown: null, like, subStrPredicate.MakeNot(predicate.IsNot));
 				}
 			}
 
@@ -120,7 +120,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			if (SqlProviderFlags == null || element.SystemType == null)
+			if (element.SystemType == null)
 				return element;
 
 			if (element.Expressions.Length == 2)
@@ -151,7 +151,7 @@ namespace LinqToDB.DataProvider.Access
 					return func.WithName("LCase");
 				case { Name: PseudoFunctions.TO_UPPER }:
 					return func.WithName("UCase");
-				case { Name: "Length" }:
+				case { Name: PseudoFunctions.LENGTH }:
 					return func.WithName("Len");
 
 				case {
@@ -200,7 +200,9 @@ namespace LinqToDB.DataProvider.Access
 
 			if (!string.IsNullOrEmpty(funcName))
 			{
-				return new SqlFunction(cast.SystemType, funcName, expression); 
+				var isNotNull = new SqlPredicate.IsNull(expression, true);
+				var funcCall = new SqlFunction(cast.Type, funcName, false, true, Precedence.Primary, nullabilityType : ParametersNullabilityType.NotNullable, canBeNull : false, expression);
+				return new SqlConditionExpression(isNotNull, funcCall, new SqlValue(cast.Type, null));
 			}
 
 			return expression;

@@ -2,11 +2,9 @@
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
-using NUnit.Framework;
 
-using Tests.Model;
+using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
@@ -97,7 +95,6 @@ namespace Tests.xUpdate
 					.SchemaName(schema)
 					.DatabaseName(database);
 
-
 				table.Insert(() => new DropTableTest() { ID = 123 });
 
 				var data = table.ToList();
@@ -112,7 +109,7 @@ namespace Tests.xUpdate
 
 				// check that table dropped
 				var exception = Assert.Catch(() => table.ToList());
-				Assert.That(exception is Exception, Is.True);
+				Assert.That(exception, Is.InstanceOf<Exception>());
 
 				// TODO: we need better assertion here
 				// Right now we just check generated sql query, not that it is
@@ -124,7 +121,6 @@ namespace Tests.xUpdate
 					Assert.That(sql, Does.Contain(schema));
 			}
 		}
-
 
 		[Table]
 		sealed class Table

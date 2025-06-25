@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-	using Data;
-	using Mapping;
-
 	public class SqlTable : SqlExpressionBase, ISqlTableSource
 	{
 		#region Init
@@ -60,59 +59,29 @@ namespace LinqToDB.SqlQuery
 			TableName    = physicalName != null && entityDescriptor.Name.Name != physicalName ? entityDescriptor.Name with { Name = physicalName } : entityDescriptor.Name;
 			TableOptions = entityDescriptor.TableOptions;
 
-			foreach (var column in entityDescriptor.Columns)
+			if (!entityDescriptor.MappingSchema.IsScalarType(ObjectType))
 			{
-				var field = new SqlField(column);
-
-				Add(field);
-
-				if (field.Type.DataType == DataType.Undefined)
+				foreach (var column in entityDescriptor.Columns)
 				{
-					var dataType = entityDescriptor.MappingSchema.GetDataType(field.Type.SystemType);
+					var field = new SqlField(column);
 
-					if (dataType.Type.DataType == DataType.Undefined)
-					{
-						dataType = entityDescriptor.MappingSchema.GetUnderlyingDataType(field.Type.SystemType, out var canBeNull);
+					Add(field);
 
-						if (canBeNull)
-							field.CanBeNull = true;
-					}
-
-					field.Type = field.Type.WithDataType(dataType.Type.DataType);
-
-					// try to get type from converter
 					if (field.Type.DataType == DataType.Undefined)
 					{
-						try
-						{
-							var converter = entityDescriptor.MappingSchema.GetConverter(
-								field.Type,
-								new DbDataType(typeof(DataParameter)),
-								true,
-								ConversionType.ToDatabase);
-
-							var parameter = converter?.ConvertValueToParameter(DefaultValue.GetValue(field.Type.SystemType, entityDescriptor.MappingSchema));
-							if (parameter != null)
-								field.Type = field.Type.WithDataType(parameter.DataType);
-						}
-						catch
-						{
-							// converter cannot handle default value?
-						}
+						field.Type = SuggestType(field.Type, entityDescriptor.MappingSchema, out var canBeNull);
+						if (canBeNull is not null)
+							field.CanBeNull = canBeNull.Value;
 					}
-
-					if (field.Type.Length    == null) field.Type = field.Type.WithLength   (dataType.Type.Length);
-					if (field.Type.Precision == null) field.Type = field.Type.WithPrecision(dataType.Type.Precision);
-					if (field.Type.Scale     == null) field.Type = field.Type.WithScale    (dataType.Type.Scale);
 				}
-			}
 
-			var identityField = GetIdentityField();
+				var identityField = GetIdentityField();
 
-			if (identityField != null)
-			{
-				var cd = entityDescriptor[identityField.Name]!;
-				SequenceAttributes = cd.SequenceName == null ? null : new[] { cd.SequenceName };
+				if (identityField != null)
+				{
+					var cd = entityDescriptor[identityField.Name]!;
+					SequenceAttributes = cd.SequenceName == null ? null : new[] { cd.SequenceName };
+				}
 			}
 
 			_all ??= SqlField.All(this);
@@ -300,6 +269,8 @@ namespace LinqToDB.SqlQuery
 
 			field.Table = this;
 
+			ResetKeys();
+
 			if (field.Name == "*")
 				_all = field;
 			else
@@ -343,11 +314,60 @@ namespace LinqToDB.SqlQuery
 			return _keyFields;
 		}
 
+		public void ResetKeys()
+		{
+			_keyFields = null;
+		}
+
 		#endregion
 
 		internal static SqlTable Create<T>(IDataContext dataContext)
 		{
 			return new SqlTable(dataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated));
+		}
+
+		internal static DbDataType SuggestType(DbDataType fieldType, MappingSchema mappingSchema, out bool? canBeNull)
+		{
+			var dataType = mappingSchema.GetDataType(fieldType.SystemType);
+
+			canBeNull = null;
+
+			if (dataType.Type.DataType == DataType.Undefined)
+			{
+				dataType = mappingSchema.GetUnderlyingDataType(fieldType.SystemType, out var underlyingCanBeNull);
+
+				if (underlyingCanBeNull)
+					canBeNull = true;
+			}
+
+			fieldType = fieldType.WithDataType(dataType.Type.DataType);
+
+			// try to get type from converter
+			if (fieldType.DataType == DataType.Undefined)
+			{
+				try
+				{
+					var converter = mappingSchema.GetConverter(
+						fieldType,
+						new DbDataType(typeof(DataParameter)),
+						true,
+						ConversionType.ToDatabase);
+
+					var parameter = converter?.ConvertValueToParameter(DefaultValue.GetValue(fieldType.SystemType, mappingSchema));
+					if (parameter != null)
+						fieldType = fieldType.WithDataType(parameter.DataType);
+				}
+				catch
+				{
+					// converter cannot handle default value?
+				}
+			}
+
+			if (fieldType.Length    == null) fieldType = fieldType.WithLength(dataType.Type.Length);
+			if (fieldType.Precision == null) fieldType = fieldType.WithPrecision(dataType.Type.Precision);
+			if (fieldType.Scale     == null) fieldType = fieldType.WithScale(dataType.Type.Scale);
+
+			return fieldType;
 		}
 
 	}

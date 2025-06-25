@@ -4,11 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Data;
-	using SqlProvider;
-
 	sealed class SqlServerBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
@@ -44,38 +44,38 @@ namespace LinqToDB.DataProvider.SqlServer
 			return MultipleRowsCopy(table, options, source);
 		}
 
-		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			var connections = TryGetProviderConnections(table);
+			var connections = await TryGetProviderConnectionsAsync(table, cancellationToken).ConfigureAwait(false);
 			if (connections.HasValue)
 			{
-				return ProviderSpecificCopyInternalAsync(
+				return await ProviderSpecificCopyInternalAsync(
 					connections.Value,
 					table,
 					options.BulkCopyOptions,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source),
-					cancellationToken);
+					cancellationToken).ConfigureAwait(false);
 			}
 
-			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+			return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
 		}
 
-		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
+		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			var connections = TryGetProviderConnections(table);
+			var connections = await TryGetProviderConnectionsAsync(table, cancellationToken).ConfigureAwait(false);
 			if (connections.HasValue)
 			{
-				return ProviderSpecificCopyInternalAsync(
+				return await ProviderSpecificCopyInternalAsync(
 					connections.Value,
 					table,
 					options.BulkCopyOptions,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken),
-					cancellationToken);
+					cancellationToken).ConfigureAwait(false);
 			}
 
-			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+			return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
 		}
 
 		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection  = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
+				var connection  = _provider.TryGetProviderConnection(dataConnection, dataConnection.OpenDbConnection());
 				var transaction = dataConnection.Transaction;
 
 				if (connection != null && transaction != null)
@@ -99,6 +99,32 @@ namespace LinqToDB.DataProvider.SqlServer
 					};
 				}
 			}
+
+			return null;
+		}
+
+		private async Task<ProviderConnections?> TryGetProviderConnectionsAsync<T>(ITable<T> table, CancellationToken cancellationToken)
+			where T : notnull
+		{
+			if (table.TryGetDataConnection(out var dataConnection))
+			{
+				var connection  = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
+				var transaction = dataConnection.Transaction;
+
+				if (connection != null && transaction != null)
+					transaction = _provider.TryGetProviderTransaction(dataConnection, transaction);
+
+				if (connection != null && (dataConnection.Transaction == null || transaction != null))
+				{
+					return new ProviderConnections()
+					{
+						DataConnection = dataConnection,
+						ProviderConnection = connection,
+						ProviderTransaction = transaction
+					};
+				}
+			}
+
 			return null;
 		}
 

@@ -2,14 +2,15 @@
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
+
+using LinqToDB.Expressions.Types;
 
 namespace LinqToDB.DataProvider
 {
-	using Expressions;
-
 	public class OleDbProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new object();
+		private static readonly Lock _syncRoot = new();
 		private static OleDbProviderAdapter? _instance;
 
 		public const string AssemblyName    = "System.Data.OleDb";
@@ -105,7 +106,7 @@ namespace LinqToDB.DataProvider
 							parameterType,
 							commandType,
 							transactionType,
-							typeMapper.BuildTypedFactory<string, OleDbConnection, DbConnection>((string connectionString) => new OleDbConnection(connectionString)),
+							typeMapper.BuildTypedFactory<string, OleDbConnection, DbConnection>(connectionString => new OleDbConnection(connectionString)),
 							typeSetter,
 							typeGetter,
 							oleDbSchemaTableGetter,
@@ -136,7 +137,7 @@ namespace LinqToDB.DataProvider
 			private static LambdaExpression[] Wrappers { get; } =
 			{
 				// [0]: get Provider
-				(Expression<Func<OleDbConnection, string>>)((OleDbConnection this_) => this_.Provider),
+				(Expression<Func<OleDbConnection, string>>)(this_ => this_.Provider),
 			};
 
 			public OleDbConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)

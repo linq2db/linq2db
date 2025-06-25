@@ -1,12 +1,12 @@
 ﻿using System.Linq;
-using LinqToDB.Linq;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB;
-	using LinqToDB.Mapping;
-
 	// tests for target/source/match condition configuration methods, not covered by other tests
 	public partial class MergeTests
 	{
@@ -128,8 +128,7 @@ namespace Tests.xUpdate
 				AssertRowCount(4, rows, context);
 
 				Assert.That(result, Has.Count.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Id, Is.EqualTo(InitialTargetData[0].Id));
 					Assert.That(result[0].Field1, Is.EqualTo(InitialTargetData[0].Field1 + InitialTargetData[0].Field2));
@@ -158,7 +157,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.Null);
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -198,8 +197,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].Id, Is.EqualTo(InitialTargetData[3].Id));
 					Assert.That(result[3].Field1, Is.EqualTo(InitialTargetData[3].Field1));
@@ -207,7 +205,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.EqualTo(InitialTargetData[3].Field3));
 					Assert.That(result[3].Field4, Is.EqualTo(InitialTargetData[3].Field4));
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -243,8 +241,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].Id, Is.EqualTo(InitialTargetData[3].Id));
 					Assert.That(result[3].Field1, Is.EqualTo(InitialTargetData[3].Field1));
@@ -252,7 +249,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.EqualTo(InitialTargetData[3].Field3));
 					Assert.That(result[3].Field4, Is.EqualTo(InitialTargetData[3].Field4));
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -292,8 +289,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].Id, Is.EqualTo(InitialTargetData[3].Id));
 					Assert.That(result[3].Field1, Is.EqualTo(InitialTargetData[3].Field1));
@@ -301,7 +297,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.EqualTo(123));
 					Assert.That(result[3].Field4, Is.EqualTo(InitialTargetData[3].Field4));
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -347,8 +343,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].Id, Is.EqualTo(InitialTargetData[3].Id));
 					Assert.That(result[3].Field1, Is.EqualTo(InitialTargetData[3].Field1));
@@ -356,7 +351,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.EqualTo(123));
 					Assert.That(result[3].Field4, Is.EqualTo(InitialTargetData[3].Field4));
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -388,8 +383,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].Id, Is.EqualTo(InitialTargetData[3].Id));
 					Assert.That(result[3].Field1, Is.EqualTo(InitialTargetData[3].Field1));
@@ -397,7 +391,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.EqualTo(321));
 					Assert.That(result[3].Field4, Is.EqualTo(InitialTargetData[3].Field4));
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 

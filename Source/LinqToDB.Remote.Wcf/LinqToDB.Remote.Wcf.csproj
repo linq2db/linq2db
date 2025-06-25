@@ -6,12 +6,16 @@
 
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<TargetFrameworks>net462</TargetFrameworks>
+
+		<Title>Linq to DB WCF Remote</Title>
+		<Description>Linq to DB support for querying remote data contexts over WCF</Description>
+		<Product>$(Title)</Product>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>

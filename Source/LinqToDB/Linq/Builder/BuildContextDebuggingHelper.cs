@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 		public static string GetContextInfo(IBuildContext context)
 		{
 #if DEBUG
-			var contextId = $"[ID:{context.ContextId}]";
+			var contextId = FormattableString.Invariant($"[ID:{context.ContextId}]");
 #else
 			var contextId = string.Empty;
 #endif
@@ -20,6 +20,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				result += FormattableString.Invariant($"(T: {tc.SqlTable.SourceID})");
 			}
+
 			if (context is ScopeContext scope)
 			{
 				result += FormattableString.Invariant($"(S:{scope.Context.SelectQuery.SourceID} -> {scope.UpTo.SelectQuery.SourceID})");

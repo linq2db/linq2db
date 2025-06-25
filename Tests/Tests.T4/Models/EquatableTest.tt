@@ -1,17 +1,17 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
-<#@ output extension=".generated.cs"                                                         #>
-<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\System.Data.SQLite.dll"           #>
-<#@ include file="..\Shared.ttinclude"                                          once="true"  #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SQLite.ttinclude" once="true"  #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\Equatable.ttinclude"       once="true"  #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"   #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                 #>
+<#@ output extension=".generated.cs"                                                           #>
+<#@ include file="..\Shared.ttinclude"                                             once="true" #>
+<#@ include file="$(LinqToDBT4SQLiteTemplatesPath)LinqToDB.SQLite.ttinclude"       once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)Equatable.ttinclude"                   once="true" #>
 <#
-
 	EnableNullableReferenceTypes  = true;
 	DataContextName               = "EquatableDB";
 	NamespaceName                 = "EquatableDataContext";
 	GenerateAssociationExtensions = true;
 
 	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+
 	LoadSQLiteMetadata(solutionsPath + @"\Data\", "TestData.sqlite");
 
 	foreach (var t in Tables.Values)

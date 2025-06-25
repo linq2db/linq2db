@@ -10,10 +10,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class InterfaceTests : TestBase
 	{
@@ -331,13 +331,13 @@ namespace Tests.Linq
 			var results = t.OrderBy(r => r.Id).ToArray();
 
 			Assert.That(results, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(results[0].Id, Is.EqualTo(1));
 				Assert.That(results[0].Name, Is.EqualTo("new_name"));
 				Assert.That(results[1].Id, Is.EqualTo(2));
 				Assert.That(results[1].Name, Is.EqualTo("old_name"));
-			});
+			}
 		}
 		#endregion
 
@@ -399,12 +399,11 @@ namespace Tests.Linq
 			tb.Insert(Expression.Lambda<Func<SomeTable>>(expr));
 
 			var res = tb.Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res.ClassProp, Is.True);
 				Assert.That(res.Interface, Is.False);
-			});
+			}
 		}
 		#endregion
 
@@ -449,14 +448,14 @@ namespace Tests.Linq
 			var ed = ConfigureIssue4715Mapping().GetEntityDescriptor(typeof(Issue4715Table));
 
 			Assert.That(ed.Columns, Has.Count.EqualTo(5));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed.Columns.Any(c => c.ColumnName == "Id"), Is.True);
 				Assert.That(ed.Columns.Any(c => c.ColumnName == "Prop1"), Is.True);
 				Assert.That(ed.Columns.Any(c => c.ColumnName == "Prop2"), Is.True);
 				Assert.That(ed.Columns.Any(c => c.ColumnName == "Prop3"), Is.True);
 				Assert.That(ed.Columns.Any(c => c.ColumnName == "Prop4"), Is.True);
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4715")]
@@ -476,13 +475,160 @@ namespace Tests.Linq
 			db.Insert(record);
 
 			var result = tb.Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Id, Is.EqualTo(1));
 				Assert.That(result.ImplicitPropertyRW, Is.EqualTo(2));
 				Assert.That(((IExplicitInterface<Issue4715Table>)result).ExplicitPropertyRW, Is.EqualTo(3));
-			});
+			}
+		}
+		#endregion
+
+		#region v6p2 regression
+		class ExtensionTable1 : IEntity
+		{
+			public int ID { get; set; }
+			public int? FK { get; set; }
+
+			[Association(ThisKey = nameof(FK), OtherKey = nameof(ExtensionTable2.ID))]
+			public ExtensionTable2? Child => throw new InvalidOperationException();
+		}
+
+		class ExtensionTable2 : IEntity
+		{
+			public int ID { get; set; }
+		}
+
+		interface IEntity
+		{
+			int ID { get; set; }
+		}
+
+		[Test(Description = "6.0.0-preview.2 regression")]
+		public void ExtensionRegression([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<ExtensionTable1>();
+			using var t2 = db.CreateLocalTable<ExtensionTable2>();
+
+			Execute(t1.Select(r => r.Child!));
+
+			void Execute<T>(IQueryable<T> query)
+				where T : IEntity
+			{
+				query
+					.Where(e => Sql.ToNullable(e.ID) != null)
+					.Select(e => e.ID)
+					.Distinct()
+					.ToArray();
+			}
+		}
+
+		#endregion
+
+		#region Interface with Expression
+		interface IParameters
+		{
+			Attributes Attributes { get; }
+		}
+
+		class Attributes
+		{
+			public int? UserId { get; set; }
+		}
+
+		interface IUserOwned
+		{
+			int UserId { get; }
+
+			int UserIdMethod();
+		}
+
+		[Table]
+		class TransactionLine : IUserOwned
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[ExpressionMethod(nameof(UserIdExpression))]
+			public int UserId => throw new InvalidOperationException();
+
+			[ExpressionMethod(nameof(UserIdExpression))]
+			public int UserIdMethod() => throw new InvalidOperationException();
+
+			private static Expression<Func<TransactionLine, int>> UserIdExpression()
+				=> x => x.Id;
+
+			public static readonly TransactionLine[] Data = new[]
+			{
+				new TransactionLine() { Id = 1 },
+				new TransactionLine() { Id = 2 },
+			};
+		}
+
+		private static IQueryable<T> Filter1<T>(IQueryable<T> q, IParameters dbCtx)
+				where T : IUserOwned
+				=> dbCtx.Attributes.UserId is null
+					? q
+					: q.Where(x => x.UserId == dbCtx.Attributes.UserId.Value);
+
+		private static IQueryable<T> Filter2<T>(IQueryable<T> q, IParameters dbCtx)
+			where T : IUserOwned
+			=> dbCtx.Attributes.UserId is null
+				? q
+				: q.Where(x => x.UserIdMethod() == dbCtx.Attributes.UserId.Value);
+
+		private static IQueryable<T> Filter1Expr<T>(IQueryable<T> q, IParameters dbCtx)
+				where T : IUserOwned
+		{
+			if (dbCtx.Attributes.UserId is null)
+				return q;
+
+			var parameter = Expression.Parameter(typeof(T));
+			var property = Expression.Property(parameter, nameof(IUserOwned.UserId));
+			var userIdValue = Expression.Constant(dbCtx.Attributes.UserId.Value);
+			var body = Expression.Equal(property, userIdValue);
+			var lambda = Expression.Lambda<Func<T, bool>>(body, parameter);
+
+			return q.Where(lambda);
+		}
+
+		private static IQueryable<T> Filter2Expr<T>(IQueryable<T> q, IParameters dbCtx)
+			where T : IUserOwned
+		{
+			if (dbCtx.Attributes.UserId is null)
+				return q;
+
+			var parameter = Expression.Parameter(typeof(T));
+			var call = Expression.Call(parameter, nameof(IUserOwned.UserIdMethod), null);
+			var userIdValue = Expression.Constant(dbCtx.Attributes.UserId.Value);
+			var body = Expression.Equal(call, userIdValue);
+			var lambda = Expression.Lambda<Func<T, bool>>(body, parameter);
+
+			return q.Where(lambda);
+		}
+
+		class Parameters : IParameters
+		{
+			Attributes IParameters.Attributes { get; } = new Attributes() { UserId = 2 };
+		}
+
+		[Test]
+		public void InterfaceFilterRegression([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TransactionLine.Data);
+
+			var cn = new Parameters();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(Filter1Expr(tb, cn).Single().Id, Is.EqualTo(2));
+				Assert.That(Filter2Expr(tb, cn).Single().Id, Is.EqualTo(2));
+
+				Assert.That(Filter1(tb, cn).Single().Id, Is.EqualTo(2));
+				Assert.That(Filter2(tb, cn).Single().Id, Is.EqualTo(2));
+			}
 		}
 		#endregion
 	}

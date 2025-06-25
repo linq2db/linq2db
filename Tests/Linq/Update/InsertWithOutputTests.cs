@@ -4,19 +4,17 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
-using LinqToDB.Tools.Comparers;
-using LinqToDB.Common;
+using Tests.Model;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB.Async;
-
-	using Model;
-
 	[TestFixture]
 	public class InsertWithOutputTests : TestBase
 	{
@@ -299,13 +297,12 @@ namespace Tests.xUpdate
 				};
 
 				var output = source.InsertWithOutput(data);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Id, Is.EqualTo(data.Id));
 					Assert.That(output.Value, Is.EqualTo(data.Value));
 					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				});
+				}
 			}
 		}
 
@@ -323,13 +320,12 @@ namespace Tests.xUpdate
 				};
 
 				var output = await source.InsertWithOutputAsync(data);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Id, Is.EqualTo(data.Id));
 					Assert.That(output.Value, Is.EqualTo(data.Value));
 					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				});
+				}
 			}
 		}
 
@@ -348,13 +344,12 @@ namespace Tests.xUpdate
 
 				var output = source.InsertWithOutput(dataFunc);
 				var data   = dataFunc.CompileExpression()();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Id, Is.EqualTo(data.Id));
 					Assert.That(output.Value, Is.EqualTo(data.Value));
 					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				});
+				}
 			}
 		}
 
@@ -373,13 +368,12 @@ namespace Tests.xUpdate
 
 				var output = await source.InsertWithOutputAsync(dataFunc);
 				var data = dataFunc.CompileExpression()();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Id, Is.EqualTo(data.Id));
 					Assert.That(output.Value, Is.EqualTo(data.Value));
 					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				});
+				}
 			}
 		}
 
@@ -399,13 +393,12 @@ namespace Tests.xUpdate
 				var output = source.InsertWithOutput(dataFunc,
 					inserted => new { inserted.Id, inserted.Value, inserted.ValueStr });
 				var data = dataFunc.CompileExpression()();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Id, Is.EqualTo(data.Id));
 					Assert.That(output.Value, Is.EqualTo(data.Value));
 					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				});
+				}
 			}
 		}
 
@@ -427,13 +420,12 @@ namespace Tests.xUpdate
 					.Value(a => a.Id, value)
 					.Value(a => a.ValueStr, "SomeStr" + value)
 					.InsertWithOutput();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Id, Is.EqualTo(data.Id));
 					Assert.That(output.Value, Is.EqualTo(data.Value));
 					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				});
+				}
 			}
 		}
 
@@ -455,13 +447,12 @@ namespace Tests.xUpdate
 					.Value(a => a.Id, value)
 					.Value(a => a.ValueStr, "SomeStr" + value)
 					.InsertWithOutputAsync();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Id, Is.EqualTo(data.Id));
 					Assert.That(output.Value, Is.EqualTo(data.Value));
 					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				});
+				}
 			}
 		}
 
@@ -484,13 +475,12 @@ namespace Tests.xUpdate
 					.Value(a => a.ValueStr, () => "SomeStr" + value)
 					.InsertWithOutput();
 				var data   = dataFunc.CompileExpression()();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Id, Is.EqualTo(data.Id));
 					Assert.That(output.Value, Is.EqualTo(data.Value));
 					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				});
+				}
 			}
 		}
 
@@ -513,13 +503,12 @@ namespace Tests.xUpdate
 					.Value(a => a.ValueStr, () => "SomeStr" + value)
 					.InsertWithOutputAsync();
 				var data = dataFunc.CompileExpression()();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Id, Is.EqualTo(data.Id));
 					Assert.That(output.Value, Is.EqualTo(data.Value));
 					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				});
+				}
 			}
 		}
 
@@ -542,13 +531,12 @@ namespace Tests.xUpdate
 					.Value(a => a.ValueStr, () => "SomeStr" + value)
 					.InsertWithOutput(inserted => new { inserted.Id, inserted.Value, inserted.ValueStr });
 				var data = dataFunc.CompileExpression()();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Id, Is.EqualTo(data.Id));
 					Assert.That(output.Value, Is.EqualTo(data.Value));
 					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				});
+				}
 			}
 		}
 
@@ -941,21 +929,21 @@ namespace Tests.xUpdate
 
 			var sourceData = source.ToArray();
 			Assert.That(sourceData, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(sourceData[0].Id, Is.EqualTo(42));
 				Assert.That(sourceData[0].Value, Is.EqualTo(42123));
 				Assert.That(sourceData[0].ValueStr, Is.EqualTo("SomeStr"));
-			});
+			}
 
 			var outputData = output.ToArray();
 			Assert.That(outputData, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(outputData[0].Id, Is.EqualTo(42));
 				Assert.That(outputData[0].Value, Is.EqualTo(42123));
 				Assert.That(outputData[0].ValueStr, Is.EqualTo("SomeStr"));
-			});
+			}
 		}
 		
 		[Test]
@@ -980,21 +968,21 @@ namespace Tests.xUpdate
 
 			var sourceData = source.ToArray();
 			Assert.That(sourceData, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(sourceData[0].Id, Is.EqualTo(42));
 				Assert.That(sourceData[0].Value, Is.EqualTo(42123));
 				Assert.That(sourceData[0].ValueStr, Is.EqualTo("SomeStr"));
-			});
+			}
 
 			var outputData = output.ToArray();
 			Assert.That(outputData, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(outputData[0].Id, Is.EqualTo(42));
 				Assert.That(outputData[0].Value, Is.EqualTo(42123));
 				Assert.That(outputData[0].ValueStr, Is.EqualTo("SomeStr"));
-			});
+			}
 		}
 
 		[Test]
@@ -1024,21 +1012,21 @@ namespace Tests.xUpdate
 
 			var sourceData = source.ToArray();
 			Assert.That(sourceData, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(sourceData[0].Id, Is.EqualTo(42));
 				Assert.That(sourceData[0].Value, Is.EqualTo(42123));
 				Assert.That(sourceData[0].ValueStr, Is.EqualTo("SomeStr"));
-			});
+			}
 
 			var outputData = output.ToArray();
 			Assert.That(outputData, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(outputData[0].Id, Is.EqualTo(43));
 				Assert.That(outputData[0].Value, Is.EqualTo(84246));
 				Assert.That(outputData[0].ValueStr, Is.EqualTo("FooSomeStr"));
-			});
+			}
 		}
 
 		[Test]
@@ -1068,21 +1056,21 @@ namespace Tests.xUpdate
 
 			var sourceData = source.ToArray();
 			Assert.That(sourceData, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(sourceData[0].Id, Is.EqualTo(42));
 				Assert.That(sourceData[0].Value, Is.EqualTo(42123));
 				Assert.That(sourceData[0].ValueStr, Is.EqualTo("SomeStr"));
-			});
+			}
 
 			var outputData = output.ToArray();
 			Assert.That(outputData, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(outputData[0].Id, Is.EqualTo(43));
 				Assert.That(outputData[0].Value, Is.EqualTo(84246));
 				Assert.That(outputData[0].ValueStr, Is.EqualTo("FooSomeStr"));
-			});
+			}
 		}
 
 		[Test]
@@ -1227,21 +1215,21 @@ namespace Tests.xUpdate
 
 			var targetData = target.ToArray();
 			Assert.That(targetData, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(targetData[0].Id, Is.EqualTo(3));
 				Assert.That(targetData[0].Value, Is.EqualTo(30));
 				Assert.That(targetData[0].ValueStr, Is.EqualTo("Jane Doe"));
-			});
+			}
 
 			var outputData = output.ToArray();
 			Assert.That(outputData, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(outputData[0].Id, Is.EqualTo(3));
 				Assert.That(outputData[0].Value, Is.EqualTo(30));
 				Assert.That(outputData[0].ValueStr, Is.EqualTo("Jane Doe"));
-			});
+			}
 		}
 
 		[Test]
@@ -1272,21 +1260,21 @@ namespace Tests.xUpdate
 
 			var targetData = target.ToArray();
 			Assert.That(targetData, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(targetData[0].Id, Is.EqualTo(3));
 				Assert.That(targetData[0].Value, Is.EqualTo(30));
 				Assert.That(targetData[0].ValueStr, Is.EqualTo("Jane Doe"));
-			});
+			}
 
 			var outputData = output.ToArray();
 			Assert.That(outputData, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(outputData[0].Id, Is.EqualTo(3));
 				Assert.That(outputData[0].Value, Is.EqualTo(30));
 				Assert.That(outputData[0].ValueStr, Is.EqualTo("Jane Doe"));
-			});
+			}
 		}
 
 		[Test]
@@ -1303,13 +1291,12 @@ namespace Tests.xUpdate
 				};
 
 				var output = source.InsertWithOutput(data);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(output.Id, Is.EqualTo(data.Id));
 					Assert.That(output.Value, Is.EqualTo(data.Value));
 					Assert.That(output.ValueStr, Is.EqualTo(data.ValueStr));
-				});
+				}
 			}
 		}
 
@@ -1341,8 +1328,7 @@ namespace Tests.xUpdate
 			};
 
 			var x = table.InsertWithOutput(what);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(x.Id, Is.EqualTo(what.Id));
 				Assert.That(x.Co2Aend, Is.EqualTo(what.Co2Aend));
@@ -1350,7 +1336,7 @@ namespace Tests.xUpdate
 				Assert.That(x.Co2Grund, Is.EqualTo(what.Co2Grund));
 				Assert.That(x.Nesto, Is.EqualTo(what.Nesto));
 				Assert.That(x.Whatsov, Is.EqualTo(what.Whatsov));
-			});
+			}
 		}
 
 		#region Issue 3581
@@ -1382,17 +1368,14 @@ namespace Tests.xUpdate
 			var created = table.InsertWithOutput(row);
 
 			Assert.That(created, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(created.Id, Is.EqualTo(row.Id));
 				Assert.That(created.Name, Is.EqualTo(row.Name));
 				Assert.That(created.ExternalId, Is.Not.Null);
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(created.ExternalId!.Id, Is.EqualTo(row.ExternalId.Id));
 				Assert.That(created.ExternalId.Source, Is.EqualTo(row.ExternalId.Source));
-			});
+			}
 		}
 		#endregion
 	}

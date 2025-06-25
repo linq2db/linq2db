@@ -11,17 +11,16 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.ClickHouse.Translation;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Common;
-	using Data;
-	using Linq.Translation;
-	using Mapping;
-	using Reflection;
-	using SchemaProvider;
-	using SqlProvider;
-	using Translation;
-
 	sealed class ClickHouseOctonicaDataProvider : ClickHouseDataProvider { public ClickHouseOctonicaDataProvider() : base(ProviderName.ClickHouseOctonica, ClickHouseProvider.Octonica        ) { } }
 	sealed class ClickHouseClientDataProvider   : ClickHouseDataProvider { public ClickHouseClientDataProvider  () : base(ProviderName.ClickHouseClient  , ClickHouseProvider.ClickHouseClient) { } }
 	sealed class ClickHouseMySqlDataProvider    : ClickHouseDataProvider { public ClickHouseMySqlDataProvider   () : base(ProviderName.ClickHouseMySql   , ClickHouseProvider.MySqlConnector  ) { } }
@@ -68,7 +67,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			if (Adapter.GetIPAddressReaderMethod      != null) SetProviderField<IPAddress     >(Adapter.GetIPAddressReaderMethod,      Adapter.DataReaderType);
 			if (Adapter.GetDateTimeOffsetReaderMethod != null) SetProviderField<DateTimeOffset>(Adapter.GetDateTimeOffsetReaderMethod, Adapter.DataReaderType);
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (Adapter.GetDateOnlyReaderMethod != null) SetProviderField<DateOnly>(Adapter.GetDateOnlyReaderMethod, Adapter.DataReaderType);
 #endif
 
@@ -76,14 +75,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				// FixedString binary readers and string fallback for other target types
 				// read as binary only for binary mappings
-				SetProviderField<DbDataReader, byte[], byte[]>((DbDataReader rd, int idx) => rd.GetFieldValue<byte[]>(idx));
-				SetProviderField<DbDataReader, Binary, byte[]>((DbDataReader rd, int idx) => new Binary(rd.GetFieldValue<byte[]>(idx)));
+				SetProviderField<DbDataReader, byte[], byte[]>((rd, idx) => rd.GetFieldValue<byte[]>(idx));
+				SetProviderField<DbDataReader, Binary, byte[]>((rd, idx) => new Binary(rd.GetFieldValue<byte[]>(idx)));
 				// for other target types read as string for better compatibility with string-based conversions
 				ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(byte[]) }] = (DbDataReader rd, int idx) => Encoding.UTF8.GetString(rd.GetFieldValue<byte[]>(idx));
 
 				// String as binary data
-				SetProviderField<DbDataReader, byte[], string>((DbDataReader rd, int idx) => rd.GetFieldValue<byte[]>(idx));
-				SetProviderField<DbDataReader, Binary, string>((DbDataReader rd, int idx) => new Binary(rd.GetFieldValue<byte[]>(idx)));
+				SetProviderField<DbDataReader, byte[], string>((rd, idx) => rd.GetFieldValue<byte[]>(idx));
+				SetProviderField<DbDataReader, Binary, string>((rd, idx) => new Binary(rd.GetFieldValue<byte[]>(idx)));
 			}
 
 			if (Provider == ClickHouseProvider.MySqlConnector)
@@ -184,7 +183,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					(ClickHouseProvider.Octonica, DataType.DateTime or DataType.DateTime64/* or DataType.DateTime2*/, DateTime val)                                       => new DateTimeOffset(val.Ticks, default),
 					(ClickHouseProvider.Octonica, DataType.VarChar or DataType.NVarChar, Guid val)                                                                        => val.ToString("D"),
 					(ClickHouseProvider.Octonica, DataType.Char or DataType.NChar, Guid val)                                                                              => Encoding.UTF8.GetBytes(val.ToString("D")),
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					(ClickHouseProvider.Octonica, DataType.Date32 or DataType.Date, DateTime val)                                                                         => DateOnly.FromDateTime(val),
 					(ClickHouseProvider.Octonica, DataType.Date32 or DataType.Date, DateTimeOffset val)                                                                   => DateOnly.FromDateTime(val.Date),
 #else
@@ -197,7 +196,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					(ClickHouseProvider.Octonica, DataType.IPv6, byte[] val)                                                                                              => new IPAddress(val),
 
 					// CLIENT provider
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 					(ClickHouseProvider.ClickHouseClient, DataType.Date or  DataType.Date32, DateOnly val)      => val.ToDateTime(default),
 #endif
 					(ClickHouseProvider.ClickHouseClient, DataType.Date or DataType.Date32, DateTimeOffset val) => val.Date,

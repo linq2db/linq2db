@@ -19,11 +19,11 @@ namespace Cli.All.ClickHouse.Client
 	[Table("Person")]
 	public class Person : IEquatable<Person>
 	{
-		[Column("PersonID"  , DataType  = DataType.Int32   , DbType   = "Int32"          , IsPrimaryKey = true            , SkipOnUpdate = true)] public int     PersonId   { get; set; } // Int32
-		[Column("FirstName" , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "String"                             )] public string  FirstName  { get; set; } = null!; // String
-		[Column("LastName"  , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "String"                             )] public string  LastName   { get; set; } = null!; // String
-		[Column("MiddleName", DataType  = DataType.NVarChar, DbType   = "String"                                                               )] public string? MiddleName { get; set; } // String
-		[Column("Gender"    , CanBeNull = false            , DataType = DataType.Binary  , DbType       = "FixedString(1)", Length       = 1   )] public byte[]  Gender     { get; set; } = null!; // FixedString(1)
+		[Column("PersonID"  , DataType  = DataType.Int32   , DbType   = "Int32"          , IsPrimaryKey = true    , SkipOnUpdate = true)] public int     PersonId   { get; set; } // Int32
+		[Column("FirstName" , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "String"                     )] public string  FirstName  { get; set; } = null!; // String
+		[Column("LastName"  , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "String"                     )] public string  LastName   { get; set; } = null!; // String
+		[Column("MiddleName", DataType  = DataType.NVarChar, DbType   = "String"                                                       )] public string? MiddleName { get; set; } // String
+		[Column("Gender"    , DataType  = DataType.NChar   , DbType   = "FixedString(1)" , Length       = 1                            )] public char    Gender     { get; set; } // FixedString(1)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<Person> _equalityComparer = ComparerBuilder.GetEqualityComparer<Person>(c => c.PersonId);

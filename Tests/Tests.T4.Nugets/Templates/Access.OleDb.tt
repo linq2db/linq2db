@@ -1,0 +1,14 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                              #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"           #>
+<#@ output extension=".generated.cs"                                                     #>
+<#@ include file="$(LinqToDBT4AccessTemplatesPath)LinqToDB.Access.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"  once="true" #>
+<#@ include file="ConnectionStrings.ttinclude"                               once="true" #>
+<#
+	NamespaceName        = "Access.OleDb";
+	GenerateSchemaAsType = true;
+
+	LoadAccessMetadata($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={GetDatabasePath("TestData.mdb")};Locale Identifier=1033;Persist Security Info=True");
+
+	GenerateModel();
+#>

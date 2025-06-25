@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
+
+using LinqToDB.Expressions.Types;
 
 namespace LinqToDB.DataProvider
 {
-	using Expressions;
-
 	public class OdbcProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new object();
+		private static readonly Lock _syncRoot = new();
 		private static OdbcProviderAdapter? _instance;
 
 		public const string AssemblyName    = "System.Data.Odbc";
@@ -86,7 +87,7 @@ namespace LinqToDB.DataProvider
 						typeMapper.RegisterTypeWrapper<OdbcConnection>(connectionType);
 						typeMapper.FinalizeMappings();
 
-						var connectionFactory = typeMapper.BuildTypedFactory<string, OdbcConnection, DbConnection>((string connectionString) => new OdbcConnection(connectionString));
+						var connectionFactory = typeMapper.BuildTypedFactory<string, OdbcConnection, DbConnection>(connectionString => new OdbcConnection(connectionString));
 
 						var dbTypeBuilder = typeMapper.Type<OdbcParameter>().Member(p => p.OdbcType);
 						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
@@ -116,7 +117,7 @@ namespace LinqToDB.DataProvider
 			private static LambdaExpression[] Wrappers { get; } =
 			{
 				// [0]: get Driver
-				(Expression<Func<OdbcConnection, string>>)((OdbcConnection this_) => this_.Driver),
+				(Expression<Func<OdbcConnection, string>>)(this_ => this_.Driver),
 			};
 
 			public OdbcConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)

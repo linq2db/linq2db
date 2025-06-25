@@ -2,14 +2,39 @@
 using System.Globalization;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlServer.Translation
 {
-	using Common;
-	using Linq.Translation;
-	using SqlQuery;
-
 	public class SqlServerMemberTranslator : ProviderMemberTranslatorDefault
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new SqlServerDateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new SqlServerMathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertDateTimeOffset(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -47,7 +72,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 				var factory   = translationContext.ExpressionFactory;
 				var intDbType = factory.GetDbDataType(typeof(int));
 
-				var resultExpression = factory.Function(intDbType, "DatePart", factory.Fragment(intDbType, partStr), dateTimeExpression);
+				var resultExpression = factory.Function(intDbType, "DatePart", ParametersNullabilityType.SameAsSecondParameter, factory.NotNullFragment(intDbType, partStr), dateTimeExpression);
 
 				return resultExpression;
 			}
@@ -70,7 +95,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 					return null;
 				}
 
-				var resultExpression = factory.Function(dateType, "DateAdd", factory.Fragment(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
+				var resultExpression = factory.Function(dateType, "DateAdd", factory.NotNullFragment(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
 				return resultExpression;
 			}
 
@@ -170,19 +195,26 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 			}
 		}
 
-		protected override IMemberTranslator CreateSqlTypesTranslator()
+		public class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			return new SqlTypesTranslation();
-		}
+			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
+			{
+				/*
+				 * REPLICATE(paddingSymbol, padding - LEN(value)) + value
+				 */
+				var factory         = translationContext.ExpressionFactory;
+				var valueTypeString = factory.GetDbDataType(value);
+				var valueTypeInt    = factory.GetDbDataType(typeof(int));
+				
+				var lengthValue = TranslateLength(translationContext, translationFlags, value);
+				if (lengthValue == null)
+					return null;
 
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new SqlServerDateFunctionsTranslator();
-		}
-
-		protected override IMemberTranslator CreateMathMemberTranslator()
-		{
-			return new SqlServerMathMemberTranslator();
+				var symbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
+				var stringToAdd  = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
+				
+				return factory.Add(valueTypeString, stringToAdd, value);
+			}
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
@@ -191,6 +223,22 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID");
 
 			return timePart;
+		}
+
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+		{
+				//"LOWER(CAST({0} AS char(36)))"
+
+			var factory  = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(36);
+
+				var cast  = factory.Cast(guidExpr, stringDataType);
+				var lower = factory.ToLower(cast);
+
+				return lower;
+			}
 		}
 	}
 }

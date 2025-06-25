@@ -26,6 +26,8 @@ namespace Default.SqlServer
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AllType>                  AllTypes                 { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypes2>                AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
 		public ITable<Child>                    Children                 { get { return this.GetTable<Child>(); } }
@@ -67,6 +69,10 @@ namespace Default.SqlServer
 		/// </summary>
 		public ITable<TheParent>                TheParents               { get { return this.GetTable<TheParent>(); } }
 
+		#endregion
+
+		#region .ctor
+
 		public TestDataDB()
 		{
 			InitDataContext();
@@ -96,6 +102,8 @@ namespace Default.SqlServer
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 
 		#region Table Functions
 
@@ -147,111 +155,111 @@ namespace Default.SqlServer
 	[Table(Schema="dbo", Name="AllTypes")]
 	public partial class AllType
 	{
-		[Column(),                                                                 PrimaryKey, Identity] public int             ID                       { get; set; } // int
-		[Column("bigintDataType"),                                                 Nullable            ] public long?           BigintDataType           { get; set; } // bigint
-		[Column("numericDataType"),                                                Nullable            ] public decimal?        NumericDataType          { get; set; } // numeric(18, 1)
-		[Column("bitDataType"),                                                    Nullable            ] public bool?           BitDataType              { get; set; } // bit
-		[Column("smallintDataType"),                                               Nullable            ] public short?          SmallintDataType         { get; set; } // smallint
-		[Column("decimalDataType"),                                                Nullable            ] public decimal?        DecimalDataType          { get; set; } // decimal(18, 1)
-		[Column("smallmoneyDataType"),                                             Nullable            ] public decimal?        SmallmoneyDataType       { get; set; } // smallmoney
-		[Column("intDataType"),                                                    Nullable            ] public int?            IntDataType              { get; set; } // int
-		[Column("tinyintDataType"),                                                Nullable            ] public byte?           TinyintDataType          { get; set; } // tinyint
-		[Column("moneyDataType"),                                                  Nullable            ] public decimal?        MoneyDataType            { get; set; } // money
-		[Column("floatDataType"),                                                  Nullable            ] public double?         FloatDataType            { get; set; } // float
-		[Column("realDataType"),                                                   Nullable            ] public float?          RealDataType             { get; set; } // real
-		[Column("datetimeDataType"),                                               Nullable            ] public DateTime?       DatetimeDataType         { get; set; } // datetime
-		[Column("smalldatetimeDataType"),                                          Nullable            ] public DateTime?       SmalldatetimeDataType    { get; set; } // smalldatetime
-		[Column("charDataType"),                                                   Nullable            ] public char?           CharDataType             { get; set; } // char(1)
-		[Column("char20DataType"),                                                 Nullable            ] public string?         Char20DataType           { get; set; } // char(20)
-		[Column("varcharDataType"),                                                Nullable            ] public string?         VarcharDataType          { get; set; } // varchar(20)
-		[Column("textDataType"),                                                   Nullable            ] public string?         TextDataType             { get; set; } // text
-		[Column("ncharDataType"),                                                  Nullable            ] public string?         NcharDataType            { get; set; } // nchar(20)
-		[Column("nvarcharDataType"),                                               Nullable            ] public string?         NvarcharDataType         { get; set; } // nvarchar(20)
-		[Column("ntextDataType"),                                                  Nullable            ] public string?         NtextDataType            { get; set; } // ntext
-		[Column("binaryDataType"),                                                 Nullable            ] public byte[]?         BinaryDataType           { get; set; } // binary(1)
-		[Column("varbinaryDataType"),                                              Nullable            ] public byte[]?         VarbinaryDataType        { get; set; } // varbinary(1)
-		[Column("imageDataType"),                                                  Nullable            ] public byte[]?         ImageDataType            { get; set; } // image
-		[Column("timestampDataType",        SkipOnInsert=true, SkipOnUpdate=true), Nullable            ] public byte[]?         TimestampDataType        { get; set; } // timestamp
-		[Column("uniqueidentifierDataType"),                                       Nullable            ] public Guid?           UniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column("sql_variantDataType"),                                            Nullable            ] public object?         SqlVariantDataType       { get; set; } // sql_variant
-		[Column("nvarchar_max_DataType"),                                          Nullable            ] public string?         NvarcharMaxDataType      { get; set; } // nvarchar(max)
-		[Column("varchar_max_DataType"),                                           Nullable            ] public string?         VarcharMaxDataType       { get; set; } // varchar(max)
-		[Column("varbinary_max_DataType"),                                         Nullable            ] public byte[]?         VarbinaryMaxDataType     { get; set; } // varbinary(max)
-		[Column("xmlDataType"),                                                    Nullable            ] public string?         XmlDataType              { get; set; } // xml
-		[Column("datetime2DataType"),                                              Nullable            ] public DateTime?       Datetime2DataType        { get; set; } // datetime2(7)
-		[Column("datetimeoffsetDataType"),                                         Nullable            ] public DateTimeOffset? DatetimeoffsetDataType   { get; set; } // datetimeoffset(7)
-		[Column("datetimeoffset0DataType"),                                        Nullable            ] public DateTimeOffset? Datetimeoffset0DataType  { get; set; } // datetimeoffset(0)
-		[Column("datetimeoffset1DataType"),                                        Nullable            ] public DateTimeOffset? Datetimeoffset1DataType  { get; set; } // datetimeoffset(1)
-		[Column("datetimeoffset2DataType"),                                        Nullable            ] public DateTimeOffset? Datetimeoffset2DataType  { get; set; } // datetimeoffset(2)
-		[Column("datetimeoffset3DataType"),                                        Nullable            ] public DateTimeOffset? Datetimeoffset3DataType  { get; set; } // datetimeoffset(3)
-		[Column("datetimeoffset4DataType"),                                        Nullable            ] public DateTimeOffset? Datetimeoffset4DataType  { get; set; } // datetimeoffset(4)
-		[Column("datetimeoffset5DataType"),                                        Nullable            ] public DateTimeOffset? Datetimeoffset5DataType  { get; set; } // datetimeoffset(5)
-		[Column("datetimeoffset6DataType"),                                        Nullable            ] public DateTimeOffset? Datetimeoffset6DataType  { get; set; } // datetimeoffset(6)
-		[Column("datetimeoffset7DataType"),                                        Nullable            ] public DateTimeOffset? Datetimeoffset7DataType  { get; set; } // datetimeoffset(7)
-		[Column("dateDataType"),                                                   Nullable            ] public DateTime?       DateDataType             { get; set; } // date
-		[Column("timeDataType"),                                                   Nullable            ] public TimeSpan?       TimeDataType             { get; set; } // time(7)
+		[Column(                            DataType=LinqToDB.DataType.Int32),                                                PrimaryKey, Identity] public int             ID                       { get; set; } // int
+		[Column("bigintDataType",           DataType=LinqToDB.DataType.Int64),                                                Nullable            ] public long?           BigintDataType           { get; set; } // bigint
+		[Column("numericDataType",          DataType=LinqToDB.DataType.Decimal,        Precision=18, Scale=1),                Nullable            ] public decimal?        NumericDataType          { get; set; } // numeric(18, 1)
+		[Column("bitDataType",              DataType=LinqToDB.DataType.Boolean),                                              Nullable            ] public bool?           BitDataType              { get; set; } // bit
+		[Column("smallintDataType",         DataType=LinqToDB.DataType.Int16),                                                Nullable            ] public short?          SmallintDataType         { get; set; } // smallint
+		[Column("decimalDataType",          DataType=LinqToDB.DataType.Decimal,        Precision=18, Scale=1),                Nullable            ] public decimal?        DecimalDataType          { get; set; } // decimal(18, 1)
+		[Column("smallmoneyDataType",       DataType=LinqToDB.DataType.SmallMoney),                                           Nullable            ] public decimal?        SmallmoneyDataType       { get; set; } // smallmoney
+		[Column("intDataType",              DataType=LinqToDB.DataType.Int32),                                                Nullable            ] public int?            IntDataType              { get; set; } // int
+		[Column("tinyintDataType",          DataType=LinqToDB.DataType.Byte),                                                 Nullable            ] public byte?           TinyintDataType          { get; set; } // tinyint
+		[Column("moneyDataType",            DataType=LinqToDB.DataType.Money),                                                Nullable            ] public decimal?        MoneyDataType            { get; set; } // money
+		[Column("floatDataType",            DataType=LinqToDB.DataType.Double),                                               Nullable            ] public double?         FloatDataType            { get; set; } // float
+		[Column("realDataType",             DataType=LinqToDB.DataType.Single),                                               Nullable            ] public float?          RealDataType             { get; set; } // real
+		[Column("datetimeDataType",         DataType=LinqToDB.DataType.DateTime),                                             Nullable            ] public DateTime?       DatetimeDataType         { get; set; } // datetime
+		[Column("smalldatetimeDataType",    DataType=LinqToDB.DataType.SmallDateTime),                                        Nullable            ] public DateTime?       SmalldatetimeDataType    { get; set; } // smalldatetime
+		[Column("charDataType",             DataType=LinqToDB.DataType.Char,           Length=1),                             Nullable            ] public char?           CharDataType             { get; set; } // char(1)
+		[Column("char20DataType",           DataType=LinqToDB.DataType.Char,           Length=20),                            Nullable            ] public string?         Char20DataType           { get; set; } // char(20)
+		[Column("varcharDataType",          DataType=LinqToDB.DataType.VarChar,        Length=20),                            Nullable            ] public string?         VarcharDataType          { get; set; } // varchar(20)
+		[Column("textDataType",             DataType=LinqToDB.DataType.Text),                                                 Nullable            ] public string?         TextDataType             { get; set; } // text
+		[Column("ncharDataType",            DataType=LinqToDB.DataType.NChar,          Length=20),                            Nullable            ] public string?         NcharDataType            { get; set; } // nchar(20)
+		[Column("nvarcharDataType",         DataType=LinqToDB.DataType.NVarChar,       Length=20),                            Nullable            ] public string?         NvarcharDataType         { get; set; } // nvarchar(20)
+		[Column("ntextDataType",            DataType=LinqToDB.DataType.NText),                                                Nullable            ] public string?         NtextDataType            { get; set; } // ntext
+		[Column("binaryDataType",           DataType=LinqToDB.DataType.Binary,         Length=1),                             Nullable            ] public byte[]?         BinaryDataType           { get; set; } // binary(1)
+		[Column("varbinaryDataType",        DataType=LinqToDB.DataType.VarBinary,      Length=1),                             Nullable            ] public byte[]?         VarbinaryDataType        { get; set; } // varbinary(1)
+		[Column("imageDataType",            DataType=LinqToDB.DataType.Image),                                                Nullable            ] public byte[]?         ImageDataType            { get; set; } // image
+		[Column("timestampDataType",        DataType=LinqToDB.DataType.Timestamp,      SkipOnInsert=true, SkipOnUpdate=true), Nullable            ] public byte[]?         TimestampDataType        { get; set; } // timestamp
+		[Column("uniqueidentifierDataType", DataType=LinqToDB.DataType.Guid),                                                 Nullable            ] public Guid?           UniqueidentifierDataType { get; set; } // uniqueidentifier
+		[Column("sql_variantDataType",      DataType=LinqToDB.DataType.Variant),                                              Nullable            ] public object?         SqlVariantDataType       { get; set; } // sql_variant
+		[Column("nvarchar_max_DataType",    DataType=LinqToDB.DataType.NVarChar,       Length=int.MaxValue),                  Nullable            ] public string?         NvarcharMaxDataType      { get; set; } // nvarchar(max)
+		[Column("varchar_max_DataType",     DataType=LinqToDB.DataType.VarChar,        Length=int.MaxValue),                  Nullable            ] public string?         VarcharMaxDataType       { get; set; } // varchar(max)
+		[Column("varbinary_max_DataType",   DataType=LinqToDB.DataType.VarBinary,      Length=int.MaxValue),                  Nullable            ] public byte[]?         VarbinaryMaxDataType     { get; set; } // varbinary(max)
+		[Column("xmlDataType",              DataType=LinqToDB.DataType.Xml),                                                  Nullable            ] public string?         XmlDataType              { get; set; } // xml
+		[Column("datetime2DataType",        DataType=LinqToDB.DataType.DateTime2,      Precision=7),                          Nullable            ] public DateTime?       Datetime2DataType        { get; set; } // datetime2(7)
+		[Column("datetimeoffsetDataType",   DataType=LinqToDB.DataType.DateTimeOffset, Precision=7),                          Nullable            ] public DateTimeOffset? DatetimeoffsetDataType   { get; set; } // datetimeoffset(7)
+		[Column("datetimeoffset0DataType",  DataType=LinqToDB.DataType.DateTimeOffset, Precision=0),                          Nullable            ] public DateTimeOffset? Datetimeoffset0DataType  { get; set; } // datetimeoffset(0)
+		[Column("datetimeoffset1DataType",  DataType=LinqToDB.DataType.DateTimeOffset, Precision=1),                          Nullable            ] public DateTimeOffset? Datetimeoffset1DataType  { get; set; } // datetimeoffset(1)
+		[Column("datetimeoffset2DataType",  DataType=LinqToDB.DataType.DateTimeOffset, Precision=2),                          Nullable            ] public DateTimeOffset? Datetimeoffset2DataType  { get; set; } // datetimeoffset(2)
+		[Column("datetimeoffset3DataType",  DataType=LinqToDB.DataType.DateTimeOffset, Precision=3),                          Nullable            ] public DateTimeOffset? Datetimeoffset3DataType  { get; set; } // datetimeoffset(3)
+		[Column("datetimeoffset4DataType",  DataType=LinqToDB.DataType.DateTimeOffset, Precision=4),                          Nullable            ] public DateTimeOffset? Datetimeoffset4DataType  { get; set; } // datetimeoffset(4)
+		[Column("datetimeoffset5DataType",  DataType=LinqToDB.DataType.DateTimeOffset, Precision=5),                          Nullable            ] public DateTimeOffset? Datetimeoffset5DataType  { get; set; } // datetimeoffset(5)
+		[Column("datetimeoffset6DataType",  DataType=LinqToDB.DataType.DateTimeOffset, Precision=6),                          Nullable            ] public DateTimeOffset? Datetimeoffset6DataType  { get; set; } // datetimeoffset(6)
+		[Column("datetimeoffset7DataType",  DataType=LinqToDB.DataType.DateTimeOffset, Precision=7),                          Nullable            ] public DateTimeOffset? Datetimeoffset7DataType  { get; set; } // datetimeoffset(7)
+		[Column("dateDataType",             DataType=LinqToDB.DataType.Date),                                                 Nullable            ] public DateTime?       DateDataType             { get; set; } // date
+		[Column("timeDataType",             DataType=LinqToDB.DataType.Time,           Precision=7),                          Nullable            ] public TimeSpan?       TimeDataType             { get; set; } // time(7)
 	}
 
 	[Table(Schema="dbo", Name="AllTypes2")]
 	public partial class AllTypes2
 	{
-		[Column(),                         PrimaryKey, Identity] public int             ID                     { get; set; } // int
-		[Column("dateDataType"),           Nullable            ] public DateTime?       DateDataType           { get; set; } // date
-		[Column("datetimeoffsetDataType"), Nullable            ] public DateTimeOffset? DatetimeoffsetDataType { get; set; } // datetimeoffset(7)
-		[Column("datetime2DataType"),      Nullable            ] public DateTime?       Datetime2DataType      { get; set; } // datetime2(7)
-		[Column("timeDataType"),           Nullable            ] public TimeSpan?       TimeDataType           { get; set; } // time(7)
-		[Column("hierarchyidDataType"),    Nullable            ] public SqlHierarchyId? HierarchyidDataType    { get; set; } // hierarchyid
-		[Column("geographyDataType"),      Nullable            ] public SqlGeography?   GeographyDataType      { get; set; } // geography
-		[Column("geometryDataType"),       Nullable            ] public SqlGeometry?    GeometryDataType       { get; set; } // geometry
+		[Column(                          DataType=LinqToDB.DataType.Int32),                       PrimaryKey, Identity] public int             ID                     { get; set; } // int
+		[Column("dateDataType",           DataType=LinqToDB.DataType.Date),                        Nullable            ] public DateTime?       DateDataType           { get; set; } // date
+		[Column("datetimeoffsetDataType", DataType=LinqToDB.DataType.DateTimeOffset, Precision=7), Nullable            ] public DateTimeOffset? DatetimeoffsetDataType { get; set; } // datetimeoffset(7)
+		[Column("datetime2DataType",      DataType=LinqToDB.DataType.DateTime2,      Precision=7), Nullable            ] public DateTime?       Datetime2DataType      { get; set; } // datetime2(7)
+		[Column("timeDataType",           DataType=LinqToDB.DataType.Time,           Precision=7), Nullable            ] public TimeSpan?       TimeDataType           { get; set; } // time(7)
+		[Column("hierarchyidDataType",    DataType=LinqToDB.DataType.Udt),                         Nullable            ] public SqlHierarchyId? HierarchyidDataType    { get; set; } // hierarchyid
+		[Column("geographyDataType",      DataType=LinqToDB.DataType.Udt),                         Nullable            ] public SqlGeography?   GeographyDataType      { get; set; } // geography
+		[Column("geometryDataType",       DataType=LinqToDB.DataType.Udt),                         Nullable            ] public SqlGeometry?    GeometryDataType       { get; set; } // geometry
 	}
 
 	[Table(Schema="dbo", Name="Child")]
 	public partial class Child
 	{
-		[Column(),      Nullable            ] public int? ParentID { get; set; } // int
+		[Column(       DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ParentID { get; set; } // int
 		/// <summary>
 		/// This ChildID column
 		/// </summary>
-		[Column(),      Nullable            ] public int? ChildID  { get; set; } // int
-		[Column("_ID"), PrimaryKey, Identity] public int  Id       { get; set; } // int
+		[Column(       DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ChildID  { get; set; } // int
+		[Column("_ID", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  Id       { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="CollatedTable")]
 	public partial class CollatedTable
 	{
-		[Column, NotNull] public int    Id              { get; set; } // int
-		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
-		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
+		[Column(DataType=LinqToDB.DataType.Int32),               NotNull] public int    Id              { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.NVarChar, Length=20), NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
+		[Column(DataType=LinqToDB.DataType.NVarChar, Length=20), NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
 	}
 
 	[Table(Schema="dbo", Name="DataType")]
 	public partial class DataType
 	{
-		[Column("id"), NotNull] public int Id { get; set; } // int
+		[Column("id", DataType=LinqToDB.DataType.Int32), NotNull] public int Id { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="DecimalOverflow")]
 	public partial class DecimalOverflow
 	{
-		[PrimaryKey, NotNull    ] public decimal  Decimal1 { get; set; } // decimal(38, 20)
-		[Column,        Nullable] public decimal? Decimal2 { get; set; } // decimal(31, 2)
-		[Column,        Nullable] public decimal? Decimal3 { get; set; } // decimal(38, 36)
-		[Column,        Nullable] public decimal? Decimal4 { get; set; } // decimal(29, 0)
-		[Column,        Nullable] public decimal? Decimal5 { get; set; } // decimal(38, 38)
+		[Column(DataType=LinqToDB.DataType.Decimal, Precision=38, Scale=20), PrimaryKey,  NotNull] public decimal  Decimal1 { get; set; } // decimal(38, 20)
+		[Column(DataType=LinqToDB.DataType.Decimal, Precision=31, Scale=2),     Nullable         ] public decimal? Decimal2 { get; set; } // decimal(31, 2)
+		[Column(DataType=LinqToDB.DataType.Decimal, Precision=38, Scale=36),    Nullable         ] public decimal? Decimal3 { get; set; } // decimal(38, 36)
+		[Column(DataType=LinqToDB.DataType.Decimal, Precision=29, Scale=0),     Nullable         ] public decimal? Decimal4 { get; set; } // decimal(29, 0)
+		[Column(DataType=LinqToDB.DataType.Decimal, Precision=38, Scale=38),    Nullable         ] public decimal? Decimal5 { get; set; } // decimal(38, 38)
 	}
 
 	[Table(Schema="dbo", Name="Doctor")]
 	public partial class Doctor
 	{
-		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
-		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(50)
+		[Column(DataType=LinqToDB.DataType.Int32),               PrimaryKey, NotNull] public int    PersonID { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.NVarChar, Length=50),             NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
 		/// <summary>
 		/// FK_Doctor_Person (dbo.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SqlServer.Person.ID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -260,39 +268,39 @@ namespace Default.SqlServer
 	[Table(Schema="dbo", Name="GrandChild")]
 	public partial class GrandChild
 	{
-		[Column(),      Nullable            ] public int? ParentID     { get; set; } // int
-		[Column(),      Nullable            ] public int? ChildID      { get; set; } // int
-		[Column(),      Nullable            ] public int? GrandChildID { get; set; } // int
-		[Column("_ID"), PrimaryKey, Identity] public int  Id           { get; set; } // int
+		[Column(       DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ParentID     { get; set; } // int
+		[Column(       DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ChildID      { get; set; } // int
+		[Column(       DataType=LinqToDB.DataType.Int32), Nullable            ] public int? GrandChildID { get; set; } // int
+		[Column("_ID", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  Id           { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="GuidID")]
 	public partial class GuidID
 	{
-		[PrimaryKey, NotNull    ] public Guid ID     { get; set; } // uniqueidentifier
-		[Column,        Nullable] public int? Field1 { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Guid),  PrimaryKey,  NotNull] public Guid ID     { get; set; } // uniqueidentifier
+		[Column(DataType=LinqToDB.DataType.Int32),    Nullable         ] public int? Field1 { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="GuidID2")]
 	public partial class GuidID2
 	{
-		[PrimaryKey, NotNull] public Guid ID { get; set; } // uniqueidentifier
+		[Column(DataType=LinqToDB.DataType.Guid), PrimaryKey, NotNull] public Guid ID { get; set; } // uniqueidentifier
 	}
 
 	[Table(Schema="dbo", Name="IndexTable")]
 	public partial class IndexTable
 	{
-		[PrimaryKey(2), NotNull] public int PKField1    { get; set; } // int
-		[PrimaryKey(1), NotNull] public int PKField2    { get; set; } // int
-		[Column,        NotNull] public int UniqueField { get; set; } // int
-		[Column,        NotNull] public int IndexField  { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32), PrimaryKey(2), NotNull] public int PKField1    { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32), PrimaryKey(1), NotNull] public int PKField2    { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                NotNull] public int UniqueField { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                NotNull] public int IndexField  { get; set; } // int
 
 		#region Associations
 
 		/// <summary>
 		/// FK_Patient2_IndexTable_BackReference (dbo.IndexTable2)
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true)]
+		[Association(ThisKey=nameof(PKField2) + ", " + nameof(PKField1), OtherKey=nameof(Default.SqlServer.IndexTable2.PKField2) + ", " + nameof(Default.SqlServer.IndexTable2.PKField1), CanBeNull=true)]
 		public IndexTable2? Patient { get; set; }
 
 		#endregion
@@ -301,15 +309,15 @@ namespace Default.SqlServer
 	[Table(Schema="dbo", Name="IndexTable2")]
 	public partial class IndexTable2
 	{
-		[PrimaryKey(2), NotNull] public int PKField1 { get; set; } // int
-		[PrimaryKey(1), NotNull] public int PKField2 { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32), PrimaryKey(2), NotNull] public int PKField1 { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32), PrimaryKey(1), NotNull] public int PKField2 { get; set; } // int
 
 		#region Associations
 
 		/// <summary>
 		/// FK_Patient2_IndexTable (dbo.IndexTable)
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false)]
+		[Association(ThisKey=nameof(PKField2) + ", " + nameof(PKField1), OtherKey=nameof(Default.SqlServer.IndexTable.PKField2) + ", " + nameof(Default.SqlServer.IndexTable.PKField1), CanBeNull=false)]
 		public IndexTable Patient2IndexTable { get; set; } = null!;
 
 		#endregion
@@ -318,24 +326,24 @@ namespace Default.SqlServer
 	[Table(Schema="dbo", Name="InheritanceChild")]
 	public partial class InheritanceChild
 	{
-		[PrimaryKey, NotNull    ] public int     InheritanceChildId  { get; set; } // int
-		[Column,     NotNull    ] public int     InheritanceParentId { get; set; } // int
-		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
-		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(50)
+		[Column(DataType=LinqToDB.DataType.Int32),               PrimaryKey,  NotNull] public int     InheritanceChildId  { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                            NotNull] public int     InheritanceParentId { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                  Nullable         ] public int?    TypeDiscriminator   { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.NVarChar, Length=50),    Nullable         ] public string? Name                { get; set; } // nvarchar(50)
 	}
 
 	[Table(Schema="dbo", Name="InheritanceParent")]
 	public partial class InheritanceParent
 	{
-		[PrimaryKey, NotNull    ] public int     InheritanceParentId { get; set; } // int
-		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
-		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(50)
+		[Column(DataType=LinqToDB.DataType.Int32),               PrimaryKey,  NotNull] public int     InheritanceParentId { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                  Nullable         ] public int?    TypeDiscriminator   { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.NVarChar, Length=50),    Nullable         ] public string? Name                { get; set; } // nvarchar(50)
 	}
 
 	[Table(Schema="dbo", Name="Issue1115")]
 	public partial class Issue1115
 	{
-		[Column("id"), PrimaryKey, NotNull] public SqlHierarchyId Id { get; set; } // hierarchyid
+		[Column("id", DataType=LinqToDB.DataType.Udt), PrimaryKey, NotNull] public SqlHierarchyId Id { get; set; } // hierarchyid
 	}
 
 	[Table(Schema="dbo", Name="Issue1144")]
@@ -344,38 +352,38 @@ namespace Default.SqlServer
 		/// <summary>
 		/// Column description
 		/// </summary>
-		[Column("id"), PrimaryKey, NotNull] public int Id { get; set; } // int
+		[Column("id", DataType=LinqToDB.DataType.Int32), PrimaryKey, NotNull] public int Id { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="LinqDataTypes")]
 	public partial class LinqDataType
 	{
-		[Column("_ID"), PrimaryKey, Identity] public int       Id             { get; set; } // int
-		[Column(),      Nullable            ] public int?      ID             { get; set; } // int
-		[Column(),      Nullable            ] public decimal?  MoneyValue     { get; set; } // decimal(10, 4)
-		[Column(),      Nullable            ] public DateTime? DateTimeValue  { get; set; } // datetime
-		[Column(),      Nullable            ] public DateTime? DateTimeValue2 { get; set; } // datetime2(7)
-		[Column(),      Nullable            ] public bool?     BoolValue      { get; set; } // bit
-		[Column(),      Nullable            ] public Guid?     GuidValue      { get; set; } // uniqueidentifier
-		[Column(),      Nullable            ] public byte[]?   BinaryValue    { get; set; } // varbinary(5000)
-		[Column(),      Nullable            ] public short?    SmallIntValue  { get; set; } // smallint
-		[Column(),      Nullable            ] public int?      IntValue       { get; set; } // int
-		[Column(),      Nullable            ] public long?     BigIntValue    { get; set; } // bigint
-		[Column(),      Nullable            ] public string?   StringValue    { get; set; } // nvarchar(50)
+		[Column("_ID", DataType=LinqToDB.DataType.Int32),                            PrimaryKey, Identity] public int       Id             { get; set; } // int
+		[Column(       DataType=LinqToDB.DataType.Int32),                            Nullable            ] public int?      ID             { get; set; } // int
+		[Column(       DataType=LinqToDB.DataType.Decimal,   Precision=10, Scale=4), Nullable            ] public decimal?  MoneyValue     { get; set; } // decimal(10, 4)
+		[Column(       DataType=LinqToDB.DataType.DateTime),                         Nullable            ] public DateTime? DateTimeValue  { get; set; } // datetime
+		[Column(       DataType=LinqToDB.DataType.DateTime2, Precision=7),           Nullable            ] public DateTime? DateTimeValue2 { get; set; } // datetime2(7)
+		[Column(       DataType=LinqToDB.DataType.Boolean),                          Nullable            ] public bool?     BoolValue      { get; set; } // bit
+		[Column(       DataType=LinqToDB.DataType.Guid),                             Nullable            ] public Guid?     GuidValue      { get; set; } // uniqueidentifier
+		[Column(       DataType=LinqToDB.DataType.VarBinary, Length=5000),           Nullable            ] public byte[]?   BinaryValue    { get; set; } // varbinary(5000)
+		[Column(       DataType=LinqToDB.DataType.Int16),                            Nullable            ] public short?    SmallIntValue  { get; set; } // smallint
+		[Column(       DataType=LinqToDB.DataType.Int32),                            Nullable            ] public int?      IntValue       { get; set; } // int
+		[Column(       DataType=LinqToDB.DataType.Int64),                            Nullable            ] public long?     BigIntValue    { get; set; } // bigint
+		[Column(       DataType=LinqToDB.DataType.NVarChar,  Length=50),             Nullable            ] public string?   StringValue    { get; set; } // nvarchar(50)
 	}
 
 	[Table(Schema="dbo", Name="Member")]
 	public partial class Member
 	{
-		[PrimaryKey, Identity] public int    MemberId { get; set; } // int
-		[Column,     NotNull ] public string Alias    { get; set; } = null!; // nvarchar(50)
+		[Column(DataType=LinqToDB.DataType.Int32),               PrimaryKey, Identity] public int    MemberId { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.NVarChar, Length=50), NotNull             ] public string Alias    { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
 		/// <summary>
 		/// FK_Provider_Member_BackReference (dbo.Provider)
 		/// </summary>
-		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		[Association(ThisKey=nameof(MemberId), OtherKey=nameof(Default.SqlServer.Provider.ProviderId), CanBeNull=true)]
 		public Provider? Provider { get; set; }
 
 		#endregion
@@ -384,37 +392,37 @@ namespace Default.SqlServer
 	[Table(Schema="dbo", Name="Name.Test")]
 	public partial class NameTest
 	{
-		[Column("Name.Test"), Nullable] public int? NameTestColumn { get; set; } // int
+		[Column("Name.Test", DataType=LinqToDB.DataType.Int32), Nullable] public int? NameTestColumn { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="ParentChildView", IsView=true)]
 	public partial class ParentChildView
 	{
-		[Column, Nullable] public int? ParentID { get; set; } // int
-		[Column, Nullable] public int? Value1   { get; set; } // int
-		[Column, Nullable] public int? ChildID  { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32), Nullable] public int? Value1   { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID  { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="ParentView", IsView=true)]
 	public partial class ParentView
 	{
-		[Column(),      Nullable] public int? ParentID { get; set; } // int
-		[Column(),      Nullable] public int? Value1   { get; set; } // int
-		[Column("_ID"), Identity] public int  Id       { get; set; } // int
+		[Column(       DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // int
+		[Column(       DataType=LinqToDB.DataType.Int32), Nullable] public int? Value1   { get; set; } // int
+		[Column("_ID", DataType=LinqToDB.DataType.Int32), Identity] public int  Id       { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="Patient")]
 	public partial class Patient
 	{
-		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
-		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
+		[Column(DataType=LinqToDB.DataType.Int32),                PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.NVarChar, Length=256),             NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region Associations
 
 		/// <summary>
 		/// FK_Patient_Person (dbo.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SqlServer.Person.ID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -423,24 +431,24 @@ namespace Default.SqlServer
 	[Table(Schema="dbo", Name="Person")]
 	public partial class Person : IIdentifiable
 	{
-		[Column("PersonID"), PrimaryKey,  Identity] public int     ID         { get; set; } // int
-		[Column(),           NotNull              ] public string  FirstName  { get; set; } = null!; // nvarchar(50)
-		[Column(),           NotNull              ] public string  LastName   { get; set; } = null!; // nvarchar(50)
-		[Column(),              Nullable          ] public string? MiddleName { get; set; } // nvarchar(50)
-		[Column(),           NotNull              ] public char    Gender     { get; set; } // char(1)
+		[Column("PersonID", DataType=LinqToDB.DataType.Int32),               PrimaryKey,  Identity] public int     ID         { get; set; } // int
+		[Column(            DataType=LinqToDB.DataType.NVarChar, Length=50), NotNull              ] public string  FirstName  { get; set; } = null!; // nvarchar(50)
+		[Column(            DataType=LinqToDB.DataType.NVarChar, Length=50), NotNull              ] public string  LastName   { get; set; } = null!; // nvarchar(50)
+		[Column(            DataType=LinqToDB.DataType.NVarChar, Length=50),    Nullable          ] public string? MiddleName { get; set; } // nvarchar(50)
+		[Column(            DataType=LinqToDB.DataType.Char,     Length=1),  NotNull              ] public char    Gender     { get; set; } // char(1)
 
 		#region Associations
 
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (dbo.Doctor)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference (dbo.Patient)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.Patient.PersonID), CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -449,15 +457,15 @@ namespace Default.SqlServer
 	[Table(Schema="dbo", Name="Provider")]
 	public partial class Provider
 	{
-		[PrimaryKey, NotNull] public int    ProviderId { get; set; } // int
-		[Column,     NotNull] public string Test       { get; set; } = null!; // nvarchar(max)
+		[Column(DataType=LinqToDB.DataType.Int32),                         PrimaryKey, NotNull] public int    ProviderId { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.NVarChar, Length=int.MaxValue),             NotNull] public string Test       { get; set; } = null!; // nvarchar(max)
 
 		#region Associations
 
 		/// <summary>
 		/// FK_Provider_Member (dbo.Member)
 		/// </summary>
-		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		[Association(ThisKey=nameof(ProviderId), OtherKey=nameof(Default.SqlServer.Member.MemberId), CanBeNull=false)]
 		public Member Member { get; set; } = null!;
 
 		#endregion
@@ -466,115 +474,115 @@ namespace Default.SqlServer
 	[Table(Schema="dbo", Name="SameTableName")]
 	public partial class SameTableName
 	{
-		[Column("id"), Nullable] public int? Id { get; set; } // int
+		[Column("id", DataType=LinqToDB.DataType.Int32), Nullable] public int? Id { get; set; } // int
 	}
 
 	[Table(Schema="TestSchema", Name="SameTableName")]
 	public partial class TestSchema_SameTableName
 	{
-		[Column("id"), Nullable] public int? Id { get; set; } // int
+		[Column("id", DataType=LinqToDB.DataType.Int32), Nullable] public int? Id { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="SqlTypes")]
 	public partial class SqlType
 	{
-		[PrimaryKey, NotNull    ] public int             ID  { get; set; } // int
-		[Column,        Nullable] public SqlHierarchyId? HID { get; set; } // hierarchyid
+		[Column(DataType=LinqToDB.DataType.Int32), PrimaryKey,  NotNull] public int             ID  { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Udt),      Nullable         ] public SqlHierarchyId? HID { get; set; } // hierarchyid
 	}
 
 	[Table(Schema="dbo", Name="TestIdentity")]
 	public partial class TestIdentity
 	{
-		[PrimaryKey, Identity] public int ID { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int ID { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="TestMerge1")]
 	public partial class TestMerge1
 	{
-		[PrimaryKey, NotNull    ] public int             Id              { get; set; } // int
-		[Column,        Nullable] public int?            Field1          { get; set; } // int
-		[Column,        Nullable] public int?            Field2          { get; set; } // int
-		[Column,        Nullable] public int?            Field3          { get; set; } // int
-		[Column,        Nullable] public int?            Field4          { get; set; } // int
-		[Column,        Nullable] public int?            Field5          { get; set; } // int
-		[Column,        Nullable] public long?           FieldInt64      { get; set; } // bigint
-		[Column,        Nullable] public bool?           FieldBoolean    { get; set; } // bit
-		[Column,        Nullable] public string?         FieldString     { get; set; } // varchar(20)
-		[Column,        Nullable] public string?         FieldNString    { get; set; } // nvarchar(20)
-		[Column,        Nullable] public char?           FieldChar       { get; set; } // char(1)
-		[Column,        Nullable] public char?           FieldNChar      { get; set; } // nchar(1)
-		[Column,        Nullable] public float?          FieldFloat      { get; set; } // real
-		[Column,        Nullable] public double?         FieldDouble     { get; set; } // float
-		[Column,        Nullable] public DateTime?       FieldDateTime   { get; set; } // datetime
-		[Column,        Nullable] public DateTimeOffset? FieldDateTime2  { get; set; } // datetimeoffset(7)
-		[Column,        Nullable] public byte[]?         FieldBinary     { get; set; } // varbinary(20)
-		[Column,        Nullable] public Guid?           FieldGuid       { get; set; } // uniqueidentifier
-		[Column,        Nullable] public decimal?        FieldDecimal    { get; set; } // decimal(24, 10)
-		[Column,        Nullable] public DateTime?       FieldDate       { get; set; } // date
-		[Column,        Nullable] public TimeSpan?       FieldTime       { get; set; } // time(7)
-		[Column,        Nullable] public string?         FieldEnumString { get; set; } // varchar(20)
-		[Column,        Nullable] public int?            FieldEnumNumber { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                                  PrimaryKey,  NotNull] public int             Id              { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field1          { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field2          { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field3          { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field4          { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field5          { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int64),                                     Nullable         ] public long?           FieldInt64      { get; set; } // bigint
+		[Column(DataType=LinqToDB.DataType.Boolean),                                   Nullable         ] public bool?           FieldBoolean    { get; set; } // bit
+		[Column(DataType=LinqToDB.DataType.VarChar,        Length=20),                 Nullable         ] public string?         FieldString     { get; set; } // varchar(20)
+		[Column(DataType=LinqToDB.DataType.NVarChar,       Length=20),                 Nullable         ] public string?         FieldNString    { get; set; } // nvarchar(20)
+		[Column(DataType=LinqToDB.DataType.Char,           Length=1),                  Nullable         ] public char?           FieldChar       { get; set; } // char(1)
+		[Column(DataType=LinqToDB.DataType.NChar,          Length=1),                  Nullable         ] public char?           FieldNChar      { get; set; } // nchar(1)
+		[Column(DataType=LinqToDB.DataType.Single),                                    Nullable         ] public float?          FieldFloat      { get; set; } // real
+		[Column(DataType=LinqToDB.DataType.Double),                                    Nullable         ] public double?         FieldDouble     { get; set; } // float
+		[Column(DataType=LinqToDB.DataType.DateTime),                                  Nullable         ] public DateTime?       FieldDateTime   { get; set; } // datetime
+		[Column(DataType=LinqToDB.DataType.DateTimeOffset, Precision=7),               Nullable         ] public DateTimeOffset? FieldDateTime2  { get; set; } // datetimeoffset(7)
+		[Column(DataType=LinqToDB.DataType.VarBinary,      Length=20),                 Nullable         ] public byte[]?         FieldBinary     { get; set; } // varbinary(20)
+		[Column(DataType=LinqToDB.DataType.Guid),                                      Nullable         ] public Guid?           FieldGuid       { get; set; } // uniqueidentifier
+		[Column(DataType=LinqToDB.DataType.Decimal,        Precision=24, Scale=10),    Nullable         ] public decimal?        FieldDecimal    { get; set; } // decimal(24, 10)
+		[Column(DataType=LinqToDB.DataType.Date),                                      Nullable         ] public DateTime?       FieldDate       { get; set; } // date
+		[Column(DataType=LinqToDB.DataType.Time,           Precision=7),               Nullable         ] public TimeSpan?       FieldTime       { get; set; } // time(7)
+		[Column(DataType=LinqToDB.DataType.VarChar,        Length=20),                 Nullable         ] public string?         FieldEnumString { get; set; } // varchar(20)
+		[Column(DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            FieldEnumNumber { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="TestMerge2")]
 	public partial class TestMerge2
 	{
-		[PrimaryKey, NotNull    ] public int             Id              { get; set; } // int
-		[Column,        Nullable] public int?            Field1          { get; set; } // int
-		[Column,        Nullable] public int?            Field2          { get; set; } // int
-		[Column,        Nullable] public int?            Field3          { get; set; } // int
-		[Column,        Nullable] public int?            Field4          { get; set; } // int
-		[Column,        Nullable] public int?            Field5          { get; set; } // int
-		[Column,        Nullable] public long?           FieldInt64      { get; set; } // bigint
-		[Column,        Nullable] public bool?           FieldBoolean    { get; set; } // bit
-		[Column,        Nullable] public string?         FieldString     { get; set; } // varchar(20)
-		[Column,        Nullable] public string?         FieldNString    { get; set; } // nvarchar(20)
-		[Column,        Nullable] public char?           FieldChar       { get; set; } // char(1)
-		[Column,        Nullable] public char?           FieldNChar      { get; set; } // nchar(1)
-		[Column,        Nullable] public float?          FieldFloat      { get; set; } // real
-		[Column,        Nullable] public double?         FieldDouble     { get; set; } // float
-		[Column,        Nullable] public DateTime?       FieldDateTime   { get; set; } // datetime
-		[Column,        Nullable] public DateTimeOffset? FieldDateTime2  { get; set; } // datetimeoffset(7)
-		[Column,        Nullable] public byte[]?         FieldBinary     { get; set; } // varbinary(20)
-		[Column,        Nullable] public Guid?           FieldGuid       { get; set; } // uniqueidentifier
-		[Column,        Nullable] public decimal?        FieldDecimal    { get; set; } // decimal(24, 10)
-		[Column,        Nullable] public DateTime?       FieldDate       { get; set; } // date
-		[Column,        Nullable] public TimeSpan?       FieldTime       { get; set; } // time(7)
-		[Column,        Nullable] public string?         FieldEnumString { get; set; } // varchar(20)
-		[Column,        Nullable] public int?            FieldEnumNumber { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                                  PrimaryKey,  NotNull] public int             Id              { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field1          { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field2          { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field3          { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field4          { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field5          { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int64),                                     Nullable         ] public long?           FieldInt64      { get; set; } // bigint
+		[Column(DataType=LinqToDB.DataType.Boolean),                                   Nullable         ] public bool?           FieldBoolean    { get; set; } // bit
+		[Column(DataType=LinqToDB.DataType.VarChar,        Length=20),                 Nullable         ] public string?         FieldString     { get; set; } // varchar(20)
+		[Column(DataType=LinqToDB.DataType.NVarChar,       Length=20),                 Nullable         ] public string?         FieldNString    { get; set; } // nvarchar(20)
+		[Column(DataType=LinqToDB.DataType.Char,           Length=1),                  Nullable         ] public char?           FieldChar       { get; set; } // char(1)
+		[Column(DataType=LinqToDB.DataType.NChar,          Length=1),                  Nullable         ] public char?           FieldNChar      { get; set; } // nchar(1)
+		[Column(DataType=LinqToDB.DataType.Single),                                    Nullable         ] public float?          FieldFloat      { get; set; } // real
+		[Column(DataType=LinqToDB.DataType.Double),                                    Nullable         ] public double?         FieldDouble     { get; set; } // float
+		[Column(DataType=LinqToDB.DataType.DateTime),                                  Nullable         ] public DateTime?       FieldDateTime   { get; set; } // datetime
+		[Column(DataType=LinqToDB.DataType.DateTimeOffset, Precision=7),               Nullable         ] public DateTimeOffset? FieldDateTime2  { get; set; } // datetimeoffset(7)
+		[Column(DataType=LinqToDB.DataType.VarBinary,      Length=20),                 Nullable         ] public byte[]?         FieldBinary     { get; set; } // varbinary(20)
+		[Column(DataType=LinqToDB.DataType.Guid),                                      Nullable         ] public Guid?           FieldGuid       { get; set; } // uniqueidentifier
+		[Column(DataType=LinqToDB.DataType.Decimal,        Precision=24, Scale=10),    Nullable         ] public decimal?        FieldDecimal    { get; set; } // decimal(24, 10)
+		[Column(DataType=LinqToDB.DataType.Date),                                      Nullable         ] public DateTime?       FieldDate       { get; set; } // date
+		[Column(DataType=LinqToDB.DataType.Time,           Precision=7),               Nullable         ] public TimeSpan?       FieldTime       { get; set; } // time(7)
+		[Column(DataType=LinqToDB.DataType.VarChar,        Length=20),                 Nullable         ] public string?         FieldEnumString { get; set; } // varchar(20)
+		[Column(DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            FieldEnumNumber { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="TestMergeIdentity")]
 	public partial class TestMergeIdentity
 	{
-		[PrimaryKey, Identity] public int  Id    { get; set; } // int
-		[Column,     Nullable] public int? Field { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  Id    { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32), Nullable            ] public int? Field { get; set; } // int
 	}
 
 	[Table(Schema="TestSchema", Name="TestSchemaA")]
 	public partial class TestSchema_TestSchemaA : IIdentifiable
 	{
-		[Column("TestSchemaAID"), PrimaryKey, NotNull] public int ID     { get; set; } // int
-		[Column(),                            NotNull] public int Field1 { get; set; } // int
+		[Column("TestSchemaAID", DataType=LinqToDB.DataType.Int32), PrimaryKey, NotNull] public int ID     { get; set; } // int
+		[Column(                 DataType=LinqToDB.DataType.Int32),             NotNull] public int Field1 { get; set; } // int
 
 		#region Associations
 
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference (TestSchema.TestSchemaB)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="TargetTestSchemaAId", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.TestSchema_TestSchemaB.TargetTestSchemaAId), CanBeNull=true)]
 		public IEnumerable<TestSchema_TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference (TestSchema.TestSchemaB)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OriginTestSchemaAID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.TestSchema_TestSchemaB.OriginTestSchemaAID), CanBeNull=true)]
 		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYOriginTestSchemaA { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference (TestSchema.TestSchemaB)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="TargetTestSchemaAID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.TestSchema_TestSchemaB.TargetTestSchemaAID), CanBeNull=true)]
 		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYTargetTestSchemaA { get; set; } = null!;
 
 		#endregion
@@ -583,29 +591,29 @@ namespace Default.SqlServer
 	[Table(Schema="TestSchema", Name="TestSchemaB")]
 	public partial class TestSchema_TestSchemaB : IIdentifiable
 	{
-		[Column("TestSchemaBID"),           PrimaryKey, NotNull] public int ID                  { get; set; } // int
-		[Column(),                                      NotNull] public int OriginTestSchemaAID { get; set; } // int
-		[Column(),                                      NotNull] public int TargetTestSchemaAID { get; set; } // int
-		[Column("Target_Test_Schema_A_ID"),             NotNull] public int TargetTestSchemaAId { get; set; } // int
+		[Column("TestSchemaBID",           DataType=LinqToDB.DataType.Int32), PrimaryKey, NotNull] public int ID                  { get; set; } // int
+		[Column(                           DataType=LinqToDB.DataType.Int32),             NotNull] public int OriginTestSchemaAID { get; set; } // int
+		[Column(                           DataType=LinqToDB.DataType.Int32),             NotNull] public int TargetTestSchemaAID { get; set; } // int
+		[Column("Target_Test_Schema_A_ID", DataType=LinqToDB.DataType.Int32),             NotNull] public int TargetTestSchemaAId { get; set; } // int
 
 		#region Associations
 
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA (TestSchema.TestSchemaA)
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(TargetTestSchemaAID), OtherKey=nameof(Default.SqlServer.TestSchema_TestSchemaA.ID), CanBeNull=false)]
 		public TestSchema_TestSchemaA FKTargetTestSchemaA { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA (TestSchema.TestSchemaA)
 		/// </summary>
-		[Association(ThisKey="OriginTestSchemaAID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(OriginTestSchemaAID), OtherKey=nameof(Default.SqlServer.TestSchema_TestSchemaA.ID), CanBeNull=false)]
 		public TestSchema_TestSchemaA OriginTestSchemaA { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 (TestSchema.TestSchemaA)
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAId", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(TargetTestSchemaAId), OtherKey=nameof(Default.SqlServer.TestSchema_TestSchemaA.ID), CanBeNull=false)]
 		public TestSchema_TestSchemaA TargetTestSchemaA { get; set; } = null!;
 
 		#endregion
@@ -614,33 +622,33 @@ namespace Default.SqlServer
 	[Table(Schema="dbo", Name="TestSchema_SameTableName")]
 	public partial class TestSchemaSameTableName
 	{
-		[Column("id"), Nullable] public int? Id { get; set; } // int
+		[Column("id", DataType=LinqToDB.DataType.Int32), Nullable] public int? Id { get; set; } // int
 	}
 
 	[Table(Schema="dbo", Name="TestSchemaX")]
 	public partial class TestSchemaX : IIdentifiable
 	{
-		[Column("TestSchemaXID"), PrimaryKey, NotNull] public int ID     { get; set; } // int
-		[Column(),                            NotNull] public int Field1 { get; set; } // int
+		[Column("TestSchemaXID", DataType=LinqToDB.DataType.Int32), PrimaryKey, NotNull] public int ID     { get; set; } // int
+		[Column(                 DataType=LinqToDB.DataType.Int32),             NotNull] public int Field1 { get; set; } // int
 
 		#region Associations
 
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX_BackReference (dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="TestSchemaXID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.TestSchemaY.TestSchemaXID), CanBeNull=true)]
 		public IEnumerable<TestSchemaY> TestSchemaY { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_OtherID_BackReference (dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="TestSchemaXID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.TestSchemaY.TestSchemaXID), CanBeNull=true)]
 		public IEnumerable<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX_BackReference (dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="ParentTestSchemaXID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.TestSchemaY.ParentTestSchemaXID), CanBeNull=true)]
 		public IEnumerable<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; } = null!;
 
 		#endregion
@@ -649,28 +657,28 @@ namespace Default.SqlServer
 	[Table(Schema="dbo", Name="TestSchemaY")]
 	public partial class TestSchemaY
 	{
-		[Column, NotNull] public int TestSchemaXID       { get; set; } // int
-		[Column, NotNull] public int ParentTestSchemaXID { get; set; } // int
-		[Column, NotNull] public int OtherID             { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32), NotNull] public int TestSchemaXID       { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32), NotNull] public int ParentTestSchemaXID { get; set; } // int
+		[Column(DataType=LinqToDB.DataType.Int32), NotNull] public int OtherID             { get; set; } // int
 
 		#region Associations
 
 		/// <summary>
 		/// FK_TestSchemaY_OtherID (dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(TestSchemaXID), OtherKey=nameof(Default.SqlServer.TestSchemaX.ID), CanBeNull=false)]
 		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX (dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="ParentTestSchemaXID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(ParentTestSchemaXID), OtherKey=nameof(Default.SqlServer.TestSchemaX.ID), CanBeNull=false)]
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX (dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(TestSchemaXID), OtherKey=nameof(Default.SqlServer.TestSchemaX.ID), CanBeNull=false)]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
 
 		#endregion
@@ -682,9 +690,9 @@ namespace Default.SqlServer
 	[Table(Schema="dbo", Name="Parent")]
 	public partial class TheParent
 	{
-		[Column("ParentID"), Nullable            ] public int?      ID     { get; set; } // int
-		[Column(),           Nullable            ] public int?      Value1 { get; set; } // int
-		[Column("_ID"),      PrimaryKey, Identity] public DayOfWeek Id     { get; set; } // int
+		[Column("ParentID", DataType=LinqToDB.DataType.Int32), Nullable            ] public int?      ID     { get; set; } // int
+		[Column(            DataType=LinqToDB.DataType.Int32), Nullable            ] public int?      Value1 { get; set; } // int
+		[Column("_ID",      DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public DayOfWeek Id     { get; set; } // int
 
 		#region Alias members
 
@@ -804,19 +812,14 @@ namespace Default.SqlServer
 		{
 			var parameters = new []
 			{
-				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar)
+				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar, 50),
+				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar, 50)
 				{
-					Size = 50
+					Direction = ParameterDirection.InputOutput
 				},
-				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar)
+				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar, 50)
 				{
-					Direction = ParameterDirection.InputOutput,
-					Size      = 50
-				},
-				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar)
-				{
-					Direction = ParameterDirection.InputOutput,
-					Size      = 50
+					Direction = ParameterDirection.InputOutput
 				}
 			};
 
@@ -845,19 +848,14 @@ namespace Default.SqlServer
 				{
 					Direction = ParameterDirection.InputOutput
 				},
-				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar)
+				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar, 50),
+				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar, 50)
 				{
-					Size = 50
+					Direction = ParameterDirection.InputOutput
 				},
-				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar)
+				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar, 50)
 				{
-					Direction = ParameterDirection.InputOutput,
-					Size      = 50
-				},
-				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar)
-				{
-					Direction = ParameterDirection.InputOutput,
-					Size      = 50
+					Direction = ParameterDirection.InputOutput
 				}
 			};
 
@@ -898,14 +896,8 @@ namespace Default.SqlServer
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar, 50)
 			};
 
 			return dataConnection.QueryProc<PatientSelectByNameResult>("[dbo].[Patient_SelectByName]", parameters);
@@ -943,22 +935,10 @@ namespace Default.SqlServer
 		{
 			var parameters = new []
 			{
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)
-				{
-					Size = 1
-				}
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char, 1)
 			};
 
 			return dataConnection.QueryProc<PersonInsertResult>("[dbo].[Person_Insert]", parameters);
@@ -977,22 +957,10 @@ namespace Default.SqlServer
 		{
 			var parameters = new []
 			{
-				new DataParameter("@FirstName", @FirstName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@LastName", @LastName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@Gender",   @Gender,   LinqToDB.DataType.Char)
-				{
-					Size = 1
-				},
+				new DataParameter("@FirstName", @FirstName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@LastName", @LastName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@Gender",   @Gender,   LinqToDB.DataType.Char, 1),
 				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32)
 				{
 					Direction = ParameterDirection.InputOutput
@@ -1057,14 +1025,8 @@ namespace Default.SqlServer
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar, 50)
 			};
 
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectByName]", parameters);
@@ -1078,14 +1040,8 @@ namespace Default.SqlServer
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar, 50)
 			};
 
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectListByName]", parameters);
@@ -1100,22 +1056,10 @@ namespace Default.SqlServer
 			var parameters = new []
 			{
 				new DataParameter("@PersonID",   @PersonID,   LinqToDB.DataType.Int32),
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)
-				{
-					Size = 1
-				}
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char, 1)
 			};
 
 			return dataConnection.ExecuteProc("[dbo].[Person_Update]", parameters);

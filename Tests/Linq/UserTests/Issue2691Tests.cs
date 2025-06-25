@@ -1,9 +1,10 @@
 ﻿using System.Data.Linq;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -44,7 +45,7 @@ namespace Tests.UserTests
 				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Contain("length("));
 
 				var qry4 = db.GetTable<IssueClass>().Select(x => x.DataB!.Length).ToList();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Contain("length("));
 
@@ -52,7 +53,7 @@ namespace Tests.UserTests
 					Assert.That(qry2[0], Is.EqualTo(5));
 					Assert.That(qry3[0], Is.EqualTo(6));
 					Assert.That(qry4[0], Is.EqualTo(6));
-				});
+				}
 			}
 		}
 	}

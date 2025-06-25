@@ -6,14 +6,16 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Builder.Visitors;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using Visitors;
-
 	public class ExpressionTreeOptimizationContext
 	{
 		public IDataContext  DataContext   { get; }
@@ -186,6 +188,12 @@ namespace LinqToDB.Linq.Builder
 				if (!CanBeEvaluated)
 					return node;
 
+				if (node.IsSameGenericMethod(Methods.LinqToDB.Select))
+				{
+					CanBeEvaluated = false;
+					return node;
+				}
+
 				if (typeof(IQueryable<>).IsSameOrParentOf(node.Type))
 				{
 					if (node.Arguments.Any(static a => typeof(IDataContext).IsSameOrParentOf(a.Type)) ||
@@ -278,7 +286,7 @@ namespace LinqToDB.Linq.Builder
 					return setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit));
 				}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				// Check if the property belongs to a readonly struct and is not modifying state
 				if (property.DeclaringType?.IsValueType == true &&
 				    property.DeclaringType.IsDefined(typeof(IsReadOnlyAttribute), false))
@@ -292,7 +300,7 @@ namespace LinqToDB.Linq.Builder
 			bool IsReadOnlyMethod(MethodInfo method)
 			{
 				// Check if the method is marked with [IsReadOnly] (for .NET 5+)
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				if (method.GetAttributes<IsReadOnlyAttribute>().Length > 0)
 				{
 					return true;
@@ -484,6 +492,7 @@ namespace LinqToDB.Linq.Builder
 							return PreferServerSide(newExpr, enforceServerSide);
 						}
 					}
+
 					break;
 				}
 			}

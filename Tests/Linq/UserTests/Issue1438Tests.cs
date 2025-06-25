@@ -1,10 +1,10 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
+
 using Npgsql;
 
 using NUnit.Framework;
@@ -44,12 +44,11 @@ namespace Tests.UserTests
 					});
 
 					var record = tbl.Where(_ => _.Id == id).Single();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(record.Id, Is.EqualTo(id));
 						Assert.That(record.Has, Is.True);
-					});
+					}
 				}
 			}
 		}
@@ -70,7 +69,7 @@ namespace Tests.UserTests
 				.Build();
 
 			using (var cn = new NpgsqlConnection(cs))
-			using (var db = new DataConnection(provider, cn))
+			using (var db = new DataConnection(new DataOptions().UseConnection(provider, cn)))
 			{
 				db.AddMappingSchema(ms);
 				using (var tbl = db.CreateLocalTable<Client>())
@@ -81,12 +80,11 @@ namespace Tests.UserTests
 					});
 
 					var record = tbl.Where(_ => _.Id == id).Single();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(record.Id, Is.EqualTo(id));
 						Assert.That(record.Has, Is.True);
-					});
+					}
 				}
 			}
 		}

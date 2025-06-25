@@ -54,6 +54,13 @@ dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_null_propagation = true:suggestion
 dotnet_style_explicit_tuple_names = true:suggestion
 
+# Namespaces
+dotnet_style_namespace_match_folder = false
+
+# New-line preferences
+dotnet_style_allow_multiple_blank_lines_experimental = false:warning
+dotnet_style_allow_statement_immediately_after_block_experimental = false:warning
+
 # CSharp code style settings:
 [*.cs]
 # Newline settings
@@ -128,6 +135,35 @@ csharp_prefer_simple_using_statement = false:silent
 dotnet_analyzer_diagnostic.severity = error
 dotnet_code_quality.api_surface = all
 dotnet_code_quality.enable_platform_analyzer_on_pre_net5_target = true
+
+########################
+# public api analyzers #
+########################
+# https://github.com/dotnet/roslyn-analyzers/blob/main/src/PublicApiAnalyzers/PublicApiAnalyzers.Help.md
+dotnet_public_api_analyzer.require_api_files = true
+dotnet_diagnostic.RS0016.severity = error # Add public types and members to the declared API
+dotnet_diagnostic.RS0017.severity = error # Remove deleted types and members from the declared API
+dotnet_diagnostic.RS0022.severity = error # Constructor make noninheritable base class inheritable
+dotnet_diagnostic.RS0024.severity = error # The contents of the public API files are invalid
+dotnet_diagnostic.RS0025.severity = error # Do not duplicate symbols in public API files
+dotnet_diagnostic.RS0026.severity = none # Do not add multiple public overloads with optional parameters
+dotnet_diagnostic.RS0027.severity = error # API with optional parameter(s) should have the most parameters amongst its public overloads
+dotnet_diagnostic.RS0036.severity = error # Annotate nullability of public types and members in the declared API
+dotnet_diagnostic.RS0037.severity = error # Enable tracking of nullability of reference types in the declared API
+dotnet_diagnostic.RS0041.severity = none # Public members should not use oblivious types
+dotnet_diagnostic.RS0048.severity = error # Missing shipped or unshipped public API file
+dotnet_diagnostic.RS0050.severity = error # API is marked as removed but it exists in source code
+dotnet_diagnostic.RS0051.severity = error # Add internal types and members to the declared API
+dotnet_diagnostic.RS0052.severity = error # Remove deleted types and members from the declared internal API
+dotnet_diagnostic.RS0053.severity = error # The contents of the internal API files are invalid
+dotnet_diagnostic.RS0054.severity = error # Do not duplicate symbols in internal API files
+dotnet_diagnostic.RS0055.severity = error # Annotate nullability of internal types and members in the declared API
+dotnet_diagnostic.RS0056.severity = error # Enable tracking of nullability of reference types in the declared API
+dotnet_diagnostic.RS0057.severity = error # Internal members should not use oblivious types
+dotnet_diagnostic.RS0058.severity = error # Missing shipped or unshipped internal API file
+dotnet_diagnostic.RS0059.severity = error # Do not add multiple public overloads with optional parameters
+dotnet_diagnostic.RS0060.severity = error # API with optional parameter(s) should have the most parameters amongst its public overloads
+dotnet_diagnostic.RS0061.severity = error # Constructor make noninheritable base class inheritable
 
 ##############################################
 # active diagnostics (explicitly configured) #
@@ -345,7 +381,6 @@ dotnet_diagnostic.IDE0059.severity = none # IDE0059: Remove unnecessary value as
 dotnet_diagnostic.IDE0060.severity = none # IDE0060: Remove unused parameter
 dotnet_diagnostic.IDE0061.severity = none # IDE0061: Use expression body for local functions
 dotnet_diagnostic.IDE0062.severity = none # IDE0062: Make local function static
-dotnet_diagnostic.IDE0065.severity = none # IDE0065: Misplaced using directive
 dotnet_diagnostic.IDE0066.severity = none # IDE0066: Convert switch statement to expression
 dotnet_diagnostic.IDE0070.severity = none # IDE0070: Use 'System.HashCode.Combine'
 dotnet_diagnostic.IDE0072.severity = none # IDE0072: Add missing cases
@@ -359,7 +394,6 @@ dotnet_diagnostic.IDE0083.severity = none # IDE0083: Use pattern matching (not o
 dotnet_diagnostic.IDE0090.severity = none # IDE0090: new expression can be simplified
 dotnet_diagnostic.IDE0100.severity = none # IDE0100: remove redundant equality
 dotnet_diagnostic.IDE0120.severity = none # IDE0120: Simplify LINQ expression
-dotnet_diagnostic.IDE0130.severity = none # IDE0130: Namespace does not match folder structure
 dotnet_diagnostic.IDE0150.severity = none # IDE0150: null check can be clarified
 dotnet_diagnostic.IDE0210.severity = none # IDE0210: convert to lol-level statements
 dotnet_diagnostic.IDE0220.severity = none # IDE0220: add explicit cast to MS implicity typed collections foreach
@@ -370,7 +404,7 @@ dotnet_diagnostic.IDE0290.severity = none # IDE0290: Use primary constructor
 dotnet_diagnostic.IDE0300.severity = none # IDE0300: Collection initialization can be simplified
 dotnet_diagnostic.IDE0301.severity = none # IDE0301: Collection initialization can be simplified
 dotnet_diagnostic.IDE0305.severity = none # IDE0305: Collection initialization can be simplified
-dotnet_diagnostic.IDE0330.severity = none # IDE0330: Use Lock class (TODO: needs polyfill)
+dotnet_diagnostic.IDE0330.severity = none # IDE0330: Use `System.Threading.Lock`
 dotnet_diagnostic.IDE1006.severity = none # IDE1006: Naming rule violation
 
 dotnet_diagnostic.CS1998.severity = error # CS1998: Async method lacks 'await' operators and will run synchronously

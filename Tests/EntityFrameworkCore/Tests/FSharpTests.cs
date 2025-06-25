@@ -1,12 +1,16 @@
 ﻿#if !NETFRAMEWORK && !NET9_0
-using Microsoft.EntityFrameworkCore;
-using LinqToDB.EntityFrameworkCore.FSharp;
-using EntityFrameworkCore.FSharp;
-
-using NUnit.Framework;
 using System;
 using System.Linq;
+
+using EntityFrameworkCore.FSharp;
+
+using LinqToDB.EntityFrameworkCore.FSharp;
 using LinqToDB.Mapping;
+
+using Microsoft.EntityFrameworkCore;
+
+using NUnit.Framework;
+
 using Tests;
 
 namespace LinqToDB.EntityFrameworkCore.Tests
@@ -58,12 +62,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			FSharpTestMethods.Issue4646TestLinqToDB(ctx);
 
 			var result = db.GetTable<Issue4646Table>().Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Value, Is.Null);
 				Assert.That(result.ValueN, Is.Null);
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -77,12 +80,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			ctx.SaveChanges();
 
 			var result = db.GetTable<Issue4646Table>().Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Value, Is.Null);
 				Assert.That(result.ValueN, Is.Null);
-			});
+			}
 		}
 
 		#endregion

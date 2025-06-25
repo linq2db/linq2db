@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Informix
 {
-	using SqlQuery;
-
 	partial class InformixSqlBuilder
 	{
 		// VALUES(...) syntax not supported
@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		// Informix is too lazy to infer types itself from context
 		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,
-			IReadOnlyList<ISqlExpression[]>                                      rows, int row, int column) => true;
+			IReadOnlyList<List<ISqlExpression>> rows, int row, int column) => true;
 
 		protected override void BuildMergeInto(NullabilityContext nullability, SqlMergeStatement merge)
 		{

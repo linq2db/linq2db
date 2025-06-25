@@ -16,10 +16,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class MappingTests : TestBase
 	{
@@ -76,12 +76,11 @@ namespace Tests.Linq
 		public void EnumValue1()
 		{
 			var value = ConvertTo<TypeValue>.From(1);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(value, Is.EqualTo(TypeValue.Value1));
 				Assert.That((int)value, Is.EqualTo(10));
-			});
+			}
 		}
 
 		[Test]
@@ -202,11 +201,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(e.ParentID, Is.EqualTo(1));
 					Assert.That(e.Value.Value1, Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -216,11 +215,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1 && p.Value.Value1 == 1);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(e.ParentID, Is.EqualTo(1));
 					Assert.That(e.Value.Value1, Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -551,7 +550,7 @@ namespace Tests.Linq
 				var data = table.OrderBy(r => r.Id).ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(1));
 					Assert.That(data[0].Value, Is.EqualTo("One"));
@@ -559,12 +558,12 @@ namespace Tests.Linq
 					Assert.That(data[1].Id, Is.EqualTo(2));
 					Assert.That(data[1].Value, Is.EqualTo("Two"));
 					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
-				});
+				}
 
 				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
 				Assert.That(proj, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(proj[0].Id, Is.EqualTo(1));
 					Assert.That(proj[0].Value, Is.EqualTo("One"));
@@ -572,7 +571,7 @@ namespace Tests.Linq
 					Assert.That(proj[1].Id, Is.EqualTo(2));
 					Assert.That(proj[1].Value, Is.EqualTo("Two"));
 					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
-				});
+				}
 			}
 		}
 
@@ -596,7 +595,7 @@ namespace Tests.Linq
 				var data = table.OrderBy(r => r.Id).ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(1));
 					Assert.That(data[0].Value, Is.EqualTo("One"));
@@ -604,12 +603,12 @@ namespace Tests.Linq
 					Assert.That(data[1].Id, Is.EqualTo(2));
 					Assert.That(data[1].Value, Is.EqualTo("Two"));
 					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
-				});
+				}
 
 				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
 				Assert.That(proj, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(proj[0].Id, Is.EqualTo(1));
 					Assert.That(proj[0].Value, Is.EqualTo("One"));
@@ -617,7 +616,7 @@ namespace Tests.Linq
 					Assert.That(proj[1].Id, Is.EqualTo(2));
 					Assert.That(proj[1].Value, Is.EqualTo("Two"));
 					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
-				});
+				}
 			}
 		}
 
@@ -640,7 +639,7 @@ namespace Tests.Linq
 				var data = table.OrderBy(r => r.Id).ToArray();
 
 				Assert.That(data, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Id, Is.EqualTo(1));
 					Assert.That(data[0].Value, Is.EqualTo("One"));
@@ -648,12 +647,12 @@ namespace Tests.Linq
 					Assert.That(data[1].Id, Is.EqualTo(2));
 					Assert.That(data[1].Value, Is.EqualTo("Two"));
 					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
-				});
+				}
 
 				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
 				Assert.That(proj, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(proj[0].Id, Is.EqualTo(1));
 					Assert.That(proj[0].Value, Is.EqualTo("One"));
@@ -661,7 +660,7 @@ namespace Tests.Linq
 					Assert.That(proj[1].Id, Is.EqualTo(2));
 					Assert.That(proj[1].Value, Is.EqualTo("Two"));
 					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
-				});
+				}
 			}
 		}
 
@@ -1108,7 +1107,7 @@ namespace Tests.Linq
 
 			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
 
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
@@ -1120,7 +1119,7 @@ namespace Tests.Linq
 
 			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
 
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
@@ -1134,7 +1133,6 @@ namespace Tests.Linq
 
 			Assert.That(cnt, Is.EqualTo(mapNull ? 3 : 4));
 		}
-
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
 		public void StructMapping_Enumerable_IntList([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
@@ -1156,7 +1154,7 @@ namespace Tests.Linq
 
 			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
 
-			Assert.That(cnt, Is.EqualTo(0));
+			Assert.That(cnt, Is.Zero);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
@@ -1169,6 +1167,69 @@ namespace Tests.Linq
 			// not supported case
 			Assert.That(() => db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count(), Throws.TypeOf<InvalidCastException>());
 		}
+
+		#region issue 4798
+
+#pragma warning disable CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
+#pragma warning disable CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
+		struct TenderId
+#pragma warning restore CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
+#pragma warning restore CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
+		{
+			public Guid Value { get; set; }
+			public static TenderId From(Guid value) => new TenderId { Value = value };
+			public static TenderId? From(Guid? value) => value.HasValue ? new TenderId { Value = value.Value } : null;
+
+			public static bool operator ==(TenderId a, Guid b) => a.Value == b;
+			public static bool operator !=(TenderId a, Guid b) => !(a == b);
+
+			public static implicit operator string(TenderId tenderId) => tenderId.Value.ToString();
+			public static implicit operator Guid(TenderId tenderId) => tenderId.Value;
+
+			internal static MappingSchema LinqToDbMapping()
+			{
+				var ms = new MappingSchema();
+
+				ms.SetConverter<TenderId, Guid>(id => id.Value);
+				ms.SetConverter<TenderId, Guid?>(id => id.Value);
+				ms.SetConverter<TenderId?, Guid>(id => id?.Value ?? default);
+				ms.SetConverter<TenderId?, Guid?>(id => id?.Value);
+				ms.SetConverter<Guid, TenderId>(From);
+				ms.SetConverter<Guid, TenderId?>(g => From(g));
+				ms.SetConverter<Guid?, TenderId>(g => g == null ? default : From((Guid)g));
+				ms.SetConverter<Guid?, TenderId?>(From);
+
+				ms.SetConverter<TenderId, DataParameter>(id => new DataParameter { DataType = DataType.Guid, Value = id.Value });
+				ms.SetConverter<TenderId?, DataParameter>(id => new DataParameter { DataType = DataType.Guid, Value = id?.Value });
+
+				return ms;
+			}
+		}
+
+		[Table("tender")]
+		sealed class Tender
+		{
+			[Column("id")]
+			public TenderId Id { get; set; }
+
+			[Column("name")]
+			public string? Name { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4798")]
+		public void Issue4798Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, TenderId.LinqToDbMapping());
+			using var tb = db.CreateLocalTable<Tender>();
+
+			var tenderIdsGuid = new List<Guid> { TestData.Guid1, TestData.Guid2 };
+			db.GetTable<Tender>().Where(i => tenderIdsGuid.Contains(i.Id)).Any();
+
+			TenderId? tenderId = new TenderId { Value = TestData.Guid1 };
+			db.GetTable<Tender>().Where(i => tenderId != null && i.Id == tenderId).Any();
+		}
+
+		#endregion
 
 		#region Issue 4437
 
@@ -1283,12 +1344,12 @@ namespace Tests.Linq
 			else
 			{
 				Assert.That(res, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Value, Is.False);
 					Assert.That(res[1].Value, Is.False);
 					Assert.That(res[2].Value, Is.False);
-				});
+				}
 			}
 		}
 
@@ -1317,12 +1378,12 @@ namespace Tests.Linq
 			else
 			{
 				Assert.That(res, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Value, Is.False);
 					Assert.That(res[1].Value, Is.False);
 					Assert.That(res[2].Value, Is.False);
-				});
+				}
 			}
 		}
 
@@ -1353,12 +1414,12 @@ namespace Tests.Linq
 			else
 			{
 				Assert.That(res, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Value, Is.False);
 					Assert.That(res[1].Value, Is.False);
 					Assert.That(res[2].Value, Is.False);
-				});
+				}
 			}
 		}
 
@@ -1384,5 +1445,27 @@ namespace Tests.Linq
 			];
 		}
 		#endregion
+
+		sealed class TimeSpanAsTicks
+		{
+			[PrimaryKey] public Guid Id { get; set; }
+			[Column] public TimeSpan Value { get; set; }
+		}
+
+		[Test]
+		public void Test_DefaultMappingOverride([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetDataType(typeof(TimeSpan), DataType.Int64);
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<TimeSpanAsTicks>();
+
+			Guid? id = Guid.NewGuid();
+
+			var query = tb.Where(r => r.Value == -new TimeSpan(1200000000L));
+
+			query.ToArray();
+		}
 	}
 }

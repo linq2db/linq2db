@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
@@ -9,18 +10,17 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-
-	using Common;
-	using Data;
-	using Expressions;
-	using Extensions;
-	using Mapping;
-
 	public class NpgsqlProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new ();
+		private static readonly Lock _syncRoot = new ();
 		private static NpgsqlProviderAdapter? _instance;
 
 		public const string AssemblyName    = "Npgsql";
@@ -205,7 +205,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					if (_instance == null)
 #pragma warning restore CA1508 // Avoid dead conditional code
 					{
-						var assembly = Tools.TryLoadAssembly(AssemblyName, null);
+						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
@@ -282,7 +282,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 							var reader  = Expression.Parameter(typeof(DbDataReader));
 							var ordinal = Expression.Parameter(typeof(int));
-							var body    = Expression.Call(reader, nameof(DbDataReader.GetFieldValue), new[] { npgsqlIntervalType }, ordinal);
+							var body    = Expression.Call(reader, nameof(DbDataReader.GetFieldValue), [npgsqlIntervalType], [ordinal]);
 
 							npgsqlIntervalReader = Expression.Lambda(body, reader, ordinal);
 						}
@@ -332,6 +332,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 									ctor = npgsqlInetType.GetConstructor(new[] { typeof(IPAddress), netmaskType })
 										?? throw new InvalidOperationException("Cannot find NpgsqlInet constructor");
 								}
+
 								var inetTupleType = valueTypeType.MakeGenericType(typeof(IPAddress), typeof(int));
 								var p = Expression.Parameter(inetTupleType, "p");
 
@@ -420,7 +421,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						AddUdtType(npgsqlPolygonType);
 						AddUdtType(npgsqlLineType);
 
-						var connectionFactory = typeMapper.BuildTypedFactory<string, NpgsqlConnection, DbConnection>((string connectionString) => new NpgsqlConnection(connectionString));
+						var connectionFactory = typeMapper.BuildTypedFactory<string, NpgsqlConnection, DbConnection>(connectionString => new NpgsqlConnection(connectionString));
 
 						_instance = new NpgsqlProviderAdapter(
 							connectionType,
@@ -560,7 +561,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			/// Added as alias to <see cref="TimestampTZ"/> in npgsql 4.0.0.
 			/// Don't use it, as it will not work with 3.x.
 			/// </summary>
-			[Obsolete("Marked obsolete to avoid unintentional use")]
+			// don't remove, both values valid and must be defined
+			[Obsolete("Marked obsolete to avoid unintentional use"), EditorBrowsable(EditorBrowsableState.Never)]
 			TimestampTz                    = 26,
 			// members with same name but different case
 			[CLSCompliant(false)]
@@ -569,7 +571,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			/// Added as alias to <see cref="TimeTZ"/> in npgsql 4.0.0.
 			/// Don't use it, as it will not work with 3.x.
 			/// </summary>
-			[Obsolete("Marked obsolete to avoid unintentional use")]
+			// don't remove, both values valid and must be defined
+			[Obsolete("Marked obsolete to avoid unintentional use"), EditorBrowsable(EditorBrowsableState.Never)]
 			TimeTz                         = 31,
 			// members with same name but different case
 			[CLSCompliant(false)]
@@ -618,7 +621,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			private static LambdaExpression[] Wrappers { get; } =
 			{
 				// [0]: get PostgreSqlVersion
-				(Expression<Func<NpgsqlConnection, Version>>)((NpgsqlConnection this_) => this_.PostgreSqlVersion),
+				(Expression<Func<NpgsqlConnection, Version>>)(this_ => this_.PostgreSqlVersion),
 			};
 
 			public NpgsqlConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -643,34 +646,34 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				// depending on npgsql version, [0] or [1] will fail to compile and CompiledWrappers will contain null
 				// [0]: Cancel
-				new Tuple<LambdaExpression, bool>((Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Cancel()), true),
+				new Tuple<LambdaExpression, bool>((Expression<Action<NpgsqlBinaryImporter>>)(this_ => this_.Cancel()), true),
 				// [1]: Complete: pre-v5
-				new Tuple<LambdaExpression, bool>((Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.Complete()), true),
+				new Tuple<LambdaExpression, bool>((Expression<Action<NpgsqlBinaryImporter>>)(this_ => this_.Complete()), true),
 				// [2]: Complete: v5+
-				new Tuple<LambdaExpression, bool>((Expression<Func<NpgsqlBinaryImporter, ulong>>)((NpgsqlBinaryImporter this_) => this_.Complete5()), true),
+				new Tuple<LambdaExpression, bool>((Expression<Func<NpgsqlBinaryImporter, ulong>>)(this_ => this_.Complete5()), true),
 				// [3]: Dispose
-				(Expression<Action<NpgsqlBinaryImporter>>                                  )((NpgsqlBinaryImporter this_) => this_.Dispose()),
+				(Expression<Action<NpgsqlBinaryImporter>>                                  )(this_ => this_.Dispose()),
 				// [4]: StartRow
-				(Expression<Action<NpgsqlBinaryImporter>>                                  )((NpgsqlBinaryImporter this_) => this_.StartRow()),
+				(Expression<Action<NpgsqlBinaryImporter>>                                  )(this_ => this_.StartRow()),
 				// [5]: CompleteAsync
 				new Tuple<LambdaExpression, bool>
-				((Expression<Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>>)((NpgsqlBinaryImporter this_, CancellationToken token) => this_.CompleteAsync(token)),         true),
+				((Expression<Func<NpgsqlBinaryImporter, CancellationToken, ValueTask<ulong>>>)((this_, token) => this_.CompleteAsync(token)), true),
 				// [6]: DisposeAsync
 				new Tuple<LambdaExpression, bool>
-				((Expression<Func<NpgsqlBinaryImporter, ValueTask                          >>)((NpgsqlBinaryImporter this_)                          => this_.DisposeAsync()),               true),
+				((Expression<Func<NpgsqlBinaryImporter, ValueTask                          >>)(this_ => this_.DisposeAsync()), true),
 				// [7]: StartRowAsync
 				new Tuple<LambdaExpression, bool>
-				((Expression<Func<NpgsqlBinaryImporter, CancellationToken, Task                       >>)((NpgsqlBinaryImporter this_, CancellationToken token) => this_.StartRowAsync(token)), true),
+				((Expression<Func<NpgsqlBinaryImporter, CancellationToken, Task                       >>)((this_, token) => this_.StartRowAsync(token)), true),
 				// [8]: WriteAsync
 				new Tuple<LambdaExpression, bool>
-				((Expression<Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>>)((NpgsqlBinaryImporter this_, object? value, NpgsqlDbType type, CancellationToken token) => this_.WriteAsync(value, type, token)), true),
+				((Expression<Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>>)((this_, value, type, token) => this_.WriteAsync(value, type, token)), true),
 				// [9]: Write
-				(Expression<Action<NpgsqlBinaryImporter, object?, NpgsqlDbType                        >>)((NpgsqlBinaryImporter this_, object? value, NpgsqlDbType type) => this_.Write(value, type)),
+				(Expression<Action<NpgsqlBinaryImporter, object?, NpgsqlDbType                        >>)((this_, value, type) => this_.Write(value, type)),
 				// [10]: Write
-				(Expression<Action<NpgsqlBinaryImporter, object?, string                              >>)((NpgsqlBinaryImporter this_, object? value, string dataTypeName) => this_.Write(value, dataTypeName)),
+				(Expression<Action<NpgsqlBinaryImporter, object?, string                              >>)((this_, value, dataTypeName) => this_.Write(value, dataTypeName)),
 				// [11]: WriteAsync
 				new Tuple<LambdaExpression, bool>
-				((Expression<Func<NpgsqlBinaryImporter, object?, string      , CancellationToken, Task>>)((NpgsqlBinaryImporter this_, object? value, string dataTypeName, CancellationToken token) => this_.WriteAsync(value, dataTypeName, token)), true),
+				((Expression<Func<NpgsqlBinaryImporter, object?, string      , CancellationToken, Task>>)((this_, value, dataTypeName, token) => this_.WriteAsync(value, dataTypeName, token)), true),
 			};
 
 			public NpgsqlBinaryImporter(object instance, Delegate[] wrappers) : base(instance, wrappers)

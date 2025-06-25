@@ -1,17 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Reflection;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Data;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Data;
-
 	[PublicAPI]
 	public static partial class PostgreSQLTools
 	{
-		internal static PostgreSQLProviderDetector ProviderDetector = new();
+		private  static PostgreSQLProviderDetector? _providerDetector;
+		internal static PostgreSQLProviderDetector   ProviderDetector
+		{
+			get => _providerDetector ??= new();
+			set => _providerDetector = value;
+		}
 
 		public static bool AutoDetectProvider
 		{
@@ -19,9 +23,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.AutoDetect, string? connectionString = null)
+		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.AutoDetect, string? connectionString = null, DbConnection? connection = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), default, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection, ConnectionString: connectionString), default, version);
 		}
 
 		public static void ResolvePostgreSQL(string path)
@@ -38,17 +42,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public static DataConnection CreateDataConnection(string connectionString, PostgreSQLVersion version = PostgreSQLVersion.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), default, version), connectionString);
+			return new DataConnection(new DataOptions()
+				.UseConnectionString(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), default, version), connectionString));
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, PostgreSQLVersion version = PostgreSQLVersion.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), default, version), connection);
+			return new DataConnection(new DataOptions()
+				.UseConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), default, version), connection));
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction, PostgreSQLVersion version = PostgreSQLVersion.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), default, version), transaction);
+			return new DataConnection(new DataOptions()
+				.UseTransaction(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), default, version), transaction));
 		}
 
 		#endregion

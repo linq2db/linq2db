@@ -9,11 +9,12 @@ using System.Xml;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Common
 {
-	using Expressions;
-	using Mapping;
-
 	/// <summary>
 	/// Type conversion manager.
 	/// </summary>
@@ -49,7 +50,7 @@ namespace LinqToDB.Common
 			SetConverter<char,           bool>          (v => ToBoolean(v));
 			SetConverter<string,         bool>          (v => v.Length == 1 ? ToBoolean(v[0]) : bool.Parse(v));
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			SetConverter<DateTime,       DateOnly>      (v => DateOnly.FromDateTime(v));
 			SetConverter<DateOnly,       DateTime>      (v => v.ToDateTime(TimeOnly.MinValue));
 

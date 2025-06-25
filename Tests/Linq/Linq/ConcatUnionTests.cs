@@ -2,19 +2,18 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.Data;
-	using Model;
-
-
 	[TestFixture]
 	public class ConcatUnionTests : TestBase
 	{
@@ -611,7 +610,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var query = 
+			var query =
 					(from p1 in db.Parent where p1.ParentID > 3 select Tuple.Create(p1.ParentID, p1.Value1))
 				.Union(
 					from p2 in db.Parent where p2.ParentID <= 3 select Tuple.Create(p2.ParentID, p2.Value1));
@@ -646,7 +645,6 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 
 		[Test]
 		public void ObjectUnion5([DataSources] string context)
@@ -1225,6 +1223,33 @@ namespace Tests.Linq
 			query.Invoking(q => q.ToList()).Should().NotThrow();
 		}
 
+		[Test]
+		public void SelectWithToString([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 =
+				from x in db.Parent
+				select new
+				{
+					StrValue = x.Value1.ToString()
+				};
+
+			var query2 =
+				from x in db.Parent
+				from c in x.Children
+				select new
+				{
+					StrValue = c.Parent1!.Value1!.ToString()
+				};
+
+			var query = query1.Concat(query2);
+
+			query = query.Where(x => x.StrValue != null);
+
+			query.Invoking(q => q.ToList()).Should().NotThrow();
+		}
+
 		[Test(Description = "Test that we generate plain UNION without sub-queries")]
 		public void Issue3359_MultipleSets([DataSources(false)] string context)
 		{
@@ -1289,13 +1314,13 @@ namespace Tests.Linq
 			var i4 = sql.IndexOf("INTERSECT ALL");
 			var i5 = sql.IndexOf("EXCEPT");
 			Assert.That(i1, Is.Not.EqualTo(-1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(i1, Is.LessThan(i2));
 				Assert.That(i2, Is.LessThan(i3));
 				Assert.That(i3, Is.LessThan(i4));
 				Assert.That(i4, Is.LessThan(i5));
-			});
+			}
 
 			// queries order correct
 			i1 = sql.IndexOf("q1");
@@ -1304,13 +1329,13 @@ namespace Tests.Linq
 			i4 = sql.IndexOf("q4");
 			i5 = sql.IndexOf("q5");
 			Assert.That(i1, Is.Not.EqualTo(-1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(i1, Is.LessThan(i2));
 				Assert.That(i2, Is.LessThan(i3));
 				Assert.That(i3, Is.LessThan(i4));
 				Assert.That(i4, Is.LessThan(i5));
-			});
+			}
 		}
 
 		public record class RecordClass (int Id, string FirstName, string LastName);
@@ -1338,7 +1363,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var query = 
+			var query =
 				db.Person.Select(p => new RecordClass(p.ID, p.FirstName, p.LastName))
 				.Concat(db.Person.Select(p => new RecordClass(p.ID, p.FirstName, p.LastName)));
 
@@ -1399,11 +1424,11 @@ namespace Tests.Linq
 			var res = tb.Concat(tb).ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].FullName, Is.EqualTo("one two"));
 				Assert.That(res[1].FullName, Is.EqualTo("one two"));
-			});
+			}
 		}
 
 		[Test(Description = "calculated column in set select")]
@@ -1425,20 +1450,20 @@ namespace Tests.Linq
 			var res = query1.Concat(query2).ToArray().OrderBy(r => r.Id).ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Text, Is.EqualTo("one two"));
 				Assert.That(res[1].Text, Is.EqualTo("text"));
-			});
+			}
 
 			res = query2.Concat(query1).ToArray().OrderBy(r => r.Id).ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Text, Is.EqualTo("one two"));
 				Assert.That(res[1].Text, Is.EqualTo("text"));
-			});
+			}
 		}
 
 		[Test(Description = "NullReferenceException : Object reference not set to an instance of an object.")]
@@ -1601,8 +1626,7 @@ namespace Tests.Linq
 			var data = query.ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0].Id, Is.EqualTo(1));
 				Assert.That(data[0].Byte, Is.Null);
@@ -1612,11 +1636,11 @@ namespace Tests.Linq
 				Assert.That(data[0].Enum, Is.Null);
 				Assert.That(data[0].EnumN, Is.Null);
 				Assert.That(data[0].Bool, Is.Null);
-			});
+			}
+
 			if (!context.IsAnyOf(TestProvName.AllSybase))
 				Assert.That(data[0].BoolN, Is.Null);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[1].Id, Is.EqualTo(2));
 				Assert.That(data[1].Byte, Is.EqualTo(1));
@@ -1625,9 +1649,9 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid2));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(true));
-				Assert.That(data[1].BoolN, Is.EqualTo(false));
-			});
+				Assert.That(data[1].Bool, Is.True);
+				Assert.That(data[1].BoolN, Is.False);
+			}
 		}
 
 		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "Update BoolN handling for sybase")]
@@ -1647,8 +1671,7 @@ namespace Tests.Linq
 			var data = query.ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0].Id, Is.EqualTo(2));
 				Assert.That(data[0].Byte, Is.EqualTo(1));
@@ -1657,8 +1680,8 @@ namespace Tests.Linq
 				Assert.That(data[0].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[0].Enum, Is.Null);
 				Assert.That(data[0].EnumN, Is.Null);
-				Assert.That(data[0].Bool, Is.EqualTo(true));
-				Assert.That(data[0].BoolN, Is.EqualTo(true));
+				Assert.That(data[0].Bool, Is.True);
+				Assert.That(data[0].BoolN, Is.True);
 
 				Assert.That(data[1].Id, Is.EqualTo(4));
 				Assert.That(data[1].Byte, Is.EqualTo(3));
@@ -1667,9 +1690,9 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(false));
-				Assert.That(data[1].BoolN, Is.EqualTo(true));
-			});
+				Assert.That(data[1].Bool, Is.False);
+				Assert.That(data[1].BoolN, Is.True);
+			}
 		}
 
 		[ActiveIssue(Configurations = [TestProvName.AllSybase, TestProvName.AllSQLite])]
@@ -1689,8 +1712,7 @@ namespace Tests.Linq
 			var data = query.ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0].Id, Is.EqualTo(2));
 				Assert.That(data[0].Byte, Is.EqualTo(5));
@@ -1699,8 +1721,8 @@ namespace Tests.Linq
 				Assert.That(data[0].GuidN, Is.EqualTo(new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE30")));
 				Assert.That(data[0].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[0].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[0].Bool, Is.EqualTo(true));
-				Assert.That(data[0].BoolN, Is.EqualTo(false));
+				Assert.That(data[0].Bool, Is.True);
+				Assert.That(data[0].BoolN, Is.False);
 
 				Assert.That(data[1].Id, Is.EqualTo(4));
 				Assert.That(data[1].Byte, Is.EqualTo(3));
@@ -1709,11 +1731,10 @@ namespace Tests.Linq
 				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
 				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
-				Assert.That(data[1].Bool, Is.EqualTo(false));
-				Assert.That(data[1].BoolN, Is.EqualTo(true));
-			});
+				Assert.That(data[1].Bool, Is.False);
+				Assert.That(data[1].BoolN, Is.True);
+			}
 		}
-
 
 		[Test(Description = "Test that we type non-field union column properly")]
 		public void Issue2451_ComplexColumn([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
@@ -2015,7 +2036,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var query = 
+				var query =
 					(from p in db.Parent where p.ParentID == 1 select p).Concat(
 					(from p in db.Parent where p.ParentID == 2 select p));
 
@@ -2050,7 +2071,7 @@ namespace Tests.Linq
 						Entity = new ConcatEntity.ConcatSubEntity
 						{
 							Id = p.ParentID
-						}, 
+						},
 					})
 					.Concat(
 					from p in db.Parent
@@ -2060,13 +2081,12 @@ namespace Tests.Linq
 						Entity = new ConcatEntity.ConcatSubEntity
 						{
 							Id = p.ParentID
-						}, 
+						},
 					});
 
 				AssertQuery(query);
 			}
 		}
-
 
 		[InheritanceMapping(Code = 1, Type = typeof(SetEntityA))]
 		[InheritanceMapping(Code = 2, Type = typeof(SetEntityB))]
@@ -2275,8 +2295,7 @@ namespace Tests.Linq
 				.ToArray()!;
 
 			Assert.That(result, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0]!.Id, Is.EqualTo(1));
 				Assert.That(result[0], Is.InstanceOf<ConcreteA>());
@@ -2285,7 +2304,7 @@ namespace Tests.Linq
 				Assert.That(result[1]!.Id, Is.EqualTo(2));
 				Assert.That(result[1], Is.InstanceOf<ConcreteB>());
 				Assert.That(((ConcreteB)result[1]!).BOnly, Is.EqualTo("b only"));
-			});
+			}
 		}
 
 		record Abstr
@@ -2405,7 +2424,7 @@ namespace Tests.Linq
 			var result = union.Select(b => new { Id = b.Id, b.Client.Name }).OrderBy(r => r.Id).ThenBy(r => r.Name).ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(4));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[0].Name, Is.EqualTo("Client 1"));
@@ -2415,7 +2434,7 @@ namespace Tests.Linq
 				Assert.That(result[2].Name, Is.EqualTo("Client 1"));
 				Assert.That(result[3].Id, Is.EqualTo(4));
 				Assert.That(result[3].Name, Is.EqualTo("Client 2"));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4620")]
@@ -2438,7 +2457,7 @@ namespace Tests.Linq
 			var result = union.Select(b => new { Id = b.Id, b.Client.Name }).OrderBy(r => r.Id).ThenBy(r => r.Name).ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(4));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[0].Name, Is.EqualTo("Client 1"));
@@ -2448,7 +2467,7 @@ namespace Tests.Linq
 				Assert.That(result[2].Name, Is.EqualTo("Client 1"));
 				Assert.That(result[3].Id, Is.EqualTo(4));
 				Assert.That(result[3].Name, Is.EqualTo("Client 2"));
-			});
+			}
 		}
 		#endregion
 	}

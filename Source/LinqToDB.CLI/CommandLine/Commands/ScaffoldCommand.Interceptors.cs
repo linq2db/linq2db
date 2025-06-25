@@ -5,13 +5,18 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+
+using LinqToDB.Common.Internal;
 using LinqToDB.Scaffold;
+using LinqToDB.Tools;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
-using Mono.TextTemplating;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.DependencyModel.Resolution;
+
+using Mono.TextTemplating;
 
 namespace LinqToDB.CommandLine
 {
@@ -83,7 +88,7 @@ namespace LinqToDB.CommandLine
 				var assemblyResolver  = new CompositeCompilationAssemblyResolver(resolver);
 				var loadContext       = AssemblyLoadContext.GetLoadContext(interceptorsAssembly);
 
-				loadContext!.Resolving += (AssemblyLoadContext context, AssemblyName name) =>
+				loadContext!.Resolving += (context, name) =>
 				{
 					bool NamesMatch(RuntimeLibrary runtime)
 					{
@@ -205,7 +210,7 @@ namespace LinqToDB.CommandLine
 
 			try
 			{
-				return (StatusCodes.SUCCESS, (ScaffoldInterceptors)Activator.CreateInstance(interceptorsType, args)!);
+				return (StatusCodes.SUCCESS, ActivatorExt.CreateInstance<ScaffoldInterceptors>(interceptorsType, args));
 			}
 			catch (Exception ex)
 			{
@@ -274,7 +279,7 @@ namespace LinqToDB.CommandLine
 				return (StatusCodes.EXPECTED_ERROR, null);
 			}
 
-			var instance = Activator.CreateInstance(type) as LinqToDBHost;
+			var instance = ActivatorExt.CreateInstance(type) as LinqToDBHost;
 			if (instance == null)
 			{
 				Console.Error.WriteLine("Cannot create template object. Make sure you didn't changed @template directive");
@@ -365,7 +370,6 @@ namespace LinqToDB.CommandLine
 				return StatusCodes.T4_ERROR;
 			}
 
-
 			// make some basic assertions
 			if (language != "C#")
 			{
@@ -386,8 +390,10 @@ namespace LinqToDB.CommandLine
 			// default linq2db imports
 			// current tool (for host class)
 			referencesList.Add(MetadataReference.CreateFromFile(typeof(LinqToDBHost).Assembly.Location));
-			// linq2db.Tools
+			// linq2db.Scaffold
 			referencesList.Add(MetadataReference.CreateFromFile(typeof(ScaffoldOptions).Assembly.Location));
+			// linq2db.Tools
+			referencesList.Add(MetadataReference.CreateFromFile(typeof(MappingSchemaExtensions).Assembly.Location));
 			// linq2db
 			referencesList.Add(MetadataReference.CreateFromFile(typeof(ProviderName).Assembly.Location));
 
@@ -403,6 +409,7 @@ namespace LinqToDB.CommandLine
 				if (!asmName.Contains(".Native.", StringComparison.Ordinal))
 					referencesList.Add(MetadataReference.CreateFromFile(Path.Combine(fwPath, asmName)));
 			}
+
 			var usings = new List<string>();
 			foreach (var directive in template.Directives)
 			{

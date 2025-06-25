@@ -3,14 +3,16 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -219,7 +221,6 @@ namespace Tests.Linq
 					from p in from t in Types select Convert.ToUInt32(t.MoneyValue) where p > 0 select p,
 					from p in from t in db.Types select Convert.ToUInt32(t.MoneyValue) where p > 0 select p);
 		}
-
 
 		[Test]
 		public void ToUInt16([DataSources] string context)
@@ -737,12 +738,11 @@ namespace Tests.Linq
 
 				var sqlActual   = qActual.ToSqlQuery().Sql;
 				var sqlExpected = qExpected.ToSqlQuery().Sql;
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sqlActual, Is.Not.Contains("Convert").Or.Contains("Cast"));
 					Assert.That(sqlExpected, Is.Not.Contains("Convert").Or.Contains("Cast"));
-				});
+				}
 
 				var actual   = qActual.  ToArray();
 				var expected = qExpected.ToArray();
@@ -799,12 +799,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -819,12 +818,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -839,12 +837,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -859,12 +856,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -879,12 +875,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -899,12 +894,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -919,12 +913,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -939,12 +932,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -959,12 +951,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -979,12 +970,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -999,12 +989,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -1019,12 +1008,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -1039,12 +1027,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -1059,12 +1046,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -1079,12 +1065,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -1099,12 +1084,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -1119,12 +1103,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -1139,12 +1122,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -1159,12 +1141,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -1179,12 +1160,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -1199,12 +1179,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -1219,12 +1198,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
-				});
+				}
 			}
 		}
 
@@ -1239,12 +1217,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
-				});
+				}
 			}
 		}
 
@@ -1259,12 +1236,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
-				});
+				}
 			}
 		}
 
@@ -1279,12 +1255,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
-				});
+				}
 			}
 		}
 
@@ -1299,12 +1274,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
-				});
+				}
 			}
 		}
 
@@ -1319,12 +1293,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
-				});
+				}
 			}
 		}
 
@@ -1339,12 +1312,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
-				});
+				}
 			}
 		}
 
@@ -1359,12 +1331,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
-				});
+				}
 			}
 		}
 
@@ -1379,12 +1350,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
-				});
+				}
 			}
 		}
 
@@ -1399,12 +1369,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
-				});
+				}
 			}
 		}
 
@@ -1419,12 +1388,11 @@ namespace Tests.Linq
 							select x;
 
 				var res = query.Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res.Id, Is.EqualTo(1));
 					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
-				});
+				}
 			}
 		}
 		#endregion
@@ -1713,16 +1681,13 @@ namespace Tests.Linq
 			var result = db.Execute<Issue4043Table>("select Id, Value from Issue4043");
 
 			Assert.That(result, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Id, Is.EqualTo(1));
 				Assert.That(result.Value, Is.Not.Null);
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(result.Value!.Field1, Is.EqualTo(1));
 				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
-			});
+			}
 		}
 
 		[Test]
@@ -1737,16 +1702,13 @@ namespace Tests.Linq
 			var result = db.Execute<Issue4043TableWithCtor>("select Id, Value from Issue4043");
 
 			Assert.That(result, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Id, Is.EqualTo(1));
 				Assert.That(result.Value, Is.Not.Null);
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(result.Value!.Field1, Is.EqualTo(1));
 				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
-			});
+			}
 		}
 
 		[Test]
@@ -1762,11 +1724,11 @@ namespace Tests.Linq
 
 			Assert.That(result, Is.Not.Null);
 			Assert.That(result.Value, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Value!.Field1, Is.EqualTo(1));
 				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
-			});
+			}
 		}
 
 		[Test]
@@ -1782,11 +1744,11 @@ namespace Tests.Linq
 
 			Assert.That(result, Is.Not.Null);
 			Assert.That(result.Value, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Value!.Field1, Is.EqualTo(1));
 				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
-			});
+			}
 		}
 
 		[Test]
@@ -1802,11 +1764,11 @@ namespace Tests.Linq
 			var result = db.Execute<ValueObject>("select Value from Issue4043");
 
 			Assert.That(result, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Field1, Is.EqualTo(1));
 				Assert.That(result.Field2, Is.EqualTo(-1));
-			});
+			}
 		}
 
 		[Test]
@@ -1825,16 +1787,13 @@ namespace Tests.Linq
 			var result = db.Execute<Issue4043Table>("select Id, Value from Issue4043");
 
 			Assert.That(result, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Id, Is.EqualTo(1));
 				Assert.That(result.Value, Is.Not.Null);
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(result.Value!.Field1, Is.EqualTo(1));
 				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
-			});
+			}
 		}
 
 		[ActiveIssue(Details = "Not supported case as we cannot connect .ctor parameter to column")]
@@ -1854,16 +1813,13 @@ namespace Tests.Linq
 			var result = db.Execute<Issue4043TableWithCtor>("select Id, Value from Issue4043");
 
 			Assert.That(result, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Id, Is.EqualTo(1));
 				Assert.That(result.Value, Is.Not.Null);
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(result.Value!.Field1, Is.EqualTo(1));
 				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
-			});
+			}
 		}
 
 		[Test]
@@ -1883,11 +1839,11 @@ namespace Tests.Linq
 
 			Assert.That(result, Is.Not.Null);
 			Assert.That(result.Value, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Value!.Field1, Is.EqualTo(1));
 				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
-			});
+			}
 		}
 
 		[ActiveIssue(Details = "Not supported case as we cannot connect .ctor parameter to column")]
@@ -1908,11 +1864,11 @@ namespace Tests.Linq
 
 			Assert.That(result, Is.Not.Null);
 			Assert.That(result.Value, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Value!.Field1, Is.EqualTo(1));
 				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
-			});
+			}
 		}
 		#endregion
 	}

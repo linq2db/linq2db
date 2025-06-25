@@ -6,7 +6,11 @@ namespace Tests
 {
 	public class ThrowsForProviderAttribute : ThrowsWhenAttribute
 	{
-		public ThrowsForProviderAttribute(Type exceptionType, params string[] providers) : base("context", exceptionType, providers)
+		public ThrowsForProviderAttribute(Type exceptionType, params string[] providers) : this(exceptionType.FullName!, providers)
+		{
+		}
+
+		public ThrowsForProviderAttribute(string exceptionType, params string[] providers) : base("context", exceptionType, providers)
 		{
 			var allProviders =
 				from p in providers
@@ -14,7 +18,7 @@ namespace Tests
 				from n in new[] { sp, sp + TestBase.LinqServiceSuffix }
 				select n;
 
-			Providers = new HashSet<string>(allProviders);
+			Providers = [.. allProviders];
 		}
 
 		public HashSet<string> Providers { get; set; }

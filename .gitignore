@@ -27,3 +27,4 @@ linq2db.sln.ide/
 packages/
 .vscode/
 .build/
+**/launchSettings.json

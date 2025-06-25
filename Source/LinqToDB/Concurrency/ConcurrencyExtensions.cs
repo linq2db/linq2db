@@ -4,14 +4,14 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Concurrency
 {
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Mapping;
-	using Reflection;
-
 	public static class ConcurrencyExtensions
 	{
 		private static IQueryable<T> FilterByColumns<T>(IQueryable<T> query, T obj, ColumnDescriptor[] columns)
@@ -33,7 +33,7 @@ namespace LinqToDB.Concurrency
 			}
 
 			if (predicate != null)
-				query = (IQueryable<T>)methodInfo.Invoke(null, new object[] { query, Expression.Lambda(predicate, param) })!;
+				query = methodInfo.InvokeExt<IQueryable<T>>(null, new object[] { query, Expression.Lambda(predicate, param) });
 
 			return query;
 		}
@@ -102,7 +102,7 @@ namespace LinqToDB.Concurrency
 				else
 					valueExpression = Expression.Lambda(cd.MemberAccessor.GetGetterExpression(instance), param);
 
-				updatable = (IUpdatable<T>)updateMethod.Invoke(null, new object[] { updatable, propExpression, valueExpression })!;
+				updatable = updateMethod.InvokeExt<IUpdatable<T>>(null, new object[] { updatable, propExpression, valueExpression });
 			}
 
 			return updatable;

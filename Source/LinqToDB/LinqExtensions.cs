@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -10,19 +11,19 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Async;
+using LinqToDB.DataProvider;
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlProvider;
+
+using static LinqToDB.MultiInsertExtensions;
+
 namespace LinqToDB
 {
-	using Async;
-	using Data;
-	using DataProvider;
-	using Expressions;
-	using Linq;
-	using Linq.Builder;
-	using Reflection;
-	using SqlProvider;
-
-	using static MultiInsertExtensions;
-
 	/// <summary>
 	/// Contains extension methods for LINQ queries.
 	/// </summary>
@@ -125,6 +126,25 @@ namespace LinqToDB
 			where T : notnull
 		{
 			var result = ((ITableMutable<T>)table).ChangeSchemaName(name);
+			return result;
+		}
+
+		/// <summary>
+		/// Used internally to pass entity descriptor into Expression Tree.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="tableDescriptor"></param>
+		/// <returns></returns>
+		// TODO: Consider to rewrite such functionality in V7
+		[LinqTunnel]
+		[Pure]
+		internal static ITable<T> UseTableDescriptor<T>(this ITable<T> table, [SqlQueryDependent] EntityDescriptor tableDescriptor)
+			where T : class
+		{
+			if (table           == null) throw new ArgumentNullException(nameof(table));
+			if (tableDescriptor == null) throw new ArgumentNullException(nameof(tableDescriptor));
+
+			var result = ((ITableMutable<T>)table).ChangeTableDescriptor(tableDescriptor);
 			return result;
 		}
 
@@ -661,7 +681,12 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var q = new ExpressionQueryImpl<T>(dataContext, selector);
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Select.MakeGenericMethod(typeof(T)),
+				SqlQueryRootExpression.Create(dataContext), Expression.Quote(selector));
+
+			var q = new ExpressionQueryImpl<T>(dataContext, expr);
 
 			foreach (var item in q)
 				return item;
@@ -687,7 +712,12 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var q = new ExpressionQueryImpl<T>(dataContext, selector);
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Select.MakeGenericMethod(typeof(T)),
+				SqlQueryRootExpression.Create(dataContext), Expression.Quote(selector));
+
+			var q = new ExpressionQueryImpl<T>(dataContext, expr);
 
 			var read = false;
 			var item = default(T)!; // this is fine, as we never return it
@@ -813,8 +843,8 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <returns>Number of updated records.</returns>
-		// TODO: remove in v7
-		[Obsolete($"Use overload with lambda argument for target parameter")]
+		// TODO: Remove in v7
+		[Obsolete("Use overload with lambda argument for target parameter. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static int Update<TSource, TTarget>(
 							this IQueryable<TSource> source,
 							ITable<TTarget> target,
@@ -845,8 +875,8 @@ namespace LinqToDB
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
-		// TODO: remove in v7
-		[Obsolete($"Use overload with lambda argument for target parameter")]
+		// TODO: Remove in v7
+		[Obsolete("Use overload with lambda argument for target parameter. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static Task<int> UpdateAsync<TSource, TTarget>(
 							this IQueryable<TSource> source,
 							ITable<TTarget> target,
@@ -1626,7 +1656,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				Methods.LinqToDB.Insert.T.AsValueInsertable.MakeGenericMethod(typeof(T)),
+				Methods.LinqToDB.Insert.FromTable.AsValueInsertable.MakeGenericMethod(typeof(T)),
 				currentSource.Expression);
 
 			var query = currentSource.Provider.CreateQuery<T>(expr);
@@ -1772,7 +1802,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				Methods.LinqToDB.Insert.VI.Insert.MakeGenericMethod(typeof(T)),
+				Methods.LinqToDB.Insert.FromValueInsertable.Insert.MakeGenericMethod(typeof(T)),
 				currentSource.Expression);
 
 			return currentSource.Execute<int>(expr);
@@ -1794,7 +1824,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				Methods.LinqToDB.Insert.VI.Insert.MakeGenericMethod(typeof(T)),
+				Methods.LinqToDB.Insert.FromValueInsertable.Insert.MakeGenericMethod(typeof(T)),
 				currentSource.Expression);
 
 			return currentSource.ExecuteAsync<int>(expr, token);
@@ -2371,7 +2401,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				Methods.LinqToDB.Insert.SI.Insert.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+				Methods.LinqToDB.Insert.FromSelectInsertable.Insert.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 				currentSource.Expression);
 
 			return currentSource.Execute<int>(expr);
@@ -2395,7 +2425,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				Methods.LinqToDB.Insert.SI.Insert.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+				Methods.LinqToDB.Insert.FromSelectInsertable.Insert.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 				currentSource.Expression);
 
 			return currentSource.ExecuteAsync<int>(expr, token);
@@ -2703,6 +2733,20 @@ namespace LinqToDB
 		}
 
 		#endregion
+
+		#region Internal
+
+		internal static TSource AssociationRecord<TSource>(this IQueryable<TSource> source)
+		{
+			throw new LinqToDBException("This method is not intended to be called directly.");
+		}
+
+		internal static TSource? AssociationOptionalRecord<TSource>(this IQueryable<TSource> source)
+		{
+			throw new LinqToDBException("This method is not intended to be called directly.");
+		}
+
+		#endregion Internal
 
 		#region Drop
 
@@ -3875,6 +3919,34 @@ namespace LinqToDB
 			return currentSource.Provider.CreateQuery<TSource>(expr);
 		}
 
+		/// <summary>
+		/// Disables filter for specific expression. For internal translator logic
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <returns>Query with disabled filters.</returns>
+		[LinqTunnel]
+		[Pure]
+		internal static IQueryable<TSource> DisableFilterInternal<TSource>(this IQueryable<TSource> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DisableFilterInternal, source), source.Expression);
+
+			return source.Provider.CreateQuery<TSource>(expr);
+		}
+
+		internal static IQueryable<TSource> ApplyModifierInternal<TSource>(this IQueryable<TSource> source, TranslationModifier modifier)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(ApplyModifierInternal, source, modifier), source.Expression, Expression.Constant(modifier));
+			return source.Provider.CreateQuery<TSource>(expr);
+		}
+
 		#endregion
 
 		#region Tests
@@ -4092,6 +4164,7 @@ namespace LinqToDB
 
 			return expressionQuery.GetSqlQueries(options)[0];
 		}
+
 		#endregion
 	}
 }

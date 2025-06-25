@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Linq;
 
 using NUnit.Framework;
 
@@ -30,8 +29,7 @@ namespace Tests.xUpdate
 				AssertRowCount(4, rows, context);
 
 				Assert.That(result, Has.Count.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Id, Is.EqualTo(1));
 					Assert.That(result[0].Field1, Is.Null);
@@ -60,7 +58,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.Null);
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -92,8 +90,7 @@ namespace Tests.xUpdate
 				AssertRowCount(4, rows, context);
 
 				Assert.That(result, Has.Count.EqualTo(4));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Id, Is.EqualTo(1));
 					Assert.That(result[0].Field1, Is.Null);
@@ -122,7 +119,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.Null);
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -153,8 +150,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].Id, Is.EqualTo(4));
 					Assert.That(result[3].Field1, Is.EqualTo(5));
@@ -162,7 +158,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.Null);
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -202,8 +198,7 @@ namespace Tests.xUpdate
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[2].Id, Is.EqualTo(6));
 					Assert.That(result[2].Field1, Is.Null);
@@ -218,7 +213,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.Null);
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -253,8 +248,7 @@ namespace Tests.xUpdate
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[2].Id, Is.EqualTo(3));
 					Assert.That(result[2].Field1, Is.Null);
@@ -269,7 +263,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.Null);
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -307,8 +301,7 @@ namespace Tests.xUpdate
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[2].Id, Is.EqualTo(3));
 					Assert.That(result[2].Field1, Is.Null);
@@ -323,7 +316,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.Null);
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -354,8 +347,7 @@ namespace Tests.xUpdate
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[2].Id, Is.EqualTo(3));
 					Assert.That(result[2].Field1, Is.Null);
@@ -370,7 +362,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.Null);
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -409,8 +401,7 @@ namespace Tests.xUpdate
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[2].Id, Is.EqualTo(3));
 					Assert.That(result[2].Field1, Is.Null);
@@ -418,7 +409,7 @@ namespace Tests.xUpdate
 					Assert.That(result[2].Field3, Is.Null);
 					Assert.That(result[2].Field4, Is.EqualTo(206));
 					Assert.That(result[2].Field5, Is.Null);
-				});
+				}
 
 				AssertRow(InitialTargetData[3], result[3], null, null);
 			}
@@ -484,8 +475,7 @@ namespace Tests.xUpdate
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[2].Id, Is.EqualTo(3));
 					Assert.That(result[2].Field1, Is.Null);
@@ -500,7 +490,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.EqualTo(214));
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -540,8 +530,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].Id, Is.EqualTo(4));
 					Assert.That(result[3].Field1, Is.EqualTo(5));
@@ -549,7 +538,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.EqualTo(214));
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -591,8 +580,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].Id, Is.EqualTo(4));
 					Assert.That(result[3].Field1, Is.EqualTo(5));
@@ -600,7 +588,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.Null);
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -648,8 +636,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].Id, Is.EqualTo(4));
 					Assert.That(result[3].Field1, Is.EqualTo(5));
@@ -657,7 +644,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.EqualTo(214));
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -706,8 +693,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				if (!context.IsAnyOf(ProviderName.Sybase))
 					AssertRow(InitialTargetData[2], result[2], null, 203);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].Id, Is.EqualTo(4));
 					Assert.That(result[3].Field1, Is.EqualTo(5));
@@ -715,7 +701,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.EqualTo(214));
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -763,8 +749,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].Id, Is.EqualTo(4));
 					Assert.That(result[3].Field1, Is.EqualTo(5));
@@ -772,7 +757,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.EqualTo(214));
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -821,8 +806,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[3].Id, Is.EqualTo(4));
 					Assert.That(result[3].Field1, Is.EqualTo(5));
@@ -830,7 +814,7 @@ namespace Tests.xUpdate
 					Assert.That(result[3].Field3, Is.Null);
 					Assert.That(result[3].Field4, Is.EqualTo(214));
 					Assert.That(result[3].Field5, Is.Null);
-				});
+				}
 			}
 		}
 

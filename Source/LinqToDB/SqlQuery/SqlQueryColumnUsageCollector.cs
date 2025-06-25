@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.SqlQuery.Visitors;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-	using Visitors;
-
 	public class SqlQueryColumnUsageCollector : SqlQueryVisitor
 	{
 		SelectQuery?                _parentSelectQuery;
@@ -268,5 +268,19 @@ namespace LinqToDB.SqlQuery
 
 			return element;
 		}
+
+		protected override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+		{
+			if (element.SourceQuery != null)
+			{
+				foreach(var column in element.SourceQuery.Select.Columns)
+					RegisterColumn(column);
+
+				VisitSqlQuery(element.SourceQuery);
+			}
+
+			return element;
+		}
+
 	}
 }

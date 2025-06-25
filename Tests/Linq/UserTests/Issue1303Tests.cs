@@ -1,8 +1,10 @@
-﻿using LinqToDB;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System.Data.Linq;
+﻿using System.Data.Linq;
 using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
@@ -40,21 +42,19 @@ namespace Tests.UserTests
 				db.InlineParameters = inlineParameters;
 
 				var byId     = tbl.Where(_ => _.ID == 1).Single();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(byId.ID, Is.EqualTo(1));
 					Assert.That(new byte[] { 1, 2, 3 }.SequenceEqual(byId.Array!), Is.True);
 					Assert.That(new byte[] { 4, 5 }.SequenceEqual(byId.Binary!.ToArray()), Is.True);
-				});
+				}
 
 				// Informix: doesn't support blobs in conditions
 				if (!context.IsAnyOf(TestProvName.AllInformix))
 				{
 					var byArray  = tbl.Where(_ => _.Array  == new byte[] { 1, 2, 3 })         .Single();
 					var byBinary = tbl.Where(_ => _.Binary == new Binary(new byte[] { 4, 5 })).Single();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(byArray.ID, Is.EqualTo(1));
 						Assert.That(new byte[] { 1, 2, 3 }.SequenceEqual(byArray.Array!), Is.True);
@@ -63,7 +63,7 @@ namespace Tests.UserTests
 						Assert.That(byBinary.ID, Is.EqualTo(1));
 						Assert.That(new byte[] { 1, 2, 3 }.SequenceEqual(byBinary.Array!), Is.True);
 						Assert.That(new byte[] { 4, 5 }.SequenceEqual(byBinary.Binary!.ToArray()), Is.True);
-					});
+					}
 				}
 			}
 		}

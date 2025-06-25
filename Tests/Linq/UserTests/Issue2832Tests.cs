@@ -60,7 +60,7 @@ namespace Tests.UserTests
 			[Column] public int? WellId { get; set; }
 		}
 
-		[LinqToDB.Sql.FunctionAttribute(Name = "UTILS.GREATESTNOTNULL3", ServerSideOnly = true)]
+		[Sql.FunctionAttribute(Name = "UTILS.GREATESTNOTNULL3", ServerSideOnly = true, IsNullable = Sql.IsNullableType.Nullable)]
 		private static decimal? UtilsGreatestnotnull3(decimal? value1, decimal? value2, decimal? value3)
 		{
 			throw new NotImplementedException();
