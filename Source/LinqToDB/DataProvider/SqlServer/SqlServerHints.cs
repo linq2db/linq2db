@@ -124,11 +124,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
-		public static class TemporalTable
+		internal static class TemporalTable
 		{
 			public const string All         = "ALL";
 			public const string AsOf        = "AS OF";
@@ -912,14 +908,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
-		public static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
+		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
 			this                ISqlServerSpecificTable<TSource> table,
 			[SqlQueryDependent] string                           expression,
 			                    DateTime                         dateTime)
@@ -935,14 +927,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
-		public static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
+		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
 			this                ISqlServerSpecificTable<TSource> table,
 			[SqlQueryDependent] string                           expression,
 			                    DateTime                         dateTime,
