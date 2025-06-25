@@ -54,7 +54,7 @@ namespace LinqToDB.DataProvider.SapHana
 				sqlValues.ToArray());
 
 			table.SqlTableType   = SqlTableType.Expression;
-			table.Expression     = "{0}('PLACEHOLDER' = {2}) {1}";
+			table.Expression     = "{0}('PLACEHOLDER' = ({2})) {1}";
 			table.TableArguments = arg.ToArray();
 		}
 	}
