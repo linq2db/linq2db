@@ -80,12 +80,11 @@ namespace Tests.Linq
 
 				var foundKey = null != table.GetSelectQuery().Find(columnName,
 					               static (columnName, e) => e is SqlField f && f.PhysicalName == columnName);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(found, Is.True);
 					Assert.That(foundKey, Is.True);
-				});
+				}
 
 				var result = table.ToArray();
 			}
@@ -113,12 +112,11 @@ namespace Tests.Linq
 
 				var foundKey = null != table.GetSelectQuery().Find(columnName,
 								static (columnName, e) => e is SqlField f && f.PhysicalName == columnName);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(found, Is.True);
 					Assert.That(foundKey, Is.True);
-				});
+				}
 
 				var result = await table.ToArrayAsync();
 			}

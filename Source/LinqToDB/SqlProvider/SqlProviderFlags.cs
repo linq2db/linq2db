@@ -10,6 +10,10 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.SqlProvider
 {
+	// why we need data contract attributes on each property with explicit order:
+	// https://github.com/protobuf-net/protobuf-net.Grpc/issues/176
+	// TLDR: we cannot rely on field ordering being the same on both sides of the channel
+	// as reflection API doesn't provide such promises
 	[DataContract]
 	public sealed class SqlProviderFlags
 	{

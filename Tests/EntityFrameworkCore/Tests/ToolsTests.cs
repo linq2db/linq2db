@@ -104,6 +104,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var connectionString = GetConnectionString(provider);
 
 			var optionsBuilder = new DbContextOptionsBuilder<NorthwindContextBase>();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
+
 			optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
 
 			var options = base.ProviderSetup(provider, connectionString, optionsBuilder).Options;
@@ -240,11 +242,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				MemberHelper.MemberOf<Customer>(c => c.CustomerId));
 
 			Assert.That(customerPk, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(customerPk!.IsPrimaryKey, Is.True);
-				Assert.That(customerPk.PrimaryKeyOrder, Is.EqualTo(0));
-			});
+				Assert.That(customerPk.PrimaryKeyOrder, Is.Zero);
+			}
 		}
 
 		[Test]
@@ -258,11 +260,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				MemberHelper.MemberOf<Customer>(c => c.Orders));
 
 			Assert.That(associationOrder, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(associationOrder!.ThisKey, Is.EqualTo("CustomerId"));
 				Assert.That(associationOrder.OtherKey, Is.EqualTo("CustomerId"));
-			});
+			}
 		}
 
 #if NET8_0_OR_GREATER
@@ -413,9 +415,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		public void TestInMemory()
 		{
 			var optionsBuilder = new DbContextOptionsBuilder<SQLServerNorthwindContext>();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
 
 			optionsBuilder.UseInMemoryDatabase("sample");
-			optionsBuilder.UseLoggerFactory(LoggerFactory);
 			optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
 
 			using var ctx = new SQLServerNorthwindContext(optionsBuilder.Options);

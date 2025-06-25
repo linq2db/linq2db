@@ -61,7 +61,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 					= new LambdaExpression[]
 				{
 					// [0]: StartRow
-					(Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.StartRow()),
+					(Expression<Action<NpgsqlBinaryImporter>>)(this_ => this_.StartRow()),
 				};
 
 				public NpgsqlBinaryImporter(object instance, Delegate[] wrappers) : base(instance, wrappers)

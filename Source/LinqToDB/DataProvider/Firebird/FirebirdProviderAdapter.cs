@@ -76,7 +76,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 			IsDateOnlySupported = assembly.GetName().Version >= MinDateOnlyVersion;
 
-			_connectionFactory = typeMapper.BuildTypedFactory<string, FbConnection, DbConnection>((string connectionString) => new FbConnection(connectionString));
+			_connectionFactory = typeMapper.BuildTypedFactory<string, FbConnection, DbConnection>(connectionString => new FbConnection(connectionString));
 		}
 
 		static readonly Lazy<FirebirdProviderAdapter> _lazy    = new (() => new ());

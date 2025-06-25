@@ -208,7 +208,7 @@ namespace Tests.xUpdate
 				{
 					db.DropTable<TestEnumTable>();
 				}
-				catch (Exception)
+				catch
 				{
 				}
 
@@ -289,12 +289,11 @@ namespace Tests.xUpdate
 				});
 
 				var qq = conn.GetTable<Aa>().ToList().First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(qq.bb, Is.EqualTo(99));
 					Assert.That(qq.cc, Is.EqualTo("hallo"));
-				});
+				}
 
 				conn.DropTable<Qq>();
 			}
@@ -352,13 +351,12 @@ namespace Tests.xUpdate
 			using var tb = db.CreateLocalTable(Issue3223Table.Data);
 
 			var res = db.GetTable<Issue3223Raw>().OrderBy(r => r.Id).ToArray();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Value, Is.EqualTo("Value1"));
 				Assert.That(res[1].Value, Is.EqualTo("Value2"));
 				Assert.That(res[2].Value, Is.Null);
-			});
+			}
 		}
 
 		[Table("Issue3223Table")]
@@ -417,12 +415,11 @@ namespace Tests.xUpdate
 
 			var res1 = t1.Single();
 			var res2 = t2.Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res1.Id, Is.EqualTo(1));
 				Assert.That(res2.Id, Is.EqualTo(1));
-			});
+			}
 		}
 
 	}

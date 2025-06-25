@@ -51,6 +51,8 @@ namespace LinqToDB.Linq.Builder
 
 		readonly          Query                             _query;
 		internal readonly IMemberTranslator                 _memberTranslator;
+		internal readonly IUnaryTranslator?                 _unaryTranslator;
+		internal readonly IBinaryTranslator?                _binaryTranslator;
 		readonly          ExpressionTreeOptimizationContext _optimizationContext;
 		readonly          ParametersContext                 _parametersContext;
 
@@ -84,6 +86,8 @@ namespace LinqToDB.Linq.Builder
 			DataOptions        = dataContext.Options;
 
 			_memberTranslator = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberTranslator>();
+			_unaryTranslator = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetService<IUnaryTranslator>();
+			_binaryTranslator = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetService<IBinaryTranslator>();
 
 			_buildVisitor = new ExpressionBuildVisitor(this);
 			
@@ -92,7 +96,21 @@ namespace LinqToDB.Linq.Builder
 			if (DataOptions.DataContextOptions.MemberTranslators != null)
 			{
 				// register overriden translators first
-				_memberTranslator = new CombinedMemberTranslator(DataOptions.DataContextOptions.MemberTranslators.Concat(new[] { _memberTranslator }));
+				_memberTranslator = new CombinedMemberTranslator(DataOptions.DataContextOptions.MemberTranslators.Concat([_memberTranslator]));
+			}
+
+			if (DataOptions.DataContextOptions.UnaryTranslators != null)
+			{
+				_unaryTranslator = _unaryTranslator != null
+					? new CombinedUnaryTranslator(DataOptions.DataContextOptions.UnaryTranslators.Concat([_unaryTranslator]))
+					: new CombinedUnaryTranslator(DataOptions.DataContextOptions.UnaryTranslators);
+			}
+
+			if (DataOptions.DataContextOptions.BinaryTranslators != null)
+			{
+				_binaryTranslator = _binaryTranslator != null
+					? new CombinedBinaryTranslator(DataOptions.DataContextOptions.BinaryTranslators.Concat([_binaryTranslator]))
+					: new CombinedBinaryTranslator(DataOptions.DataContextOptions.BinaryTranslators);
 			}
 
 			_optimizationContext = optimizationContext;
