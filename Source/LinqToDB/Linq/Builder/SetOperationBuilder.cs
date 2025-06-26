@@ -573,7 +573,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var predicate = GetLeftSetPredicate();
 						if (predicate == null)
-							throw new InvalidOperationException("No way to distinguish difference between tho different sets.");
+							throw new InvalidOperationException("No way to distinguish difference between two different sets.");
 						eagerMapping.Add(e1, e1.AppendPredicate(predicate));
 					}
 				}
@@ -587,7 +587,7 @@ namespace LinqToDB.Linq.Builder
 
 					var predicate = GetRightSetPredicate();
 					if (predicate == null)
-						throw new InvalidOperationException("No way to distinguish difference between tho different sets.");
+						throw new InvalidOperationException("No way to distinguish difference between two different sets.");
 
 					eagerMapping.Add(e2, e2.AppendPredicate(predicate));
 				}
