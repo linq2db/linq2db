@@ -111,10 +111,10 @@ namespace LinqToDB.SqlQuery
 
 		public void Deconstruct(out DbDataType type, out ISqlExpression expr1, out string operation, out ISqlExpression expr2)
 		{
-			type = Type;
-			expr1 = Expr1;
+			type      = Type;
+			expr1     = Expr1;
 			operation = Operation;
-			expr2 = Expr2;
+			expr2     = Expr2;
 		}
 
 		public void Deconstruct(out ISqlExpression expr1, out string operation, out ISqlExpression expr2)

@@ -1898,15 +1898,13 @@ namespace LinqToDB.SqlQuery
 				}
 
 				if (!subQuery.Select.Columns.All(c =>
-					{
-						var columnExpression = QueryHelper.UnwrapCastAndNullability(c.Expression);
-
-						if (columnExpression is SqlColumn or SqlField or SqlTable or SqlBinaryExpression)
-							return true;
-						if (columnExpression is SqlParameterizedExpressionBase e)
-							return !e.IsAggregate;
-						return false;
-					}))
+						QueryHelper.UnwrapCastAndNullability(c.Expression) switch
+						{
+							SqlColumn or SqlField or SqlTable or SqlBinaryExpression => true,
+							SqlParameterizedExpressionBase e => !e.IsAggregate,
+							_ => false,
+						})
+					)
 				{
 					return false;
 				}

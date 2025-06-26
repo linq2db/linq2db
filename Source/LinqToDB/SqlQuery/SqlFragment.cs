@@ -96,11 +96,15 @@ namespace LinqToDB.SqlQuery
 				|| Precedence        != expr.Precedence
 				|| Expr              != expr.Expr
 				|| Parameters.Length != expr.Parameters.Length)
+			{
 				return false;
+			}
 
 			for (var i = 0; i < Parameters.Length; i++)
+			{
 				if (!Parameters[i].Equals(expr.Parameters[i], comparer))
 					return false;
+			}	
 
 			return comparer(this, expr);
 		}
