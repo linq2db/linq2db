@@ -64,6 +64,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						subStrPredicate = new SqlPredicate.Expr(
 							new SqlFunction(typeof(bool), "startsWith", dataExpr, searchExpr));
 					}
+
 					break;
 
 				case SqlPredicate.SearchString.SearchKind.EndsWith:
@@ -79,6 +80,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						subStrPredicate = new SqlPredicate.Expr(
 							new SqlFunction(typeof(bool), "endsWith", dataExpr, searchExpr));
 					}
+
 					break;
 
 				case SqlPredicate.SearchString.SearchKind.Contains:
