@@ -893,7 +893,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
-		public static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
+		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
 			this                ISqlServerSpecificTable<TSource> table,
 			[SqlQueryDependent] string                           expression)
 			where TSource : notnull
