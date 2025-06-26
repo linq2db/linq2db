@@ -236,16 +236,20 @@ namespace LinqToDB.SqlQuery
 		//
 		public sealed class ExprExpr : Expr
 		{
-			public ExprExpr(ISqlExpression exp1, Operator op, ISqlExpression exp2, bool? unknownAsValue)
+			public ExprExpr(ISqlExpression exp1, Operator op, ISqlExpression exp2, bool? unknownAsValue, bool notNullableExpr1 = false, bool notNullableExpr2 = false)
 				: base(exp1, SqlQuery.Precedence.Comparison)
 			{
-				Operator       = op;
-				Expr2          = exp2;
-				UnknownAsValue = unknownAsValue;
+				Operator         = op;
+				Expr2            = exp2;
+				UnknownAsValue   = unknownAsValue;
+				NotNullableExpr1 = notNullableExpr1;
+				NotNullableExpr2 = notNullableExpr2;
 			}
 
-			public new Operator       Operator { get; }
-			public     ISqlExpression Expr2    { get; internal set; }
+			public new Operator       Operator         { get; }
+			public     ISqlExpression Expr2            { get; internal set; }
+			public     bool           NotNullableExpr1 { get; }
+			public     bool           NotNullableExpr2 { get; }
 
 			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased)
 			{
@@ -255,18 +259,15 @@ namespace LinqToDB.SqlQuery
 				}
 
 				if (Operator == Operator.Equal)
-					return Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
-
-				if (Operator == Operator.Equal)
-					return Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
+					return !NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || !NotNullableExpr2 && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
 
 				// comparison
-				return UnknownAsValue != true && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
+				return UnknownAsValue != true && !NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || !NotNullableExpr2 && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
 			}
 
 			/// <summary>
 			/// Specify value, used as UNKNOWN value replacement on reduced predicate with UNKNOWN value erased.
-			/// Replacement only applyed when this property is not null.
+			/// Replacement only applied when this property is not null.
 			/// </summary>
 			public bool? UnknownAsValue { get; }
 
@@ -278,16 +279,20 @@ namespace LinqToDB.SqlQuery
 				hash.Add(Operator);
 				hash.Add(Expr2.GetElementHashCode());
 				hash.Add(UnknownAsValue);
+				hash.Add(NotNullableExpr1);
+				hash.Add(NotNullableExpr2);
 				return hash.ToHashCode();
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
 				return other is ExprExpr expr
-					&& UnknownAsValue == expr.UnknownAsValue
-					&& Operator == expr.Operator
-					&& Expr2.Equals(expr.Expr2, comparer)
-					&& base.Equals(other, comparer);
+				       && UnknownAsValue == expr.UnknownAsValue
+				       && Operator       == expr.Operator
+				       && Expr2.Equals(expr.Expr2, comparer)
+				       && base.Equals(other, comparer)
+				       && NotNullableExpr1 == expr.NotNullableExpr1
+				       && NotNullableExpr2 == expr.NotNullableExpr2;
 			}
 
 			public override QueryElementType ElementType => QueryElementType.ExprExprPredicate;
@@ -364,7 +369,7 @@ namespace LinqToDB.SqlQuery
 
 				ISqlPredicate MakeWithoutNulls()
 				{
-					return new ExprExpr(Expr1, Operator, Expr2, null);
+					return new ExprExpr(Expr1, Operator, Expr2, null, NotNullableExpr1, NotNullableExpr2);
 				}
 
 				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeClr
@@ -414,8 +419,8 @@ namespace LinqToDB.SqlQuery
 				if (UnknownAsValue == null || nullability.IsEmpty)
 					return this;
 
-				var expr1CanBeUnknown = Expr1.CanBeNullableOrUnknown(nullability, false);
-				var expr2CanBeUnknown = Expr2.CanBeNullableOrUnknown(nullability, false);
+				var expr1CanBeUnknown = !NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, false);
+				var expr2CanBeUnknown = !NotNullableExpr2 && Expr2.CanBeNullableOrUnknown(nullability, false);
 				if (!expr1CanBeUnknown && !expr2CanBeUnknown)
 					return MakeWithoutNulls();
 
