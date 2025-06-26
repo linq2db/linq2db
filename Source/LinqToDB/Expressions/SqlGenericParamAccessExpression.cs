@@ -69,12 +69,10 @@ namespace LinqToDB.Expressions
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var hashCode = ExpressionEqualityComparer.Instance.GetHashCode(Constructor);
-				hashCode = (hashCode * 397) ^ ParameterInfo.GetHashCode();
-				return hashCode;
-			}
+			return HashCode.Combine(
+				ExpressionEqualityComparer.Instance.GetHashCode(Constructor),
+				ParameterInfo.GetHashCode()
+			);
 		}
 
 		public static bool operator ==(SqlGenericParamAccessExpression? left, SqlGenericParamAccessExpression? right)

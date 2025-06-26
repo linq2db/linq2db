@@ -40,7 +40,6 @@ namespace LinqToDB.SqlQuery
 				if (_valueType == value)
 					return;
 				_valueType = value;
-				_hashCode  = null;
 			}
 		}
 
@@ -91,23 +90,12 @@ namespace LinqToDB.SqlQuery
 				&& comparer(this, other);
 		}
 
-		int? _hashCode;
-
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
-			if (_hashCode.HasValue)
-				return _hashCode.Value;
-
-			var hashCode = 17;
-
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ ValueType.GetHashCode());
-
-			if (Value != null)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ Value.GetHashCode());
-
-			_hashCode = hashCode;
-			return hashCode;
+			return HashCode.Combine(
+				ValueType,
+				Value
+			);
 		}
 
 		#endregion

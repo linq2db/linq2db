@@ -139,18 +139,15 @@ namespace LinqToDB.Common
 			if (_hashCode != null)
 				return _hashCode.Value;
 
-			unchecked
-			{
-				var hashCode = (SystemType != null ? SystemType.GetHashCode() : 0);
-				hashCode     = (hashCode * 397) ^ (int) DataType;
-				hashCode     = (hashCode * 397) ^ (DbType    != null ? DbType.GetHashCode()          : 0);
-				hashCode     = (hashCode * 397) ^ (Length    != null ? Length.Value.GetHashCode()    : 0);
-				hashCode     = (hashCode * 397) ^ (Precision != null ? Precision.Value.GetHashCode() : 0);
-				hashCode     = (hashCode * 397) ^ (Scale     != null ? Scale.Value.GetHashCode()     : 0);
-				_hashCode    = hashCode;
-			}
-
-			return _hashCode.Value;
+			var hashCode = new HashCode();
+			hashCode.Add(SystemType.GetHashCode());
+			hashCode.Add(DataType);
+			hashCode.Add(DbType);
+			hashCode.Add(Length);
+			hashCode.Add(Precision);
+			hashCode.Add(Scale);
+			
+			return _hashCode ??= hashCode.ToHashCode();
 		}
 
 #endregion

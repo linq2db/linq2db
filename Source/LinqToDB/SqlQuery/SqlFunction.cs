@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using LinqToDB.Common;
@@ -135,23 +136,22 @@ namespace LinqToDB.SqlQuery
 
 		int? _hashCode;
 
+		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
-			// ReSharper disable NonReadonlyMemberInGetHashCode
 			if (_hashCode.HasValue)
 				return _hashCode.Value;
 
-			var hashCode = SystemType.GetHashCode();
+			var hashCode = new HashCode();
+			hashCode.Add(SystemType);
+			hashCode.Add(Name);
+			hashCode.Add(CanBeNull);
+			hashCode.Add(DoNotOptimize);
 
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCode());
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ CanBeNull.GetHashCode());
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ DoNotOptimize.GetHashCode());
-			for (var i = 0; i < Parameters.Length; i++)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
+			foreach (var p in Parameters)
+				hashCode.Add(p);
 
-			_hashCode = hashCode;
-			return hashCode;
-			// ReSharper restore NonReadonlyMemberInGetHashCode
+			return _hashCode ??= hashCode.ToHashCode();
 		}
 
 		public override bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)

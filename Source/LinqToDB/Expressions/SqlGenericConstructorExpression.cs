@@ -334,16 +334,12 @@ namespace LinqToDB.Expressions
 
 		static int GetHashCode<T>(ICollection<T> collection, IEqualityComparer<T> comparer)
 		{
-			unchecked
-			{
-				var hashCode = 0;
-				foreach (var item in collection)
-				{
-					hashCode = (hashCode * 397) ^ (item == null ? 0 : comparer.GetHashCode(item));
-				}
+			var hashCode = new HashCode();
 
-				return hashCode;
-			}
+			foreach (var item in collection)
+				hashCode.Add(item, comparer);
+
+			return hashCode.ToHashCode();
 		}
 
 		static bool EqualsLists<T>(IList<T> list1, IList<T> list2, IEqualityComparer<T> comparer)
@@ -408,16 +404,14 @@ namespace LinqToDB.Expressions
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var hashCode = (NewExpression != null ? NewExpression.GetHashCode() : 0);
-				hashCode = (hashCode * 397) ^ (Constructor       != null ? Constructor.GetHashCode() : 0);
-				hashCode = (hashCode * 397) ^ (ConstructorMethod != null ? ConstructorMethod.GetHashCode() : 0);
-				hashCode = (hashCode * 397) ^ (int)ConstructType;
-				hashCode = (hashCode * 397) ^ ObjectType.GetHashCode();
-				hashCode = (hashCode * 397) ^ GetHashCode(Parameters, Parameter.ParameterComparer);
-				return hashCode;
-			}
+			var hashCode = new HashCode();
+			hashCode.Add(NewExpression);
+			hashCode.Add(Constructor);
+			hashCode.Add(ConstructorMethod);
+			hashCode.Add(ConstructType);
+			hashCode.Add(ObjectType);
+			hashCode.Add(GetHashCode(Parameters, Parameter.ParameterComparer));
+			return hashCode.ToHashCode();
 		}
 
 		public static bool operator ==(SqlGenericConstructorExpression? left, SqlGenericConstructorExpression? right)
@@ -510,14 +504,12 @@ namespace LinqToDB.Expressions
 
 				public int GetHashCode(Assignment obj)
 				{
-					unchecked
-					{
-						var hashCode = obj.MemberInfo.GetHashCode();
-						hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
-						hashCode = (hashCode * 397) ^ obj.IsMandatory.GetHashCode();
-						hashCode = (hashCode * 397) ^ obj.IsLoaded.GetHashCode();
-						return hashCode;
-					}
+					return HashCode.Combine(
+						obj.MemberInfo,
+						ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression),
+						obj.IsMandatory,
+						obj.IsLoaded
+					);
 				}
 			}
 
@@ -584,20 +576,16 @@ namespace LinqToDB.Expressions
 
 				public int GetHashCode(Parameter obj)
 				{
-					unchecked
-					{
-						var hashCode = (obj.MemberInfo != null ? obj.MemberInfo.GetHashCode() : 0);
-						hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
-						hashCode = (hashCode * 397) ^ obj.ParameterInfo.GetHashCode();
-						return hashCode;
-					}
+					return HashCode.Combine(
+						obj.MemberInfo,
+						ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression),
+						obj.ParameterInfo
+					);
 				}
 			}
 
 			public static IEqualityComparer<Parameter> ParameterComparer { get; } = new MemberInfoExpressionParamTypeEqualityComparer();
 		}
-
 		#endregion
-
 	}
 }

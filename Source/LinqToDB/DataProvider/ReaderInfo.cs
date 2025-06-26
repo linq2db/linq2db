@@ -64,15 +64,13 @@ namespace LinqToDB.DataProvider
 
 		void CalcHashCode()
 		{
-			unchecked
-			{
-				_hashCode = 639348056;
-				_hashCode = _hashCode * -1521134295 + (ToType            == null ? 0 : ToType.           GetHashCode  ());
-				_hashCode = _hashCode * -1521134295 + (FieldType         == null ? 0 : FieldType.        GetHashCode  ());
-				_hashCode = _hashCode * -1521134295 + (ProviderFieldType == null ? 0 : ProviderFieldType.GetHashCode  ());
-				_hashCode = _hashCode * -1521134295 + (DataTypeName      == null ? 0 : DataTypeName     .GetHashCode());
-				_hashCode = _hashCode * -1521134295 + (DataReaderType    == null ? 0 : DataReaderType   .GetHashCode  ());
-			}
+			var hashCode = new HashCode();
+			hashCode.Add(ToType);
+			hashCode.Add(FieldType);
+			hashCode.Add(ProviderFieldType);
+			hashCode.Add(DataTypeName);
+			hashCode.Add(DataReaderType);
+			_hashCode = hashCode.ToHashCode();
 		}
 
 		public override bool Equals(object? obj)

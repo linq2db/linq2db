@@ -139,16 +139,14 @@ namespace Tests.UserTests
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					var hashCode = Id.GetHashCode();
-					hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
-					hashCode = (hashCode * 397) ^ (ShortName != null ? ShortName.GetHashCode() : 0);
-					hashCode = (hashCode * 397) ^ Height;
-					hashCode = (hashCode * 397) ^ Depth;
-					hashCode = (hashCode * 397) ^ Width;
-					return hashCode;
-				}
+				var hashCode = new HashCode();
+				hashCode.Add(Id);
+				hashCode.Add(Name);
+				hashCode.Add(ShortName);
+				hashCode.Add(Height);
+				hashCode.Add(Depth);
+				hashCode.Add(Width);
+				return hashCode.ToHashCode();
 			}
 		}
 
