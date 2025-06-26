@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -135,7 +135,7 @@ namespace Tests.UserTests
 				var selectQuery = query.GetSelectQuery();
 
 				selectQuery.Select.Columns.Any(c =>
-					(c.Expression is SqlField field) && field.Name == "TelegramBotName").Should().BeTrue();
+					(c.Expression is SqlField field) && field.Name == "TelegramBotName").ShouldBeTrue();
 			}
 		}
 	}

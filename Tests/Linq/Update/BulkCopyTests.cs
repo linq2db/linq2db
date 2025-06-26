@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -1059,25 +1059,25 @@ namespace Tests.xUpdate
 
 				var items = table.OrderBy(_ => _.Id).ToArray();
 
-				items[0].Id.Should().Be(1);
-				items[0].Discriminator.Should().Be(1);
-				((Inherited1)items[0]).Value1.Should().Be("Str1");
+				items[0].Id.ShouldBe(1);
+				items[0].Discriminator.ShouldBe(1);
+				((Inherited1)items[0]).Value1.ShouldBe("Str1");
 
-				items[1].Id.Should().Be(2);
-				items[1].Discriminator.Should().Be(2);
-				((Inherited2)items[1]).Value2.Should().Be("Str2");
+				items[1].Id.ShouldBe(2);
+				items[1].Discriminator.ShouldBe(2);
+				((Inherited2)items[1]).Value2.ShouldBe("Str2");
 
-				items[2].Id.Should().Be(3);
-				items[2].Discriminator.Should().Be(3);
-				((Inherited3)items[2]).Value3.Should().Be("Str3");
+				items[2].Id.ShouldBe(3);
+				items[2].Discriminator.ShouldBe(3);
+				((Inherited3)items[2]).Value3.ShouldBe("Str3");
 
-				table.Single(x => x is Inherited1).Should().BeOfType<Inherited1>();
-				table.Single(x => x is Inherited2).Should().BeOfType<Inherited2>();
-				table.Single(x => x is Inherited3).Should().BeOfType<Inherited3>();
+				table.Single(x => x is Inherited1).ShouldBeOfType<Inherited1>();
+				table.Single(x => x is Inherited2).ShouldBeOfType<Inherited2>();
+				table.Single(x => x is Inherited3).ShouldBeOfType<Inherited3>();
 
-				table.Single(x => ((Inherited1)x).Value1 == "Str1").Should().BeOfType<Inherited1>();
-				table.Single(x => ((Inherited2)x).Value2 == "Str2").Should().BeOfType<Inherited2>();
-				table.Single(x => ((Inherited3)x).Value3 == "Str3").Should().BeOfType<Inherited3>();
+				table.Single(x => ((Inherited1)x).Value1 == "Str1").ShouldBeOfType<Inherited1>();
+				table.Single(x => ((Inherited2)x).Value2 == "Str2").ShouldBeOfType<Inherited2>();
+				table.Single(x => ((Inherited3)x).Value3 == "Str3").ShouldBeOfType<Inherited3>();
 			}
 		}
 
@@ -1132,25 +1132,25 @@ namespace Tests.xUpdate
 
 				var items = table.OrderBy(_ => _.Id).ToArray();
 
-				items[0].Id.Should().Be(1);
-				items[0].Discriminator.Should().Be(1);
-				((InheritedDefault1)items[0]).Value1.Should().Be("Str1");
+				items[0].Id.ShouldBe(1);
+				items[0].Discriminator.ShouldBe(1);
+				((InheritedDefault1)items[0]).Value1.ShouldBe("Str1");
 
-				items[1].Id.Should().Be(2);
-				items[1].Discriminator.Should().Be(2);
-				((InheritedDefault2)items[1]).Value2.Should().Be("Str2");
+				items[1].Id.ShouldBe(2);
+				items[1].Discriminator.ShouldBe(2);
+				((InheritedDefault2)items[1]).Value2.ShouldBe("Str2");
 
-				items[2].Id.Should().Be(3);
-				items[2].Discriminator.Should().Be(3);
-				((InheritedDefault3)items[2]).Value3.Should().Be("Str3");
+				items[2].Id.ShouldBe(3);
+				items[2].Discriminator.ShouldBe(3);
+				((InheritedDefault3)items[2]).Value3.ShouldBe("Str3");
 
-				table.Single(x => x is InheritedDefault1).Should().BeOfType<InheritedDefault1>();
-				table.Single(x => x is InheritedDefault2).Should().BeOfType<InheritedDefault2>();
-				table.Single(x => x is InheritedDefault3).Should().BeOfType<InheritedDefault3>();
+				table.Single(x => x is InheritedDefault1).ShouldBeOfType<InheritedDefault1>();
+				table.Single(x => x is InheritedDefault2).ShouldBeOfType<InheritedDefault2>();
+				table.Single(x => x is InheritedDefault3).ShouldBeOfType<InheritedDefault3>();
 
-				table.Single(x => ((InheritedDefault1)x).Value1 == "Str1").Should().BeOfType<InheritedDefault1>();
-				table.Single(x => ((InheritedDefault2)x).Value2 == "Str2").Should().BeOfType<InheritedDefault2>();
-				table.Single(x => ((InheritedDefault3)x).Value3 == "Str3").Should().BeOfType<InheritedDefault3>();
+				table.Single(x => ((InheritedDefault1)x).Value1 == "Str1").ShouldBeOfType<InheritedDefault1>();
+				table.Single(x => ((InheritedDefault2)x).Value2 == "Str2").ShouldBeOfType<InheritedDefault2>();
+				table.Single(x => ((InheritedDefault3)x).Value3 == "Str3").ShouldBeOfType<InheritedDefault3>();
 			}
 		}
 

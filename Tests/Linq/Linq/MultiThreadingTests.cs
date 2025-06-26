@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -215,7 +215,7 @@ namespace Tests.Linq
 							})
 							.ToList();
 
-						result.Count.Should().Be(expected.Count);
+						result.Count.ShouldBe(expected.Count);
 
 						if (expected.Count > 0)
 							AreEqualWithComparer(result, expected);

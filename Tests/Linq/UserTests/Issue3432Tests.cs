@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -50,7 +50,8 @@ namespace Tests.UserTests
 					.DefaultIfEmpty()
 				select new { task.Description, party.Name };
 
-			FluentActions.Enumerating(() => query).Should().NotThrow();
+			var act = () => query.ToArray();
+			act.ShouldNotThrow();
 		}
 	}
 }

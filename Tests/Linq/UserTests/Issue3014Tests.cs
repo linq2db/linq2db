@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -50,10 +50,10 @@ namespace Tests.UserTests
 						Text       = "0",
 						StatusData = db.GetTable<TableStatus>().Select(x => 1).ToList(),
 					};
-				query.Should().HaveCount(1);
-				query.Where(x => x.Id == 0).Should().BeEmpty();
-				query.Where(x => x.Status == 0).Should().BeEmpty();
-				query.Where(e => e.Text == "0").Should().HaveCount(1);
+				query.ToList().Count().ShouldBe(1);
+				query.Where(x => x.Id == 0).ShouldBeEmpty();
+				query.Where(x => x.Status == 0).ShouldBeEmpty();
+				query.Where(e => e.Text == "0").ToList().Count().ShouldBe(1);
 
 			}
 		}

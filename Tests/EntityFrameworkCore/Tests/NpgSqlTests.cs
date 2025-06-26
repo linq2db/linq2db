@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.EntityFrameworkCore.Tests.Models.NpgSqlEntities;
@@ -68,7 +68,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 						where Sql.Ext.PostgreSQL().Overlaps(m.Guids, guids)
 						select m;
 
-			query.Invoking(q => q.ToArray()).Should().NotThrow();
+			var act = () => query.ToArray();
+			act.ShouldNotThrow();
 		}
 
 		[Test]
@@ -98,7 +99,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				where Sql.Ext.PostgreSQL().Overlaps(m.Guids, guids)
 				select m;
 
-			query.Invoking(q => q.ToArray()).Should().NotThrow();
+			var act = () => query.ToArray();
+			act.ShouldNotThrow();
 		}
 
 		[Test]

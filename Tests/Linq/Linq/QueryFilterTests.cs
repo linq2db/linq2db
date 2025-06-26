@@ -3,7 +3,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -200,13 +200,13 @@ namespace Tests.Linq
 				var result = query.ToList();
 
 				if (filtered)
-					result.Count.Should().BeLessThan(testData.Item1.Length);
+					result.Count.ShouldBeLessThan(testData.Item1.Length);
 				else
-					result.Count.Should().Be(testData.Item1.Length);
+					result.Count.ShouldBe(testData.Item1.Length);
 
 				if (iteration > 1)
 				{
-					tb.GetCacheMissCount().Should().Be(currentMissCount);
+					tb.GetCacheMissCount().ShouldBe(currentMissCount);
 				}
 			}
 		}
@@ -336,10 +336,10 @@ namespace Tests.Linq
 
 				var result = query.ToArray();
 
-				result.Should().AllSatisfy(m =>
+				result.ShouldAllSatisfy(m =>
 				{
-					m.IsDeleted.Should().BeFalse();
-					m.Info?.IsDeleted.Should().BeTrue();
+					m.IsDeleted.ShouldBeFalse();
+					m.Info?.IsDeleted.ShouldBeTrue();
 				});
 			}
 		}

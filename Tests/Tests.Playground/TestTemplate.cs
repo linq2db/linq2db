@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Playground
 {
@@ -24,7 +24,7 @@ namespace Tests.Playground
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())
 			{
-				table.ToArray().Should().BeEmpty();
+				table.ToArray().ShouldBeEmpty();
 			}
 		}
 	}

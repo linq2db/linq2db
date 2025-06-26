@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -169,7 +169,6 @@ namespace Tests.UserTests
 								.Select(e => e.StartHour != null ? e.StartHour : e.EndHour)
 								.DefaultIfEmpty(0)
 								.Sum()
-
 						});
 
 					var expected = expectedQuery
@@ -177,12 +176,12 @@ namespace Tests.UserTests
 						.ThenByDescending(x => x.WithoutParentReference ?? 0)
 						.ToArray();
 
-					result.Should().HaveCount(expected.Length);
+					result.Length.ShouldBe(expected.Length);
 
 					for (int i = 0; i < result.Length; i++)
 					{
-						result[i].WithParentReference.Should().Be(expected[i].WithParentReference);
-						result[i].WithoutParentReference.Should().Be(expected[i].WithoutParentReference);
+						result[i].WithParentReference.ShouldBe(expected[i].WithParentReference);
+						result[i].WithoutParentReference.ShouldBe(expected[i].WithoutParentReference);
 					}
 
 				}
