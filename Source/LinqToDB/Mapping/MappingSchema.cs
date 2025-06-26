@@ -1388,7 +1388,7 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(DateTime),        DataType.DateTime2);
 				AddScalarType(typeof(DateTimeOffset),  DataType.DateTimeOffset);
 				AddScalarType(typeof(TimeSpan),        DataType.Time);
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				AddScalarType(typeof(DateOnly),        DataType.Date);
 #endif
 				AddScalarType(typeof(byte[]),          DataType.VarBinary);
@@ -1415,7 +1415,7 @@ namespace LinqToDB.Mapping
 
 				// explicitly specify old ToString client-side conversions for some types after we added support for ToString(InvariantCulture) to conversion generators
 				SetConverter<DateTime, string>(static v => v.ToString("yyyy-MM-dd hh:mm:ss", DateTimeFormatInfo.InvariantInfo));
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				SetConverter<DateOnly, string>(static v => v.ToString("yyyy-MM-dd", DateTimeFormatInfo.InvariantInfo));
 #endif
 

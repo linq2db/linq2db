@@ -47,9 +47,11 @@ namespace LinqToDB.Linq.Builder
 						EntityConstructorBase.FullEntityPurpose.Insert);
 				}
 
-				var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
+				var setterExpressions    = new List<UpdateBuilder.SetExpressionEnvelope>();
+				var targetRef = mergeContext.SourceContext.TargetContextRef.WithType(setterExpression.Type);
+				var sourceRef = mergeContext.SourceContext.SourceContextRef.WithType(setterExpression.Type);
 				UpdateBuilder.ParseSetter(builder,
-					mergeContext.SourceContext.TargetContextRef.WithType(setterExpression.Type), setterExpression,
+					targetRef, sourceRef, setterExpression,
 					setterExpressions);
 				UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, createColumns : false);
 

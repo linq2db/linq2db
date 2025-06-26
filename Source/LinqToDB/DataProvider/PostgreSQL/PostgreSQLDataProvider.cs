@@ -43,6 +43,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true;
+			SqlProviderFlags.SupportsPredicatesComparison      = true;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
 			                                         RowFeature.CompareToSelect | RowFeature.In | RowFeature.IsNull |
@@ -56,7 +57,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetCharField("character", (r,i) => r.GetString(i).TrimEnd(' '));
 
 			if (Adapter.SupportsBigInteger)
-				SetProviderField<DbDataReader, BigInteger, decimal>((DbDataReader rd, int idx) => rd.GetFieldValue<BigInteger>(idx));
+				SetProviderField<DbDataReader, BigInteger, decimal>((rd, idx) => rd.GetFieldValue<BigInteger>(idx));
 
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 

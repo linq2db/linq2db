@@ -5,18 +5,19 @@
 		<RootNamespace>LinqToDB</RootNamespace>
 
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net462;netstandard2.0;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net8.0;net9.0</TargetFrameworks>
 
 		<Title>Linq to DB</Title>
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<Product>$(Title)</Product>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing'">
 		<DefineConstants>OVERRIDETOSTRING;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Azure'">
+	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">
 		<!--bugchecks to run in debug and during CI tests to discover potential issues-->
 		<DefineConstants>BUGCHECK;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>

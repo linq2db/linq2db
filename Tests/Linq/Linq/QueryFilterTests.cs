@@ -111,7 +111,7 @@ namespace Tests.Linq
 
 		sealed class MyDataContext : DataConnection
 		{
-			public MyDataContext(string configuration, MappingSchema mappingSchema) : base(configuration, mappingSchema)
+			public MyDataContext(string configuration, MappingSchema mappingSchema) : base(new DataOptions().UseConfiguration(configuration, mappingSchema))
 			{
 
 			}
@@ -351,7 +351,7 @@ namespace Tests.Linq
 
 			builder
 				.Entity<Child>()
-				.HasQueryFilter((IQueryable<Child> q, IDataContext ctx) => q.InnerJoin(
+				.HasQueryFilter((q, ctx) => q.InnerJoin(
 					ctx.GetTable<Parent>(),
 					(p, u) => p.ParentID == u.ParentID && u.Value1 > 5,
 					(p, u) => p)

@@ -25,26 +25,29 @@ namespace LinqToDB.DataProvider.Access
 		/// <summary>
 		/// Returns instance of Access database provider.
 		/// </summary>
-		public static IDataProvider GetDataProvider(AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect, string? connectionString = null)
+		public static IDataProvider GetDataProvider(AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect, string? connectionString = null, DbConnection? connection = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection), provider, version);
 		}
 
 		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString, AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version), connectionString);
+			return new DataConnection(new DataOptions()
+				.UseConnectionString(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version), connectionString));
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, version), connection);
+			return new DataConnection(new DataOptions()
+				.UseConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, version), connection));
 		}
 
 		public static DataConnection CreateDataConnection(DbTransaction transaction, AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, version), transaction);
+			return new DataConnection(new DataOptions()
+				.UseTransaction(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, version), transaction));
 		}
 
 		#endregion

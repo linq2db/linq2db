@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
@@ -21,7 +22,7 @@ namespace LinqToDB.CommandLine
 {
 	partial class ScaffoldCommand : CliCommand
 	{
-		public override int Execute(
+		public override async ValueTask<int> Execute(
 			CliController                  controller,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
@@ -36,8 +37,15 @@ namespace LinqToDB.CommandLine
 				return StatusCodes.INVALID_ARGUMENTS;
 
 			// restart if other arch requested
-			if (options.Remove(General.Architecture, out var value) && RestartIfNeeded((string)value!, rawArgs, out var status))
-				return status.Value;
+			if (options.Remove(General.Architecture, out var value))
+			{
+				var status = await RestartIfNeeded((string)value!, rawArgs).ConfigureAwait(false);
+
+				if (status != null)
+				{
+					return status.Value;
+				}
+			}
 
 			// process remaining utility-specific (general) options
 
@@ -162,6 +170,17 @@ namespace LinqToDB.CommandLine
 			return StatusCodes.SUCCESS;
 		}
 
+		private const string SapHanaDefaultPath = "sap\\hdbclient\\dotnetcore";
+
+		private static readonly IEnumerable<string> SapHanaProbePathes =
+		[
+#if NET8_0_OR_GREATER
+			@"v8.0\Sap.Data.Hana.Net.v8.0.dll",
+#endif
+			@"v6.0\Sap.Data.Hana.Net.v6.0.dll",
+			@"v2.1\Sap.Data.Hana.Core.v2.1.dll"
+		];
+
 		private DataConnection? GetConnection(string provider, string? providerLocation, string connectionString, string? additionalConnectionString, out DataConnection? secondaryConnection)
 		{
 			secondaryConnection = null;
@@ -235,20 +254,42 @@ Possible reasons:
 
 					if (!isOdbc)
 					{
-						var assemblyPath = providerLocation ?? Path.Combine(Environment.GetEnvironmentVariable(IntPtr.Size == 4 ? "ProgramFiles(x86)" : "ProgramFiles")!, @"sap\hdbclient\dotnetcore\v2.1\Sap.Data.Hana.Core.v2.1.dll");
-						if (!File.Exists(assemblyPath))
+						var found = false;
+						var installPath = Environment.GetEnvironmentVariable("HDBDOTNETCORE");
+						var defaultPath = Path.Combine(Environment.GetEnvironmentVariable(IntPtr.Size == 4 ? "ProgramFiles(x86)" : "ProgramFiles")!, SapHanaDefaultPath);
+
+						var clientRoots = installPath== null ? new string[] { defaultPath } : [installPath, defaultPath];
+
+						foreach (var clientRoot in clientRoots)
+						{
+							foreach (var assemblyProbePath in SapHanaProbePathes)
+							{
+								var assemblyPath = providerLocation ?? Path.Combine(clientRoot, assemblyProbePath);
+								if (File.Exists(assemblyPath))
+								{
+									var assembly = Assembly.LoadFrom(assemblyPath);
+									DbProviderFactories.RegisterFactory("Sap.Data.Hana", assembly.GetType("Sap.Data.Hana.HanaFactory")!);
+									found = true;
+									break;
+								}
+							}
+
+							if (found)
+							{
+								break;
+							}
+						}
+
+						if (!found)
 						{
 							Console.Error.WriteLine(@$"Cannot locate SAP HANA native client installation.
-Probed location: {assemblyPath}.
+Probed locations: {string.Join(", ", clientRoots)}.
 Possible reasons:
 1. HDB client not installed => install HDB client for .net core
 2. HDB architecture doesn't match process architecture => add '--architecture x86' or '--architecture x64' scaffold option
-3. HDB client installed at custom location => specify path to Sap.Data.Hana.Core.v2.1.dll using '--provider-location <path_to_assembly>' option");
+3. HDB client installed at custom location => specify path to Sap.Data.Hana.Net.v8.0.dll, Sap.Data.Hana.Net.v6.0.dll or Sap.Data.Hana.Core.v2.1.dll using '--provider-location <path_to_assembly>' option");
 							return null;
 						}
-
-						var assembly = Assembly.LoadFrom(assemblyPath);
-						DbProviderFactories.RegisterFactory("Sap.Data.Hana", assembly.GetType("Sap.Data.Hana.HanaFactory")!);
 					}
 
 					break;
@@ -314,7 +355,7 @@ Provider could be downloaded from:
 							return null;
 						}
 
-						secondaryConnection = new DataConnection(secondaryDataProvider, additionalConnectionString);
+						secondaryConnection = new DataConnection(new DataOptions().UseConnectionString(secondaryDataProvider, additionalConnectionString));
 						// to simplify things for caller (no need to detect connection type)
 						// returned connection should be OLE DB and additional - ODBC
 						returnSecondary     = isSecondaryOleDb;
@@ -335,7 +376,7 @@ Provider could be downloaded from:
 				return null;
 			}
 
-			var dc = new DataConnection(dataProvider, connectionString);
+			var dc = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString));
 
 			if (secondaryConnection != null && returnSecondary)
 			{
@@ -352,17 +393,14 @@ Provider could be downloaded from:
 		/// </summary>
 		/// <param name="requestedArch">New process architecture.</param>
 		/// <param name="args">Command line arguments for current invocation.</param>
-		/// <param name="status">Return code from child process.</param>
-		/// <returns><c>true</c> if scaffold restarted in child process with specific arch.</returns>
-		private bool RestartIfNeeded(string requestedArch, string[] args, [NotNullWhen(true)] out int? status)
+		/// <returns>Not-null return code from child process if scaffold restarted in child process with specific arch or <c>null</c> otherwise.</returns>
+		private async Task<int?> RestartIfNeeded(string requestedArch, string[] args)
 		{
-			status = null;
-
 			// currently we support multiarch only for Windows
 			if (!OperatingSystem.IsWindows())
 			{
 				Console.Out.WriteLine($"'{General.Architecture.Name}' parameter ignored for non-Windows system");
-				return false;
+				return null;
 			}
 
 			string? exeName = null;
@@ -377,7 +415,7 @@ Provider could be downloaded from:
 
 			if (exeName == null)
 			{
-				return false;
+				return null;
 			}
 
 			// build full path to executable
@@ -405,15 +443,12 @@ Provider could be downloaded from:
 			childProcess.BeginOutputReadLine();
 			childProcess.BeginErrorReadLine ();
 
-			// IMPORTANT: don't use WaitForExitAsync till net6+ migration due to buggy implementation in earlier versions
-			childProcess.WaitForExit();
+			await childProcess.WaitForExitAsync().ConfigureAwait(false);
 
 			childProcess.OutputDataReceived -= ChildProcess_OutputDataReceived;
 			childProcess.ErrorDataReceived  -= ChildProcess_ErrorDataReceived;
 
-			status = childProcess.ExitCode;
-
-			return true;
+			return childProcess.ExitCode;
 		}
 
 		private void ChildProcess_ErrorDataReceived(object sender, DataReceivedEventArgs e)

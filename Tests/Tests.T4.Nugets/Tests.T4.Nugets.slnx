@@ -1,0 +1,46 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+  </Configurations>
+  <Folder Name="/Build/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="nuget.config" />
+  </Folder>
+  <Folder Name="/Templates/">
+    <File Path="Templates/Access.Odbc.tt" />
+    <File Path="Templates/Access.OleDb.tt" />
+    <File Path="Templates/ClickHouse.Client.tt" />
+    <File Path="Templates/ClickHouse.MySql.tt" />
+    <File Path="Templates/ConnectionStrings.ttinclude" />
+    <File Path="Templates/DB2.tt" />
+    <File Path="Templates/Firebird.tt" />
+    <File Path="Templates/Hana.Native.tt" />
+    <File Path="Templates/Hana.ODBC.tt" />
+    <File Path="Templates/Informix.tt" />
+    <File Path="Templates/MariaDB.tt" />
+    <File Path="Templates/Oracle.tt" />
+    <File Path="Templates/PostgreSQL.tt" />
+    <File Path="Templates/SQLCE.tt" />
+    <File Path="Templates/SQLite.tt" />
+    <File Path="Templates/SqlServer.tt" />
+    <File Path="Templates/Sybase.tt" />
+  </Folder>
+  <Project Path="Projects/Access.ODBC.csproj" />
+  <Project Path="Projects/Access.OleDb.csproj" />
+  <Project Path="Projects/ClickHouse.Client.csproj" />
+  <Project Path="Projects/ClickHouse.MySql.csproj" />
+  <Project Path="Projects/DB2.csproj" />
+  <Project Path="Projects/Firebird.csproj" />
+  <Project Path="Projects/Hana.Native.csproj" />
+  <Project Path="Projects/Hana.ODBC.csproj" />
+  <Project Path="Projects/Informix.csproj" />
+  <Project Path="Projects/MariaDB.csproj" />
+  <Project Path="Projects/Oracle.csproj" />
+  <Project Path="Projects/PostgreSQL.csproj" />
+  <Project Path="Projects/SQLCE.csproj" />
+  <Project Path="Projects/SQLite.csproj" />
+  <Project Path="Projects/SqlServer.csproj" />
+  <Project Path="Projects/Sybase.csproj" />
+  <Project Path="Projects/t4models.csproj" />
+</Solution>

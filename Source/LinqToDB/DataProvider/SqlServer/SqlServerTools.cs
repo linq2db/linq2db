@@ -50,9 +50,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IDataProvider GetDataProvider(
 			SqlServerVersion  version          = SqlServerVersion.AutoDetect,
 			SqlServerProvider provider         = SqlServerProvider.AutoDetect,
-			string?           connectionString = null)
+			string?           connectionString = null,
+			DbConnection?     connection       = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection), provider, version);
 		}
 
 		/// <summary>
@@ -84,7 +85,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 			SqlServerProvider provider = SqlServerProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version), connectionString);
+			return new DataConnection(new DataOptions()
+				.UseConnectionString(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version), connectionString));
 		}
 
 		public static DataConnection CreateDataConnection(
@@ -92,7 +94,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 			SqlServerProvider provider = SqlServerProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, version), connection);
+			return new DataConnection(new DataOptions()
+				.UseConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, version), connection));
 		}
 
 		public static DataConnection CreateDataConnection(
@@ -100,7 +103,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlServerVersion  version  = SqlServerVersion.AutoDetect,
 			SqlServerProvider provider = SqlServerProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, version), transaction);
+			return new DataConnection(new DataOptions()
+				.UseTransaction(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, version), transaction));
 		}
 
 		#endregion

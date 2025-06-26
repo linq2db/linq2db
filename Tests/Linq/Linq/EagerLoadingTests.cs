@@ -320,11 +320,12 @@ namespace Tests.Linq
 
 				foreach (var item in result)
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(ReferenceEquals(item.One.d, item.Two), Is.True);
 						Assert.That(item.Two.SubDetails, Is.Not.Empty);
-					});
+					}
+
 					Assert.That(item.Two.SubDetails[0].Detail, Is.Not.Null);
 				}
 			}
@@ -1319,22 +1320,15 @@ FROM
 				};
 
 				Assert.That(result.Blog, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Blog[0].Id, Is.EqualTo(1));
 					Assert.That(result.Blog[0].Title, Is.EqualTo("Another .NET Core Guy"));
 					Assert.That(result.Blog[0].Posts, Has.Length.EqualTo(4));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(result.Blog[0].Posts[0].Id, Is.EqualTo(1));
 					Assert.That(result.Blog[0].Posts[0].Title, Is.EqualTo("Post 1"));
 					Assert.That(result.Blog[0].Posts[0].PostContent, Is.EqualTo("Content 1 is about EF Core and Razor page"));
 					Assert.That(result.Blog[0].Posts[0].Tags, Has.Length.EqualTo(2));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result.Blog[0].Posts[0].Tags[0].Id, Is.EqualTo(1));
 					Assert.That(result.Blog[0].Posts[0].Tags[0].Name, Is.EqualTo("Razor Page"));
 					Assert.That(result.Blog[0].Posts[0].Tags[1].Id, Is.EqualTo(2));
@@ -1344,9 +1338,6 @@ FROM
 					Assert.That(result.Blog[0].Posts[1].Title, Is.EqualTo("Post 2"));
 					Assert.That(result.Blog[0].Posts[1].PostContent, Is.EqualTo("Content 2 is about Dapper"));
 					Assert.That(result.Blog[0].Posts[1].Tags, Has.Length.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result.Blog[0].Posts[1].Tags[0].Id, Is.EqualTo(3));
 					Assert.That(result.Blog[0].Posts[1].Tags[0].Name, Is.EqualTo("Dapper"));
 
@@ -1359,12 +1350,9 @@ FROM
 					Assert.That(result.Blog[0].Posts[3].Title, Is.EqualTo("Post 4"));
 					Assert.That(result.Blog[0].Posts[3].PostContent, Is.EqualTo("Content 4"));
 					Assert.That(result.Blog[0].Posts[3].Tags, Has.Length.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result.Blog[0].Posts[3].Tags[0].Id, Is.EqualTo(5));
 					Assert.That(result.Blog[0].Posts[3].Tags[0].Name, Is.EqualTo("SqlKata"));
-				});
+				}
 			}
 		}
 #endregion
@@ -1665,22 +1653,24 @@ FROM
 			var id = 11;
 			var result = records.LoadWith(a => a.Items, a => a.Where(a => a.Id == id)).ToList();
 			Assert.That(result, Has.Count.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[0].Items, Has.Count.EqualTo(1));
-			});
+			}
+
 			Assert.That(result[0].Items[0].Id, Is.EqualTo(11));
 
 			id = 12;
 			result = records.LoadWith(a => a.Items, a => a.Where(a => a.Id == id)).ToList();
 
 			Assert.That(result, Has.Count.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[0].Items, Has.Count.EqualTo(1));
-			});
+			}
+
 			Assert.That(result[0].Items[0].Id, Is.EqualTo(12));
 		}
 		#endregion
@@ -1797,7 +1787,7 @@ FROM
 
 			await using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = true;
+				await db.SetKeepConnectionAliveAsync(true);
 
 				await db.GetTable<Parent>()
 					.LoadWith(x => x.Children)
@@ -1806,7 +1796,7 @@ FROM
 
 			await using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = false;
+				await db.SetKeepConnectionAliveAsync(false);
 
 				await db.GetTable<Parent>()
 					.LoadWith(x => x.Children)
@@ -1829,7 +1819,7 @@ FROM
 
 			using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = true;
+				db.SetKeepConnectionAlive(true);
 
 				db.GetTable<Parent>()
 					.LoadWith(x => x.Children)
@@ -1838,7 +1828,7 @@ FROM
 
 			using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = false;
+				db.SetKeepConnectionAlive(false);
 
 				db.GetTable<Parent>()
 					.LoadWith(x => x.Children)
@@ -1862,7 +1852,7 @@ FROM
 
 			await using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = true;
+				db.SetKeepConnectionAlive(true);
 
 				using var _ = db.BeginTransaction();
 				await db.GetTable<Parent>()
@@ -1872,7 +1862,7 @@ FROM
 
 			await using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = false;
+				db.SetKeepConnectionAlive(false);
 
 				using var _ = db.BeginTransaction();
 				await db.GetTable<Parent>()
@@ -1897,7 +1887,7 @@ FROM
 
 			using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = true;
+				db.SetKeepConnectionAlive(true);
 
 				using var _ = db.BeginTransaction();
 				db.GetTable<Parent>()
@@ -1907,7 +1897,7 @@ FROM
 
 			using (var db = new DataContext(options))
 			{
-				db.KeepConnectionAlive = false;
+				db.SetKeepConnectionAlive(false);
 
 				using var _ = db.BeginTransaction();
 				db.GetTable<Parent>()
@@ -3176,12 +3166,11 @@ FROM
 
 			var selects = db.LastQuery!.Split(["SELECT"], StringSplitOptions.None).Length - 1;
 			var joins = db.LastQuery.Split(["LEFT JOIN"], StringSplitOptions.None).Length - 1;
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(selects, Is.EqualTo(1));
 				Assert.That(joins, Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3140")]
@@ -3200,12 +3189,11 @@ FROM
 
 			var selects = db.LastQuery!.Split(["SELECT"], StringSplitOptions.None).Length - 1;
 			var joins = db.LastQuery.Split(["LEFT JOIN"], StringSplitOptions.None).Length - 1;
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(selects, Is.EqualTo(1));
 				Assert.That(joins, Is.EqualTo(1));
-			});
+			}
 		}
 
 		sealed class Issue3140Parent
@@ -3297,7 +3285,7 @@ FROM
 		sealed record CteRecord(int Id, int Value1, int Value2, int Value4, int Value5);
 
 		[Test]
-		public void CteCloning_Original([CteTests.CteContextSource(TestProvName.AllSapHana)] string context)
+		public void CteCloning_Original([CteContextSource(TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<CteTable>();
@@ -3334,7 +3322,7 @@ FROM
 		}
 
 		[Test]
-		public void CteCloning_Simple([CteTests.CteContextSource] string context)
+		public void CteCloning_Simple([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<CteTable>();
@@ -3364,7 +3352,7 @@ FROM
 		}
 
 		[Test]
-		public void CteCloning_SimpleChain([CteTests.CteContextSource] string context)
+		public void CteCloning_SimpleChain([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<CteTable>();
@@ -3404,7 +3392,7 @@ FROM
 		}
 
 		[Test]
-		public void CteCloning_RecursiveChain([CteTests.CteContextSource(TestProvName.AllSapHana, TestProvName.AllOracle)] string context)
+		public void CteCloning_RecursiveChain([CteContextSource(TestProvName.AllSapHana, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<CteTable>();
@@ -3520,7 +3508,6 @@ FROM
 			];
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4797")]
 		public void Issue4797Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -3535,26 +3522,29 @@ FROM
 				.ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[0].Children, Is.Not.Null);
-			});
+			}
+
 			Assert.That(result[0].Children, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Children.Count(r => r.Id == 1), Is.EqualTo(1));
 				Assert.That(result[0].Children.Count(r => r.Id == 2), Is.EqualTo(1));
-			});
-			Assert.That(result[0].Children[0].Parent, Is.Not.Null);
-			Assert.That(result[0].Children[0].Parent.Children, Is.Not.Null);
-			Assert.Multiple(() =>
+			}
+
+			Assert.That(result[0].Children![0].Parent, Is.Not.Null);
+			Assert.That(result[0].Children![0].Parent!.Children, Is.Not.Null);
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result[0].Children[0].Parent.Children, Has.Length.EqualTo(2));
-				Assert.That(result[0].Children[1].Parent, Is.Not.Null);
-			});
-			Assert.That(result[0].Children[1].Parent.Children, Is.Not.Null);
-			Assert.That(result[0].Children[1].Parent.Children, Has.Length.EqualTo(2));
+				Assert.That(result[0].Children![0].Parent!.Children, Has.Length.EqualTo(2));
+				Assert.That(result[0].Children![1].Parent, Is.Not.Null);
+			}
+
+			Assert.That(result[0].Children![1].Parent!.Children, Is.Not.Null);
+			Assert.That(result[0].Children![1].Parent!.Children, Has.Length.EqualTo(2));
 
 			// TODO: right now we create separate objects for same record on different levels
 			// if we want to change this behavior - it makes sense to add object equality asserts

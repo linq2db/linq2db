@@ -156,7 +156,7 @@ namespace LinqToDB.DataProvider.Sybase
 			var paramMapper   = typeMapper.Type<AseParameter>();
 			var dbTypeBuilder = paramMapper.Member(p => p.AseDbType);
 
-			var connectionFactory = typeMapper.BuildTypedFactory<string, AseConnection, DbConnection>((string connectionString) => new AseConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, AseConnection, DbConnection>(connectionString => new AseConnection(connectionString));
 
 			return new SybaseProviderAdapter(
 				connectionType,
@@ -232,19 +232,19 @@ namespace LinqToDB.DataProvider.Sybase
 				= new LambdaExpression[]
 			{
 				// [0]: Dispose
-				(Expression<Action<AseBulkCopy>>                                  )((AseBulkCopy this_                        ) => ((IDisposable)this_).Dispose()),
+				(Expression<Action<AseBulkCopy>>                                  )(this_ => ((IDisposable)this_).Dispose()),
 				// [1]: WriteToServer
-				(Expression<Action<AseBulkCopy, IDataReader>>                     )((AseBulkCopy this_, IDataReader dataReader) => this_.WriteToServer(dataReader)),
+				(Expression<Action<AseBulkCopy, IDataReader>>                     )((this_, dataReader) => this_.WriteToServer(dataReader)),
 				// [2]: get NotifyAfter
-				(Expression<Func<AseBulkCopy, int>>                               )((AseBulkCopy this_                        ) => this_.NotifyAfter),
+				(Expression<Func<AseBulkCopy, int>>                               )(this_ => this_.NotifyAfter),
 				// [3]: get BatchSize
-				(Expression<Func<AseBulkCopy, int>>                               )((AseBulkCopy this_                        ) => this_.BatchSize),
+				(Expression<Func<AseBulkCopy, int>>                               )(this_ => this_.BatchSize),
 				// [4]: get BulkCopyTimeout
-				(Expression<Func<AseBulkCopy, int>>                               )((AseBulkCopy this_                        ) => this_.BulkCopyTimeout),
+				(Expression<Func<AseBulkCopy, int>>                               )(this_ => this_.BulkCopyTimeout),
 				// [5]: get DestinationTableName
-				(Expression<Func<AseBulkCopy, string?>>                           )((AseBulkCopy this_                        ) => this_.DestinationTableName),
+				(Expression<Func<AseBulkCopy, string?>>                           )(this_ => this_.DestinationTableName),
 				// [6]: get ColumnMappings
-				(Expression<Func<AseBulkCopy, AseBulkCopyColumnMappingCollection>>)((AseBulkCopy this_                        ) => this_.ColumnMappings),
+				(Expression<Func<AseBulkCopy, AseBulkCopyColumnMappingCollection>>)(this_ => this_.ColumnMappings),
 				// [7]: set NotifyAfter
 				PropertySetter((AseBulkCopy this_) => this_.NotifyAfter),
 				// [8]: set BatchSize
@@ -314,9 +314,9 @@ namespace LinqToDB.DataProvider.Sybase
 				= new LambdaExpression[]
 			{
 				// [0]: get RowCopied
-				(Expression<Func<AseRowsCopiedEventArgs, int>> )((AseRowsCopiedEventArgs this_) => this_.RowCopied),
+				(Expression<Func<AseRowsCopiedEventArgs, int>> )(this_ => this_.RowCopied),
 				// [1]: get Abort
-				(Expression<Func<AseRowsCopiedEventArgs, bool>>)((AseRowsCopiedEventArgs this_) => this_.Abort),
+				(Expression<Func<AseRowsCopiedEventArgs, bool>>)(this_ => this_.Abort),
 				// [2]: set RowCopied
 				PropertySetter((AseRowsCopiedEventArgs this_) => this_.RowCopied),
 				// [3]: set Abort
@@ -351,7 +351,7 @@ namespace LinqToDB.DataProvider.Sybase
 				= new LambdaExpression[]
 			{
 				// [0]: Add
-				(Expression<Func<AseBulkCopyColumnMappingCollection, AseBulkCopyColumnMapping, int>>)((AseBulkCopyColumnMappingCollection this_, AseBulkCopyColumnMapping column) => this_.Add(column)),
+				(Expression<Func<AseBulkCopyColumnMappingCollection, AseBulkCopyColumnMapping, int>>)((this_, column) => this_.Add(column)),
 			};
 
 			public AseBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)

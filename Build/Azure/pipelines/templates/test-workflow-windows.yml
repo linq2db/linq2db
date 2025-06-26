@@ -4,17 +4,8 @@ parameters:
 steps:
 - checkout: none
 
-# .NET 6, 8 and 9 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
+# .NET 8 and 9 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
 # so we need to install only x86 versions
-
-- task: UseDotNet@2
-  displayName: 'Install .NET 6 (x86)'
-  inputs:
-    packageType: sdk
-    version: 6.x
-  condition: and(variables.title, eq(variables.net60, 'true'), eq(variables.x86, 'true'), succeeded())
-  env:
-    PROCESSOR_ARCHITECTURE: x86
 
 - task: UseDotNet@2
   displayName: 'Install .NET 8 (x86)'
@@ -53,12 +44,6 @@ steps:
     script: 'copy $(System.DefaultWorkingDirectory)\configs\netfx\$(config).json $(System.DefaultWorkingDirectory)\$(netfx_tfm)\UserDataProviders.json'
   displayName: Copy .NET FW test config
   condition: and(variables.title, eq(variables.netfx, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\configs\net60\$(config).json $(System.DefaultWorkingDirectory)\net6.0\UserDataProviders.json'
-  displayName: Copy .NET 6 test config
-  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -139,60 +124,6 @@ steps:
 - script: dotnet test $(netfx_tfm)/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx --arch x64 --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (NETFX x64): $(title)'
   condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net6.0/main/x64'
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), variables.script_local, succeeded())
-  displayName: Execute NET 6 (x64) Setup Script
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net6.0/main/x86'
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), variables.script_local, succeeded())
-  displayName: Execute NET 6 (x86) Setup Script
-
-- task: PowerShell@2
-  inputs:
-    filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net6.0/net60/main/x64'
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), variables.psscript_local, succeeded())
-  displayName: Execute NET 6 (x64) PowerShell Setup Script
-
-- task: PowerShell@2
-  inputs:
-    filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net6.0/main/x86'
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), variables.psscript_local, succeeded())
-  displayName: Execute NET 6 (x86) PowerShell Setup Script
-
-- script: dotnet test net6.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
-  displayName: 'Tests (NET60): $(title)'
-  condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
-
-- script: dotnet test net6.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
-  displayName: 'Tests (NET60): $(title)'
-  condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
-  retryCountOnTaskFailure: 2
-
-- script: dotnet test net6.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
-  displayName: 'Tests (NET60 x86): $(title)'
-  condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
-
-- script: dotnet test net6.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
-  displayName: 'Tests (NET60 x86): $(title)'
-  condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
-  retryCountOnTaskFailure: 2
-
-- script: dotnet test net6.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
-  displayName: 'EF.Core Tests (NET60): $(title)'
-  condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
-
-- script: dotnet test net6.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
-  displayName: 'EF.Core Tests (NET60 x86): $(title)'
-  condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -314,6 +245,7 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
+      reg import $(System.DefaultWorkingDirectory)/scripts/tls11_disable.reg
       Write-Host "Add baselines changes to commit (index)"
       $output = git add -A
       if ($LASTEXITCODE -ne 0) {

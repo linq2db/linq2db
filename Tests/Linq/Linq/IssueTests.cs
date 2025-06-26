@@ -505,11 +505,11 @@ namespace Tests.Linq
 					.Select(_ => MapToDto(_)).ToList();
 
 				Assert.That(l, Is.Not.Empty);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(l.Where(_ => _.Doc == null), Is.Not.Empty);
 					Assert.That(l.Where(_ => _.Doc != null), Is.Not.Empty);
-				});
+				}
 			}
 		}
 
@@ -545,14 +545,13 @@ namespace Tests.Linq
 				var lrp = db
 					.GetTable<Person88>()
 					.Where(_ => _.ID == 1 && gender == _.Gender);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(llc, Is.Not.Empty);
 					Assert.That(lrc, Is.Not.Empty);
 					Assert.That(llp, Is.Not.Empty);
 					Assert.That(lrp, Is.Not.Empty);
-				});
+				}
 			}
 
 		}
@@ -666,12 +665,12 @@ namespace Tests.Linq
 
 			var data = tb.ToArray();
 			Assert.That(data, Has.Length.EqualTo(5));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data.Count(r => r.ID == 0 && r.intDataType == 0), Is.EqualTo(2));
 				Assert.That(data.Count(r => r.ID == 123 && r.intDataType == 1234), Is.EqualTo(1));
 				Assert.That(data.Count(r => r.ID == 1234 && r.intDataType == 1234), Is.EqualTo(2));
-			});
+			}
 
 			void Query(bool isNull)
 			{
@@ -731,7 +730,7 @@ namespace Tests.Linq
 				
 				var data = table.ToArray();
 				Assert.That(data, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data[0].Default, Is.EqualTo(TestData.Guid1));
 					Assert.That(data[0].Binary, Is.EqualTo(TestData.Guid2));
@@ -746,7 +745,7 @@ namespace Tests.Linq
 					Assert.That(table.Where(x => x.DefaultN == TestData.Guid4).Count(), Is.EqualTo(1));
 					Assert.That(table.Where(x => x.BinaryN == TestData.Guid5).Count(), Is.EqualTo(1));
 					Assert.That(table.Where(x => x.StringN == TestData.Guid6).Count(), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 

@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.SqlQuery
 {
-	//Note it is full copy of Sql.IsNullableType
+	// !!! must be in sync by value with Sql.IsNullableType
 
 	/// <summary>
 	/// Provides information when function or expression could return null.
@@ -40,6 +40,9 @@
 		/// Expression could return NULL if last parameter of expression could contain NULL.
 		/// </summary>
 		SameAsLastParameter,
+		/// <summary>
+		/// Expression could return NULL if all parameters of expression could contain NULL.
+		/// </summary>
 		IfAllParametersNullable,
 	}
 

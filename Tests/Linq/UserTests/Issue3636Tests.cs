@@ -52,39 +52,31 @@ namespace Tests.UserTests
 
 			if (myId == 2)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Key, Is.EqualTo(1));
 
 					Assert.That(groupResult, Has.Length.EqualTo(1));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(groupResult[0].s.ID, Is.EqualTo(1));
 					Assert.That(groupResult[0].s.ID2, Is.EqualTo(2));
-					Assert.That(groupResult[0].s.ID3, Is.EqualTo(0));
+					Assert.That(groupResult[0].s.ID3, Is.Zero);
 					Assert.That(groupResult[0].order.ID, Is.EqualTo(1));
 					Assert.That(groupResult[0].order.ID2, Is.EqualTo(2));
-				});
+				}
 			}
 			else
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Key, Is.EqualTo(2));
 
 					Assert.That(groupResult, Has.Length.EqualTo(1));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(groupResult[0].s.ID, Is.EqualTo(2));
 					Assert.That(groupResult[0].s.ID2, Is.EqualTo(85));
-					Assert.That(groupResult[0].s.ID3, Is.EqualTo(0));
+					Assert.That(groupResult[0].s.ID3, Is.Zero);
 					Assert.That(groupResult[0].order.ID, Is.EqualTo(2));
 					Assert.That(groupResult[0].order.ID2, Is.EqualTo(85));
-				});
+				}
 			}
 		}
 	}

@@ -18,9 +18,9 @@ namespace LinqToDB.DataProvider.DB2
 			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider(DB2Version version = DB2Version.AutoDetect, string? connectionString = null)
+		public static IDataProvider GetDataProvider(DB2Version version = DB2Version.AutoDetect, string? connectionString = null, DbConnection? connection = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), default, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection), default, version);
 		}
 
 		public static void ResolveDB2(string path)
@@ -46,7 +46,8 @@ namespace LinqToDB.DataProvider.DB2
 		/// <returns><see cref="DataConnection"/> instance.</returns>
 		public static DataConnection CreateDataConnection(string connectionString, DB2Version version = DB2Version.LUW)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), default, version), connectionString);
+			return new DataConnection(new DataOptions()
+				.UseConnectionString(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), default, version), connectionString));
 		}
 
 		/// <summary>
@@ -57,7 +58,8 @@ namespace LinqToDB.DataProvider.DB2
 		/// <returns><see cref="DataConnection"/> instance.</returns>
 		public static DataConnection CreateDataConnection(DbConnection connection, DB2Version version = DB2Version.LUW)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), default, version), connection);
+			return new DataConnection(new DataOptions()
+				.UseConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), default, version), connection));
 		}
 
 		/// <summary>
@@ -68,7 +70,8 @@ namespace LinqToDB.DataProvider.DB2
 		/// <returns><see cref="DataConnection"/> instance.</returns>
 		public static DataConnection CreateDataConnection(DbTransaction transaction, DB2Version version = DB2Version.LUW)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), default, version), transaction);
+			return new DataConnection(new DataOptions()
+				.UseTransaction(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), default, version), transaction));
 		}
 
 		#endregion

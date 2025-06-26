@@ -118,7 +118,7 @@ JSON file example:
 					@"Allows user to specify path to database provider for some databases.
 Supported databases:
 - SQL Server Compact Edition : value is a full path to System.Data.SqlServerCe.dll assembly from Private folder of SQL CE installation
-- SAP HANA                   : value is a full path to Sap.Data.Hana.Core.v2.1.dll assembly from HDB client installation folder
+- SAP HANA                   : value is a full path to Sap.Data.Hana.Core.v2.1.dll, Sap.Data.Hana.Net.v6.0.dll or Sap.Data.Hana.Net.v8.0.dll assembly from HDB client installation folder
 - IBM DB2 and Informix       : value is a full path to IBM.Data.DB2.Core.dll assembly in DB2 provider folder",
 					null,
 					null,

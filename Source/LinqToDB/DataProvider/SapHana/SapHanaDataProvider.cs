@@ -22,7 +22,8 @@ namespace LinqToDB.DataProvider.SapHana
 
 	public abstract class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{
-		protected SapHanaDataProvider(string name, SapHanaProvider provider) : base(name, MappingSchemaInstance.Get(provider), SapHanaProviderAdapter.GetInstance(provider))
+		protected SapHanaDataProvider(string name, SapHanaProvider provider)
+			: base(name, MappingSchemaInstance.Get(provider), SapHanaProviderAdapter.GetInstance(provider))
 		{
 			Provider = provider;
 
@@ -42,9 +43,14 @@ namespace LinqToDB.DataProvider.SapHana
 			SqlProviderFlags.SupportsBooleanType               = false;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
+
+			if (Adapter.GetDateTimeOffsetMethod != null) SetProviderField(typeof(DateTimeOffset)  , typeof(DateTimeOffset), Adapter.GetDateTimeOffsetMethod, dataReaderType: Adapter.DataReaderType);
+			if (Adapter.GetHanaDecimalMethod    != null) SetProviderField(Adapter.HanaDecimalType!, typeof(decimal)       , Adapter.GetHanaDecimalMethod   , dataReaderType: Adapter.DataReaderType);
+			if (Adapter.GetRealVectorMethod     != null) SetProviderField(typeof(float[])         , typeof(float[])       , Adapter.GetRealVectorMethod    , dataReaderType: Adapter.DataReaderType);
+			if (Adapter.GetTimeSpanMethod       != null) SetProviderField(typeof(TimeSpan)        , typeof(TimeSpan)      , Adapter.GetTimeSpanMethod      , dataReaderType: Adapter.DataReaderType);
 		}
 
-		private SapHanaProvider Provider { get; }
+		internal SapHanaProvider Provider { get; }
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
@@ -82,7 +88,7 @@ namespace LinqToDB.DataProvider.SapHana
 			if (type.IsNullable())
 				type = type.ToUnderlying();
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (Provider == SapHanaProvider.Unmanaged && type == typeof(DateOnly))
 				type = typeof(DateTime);
 #endif
@@ -103,7 +109,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			if (value is DateOnly d)
 				value = d.ToDateTime(TimeOnly.MinValue);
 #endif
@@ -135,8 +141,12 @@ namespace LinqToDB.DataProvider.SapHana
 				SapHanaProviderAdapter.HanaDbType? type = null;
 				switch (dataType.DataType)
 				{
-					case DataType.Text : type = SapHanaProviderAdapter.HanaDbType.Text; break;
-					case DataType.Image: type = SapHanaProviderAdapter.HanaDbType.Blob; break;
+					case DataType.Text                   : type = SapHanaProviderAdapter.HanaDbType.Text;         break;
+					case DataType.Image                  : type = SapHanaProviderAdapter.HanaDbType.Blob;         break;
+					case DataType.Decimal                :
+					case DataType.DecFloat               : type = SapHanaProviderAdapter.HanaDbType.Decimal;      break;
+					case DataType.SmallDecFloat          : type = SapHanaProviderAdapter.HanaDbType.SmallDecimal; break;
+					case DataType.Array | DataType.Single: type = SapHanaProviderAdapter.HanaDbType.RealVector;   break;
 				}
 
 				if (type != null)
@@ -165,6 +175,12 @@ namespace LinqToDB.DataProvider.SapHana
 					case DataType.Boolean  : parameter.DbType = DbType.Byte;     return;
 					case DataType.DateTime2: parameter.DbType = DbType.DateTime; return;
 				}
+			}
+
+			if (dataType.DataType == DataType.UInt32)
+			{
+				parameter.DbType = DbType.Int64;
+				return;
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);

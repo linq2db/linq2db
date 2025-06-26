@@ -1225,6 +1225,8 @@ LinqToDB.Scaffold.DataModelOptions.BaseContextClass.get -> string?
 LinqToDB.Scaffold.DataModelOptions.BaseContextClass.set -> void
 LinqToDB.Scaffold.DataModelOptions.BaseEntityClass.get -> string?
 LinqToDB.Scaffold.DataModelOptions.BaseEntityClass.set -> void
+LinqToDB.Scaffold.DataModelOptions.ContextClassModifier.get -> LinqToDB.CodeModel.Modifiers?
+LinqToDB.Scaffold.DataModelOptions.ContextClassModifier.set -> void
 LinqToDB.Scaffold.DataModelOptions.ContextClassName.get -> string?
 LinqToDB.Scaffold.DataModelOptions.ContextClassName.set -> void
 LinqToDB.Scaffold.DataModelOptions.DataContextClassNameOptions.get -> LinqToDB.Naming.NormalizationOptions!
@@ -1243,6 +1245,8 @@ LinqToDB.Scaffold.DataModelOptions.EntityContextPropertyNameProvider.get -> Syst
 LinqToDB.Scaffold.DataModelOptions.EntityContextPropertyNameProvider.set -> void
 LinqToDB.Scaffold.DataModelOptions.FindParameterNameOptions.get -> LinqToDB.Naming.NormalizationOptions!
 LinqToDB.Scaffold.DataModelOptions.FindParameterNameOptions.set -> void
+LinqToDB.Scaffold.DataModelOptions.FluentEntityTypeHelpers.get -> System.Collections.Generic.IReadOnlyCollection<string!>?
+LinqToDB.Scaffold.DataModelOptions.FluentEntityTypeHelpers.set -> void
 LinqToDB.Scaffold.DataModelOptions.FunctionTupleResultClassNameOptions.get -> LinqToDB.Naming.NormalizationOptions!
 LinqToDB.Scaffold.DataModelOptions.FunctionTupleResultClassNameOptions.set -> void
 LinqToDB.Scaffold.DataModelOptions.FunctionTupleResultPropertyNameOptions.get -> LinqToDB.Naming.NormalizationOptions!
@@ -1281,6 +1285,8 @@ LinqToDB.Scaffold.DataModelOptions.GenerateScale.get -> bool
 LinqToDB.Scaffold.DataModelOptions.GenerateScale.set -> void
 LinqToDB.Scaffold.DataModelOptions.GenerateSchemaAsType.get -> bool
 LinqToDB.Scaffold.DataModelOptions.GenerateSchemaAsType.set -> void
+LinqToDB.Scaffold.DataModelOptions.GenerateStaticInitDataContextMethod.get -> bool
+LinqToDB.Scaffold.DataModelOptions.GenerateStaticInitDataContextMethod.set -> void
 LinqToDB.Scaffold.DataModelOptions.HasConfigurationConstructor.get -> bool
 LinqToDB.Scaffold.DataModelOptions.HasConfigurationConstructor.set -> void
 LinqToDB.Scaffold.DataModelOptions.HasDefaultConstructor.get -> bool

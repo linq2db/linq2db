@@ -77,7 +77,7 @@ namespace LinqToDB
 		public static string GetTableName<T>(this ITable<T> table)
 			where T : notnull
 		{
-			return table.DataContext.CreateSqlProvider()
+			return table.DataContext.CreateSqlBuilder()
 				.BuildObjectName(new (), new (table.TableName, Server: table.ServerName, Database: table.DatabaseName, Schema: table.SchemaName), tableOptions: table.TableOptions)
 				.ToString();
 		}
@@ -100,10 +100,8 @@ namespace LinqToDB
 		internal static DataConnection GetDataConnection<T>(this ITable<T> table)
 			where T : notnull
 		{
-			if (table.DataContext is DataConnection dataConnection)
-				return dataConnection;
-			if (table.DataContext is DataContext dataContext)
-				return dataContext.GetDataConnection();
+			if (table.TryGetDataConnection(out var connection))
+				return connection;
 
 			throw new ArgumentException($"Data context must be of {nameof(DataConnection)} or {nameof(DataContext)} type.", nameof(table));
 		}

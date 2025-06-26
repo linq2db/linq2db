@@ -89,11 +89,11 @@ namespace Tests.Data
 
 			using (var conn = new DataConnection())
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<byte[]>("SELECT @p", new { p = arr1 }), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT @p", new { p = arr2 }), Is.EqualTo(arr2));
-				});
+				}
 			}
 		}
 
@@ -316,7 +316,7 @@ namespace Tests.Data
 			{
 				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null });
 
-				Assert.That(n, Is.EqualTo(null));
+				Assert.That(n, Is.Null);
 			}
 		}
 
@@ -330,7 +330,7 @@ namespace Tests.Data
 				var v1 = dc.Query<object>("SELECT v1 FROM #t1").ToList();
 				dc.Execute("ALTER TABLE #t1 ALTER COLUMN v1 INT NULL");
 
-				DataConnection.ClearObjectReaderCache();
+				CommandInfo.ClearObjectReaderCache();
 
 				dc.Execute("INSERT INTO #t1(v1) VALUES (null)");
 				var v2 = dc.Query<object>("SELECT v1 FROM #t1").ToList();

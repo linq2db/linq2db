@@ -98,7 +98,7 @@ namespace LinqToDB.DataProvider.SqlCe
 						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
 						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
 
-						var connectionFactory = typeMapper.BuildTypedFactory<string, SqlCeConnection, DbConnection>((string connectionString) => new SqlCeConnection(connectionString));
+						var connectionFactory = typeMapper.BuildTypedFactory<string, SqlCeConnection, DbConnection>(connectionString => new SqlCeConnection(connectionString));
 
 						_instance = new SqlCeProviderAdapter(
 							connectionType,
@@ -152,9 +152,9 @@ namespace LinqToDB.DataProvider.SqlCe
 				= new LambdaExpression[]
 			{
 				// [0]: CreateDatabase
-				(Expression<Action<SqlCeEngine>>)((SqlCeEngine this_) => this_.CreateDatabase()),
+				(Expression<Action<SqlCeEngine>>)(this_ => this_.CreateDatabase()),
 				// [1]: Dispose
-				(Expression<Action<SqlCeEngine>>)((SqlCeEngine this_) => this_.Dispose()),
+				(Expression<Action<SqlCeEngine>>)(this_ => this_.Dispose()),
 			};
 
 			public SqlCeEngine(object instance, Delegate[] wrappers) : base(instance, wrappers)

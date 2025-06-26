@@ -25,5 +25,7 @@ dotnet_diagnostic.CA1861.severity = none # CA1861: Avoid constant arrays as argu
 dotnet_diagnostic.CA1862.severity = none # CA1862: prefer the string comparison method with StringComparison argument
 dotnet_diagnostic.CA2237.severity = none # CA2237: Mark ISerializable types with SerializableAttribute
 
+dotnet_diagnostic.MA0169.severity = none
+
 [*.vb]
 dotnet_diagnostic.CA2224.severity = none # CA2224: Override Equals on overloading operator equals // https://github.com/dotnet/roslyn-analyzers/issues/6778

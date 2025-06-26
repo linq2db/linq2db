@@ -3029,12 +3029,12 @@ namespace Tests.xUpdate
 				.ToArray();
 
 			Assert.That(people, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(people[0].Id, Is.EqualTo(1));
 				Assert.That(people[0].Name, Is.EqualTo("name1"));
-				Assert.That(people[0].NeedsUpdate, Is.EqualTo(true));
-			});
+				Assert.That(people[0].NeedsUpdate, Is.True);
+			}
 		}
 
 		[Table]
@@ -3103,11 +3103,11 @@ namespace Tests.xUpdate
 				.ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].EmployeeId, Is.EqualTo(1));
 				Assert.That(result[0].Name, Is.EqualTo("new_name"));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4253")]

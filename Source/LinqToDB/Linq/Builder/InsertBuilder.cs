@@ -37,9 +37,22 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+		static BuildSequenceResult TryBuildSequenceWithFilter(ExpressionBuilder builder, BuildInfo localBuildInfo, bool shouldDisableFilter)
+		{
+			if (shouldDisableFilter)
+				builder.PushDisabledQueryFilters([]);
+
+			var buildResult = builder.TryBuildSequence(localBuildInfo);
+
+			if (shouldDisableFilter)
+				builder.PopDisabledFilter();
+
+			return buildResult;
+		}
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var shouldDisableFilters = typeof(ITable<>).IsSameOrParentOf(methodCall.Method.GetParameters()[0].ParameterType);
+			var buildResult          = TryBuildSequenceWithFilter(builder, new BuildInfo(buildInfo, methodCall.Arguments[0]), shouldDisableFilters);
 
 			if (buildResult.BuildContext == null)
 				return buildResult;
@@ -92,7 +105,7 @@ namespace LinqToDB.Linq.Builder
 
 						var sqlExpr = builder.BuildSqlExpression(sequence, sourceRef);
 
-						UpdateBuilder.ParseSetter(builder, targetRef, sqlExpr, insertContext.SetExpressions);
+						UpdateBuilder.ParseSetter(builder, targetRef, sourceRef, sqlExpr, insertContext.SetExpressions);
 					}
 				}
 				else if (methodCall.Arguments.Count > 1                  &&
@@ -102,7 +115,11 @@ namespace LinqToDB.Linq.Builder
 					// static int Insert<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target, Expression<Func<TSource,TTarget>> setter)
 					//
 
-					var into = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+					var intoResult = TryBuildSequenceWithFilter(builder, new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()), true);
+					if (intoResult.BuildContext == null)
+						return intoResult;
+					var into = intoResult.BuildContext;
+
 					var tableContext = SequenceHelper.GetTableOrCteContext(builder, new ContextRefExpression(into.ElementType, into));
 
 					if (tableContext == null)
@@ -118,8 +135,9 @@ namespace LinqToDB.Linq.Builder
 
 					var targetType = genericArguments[1];
 					var contextRef = new ContextRefExpression(targetType, into);
+					var sourceRef  = SequenceHelper.CreateRef(sequence);
 
-					UpdateBuilder.ParseSetter(builder, contextRef, setterExpr, insertContext.SetExpressions);
+					UpdateBuilder.ParseSetter(builder, contextRef, sourceRef, setterExpr, insertContext.SetExpressions);
 				}
 				else if (typeof(ITable<>).IsSameOrParentOf(argument.Type))
 				{
@@ -181,6 +199,7 @@ namespace LinqToDB.Linq.Builder
 
 					UpdateBuilder.ParseSetter(builder,
 						intoContextRef,
+						sourceRef,
 						redirectedExpression,
 						insertContext.SetExpressions);
 				}
@@ -211,16 +230,21 @@ namespace LinqToDB.Linq.Builder
 					if (insertType is InsertContext.InsertTypeEnum.InsertOutputInto)
 					{
 						var outputTable = methodCall.GetArgumentByName("outputTable")!;
-						var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
+
+						var destinationResult = TryBuildSequenceWithFilter(builder, new BuildInfo(buildInfo, outputTable, new SelectQuery()), true);
+						if (destinationResult.BuildContext == null)
+							return destinationResult;
+						var destination = destinationResult.BuildContext;
 
 						var destinationRef = new ContextRefExpression(outputExpression.Body.Type, destination);
+						var sourceRef      = SequenceHelper.CreateRef(sequence);
 
 						var outputExpr   = SequenceHelper.PrepareBody(outputExpression, outputAnchor);
 
 						insertStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
 
 						var outputSetters = new List<UpdateBuilder.SetExpressionEnvelope>();
-						UpdateBuilder.ParseSetter(builder, destinationRef, outputExpr, outputSetters);
+						UpdateBuilder.ParseSetter(builder, destinationRef, sourceRef, outputExpr, outputSetters);
 
 						UpdateBuilder.InitializeSetExpressions(builder, outputAnchor, outputAnchor,
 							outputSetters, insertStatement.Output.OutputItems, false);
@@ -294,7 +318,8 @@ namespace LinqToDB.Linq.Builder
 							? new SelectContext(Parent, OutputExpression, false, OutputContext)
 							: new AnchorContext(Parent, new SelectContext(Parent, OutputExpression, false, OutputContext), SqlAnchor.AnchorKindEnum.Inserted);
 
-						var outputRef     = new ContextRefExpression(path.Type, selectContext);
+						var outputRef = new ContextRefExpression(path.Type, selectContext);
+						var sourceRef = SequenceHelper.CreateRef(QuerySequence);
 
 						var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 
@@ -304,7 +329,7 @@ namespace LinqToDB.Linq.Builder
 						if (sqlExpr is SqlPlaceholderExpression)
 							outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr, false));
 						else
-							UpdateBuilder.ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
+							UpdateBuilder.ParseSetter(Builder, outputRef, sourceRef, sqlExpr, outputExpressions);
 
 						var setItems = new List<SqlSetExpression>();
 						UpdateBuilder.InitializeSetExpressions(Builder, selectContext, selectContext, outputExpressions, setItems, false);
@@ -350,7 +375,7 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var field in q)
 				{
-					var expr = Builder.DataContext.CreateSqlProvider().GetIdentityExpression(insert.Into);
+					var expr = Builder.DataContext.CreateSqlBuilder().GetIdentityExpression(insert.Into);
 
 					if (expr != null)
 					{
@@ -432,7 +457,11 @@ namespace LinqToDB.Linq.Builder
 				if (source.IsNullValue() || typeof(IDataContext).IsSameOrParentOf(source.Type))
 				{
 					createColumns = false;
-					sequence = builder.BuildSequence(new BuildInfo((IBuildContext?)null, into, new SelectQuery()));
+					var buildResult = TryBuildSequenceWithFilter(builder, new BuildInfo((IBuildContext?)null, into, new SelectQuery()), true);
+					if (buildResult.BuildContext == null)
+						return buildResult;
+
+					sequence            = buildResult.BuildContext;
 					destinationSequence = sequence;
 				}
 				// static ISelectInsertable<TSource,TTarget> Into<TSource,TTarget>(this IQueryable<TSource> source, Table<TTarget> target)
@@ -441,8 +470,11 @@ namespace LinqToDB.Linq.Builder
 				{
 					createColumns = true;
 					sequence = builder.BuildSequence(new BuildInfo(buildInfo, source));
-					destinationSequence = builder.BuildSequence(new BuildInfo((IBuildContext?)null, into, new SelectQuery()));
 
+					var buildResult = TryBuildSequenceWithFilter(builder, new BuildInfo((IBuildContext?)null, into, new SelectQuery()), true);
+					if (buildResult.BuildContext == null)
+						return buildResult;
+					destinationSequence = buildResult.BuildContext;
 				}
 
 				insertStatement = new SqlInsertStatement(sequence.SelectQuery);
@@ -469,7 +501,11 @@ namespace LinqToDB.Linq.Builder
 			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder,
 				MethodCallExpression                                                 methodCall, BuildInfo buildInfo)
 			{
-				var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+				var buildResult = TryBuildSequenceWithFilter(builder, new BuildInfo(buildInfo, methodCall.Arguments[0]), true);
+				if (buildResult.BuildContext == null)
+					return buildResult;
+
+				var sequence = buildResult.BuildContext;
 				var extract  = methodCall.Arguments[1].UnwrapLambda();
 				var update   = methodCall.Arguments[2].Unwrap();
 
@@ -479,6 +515,7 @@ namespace LinqToDB.Linq.Builder
 
 				var tableType  = methodCall.Method.GetGenericArguments()[1];
 				var contextRef = new ContextRefExpression(tableType, insertContext.Into);
+				var sourceRef  = SequenceHelper.CreateRef(sequence);
 
 				var extractExp = SequenceHelper.PrepareBody(extract, insertContext.Into);
 				var updateExpr = update;
@@ -490,7 +527,7 @@ namespace LinqToDB.Linq.Builder
 					forceParameters = false;
 				}
 
-				UpdateBuilder.ParseSet(contextRef, extractExp, updateExpr, insertContext.SetExpressions, forceParameters);
+				UpdateBuilder.ParseSet(contextRef, sourceRef, extractExp, updateExpr, insertContext.SetExpressions, forceParameters);
 				insertContext.LastBuildInfo = buildInfo;
 
 				return BuildSequenceResult.FromContext(insertContext);

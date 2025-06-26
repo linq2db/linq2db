@@ -3134,6 +3134,9 @@ HanaDataReader reader = cmd.ExecuteReader();</code>
 	    <para>The number of objects in the array.</para>
         </returns>
         </member>
+        <member name="M:Sap.Data.Hana.HanaDataReader.GetRealVector(System.Int32)">
+            <!-- No matching elements were found for the following include tag --><include file="DataReader.xml" path="doc/member[@name=&quot;GetRealVector&quot;]/*"/>
+        </member>
         <member name="M:Sap.Data.Hana.HanaDataReader.IsDBNull(System.Int32)">
             <summary>
             <para>Returns a value indicating whether the column contains NULL values.</para>
@@ -3387,6 +3390,9 @@ reader.Close();</code>
             <summary>
             <para>Single-precision 32-bit floating-point number.</para>
         </summary>
+        </member>
+        <member name="F:Sap.Data.Hana.HanaDbType.RealVector">
+            <!-- No matching elements were found for the following include tag --><include file="enum.xml" path="doc/member[@name=&quot;HanaDbType_RealVector&quot;]/*"/>
         </member>
         <member name="F:Sap.Data.Hana.HanaDbType.SecondDate">
             <summary>

@@ -84,7 +84,7 @@ namespace Tests.Samples
 			MappingHelper.GenerateConvertorsForTables(typeof(MyDataConnection), _convertorSchema);
 		}
 
-		public MyDataConnection(string providerName, string connectionString, MappingSchema mappingSchema) : base(providerName, connectionString, mappingSchema)
+		public MyDataConnection(string providerName, string connectionString, MappingSchema mappingSchema) : base(new DataOptions().UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema))
 		{
 			AddMappingSchema(_convertorSchema);
 		}
@@ -172,13 +172,13 @@ namespace Tests.Samples
 
 				var objects = table.Where(t => Json.Value(t.Data!.Property1) == "Pr1")
 					.ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.LastQuery!, Does.Not.Contain("IS NULL"));
 
 					Assert.That(objects, Has.Length.EqualTo(1));
-				});
+				}
+
 				Assert.That(objects[0].Data!.Property1, Is.EqualTo("Pr1"));
 			}
 		}

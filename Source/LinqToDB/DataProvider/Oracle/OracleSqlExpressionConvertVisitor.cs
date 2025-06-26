@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public override IQueryElement ConvertExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			var (a, op, b, withNull) = predicate;
-			
+
 			// We want to modify comparisons involving "" as Oracle treats "" as null
 
 			// Comparisons to a literal constant "" are always converted to IS [NOT] NULL (same as == null or == default)
@@ -52,7 +52,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					return CompareToEmptyString(a, op);
 				}
-				
+
 				if (Oracle11SqlOptimizer.IsTextType(a, MappingSchema)                   &&
 				    a.TryEvaluateExpressionForServer(EvaluationContext, out var aValue) &&
 					aValue is string { Length: 0 })
@@ -75,10 +75,10 @@ namespace LinqToDB.DataProvider.Oracle
 					SqlPredicate.Operator.NotEqual       => new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(x, true), isNot: true),
 					SqlPredicate.Operator.GreaterOrEqual => new SqlPredicate.ExprExpr(
 						// Always true
-						new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(1), withNull: null),
+						new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(1), unknownAsValue: null),
 					SqlPredicate.Operator.Less           => new SqlPredicate.ExprExpr(
 						// Always false
-						new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(0), withNull: null),
+						new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(0), unknownAsValue: null),
 					// Overlaps doesn't operate on strings
 					_ => throw new InvalidOperationException(),
 				};
@@ -164,7 +164,7 @@ namespace LinqToDB.DataProvider.Oracle
 			var argument = cast.Expression;
 
 			if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				|| ftype == typeof(DateOnly)
 #endif
 			   )
@@ -209,7 +209,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 				}
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				else if (stype == typeof(DateOnly))
 				{
 					return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("YYYY-MM-DD"));

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Linq;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 
 using LinqToDB.Common;
@@ -14,11 +15,13 @@ namespace LinqToDB.DataProvider.SapHana
 		SapHanaMappingSchema() : base(ProviderName.SapHana)
 		{
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+			SetDataType(typeof(float[]), new SqlDataType(new DbDataType(typeof(float[]), DataType.Array | DataType.Single, "REAL_VECTOR")));
 
 			SetValueToSqlConverter(typeof(string), (sb,_,_,v) => ConvertStringToSql(sb, (string)v));
 			SetValueToSqlConverter(typeof(char)  , (sb,_,_,v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]), (sb,_,_,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary), (sb,_,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 38, 10));
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
@@ -53,7 +56,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public sealed class NativeMappingSchema : LockedMappingSchema
 		{
-			public NativeMappingSchema() : base(ProviderName.SapHanaNative, Instance)
+			public NativeMappingSchema() : base(ProviderName.SapHanaNative, new MappingSchema?[] { SapHanaProviderAdapter.GetInstance(SapHanaProvider.Unmanaged).MappingSchema, Instance }.Where(_ => _ != null).ToArray()!)
 			{
 			}
 		}

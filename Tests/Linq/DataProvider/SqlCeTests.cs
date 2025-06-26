@@ -28,7 +28,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as int)", new { p = 1 }), Is.EqualTo("1"));
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = "1" }), Is.EqualTo("1"));
@@ -36,7 +36,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<string>("SELECT Cast(@p1 as nvarchar)", new { p1 = new DataParameter { Value = "1" } }), Is.EqualTo("1"));
 					Assert.That(conn.Execute<int>("SELECT @p1 + @p2", new { p1 = 2, p2 = 3 }), Is.EqualTo(5));
 					Assert.That(conn.Execute<int>("SELECT @p2 + @p1", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
-				});
+				}
 			}
 		}
 
@@ -45,11 +45,11 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(TestType<long?>(conn, "bigintDataType", DataType.UInt64, skipUndefinedNull: true), Is.EqualTo(1000000L));
 					Assert.That(TestType<decimal?>(conn, "numericDataType", DataType.Decimal, skipUndefinedNull: true), Is.EqualTo(9999999m));
-					Assert.That(TestType<bool?>(conn, "bitDataType", DataType.Boolean, skipUndefinedNull: true), Is.EqualTo(true));
+					Assert.That(TestType<bool?>(conn, "bitDataType", DataType.Boolean, skipUndefinedNull: true), Is.True);
 					Assert.That(TestType<short?>(conn, "smallintDataType", DataType.Int16, skipUndefinedNull: true), Is.EqualTo(25555));
 					Assert.That(TestType<decimal?>(conn, "decimalDataType", DataType.Decimal, skipUndefinedNull: true), Is.EqualTo(2222222m));
 					Assert.That(TestType<int?>(conn, "intDataType", DataType.Int32, skipUndefinedNull: true), Is.EqualTo(7777777));
@@ -71,7 +71,7 @@ namespace Tests.DataProvider
 					Assert.That(TestType<Guid?>(conn, "uniqueidentifierDataType", DataType.Guid, skipUndefinedNull: true), Is.EqualTo(new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}")));
 
 					Assert.That(conn.Execute<byte[]>("SELECT timestampDataType FROM AllTypes WHERE ID = 1"), Has.Length.EqualTo(8));
-				});
+				}
 			}
 		}
 
@@ -103,12 +103,12 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(conn.Execute<T>("SELECT @p + 0", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
 				Assert.That(conn.Execute<T>("SELECT @p + 0", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
 				Assert.That(conn.Execute<T>("SELECT @p + 0", new { p = expectedValue }), Is.EqualTo(expectedValue));
-			});
+			}
 		}
 
 		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
@@ -175,8 +175,7 @@ namespace Tests.DataProvider
 			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<DateTime>("SELECT Cast('2012-12-12 12:12:12' as datetime)"), Is.EqualTo(dateTime));
 					Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12' as datetime)"), Is.EqualTo(dateTime));
@@ -185,7 +184,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<DateTime?>("SELECT DateAdd(day, 0, @p)", new DataParameter("p", dateTime)), Is.EqualTo(dateTime));
 					Assert.That(conn.Execute<DateTime?>("SELECT DateAdd(day, 0, @p)", new DataParameter("p", dateTime, DataType.DateTime)), Is.EqualTo(dateTime));
 					Assert.That(conn.Execute<DateTime?>("SELECT DateAdd(day, 0, @p)", new DataParameter("p", dateTime, DataType.DateTime2)), Is.EqualTo(dateTime));
-				});
+				}
 			}
 		}
 
@@ -194,7 +193,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<char>("SELECT Cast('1' as nchar)"), Is.EqualTo('1'));
 					Assert.That(conn.Execute<char?>("SELECT Cast('1' as nchar)"), Is.EqualTo('1'));
@@ -224,7 +223,7 @@ namespace Tests.DataProvider
 
 					Assert.That(conn.Execute<char>("SELECT RTRIM(@p)", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
 					Assert.That(conn.Execute<char?>("SELECT RTRIM(@p)", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
-				});
+				}
 			}
 		}
 
@@ -233,7 +232,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar)"), Is.EqualTo("12345"));
 					Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20))"), Is.EqualTo("12345"));
@@ -254,9 +253,9 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as ntext)", DataParameter.NText("p", "123")), Is.EqualTo("123"));
 					Assert.That(conn.Execute<string>("SELECT @p + ''", DataParameter.Create("p", "123")), Is.EqualTo("123"));
 
-					Assert.That(conn.Execute<string>("SELECT @p + ''", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<string>("SELECT @p + ''", DataParameter.Create("p", (string?)null)), Is.Null);
 					Assert.That(conn.Execute<string>("SELECT @p + ''", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
-				});
+				}
 			}
 		}
 
@@ -268,7 +267,7 @@ namespace Tests.DataProvider
 
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as binary(2))"), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as binary(4))"), Is.EqualTo(new Binary(arr2)));
@@ -276,12 +275,12 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as varbinary(2))"), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as varbinary(4))"), Is.EqualTo(new Binary(arr2)));
 
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"), Is.Null);
 
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(2))", DataParameter.Binary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary(2))", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary(2))", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary)", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary)", DataParameter.VarBinary("p", null)), Is.Null);
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(1))", DataParameter.Binary("p", Array.Empty<byte>())), Is.EqualTo(new byte[] { 0 }));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary)", DataParameter.Binary("p", Array.Empty<byte>())), Is.EqualTo(new byte[8000]));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary)", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
@@ -289,7 +288,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary)", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary)", DataParameter.Create("p", new Binary(arr1))), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as varbinary)", new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
-				});
+				}
 			}
 		}
 
@@ -299,11 +298,10 @@ namespace Tests.DataProvider
 			using (var conn = GetDataConnection(context))
 			{
 				var arr = new byte[] { 48, 57 };
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<SqlBinary>("SELECT Cast(12345    as binary(2))").Value, Is.EqualTo(arr));
-					Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(1        as bit)").Value, Is.EqualTo(true));
+					Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(1        as bit)").Value, Is.True);
 					Assert.That(conn.Execute<SqlByte>("SELECT Cast(1        as tinyint)").Value, Is.EqualTo((byte)1));
 					Assert.That(conn.Execute<SqlDecimal>("SELECT Cast(1        as decimal)").Value, Is.EqualTo(1));
 					Assert.That(conn.Execute<SqlDouble>("SELECT Cast(1        as float)").Value, Is.EqualTo(1.0));
@@ -326,17 +324,16 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<SqlBinary>("SELECT Cast(@p as varbinary)", new DataParameter("p", new SqlBinary(arr))).Value, Is.EqualTo(arr));
 					Assert.That(conn.Execute<SqlBinary>("SELECT Cast(@p as varbinary)", new DataParameter("p", new SqlBinary(arr), DataType.VarBinary)).Value, Is.EqualTo(arr));
 
-					Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(@p as bit)", new DataParameter("p", true)).Value, Is.EqualTo(true));
-					Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(@p as bit)", new DataParameter("p", true, DataType.Boolean)).Value, Is.EqualTo(true));
-				});
+					Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(@p as bit)", new DataParameter("p", true)).Value, Is.True);
+					Assert.That(conn.Execute<SqlBoolean>("SELECT Cast(@p as bit)", new DataParameter("p", true, DataType.Boolean)).Value, Is.True);
+				}
 
 				var conv = conn.MappingSchema.GetConverter<string,SqlXml>()!;
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<SqlXml>("SELECT Cast(@p as nvarchar)", new DataParameter("p", conv("<xml/>"))).Value, Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<SqlXml>("SELECT Cast(@p as nvarchar)", new DataParameter("p", conv("<xml/>"), DataType.Xml)).Value, Is.EqualTo("<xml />"));
-				});
+				}
 			}
 		}
 
@@ -345,7 +342,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(
 									conn.Execute<Guid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)"),
@@ -354,15 +351,14 @@ namespace Tests.DataProvider
 					Assert.That(
 						conn.Execute<Guid?>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)"),
 						Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
-				});
+				}
 
 				var guid = TestData.Guid1;
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<Guid>("SELECT Cast(@p as uniqueidentifier)", DataParameter.Create("p", guid)), Is.EqualTo(guid));
 					Assert.That(conn.Execute<Guid>("SELECT Cast(@p as uniqueidentifier)", new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
-				});
+				}
 			}
 		}
 
@@ -372,15 +368,14 @@ namespace Tests.DataProvider
 			using (var conn = GetDataConnection(context))
 			{
 				var arr = new byte[] { 0, 0, 0, 0, 0, 0, 0, 1 };
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(1 as timestamp)"), Is.EqualTo(arr));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(1 as rowversion)"), Is.EqualTo(arr));
 
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as timestamp)", DataParameter.Timestamp("p", arr)), Is.EqualTo(arr));
 					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as timestamp)", new DataParameter("p", arr, DataType.Timestamp)), Is.EqualTo(arr));
-				});
+				}
 			}
 		}
 
@@ -389,24 +384,23 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<string>("SELECT Cast('<xml/>' as nvarchar)"), Is.EqualTo("<xml/>"));
 					Assert.That(conn.Execute<XDocument>("SELECT Cast('<xml/>' as nvarchar)").ToString(), Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XmlDocument>("SELECT Cast('<xml/>' as nvarchar)").InnerXml, Is.EqualTo("<xml />"));
-				});
+				}
 
 				var xdoc = XDocument.Parse("<xml/>");
 				var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", DataParameter.Xml("p", "<xml/>")), Is.EqualTo("<xml/>"));
 					Assert.That(conn.Execute<XDocument>("SELECT Cast(@p as nvarchar)", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XmlDocument>("SELECT Cast(@p as nvarchar)", DataParameter.Xml("p", xml)).InnerXml, Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XDocument>("SELECT Cast(@p as nvarchar)", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XDocument>("SELECT Cast(@p as nvarchar)", new DataParameter("p", xml)).ToString(), Is.EqualTo("<xml />"));
-				});
+				}
 			}
 		}
 
@@ -421,13 +415,13 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<TestEnum>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 					Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 					Assert.That(conn.Execute<TestEnum>("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
 					Assert.That(conn.Execute<TestEnum?>("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
-				});
+				}
 			}
 		}
 
@@ -436,7 +430,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = TestEnum.AA }), Is.EqualTo("A"));
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
@@ -444,7 +438,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
 					Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = conn.MappingSchema.GetConverter<TestEnum?, string>()!(TestEnum.AA) }), Is.EqualTo("A"));
-				});
+				}
 			}
 		}
 
@@ -462,7 +456,7 @@ namespace Tests.DataProvider
 			SqlCeTools.CreateDatabase ("TestDatabase");
 			Assert.That(File.Exists ("TestDatabase.sdf"), Is.True);
 
-			using (var db = new DataConnection(SqlCeTools.GetDataProvider(), "Data Source=TestDatabase.sdf"))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(SqlCeTools.GetDataProvider(), "Data Source=TestDatabase.sdf")))
 			{
 				db.CreateTable<CreateTableTest>();
 				db.DropTable  <CreateTableTest>();
@@ -544,11 +538,12 @@ namespace Tests.DataProvider
 				var t  = sh.Tables.Single(_ => _.TableName!.Equals("Issue695", StringComparison.OrdinalIgnoreCase));
 
 				Assert.That(t.Columns, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(t.Columns.Count(_ => _.IsPrimaryKey), Is.EqualTo(1));
 					Assert.That(t.ForeignKeys, Has.Count.EqualTo(1));
-				});
+				}
+
 				Assert.That(t.ForeignKeys[0].ThisColumns, Has.Count.EqualTo(1));
 			}
 		}
@@ -567,11 +562,11 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.Person.Set(_ => _.FirstName, _ => _.FirstName).Update(), Is.EqualTo(Person.Count()));
 					Assert.That(db.Person.With("TABLOCK").Set(_ => _.FirstName, _ => _.FirstName).Update(), Is.EqualTo(Person.Count()));
-				});
+				}
 			}
 		}
 

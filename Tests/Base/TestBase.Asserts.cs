@@ -21,6 +21,23 @@ namespace Tests
 {
 	partial class TestBase
 	{
+#if !NETFRAMEWORK
+		public static readonly IEqualityComparer<decimal> DecimalComparerInstance = EqualityComparer<decimal>.Default;
+#else
+		public static readonly IEqualityComparer<decimal> DecimalComparerInstance = new DecimalComparer();
+
+		sealed class DecimalComparer : IEqualityComparer<decimal>
+		{
+			bool IEqualityComparer<decimal>.Equals(decimal x, decimal y) => x == y;
+
+			int IEqualityComparer<decimal>.GetHashCode(decimal obj)
+			{
+				// workaround netfx bug in decimal.GetHashCode
+				return (obj / 1.00000000000000000000000000000m).GetHashCode();
+			}
+		}
+#endif
+
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false)
 		{
 			AreEqual(t => t, expected, result, EqualityComparer<T>.Default, allowEmpty);
@@ -104,8 +121,8 @@ namespace Tests
 				}
 			}
 
-			Assert.That(exceptExpected, Is.EqualTo(0), $"Expected Was{Environment.NewLine}{message}");
-			Assert.That(exceptResult, Is.EqualTo(0), $"Expect Result{Environment.NewLine}{message}");
+			Assert.That(exceptExpected, Is.Zero, $"Expected Was{Environment.NewLine}{message}");
+			Assert.That(exceptResult, Is.Zero, $"Expect Result{Environment.NewLine}{message}");
 
 			LastQuery = lastQuery;
 		}

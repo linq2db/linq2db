@@ -204,7 +204,7 @@ namespace Tests.xUpdate
 					tableExists = false;
 				}
 
-				Assert.That(tableExists, Is.EqualTo(false));
+				Assert.That(tableExists, Is.False);
 			}
 		}
 
@@ -259,7 +259,7 @@ namespace Tests.xUpdate
 					tableExists = false;
 				}
 
-				Assert.That(tableExists, Is.EqualTo(false));
+				Assert.That(tableExists, Is.False);
 			}
 		}
 
@@ -356,7 +356,7 @@ namespace Tests.xUpdate
 			var records2 = tmp.OrderBy(r => r.Id).ToArray();
 
 			Assert.That(records1, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(records1[0].Id, Is.EqualTo(1));
 				Assert.That(records1[0].Value, Is.EqualTo("value"));
@@ -364,14 +364,11 @@ namespace Tests.xUpdate
 				Assert.That(records1[1].Value, Is.EqualTo("value 2"));
 
 				Assert.That(records2, Has.Length.EqualTo(2));
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(records2[0].Id, Is.EqualTo(1));
 				Assert.That(records2[0].Value, Is.EqualTo("value"));
 				Assert.That(records2[1].Id, Is.EqualTo(2));
 				Assert.That(records2[1].Value, Is.EqualTo("renamed 2"));
-			});
+			}
 		}
 
 		[Test]

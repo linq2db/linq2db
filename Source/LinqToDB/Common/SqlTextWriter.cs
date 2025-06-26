@@ -98,7 +98,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(sbyte value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
+			StringBuilder.Append(value);
 			return this;
 		}
 
@@ -106,7 +106,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(byte value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
+			StringBuilder.Append(value);
 			return this;
 		}
 
@@ -114,7 +114,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(short value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
+			StringBuilder.Append(value);
 			return this;
 		}
 
@@ -122,7 +122,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(int value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
+			StringBuilder.Append(value);
 			return this;
 		}
 
@@ -130,7 +130,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(long value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
+			StringBuilder.Append(value);
 			return this;
 		}
 
@@ -172,7 +172,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(ushort value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
+			StringBuilder.Append(value);
 			return this;
 		}
 
@@ -181,7 +181,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(uint value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
+			StringBuilder.Append(value);
 			return this;
 		}
 
@@ -190,7 +190,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(ulong value)
 		{
 			AppendIndentIfNeeded();
-			StringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
+			StringBuilder.Append(value);
 			return this;
 		}
 
@@ -198,7 +198,7 @@ namespace LinqToDB.Common
 		public SqlTextWriter Append(StringBuilder? value)
 		{
 			if (value != null)
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 				StringBuilder.Append(value);
 #else
 				Append(value.ToString());
