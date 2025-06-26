@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 		}
 	}
 
-	class AsSubqueryContext : SubQueryContext
+	sealed class AsSubqueryContext : SubQueryContext
 	{
 		public AsSubqueryContext(IBuildContext subQuery, SelectQuery selectQuery, bool addToSql) : base(subQuery, selectQuery, addToSql)
 		{

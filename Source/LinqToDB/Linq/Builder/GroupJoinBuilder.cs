@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-		class GroupJoinInnerContext : BuildContextBase
+		sealed class GroupJoinInnerContext : BuildContextBase
 		{
 			public override MappingSchema MappingSchema => Parent?.MappingSchema ?? Builder.MappingSchema;
 

@@ -11,7 +11,7 @@ namespace LinqToDB.SqlQuery
 	public class SqlQueryColumnNestingCorrector : SqlQueryVisitor
 	{
 		[DebuggerDisplay("QN(S:{TableSource.SourceID})")]
-		class QueryNesting
+		sealed class QueryNesting
 		{
 			public QueryNesting(QueryNesting? parent, ISqlTableSource tableSource)
 			{

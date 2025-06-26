@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 			return new GuidMemberTranslator();
 		}
 
-		class SqlTypesTranslation : SqlTypesTranslationDefault
+		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertTinyInt(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Int16));
@@ -225,7 +225,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 			}
 		}
 
-		class MathMemberTranslator : MathMemberTranslatorBase
+		sealed class MathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
@@ -252,7 +252,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 			}
 		}
 
-		class GuidMemberTranslator : GuidMemberTranslatorBase
+		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{

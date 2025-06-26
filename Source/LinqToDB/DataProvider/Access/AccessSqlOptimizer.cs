@@ -6,7 +6,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Access
 {
-	class AccessSqlOptimizer : BasicSqlOptimizer
+	sealed class AccessSqlOptimizer : BasicSqlOptimizer
 	{
 		public AccessSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

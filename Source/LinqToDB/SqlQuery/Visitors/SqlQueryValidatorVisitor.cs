@@ -255,7 +255,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			return visitor.ContainsNotNullExpr;
 		}
 
-		class ValidateThatQueryHasNoIsNotNullParentReferenceVisitor : SqlQueryVisitor
+		sealed class ValidateThatQueryHasNoIsNotNullParentReferenceVisitor : SqlQueryVisitor
 		{
 			public Stack<ISqlTableSource> _currentSources = new Stack<ISqlTableSource>();
 

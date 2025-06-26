@@ -8,7 +8,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Builder
 {
-	class LambdaResolveVisitor : ExpressionVisitorBase
+	sealed class LambdaResolveVisitor : ExpressionVisitorBase
 	{
 		readonly IBuildContext _context;
 		readonly BuildPurpose  _buildPurpose;

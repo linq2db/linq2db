@@ -11,7 +11,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	class MergeProjectionHelper
+	sealed class MergeProjectionHelper
 	{
 		public ExpressionBuilder Builder       { get; }
 		public MappingSchema     MappingSchema { get; }
@@ -255,7 +255,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Nested class
 
-		class ExpressionOptimizerVisitor : ExpressionVisitorBase
+		sealed class ExpressionOptimizerVisitor : ExpressionVisitorBase
 		{
 			protected override Expression VisitConditional(ConditionalExpression node)
 			{
@@ -274,7 +274,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		class ExpressionPathVisitor : ExpressionVisitorBase
+		sealed class ExpressionPathVisitor : ExpressionVisitorBase
 		{
 			Stack<Expression> _stack = new();
 

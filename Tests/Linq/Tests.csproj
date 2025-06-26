@@ -58,5 +58,6 @@
 
 	<ItemGroup Condition="'$(Language)'=='C#'">
 		<Compile Remove="$(MSBuildThisFileDirectory)/../../Source/Shared/*.cs" />
+		<Compile Include="$(MSBuildThisFileDirectory)/../../Source/Shared/JetBrains.Annotations.cs" Link="JetBrains.Annotations.cs" />
 	</ItemGroup>
 </Project>

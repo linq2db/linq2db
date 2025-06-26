@@ -418,7 +418,7 @@ namespace LinqToDB.Linq.Builder
 				return null;
 			}
 
-			class PathComparer : IEqualityComparer<Expression[]>
+			sealed class PathComparer : IEqualityComparer<Expression[]>
 			{
 				public static readonly PathComparer Instance = new PathComparer();
 
@@ -677,7 +677,7 @@ namespace LinqToDB.Linq.Builder
 				_setIdPlaceholder = leftIdPlaceholder.WithPath(setIdReference).WithTrackingPath(setIdReference);
 			}
 
-			class ExpressionOptimizerVisitor : ExpressionVisitorBase
+			sealed class ExpressionOptimizerVisitor : ExpressionVisitorBase
 			{
 				protected override Expression VisitConditional(ConditionalExpression node)
 				{
@@ -696,7 +696,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			class ExpressionPathVisitor : ExpressionVisitorBase
+			sealed class ExpressionPathVisitor : ExpressionVisitorBase
 			{
 				Stack<Expression> _stack = new();
 

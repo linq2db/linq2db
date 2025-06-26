@@ -106,7 +106,6 @@ namespace LinqToDB.Linq.Builder
 
 		public readonly IDataContext           DataContext;
 		public readonly Expression             Expression;
-		public readonly ParameterExpression[]? CompiledParameters;
 		public readonly object?[]?             ParameterValues;
 
 		public static readonly ParameterExpression QueryRunnerParam              = Expression.Parameter(typeof(IQueryRunner), "qr");

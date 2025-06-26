@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider
 			newAliasContext = visitor.Value.SetAliases(identifierService, statement, prevAliasContext);
 		}
 
-		class AliasesVisitor : SqlQueryVisitor
+		sealed class AliasesVisitor : SqlQueryVisitor
 		{
 			IIdentifierService _identifierService = default!;
 			AliasesContext?    _prevAliases;

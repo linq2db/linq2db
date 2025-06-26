@@ -258,7 +258,7 @@ namespace LinqToDB
 
 		#region Convert Functions
 
-		class ConvertBuilder : IExtensionCallBuilder
+		sealed class ConvertBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -291,7 +291,7 @@ namespace LinqToDB
 			return Common.ConvertTo<TTo>.From(from);
 		}
 
-		class ConvertBuilderSimple : IExtensionCallBuilder
+		sealed class ConvertBuilderSimple : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -311,7 +311,7 @@ namespace LinqToDB
 			return Common.ConvertTo<TTo>.From(obj);
 		}
 
-		class ConvertBuilderInner : IExtensionCallBuilder
+		sealed class ConvertBuilderInner : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -559,7 +559,7 @@ namespace LinqToDB
 			return str.Substring(0, length.Value);
 		}
 
-		class OracleRightBuilder : IExtensionCallBuilder
+		sealed class OracleRightBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -578,7 +578,7 @@ namespace LinqToDB
 			}
 		}
 
-		class SqlCeRightBuilder : IExtensionCallBuilder
+		sealed class SqlCeRightBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{

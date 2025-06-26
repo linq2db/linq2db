@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 {
 	public class MySqlMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		class SqlTypesTranslation : SqlTypesTranslationDefault
+		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Boolean));
@@ -217,7 +217,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 		{
 		}
 
-		class GuidMemberTranslator : GuidMemberTranslatorBase
+		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{

@@ -226,7 +226,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		#region BulkCopy
 		[Wrapper]
-		internal class AseBulkCopy : TypeWrapper, IDisposable
+		internal sealed class AseBulkCopy : TypeWrapper, IDisposable
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]

@@ -153,7 +153,7 @@ namespace LinqToDB.DataProvider.Informix
 		public Func<TimeSpan, object>? TimeSpanFactory { get; }
 
 		internal BulkCopyAdapter?                    InformixBulkCopy { get; }
-		internal DB2ProviderAdapter.BulkCopyAdapter? DB2BulkCopy      { get; }
+		public   DB2ProviderAdapter.BulkCopyAdapter? DB2BulkCopy      { get; }
 
 		public string? GetDecimalReaderMethod  { get; }
 		public string  GetDateTimeReaderMethod { get; }
@@ -163,7 +163,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		public string ProviderTypesNamespace   { get; }
 
-		internal class BulkCopyAdapter
+		internal sealed class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
 				Func<DbConnection, IfxBulkCopyOptions, IfxBulkCopy> bulkCopyCreator,
@@ -396,7 +396,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		#region BulkCopy
 		[Wrapper]
-		internal class IfxBulkCopy : TypeWrapper, IDisposable
+		internal sealed class IfxBulkCopy : TypeWrapper, IDisposable
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]

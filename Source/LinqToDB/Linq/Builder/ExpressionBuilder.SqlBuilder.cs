@@ -457,7 +457,7 @@ namespace LinqToDB.Linq.Builder
 			return _buildVisitor.GenerateComparison(context, left, right, buildPurpose);
 		}
 
-		class PlaceholderCollectVisitor : ExpressionVisitorBase
+		sealed class PlaceholderCollectVisitor : ExpressionVisitorBase
 		{
 			readonly List<SqlPlaceholderExpression> _collected = new();
 			bool                                    _includeDefaultIfEmpty;

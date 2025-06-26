@@ -320,7 +320,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		#region BulkCopy
 		[Wrapper]
-		internal class HanaBulkCopy : TypeWrapper, IDisposable
+		internal sealed class HanaBulkCopy : TypeWrapper, IDisposable
 		{
 			private static object[] Wrappers { get; }
 				= new object[]
