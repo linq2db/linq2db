@@ -1375,11 +1375,12 @@ namespace LinqToDB.SqlProvider
 
 				if (wrap)
 				{
-					var predicate = unwrapped as ISqlPredicate;
-					if (predicate == null && unwrapped is SqlParameterizedExpressionBase { IsPredicate: true })
-						predicate = new SqlPredicate.Expr(expr);
-					if (predicate == null)
-						predicate = ConvertToBooleanSearchCondition(expr);
+					var predicate = unwrapped switch
+					{
+						SqlParameterizedExpressionBase { IsPredicate: true } => new SqlPredicate.Expr(expr),
+						ISqlPredicate isp                                    => isp,
+						_                                                    => ConvertToBooleanSearchCondition(expr),
+					};
 
 					var trueValue  = new SqlValue(true);
 					var falseValue = new SqlValue(false);

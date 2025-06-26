@@ -112,7 +112,9 @@ namespace LinqToDB.DataProvider.Informix
 								|| IsDateTimeType(cast.ToType, "DateTime")
 								|| IsSmallDateTimeType(cast.ToType, "SmallDateTime"))
 							&& argument.SystemType == typeof(string))
+						{
 							return new SqlFunction(cast.Type, "To_Date", argument, new SqlValue("%Y-%m-%d %H:%M:%S"));
+						}
 
 						if (IsTimeDataType(cast.ToType))
 						{

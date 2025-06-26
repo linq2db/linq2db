@@ -53,22 +53,32 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				case SqlPredicate.SearchString.SearchKind.StartsWith:
 					if (!caseSensitive)
+					{
 						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "startsWith",
+							new SqlFunction(
+								typeof(bool), "startsWith",
 								PseudoFunctions.MakeToLower(dataExpr), PseudoFunctions.MakeToLower(searchExpr)));
+					}
 					else
+					{
 						subStrPredicate = new SqlPredicate.Expr(
 							new SqlFunction(typeof(bool), "startsWith", dataExpr, searchExpr));
+					}
 					break;
 
 				case SqlPredicate.SearchString.SearchKind.EndsWith:
 					if (!caseSensitive)
+					{
 						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "endsWith",
+							new SqlFunction(
+								typeof(bool), "endsWith",
 								PseudoFunctions.MakeToLower(dataExpr), PseudoFunctions.MakeToLower(searchExpr)));
+					}
 					else
+					{
 						subStrPredicate = new SqlPredicate.Expr(
 							new SqlFunction(typeof(bool), "endsWith", dataExpr, searchExpr));
+					}
 					break;
 
 				case SqlPredicate.SearchString.SearchKind.Contains:
@@ -151,10 +161,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 					return element;
 				}
 
-				case SqlBinaryExpression(var type, var left, "|", var right)    : return new SqlFunction(type, "bitOr" , left, right);
-				case SqlBinaryExpression(var type, var left, "&", var right)    : return new SqlFunction(type, "bitAnd", left, right);
-				case SqlBinaryExpression(var type, var left, "^", var right)    : return new SqlFunction(type, "bitXor", left, right);
-				case SqlBinaryExpression(var type, SqlValue(-1), "*", var right): return new SqlFunction(type, "negate", right      );
+				case SqlBinaryExpression(var type, var left, "|", var right)    :
+					return new SqlFunction(type, "bitOr", left, right);
+				case SqlBinaryExpression(var type, var left, "&", var right)    :
+					return new SqlFunction(type, "bitAnd", left, right);
+				case SqlBinaryExpression(var type, var left, "^", var right)    :
+					return new SqlFunction(type, "bitXor", left, right);
+				case SqlBinaryExpression(var type, SqlValue(-1), "*", var right):
+					return new SqlFunction(type, "negate", right);
 
 				case SqlBinaryExpression(var type, var ex1, "+", var ex2) when type.SystemType == typeof(string):
 				{
@@ -331,8 +345,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 						var valueType = QueryHelper.GetDbDataType(value, MappingSchema);
 						if (valueType.DataType is DataType.Char or DataType.NChar or DataType.Binary)
 						{
-							return new SqlFunction(toType, "trim", canBeNull: true,
-								new SqlExpression(toType.SystemType, "TRAILING '\x00' FROM {0}", Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, value));
+							return new SqlFunction(
+								toType, "trim", canBeNull: true,
+								new SqlExpression(toType.SystemType, "TRAILING '\x00' FROM {0}",
+								Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, value));
 						}
 
 						return new SqlCastExpression(value, toType, null, true);
