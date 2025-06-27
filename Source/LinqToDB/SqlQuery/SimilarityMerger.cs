@@ -52,7 +52,7 @@ namespace LinqToDB.SqlQuery
 						return true;
 					}
 				}
-				else if (predicate2 is SqlPredicate.ExprExpr exprExpr2 && exprExpr2.UnknownAsValue is true)
+				else if (predicate2 is SqlPredicate.ExprExpr { UnknownAsValue: true or null } exprExpr2)
 				{
 					if (!isLogicalOr && isNull1.IsNot && !nullabilityContext.IsEmpty)
 					{
