@@ -13,6 +13,7 @@ using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
+using System.Data;
 
 namespace Tests.DataProvider
 {
@@ -541,89 +542,6 @@ namespace Tests.DataProvider
 		}
 
 		#endregion
-
-		//#region HintsTests
-		////------------------------------------------------------------------
-		//// 1. WITH INLINE  (TableHint)
-		////------------------------------------------------------------------
-		//[Test]
-		//public void InlineHint_WritesWithInline([IncludeDataSources(Ctx)] string ctx)
-		//{
-		//	using var db    = GetDataConnection(ctx);
-		//	using var tbl   = db.CreateLocalTable<YdbTests.SimpleEntity>();
-
-		//	var _ = tbl.AsYdb()
-		//		   .InlineHint()
-		//		   .Select(t => t.Id)
-		//		   .ToArray();                // выполняем запрос → db.LastQuery
-
-		//	Assert.That(db.LastQuery, Does.Contain("WITH INLINE"));
-		//}
-
-		////------------------------------------------------------------------
-		//// 2. WITH UNORDERED (Tables‑in‑scope)
-		////------------------------------------------------------------------
-		//[Test]
-		//public void UnorderedInScopeHint_WritesWithUnordered([IncludeDataSources(Ctx)] string ctx)
-		//{
-		//	using var db  = GetDataConnection(ctx);
-		//	using var tbl = db.CreateLocalTable<YdbTests.SimpleEntity>();
-
-		//	var _ = tbl.Where(e => e.Id > 0)
-		//		   .AsYdb()
-		//		   .UnorderedInScopeHint()
-		//		   .Select(e => new { e.Id, e.StrVal })
-		//		   .ToArray();
-
-		//	var sql = db.LastQuery ?? string.Empty;
-		//	var cnt = sql.Split('\n')
-		//		 .Count(l => l.Contains("WITH UNORDERED",
-		//								StringComparison.OrdinalIgnoreCase));
-
-		//	Assert.That(cnt, Is.EqualTo(1));
-		//}
-
-		////------------------------------------------------------------------
-		//// 3. PRAGMA DisablePredicatePushdown
-		////------------------------------------------------------------------
-		//[Test]
-		//public void DisablePredicatePushdown_PrependsPragma([IncludeDataSources(Ctx)] string ctx)
-		//{
-		//	using var db  = GetDataConnection(ctx);
-		//	using var tbl = db.CreateLocalTable<YdbTests.SimpleEntity>();
-
-		//	var _ = tbl.Where(e => e.BoolVal)
-		//		   .AsYdb()
-		//		   .DisablePredicatePushdown()
-		//		   .ToArray();
-
-		//	var sql = db.LastQuery ?? string.Empty;
-		//	Assert.That(sql.TrimStart()
-		//				  .StartsWith("PRAGMA DisablePredicatePushdown",
-		//							  StringComparison.OrdinalIgnoreCase));
-		//}
-
-		////------------------------------------------------------------------
-		//// 4. PRAGMA UseFollowerRead (асинхронный пример)
-		////------------------------------------------------------------------
-		//[Test]
-		//public async Task UseFollowerRead_PrependsPragma_Async([IncludeDataSources(Ctx)] string ctx)
-		//{
-		//	await using var db  = GetDataConnection(ctx);
-		//	await using var tbl = db.CreateLocalTable<YdbTests.SimpleEntity>();
-
-		//	var _ = await tbl.Where(e => e.IntVal >= 0)
-		//				 .AsYdb()
-		//				 .UseFollowerRead()
-		//				 .Select(e => e.IntVal)
-		//				 .ToArrayAsync();
-
-		//	var sql = db.LastQuery ?? string.Empty;
-		//	Assert.That(sql.TrimStart()
-		//				  .StartsWith("PRAGMA UseFollowerRead",
-		//							  StringComparison.OrdinalIgnoreCase));
-		//}
-		//#endregion
 
 	}
 }

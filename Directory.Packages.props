@@ -78,7 +78,7 @@
 		<PackageVersion Include="System.Data.OleDb"                                     Version="9.0.4"                        />
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.9.0"                        />
 		<PackageVersion Include="System.Data.SQLite.Core"                               Version="1.0.119"                      />
-		<PackageVersion Include="Ydb.Sdk"                                               Version="0.16.2"                       />
+		<PackageVersion Include="Ydb.Sdk"                                               Version="0.19.0"                       />
 		<PackageVersion Include="Ydb.Sdk.Yc.Auth"                                       Version="0.2.0"                        />
 	</ItemGroup>
 

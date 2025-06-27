@@ -52,6 +52,19 @@ namespace LinqToDB.DataProvider.Ydb
 			AddScalarType(typeof(TimeSpan), DataType.Interval);
 #if NET6_0_OR_GREATER
 			AddScalarType(typeof(DateOnly), DataType.Date);
+
+			SetConverter<DateOnly, DateTime>(d =>
+				new DateTime(d.Year, d.Month, d.Day, 0, 0, 0, DateTimeKind.Unspecified));
+
+			SetConverter<DateOnly?, DateTime?>(d =>
+				d.HasValue
+					? new DateTime(d.Value.Year, d.Value.Month, d.Value.Day, 0, 0, 0, DateTimeKind.Unspecified)
+					: null);
+
+			SetValueToSqlConverter(typeof(DateOnly),
+				(sb, _, _, v) => sb.AppendFormat(
+					CultureInfo.InvariantCulture,
+					"Date(\"{0:yyyy-MM-dd}\")", (DateOnly)v));
 #endif
 
 			// ----------------------------------------------------------------
@@ -133,6 +146,13 @@ namespace LinqToDB.DataProvider.Ydb
 
 		private static void BuildDateTimeLiteral(StringBuilder sb, DateTime dt, DataType target)
 		{
+			if (target == DataType.Date)
+			{
+				sb.AppendFormat(CultureInfo.InvariantCulture,
+								"Date(\"{0:yyyy-MM-dd}\")", dt);
+				return;
+			}
+
 			var isSecondPrecision =
 				target == DataType.DateTime &&
 				dt.Millisecond == 0 &&
