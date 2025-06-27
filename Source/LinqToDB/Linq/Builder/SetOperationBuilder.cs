@@ -387,12 +387,12 @@ namespace LinqToDB.Linq.Builder
 
 			Expression? GetLeftSetPredicate()
 			{
-				return _leftSetPredicate ??= GetDifferencePredicate(true);
+				return _leftSetPredicate ??= GetDifferencePredicate(isLeft: true);
 			}
 
 			Expression? GetRightSetPredicate()
 			{
-				return _rightSetPredicate ??= GetDifferencePredicate(false);
+				return _rightSetPredicate ??= GetDifferencePredicate(isLeft: false);
 			}
 
 			Expression? GetDifferencePredicate(bool isLeft)
@@ -435,7 +435,10 @@ namespace LinqToDB.Linq.Builder
 
 				public int GetHashCode(Expression[] obj)
 				{
-					return obj.Aggregate(0, (acc, val) => acc ^ ExpressionEqualityComparer.Instance.GetHashCode(val!));
+					var hashCode = new HashCode();
+					foreach (var val in obj)
+						hashCode.Add(val);
+					return hashCode.ToHashCode();
 				}
 			}
 

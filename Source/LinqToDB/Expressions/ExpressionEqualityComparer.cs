@@ -56,7 +56,7 @@ namespace LinqToDB.Expressions
 					var unaryExpression = (UnaryExpression)obj;
 
 					hashCode.Add(unaryExpression.Method);
-					hashCode.Add(unaryExpression.Operand);
+					hashCode.Add(GetHashCode(unaryExpression.Operand));
 
 					break;
 				}
@@ -89,8 +89,8 @@ namespace LinqToDB.Expressions
 				{
 					var binaryExpression = (BinaryExpression)obj;
 
-					hashCode.Add(binaryExpression.Left);
-					hashCode.Add(binaryExpression.Right);
+					hashCode.Add(GetHashCode(binaryExpression.Left));
+					hashCode.Add(GetHashCode(binaryExpression.Right));
 
 					break;
 				}
@@ -122,7 +122,10 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Parameter:
 				{
 					var parameterExpression = (ParameterExpression)obj;
-					hashCode.Add(parameterExpression.Name);
+
+					if (parameterExpression.Name is not null)
+						hashCode.Add(parameterExpression.Name);
+
 					break;
 				}
 
