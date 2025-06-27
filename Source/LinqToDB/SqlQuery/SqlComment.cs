@@ -38,6 +38,7 @@ namespace LinqToDB.SqlQuery
 			{
 				hash.Add(line);
 			}
+
 			return hash.ToHashCode();
 		}
 	}

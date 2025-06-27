@@ -51,6 +51,7 @@ namespace LinqToDB.SqlQuery
 				foreach (var extension in SqlQueryExtensions)
 					hash.Add(extension.GetElementHashCode());
 			}
+
 			return hash.ToHashCode();
 		}
 	}

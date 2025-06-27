@@ -63,6 +63,7 @@ namespace LinqToDB.SqlQuery
 			{
 				hash.Add(value.GetElementHashCode());
 			}
+
 			return hash.ToHashCode();
 		}
 	}

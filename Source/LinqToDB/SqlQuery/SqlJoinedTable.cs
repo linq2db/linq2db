@@ -108,6 +108,7 @@ namespace LinqToDB.SqlQuery
 				foreach (var ext in SqlQueryExtensions)
 					hash.Add(ext.GetElementHashCode());
 			}
+
 			return hash.ToHashCode();
 		}
 	}

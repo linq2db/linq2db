@@ -128,7 +128,5 @@ namespace LinqToDB.SqlQuery
 			mergedListPredicate = null;
 			return false;
 		}
+	}
 }
-}
-
-

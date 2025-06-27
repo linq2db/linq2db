@@ -186,6 +186,7 @@ namespace LinqToDB.SqlQuery
 				foreach (var arg in TableArguments)
 					hash.Add(arg.GetElementHashCode());
 			}
+
 			return hash.ToHashCode();
 		}
 

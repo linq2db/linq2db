@@ -129,11 +129,13 @@ namespace LinqToDB.SqlQuery
 				foreach (var column in OutputColumns)
 					hash.Add(column.GetElementHashCode());
 			}
+
 			if (HasOutputItems)
 			{
 				foreach (var item in OutputItems)
 					hash.Add(item.GetElementHashCode());
 			}
+
 			return hash.ToHashCode();
 		}
 

@@ -137,6 +137,7 @@ namespace LinqToDB.SqlQuery
 			{
 				hash.Add(parameter.Sql.GetElementHashCode());
 			}
+
 			return hash.ToHashCode();
 		}
 

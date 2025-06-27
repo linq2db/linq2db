@@ -39,6 +39,7 @@ namespace LinqToDB.SqlQuery
 			{
 				hash.Add(expression.GetElementHashCode());
 			}
+
 			return hash.ToHashCode();
 		}
 

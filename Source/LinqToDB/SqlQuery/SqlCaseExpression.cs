@@ -94,6 +94,7 @@ namespace LinqToDB.SqlQuery
 				hash.Add(c.Condition.GetElementHashCode());
 				hash.Add(c.ResultExpression.GetElementHashCode());
 			}
+
 			if (ElseExpression != null)
 				hash.Add(ElseExpression.GetElementHashCode());
 			return hash.ToHashCode();

@@ -100,6 +100,7 @@ namespace LinqToDB.SqlQuery
 			{
 				hash.Add(clause.GetElementHashCode());
 			}
+
 			return hash.ToHashCode();
 		}
 

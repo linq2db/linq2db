@@ -96,6 +96,7 @@ namespace LinqToDB.SqlQuery
 				hash.Add(c.MatchValue.GetElementHashCode());
 				hash.Add(c.ResultExpression.GetElementHashCode());
 			}
+
 			return hash.ToHashCode();
 		}
 

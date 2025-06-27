@@ -222,6 +222,7 @@ namespace LinqToDB.SqlQuery
 			{
 				hash.Add(field.GetElementHashCode());
 			}
+
 			if (Rows != null)
 			{
 				foreach (var row in Rows)
@@ -232,6 +233,7 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 			}
+
 			return hash.ToHashCode();
 		}
 

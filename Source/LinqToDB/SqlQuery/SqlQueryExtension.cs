@@ -48,6 +48,7 @@ namespace LinqToDB.SqlQuery
 				hash.Add(arg.Key);
 				hash.Add(arg.Value.GetElementHashCode());
 			}
+
 			if (BuilderType != null)
 				hash.Add(BuilderType);
 			return hash.ToHashCode();
