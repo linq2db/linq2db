@@ -52,13 +52,12 @@ namespace LinqToDB.SqlQuery
 						return true;
 					}
 				}
-				else if (predicate2 is SqlPredicate.ExprExpr { UnknownAsValue: true or null, Operator: SqlPredicate.Operator.Equal } exprExpr2)
+				else if (predicate2 is SqlPredicate.ExprExpr { UnknownAsValue: true, Operator: SqlPredicate.Operator.Equal } exprExpr2)
 				{
 					if (!isLogicalOr && isNull1.IsNot && !nullabilityContext.IsEmpty)
 					{
 						if (exprExpr2.Expr1.Equals(isNull1.Expr1, SqlExpression.DefaultComparer))
 						{
-							// throw new NotImplementedException();
 							if (exprExpr2.NotNullableExpr1)
 							{
 								mergedPredicate = exprExpr2;
@@ -71,7 +70,6 @@ namespace LinqToDB.SqlQuery
 
 						if (exprExpr2.Expr2.Equals(isNull1.Expr1, SqlExpression.DefaultComparer))
 						{
-							// throw new NotImplementedException();
 							if (exprExpr2.NotNullableExpr2)
 							{
 								mergedPredicate = exprExpr2;

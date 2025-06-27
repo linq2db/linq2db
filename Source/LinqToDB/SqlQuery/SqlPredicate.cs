@@ -259,10 +259,13 @@ namespace LinqToDB.SqlQuery
 				}
 
 				if (Operator == Operator.Equal)
-					return !NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || !NotNullableExpr2 && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
+					return Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
+
+				if (Operator == Operator.Equal)
+					return Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
 
 				// comparison
-				return UnknownAsValue != true && !NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || !NotNullableExpr2 && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
+				return UnknownAsValue != true && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
 			}
 
 			/// <summary>
@@ -351,7 +354,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			public override bool CanInvert(NullabilityContext nullability) => true;
+			public override bool CanInvert(NullabilityContext nullability) => !NotNullableExpr1 && !NotNullableExpr2;
 
 			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
