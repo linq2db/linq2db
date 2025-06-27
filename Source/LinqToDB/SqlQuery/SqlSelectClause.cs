@@ -72,33 +72,15 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
-		public SqlSelectClause Expr(string expr, params ISqlExpression[] values)
-		{
-			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(null, expr, values)));
-			return this;
-		}
-
 		public SqlSelectClause Expr(Type systemType, string expr, params ISqlExpression[] values)
 		{
 			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(systemType, expr, values)));
 			return this;
 		}
 
-		public SqlSelectClause Expr(string expr, int priority, params ISqlExpression[] values)
-		{
-			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(null, expr, priority, values)));
-			return this;
-		}
-
 		public SqlSelectClause Expr(Type systemType, string expr, int priority, params ISqlExpression[] values)
 		{
 			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(systemType, expr, priority, values)));
-			return this;
-		}
-
-		public SqlSelectClause Expr(string alias, string expr, int priority, params ISqlExpression[] values)
-		{
-			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(null, expr, priority, values)));
 			return this;
 		}
 

@@ -11,6 +11,7 @@ namespace IBM.Data.DB2
 namespace IBM.Data.Db2
 {
 	public abstract class DB2Connection : DbConnection { }
+	public abstract class DB2Exception  : DbException  { }
 }
 namespace IBM.Data.DB2.Core
 {

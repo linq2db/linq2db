@@ -33,7 +33,7 @@ namespace Tests.UserTests
 			{
 				if (statement.SelectQuery?.Where.IsEmpty == false)
 					statement.SelectQuery.Where.SearchCondition.Add(new SqlPredicate.Expr(
-						new SqlExpression(typeof(bool), "'one' != 'two'", Precedence.Comparison, SqlFlags.IsPredicate, ParametersNullabilityType.IfAllParametersNullable, null), 0));
+						new SqlExpression(typeof(bool), "'one' != 'two'", Precedence.Comparison, SqlFlags.IsPredicate, ParametersNullabilityType.IfAllParametersNullable), 0));
 			}
 		}
 

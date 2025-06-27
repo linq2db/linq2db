@@ -235,7 +235,7 @@ namespace LinqToDB
 				return str;
 			}
 
-			public static readonly SqlExpression UnknownExpression = new ("!!!");
+			public static readonly ISqlExpression UnknownExpression = new SqlFragment("!!!");
 
 			public static void PrepareParameterValues<TContext>(
 				TContext                                                              context,

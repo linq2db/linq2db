@@ -574,7 +574,7 @@ namespace LinqToDB
 
 				lengthExpr = new SqlBinaryExpression(lengthExpr.SystemType!, new SqlValue(-1), "*", lengthExpr, Precedence.Multiplicative);
 
-				builder.ResultExpression = new SqlFunction(stringExpr.SystemType!, "substr", false, true, stringExpr, lengthExpr);
+				builder.ResultExpression = new SqlFunction(stringExpr.SystemType!, "substr", canBeNull: true, stringExpr, lengthExpr);
 			}
 		}
 
@@ -598,7 +598,7 @@ namespace LinqToDB
 					new SqlBinaryExpression(lengthExpr.SystemType!, lengthExpr, "-", new SqlValue(1), Precedence.Subtraction),
 					Precedence.Subtraction);
 
-				builder.ResultExpression = new SqlFunction(stringExpr.SystemType!, "SUBSTRING", false, true, stringExpr, startExpr, lengthExpr);
+				builder.ResultExpression = new SqlFunction(stringExpr.SystemType!, "SUBSTRING", canBeNull: true, stringExpr, startExpr, lengthExpr);
 			}
 		}
 
@@ -766,7 +766,6 @@ namespace LinqToDB
 						Precedence.Comparison,
 						SqlFlags.IsPredicate,
 						ParametersNullabilityType.NotNullable,
-						null,
 						str,
 						new SqlValue(typeof(string), whiteSpaces)))
 					.MakeNot();
@@ -795,7 +794,6 @@ namespace LinqToDB
 						Precedence.Comparison,
 						SqlFlags.IsPredicate,
 						ParametersNullabilityType.NotNullable,
-						null,
 						str,
 						new SqlValue(typeof(string), whiteSpaces)))
 					.MakeNot();

@@ -74,7 +74,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 					case Sql.DateParts.Year: partStr = "year"; break;
 					case Sql.DateParts.Quarter:
 					{
-						var result = factory.Function(shortIntDataType, "Extract", factory.Fragment(shortIntDataType, "Month from {0}", dateTimeExpression));
+						var result = factory.Function(shortIntDataType, "Extract", factory.Expression(shortIntDataType, "Month from {0}", dateTimeExpression));
 
 						result = factory.Increment(factory.Div(shortIntDataType, factory.Decrement(result), 3));
 						return result;
@@ -107,7 +107,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 				}
 
 				var resultExpression =
-					factory.Function(extractDbType, "Extract", factory.Fragment(shortIntDataType, partStr + " from {0}", dateTimeExpression));
+					factory.Function(extractDbType, "Extract", factory.Expression(shortIntDataType, partStr + " from {0}", dateTimeExpression));
 
 				switch (datepart)
 				{
@@ -159,7 +159,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 				// Firebird does not support dynamic increment in DateAdd function
 				QueryHelper.MarkAsNonQueryParameters(number);
 
-				var partExpression   = factory.NotNullFragment(factory.GetDbDataType(typeof(string)), datepart.ToString());
+				var partExpression   = factory.NotNullExpression(factory.GetDbDataType(typeof(string)), datepart.ToString());
 				var resultExpression = factory.Function(factory.GetDbDataType(dateTimeExpression), "DateAdd", partExpression, number, dateTimeExpression);
 
 				return resultExpression;
@@ -240,7 +240,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullFragment(factory.GetDbDataType(typeof(DateTime)), "LOCALTIMESTAMP");
+				return factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "LOCALTIMESTAMP");
 			}
 		}
 

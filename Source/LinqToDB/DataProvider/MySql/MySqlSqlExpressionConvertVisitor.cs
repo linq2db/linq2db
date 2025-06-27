@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			switch (element)
 			{
-				case SqlBinaryExpression(var type, var ex1, "+", var ex2) when type == typeof(string) :
+				case SqlBinaryExpression(var type, var ex1, "+", var ex2) when type.SystemType == typeof(string) :
 				{
 					return ConvertFunc(new (type, "Concat", ex1, ex2));
 
@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.MySql
 						{
 							switch (func.Parameters[i])
 							{
-								case SqlBinaryExpression(var t, var e1, "+", var e2) when t == typeof(string) :
+								case SqlBinaryExpression(var t, var e1, "+", var e2) when t.SystemType == typeof(string) :
 								{
 									var ps = new List<ISqlExpression>(func.Parameters);
 
@@ -49,7 +49,7 @@ namespace LinqToDB.DataProvider.MySql
 									return ConvertFunc(new (t, func.Name, ps.ToArray()));
 								}
 
-								case SqlFunction(var t, "Concat") f when t == typeof(string) :
+								case SqlFunction { Name: "Concat", Type: var t } f when t.SystemType == typeof(string):
 								{
 									var ps = new List<ISqlExpression>(func.Parameters);
 

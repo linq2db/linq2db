@@ -44,7 +44,7 @@ namespace LinqToDB.Linq.Translation
 					return translationContext.CreateErrorExpression(methodCall.Arguments[2], type: methodCall.Type);
 			}
 
-			var predicate       = new SqlPredicate.Like(translatedField, false, translatedValue, escape);
+			var predicate       = translationContext.ExpressionFactory.LikePredicate(translatedField, false, translatedValue, escape);
 			var searchCondition = translationContext.ExpressionFactory.SearchCondition().Add(predicate);
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, searchCondition, methodCall);

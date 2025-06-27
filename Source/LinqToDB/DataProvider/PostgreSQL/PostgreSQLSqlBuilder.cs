@@ -222,7 +222,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					sb.Value.Append("nextval(");
 					MappingSchema.ConvertToSqlValue(sb.Value, null, DataOptions, BuildObjectName(new (), sequenceName, ConvertType.SequenceName, true, TableOptions.NotSet).ToString());
 					sb.Value.Append(')');
-					return new SqlExpression(sb.Value.ToString(), Precedence.Primary);
+
+					// it could have type, but we don't care about it
+					return new SqlFragment(sb.Value.ToString());
 				}
 			}
 

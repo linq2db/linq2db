@@ -36,7 +36,7 @@ namespace LinqToDB
 					throw new InvalidOperationException($"Invalid collation: {collation}");
 
 				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE {collation}",
-					Precedence.Primary, SqlFlags.IsPure, ParametersNullabilityType.IfAnyParameterNullable, null, expr);
+					Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, expr);
 ;
 			}
 
@@ -59,7 +59,7 @@ namespace LinqToDB
 				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"");
 
 				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"",
-					Precedence.Primary, SqlFlags.IsPure, ParametersNullabilityType.IfAnyParameterNullable, null,
+					Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable,
 					expr);
 			}
 		}
@@ -73,7 +73,7 @@ namespace LinqToDB
 
 				// collation cannot be parameter
 				builder.ResultExpression = new SqlExpression(typeof(string), $"COLLATION_KEY_BIT({{0}}, {{1}})",
-					Precedence.Primary, SqlFlags.IsPure, ParametersNullabilityType.SameAsFirstParameter, null,
+					Precedence.Primary, ParametersNullabilityType.SameAsFirstParameter,
 					expr, new SqlValue(typeof(string), collation));
 			}
 		}

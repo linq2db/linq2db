@@ -162,7 +162,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 					if (argumentType.SystemType.IsFloatType())
 					{
-						return PseudoFunctions.MakeCast(new SqlFunction(cast.SystemType, "Floor", argument), toType);
+						return PseudoFunctions.MakeCast(new SqlFunction(cast.Type, "Floor", argument), toType);
 					}
 
 					break;
@@ -177,14 +177,14 @@ namespace LinqToDB.DataProvider.SqlCe
 					{
 						if (type1 == typeof(DateTime) || type1 == typeof(DateTimeOffset))
 							return new SqlExpression(
-								cast.SystemType, "Cast(Convert(NChar, {0}, 114) as DateTime)",
+								cast.Type, "Cast(Convert(NChar, {0}, 114) as DateTime)",
 								Precedence.Primary, argument);
 
 						if (argument.SystemType == typeof(string))
 							return argument;
 
 						return new SqlExpression(
-							cast.SystemType, "Convert(NChar, {0}, 114)", Precedence.Primary,
+							cast.Type, "Convert(NChar, {0}, 114)", Precedence.Primary,
 							argument);
 					}
 
@@ -192,7 +192,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					{
 						if (IsDateDataType(toType, "Datetime"))
 							return new SqlExpression(
-								cast.SystemType, "Cast(Floor(Cast({0} as Float)) as DateTime)",
+								cast.Type, "Cast(Floor(Cast({0} as Float)) as DateTime)",
 								Precedence.Primary, argument);
 					}
 

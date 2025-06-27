@@ -58,11 +58,12 @@ namespace LinqToDB.DataProvider.Oracle
 				var attr = GetSequenceNameAttribute(table, false);
 
 				if (attr != null)
-					return new SqlExpression(
+				{
+					return new SqlFragment(
 							(attr.Schema != null ? ConvertInline(attr.Schema, ConvertType.NameToSchema) + "." : null) +
 							ConvertInline(attr.SequenceName, ConvertType.SequenceName) +
-							".nextval",
-						Precedence.Primary);
+							".nextval");
+				}
 			}
 
 			return base.GetIdentityExpression(table);

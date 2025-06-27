@@ -106,18 +106,18 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			switch (element.Operation)
 			{
-				case "%": return new SqlFunction(element.SystemType, "MOD", element.Expr1, element.Expr2);
-				case "&": return new SqlFunction(element.SystemType, "BITAND", element.Expr1, element.Expr2);
+				case "%": return new SqlFunction(element.Type, "MOD", element.Expr1, element.Expr2);
+				case "&": return new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2);
 				case "|": // (a + b) - BITAND(a, b)
 					return Sub(
 						Add(element.Expr1, element.Expr2, element.SystemType),
-						new SqlFunction(element.SystemType, "BITAND", element.Expr1, element.Expr2),
+						new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2),
 						element.SystemType);
 
 				case "^": // (a + b) - BITAND(a, b) * 2
 					return Sub(
 						Add(element.Expr1, element.Expr2, element.SystemType),
-						Mul(new SqlFunction(element.SystemType, "BITAND", element.Expr1, element.Expr2), 2),
+						Mul(new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2), 2),
 						element.SystemType);
 				case "+": return element.SystemType == typeof(string) ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
 			}
@@ -128,7 +128,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
 		{
 			if (element.Expr.StartsWith("To_Number(To_Char(") && element.Expr.EndsWith(", 'FF'))"))
-				return Div(new SqlExpression(element.SystemType, element.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char("), element.Parameters), 1000);
+				return Div(new SqlExpression(element.Type, element.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char("), element.Parameters), 1000);
 
 			return base.ConvertSqlExpression(element);
 		}
@@ -140,14 +140,14 @@ namespace LinqToDB.DataProvider.Oracle
 				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],
-					SystemType: var type,
+					Type: var type,
 				}:
 					return new SqlFunction(type, "InStr", p1, p0);
 
 				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
-					SystemType: var type,
+					Type: var type,
 				}:
 					return new SqlFunction(type, "InStr", p1, p0, p2);
 
@@ -174,7 +174,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (argument.SystemType == typeof(string))
 						return argument;
 
-					return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("HH24:MI:SS"));
+					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("HH24:MI:SS"));
 				}
 
 				if (IsDateDataType(toType, "Date"))
@@ -182,20 +182,20 @@ namespace LinqToDB.DataProvider.Oracle
 					if (argument.SystemType!.ToUnderlying() == typeof(DateTime)
 						|| argument.SystemType!.ToUnderlying() == typeof(DateTimeOffset))
 					{
-						return new SqlFunction(cast.SystemType, "Trunc", argument, new SqlValue("DD"));
+						return new SqlFunction(cast.Type, "Trunc", argument, new SqlValue("DD"));
 					}
 
-					return new SqlFunction(cast.SystemType, "TO_DATE", argument, new SqlValue("YYYY-MM-DD"));
+					return new SqlFunction(cast.Type, "TO_DATE", argument, new SqlValue("YYYY-MM-DD"));
 				}
 				else if (IsDateDataOffsetType(toType))
 				{
 					if (ftype == typeof(DateTimeOffset))
 						return argument;
 
-					return new SqlFunction(cast.SystemType, "TO_TIMESTAMP_TZ", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+					return new SqlFunction(cast.Type, "TO_TIMESTAMP_TZ", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 				}
 
-				return new SqlFunction(cast.SystemType, "TO_TIMESTAMP", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+				return new SqlFunction(cast.Type, "TO_TIMESTAMP", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 			}
 			else if (ftype == typeof(string))
 			{
@@ -203,16 +203,16 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (stype == typeof(DateTimeOffset))
 				{
-					return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS TZH:TZM"));
+					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS TZH:TZM"));
 				}
 				else if (stype == typeof(DateTime))
 				{
-					return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 				}
 #if NET8_0_OR_GREATER
 				else if (stype == typeof(DateOnly))
 				{
-					return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("YYYY-MM-DD"));
+					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD"));
 				}
 #endif
 			}

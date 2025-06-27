@@ -31,10 +31,10 @@ namespace LinqToDB.DataProvider.Firebird
 
 			switch (element.Operation)
 			{
-				case "%": return new SqlFunction(element.SystemType, "Mod", element.Expr1, element.Expr2);
-				case "&": return new SqlFunction(element.SystemType, "Bin_And", element.Expr1, element.Expr2);
-				case "|": return new SqlFunction(element.SystemType, "Bin_Or", element.Expr1, element.Expr2);
-				case "^": return new SqlFunction(element.SystemType, "Bin_Xor", element.Expr1, element.Expr2);
+				case "%": return new SqlFunction(element.Type, "Mod", element.Expr1, element.Expr2);
+				case "&": return new SqlFunction(element.Type, "Bin_And", element.Expr1, element.Expr2);
+				case "|": return new SqlFunction(element.Type, "Bin_Or", element.Expr1, element.Expr2);
+				case "^": return new SqlFunction(element.Type, "Bin_Xor", element.Expr1, element.Expr2);
 				case "+": return element.SystemType == typeof(string) ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
 			}
 
@@ -97,7 +97,6 @@ namespace LinqToDB.DataProvider.Firebird
 						Precedence.Comparison,
 						SqlFlags.IsPredicate,
 						ParametersNullabilityType.IfAnyParameterNullable,
-						null,
 						TryConvertToValue(
 							caseSensitive == false
 								? PseudoFunctions.MakeToLower(predicate.Expr1)
@@ -120,7 +119,6 @@ namespace LinqToDB.DataProvider.Firebird
 							precedence : Precedence.Comparison,
 							flags : SqlFlags.IsPredicate,
 							nullabilityType : ParametersNullabilityType.IfAnyParameterNullable,
-							canBeNull : null,
 							TryConvertToValue(predicate.Expr1, EvaluationContext),
 							TryConvertToValue(predicate.Expr2, EvaluationContext)) { CanBeNull = false };
 					}
@@ -165,11 +163,11 @@ namespace LinqToDB.DataProvider.Firebird
 			else if (cast.SystemType.ToUnderlying() == typeof(string) && cast.Expression.SystemType?.ToUnderlying() == typeof(Guid))
 			{
 				// TODO: think how to use FirebirdMemberTranslator.GuidMemberTranslator.TranslateGuildToString instead of code duplication here
-				return PseudoFunctions.MakeToLower(new SqlFunction(cast.SystemType, "UUID_TO_CHAR", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, cast.Expression));
+				return PseudoFunctions.MakeToLower(new SqlFunction(cast.Type, "UUID_TO_CHAR", cast.Expression));
 			}
 			else if (cast.SystemType.ToUnderlying() == typeof(Guid) && cast.Expression.SystemType?.ToUnderlying() == typeof(string))
 			{
-				return new SqlFunction(cast.SystemType, "CHAR_TO_UUID", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, cast.Expression);
+				return new SqlFunction(cast.Type, "CHAR_TO_UUID", cast.Expression);
 			}
 			else if (cast.ToType.DataType == DataType.Decimal)
 			{

@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.Oracle.Translation
 
 				if (extractStr != null)
 				{
-					resultExpression = factory.Function(extractDbType, "EXTRACT", factory.Fragment(intDataType, extractStr + " FROM {0}", dateTimeExpression));
+					resultExpression = factory.Function(extractDbType, "EXTRACT", factory.Expression(intDataType, extractStr + " FROM {0}", dateTimeExpression));
 				}
 				else
 				{
@@ -135,7 +135,7 @@ namespace LinqToDB.DataProvider.Oracle.Translation
 						return null;
 				}
 
-				var intervalExpression = factory.Multiply(intervalType, increment, factory.NotNullFragment(intervalType, expStr));
+				var intervalExpression = factory.Multiply(intervalType, increment, factory.NotNullExpression(intervalType, expStr));
 				var resultExpression   = factory.Add(dateType, dateTimeExpression, intervalExpression);
 
 				return resultExpression;

@@ -2,6 +2,7 @@
 
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -41,6 +42,18 @@ namespace Tests.Mapping
 				.Select(i => new InstanceClass { Id = i, Value = 100 + i }).ToArray();
 		}
 
+		[ActiveIssue(
+			Details = "https://github.com/linq2db/linq2db/issues/4987",
+			Configurations = [
+				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllOracle,
+				TestProvName.AllDB2,
+				TestProvName.AllInformix,
+				TestProvName.AllClickHouse,
+				TestProvName.AllAccess,
+				TestProvName.AllMySql])]
 		[Test]
 		public void ExpressionMethodOnProperty([DataSources] string context)
 		{
@@ -49,7 +62,20 @@ namespace Tests.Mapping
 				var testData = GenerateData();
 				using (var table = db.CreateLocalTable(testData))
 				{
-					Assert.That(table.Where(t => Sql.AsNotNull(t.EntityValue) == t.Id.ToString() + t.Value).Count(), Is.EqualTo(testData.Length));
+					var query = table.Where(t => Sql.AsNotNull(t.EntityValue) == t.Id.ToString() + t.Value);
+
+					Assert.That(query.Count(), Is.EqualTo(testData.Length));
+
+					if (!context.IsRemote())
+					{
+						var where = query.GetSelectQuery().Select.Where;
+
+						if (!where.IsEmpty)
+						{
+							Assert.That(where.SearchCondition.Predicates, Has.Count.EqualTo(1));
+							Assert.That(where.SearchCondition.Predicates[0], Is.InstanceOf<SqlPredicate.TruePredicate>());
+						}
+					}
 				}
 			}
 		}

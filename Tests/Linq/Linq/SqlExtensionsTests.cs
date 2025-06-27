@@ -198,7 +198,7 @@ namespace Tests.Linq
 
 				string GetColumnValue(int index)
 				{
-					return ((SqlExpression)ast.Select.Columns[index].Expression).Expr;
+					return ((SqlFragment)ast.Select.Columns[index].Expression).Expr;
 				}
 
 				using (Assert.EnterMultipleScope())
