@@ -72,7 +72,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 				var factory   = translationContext.ExpressionFactory;
 				var intDbType = factory.GetDbDataType(typeof(int));
 
-				var resultExpression = factory.Function(intDbType, "DatePart", ParametersNullabilityType.SameAsSecondParameter, factory.NotNullFragment(intDbType, partStr), dateTimeExpression);
+				var resultExpression = factory.Function(intDbType, "DatePart", ParametersNullabilityType.SameAsSecondParameter, factory.NotNullExpression(intDbType, partStr), dateTimeExpression);
 
 				return resultExpression;
 			}
@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 					return null;
 				}
 
-				var resultExpression = factory.Function(dateType, "DateAdd", factory.NotNullFragment(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
+				var resultExpression = factory.Function(dateType, "DateAdd", factory.NotNullExpression(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
 				return resultExpression;
 			}
 
@@ -178,7 +178,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullFragment(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
+				return factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
 			}
 		}
 

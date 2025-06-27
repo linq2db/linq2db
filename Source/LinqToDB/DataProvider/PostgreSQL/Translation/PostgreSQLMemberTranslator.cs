@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 				else*/
 				{
 					resultExpression = factory.Cast(
-						factory.Function(extractDbType, "Extract", factory.Fragment(doubleDbType, $"{partStr} From {{0}}", dateTimeExpression)),
+						factory.Function(extractDbType, "Extract", factory.Expression(doubleDbType, $"{partStr} From {{0}}", dateTimeExpression)),
 						intDbType);
 				}
 
@@ -143,7 +143,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				var factory = translationContext.ExpressionFactory;
 
-				var atTimeZone = factory.Fragment(factory.GetDbDataType(dateExpression), "{0} AT TIME ZONE {1}", dateExpression, factory.Value("UTC"));
+				var atTimeZone = factory.Expression(factory.GetDbDataType(dateExpression), "{0} AT TIME ZONE {1}", dateExpression, factory.Value("UTC"));
 
 				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", ParametersNullabilityType.SameAsSecondParameter, factory.Value("day"), atTimeZone);
 
@@ -159,7 +159,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				ISqlExpression ToInterval(ISqlExpression numberExpression, string intervalKind)
 				{
-					var intervalExpr = factory.NotNullFragment(intervalType, "Interval {0}", factory.Value(intervalKind));
+					var intervalExpr = factory.Expression(intervalType, "Interval {0}", factory.Value(intervalKind));
 
 					return factory.Multiply(intervalType, numberExpression, intervalExpr);
 				}
