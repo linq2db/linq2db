@@ -332,16 +332,6 @@ namespace LinqToDB.Expressions
 			return result;
 		}
 
-		static int GetHashCode<T>(ICollection<T> collection, IEqualityComparer<T> comparer)
-		{
-			var hashCode = new HashCode();
-
-			foreach (var item in collection)
-				hashCode.Add(item, comparer);
-
-			return hashCode.ToHashCode();
-		}
-
 		static bool EqualsLists<T>(IList<T> list1, IList<T> list2, IEqualityComparer<T> comparer)
 		{
 			if (list1.Count != list2.Count) return false;
@@ -410,7 +400,10 @@ namespace LinqToDB.Expressions
 			hashCode.Add(ConstructorMethod);
 			hashCode.Add(ConstructType);
 			hashCode.Add(ObjectType);
-			hashCode.Add(GetHashCode(Parameters, Parameter.ParameterComparer));
+
+			foreach (var item in Parameters)
+				hashCode.Add(item, Parameter.ParameterComparer);
+
 			return hashCode.ToHashCode();
 		}
 

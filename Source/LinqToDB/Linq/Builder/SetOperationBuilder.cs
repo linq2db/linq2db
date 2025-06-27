@@ -435,10 +435,7 @@ namespace LinqToDB.Linq.Builder
 
 				public int GetHashCode(Expression[] obj)
 				{
-					var hashCode = new HashCode();
-					foreach (var val in obj)
-						hashCode.Add(val);
-					return hashCode.ToHashCode();
+					return obj.Aggregate(0, (acc, val) => acc ^ ExpressionEqualityComparer.Instance.GetHashCode(val!));
 				}
 			}
 

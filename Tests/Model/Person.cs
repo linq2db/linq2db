@@ -90,6 +90,7 @@ namespace Tests.Model
 		public override int GetHashCode()
 		{
 			return HashCode.Combine(
+				ID,
 				LastName,
 				MiddleName,
 				Gender,

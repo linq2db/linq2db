@@ -87,6 +87,7 @@ namespace Tests.Linq
 			public override int GetHashCode()
 			{
 				return HashCode.Combine(
+					ID,
 					LastName,
 					MiddleName,
 					Gender,

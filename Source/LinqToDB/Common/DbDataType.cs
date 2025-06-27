@@ -140,7 +140,7 @@ namespace LinqToDB.Common
 				return _hashCode.Value;
 
 			var hashCode = new HashCode();
-			hashCode.Add(SystemType.GetHashCode());
+			hashCode.Add(SystemType);
 			hashCode.Add(DataType);
 			hashCode.Add(DbType);
 			hashCode.Add(Length);

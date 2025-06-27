@@ -71,7 +71,7 @@ namespace LinqToDB.Expressions
 		{
 			return HashCode.Combine(
 				ExpressionEqualityComparer.Instance.GetHashCode(Constructor),
-				ParameterInfo.GetHashCode()
+				ParameterInfo
 			);
 		}
 
