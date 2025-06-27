@@ -159,7 +159,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				ISqlExpression ToInterval(ISqlExpression numberExpression, string intervalKind)
 				{
-					var intervalExpr = factory.Expression(intervalType, "Interval {0}", factory.Value(intervalKind));
+					var intervalExpr = factory.NotNullExpression(intervalType, "Interval {0}", factory.Value(intervalKind));
 
 					return factory.Multiply(intervalType, numberExpression, intervalExpr);
 				}

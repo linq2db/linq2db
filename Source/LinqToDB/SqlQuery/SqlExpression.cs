@@ -75,7 +75,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public SqlExpression(DbDataType type, string expr, int precedence, SqlFlags flags, ParametersNullabilityType nullabilityType, params ISqlExpression[] parameters)
-			: this(type, expr, precedence, DefaultFlags, DefaultNullability, null, parameters)
+			: this(type, expr, precedence, flags, nullabilityType, null, parameters)
 		{
 		}
 
