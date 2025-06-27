@@ -454,10 +454,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return (ChildID * 397) ^ ParentID;
-				}
+				return HashCode.Combine(ChildID, ParentID);
 			}
 
 			public int ChildID  { get; set; }
@@ -864,10 +861,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return ((Child != null ? Child.GetHashCode() : 0) * 397) ^ (Parent != null ? Parent.GetHashCode() : 0);
-				}
+				return HashCode.Combine(Child, Parent);
 			}
 		}
 

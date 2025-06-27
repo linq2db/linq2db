@@ -98,10 +98,7 @@ namespace Tests.UserTests
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return (Id.GetHashCode() * 397) ^ TypeID.GetHashCode();
-				}
+				return HashCode.Combine(Id, TypeID);
 			}
 		}
 
