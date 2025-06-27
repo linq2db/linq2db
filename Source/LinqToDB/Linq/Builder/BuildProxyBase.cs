@@ -282,8 +282,8 @@ namespace LinqToDB.Linq.Builder
 			hashCode.Add(OwnerContext, EqualityComparer<TOwner>.Default);
 			hashCode.Add(BuildContext);
 			hashCode.Add(OwnerContextRef);
-			hashCode.Add(ExpressionEqualityComparer.Instance.GetHashCode(CurrentPath));
-			hashCode.Add(ExpressionEqualityComparer.Instance.GetHashCode(InnerExpression));
+			hashCode.Add(CurrentPath, ExpressionEqualityComparer.Instance!);
+			hashCode.Add(InnerExpression, ExpressionEqualityComparer.Instance);
 			return hashCode.ToHashCode();
 		}
 
