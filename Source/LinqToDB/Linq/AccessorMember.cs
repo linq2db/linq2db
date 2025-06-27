@@ -59,10 +59,7 @@ namespace LinqToDB.Linq
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				return (MemberInfo.GetHashCode() * 397) ^ (Arguments != null ? Arguments.GetHashCode() : 0);
-			}
+			return HashCode.Combine(MemberInfo, Arguments);
 		}
 	}
 }

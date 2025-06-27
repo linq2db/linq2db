@@ -136,10 +136,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return (EntityType.GetHashCode() * 397) ^ (Model != null ? Model.GetHashCode() : 0);
-				}
+				return HashCode.Combine(EntityType, Model);
 			}
 		}
 

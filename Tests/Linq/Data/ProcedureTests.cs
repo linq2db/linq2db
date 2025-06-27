@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
@@ -83,13 +84,11 @@ namespace Tests.Data
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					var hashCode = Code;
-					hashCode = (hashCode * 397) ^ (Value1 != null ? Value1.GetHashCode() : 0);
-					hashCode = (hashCode * 397) ^ (Value2 != null ? Value2.GetHashCode() : 0);
-					return hashCode;
-				}
+				return HashCode.Combine(
+					Code,
+					Value1,
+					Value2
+				);
 			}
 
 			public string? Value2 { get; set; }

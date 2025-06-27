@@ -670,10 +670,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return (Id * 397) ^ (Value != null ? Value.GetHashCode() : 0);
-				}
+				return HashCode.Combine(Id, Value);
 			}
 		}
 
