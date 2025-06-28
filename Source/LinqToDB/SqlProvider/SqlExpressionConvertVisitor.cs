@@ -1370,6 +1370,13 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
+					if (SqlProviderFlags.SupportsBooleanType
+						&& !forceConvert
+						&& !withNull)
+					{
+						throw new InvalidOperationException($"HERE: {unwrapped.CanBeNullableOrUnknown(NullabilityContext, withoutUnknownErased: true)}");
+					}
+
 					wrap = !SqlProviderFlags.SupportsBooleanType || (!withNull && unwrapped.CanBeNullableOrUnknown(NullabilityContext, withoutUnknownErased: true)) || forceConvert;
 				}
 
