@@ -168,13 +168,13 @@ namespace Tests.Infrastructure
 
 			Console.WriteLine(GenerateSQL(selectQuery));
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(nullabilityContext.CanBeNullSource(ts1.Source), Is.True);
 				Assert.That(nullabilityContext.CanBeNullSource(ts2.Source), Is.True);
 				Assert.That(nullabilityContext.CanBeNullSource(ts3.Source), Is.True);
 				Assert.That(nullabilityContext.CanBeNullSource(ts4.Source), Is.True);
-			});
+			}
 
 			AssertJoinNotNullable(nullabilityContext, ts1.Joins[0]);
 			AssertJoinNotNullable(nullabilityContext, ts1.Joins[1]);
@@ -223,13 +223,13 @@ namespace Tests.Infrastructure
 
 			Console.WriteLine(GenerateSQL(selectQuery));
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(nullabilityContext.CanBeNullSource(table1), Is.True);
 				Assert.That(nullabilityContext.CanBeNullSource(table2), Is.True);
 				Assert.That(nullabilityContext.CanBeNullSource(table3), Is.True);
 				Assert.That(nullabilityContext.CanBeNullSource(table4), Is.True);
-			});
+			}
 
 			AssertJoinNotNullable(nullabilityContext, qts1.Joins[0]);
 			AssertJoinNotNullable(nullabilityContext, qts1.Joins[1]);
@@ -268,13 +268,13 @@ namespace Tests.Infrastructure
 
 			Console.WriteLine(GenerateSQL(selectQuery));
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(nullabilityContext.CanBeNullSource(ts1.Source), Is.True);
 				Assert.That(nullabilityContext.CanBeNullSource(ts2.Source), Is.True);
 				Assert.That(nullabilityContext.CanBeNullSource(ts3.Source), Is.True);
 				Assert.That(nullabilityContext.CanBeNullSource(ts4.Source), Is.False);
-			});
+			}
 
 			AssertJoinNotNullable(nullabilityContext, ts1.Joins[0]);
 			AssertJoinNotNullable(nullabilityContext, ts1.Joins[1]);
@@ -323,13 +323,13 @@ namespace Tests.Infrastructure
 
 			Console.WriteLine(GenerateSQL(selectQuery));
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(nullabilityContext.CanBeNullSource(table1), Is.True);
 				Assert.That(nullabilityContext.CanBeNullSource(table2), Is.True);
 				Assert.That(nullabilityContext.CanBeNullSource(table3), Is.True);
 				Assert.That(nullabilityContext.CanBeNullSource(table4), Is.False);
-			});
+			}
 
 			AssertJoinNotNullable(nullabilityContext, qts1.Joins[0]);
 			AssertJoinNotNullable(nullabilityContext, qts1.Joins[1]);
@@ -368,13 +368,13 @@ namespace Tests.Infrastructure
 
 			Console.WriteLine(GenerateSQL(selectQuery));
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(nullabilityContext.CanBeNullSource(ts1.Source), Is.True);
 				Assert.That(nullabilityContext.CanBeNullSource(ts2.Source), Is.True);
 				Assert.That(nullabilityContext.CanBeNullSource(ts3.Source), Is.False);
 				Assert.That(nullabilityContext.CanBeNullSource(ts4.Source), Is.False);
-			});
+			}
 
 			AssertJoinNotNullable(nullabilityContext, ts1.Joins[0]);
 			AssertJoinNotNullable(nullabilityContext, ts1.Joins[1]);

@@ -163,7 +163,7 @@ namespace LinqToDB.SqlQuery
 							}
 							else
 							{
-								result = object.Equals(value1, value2);
+								result = Equals(value1, value2);
 							}
 
 							break;
@@ -176,7 +176,7 @@ namespace LinqToDB.SqlQuery
 							}
 							else
 							{
-								result = !object.Equals(value1, value2);
+								result = !Equals(value1, value2);
 							}
 
 							break;
