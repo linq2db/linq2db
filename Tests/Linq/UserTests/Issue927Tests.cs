@@ -24,11 +24,11 @@ namespace Tests.UserTests
 				Assert.That(c.State, Is.EqualTo(ConnectionState.Open));
 			}
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(connection.State, Is.EqualTo(ConnectionState.Closed));
 				Assert.That(connection.IsDisposed, Is.EqualTo(dispose));
-			});
+			}
 		}
 
 		[Test]
@@ -42,11 +42,11 @@ namespace Tests.UserTests
 				Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
 			}
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(connection.State, Is.EqualTo(ConnectionState.Closed));
 				Assert.That(connection.IsDisposed, Is.True);
-			});
+			}
 		}
 
 		[Test]
@@ -66,11 +66,11 @@ namespace Tests.UserTests
 				Assert.That(c.State, Is.EqualTo(ConnectionState.Open));
 			}
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 				Assert.That(connection.IsDisposed, Is.False);
-			});
+			}
 		}
 	}
 }

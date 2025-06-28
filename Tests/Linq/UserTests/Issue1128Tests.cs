@@ -53,12 +53,12 @@ namespace Tests.UserTests
 			var ed2 = ms.GetEntityDescriptor(typeof(FluentDerived));
 			var ed3 = ms.GetEntityDescriptor(typeof(AttributeBase));
 			var ed4 = ms.GetEntityDescriptor(typeof(AttributeBase));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed2.Name.Name, Is.EqualTo(ed1.Name.Name));
 				Assert.That(ed4.Name.Name, Is.EqualTo(ed3.Name.Name));
-			});
+			}
+
 			Assert.That(ed4.Name.Name, Is.EqualTo(ed1.Name.Name));
 		}
 

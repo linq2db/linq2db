@@ -97,8 +97,7 @@ namespace Tests.UserTests
 
 				db.Insert(notVerified, tbl.TableName);
 				db.Insert(verified,    tbl.TableName);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.BoolValue == 'N'), Is.EqualTo(1));
 					Assert.That(db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.BoolValue == 'Y'), Is.EqualTo(1));
@@ -121,7 +120,7 @@ namespace Tests.UserTests
 
 					Assert.That(tbl.First(_ => _.GuidValue == notVerified.GuidValue), Is.EqualTo(notVerified));
 					Assert.That(tbl.First(_ => _.GuidValue == verified.GuidValue), Is.EqualTo(verified));
-				});
+				}
 			}
 		}
 	}

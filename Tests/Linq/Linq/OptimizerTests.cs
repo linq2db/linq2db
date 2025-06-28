@@ -191,7 +191,7 @@ namespace Tests.Linq
 
 				var projected = query.Select(p => p.s);
 				projected.ToArray();
-				Assert.That(projected.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(0));
+				Assert.That(projected.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.Zero);
 			}
 		}
 
@@ -405,12 +405,12 @@ namespace Tests.Linq
 				var selectQuery = query.EnumQueries().Single();
 				var table = selectQuery.From.Tables[0];
 				var joinedTable = table.Joins[0].Table;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(joinedTable.HasUniqueKeys && table.HasUniqueKeys, Is.True);
 
 					Assert.That(joinedTable.UniqueKeys.Count + table.UniqueKeys.Count, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 

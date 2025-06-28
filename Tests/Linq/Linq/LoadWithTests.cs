@@ -298,17 +298,14 @@ namespace Tests.Linq
 
 				foreach (var parent in q)
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(parent.Children, Is.Not.Null);
 						Assert.That(parent.GrandChildren, Is.Not.Null);
-					});
-					Assert.Multiple(() =>
-					{
 						Assert.That(parent.Children, Is.Not.Empty);
 						Assert.That(parent.GrandChildren, Is.Not.Empty);
 						Assert.That(parent.Children3, Is.Null);
-					});
+					}
 				}
 			}
 		}
@@ -552,11 +549,11 @@ namespace Tests.Linq
 						subItem.SubSubItems = subItem.SubSubItems.OrderBy(_ => _.Id).ToArray();
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result2[0].SubItems1[0].SubSubItems[0].ParentSubItem, Is.Not.Null);
 					Assert.That(result2[0].SubItems2[0].Parent, Is.Not.Null);
-				});
+				}
 
 				var query3 = filterQuery
 					.LoadWith(m => m.SubItems1)
@@ -574,11 +571,11 @@ namespace Tests.Linq
 						subItem.SubSubItems = subItem.SubSubItems.OrderBy(_ => _.Id).ToArray();
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result3[0].SubItems1[0].SubSubItems[0].ParentSubItem, Is.Not.Null);
 					Assert.That(result3[0].SubItems2[0].Parent, Is.Not.Null);
-				});
+				}
 			}
 		}
 
@@ -809,11 +806,11 @@ namespace Tests.Linq
 					.ToArray();
 
 				Assert.That(result, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Children, Has.Count.EqualTo(3));
 					Assert.That(result[0].ActiveChildren, Has.Count.EqualTo(2));
-				});
+				}
 			}
 		}
 

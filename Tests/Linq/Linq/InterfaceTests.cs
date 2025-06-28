@@ -331,13 +331,13 @@ namespace Tests.Linq
 			var results = t.OrderBy(r => r.Id).ToArray();
 
 			Assert.That(results, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(results[0].Id, Is.EqualTo(1));
 				Assert.That(results[0].Name, Is.EqualTo("new_name"));
 				Assert.That(results[1].Id, Is.EqualTo(2));
 				Assert.That(results[1].Name, Is.EqualTo("old_name"));
-			});
+			}
 		}
 		#endregion
 
@@ -399,12 +399,11 @@ namespace Tests.Linq
 			tb.Insert(Expression.Lambda<Func<SomeTable>>(expr));
 
 			var res = tb.Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res.ClassProp, Is.True);
 				Assert.That(res.Interface, Is.False);
-			});
+			}
 		}
 		#endregion
 
@@ -449,14 +448,14 @@ namespace Tests.Linq
 			var ed = ConfigureIssue4715Mapping().GetEntityDescriptor(typeof(Issue4715Table));
 
 			Assert.That(ed.Columns, Has.Count.EqualTo(5));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ed.Columns.Any(c => c.ColumnName == "Id"), Is.True);
 				Assert.That(ed.Columns.Any(c => c.ColumnName == "Prop1"), Is.True);
 				Assert.That(ed.Columns.Any(c => c.ColumnName == "Prop2"), Is.True);
 				Assert.That(ed.Columns.Any(c => c.ColumnName == "Prop3"), Is.True);
 				Assert.That(ed.Columns.Any(c => c.ColumnName == "Prop4"), Is.True);
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4715")]
@@ -476,13 +475,12 @@ namespace Tests.Linq
 			db.Insert(record);
 
 			var result = tb.Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Id, Is.EqualTo(1));
 				Assert.That(result.ImplicitPropertyRW, Is.EqualTo(2));
 				Assert.That(((IExplicitInterface<Issue4715Table>)result).ExplicitPropertyRW, Is.EqualTo(3));
-			});
+			}
 		}
 		#endregion
 

@@ -414,7 +414,7 @@ namespace LinqToDB.EntityFrameworkCore
 			void MapEFCoreType(Type modelType)
 			{
 				var currentType = mappingSchema.GetDataType(modelType);
-				if (currentType != SqlDataType.Undefined)
+				if (!currentType.Equals(SqlDataType.Undefined))
 					return;
 
 				var infos = convertorSelector.Select(modelType).ToArray();

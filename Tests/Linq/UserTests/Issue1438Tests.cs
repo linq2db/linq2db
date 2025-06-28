@@ -44,12 +44,11 @@ namespace Tests.UserTests
 					});
 
 					var record = tbl.Where(_ => _.Id == id).Single();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(record.Id, Is.EqualTo(id));
 						Assert.That(record.Has, Is.True);
-					});
+					}
 				}
 			}
 		}
@@ -81,12 +80,11 @@ namespace Tests.UserTests
 					});
 
 					var record = tbl.Where(_ => _.Id == id).Single();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(record.Id, Is.EqualTo(id));
 						Assert.That(record.Has, Is.True);
-					});
+					}
 				}
 			}
 		}

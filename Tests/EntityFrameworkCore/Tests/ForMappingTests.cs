@@ -248,7 +248,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var result = context.GetTable<SkipModesTable>().OrderBy(r => r.Id).ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].InsertOnly, Is.EqualTo(2));
 				Assert.That(result[0].UpdateOnly, Is.Null);
@@ -256,7 +256,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				Assert.That(result[1].InsertOnly, Is.EqualTo(2));
 				Assert.That(result[1].UpdateOnly, Is.Null);
 				Assert.That(result[1].ReadOnly, Is.Null);
-			});
+			}
 
 			entityEF.InsertOnly = 11;
 			entityEF.UpdateOnly = 12;
@@ -271,7 +271,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			result = context.GetTable<SkipModesTable>().OrderBy(r => r.Id).ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].InsertOnly, Is.EqualTo(2));
 				Assert.That(result[0].UpdateOnly, Is.EqualTo(12));
@@ -279,7 +279,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				Assert.That(result[1].InsertOnly, Is.EqualTo(2));
 				Assert.That(result[1].UpdateOnly, Is.EqualTo(12));
 				Assert.That(result[1].ReadOnly, Is.Null);
-			});
+			}
 		}
 	}
 }

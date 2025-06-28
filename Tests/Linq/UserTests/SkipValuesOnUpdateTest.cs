@@ -89,11 +89,11 @@ namespace Tests.UserTests
 						Assert.That(count, Is.GreaterThan(0));
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.That(r, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(r.Age, Is.EqualTo(15));
 						Assert.That(r.Name, Is.EqualTo("Jacob"));
-					});
+					}
 
 					r.Name = "John";
 					r.Age = 22;
@@ -102,11 +102,11 @@ namespace Tests.UserTests
 						Assert.That(count, Is.GreaterThan(0));
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.That(r, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(r.Age, Is.EqualTo(22));
 						Assert.That(r.Name, Is.EqualTo("Jacob"));
-					});
+					}
 				}
 			}
 		}
@@ -136,11 +136,11 @@ namespace Tests.UserTests
 						Assert.That(count, Is.GreaterThan(0));
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.That(r, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(r.Age, Is.EqualTo(15));
 						Assert.That(r.Name, Is.EqualTo("Franki"));
-					});
+					}
 
 					r.Name = "Jack";
 					r.Age = 2;
@@ -149,11 +149,11 @@ namespace Tests.UserTests
 						Assert.That(count, Is.GreaterThan(0));
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.That(r, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(r.Age, Is.EqualTo(15));
 						Assert.That(r.Name, Is.EqualTo("Jack"));
-					});
+					}
 				}
 			}
 		}
@@ -181,11 +181,11 @@ namespace Tests.UserTests
 						Assert.That(count, Is.GreaterThan(0));
 					r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.That(r, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(r.Age, Is.EqualTo(2));
 						Assert.That(r.Name, Is.EqualTo("Jack"));
-					});
+					}
 
 					r.Name = "Franki";
 					r.Age = null;
@@ -194,11 +194,11 @@ namespace Tests.UserTests
 						Assert.That(count, Is.GreaterThan(0));
 					r = db.GetTable<TestTableNull>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.That(r, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(r.Age, Is.EqualTo(2));
 						Assert.That(r.Name, Is.EqualTo("Franki"));
-					});
+					}
 				}
 			}
 		}
@@ -230,11 +230,11 @@ namespace Tests.UserTests
 						Assert.That(count, Is.GreaterThan(0));
 					r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.That(r, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(r.Age, Is.EqualTo(18));
 						Assert.That(r.Name, Is.EqualTo("Franki"));
-					});
+					}
 
 					r.Name = "Jack";
 					r.Age = 2;
@@ -243,11 +243,11 @@ namespace Tests.UserTests
 						Assert.That(count, Is.GreaterThan(0));
 					r = db.GetTable<TestTableFluent>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.That(r, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(r.Age, Is.EqualTo(18));
 						Assert.That(r.Name, Is.EqualTo("Jack"));
-					});
+					}
 				}
 			}
 		}
@@ -277,12 +277,12 @@ namespace Tests.UserTests
 						Assert.That(count, Is.GreaterThan(0));
 					r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.That(r, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(r.Age, Is.EqualTo(2));
 						Assert.That(r.Name, Is.EqualTo("Jack"));
 						Assert.That(r.Gender, Is.EqualTo(TestTableEnum.GenderType.Male));
-					});
+					}
 
 					r.Name = "Francine";
 					r.Age = 20;
@@ -292,12 +292,12 @@ namespace Tests.UserTests
 						Assert.That(count, Is.GreaterThan(0));
 					r = db.GetTable<TestTableEnum>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.That(r, Is.Not.Null);
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(r.Age, Is.EqualTo(20));
 						Assert.That(r.Name, Is.EqualTo("Francine"));
 						Assert.That(r.Gender, Is.EqualTo(TestTableEnum.GenderType.Male));
-					});
+					}
 				}
 			}
 		}

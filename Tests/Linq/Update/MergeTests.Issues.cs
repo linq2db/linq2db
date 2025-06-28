@@ -61,21 +61,16 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<AllTypes2>().OrderBy(_ => _.ID).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(2));
 					Assert.That(result, Has.Length.EqualTo(2));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[0].datetime2DataType, Is.EqualTo(testData[0].datetime2DataType));
 					Assert.That(result[0].datetimeoffsetDataType, Is.EqualTo(testData[0].datetimeoffsetDataType));
 
 					Assert.That(result[1].datetime2DataType, Is.EqualTo(testData[1].datetime2DataType));
 					Assert.That(result[1].datetimeoffsetDataType, Is.EqualTo(testData[1].datetimeoffsetDataType));
-				});
+				}
 			}
 		}
 
@@ -109,21 +104,16 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<AllTypes2>().OrderBy(_ => _.ID).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(2));
 					Assert.That(result, Has.Length.EqualTo(2));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[0].datetime2DataType, Is.EqualTo(testData[0].datetime2DataType));
 					Assert.That(result[0].datetimeoffsetDataType, Is.EqualTo(testData[0].datetimeoffsetDataType));
 
 					Assert.That(result[1].datetime2DataType, Is.EqualTo(testData[1].datetime2DataType));
 					Assert.That(result[1].datetimeoffsetDataType, Is.EqualTo(testData[1].datetimeoffsetDataType));
-				});
+				}
 			}
 		}
 
@@ -162,21 +152,16 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<AllTypes2>().OrderBy(_ => _.ID).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(2));
 					Assert.That(result, Has.Length.EqualTo(2));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[0].datetime2DataType, Is.EqualTo(testData[0].datetime2DataType));
 					Assert.That(result[0].datetimeoffsetDataType, Is.EqualTo(testData[0].datetimeoffsetDataType));
 
 					Assert.That(result[1].datetime2DataType, Is.EqualTo(testData[1].datetime2DataType));
 					Assert.That(result[1].datetimeoffsetDataType, Is.EqualTo(testData[1].datetimeoffsetDataType));
-				});
+				}
 			}
 		}
 
@@ -222,15 +207,10 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<AllTypes2>().OrderBy(_ => _.ID).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(2));
 					Assert.That(result, Has.Length.EqualTo(2));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[0].ID, Is.EqualTo(testData[0].ID));
 					Assert.That(result[0].datetime2DataType, Is.EqualTo(dt2));
 					Assert.That(result[0].datetimeoffsetDataType, Is.EqualTo(dto2));
@@ -238,7 +218,7 @@ namespace Tests.xUpdate
 					Assert.That(result[1].ID, Is.EqualTo(testData[1].ID));
 					Assert.That(result[1].datetime2DataType, Is.EqualTo(dt2));
 					Assert.That(result[1].datetimeoffsetDataType, Is.EqualTo(dto2));
-				});
+				}
 			}
 		}
 
@@ -290,21 +270,16 @@ namespace Tests.xUpdate
 					.Merge();
 
 				var result = db.GetTable<AllTypes2>().OrderBy(_ => _.ID).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(result, Has.Length.EqualTo(2));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[0].datetime2DataType, Is.EqualTo(dt2));
 					Assert.That(result[0].datetimeoffsetDataType, Is.EqualTo(dto2));
 
 					Assert.That(result[1].datetime2DataType, Is.EqualTo(testData[1].datetime2DataType));
 					Assert.That(result[1].datetimeoffsetDataType, Is.EqualTo(testData[1].datetimeoffsetDataType));
-				});
+				}
 			}
 		}
 		#endregion
@@ -365,12 +340,11 @@ namespace Tests.xUpdate
 				Assert.That(result, Has.Count.EqualTo(1));
 
 				var newRecord = new TestMapping1();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Id, Is.EqualTo(lastId));
 					Assert.That(result[0].Field, Is.EqualTo(10));
-				});
+				}
 			}
 		}
 		#endregion
@@ -784,13 +758,13 @@ namespace Tests.xUpdate
 				var res = table.OrderBy(_ => _.Id).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Id, Is.EqualTo(1));
 					Assert.That(res[0].Value, Is.EqualTo(1));
 					Assert.That(res[1].Id, Is.EqualTo(2));
 					Assert.That(res[1].Value, Is.EqualTo(2));
-				});
+				}
 
 				source[1].Value = 4;
 				source.Add(new CacheTestTable() { Id = 3, Value = 3 });
@@ -806,7 +780,7 @@ namespace Tests.xUpdate
 				res = table.OrderBy(_ => _.Id).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Id, Is.EqualTo(1));
 					Assert.That(res[0].Value, Is.EqualTo(1));
@@ -814,7 +788,7 @@ namespace Tests.xUpdate
 					Assert.That(res[1].Value, Is.EqualTo(4));
 					Assert.That(res[2].Id, Is.EqualTo(3));
 					Assert.That(res[2].Value, Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
