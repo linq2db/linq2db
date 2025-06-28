@@ -1065,14 +1065,15 @@ namespace Tests.xUpdate
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4584")]
 		public void Issue_EnumerableSourceDuplicateColumnAlias([MergeDataContextSource(true)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<MyChildClass>();
 
-			List<MyChildClass> items = [
-				new MyChildClass { Value = 1 },
-				new MyChildClass { Value = 2 },
-				new MyChildClass { Value = 3 },
-				new MyChildClass { Value = 4 },
+			List<MyChildClass> items =
+			[
+				new MyChildClass { Id = 1, Value = 10 },
+				new MyChildClass { Id = 2, Value = 20 },
+				new MyChildClass { Id = 3, Value = 30 },
+				new MyChildClass { Id = 4, Value = 40 },
 			];
 
 			tb
