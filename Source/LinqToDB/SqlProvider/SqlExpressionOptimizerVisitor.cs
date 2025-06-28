@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Xml.Linq;
 
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
@@ -349,6 +348,9 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
+			if (element.Predicates.Count == 0)
+				return element;
+
 			if (element.Predicates.Count == 1)
 			{
 				if (IsAllowedToOptimizePredicate(element, element.Predicates[0]))
@@ -669,8 +671,8 @@ namespace LinqToDB.SqlProvider
 							if (visitedPredicates.Contains(predicate2))
 								continue;
 
-							if (_similarityMerger.TryMerge(_nullabilityContext, predicate1, predicate2, element.IsOr, out var mergedPredicate) || 
-							    _similarityMerger.TryMerge(_nullabilityContext, predicate2, predicate1, element.IsOr, out mergedPredicate))
+							if (_similarityMerger.TryMerge(_nullabilityContext, _isInsidePredicate, predicate1, predicate2, element.IsOr, out var mergedPredicate) || 
+							    _similarityMerger.TryMerge(_nullabilityContext, _isInsidePredicate, predicate2, predicate1, element.IsOr, out mergedPredicate))
 							{
 								var predicatesList = element.Predicates;
 
@@ -802,7 +804,7 @@ namespace LinqToDB.SqlProvider
 				if (visitedPredicates.Contains(conditionPredicate))
 					continue;
 
-				if (_similarityMerger.TryMerge(_nullabilityContext, predicate, conditionPredicate, !searchCondition.IsOr, out var mergedSingle, out var mergedConditional))
+				if (_similarityMerger.TryMerge(_nullabilityContext, _isInsidePredicate, predicate, conditionPredicate, !searchCondition.IsOr, out var mergedSingle, out var mergedConditional))
 				{
 					isOptimized = true;
 

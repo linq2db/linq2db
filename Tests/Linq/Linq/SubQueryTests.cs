@@ -494,7 +494,6 @@ namespace Tests.Linq
 					});
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllOracle11, Details = "Flag IsColumnSubqueryShouldNotContainParentIsNotNull prevents moving OUTER APPLY join to subquery. Return to this test after implementing more Oracle versions")]
 		[Test]
 		public void SubSub212([DataSources(TestProvName.AllClickHouse)] string context)
 		{

@@ -27,7 +27,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public bool TryMerge(NullabilityContext nullabilityContext, ISqlPredicate predicate1, ISqlPredicate predicate2, bool isLogicalOr, out ISqlPredicate? mergedPredicate)
+		public bool TryMerge(NullabilityContext nullabilityContext, bool isNestedPredicate, ISqlPredicate predicate1, ISqlPredicate predicate2, bool isLogicalOr, out ISqlPredicate? mergedPredicate)
 		{
 			if (predicate1.Equals(predicate2, SqlExpression.DefaultComparer))
 			{
@@ -52,7 +52,8 @@ namespace LinqToDB.SqlQuery
 						return true;
 					}
 				}
-				else if (predicate2 is SqlPredicate.ExprExpr { UnknownAsValue: true, Operator: SqlPredicate.Operator.Equal } exprExpr2)
+				else if (predicate2 is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr2
+					&& (exprExpr2.UnknownAsValue == true || !isNestedPredicate))
 				{
 					if (!isLogicalOr && isNull1.IsNot && !nullabilityContext.IsEmpty)
 					{
@@ -114,7 +115,7 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		public bool TryMerge(NullabilityContext nullabilityContext, ISqlPredicate single, ISqlPredicate predicateFromList, bool isLogicalOr, out ISqlPredicate? mergedSinglePredicate,
+		public bool TryMerge(NullabilityContext nullabilityContext, bool isNestedPredicate, ISqlPredicate single, ISqlPredicate predicateFromList, bool isLogicalOr, out ISqlPredicate? mergedSinglePredicate,
 			out ISqlPredicate?                  mergedListPredicate)
 		{
 			if (single.Equals(predicateFromList, SqlExpression.DefaultComparer))
