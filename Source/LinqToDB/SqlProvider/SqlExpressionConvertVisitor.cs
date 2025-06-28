@@ -498,10 +498,10 @@ namespace LinqToDB.SqlProvider
 				var expr2IsConstant = QueryHelper.UnwrapNullablity(predicate.Expr2) is (SqlValue or SqlParameter { IsQueryParameter: false });
 
 				var expr1 = expr1IsPredicate && !expr2IsConstant
-					? WrapBooleanExpression(predicate.Expr1, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
+					? WrapBooleanExpression(predicate.Expr1, includeFields : true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
 					: predicate.Expr1;
 				var expr2 = expr2IsPredicate && !expr1IsConstant
-					? WrapBooleanExpression(predicate.Expr2, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
+					? WrapBooleanExpression(predicate.Expr2, includeFields : true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
 					: predicate.Expr2;
 
 				if (!ReferenceEquals(expr1, predicate.Expr1) || !ReferenceEquals(expr2, predicate.Expr2))
@@ -1368,13 +1368,6 @@ namespace LinqToDB.SqlProvider
 						{
 							return new SqlValue(typeof(bool?), null);
 						}
-					}
-
-					if (SqlProviderFlags.SupportsBooleanType
-						&& !forceConvert
-						&& !withNull)
-					{
-						throw new InvalidOperationException($"HERE: {unwrapped.CanBeNullableOrUnknown(NullabilityContext, withoutUnknownErased: true)}");
 					}
 
 					wrap = !SqlProviderFlags.SupportsBooleanType || (!withNull && unwrapped.CanBeNullableOrUnknown(NullabilityContext, withoutUnknownErased: true)) || forceConvert;

@@ -1311,6 +1311,80 @@ namespace Tests.Linq
 			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 0 : r.Value5) <= null));
 #pragma warning restore CS0464 // Comparing with null of struct type always produces 'false'
 		}
+
+		[Test]
+		public void Test_PredicateAsNonConditionBooleanValue_Test1([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			AssertQuery(tb.Select(r => new
+			{
+				Id = r.Id,
+				Value11 = r.Value1 == r.Value2,
+				Value12 = r.Value1 != r.Value2,
+				Value13 = r.Value1 > r.Value2,
+				Value14 = r.Value1 < r.Value2,
+				Value15 = r.Value1 >= r.Value2,
+				Value16 = r.Value1 <= r.Value2,
+
+				Value21 = r.Value4 == r.Value5,
+				Value22 = r.Value4 != r.Value5,
+				Value23 = r.Value4 > r.Value5,
+				Value24 = r.Value4 < r.Value5,
+				Value25 = r.Value4 >= r.Value5,
+				Value26 = r.Value4 <= r.Value5,
+
+				Value31 = r.Value1 == r.Value4,
+				Value32 = r.Value1 != r.Value4,
+				Value33 = r.Value1 > r.Value4,
+				Value34 = r.Value1 < r.Value4,
+				Value35 = r.Value1 >= r.Value4,
+				Value36 = r.Value1 <= r.Value4,
+
+				Value41 = r.Value5 == r.Value2,
+				Value42 = r.Value5 != r.Value2,
+				Value43 = r.Value5 > r.Value2,
+				Value44 = r.Value5 < r.Value2,
+				Value45 = r.Value5 >= r.Value2,
+				Value46 = r.Value5 <= r.Value2,
+			}).Where(r => r.Id != -1));
+		}
+
+		[Test]
+		public void Test_PredicateAsNonConditionBooleanValue_Test2([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			AssertQuery(from r in tb group r by r.Value1 == r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 != r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 > r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 < r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 >= r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 <= r.Value2 into g select new { g.Key, Count = g.Count() });
+
+			AssertQuery(from r in tb group r by r.Value4 == r.Value5 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value4 != r.Value5 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value4 > r.Value5 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value4 < r.Value5 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value4 >= r.Value5 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value4 <= r.Value5 into g select new { g.Key, Count = g.Count() });
+
+			AssertQuery(from r in tb group r by r.Value1 == r.Value4 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 != r.Value4 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 > r.Value4 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 < r.Value4 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 >= r.Value4 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 <= r.Value4 into g select new { g.Key, Count = g.Count() });
+
+			AssertQuery(from r in tb group r by r.Value5 == r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value5 != r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value5 > r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value5 < r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value5 >= r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value5 <= r.Value2 into g select new { g.Key, Count = g.Count() });
+		}
 		#endregion
 	}
 }

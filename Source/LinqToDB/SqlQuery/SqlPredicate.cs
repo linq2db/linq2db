@@ -261,11 +261,11 @@ namespace LinqToDB.SqlQuery
 				if (Operator == Operator.Equal)
 					return Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
 
-				if (Operator == Operator.Equal)
+				if (Operator == Operator.NotEqual)
 					return Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
 
 				// comparison
-				return UnknownAsValue != true && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
+				return UnknownAsValue != true && (Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased));
 			}
 
 			/// <summary>
