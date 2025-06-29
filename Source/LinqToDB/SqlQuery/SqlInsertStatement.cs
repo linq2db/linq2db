@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
 	public class SqlInsertStatement : SqlStatementWithQueryBase
 	{
@@ -40,6 +42,16 @@
 				.AppendLine()
 				.AppendElement(SelectQuery)
 				.AppendElement(Output);
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(base.GetElementHashCode());
+
+			hash.Add(_insert?.GetElementHashCode());
+			hash.Add(Output?.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)

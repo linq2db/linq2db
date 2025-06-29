@@ -212,6 +212,31 @@ namespace LinqToDB.SqlQuery
 
 			return writer;
 		}
+
+		public int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(SourceID);
+			hash.Add(Source?.GetElementHashCode() ?? 0);
+			foreach (var field in Fields)
+			{
+				hash.Add(field.GetElementHashCode());
+			}
+
+			if (Rows != null)
+			{
+				foreach (var row in Rows)
+				{
+					foreach (var expr in row)
+					{
+						hash.Add(expr.GetElementHashCode());
+					}
+				}
+			}
+
+			return hash.ToHashCode();
+		}
+
 		#endregion
 
 		#region IEquatable

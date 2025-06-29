@@ -48,8 +48,10 @@ namespace Tests
 #endif
 
 #if !DEBUG
+#pragma warning disable RS0030 // Do not use banned APIs
 				Console.WriteLine("UserDataProviders.json:");
 				Console.WriteLine(userDataProvidersJson);
+#pragma warning restore RS0030 // Do not use banned APIs
 #endif
 
 				var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);

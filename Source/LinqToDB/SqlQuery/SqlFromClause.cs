@@ -186,6 +186,14 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			foreach (var table in Tables)
+				hash.Add(table.GetElementHashCode());
+			return hash.ToHashCode();
+		}
+
 		#endregion
 
 		public void Cleanup()

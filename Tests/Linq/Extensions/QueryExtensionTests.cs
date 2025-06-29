@@ -32,7 +32,7 @@ namespace Tests.Extensions
 					on p.Id equals a.Id //PK column
 				select p;
 
-			Console.WriteLine(query);
+			BaselinesManager.LogQuery(query.ToSqlQuery().Sql);
 
 			Assert.That(query.GetTableSource().Joins, Has.Count.EqualTo(1));
 		}

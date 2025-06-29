@@ -36,5 +36,22 @@ namespace LinqToDB.SqlQuery
 		{
 			return writer.Append("extension");
 		}
+
+		public int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(Configuration);
+			hash.Add(Scope);
+			foreach (var arg in Arguments)
+			{
+				hash.Add(arg.Key);
+				hash.Add(arg.Value.GetElementHashCode());
+			}
+
+			if (BuilderType != null)
+				hash.Add(BuilderType);
+			return hash.ToHashCode();
+		}
 	}
 }

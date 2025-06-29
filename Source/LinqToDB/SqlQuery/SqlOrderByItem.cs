@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
 	public class SqlOrderByItem : QueryElement
 	{
@@ -28,6 +30,16 @@
 				writer.Append(" DESC");
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(Expression.GetElementHashCode());
+			hash.Add(IsDescending);
+			hash.Add(IsPositioned);
+			return hash.ToHashCode();
 		}
 
 		public override string ToString()
