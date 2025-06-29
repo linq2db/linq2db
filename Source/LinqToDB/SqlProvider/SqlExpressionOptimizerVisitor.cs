@@ -743,38 +743,33 @@ namespace LinqToDB.SqlProvider
 			{
 				if (OptimizeSimilarForSearch(element.Predicates[1], search, out var newCondition, out var newPredicate))
 				{
-					if (newPredicate == null)
-						return newCondition;
-
-					if (GetVisitMode(element) == VisitMode.Transform)
-					{
-						var newElement = new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, [newCondition, newPredicate]);
-						NotifyReplaced(newElement, element);
-						return newElement;
-					}
-
-					return Visit(newCondition);
+					return Optimize(element, newCondition, newPredicate, false);
 				}
 			}
 			else if (element.Predicates[1] is SqlSearchCondition search2)
 			{
 				if (OptimizeSimilarForSearch(element.Predicates[0], search2, out var newCondition, out var newPredicate))
 				{
-					if (newPredicate == null)
-						return newCondition;
-
-					if (GetVisitMode(element) == VisitMode.Transform)
-					{
-						var newElement = new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, [newPredicate, newCondition]);
-						NotifyReplaced(newElement, element);
-						return newElement;
-					}
-
-					return Visit(newCondition);
+					return Optimize(element, newCondition, newPredicate, true);
 				}
 			}
 
 			return element;
+
+			IQueryElement Optimize(SqlSearchCondition element, ISqlPredicate newCondition, ISqlPredicate? newPredicate, bool reverse)
+			{
+				if (newPredicate == null)
+					return newCondition;
+
+				if (GetVisitMode(element) == VisitMode.Transform)
+				{
+					var newElement = new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, reverse ? [newPredicate, newCondition] : [newCondition, newPredicate]);
+					NotifyReplaced(newElement, element);
+					return newElement;
+				}
+
+				return Visit(newCondition);
+			}
 		}
 
 		public bool OptimizeSimilarForSearch(ISqlPredicate predicate, SqlSearchCondition searchCondition, out ISqlPredicate newCondition, out ISqlPredicate? newPredicate)

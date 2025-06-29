@@ -55,7 +55,8 @@ namespace LinqToDB.SqlQuery
 			if (ReferenceEquals(this, other))
 				return true;
 
-			if (ElementType != other.ElementType)
+			if (other is not SqlNullabilityExpression otherNullability
+				|| CanBeNull != otherNullability.CanBeNull)
 				return false;
 
 			return SqlExpression.Equals(((SqlNullabilityExpression)other).SqlExpression, comparer);
@@ -92,6 +93,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var hash = new HashCode();
 			hash.Add(ElementType);
+			hash.Add(CanBeNull);
 			hash.Add(SqlExpression.GetElementHashCode());
 
 			return hash.ToHashCode();
