@@ -99,8 +99,10 @@ namespace Tests
 
 			if (printData)
 			{
+#pragma warning disable RS0030 // Do not use banned APIs
 				Console.WriteLine(expectedList.ToDiagnosticString("Expected"));
 				Console.WriteLine(resultList.  ToDiagnosticString("Result"));
+#pragma warning restore RS0030 // Do not use banned APIs
 			}
 
 			if (!allowEmpty)

@@ -621,15 +621,17 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			// A IS NOT NULL AND A = B => A = B, when B is not nullable
-			// A OR B OR A => A OR B
-			// A AND B AND A => A AND B
+			// Optimizations: PREDICATE vs PREDICATE:
+			// 1. A IS NOT NULL AND A = B => A = B, when B is not nullable
+			// 2. A OR B OR A => A OR B
+			// 3. A AND B AND A => A AND B
 			newElement = OptimizeSimilarFlat(element);
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			// A OR (A AND B) => A OR B
-			// A AND (A OR B) => A AND B
+			// Optimizations: PREDICATE vs (GROUP)
+			// 1. A OR (A AND B) => A OR B
+			// 2. A AND (A OR B) => A AND B
 			newElement = OptimizeSimilarForSinglePredicate(element);
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);

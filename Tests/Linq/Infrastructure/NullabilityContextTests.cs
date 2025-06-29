@@ -166,7 +166,7 @@ namespace Tests.Infrastructure
 
 			var nullabilityContext = NullabilityContext.GetContext(selectQuery);
 
-			Console.WriteLine(GenerateSQL(selectQuery));
+			BaselinesManager.LogQuery(GenerateSQL(selectQuery));
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -221,7 +221,7 @@ namespace Tests.Infrastructure
 
 			var nullabilityContext = NullabilityContext.GetContext(selectQuery);
 
-			Console.WriteLine(GenerateSQL(selectQuery));
+			BaselinesManager.LogQuery(GenerateSQL(selectQuery));
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -266,7 +266,7 @@ namespace Tests.Infrastructure
 
 			var nullabilityContext = NullabilityContext.GetContext(selectQuery);
 
-			Console.WriteLine(GenerateSQL(selectQuery));
+			BaselinesManager.LogQuery(GenerateSQL(selectQuery));
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -321,7 +321,7 @@ namespace Tests.Infrastructure
 
 			var nullabilityContext = NullabilityContext.GetContext(selectQuery);
 
-			Console.WriteLine(GenerateSQL(selectQuery));
+			BaselinesManager.LogQuery(GenerateSQL(selectQuery));
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -366,7 +366,7 @@ namespace Tests.Infrastructure
 
 			var nullabilityContext = NullabilityContext.GetContext(selectQuery);
 
-			Console.WriteLine(GenerateSQL(selectQuery));
+			BaselinesManager.LogQuery(GenerateSQL(selectQuery));
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -380,6 +380,5 @@ namespace Tests.Infrastructure
 			AssertJoinNotNullable(nullabilityContext, ts1.Joins[1]);
 			AssertJoinNotNullable(nullabilityContext, ts1.Joins[2]);
 		}
-
 	}
 }

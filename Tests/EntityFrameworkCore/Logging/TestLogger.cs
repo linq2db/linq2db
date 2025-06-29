@@ -129,15 +129,21 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 		{
 			if (message.TimeStamp != null)
 			{
+#pragma warning disable RS0030 // Do not use banned APIs
 				Console.Write(message.TimeStamp, message.MessageColor, message.MessageColor);
+#pragma warning restore RS0030 // Do not use banned APIs
 			}
 
 			if (message.LevelString != null)
 			{
+#pragma warning disable RS0030 // Do not use banned APIs
 				Console.Write(message.LevelString);
+#pragma warning restore RS0030 // Do not use banned APIs
 			}
 
+#pragma warning disable RS0030 // Do not use banned APIs
 			Console.WriteLine(message.Message);
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
 
 		private LogMessageEntry CreateDefaultLogMessage(StringBuilder logBuilder, LogLevel logLevel, string logName, int eventId, string message, Exception? exception)
