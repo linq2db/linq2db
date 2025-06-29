@@ -320,7 +320,7 @@ namespace LinqToDB.Linq.Builder
 				correctedPath = Builder.UpdateNesting(InnerQueryContext, correctedPath);
 
 				// replace tracking path back
-				var translated = SequenceHelper.CorrectTrackingPath(Builder, correctedPath, path);
+				var translated = SequenceHelper.CorrectTrackingPath(Builder, correctedPath, projectedPath);
 
 				var placeholders = ExpressionBuilder.CollectPlaceholders(translated, true);
 
