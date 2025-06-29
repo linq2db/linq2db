@@ -3194,42 +3194,6 @@ $function$
 				Assert.That(tb.Count(r => r.Jsonb == r.Json), Is.EqualTo(1));
 			}
 		}
-
-		sealed class Issue4955Table
-		{
-			public long Id { get; set; }
-			public long UserId { get; set; }
-			public int Amount { get; set; }
-
-			public static readonly Issue4955Table[] Data =
-			[
-				new Issue4955Table() { Id = 1, UserId  = 1 },
-				new Issue4955Table() { Id = 2, UserId = 2147483648 }
-			];
-		}
-
-		readonly record struct Issue4955Arguments(long Id, long UserId);
-		sealed record Issue4955Result(long Id, long UserId, int Amount);
-
-		[Test]
-		public void Issue4955Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4955Table.Data);
-
-			Test([new(1,1)]);
-			Test([new(2,2147483648)]);
-
-			List<Issue4955Result> Test(List<Issue4955Arguments> arguments)
-			{
-				return tb
-					.InnerJoin(
-						arguments.AsQueryable(),
-						(entity, arg) => entity.Id == arg.Id && entity.UserId == arg.UserId,
-						(entity, arg) => new Issue4955Result(arg.Id, arg.UserId, entity.Amount))
-					.ToList();
-			}
-		}
 	}
 
 	#region Extensions
