@@ -567,6 +567,7 @@ namespace LinqToDB.SqlProvider
 					var oldContext      = _nullabilityContext;
 					_nullabilityContext = new NullabilityContext(_nullabilityContext, notNullOverrides);
 
+					var modified = false;
 					var indexOffset = 0;
 					for (var i = 0; i < element.Predicates.Count; i++)
 					{
@@ -577,6 +578,7 @@ namespace LinqToDB.SqlProvider
 								element.Predicates.RemoveAt(i);
 								i--;
 								indexOffset++;
+								modified = true;
 								continue;
 							}
 							else
@@ -601,6 +603,7 @@ namespace LinqToDB.SqlProvider
 							if (modify)
 							{
 								element.Predicates[i] = newPredicate;
+								modified = true;
 							}
 							else
 							{
@@ -618,6 +621,8 @@ namespace LinqToDB.SqlProvider
 
 					if (!modify && newPredicates != null)
 						return Visit(new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, newPredicates));
+					else if (modified)
+						return Visit(element);
 				}
 			}
 
