@@ -453,21 +453,19 @@ namespace Tests.Infrastructure
 			var dbID           = ((IConfigurationID)db).        ConfigurationID;
 
 			using (db.UseOptions<DataContextOptions>(o => o with { CommandTimeout = 45 }))
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.Multiple(() =>
-				{
-					Assert.That(db.CommandTimeout,                              Is.EqualTo(45));
-					Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.Not.EqualTo(optionsID));
-					Assert.That(((IConfigurationID)db).ConfigurationID,         Is.Not.EqualTo(dbID));
-				});
+				Assert.That(db.CommandTimeout,                              Is.EqualTo(45));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.Not.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID,         Is.Not.EqualTo(dbID));
 			}
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(db.CommandTimeout,                              Is.EqualTo(commandTimeout));
 				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
 				Assert.That(((IConfigurationID)db).ConfigurationID,         Is.EqualTo(dbID));
-			});
+			}
 		}
 
 		[Test]
@@ -482,21 +480,19 @@ namespace Tests.Infrastructure
 			using (db.UseOptions(o => o
 				.WithOptions<LinqOptions>    (co => co with { OptimizeJoins = true })
 				.WithOptions<BulkCopyOptions>(bo => bo with { BulkCopyType = BulkCopyType.RowByRow })))
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.Multiple(() =>
-				{
-					Assert.That(db.Options.LinqOptions.OptimizeJoins,           Is.Not.EqualTo(param));
-					Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.Not.EqualTo(optionsID));
-					Assert.That(((IConfigurationID)db).ConfigurationID,         Is.Not.EqualTo(dbID));
-				});
+				Assert.That(db.Options.LinqOptions.OptimizeJoins,           Is.Not.EqualTo(param));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.Not.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID,         Is.Not.EqualTo(dbID));
 			}
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(db.Options.LinqOptions.OptimizeJoins,           Is.EqualTo(param));
 				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
 				Assert.That(((IConfigurationID)db).ConfigurationID,         Is.EqualTo(dbID));
-			});
+			}
 		}
 
 		[Test]
@@ -517,12 +513,12 @@ namespace Tests.Infrastructure
 
 			void AssertState()
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.Options.LinqOptions.CompareNulls,            Is.EqualTo(param));
 					Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
 					Assert.That(((IConfigurationID)db).ConfigurationID,         Is.EqualTo(dbID));
-				});
+				}
 			}
 		}
 
