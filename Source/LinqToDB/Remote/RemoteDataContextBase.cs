@@ -270,7 +270,7 @@ namespace LinqToDB.Remote
 
 				// Because setter could be called from constructor, we cannot build composite schemas here to avoid server calls on half-initialized context
 				// Instead we reset schemas status and finish initialization in getters for MappingSchema and SerializationMappingSchema, when they are called
-				if (_providedMappingSchema != value)
+				if (!Equals(_providedMappingSchema, value))
 				{
 					_providedMappingSchema = value;
 					// reset schemas
