@@ -157,7 +157,7 @@ namespace LinqToDB.Mapping
 				var i = 0;
 				var j = 0;
 
-				schemaList[schemaInfo] = -100;
+				schemaList[schemaInfo] = i++;
 
 				foreach (var schema in schemas)
 				{
@@ -170,7 +170,7 @@ namespace LinqToDB.Mapping
 						baseConverters[bc] = j++;
 				}
 
-				Schemas             = schemaList.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray();
+				Schemas             = schemaList.OrderBy(static s => s.Value).Select(static s => s.Key).ToArray();
 				ValueToSqlConverter = new (baseConverters.OrderBy(static c => c.Value).Select(static c => c.Key).ToArray());
 			}
 
@@ -1324,14 +1324,8 @@ namespace LinqToDB.Mapping
 				;
 
 			lock (_syncRoot)
-			{
 				foreach (var s in Schemas)
 					idBuilder.Add(s.ConfigurationID);
-
-//				var reader = Schemas[0].MetadataReader;
-//				if (reader != null)
-//					idBuilder.Add(reader.GetObjectID());
-			}
 
 			return idBuilder.CreateID();
 		}

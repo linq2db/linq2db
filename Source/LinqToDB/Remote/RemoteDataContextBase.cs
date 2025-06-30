@@ -646,16 +646,16 @@ namespace LinqToDB.Remote
 				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
 				// Connection string, configuration, data provider, etc. are not reapplyable.
 				//
-				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException("Configuration string cannot be changed.");
-				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException("ConnectionString cannot be changed.");
-				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException("ProviderName cannot be changed.");
-				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException("DbConnection cannot be changed.");
-				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException("DbTransaction cannot be changed.");
-				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException("DisposeConnection cannot be changed.");
-				if (options.DataProvider              != previousOptions?.DataProvider)              throw new LinqToDBException("DataProvider cannot be changed.");
-				if (options.ConnectionFactory         != previousOptions?.ConnectionFactory)         throw new LinqToDBException("ConnectionFactory cannot be changed.");
-				if (options.DataProviderFactory       != previousOptions?.DataProviderFactory)       throw new LinqToDBException("DataProviderFactory cannot be changed.");
-				if (options.OnEntityDescriptorCreated != previousOptions?.OnEntityDescriptorCreated) throw new LinqToDBException("OnEntityDescriptorCreated cannot be changed.");
+				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException($"Option '{nameof(options.ConfigurationString)} cannot be changed for context dynamically.");
+				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException($"Option '{nameof(options.ConnectionString)} cannot be changed for context dynamically.");
+				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException($"Option '{nameof(options.ProviderName)} cannot be changed for context dynamically.");
+				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException($"Option '{nameof(options.DbConnection)} cannot be changed for context dynamically.");
+				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException($"Option '{nameof(options.DbTransaction)} cannot be changed for context dynamically.");
+				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException($"Option '{nameof(options.DisposeConnection)} cannot be changed for context dynamically.");
+				if (options.DataProvider              != previousOptions?.DataProvider)              throw new LinqToDBException($"Option '{nameof(options.DataProvider)} cannot be changed for context dynamically.");
+				if (options.ConnectionFactory         != previousOptions?.ConnectionFactory)         throw new LinqToDBException($"Option '{nameof(options.ConnectionFactory)} cannot be changed for context dynamically.");
+				if (options.DataProviderFactory       != previousOptions?.DataProviderFactory)       throw new LinqToDBException($"Option '{nameof(options.DataProviderFactory)} cannot be changed for context dynamically.");
+				if (options.OnEntityDescriptorCreated != previousOptions?.OnEntityDescriptorCreated) throw new LinqToDBException($"Option '{nameof(options.OnEntityDescriptorCreated)} cannot be changed for context dynamically.");
 
 				Action? action = null;
 
@@ -743,12 +743,7 @@ namespace LinqToDB.Remote
 			action += () =>
 			{
 				Options          = prevOptions;
-
-#if DEBUG
-				_configurationID = null;
-#else
 				_configurationID = configurationID;
-#endif
 			};
 
 			return new DisposableAction(action);

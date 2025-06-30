@@ -807,7 +807,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Explicit]
+		[Test]
 		public void CombinedTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			SqlServerCustomVarCharKnownParameterSizeAsDataParameter(context);
