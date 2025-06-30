@@ -149,8 +149,7 @@ namespace LinqToDB
 
 			void Add(Action? action)
 			{
-				if (action is not null)
-					actions += action;
+				actions += action;
 			}
 		}
 
@@ -189,8 +188,7 @@ namespace LinqToDB
 
 			void Add(Action? action)
 			{
-				if (action is not null)
-					actions += action;
+				actions += action;
 			}
 		}
 
@@ -229,8 +227,7 @@ namespace LinqToDB
 
 			void Add(Action? action)
 			{
-				if (action is not null)
-					actions += action;
+				actions += action;
 			}
 		}
 

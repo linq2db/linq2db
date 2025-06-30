@@ -145,30 +145,16 @@ namespace LinqToDB.Common
 						previousContainer._sets?.TryGetValue(item.Key, out previousItem);
 
 						if (!ReferenceEquals(a, previousItem))
-						{
-							var action = a.Apply(obj, previousItem);
-							if (action != null)
-								actions += action;
-						}
+							actions += a.Apply(obj, previousItem);
 					}
 				}
 			}
 
 			if (previousContainer._sets != null)
-			{
 				foreach (var item in previousContainer._sets)
-				{
 					if (item.Value is IReapplicable<TA> a && _sets?.ContainsKey(item.Key) == false)
-					{
 						if (!ReferenceEquals(item.Value.Default, a))
-						{
-							var action = ((IReapplicable<TA>)item.Value.Default).Apply(obj, a);
-							if (action != null)
-								actions += action;
-						}
-					}
-				}
-			}
+							actions += ((IReapplicable<TA>)item.Value.Default).Apply(obj, a);
 
 			return actions;
 		}
