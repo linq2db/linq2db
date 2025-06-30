@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
@@ -97,12 +98,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var hashCode = Context.GetHashCode();
-				hashCode = (hashCode * 397) ^ UpTo.GetHashCode();
-				return hashCode;
-			}
+			return HashCode.Combine(Context, UpTo);
 		}
 	}
 }

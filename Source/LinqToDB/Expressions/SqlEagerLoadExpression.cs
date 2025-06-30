@@ -85,12 +85,10 @@ namespace LinqToDB.Expressions
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var hashCode = ExpressionEqualityComparer.Instance.GetHashCode(SequenceExpression);
-				hashCode = (hashCode * 397) ^ (Predicate != null ? ExpressionEqualityComparer.Instance.GetHashCode(Predicate) : 0);
-				return hashCode;
-			}
+			return HashCode.Combine(
+				ExpressionEqualityComparer.Instance.GetHashCode(SequenceExpression),
+				ExpressionEqualityComparer.Instance.GetHashCode(Predicate)
+			);
 		}
 
 		public static bool operator ==(SqlEagerLoadExpression? left, SqlEagerLoadExpression? right)

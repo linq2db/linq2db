@@ -1,4 +1,6 @@
-﻿using LinqToDB.Mapping;
+﻿using System;
+
+using LinqToDB.Mapping;
 
 namespace Tests.Model
 {
@@ -25,12 +27,7 @@ namespace Tests.Model
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var result = PersonID;
-				result = (result * 397) ^ (Diagnosis != null ? Diagnosis.GetHashCode() : 0);
-				return result;
-			}
+			return HashCode.Combine(PersonID, Diagnosis);
 		}
 	}
 }

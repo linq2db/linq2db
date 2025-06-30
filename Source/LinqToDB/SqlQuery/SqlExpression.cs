@@ -82,17 +82,14 @@ namespace LinqToDB.SqlQuery
 			if (_hashCode != null)
 				return _hashCode.Value;
 
-			var hashCode = Expr.GetHashCode();
+			var hashCode = new HashCode();
+			hashCode.Add(Expr);
+			hashCode.Add(SystemType);
 
-			if (SystemType != null)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
+			foreach (var p in Parameters)
+				hashCode.Add(p);
 
-			for (var i = 0; i < Parameters.Length; i++)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
-
-			_hashCode = hashCode;
-
-			return hashCode;
+			return _hashCode ??= hashCode.ToHashCode();
 		}
 
 		public override bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)

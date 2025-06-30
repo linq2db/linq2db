@@ -56,7 +56,7 @@ namespace Tests.Model
 
 		public override int GetHashCode()
 		{
-			unchecked { return (ParentID * 397) ^ (Value1 ?? 0); }
+			return HashCode.Combine(ParentID, Value1);
 		}
 
 		public override string ToString()
@@ -152,7 +152,7 @@ namespace Tests.Model
 
 		public override int GetHashCode()
 		{
-			unchecked { return (ParentID * 397) ^ ChildID; }
+			return HashCode.Combine(ParentID, ChildID);
 		}
 	}
 
@@ -189,15 +189,11 @@ namespace Tests.Model
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var result = ParentID.HasValue ? ParentID.Value : 0;
-
-				result = (result * 397) ^ (ChildID.     HasValue ? ChildID.     Value : 0);
-				result = (result * 397) ^ (GrandChildID.HasValue ? GrandChildID.Value : 0);
-
-				return result;
-			}
+			return HashCode.Combine(
+				ParentID,
+				ChildID,
+				GrandChildID
+			);
 		}
 	}
 
@@ -223,7 +219,7 @@ namespace Tests.Model
 
 		public override int GetHashCode()
 		{
-			unchecked { return (ParentID2 * 397) ^ (Value1 ?? 0); }
+			return HashCode.Combine(ParentID2, Value1);
 		}
 
 		public int CompareTo(object? obj)
@@ -271,7 +267,7 @@ namespace Tests.Model
 
 		public override int GetHashCode()
 		{
-			unchecked { return (ParentID * 397) ^ (int)Value1; }
+			return HashCode.Combine(ParentID, Value1);
 		}
 
 		public int CompareTo(object? obj)
@@ -313,7 +309,7 @@ namespace Tests.Model
 
 		public override int GetHashCode()
 		{
-			unchecked { return (ParentID * 397) ^ (int)Value1!; }
+			return HashCode.Combine(ParentID, Value1);
 		}
 
 		public int CompareTo(object? obj)
@@ -354,7 +350,7 @@ namespace Tests.Model
 
 		public override int GetHashCode()
 		{
-			unchecked { return ParentID * 397; }
+			return HashCode.Combine(ParentID);
 		}
 
 		public int CompareTo(object? obj)
@@ -398,15 +394,11 @@ namespace Tests.Model
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var result = ParentID;
-
-				result = (result * 397) ^ (ChildID.     HasValue ? ChildID.     Value : 0);
-				result = (result * 397) ^ (GrandChildID.HasValue ? GrandChildID.Value : 0);
-
-				return result;
-			}
+			return HashCode.Combine(
+				ParentID,
+				ChildID,
+				GrandChildID
+			);
 		}
 	}
 
@@ -477,7 +469,7 @@ namespace Tests.Model
 
 		public override int GetHashCode()
 		{
-			unchecked { return (ParentID * 397) ^ Value1; }
+			return HashCode.Combine(ParentID, Value1);
 		}
 	}
 
@@ -498,7 +490,7 @@ namespace Tests.Model
 
 		public override int GetHashCode()
 		{
-			unchecked { return (ParentID * 397) ^ Value1; }
+			return HashCode.Combine(ParentID, Value1);
 		}
 	}
 
