@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 using LinqToDB.Common.Internal;
+using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -134,7 +135,7 @@ namespace LinqToDB
 		/// </para>
 		/// </summary>
 		/// <remarks>
-		/// For ConnectionOptions we reapply only mapping schema and connection interceptor. Connection string, configuration, data provider, etc. are not reapplyable.
+		/// For <see cref="ConnectionOptions"/> we update only mapping schema and connection interceptor. Connection string, configuration, data provider, etc. are not updatable.
 		/// </remarks>
 		/// <param name="optionsSetter">
 		/// Options setter function.

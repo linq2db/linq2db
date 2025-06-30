@@ -71,6 +71,10 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Creates mapping schema, derived from other mapping schemata.
+		/// <para>
+		/// <b>Order of <paramref name="schemas"/> is important:</b>
+		/// the first schema (<paramref name="schemas"/>[0]) will have higher priority than the second (<paramref name="schemas"/>[1]).
+		/// </para>
 		/// </summary>
 		/// <param name="schemas">Base mapping schemata.</param>
 		public MappingSchema(params MappingSchema[] schemas)
@@ -94,13 +98,18 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Creates mapping schema with specified configuration name and base mapping schemas.
+		/// <para>
+		/// <b>Order of <paramref name="schemas"/> is important:</b>
+		/// the first schema (<paramref name="schemas"/>[0]) will have higher priority than the second (<paramref name="schemas"/>[1]).
+		/// </para>
 		/// </summary>
 		/// <param name="configuration">Mapping schema configuration name.
 		/// <see cref="ProviderName"/> for standard names.</param>
 		/// <param name="schemas">Base mapping schemas.</param>
 		/// <remarks>Schema name should be unique for mapping schemas with different mappings.
 		/// Using same name could lead to incorrect mapping used when mapping schemas with same name define different
-		/// mappings for same type.</remarks>
+		/// mappings for same type.
+		/// </remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
 			// initialize on schema creation to avoid race conditions later
