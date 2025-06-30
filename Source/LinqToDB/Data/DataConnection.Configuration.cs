@@ -782,9 +782,18 @@ namespace LinqToDB.Data
 				{
 					var commandTimeout = dataConnection._commandTimeout;
 
-					dataConnection.CommandTimeout = options.CommandTimeout ?? -1;
+					if (options.CommandTimeout != null)
+						dataConnection.CommandTimeout = options.CommandTimeout.Value;
+					else
+						dataConnection.CommandTimeout = -1;
 
-					action += () => dataConnection.CommandTimeout = commandTimeout ?? -1;
+					action += () =>
+					{
+						if (commandTimeout != null)
+							dataConnection.CommandTimeout = commandTimeout.Value;
+						else
+							dataConnection.CommandTimeout = -1;
+					};
 				}
 
 				if (!ReferenceEquals(options.Interceptors, previousOptions?.Interceptors))
