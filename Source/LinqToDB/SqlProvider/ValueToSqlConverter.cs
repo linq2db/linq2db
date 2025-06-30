@@ -5,14 +5,17 @@ using System.Globalization;
 using System.Text;
 
 using LinqToDB.Common;
+using LinqToDB.Common.Internal;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 
 using ConverterType = System.Action<System.Text.StringBuilder, LinqToDB.Common.DbDataType, LinqToDB.DataOptions, object>;
 
+#pragma warning disable IDE2003
+
 namespace LinqToDB.SqlProvider
 {
-	public class ValueToSqlConverter
+	public class ValueToSqlConverter : IConfigurationID, IEquatable<ValueToSqlConverter>
 	{
 		public ValueToSqlConverter()
 		{
@@ -40,7 +43,7 @@ namespace LinqToDB.SqlProvider
 
 		internal void SetDefaults()
 		{
-			SetConverter(typeof(bool),       (sb,_,_,v) => sb.Append((bool)      v ? "1" : "0"));
+			SetConverter(typeof(bool),       (sb,_,_,v) => sb.Append((bool)      v ? '1' : '0'));
 			SetConverter(typeof(char),       (sb,_,_,v) => BuildChar(sb, (char)  v));
 			SetConverter(typeof(sbyte),      (sb,_,_,v) => sb.Append(((sbyte)    v).ToString(NumberFormatInfo.InvariantInfo)));
 			SetConverter(typeof(byte),       (sb,_,_,v) => sb.Append(((byte)     v).ToString(NumberFormatInfo.InvariantInfo)));
@@ -57,7 +60,7 @@ namespace LinqToDB.SqlProvider
 			SetConverter(typeof(string),     (sb,_,_,v) => BuildString  (sb, (string)v));
 			SetConverter(typeof(Guid),       (sb,_,_,v) => sb.Append('\'').Append(((Guid)v).ToString()).Append('\''));
 
-			SetConverter(typeof(SqlBoolean), (sb,_,_,v) => sb.Append((SqlBoolean)v ? "1" : "0"));
+			SetConverter(typeof(SqlBoolean), (sb,_,_,v) => sb.Append((SqlBoolean)v ? '1' : '0'));
 			SetConverter(typeof(SqlByte),    (sb,_,_,v) => sb.Append(((SqlByte)   v).ToString()));
 			SetConverter(typeof(SqlInt16),   (sb,_,_,v) => sb.Append(((SqlInt16)  v).ToString()));
 			SetConverter(typeof(SqlInt32),   (sb,_,_,v) => sb.Append(((SqlInt32)  v).ToString()));
@@ -187,7 +190,7 @@ namespace LinqToDB.SqlProvider
 
 		bool TryConvertImpl(StringBuilder? stringBuilder, DbDataType dataType, DataOptions options, object? value, bool tryBase)
 		{
-			if (value == null || value is INullable nullable && nullable.IsNull)
+			if (value is null or INullable { IsNull: true })
 			{
 				stringBuilder?.Append("NULL");
 				return true;
@@ -284,6 +287,70 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 			}
+
+			_configurationID = null;
+		}
+
+		int? _configurationID;
+
+		/// <summary>
+		/// Unique configuration identifier. For internal use only.
+		/// </summary>
+		int IConfigurationID.ConfigurationID
+		{
+			get
+			{
+				if (_configurationID == null)
+				{
+					var idBuilder = new IdentifierBuilder();
+
+					if (_booleanConverter  != null) idBuilder.Add(typeof(bool)).    Add(_booleanConverter);
+					if (_charConverter     != null) idBuilder.Add(typeof(char)).    Add(_charConverter);
+					if (_sByteConverter    != null) idBuilder.Add(typeof(sbyte)).   Add(_sByteConverter);
+					if (_byteConverter     != null) idBuilder.Add(typeof(byte)).    Add(_byteConverter);
+					if (_int16Converter    != null) idBuilder.Add(typeof(short)).   Add(_int16Converter);
+					if (_uInt16Converter   != null) idBuilder.Add(typeof(ushort)).  Add(_uInt16Converter);
+					if (_int32Converter    != null) idBuilder.Add(typeof(int)).     Add(_int32Converter);
+					if (_uInt32Converter   != null) idBuilder.Add(typeof(uint)).    Add(_uInt32Converter);
+					if (_int64Converter    != null) idBuilder.Add(typeof(long)).    Add(_int64Converter);
+					if (_uInt64Converter   != null) idBuilder.Add(typeof(ulong)).   Add(_uInt64Converter);
+					if (_singleConverter   != null) idBuilder.Add(typeof(float)).   Add(_singleConverter);
+					if (_doubleConverter   != null) idBuilder.Add(typeof(double)).  Add(_doubleConverter);
+					if (_decimalConverter  != null) idBuilder.Add(typeof(decimal)). Add(_decimalConverter);
+					if (_dateTimeConverter != null) idBuilder.Add(typeof(DateTime)).Add(_dateTimeConverter);
+					if (_stringConverter   != null) idBuilder.Add(typeof(string)).  Add(_stringConverter);
+
+					if (_converters != null)
+						foreach (var kvp in _converters)
+							idBuilder.Add(kvp.Key).Add(kvp.Value);
+
+					_configurationID = idBuilder.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
+
+		public bool Equals(ValueToSqlConverter? other)
+		{
+			if (other is null)                return false;
+			if (ReferenceEquals(this, other)) return true;
+
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)other).ConfigurationID;
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (obj is null)                return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != GetType()) return false;
+
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)obj).ConfigurationID;
+		}
+
+		public override int GetHashCode()
+		{
+			return ((IConfigurationID)this).ConfigurationID;
 		}
 	}
 }
