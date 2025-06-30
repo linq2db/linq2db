@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using BenchmarkDotNet.Attributes;
 
+using LinqToDB.Async;
 using LinqToDB.Benchmarks.Mappings;
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.DataProvider;

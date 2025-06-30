@@ -10,6 +10,7 @@ using FluentAssertions;
 using JetBrains.Annotations;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

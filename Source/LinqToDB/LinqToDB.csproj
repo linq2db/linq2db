@@ -45,6 +45,12 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
 
+		<Compile Update="Async\AsyncExtensions.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>AsyncExtensions.tt</DependentUpon>
+		</Compile>
+
 		<Compile Update="DataProvider\ClickHouse\ClickHouseHints.generated.cs">
 			<DependentUpon>ClickHouseHints.tt</DependentUpon>
 			<DesignTime>True</DesignTime>
@@ -106,15 +112,10 @@
 			<DependentUpon>SqlServerHints.tt</DependentUpon>
 		</Compile>
 
-		<None Update="AsyncExtensions.tt">
+		<None Update="Async\AsyncExtensions.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
 		</None>
-		<Compile Update="AsyncExtensions.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>AsyncExtensions.tt</DependentUpon>
-		</Compile>
 
 		<None Update="Common\Internal\MutableTuple.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>

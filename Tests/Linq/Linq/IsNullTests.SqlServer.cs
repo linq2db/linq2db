@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
