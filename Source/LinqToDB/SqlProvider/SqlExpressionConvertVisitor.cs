@@ -194,7 +194,7 @@ namespace LinqToDB.SqlProvider
 					{
 						newResult = ConvertCastToPredicate(castExpression);
 					}
-					else if (unwrapped is SqlExpression { IsPredicate: true } or SqlValue { Value: null })
+					else if (unwrapped is SqlParameterizedExpressionBase { IsPredicate: true } or SqlValue { Value: null })
 					{
 						// do nothing
 					}
@@ -1143,7 +1143,7 @@ namespace LinqToDB.SqlProvider
 
 				case PseudoFunctions.CONVERT_FORMAT:
 				{
-					return new SqlFunction(func.SystemType, "Convert", func.Parameters[0], func.Parameters[2], func.Parameters[3]);
+					return new SqlFunction(func.Type, "Convert", func.Parameters[0], func.Parameters[2], func.Parameters[3]);
 				}
 
 				case PseudoFunctions.TO_LOWER: return func.WithName("Lower");
@@ -1282,7 +1282,7 @@ namespace LinqToDB.SqlProvider
 							element.SystemType,
 							element.Expr1,
 							element.Operation,
-							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, new DbDataType(typeof(string), DataType.VarChar, null, len.Value))),
+							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, QueryHelper.GetDbDataType(element.Expr1, MappingSchema).WithLength(len.Value))),
 							element.Precedence);
 					}
 
@@ -1295,7 +1295,7 @@ namespace LinqToDB.SqlProvider
 
 						return new SqlBinaryExpression(
 							element.SystemType,
-							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, new DbDataType(typeof(string), DataType.VarChar, null, len.Value))),
+							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, QueryHelper.GetDbDataType(element.Expr2, MappingSchema).WithLength(len.Value))),
 							element.Operation,
 							element.Expr2,
 							element.Precedence);
@@ -1375,11 +1375,12 @@ namespace LinqToDB.SqlProvider
 
 				if (wrap)
 				{
-					var predicate = unwrapped as ISqlPredicate;
-					if (predicate == null && unwrapped is SqlExpression { IsPredicate: true })
-						predicate = new SqlPredicate.Expr(expr);
-					if (predicate == null)
-						predicate = ConvertToBooleanSearchCondition(expr);
+					var predicate = unwrapped switch
+					{
+						SqlParameterizedExpressionBase { IsPredicate: true } => new SqlPredicate.Expr(expr),
+						ISqlPredicate isp                                    => isp,
+						_                                                    => ConvertToBooleanSearchCondition(expr),
+					};
 
 					var trueValue  = new SqlValue(true);
 					var falseValue = new SqlValue(false);

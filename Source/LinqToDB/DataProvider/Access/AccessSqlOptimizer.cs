@@ -177,7 +177,7 @@ namespace LinqToDB.DataProvider.Access
 
 								var newSearch = new SqlSearchCondition();
 
-								var countExpr = SqlFunction.CreateCount(typeof(int), existsQuery.From.Tables[0]);
+								var countExpr = existsQuery.From.Tables[0].CreateCount();
 								if (!isNot)
 									newSearch.AddGreater(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNulls);
 								else
@@ -197,7 +197,7 @@ namespace LinqToDB.DataProvider.Access
 								subquery.Select.Columns.Clear();
 
 								var newSearch = new SqlSearchCondition();
-								var countExpr = SqlFunction.CreateCount(typeof(int), subquery.From.Tables[0]);
+								var countExpr = subquery.From.Tables[0].CreateCount();
 
 								isNot = isNot != inSubQuery.IsNot;
 

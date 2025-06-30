@@ -57,7 +57,7 @@ namespace LinqToDB.SqlQuery
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
-			return Equals(other, DefaultComparer);
+			return Equals(other, SqlExtensions.DefaultComparer);
 		}
 
 		#endregion
@@ -90,8 +90,6 @@ namespace LinqToDB.SqlQuery
 
 			set => _canBeNull = value;
 		}
-
-		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;
 
 		public override int GetHashCode()
 		{

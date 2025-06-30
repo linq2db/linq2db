@@ -45,7 +45,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 					if (orderByClause is { SelectQuery.Select.SkipValue: not null, OrderBy.IsEmpty: true })
 					{
-						return new SqlOrderByClause([new SqlOrderByItem(new SqlExpression(typeof(int), "1"), false, true)]);
+						return new SqlOrderByClause([new SqlOrderByItem(new SqlFragment("1"), false, true)]);
 					}
 				}
 

@@ -268,10 +268,7 @@ namespace Tests.UserTests
 					return ToSqlExpression(serializedValue.Trim('"'));
 				}
 
-				return new SqlExpression(
-					"JSON_QUERY({0})",
-					ToSqlExpression(serializedValue)
-				);
+				return new SqlFragment("JSON_QUERY({0})", ToSqlExpression(serializedValue));
 			}
 
 			#region CLASSES

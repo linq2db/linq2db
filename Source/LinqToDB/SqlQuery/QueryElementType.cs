@@ -104,5 +104,7 @@
 		SqlCase,
 		SqlSimpleCase,
 		CompareTo,
+
+		SqlFragment,
 	}
 }

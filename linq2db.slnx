@@ -236,7 +236,7 @@
     <File Path="Data/Setup Scripts/firebird40.cmd" />
     <File Path="Data/Setup Scripts/firebird50.cmd" />
     <File Path="Data/Setup Scripts/hana-password.json" />
-    <File Path="Data/Setup Scripts/informix.cmd" />
+    <File Path="Data/Setup Scripts/informix14.cmd" />
     <File Path="Data/Setup Scripts/informix_init.sql" />
     <File Path="Data/Setup Scripts/mariadb.cmd" />
     <File Path="Data/Setup Scripts/mysql.cmd" />
@@ -261,11 +261,13 @@
     <File Path="Data/Setup Scripts/pgsql95.cmd" />
     <File Path="Data/Setup Scripts/readme.md" />
     <File Path="Data/Setup Scripts/saphana2.cmd" />
+    <File Path="Data/Setup Scripts/sqlserver2005-win.cmd" />
     <File Path="Data/Setup Scripts/sqlserver2016.cmd" />
     <File Path="Data/Setup Scripts/sqlserver2017.cmd" />
     <File Path="Data/Setup Scripts/sqlserver2019.cmd" />
     <File Path="Data/Setup Scripts/sqlserver2022-win.cmd" />
     <File Path="Data/Setup Scripts/sqlserver2022.cmd" />
+    <File Path="Data/Setup Scripts/start-minimal.ps1" />
     <File Path="Data/Setup Scripts/sybase-ase.cmd" />
     <File Path="Data/Setup Scripts/UserDataProviders.json" />
     <File Path="Data/Setup Scripts/wait-err.cmd" />
