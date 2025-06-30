@@ -666,7 +666,7 @@ namespace LinqToDB.EntityFrameworkCore
 #else
 					var newExpression = ctx.this_._dependencies!.MemberTranslatorProvider.Translate(objExpr, ctx.propInfo, ctx.propInfo.GetMemberType());
 #endif
-					if (newExpression != null && newExpression != objExpr)
+					if (newExpression?.Equals(objExpr) == false)
 					{
 						var parametersArray = new Expression[] { objExpr };
 						result = ConvertToExpressionAttribute(ctx.propInfo, newExpression, parametersArray);

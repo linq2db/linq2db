@@ -1721,8 +1721,7 @@ namespace Tests.Linq
 			var data = query.ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0].Id, Is.EqualTo(1));
 				Assert.That(data[0].Byte, Is.Null);
@@ -1743,7 +1742,7 @@ namespace Tests.Linq
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
 				Assert.That(data[1].Bool, Is.True);
 				Assert.That(data[1].BoolN, Is.False);
-			});
+			}
 		}
 
 		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
@@ -1768,8 +1767,7 @@ namespace Tests.Linq
 			var data = query.ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0].Id, Is.EqualTo(2));
 				Assert.That(data[0].Byte, Is.EqualTo(1));
@@ -1790,7 +1788,7 @@ namespace Tests.Linq
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
 				Assert.That(data[1].Bool, Is.False);
 				Assert.That(data[1].BoolN, Is.True);
-			});
+			}
 		}
 
 		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
@@ -1815,8 +1813,7 @@ namespace Tests.Linq
 			var data = query.ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0].Id, Is.EqualTo(2));
 				Assert.That(data[0].Byte, Is.EqualTo(5));
@@ -1837,7 +1834,7 @@ namespace Tests.Linq
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
 				Assert.That(data[1].Bool, Is.False);
 				Assert.That(data[1].BoolN, Is.True);
-			});
+			}
 		}
 
 		#endregion
@@ -2027,12 +2024,12 @@ namespace Tests.Linq
 				.ToList();
 
 			Assert.That(result, Has.Count.EqualTo(3));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
 				Assert.That(result[1].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
 				Assert.That(result[2].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NonResident));
-			});
+			}
 		}
 
 		[Test]
@@ -2075,13 +2072,13 @@ namespace Tests.Linq
 			var result = query.ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ID, Is.EqualTo(11));
 				Assert.That(result[0].FirstName, Is.EqualTo("FN2"));
 				Assert.That(result[0].MiddleName, Is.Null);
 				Assert.That(result[0].Gender, Is.EqualTo(Gender.Female));
-			});
+			}
 
 			if (db is DataConnection dc)
 			{
@@ -2102,11 +2099,11 @@ namespace Tests.Linq
 
 			Assert.That(data, Has.Count.EqualTo(1));
 			Assert.That(data[0].Patient, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0].Patient!.Diagnosis, Is.Not.Null);
 				Assert.That(count, Is.EqualTo(4));
-			});
+			}
 		}
 
 		[Test]
@@ -2430,12 +2427,12 @@ namespace Tests.Linq
 			var result = query.ToList();
 
 			Assert.That(result, Has.Count.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ProductId, Is.EqualTo(1));
 				Assert.That(result[0].first, Is.EqualTo(10));
 				Assert.That(result[0].sum, Is.EqualTo(10));
-			});
+			}
 		}
 		#endregion
 
