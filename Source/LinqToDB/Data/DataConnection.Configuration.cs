@@ -585,20 +585,8 @@ namespace LinqToDB.Data
 						SetConnection(provider, connection);
 						break;
 					}
-					case (_,               _,                   _,           {} providerName, {} connection, _,              _) :
-					{
-						var provider = GetDataProviderEx(providerName, connection.ConnectionString);
-						SetConnection(provider, connection);
-						break;
-					}
 					case (_,               _,                   {} provider, _,               _,             {} transaction, _) :
 					{
-						SetTransaction(provider, transaction);
-						break;
-					}
-					case (_,               _,                   _,           {} providerName, _,             {} transaction, _) :
-					{
-						var provider = GetDataProviderEx(providerName, transaction.Connection?.ConnectionString ?? throw new LinqToDBException("Transaction.Connection is null"));
 						SetTransaction(provider, transaction);
 						break;
 					}
