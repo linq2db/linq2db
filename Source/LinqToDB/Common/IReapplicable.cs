@@ -2,8 +2,8 @@
 
 namespace LinqToDB.Common
 {
-	interface IReapplicable<T>
+	interface IReapplicable<T> : IOptionSet
 	{
-		Action? Apply(T obj, object? previousObject);
+		Action? Apply(T obj, IOptionSet? previousObject);
 	}
 }

@@ -67,9 +67,9 @@ namespace LinqToDB.Data
 			DataConnection.ConfigurationApplier.Apply(obj, this);
 		}
 
-		Action? IReapplicable<DataConnection>.Apply(DataConnection obj, object? previousObject)
+		Action? IReapplicable<DataConnection>.Apply(DataConnection obj, IOptionSet? previousObject)
 		{
-			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID?)previousObject)?.ConfigurationID
+			return ((IConfigurationID)this).ConfigurationID == previousObject?.ConfigurationID
 				? null
 				: DataConnection.ConfigurationApplier.Reapply(obj, this, (QueryTraceOptions?)previousObject);
 		}

@@ -83,23 +83,23 @@ namespace LinqToDB
 
 		#region IReapplicable implementation
 
-		Action? IReapplicable<DataConnection>.Apply(DataConnection obj, object? previousObject)
+		Action? IReapplicable<DataConnection>.Apply(DataConnection obj, IOptionSet? previousObject)
 		{
-			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID?)previousObject)?.ConfigurationID
+			return ((IConfigurationID)this).ConfigurationID == previousObject?.ConfigurationID
 				? null
 				: DataConnection.ConfigurationApplier.Reapply(obj, this, (DataContextOptions?)previousObject);
 		}
 
-		Action? IReapplicable<DataContext>.Apply(DataContext obj, object? previousObject)
+		Action? IReapplicable<DataContext>.Apply(DataContext obj, IOptionSet? previousObject)
 		{
-			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID?)previousObject)?.ConfigurationID
+			return ((IConfigurationID)this).ConfigurationID == previousObject?.ConfigurationID
 				? null
 				: DataContext.ConfigurationApplier.Reapply(obj, this, (DataContextOptions?)previousObject);
 		}
 
-		Action? IReapplicable<RemoteDataContextBase>.Apply(RemoteDataContextBase obj, object? previousObject)
+		Action? IReapplicable<RemoteDataContextBase>.Apply(RemoteDataContextBase obj, IOptionSet? previousObject)
 		{
-			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID?)previousObject)?.ConfigurationID
+			return ((IConfigurationID)this).ConfigurationID == previousObject?.ConfigurationID
 				? null
 				: RemoteDataContextBase.ConfigurationApplier.Reapply(obj, this, (DataContextOptions?)previousObject);
 		}
