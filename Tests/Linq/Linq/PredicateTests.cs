@@ -1385,6 +1385,57 @@ namespace Tests.Linq
 			AssertQuery(from r in tb group r by r.Value5 >= r.Value2 into g select new { g.Key, Count = g.Count() });
 			AssertQuery(from r in tb group r by r.Value5 <= r.Value2 into g select new { g.Key, Count = g.Count() });
 		}
+
+		[Test]
+		public void Test_PredicateOptimization([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			// A OR (A AND B) => A
+			AssertQuery(tb.Where(r => r.Value1 == r.Value2 || (r.Value1 == r.Value2 && r.Value1 == r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 || (r.Value1 == r.Value5 && r.Value1 == r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 || (r.Value1 == r.Value5 && r.Value1 == r.Value4)));
+
+			AssertQuery(tb.Where(r => r.Value1 != r.Value2 || (r.Value1 != r.Value2 && r.Value1 != r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 != r.Value5 || (r.Value1 != r.Value5 && r.Value1 != r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 != r.Value5 || (r.Value1 != r.Value5 && r.Value1 != r.Value4)));
+
+			AssertQuery(tb.Where(r => r.Value1 > r.Value2 || (r.Value1 > r.Value2 && r.Value1 > r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 > r.Value5 || (r.Value1 > r.Value5 && r.Value1 > r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 > r.Value5 || (r.Value1 > r.Value5 && r.Value1 > r.Value4)));
+
+			// A AND (A OR B) => A
+			AssertQuery(tb.Where(r => r.Value1 == r.Value2 && (r.Value1 == r.Value2 || r.Value1 == r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 && (r.Value1 == r.Value5 || r.Value1 == r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 && (r.Value1 == r.Value5 || r.Value1 == r.Value4)));
+
+			AssertQuery(tb.Where(r => r.Value1 != r.Value2 && (r.Value1 != r.Value2 || r.Value1 != r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 != r.Value5 && (r.Value1 != r.Value5 || r.Value1 != r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 != r.Value5 && (r.Value1 != r.Value5 || r.Value1 != r.Value4)));
+
+			AssertQuery(tb.Where(r => r.Value1 >= r.Value2 && (r.Value1 >= r.Value2 || r.Value1 >= r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 >= r.Value5 && (r.Value1 >= r.Value5 || r.Value1 >= r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 >= r.Value5 && (r.Value1 >= r.Value5 || r.Value1 >= r.Value4)));
+
+			// A OR (!A AND B) => A OR B
+			AssertQuery(tb.Where(r => r.Value1 == r.Value2 || (r.Value1 != r.Value2 && r.Value1 == r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 || (r.Value1 != r.Value5 && r.Value1 == r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 || (r.Value1 != r.Value5 && r.Value1 == r.Value4)));
+
+			AssertQuery(tb.Where(r => r.Value1 > r.Value2 || (r.Value1 <= r.Value2 && r.Value1 > r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 > r.Value5 || (r.Value1 <= r.Value5 && r.Value1 > r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 > r.Value5 || (r.Value1 <= r.Value5 && r.Value1 > r.Value4)));
+
+			// A AND (!A OR B) => A AND B
+			AssertQuery(tb.Where(r => r.Value1 == r.Value2 && (r.Value1 != r.Value2 || r.Value1 == r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 && (r.Value1 != r.Value5 || r.Value1 == r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 && (r.Value1 != r.Value5 || r.Value1 == r.Value4)));
+
+			AssertQuery(tb.Where(r => r.Value1 < r.Value2 && (r.Value1 >= r.Value2 || r.Value1 < r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 < r.Value5 && (r.Value1 >= r.Value5 || r.Value1 < r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 < r.Value5 && (r.Value1 >= r.Value5 || r.Value1 < r.Value4)));
+		}
 		#endregion
 	}
 }

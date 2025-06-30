@@ -630,8 +630,10 @@ namespace LinqToDB.SqlProvider
 				return Visit(newElement);
 
 			// Optimizations: PREDICATE vs (GROUP)
-			// 1. A OR (A AND B) => A OR B
-			// 2. A AND (A OR B) => A AND B
+			// 1. A OR (A AND B) => A
+			// 2. A AND (A OR B) => A
+			// 3. A OR (!A AND B) => A OR B
+			// 4. A AND (!A OR B) => A AND B
 			newElement = OptimizeSimilarForSinglePredicate(element);
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
@@ -761,14 +763,18 @@ namespace LinqToDB.SqlProvider
 				if (newPredicate == null)
 					return newCondition;
 
+				IEnumerable<ISqlPredicate> newPredicates = reverse ? [newPredicate, newCondition] : [newCondition, newPredicate];
+
 				if (GetVisitMode(element) == VisitMode.Transform)
 				{
-					var newElement = new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, reverse ? [newPredicate, newCondition] : [newCondition, newPredicate]);
+					var newElement = new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, newPredicates);
 					NotifyReplaced(newElement, element);
 					return newElement;
 				}
 
-				return Visit(newCondition);
+				element.Predicates.Clear();
+				element.Predicates.AddRange(newPredicates);
+				return Visit(element);
 			}
 		}
 
@@ -815,10 +821,16 @@ namespace LinqToDB.SqlProvider
 						}
 
 						var ixd = predicatesList.IndexOf(conditionPredicate);
-						predicatesList.RemoveAt(ixd);
+
+						if (mergedConditional == null)
+							predicatesList.RemoveAt(ixd);
+						else
+							predicatesList[ixd] = mergedConditional;
+
 						visitedPredicates.Add(conditionPredicate);
 					}
 
+					// is it even needed?
 					if (!ReferenceEquals(mergedSingle, mergedConditional))
 					{
 						newPredicate = mergedSingle;

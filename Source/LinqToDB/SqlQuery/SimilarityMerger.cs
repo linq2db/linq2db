@@ -121,6 +121,15 @@ namespace LinqToDB.SqlQuery
 			if (single.Equals(predicateFromList, SqlExpression.DefaultComparer))
 			{
 				mergedSinglePredicate = single;
+				mergedListPredicate   = isLogicalOr ? SqlPredicate.False : SqlPredicate.True;
+				return true;
+			}
+
+			// A x (!A)
+			if (   single           .CanInvert(nullabilityContext) && single.Invert(nullabilityContext).Equals(predicateFromList                           , SqlExpression.DefaultComparer)
+				|| predicateFromList.CanInvert(nullabilityContext) && single                           .Equals(predicateFromList.Invert(nullabilityContext), SqlExpression.DefaultComparer))
+			{
+				mergedSinglePredicate = single;
 				mergedListPredicate   = isLogicalOr ? SqlPredicate.True : SqlPredicate.False;
 				return true;
 			}

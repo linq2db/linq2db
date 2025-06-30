@@ -358,7 +358,10 @@ namespace LinqToDB.SqlQuery
 
 			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
-				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, !UnknownAsValue);
+				var unknownAsValue = UnknownAsValue == null && Operator is not (Operator.Equal or Operator.NotEqual)
+					? true
+					: !UnknownAsValue;
+				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, unknownAsValue);
 			}
 
 			/// <summary>
