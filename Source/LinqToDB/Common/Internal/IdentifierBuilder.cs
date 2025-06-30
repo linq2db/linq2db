@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 
@@ -54,6 +55,7 @@ namespace LinqToDB.Common.Internal
 			return Add(data?.ConfigurationID);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IdentifierBuilder Add(string? data)
 		{
 			_sb.Value
@@ -74,38 +76,22 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(object? data)
 		{
-			_sb.Value
-				.Append('.')
-				.Append(GetObjectID(data))
-				;
-			return this;
+			return Add(GetObjectID(data));
 		}
 
 		public IdentifierBuilder Add(Delegate? data)
 		{
-			_sb.Value
-				.Append('.')
-				.Append(GetObjectID(data?.Method))
-				;
-			return this;
+			return Add(GetObjectID(data?.Method));
 		}
 
 		public IdentifierBuilder Add(Type? data)
 		{
-			_sb.Value
-				.Append('.')
-				.Append(GetObjectID(data))
-				;
-			return this;
+			return Add(GetObjectID(data));
 		}
 
 		public IdentifierBuilder Add(int? data)
 		{
-			_sb.Value
-				.Append('.')
-				.Append(data == null ? string.Empty : GetIntID(data.Value))
-				;
-			return this;
+			return Add(data == null ? string.Empty : GetIntID(data.Value));
 		}
 
 		public IdentifierBuilder Add(string format, object? data)
