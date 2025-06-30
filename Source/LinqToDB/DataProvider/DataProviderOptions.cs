@@ -43,11 +43,27 @@ namespace LinqToDB.DataProvider
 
 		protected abstract IdentifierBuilder CreateID(IdentifierBuilder builder);
 
-		/// <summary>
-		/// Default options.
-		/// </summary>
-		public static T Default { get; set; } = new();
+		#region Default Options
 
+		static T _default = new();
+
+		/// <summary>
+		/// Gets default <see cref="DataProviderOptions{T}"/> instance.
+		/// </summary>
+		public static T Default
+		{
+			get => _default;
+			set
+			{
+				_default = value;
+				DataConnection.ResetDefaultOptions();
+				DataConnection.ConnectionOptionsByConfigurationString.Clear();
+			}
+		}
+
+		/// <inheritdoc />
 		IOptionSet IOptionSet.Default => Default;
+
+		#endregion
 	}
 }

@@ -228,9 +228,30 @@ namespace LinqToDB
 			}
 		}
 
-		IOptionSet IOptionSet.Default => Common.Configuration.Linq.Options;
-
 		public TimeSpan CacheSlidingExpirationOrDefault => CacheSlidingExpiration ?? TimeSpan.FromHours(1);
+
+		#region Default Options
+
+		static LinqOptions _default = new();
+
+		/// <summary>
+		/// Gets default <see cref="LinqOptions"/> instance.
+		/// </summary>
+		public static LinqOptions Default
+		{
+			get => _default;
+			set
+			{
+				_default = value;
+				DataConnection.ResetDefaultOptions();
+				DataConnection.ConnectionOptionsByConfigurationString.Clear();
+			}
+		}
+
+		/// <inheritdoc />
+		IOptionSet IOptionSet.Default => Default;
+
+		#endregion
 
 		#region IEquatable implementation
 

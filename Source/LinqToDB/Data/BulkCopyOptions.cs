@@ -170,10 +170,6 @@ namespace LinqToDB.Data
 			WithoutSession         = original.WithoutSession;
 		}
 
-		public static readonly BulkCopyOptions Empty = new();
-
-		IOptionSet IOptionSet.Default => Empty;
-
 		int? _configurationID;
 		int IConfigurationID.ConfigurationID
 		{
@@ -209,6 +205,29 @@ namespace LinqToDB.Data
 				return _configurationID.Value;
 			}
 		}
+
+		#region Default Options
+
+		static BulkCopyOptions _default = new();
+
+		/// <summary>
+		/// Gets default <see cref="BulkCopyOptions"/> instance.
+		/// </summary>
+		public static BulkCopyOptions Default
+		{
+			get => _default;
+			set
+			{
+				_default = value;
+				DataConnection.ResetDefaultOptions();
+				DataConnection.ConnectionOptionsByConfigurationString.Clear();
+			}
+		}
+
+		/// <inheritdoc />
+		IOptionSet IOptionSet.Default => Default;
+
+		#endregion
 
 		#region IEquatable implementation
 

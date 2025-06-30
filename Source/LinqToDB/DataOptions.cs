@@ -67,12 +67,12 @@ namespace LinqToDB
 		BulkCopyOptions?    _bulkCopyOptions;
 		SqlOptions?         _sqlOptions;
 
-		public LinqOptions        LinqOptions        => _linqOptions        ??= Common.Configuration.Linq.Options;
-		public RetryPolicyOptions RetryPolicyOptions => _retryPolicyOptions ??= Common.Configuration.RetryPolicy.Options;
-		public ConnectionOptions  ConnectionOptions  => _connectionOptions  ??= DataConnection.DefaultDataOptions.ConnectionOptions;
-		public DataContextOptions DataContextOptions => _dataContextOptions ??= DataContextOptions.Empty;
-		public BulkCopyOptions    BulkCopyOptions    => _bulkCopyOptions    ??= BulkCopyOptions.Empty;
-		public SqlOptions         SqlOptions         => _sqlOptions         ??= Common.Configuration.Sql.Options;
+		public LinqOptions        LinqOptions        => _linqOptions        ??= LinqOptions.       Default;
+		public RetryPolicyOptions RetryPolicyOptions => _retryPolicyOptions ??= RetryPolicyOptions.Default;
+		public ConnectionOptions  ConnectionOptions  => _connectionOptions  ??= ConnectionOptions. Default;
+		public DataContextOptions DataContextOptions => _dataContextOptions ??= DataContextOptions.Default;
+		public BulkCopyOptions    BulkCopyOptions    => _bulkCopyOptions    ??= BulkCopyOptions.   Default;
+		public SqlOptions         SqlOptions         => _sqlOptions         ??= SqlOptions.        Default;
 
 		public override IEnumerable<IOptionSet> OptionSets
 		{
@@ -139,7 +139,7 @@ namespace LinqToDB
 				}
 				else if (previousOptions._dataContextOptions is not null)
 				{
-					Add(((IReapplicable<DataConnection>)DataContextOptions.Empty).Apply(dataConnection, previousOptions._dataContextOptions));
+					Add(((IReapplicable<DataConnection>)DataContextOptions.Default).Apply(dataConnection, previousOptions._dataContextOptions));
 				}
 			}
 
@@ -179,7 +179,7 @@ namespace LinqToDB
 				}
 				else if (previousOptions._dataContextOptions is not null)
 				{
-					Add(((IReapplicable<DataContext>)DataContextOptions.Empty).Apply(dataContext, previousOptions._dataContextOptions));
+					Add(((IReapplicable<DataContext>)DataContextOptions.Default).Apply(dataContext, previousOptions._dataContextOptions));
 				}
 			}
 
@@ -219,7 +219,7 @@ namespace LinqToDB
 				}
 				else if (previousOptions._dataContextOptions is not null)
 				{
-					Add(((IReapplicable<RemoteDataContextBase>)DataContextOptions.Empty).Apply(dataContext, previousOptions._dataContextOptions));
+					Add(((IReapplicable<RemoteDataContextBase>)DataContextOptions.Default).Apply(dataContext, previousOptions._dataContextOptions));
 				}
 			}
 

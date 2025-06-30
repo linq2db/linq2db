@@ -120,10 +120,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly ConnectionOptions _empty = new();
-
-		IOptionSet IOptionSet.Default => _empty;
-
 		internal IDataProvider? SavedDataProvider;
 		internal MappingSchema? SavedMappingSchema;
 		internal string?        SavedConnectionString;
@@ -171,6 +167,29 @@ namespace LinqToDB.Data
 				? null
 				: RemoteDataContextBase.ConfigurationApplier.Reapply(obj, this, (ConnectionOptions?)previousObject);
 		}
+
+		#endregion
+
+		#region Default Options
+
+		static ConnectionOptions _default = new();
+
+		/// <summary>
+		/// Gets default <see cref="ConnectionOptions"/> instance.
+		/// </summary>
+		public static ConnectionOptions Default
+		{
+			get => _default;
+			set
+			{
+				_default = value;
+				DataConnection.ResetDefaultOptions();
+				DataConnection.ConnectionOptionsByConfigurationString.Clear();
+			}
+		}
+
+		/// <inheritdoc />
+		IOptionSet IOptionSet.Default => Default;
 
 		#endregion
 

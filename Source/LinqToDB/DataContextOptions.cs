@@ -62,10 +62,6 @@ namespace LinqToDB
 			}
 		}
 
-		public static readonly DataContextOptions Empty = new();
-
-		IOptionSet IOptionSet.Default => Empty;
-
 		#region IApplicable implementation
 
 		void IApplicable<DataConnection>.Apply(DataConnection obj)
@@ -110,10 +106,28 @@ namespace LinqToDB
 
 		#endregion
 
-		public override int GetHashCode()
+		#region Default Options
+
+		static DataContextOptions _default = new();
+
+		/// <summary>
+		/// Gets default <see cref="DataContextOptions"/> instance.
+		/// </summary>
+		public static DataContextOptions Default
 		{
-			return ((IConfigurationID)this).ConfigurationID;
+			get => _default;
+			set
+			{
+				_default = value;
+				DataConnection.ResetDefaultOptions();
+				DataConnection.ConnectionOptionsByConfigurationString.Clear();
+			}
 		}
+
+		/// <inheritdoc />
+		IOptionSet IOptionSet.Default => Default;
+
+		#endregion
 
 		#region IEquatable implementation
 
@@ -123,6 +137,11 @@ namespace LinqToDB
 			if (ReferenceEquals(this, other)) return true;
 
 			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)other).ConfigurationID;
+		}
+
+		public override int GetHashCode()
+		{
+			return ((IConfigurationID)this).ConfigurationID;
 		}
 
 		#endregion

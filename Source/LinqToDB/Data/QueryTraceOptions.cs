@@ -62,10 +62,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-		public static readonly QueryTraceOptions Empty = new();
-
-		IOptionSet IOptionSet.Default => Empty;
-
 		void IApplicable<DataConnection>.Apply(DataConnection obj)
 		{
 			DataConnection.ConfigurationApplier.Apply(obj, this);
@@ -77,6 +73,29 @@ namespace LinqToDB.Data
 				? null
 				: DataConnection.ConfigurationApplier.Reapply(obj, this, (QueryTraceOptions?)previousObject);
 		}
+
+		#region Default Options
+
+		static QueryTraceOptions _default = new();
+
+		/// <summary>
+		/// Gets default <see cref="QueryTraceOptions"/> instance.
+		/// </summary>
+		public static QueryTraceOptions Default
+		{
+			get => _default;
+			set
+			{
+				_default = value;
+				DataConnection.ResetDefaultOptions();
+				DataConnection.ConnectionOptionsByConfigurationString.Clear();
+			}
+		}
+
+		/// <inheritdoc />
+		IOptionSet IOptionSet.Default => Default;
+
+		#endregion
 
 		#region IEquatable implementation
 

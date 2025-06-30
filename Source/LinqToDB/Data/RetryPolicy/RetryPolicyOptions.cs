@@ -79,8 +79,6 @@ namespace LinqToDB.Data.RetryPolicy
 			}
 		}
 
-		IOptionSet IOptionSet.Default => Common.Configuration.RetryPolicy.Options;
-
 		void IApplicable<DataConnection>.Apply(DataConnection obj)
 		{
 			DataConnection.ConfigurationApplier.Apply(obj, this);
@@ -92,6 +90,35 @@ namespace LinqToDB.Data.RetryPolicy
 				? null
 				: DataConnection.ConfigurationApplier.Reapply(obj, this, (RetryPolicyOptions?)previousObject);
 		}
+
+		#region Default Options
+
+		static RetryPolicyOptions _default = new(
+			null,
+			MaxRetryCount   : 5,
+			MaxDelay        : TimeSpan.FromSeconds(30),
+			RandomFactor    : 1.1,
+			ExponentialBase : 2,
+			Coefficient     : TimeSpan.FromSeconds(1));
+
+		/// <summary>
+		/// Gets default <see cref="RetryPolicyOptions"/> instance.
+		/// </summary>
+		public static RetryPolicyOptions Default
+		{
+			get => _default;
+			set
+			{
+				_default = value;
+				DataConnection.ResetDefaultOptions();
+				DataConnection.ConnectionOptionsByConfigurationString.Clear();
+			}
+		}
+
+		/// <inheritdoc />
+		IOptionSet IOptionSet.Default => Default;
+
+		#endregion
 
 		#region IEquatable implementation
 
