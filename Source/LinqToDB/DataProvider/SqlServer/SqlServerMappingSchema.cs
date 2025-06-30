@@ -786,6 +786,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		public sealed class SqlServer2019MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2019 + SDS, new[] { Instance2019, SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema }.Where(ms => ms != null).ToArray()!);
 		public sealed class SqlServer2019MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2019 + MDS, new[] { Instance2019, SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema }.Where(ms => ms != null).ToArray()!);
 		public sealed class SqlServer2022MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2022 + SDS, new[] { Instance2022, SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2022MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2022 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2022 }.Where(ms => ms                != null).ToArray()!);
+		public sealed class SqlServer2022MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2022 + MDS, new[] { Instance2022, SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema }.Where(ms => ms != null).ToArray()!);
 	}
 }
