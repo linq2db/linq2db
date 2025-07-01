@@ -2729,8 +2729,6 @@ namespace Tests.DataProvider
 			resultAfter = db.GetTableRowCountInfo().OrderBy(t => t.ObjectID).ToList();
 
 			Assert.That(resultAfter, Is.EquivalentTo(resultBefore));
-
-			Console.WriteLine(resultAfter.ToDiagnosticString());
 		}
 	}
 }
