@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -51,16 +51,16 @@ namespace Tests.UserTests
 					.LoadWith(p => p.Parent!.GrandParent)
 					.ToList();
 
-				items1.Should().HaveCount(1);
-				items1[0].Parent?.GrandParent.Should().NotBeNull();
+				items1.Count.ShouldBe(1);
+				items1[0].Parent?.GrandParent.ShouldNotBeNull();
 
 				var items2 = db.GetTable<ChildViewModel>()
 					.LoadWith(p => p.Parent)
 					.LoadWith(p => p.Parent!.GrandParent)
 					.ToList();				
 
-				items2.Should().HaveCount(1);
-				items2[0].Parent?.GrandParent.Should().NotBeNull();
+				items2.Count.ShouldBe(1);
+				items2[0].Parent?.GrandParent.ShouldNotBeNull();
 			}
 		}
 	}

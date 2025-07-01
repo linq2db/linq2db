@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Expressions;
@@ -240,8 +240,8 @@ namespace Tests.Linq
 
 				var result = query.First();
 
-				result.PTOAccrued.Should().Be(1);
-				result.LastName.Should().Be("Enriched");
+				result.PTOAccrued.ShouldBe(1);
+				result.LastName.ShouldBe("Enriched");
 			}
 		}
 
@@ -273,8 +273,8 @@ namespace Tests.Linq
 
 				var result = query.First();
 
-				result.PTOAccrued.Should().Be(1);
-				result.LastName.Should().Be("Enriched");
+				result.PTOAccrued.ShouldBe(1);
+				result.LastName.ShouldBe("Enriched");
 			}
 		}
 	}

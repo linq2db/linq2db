@@ -3,7 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -170,7 +170,7 @@ namespace Tests.Linq
 
 			var sql = query.ToSqlQuery().Sql;
 			Assert.That(sql, Is.Not.Contains("PersonID"));
-			sql.Should().Contain("UNKNOWN", Exactly.Twice());
+			sql.ShouldContain("UNKNOWN", Exactly.Twice());
 		}
 
 		[Test]
@@ -193,7 +193,7 @@ namespace Tests.Linq
 			BaselinesManager.LogQuery(sql);
 
 			Assert.That(sql, Is.Not.Contains("PersonID"));
-			sql.Should().Contain("UNKNOWN", Exactly.Twice());
+			sql.ShouldContain("UNKNOWN", Exactly.Twice());
 		}
 
 		[Test]
@@ -258,7 +258,7 @@ namespace Tests.Linq
 			BaselinesManager.LogQuery(sql);
 
 			Assert.That(sql, Is.Not.Contains("PersonID"));
-			sql.Should().Contain("UNKNOWN", Exactly.Twice());
+			sql.ShouldContain("UNKNOWN", Exactly.Twice());
 		}
 
 		[Test]

@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -367,8 +367,8 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<DateTime?>("SELECT \"datetimeoffsetDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.Default);
 				}
 
-				conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto)).Should().Be(dto);
-				conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto, DataType.DateTimeOffset)).Should().Be(dto);
+				conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto)).ShouldBe(dto);
+				conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto, DataType.DateTimeOffset)).ShouldBe(dto);
 			}
 		}
 
@@ -966,7 +966,7 @@ namespace Tests.DataProvider
 
 				_ = query.FirstOrDefault();
 
-				parameters.Should().HaveCount(1);
+				parameters.Length.ShouldBe(1);
 
 				if (context.IsAnyOf(TestProvName.AllOracleDevart))
 					// another case of sloppy implementation by devart...
@@ -996,7 +996,7 @@ namespace Tests.DataProvider
 
 				_ = query.FirstOrDefault();
 
-				parameters.Should().HaveCount(1);
+				parameters.Length.ShouldBe(1);
 
 				if (context.IsAnyOf(TestProvName.AllOracleDevart))
 					// another case of sloppy implementation by devart...
@@ -3885,11 +3885,11 @@ CREATE TABLE ""TABLE_A""(
 				.GetTable<LinqDataTypesBlobs>()
 				.Where(x => x.ID.In(-10, -20))
 				.Select(x => Sql.Expr<int>("LENGTH(\"BinaryValue\")"))
-				.ToList();
+				.ToArray();
 
 			tx.Rollback();
 
-			inserted.Should().Equal(1, 1);
+			inserted.ShouldBeEquivalentTo(new int[] { 1, 1 });
 		}
 
 		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
@@ -3921,11 +3921,11 @@ CREATE TABLE ""TABLE_A""(
 				.GetTable<LinqDataTypesBlobsDevart>()
 				.Where(x => x.ID.In(-10, -20))
 				.Select(x => Sql.Expr<int>("LENGTH(\"BinaryValue\")"))
-				.ToList();
+				.ToArray();
 
 			tx.Rollback();
 
-			inserted.Should().Equal(1, 1);
+			inserted.ShouldBeEquivalentTo(new int[] { 1, 1 });
 		}
 
 #if NETFRAMEWORK
@@ -3958,11 +3958,11 @@ CREATE TABLE ""TABLE_A""(
 				.GetTable<LinqDataTypesBlobsNative>()
 				.Where(x => x.ID.In(-10, -20))
 				.Select(x => Sql.Expr<int>("LENGTH(\"BinaryValue\")"))
-				.ToList();
+				.ToArray();
 
 			tx.Rollback();
 
-			inserted.Should().Equal(1, 1);
+			inserted.ShouldBeEquivalentTo(new int[] { 1, 1 });
 		}
 #endif
 

@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -110,7 +110,7 @@ namespace Tests.Linq
 		{
 			using (var db = new MyContext(context))
 			{
-				db.SomeValue.Should().Be(10);
+				db.SomeValue.ShouldBe(10);
 			}
 		}
 
