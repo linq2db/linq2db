@@ -24,7 +24,6 @@
 		<Features>strict</Features>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
-		<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)/Build/linq2db.snk</AssemblyOriginatorKeyFile>
