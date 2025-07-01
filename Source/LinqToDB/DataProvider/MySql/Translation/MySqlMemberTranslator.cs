@@ -213,6 +213,10 @@ namespace LinqToDB.DataProvider.MySql.Translation
 			}
 		}
 
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+		}
+
 		class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
@@ -237,6 +241,11 @@ namespace LinqToDB.DataProvider.MySql.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
 		}
 
 		protected override IMemberTranslator CreateGuidMemberTranslator()

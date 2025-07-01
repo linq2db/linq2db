@@ -24,6 +24,11 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 			return new MathMemberTranslator();
 		}
 
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
 		protected override IMemberTranslator CreateGuidMemberTranslator()
 		{
 			return new GuidMemberTranslator();
@@ -230,6 +235,10 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 				
 				return result;
 			}
+		}
+
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

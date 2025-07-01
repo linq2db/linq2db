@@ -20,6 +20,11 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 			return new FirebirdDateFunctionsTranslator();
 		}
 
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
 		protected override IMemberTranslator CreateGuidMemberTranslator()
 		{
 			return new GuidMemberTranslator();
@@ -239,6 +244,10 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 			}
 		}
 
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+		}
+
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			var factory  = translationContext.ExpressionFactory;
@@ -250,10 +259,10 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 		class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
-			{
+		{
 				// lower(UUID_TO_CHAR({0}))
 
-				var factory        = translationContext.ExpressionFactory;
+			var factory  = translationContext.ExpressionFactory;
 				var stringDataType = factory.GetDbDataType(typeof(string));
 				var toChar         = factory.Function(stringDataType, "UUID_TO_CHAR", guidExpr);
 				var toLower        = factory.ToLower(toChar);

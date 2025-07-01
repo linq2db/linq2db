@@ -28,9 +28,9 @@ namespace LinqToDB.DataProvider.SapHana
 			_ = new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
-		public static IDataProvider GetDataProvider(SapHanaProvider provider = SapHanaProvider.AutoDetect, string? connectionString = null)
+		public static IDataProvider GetDataProvider(SapHanaProvider provider = SapHanaProvider.AutoDetect, string? connectionString = null, DbConnection? connection = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection), provider, default);
 		}
 
 		#region CreateDataConnection
