@@ -2037,11 +2037,11 @@ namespace Tests.Linq
 					query);
 
 				var sql = query.ToSqlQuery().Sql;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sql, Does.Not.Contain("IS NULL"), sql);
 					Assert.That(Regex.Matches(sql, "IS NOT NULL"), Has.Count.EqualTo(1), sql);
-				});
+				}
 			}
 		}
 
@@ -2057,11 +2057,11 @@ namespace Tests.Linq
 					query);
 
 				var sql = query.ToSqlQuery().Sql;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(Regex.Matches(sql, "IS NULL"), Has.Count.EqualTo(1), sql);
 					Assert.That(sql, Does.Not.Contain("IS NOT NULL"), sql);
-				});
+				}
 			}
 		}
 

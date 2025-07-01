@@ -80,7 +80,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.NestLevel);
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -89,7 +89,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Options);
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -125,7 +125,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SpID);
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -1305,7 +1305,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Atn2(10, 100));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -1332,7 +1332,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Cot(1));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -1583,11 +1583,11 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.DatabasePropertyEx(SqlFn.DbName(), SqlFn.DatabasePropertyName.Version));
 			Console.WriteLine(result);
 			Assert.That(result, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result, Is.TypeOf<int>());
 				Assert.That((int)result, Is.GreaterThan(600));
-			});
+			}
 		}
 
 		[Test]
@@ -1689,7 +1689,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.FileGroupProperty("PRIMARY", SqlFn.FileGroupPropertyName.IsReadOnly));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -1724,7 +1724,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.FullTextServiceProperty(SqlFn.FullTextServicePropertyName.IsFulltextInstalled));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0).Or.EqualTo(1));
+			Assert.That(result, Is.Zero.Or.EqualTo(1));
 		}
 
 		[Test]
@@ -1762,11 +1762,11 @@ namespace Tests.DataProvider
 			Console.WriteLine(result);
 
 			Assert.That(result, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result, Is.TypeOf<long>());
 				Assert.That((long)result, Is.GreaterThan(0L));
-			});
+			}
 		}
 
 		[Test]
@@ -1838,7 +1838,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ObjectProperty(SqlFn.ObjectID("dbo.Person"), SqlFn.ObjectPropertyName.HasDeleteTrigger));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -1900,7 +1900,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ScopeIdentity());
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -2362,7 +2362,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TransactionCount);
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -2377,7 +2377,7 @@ namespace Tests.DataProvider
 			var result = q.First();
 
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2393,7 +2393,7 @@ namespace Tests.DataProvider
 			var result = q.First();
 
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2408,7 +2408,7 @@ namespace Tests.DataProvider
 			var result = q.First();
 
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2424,7 +2424,7 @@ namespace Tests.DataProvider
 			var result = q.First();
 
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2468,7 +2468,7 @@ namespace Tests.DataProvider
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.CurrentTransactionID());
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2607,7 +2607,7 @@ namespace Tests.DataProvider
 			db.RollbackTransaction();
 			result = db.Select(() => SqlFn.XactState());
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		#endregion

@@ -40,14 +40,13 @@ namespace Tests.Mapping
 
 			var c1 = ms1.GetConverter<int?,int>()!;
 			var c2 = ms2.GetConverter<int?,int>()!;
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(c1(2), Is.EqualTo(4));
-				Assert.That(c1(null), Is.EqualTo(0));
+				Assert.That(c1(null), Is.Zero);
 				Assert.That(c2(2), Is.EqualTo(4));
 				Assert.That(c2(null), Is.EqualTo(-1));
-			});
+			}
 		}
 
 		[Test]
@@ -61,14 +60,13 @@ namespace Tests.Mapping
 
 			var c1 = ms1.GetConverter<int?,int>()!;
 			var c2 = ms2.GetConverter<int?,int>()!;
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(c1(2), Is.EqualTo(4));
-				Assert.That(c1(null), Is.EqualTo(0));
+				Assert.That(c1(null), Is.Zero);
 				Assert.That(c2(2), Is.EqualTo(4));
 				Assert.That(c2(null), Is.EqualTo(-1));
-			});
+			}
 		}
 
 		[Test]
@@ -82,12 +80,11 @@ namespace Tests.Mapping
 
 			var c1 = ms1.GetConverter<int?,int>()!;
 			var c2 = ms2.GetConverter<int?,int>()!;
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(c1(null), Is.EqualTo(-1));
 				Assert.That(c2(null), Is.EqualTo(-2));
-			});
+			}
 		}
 
 		[Test]
@@ -105,13 +102,12 @@ namespace Tests.Mapping
 				var c0 = Convert<DateTime,string>.Lambda;
 				var c1 = ms1.GetConverter<DateTime,string>()!;
 				var c2 = ms2.GetConverter<DateTime,string>()!;
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(c0(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)), Is.EqualTo("01/20/2012 16:30:40"));
 					Assert.That(c1(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)), Is.EqualTo("1/20/2012 4:30:40"));
 					Assert.That(c2(new DateTime(2012, 1, 20, 16, 30, 40, 50, DateTimeKind.Utc)), Is.EqualTo("20.01.2012 16:30:40"));
-				});
+				}
 			}
 
 			Convert<string,DateTime>.Expression = s => DateTime.Parse(s, DateTimeFormatInfo.InvariantInfo);
@@ -123,13 +119,12 @@ namespace Tests.Mapping
 				var c0 = Convert<string,DateTime>.Lambda;
 				var c1 = ms1.GetConverter<string,DateTime>()!;
 				var c2 = ms2.GetConverter<string,DateTime>()!;
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(c0("01/20/2012 16:30:40"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
 					Assert.That(c1("1/20/2012 4:30:40 PM"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
 					Assert.That(c2("20.01.2012 16:30:40"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
-				});
+				}
 			}
 		}
 
@@ -147,7 +142,7 @@ namespace Tests.Mapping
 			ci.DateTimeFormat.ShortTimePattern = "HH:mm:ss";
 
 			ms.SetCultureInfo(ci);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ms.GetConverter<DateTime, string>()!(new DateTime(2012, 1, 20, 16, 30, 40)), Is.EqualTo("20.01.2012 16:30:40"));
 				Assert.That(ms.GetConverter<string, DateTime>()!("20.01.2012 16:30:40"), Is.EqualTo(new DateTime(2012, 1, 20, 16, 30, 40)));
@@ -156,7 +151,7 @@ namespace Tests.Mapping
 				//Assert.AreEqual(100000.999m,                           ConvertTo<decimal>.From("100000.999")); this will fail if System Locale is ru-RU
 				Assert.That(ms.GetConverter<double, string>()!(100000.999), Is.EqualTo("100000,999"));
 				Assert.That(ms.GetConverter<string, double>()!("100000,999"), Is.EqualTo(100000.999));
-			});
+			}
 		}
 
 		sealed class AttrTest
@@ -177,11 +172,11 @@ namespace Tests.Mapping
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(attrs[0].Value, Is.EqualTo(2));
 				Assert.That(attrs[1].Value, Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -194,12 +189,12 @@ namespace Tests.Mapping
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs, Has.Length.EqualTo(3));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(attrs[0].Value, Is.EqualTo(2));
 				Assert.That(attrs[1].Value, Is.EqualTo(3));
 				Assert.That(attrs[2].Value, Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -212,12 +207,12 @@ namespace Tests.Mapping
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs, Has.Length.EqualTo(3));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(attrs[0].Value, Is.EqualTo(3));
 				Assert.That(attrs[1].Value, Is.EqualTo(2));
 				Assert.That(attrs[2].Value, Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -267,13 +262,13 @@ namespace Tests.Mapping
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs, Has.Length.EqualTo(4));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(attrs[0].Value, Is.EqualTo(2));
 				Assert.That(attrs[1].Value, Is.EqualTo(30));
 				Assert.That(attrs[2].Value, Is.EqualTo(3));
 				Assert.That(attrs[3].Value, Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -289,13 +284,13 @@ namespace Tests.Mapping
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs, Has.Length.EqualTo(4));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(attrs[0].Value, Is.EqualTo(2));
 				Assert.That(attrs[1].Value, Is.EqualTo(30));
 				Assert.That(attrs[2].Value, Is.EqualTo(3));
 				Assert.That(attrs[3].Value, Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -309,13 +304,13 @@ namespace Tests.Mapping
 				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs, Has.Length.EqualTo(4));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(attrs[1].Value, Is.EqualTo(3));
 				Assert.That(attrs[0].Value, Is.EqualTo(30));
 				Assert.That(attrs[2].Value, Is.EqualTo(2));
 				Assert.That(attrs[3].Value, Is.EqualTo(1));
-			});
+			}
 		}
 
 		enum Enum1
@@ -370,13 +365,12 @@ namespace Tests.Mapping
 		{
 			var ed = MappingSchema.Default.GetEntityDescriptor(typeof(FkTable));
 			var c  = ed.Columns.Single(_ => _.ColumnName == "ParentId");
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(c.IsPrimaryKey, Is.False);
 				Assert.That(c.IsIdentity, Is.False);
 				Assert.That(c.DataType, Is.EqualTo(DataType.DateTime));
-			});
+			}
 		}
 
 		[Repeat(100)]

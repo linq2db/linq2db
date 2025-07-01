@@ -96,11 +96,11 @@ namespace Tests.Linq
 		public void CurrentTimestampUtcClientSide()
 		{
 			var delta = Sql.CurrentTimestampUtc - DateTime.UtcNow;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(delta.Between(TimeSpan.FromSeconds(-1), TimeSpan.FromSeconds(1)), Is.True);
 				Assert.That(Sql.CurrentTimestampUtc.Kind, Is.EqualTo(DateTimeKind.Utc));
-			});
+			}
 		}
 
 		[Test]
@@ -223,12 +223,11 @@ namespace Tests.Linq
 #pragma warning restore CS8073 // The result of the expression is always the same since a value of this type is never equal to 'null'
 
 				var result = q.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result, Has.Count.EqualTo(1));
 					Assert.That(db.LastQuery, Does.Not.Contain("NULL"));
-				});
+				}
 			}
 		}
 

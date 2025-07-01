@@ -193,11 +193,11 @@ namespace Tests.UserTests
 				var result = db.Types.Where(_ => _.ID == 256).ToList();
 
 				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].ID, Is.EqualTo(256));
 					Assert.That(result[0].BoolValue, Is.EqualTo(expected));
-				});
+				}
 
 				calls--;
 				expected = !expected;
@@ -214,21 +214,21 @@ namespace Tests.UserTests
 				var result = query.ToList();
 
 				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].ID, Is.EqualTo(256));
 					Assert.That(result[0].BinaryValue, Is.Null);
-				});
+				}
 
 				query.Set(_ => _.BinaryValue, _ => value).Update();
 				result = query.ToList();
 
 				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].ID, Is.EqualTo(256));
 					Assert.That(value.SequenceEqual(result[0].BinaryValue!.ToArray()), Is.True);
-				});
+				}
 
 				calls--;
 			}
@@ -244,21 +244,21 @@ namespace Tests.UserTests
 				var result = query.ToList();
 
 				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].ID, Is.EqualTo(256));
 					Assert.That(result[0].BinaryValue, Is.Null);
-				});
+				}
 
 				query.Update(_ => new LinqDataTypes() { BinaryValue = value });
 				result = query.ToList();
 
 				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].ID, Is.EqualTo(256));
 					Assert.That(value.SequenceEqual(result[0].BinaryValue!.ToArray()), Is.True);
-				});
+				}
 
 				calls--;
 			}
@@ -275,11 +275,11 @@ namespace Tests.UserTests
 				var result = query.ToList();
 
 				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].ID, Is.EqualTo(256));
 					Assert.That(value.SequenceEqual(result[0].BinaryValue!.ToArray()), Is.True);
-				});
+				}
 
 				calls--;
 			}
@@ -308,11 +308,11 @@ namespace Tests.UserTests
 			db.Types.Where(_ => _.ID == 10256).Delete();
 
 			Assert.That(result, Has.Count.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ID, Is.EqualTo(10256));
 				Assert.That(value.SequenceEqual(result[0].BinaryValue!.ToArray()), Is.True);
-			});
+			}
 		}
 
 		private static void NonLinqUpdate(ITestDataContext db, byte[] value, int calls)
@@ -325,21 +325,21 @@ namespace Tests.UserTests
 				var result = query.ToList();
 
 				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].ID, Is.EqualTo(256));
 					Assert.That(result[0].BinaryValue, Is.Null);
-				});
+				}
 
 				db.Update(new LinqDataTypesWithPK() { ID = 256, BinaryValue = value, DateTimeValue = _date });
 				result = query.ToList();
 
 				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].ID, Is.EqualTo(256));
 					Assert.That(value.SequenceEqual(result[0].BinaryValue!.ToArray()), Is.True);
-				});
+				}
 
 				calls--;
 			}
