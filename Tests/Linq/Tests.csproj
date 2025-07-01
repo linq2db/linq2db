@@ -6,7 +6,6 @@
 		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net9.0</TargetFrameworks>
 
 		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
-		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 	</PropertyGroup>
 
 	<ItemGroup>
