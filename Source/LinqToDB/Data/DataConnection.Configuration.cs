@@ -785,14 +785,14 @@ namespace LinqToDB.Data
 					if (options.CommandTimeout != null)
 						dataConnection.CommandTimeout = options.CommandTimeout.Value;
 					else
-						dataConnection.CommandTimeout = -1;
+						dataConnection.ResetCommandTimeout();
 
 					action += () =>
 					{
 						if (commandTimeout != null)
 							dataConnection.CommandTimeout = commandTimeout.Value;
 						else
-							dataConnection.CommandTimeout = -1;
+							dataConnection.ResetCommandTimeout();
 					};
 				}
 
