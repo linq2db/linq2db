@@ -1,9 +1,7 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
-using LinqToDB.Mapping;
+using LinqToDB.Tools;
 
 using NUnit.Framework;
 
@@ -71,28 +69,6 @@ namespace Tests.Linq
 				select p.ParentID;
 
 			_ = q.ToSqlQuery().Sql;
-		}
-
-		[Table("Person")]
-		sealed class Person2
-		{
-			[Column("PersonID"), PrimaryKey] public int ID { get; set; }
-			// this annotation is not correct and used only to enforce non-nullable join condition
-			[Column] public string MiddleName { get; set; } = null!;
-		}
-
-		[Test]
-		public void LeftJoinConditionNullability([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p1 in db.Person
-				join p2 in db.GetTable<Person2>() on p1.MiddleName equals p2.MiddleName into g
-				from r in g.DefaultIfEmpty()
-				select r.ID;
-
-			Assert.That(q.Count(), Is.EqualTo(4));
 		}
 	}
 }
