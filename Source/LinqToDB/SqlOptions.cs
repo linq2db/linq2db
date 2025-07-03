@@ -1,5 +1,6 @@
 ﻿using LinqToDB.Common;
 using LinqToDB.Common.Internal;
+using LinqToDB.Data;
 
 namespace LinqToDB
 {
@@ -72,6 +73,29 @@ namespace LinqToDB
 				return _configurationID.Value;
 			}
 		}
+
+		#region Default Options
+
+		static SqlOptions _default = new();
+
+		/// <summary>
+		/// Gets default <see cref="SqlOptions"/> instance.
+		/// </summary>
+		public static SqlOptions Default
+		{
+			get => _default;
+			set
+			{
+				_default = value;
+				DataConnection.ResetDefaultOptions();
+				DataConnection.ConnectionOptionsByConfigurationString.Clear();
+			}
+		}
+
+		/// <inheritdoc />
+		IOptionSet IOptionSet.Default => Default;
+
+		#endregion
 
 		#region IEquatable implementation
 

@@ -178,20 +178,13 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class Linq
 		{
-			private static volatile LinqOptions _options = new ();
-
 			/// <summary>
 			/// Default <see cref="LinqOptions"/> options. Automatically synchronized with other settings in <see cref="Linq"/> class.
 			/// </summary>
 			public  static LinqOptions Options
 			{
-				get => _options;
-				set
-				{
-					_options = value;
-					DataConnection.ResetDefaultOptions();
-					DataConnection.ConnectionOptionsByConfigurationString.Clear();
-				}
+				get => LinqOptions.Default;
+				set => LinqOptions.Default = value;
 			}
 
 			/// <summary>
@@ -459,7 +452,7 @@ namespace LinqToDB.Common
 		{
 			/// <summary>
 			/// if set to <c>true</c>, SchemaProvider uses <see cref="CommandBehavior.SchemaOnly"/> to get metadata.
-			/// Otherwise the sp_describe_first_result_set sproc is used.
+			/// Otherwise, the <c>sp_describe_first_result_set</c> sproc is used.
 			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool UseSchemaOnlyToGetSchema;
@@ -494,26 +487,13 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class RetryPolicy
 		{
-			static volatile RetryPolicyOptions _options = new(
-				null,
-				MaxRetryCount   : 5,
-				MaxDelay        : TimeSpan.FromSeconds(30),
-				RandomFactor    : 1.1,
-				ExponentialBase : 2,
-				Coefficient     : TimeSpan.FromSeconds(1));
-
 			/// <summary>
 			/// Default <see cref="RetryPolicyOptions"/> options. Automatically synchronized with other settings in <see cref="RetryPolicy"/> class.
 			/// </summary>
 			public static  RetryPolicyOptions Options
 			{
-				get => _options;
-				set
-				{
-					_options = value;
-					DataConnection.ResetDefaultOptions();
-					DataConnection.ConnectionOptionsByConfigurationString.Clear();
-				}
+				get => RetryPolicyOptions.Default;
+				set => RetryPolicyOptions.Default = value;
 			}
 
 			/// <summary>
@@ -595,20 +575,13 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class Sql
 		{
-			static volatile SqlOptions _options = new();
-
 			/// <summary>
 			/// Default <see cref="SqlOptions"/> options. Automatically synchronized with other settings in <see cref="Sql"/> class.
 			/// </summary>
 			public static SqlOptions Options
 			{
-				get => _options;
-				set
-				{
-					_options = value;
-					DataConnection.ResetDefaultOptions();
-					DataConnection.ConnectionOptionsByConfigurationString.Clear();
-				}
+				get => SqlOptions.Default;
+				set => SqlOptions.Default = value;
 			}
 
 			/// <summary>
@@ -708,6 +681,70 @@ namespace LinqToDB.Common
 			{
 				get => Options.EnableConstantExpressionInOrderBy;
 				set => Options = Options with { EnableConstantExpressionInOrderBy = value };
+			}
+		}
+
+		/// <summary>
+		/// Bulk copy global settings.
+		/// </summary>
+		[PublicAPI]
+		public static class BulkCopy
+		{
+			/// <summary>
+			/// Default <see cref="BulkCopyOptions"/> options.
+			/// </summary>
+			public static BulkCopyOptions Options
+			{
+				get => BulkCopyOptions.Default;
+				set => BulkCopyOptions.Default = value;
+			}
+		}
+
+		/// <summary>
+		/// DataContext global settings.
+		/// </summary>
+		[PublicAPI]
+		public static class DataContext
+		{
+			/// <summary>
+			/// Default <see cref="DataContextOptions"/> options.
+			/// </summary>
+			public static DataContextOptions Options
+			{
+				get => DataContextOptions.Default;
+				set => DataContextOptions.Default = value;
+			}
+		}
+
+		/// <summary>
+		/// Connection global settings.
+		/// </summary>
+		[PublicAPI]
+		public static class Connection
+		{
+			/// <summary>
+			/// Default <see cref="ConnectionOptions"/> options.
+			/// </summary>
+			public static ConnectionOptions Options
+			{
+				get => ConnectionOptions.Default;
+				set => ConnectionOptions.Default = value;
+			}
+		}
+
+		/// <summary>
+		/// QueryTrace global settings.
+		/// </summary>
+		[PublicAPI]
+		public static class QueryTrace
+		{
+			/// <summary>
+			/// Default <see cref="QueryTraceOptions"/> options.
+			/// </summary>
+			public static QueryTraceOptions Options
+			{
+				get => QueryTraceOptions.Default;
+				set => QueryTraceOptions.Default = value;
 			}
 		}
 	}

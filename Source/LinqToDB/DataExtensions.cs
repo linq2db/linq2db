@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
@@ -1210,17 +1212,17 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Created table as queryable source.</returns>
 		internal static Task<ITable<T>> CreateTableAsync<T>(
-			this IDataContext dataContext,
-			EntityDescriptor? tableDescriptor,
-			string?           tableName       = default,
-			string?           databaseName    = default,
-			string?           schemaName      = default,
-			string?           statementHeader = default,
-			string?           statementFooter = default,
-			DefaultNullable   defaultNullable = DefaultNullable.None,
-			string?           serverName      = default,
-			TableOptions      tableOptions    = default,
-			CancellationToken token           = default)
+			this IDataContext    dataContext,
+			TempTableDescriptor? tableDescriptor,
+			string?              tableName       = default,
+			string?              databaseName    = default,
+			string?              schemaName      = default,
+			string?              statementHeader = default,
+			string?              statementFooter = default,
+			DefaultNullable      defaultNullable = DefaultNullable.None,
+			string?              serverName      = default,
+			TableOptions         tableOptions    = default,
+			CancellationToken    token           = default)
 			where T : notnull
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -1505,7 +1507,7 @@ namespace LinqToDB
 			{
 				if (p == null)
 					return Expression.Constant(null, typeof(object));
-				
+
 				var argumentType    = p.GetType();
 				var valueExpression = SequenceHelper.WrapAsParameter(Expression.Constant(p, argumentType));
 				if (valueExpression.Type != typeof(object))
@@ -1733,5 +1735,57 @@ namespace LinqToDB
 			return new ExpressionQueryImpl<TResult>(dataContext, expression.Body);
 		}
 
+		#region UseOptions
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseOptions<TSet>(this IDataContext dataContext, Func<TSet,TSet> optionSetter)
+			where TSet : class, IOptionSet, new()
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseLinqOptions(this IDataContext dataContext, Func<LinqOptions,LinqOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseSqlOptions(this IDataContext dataContext, Func<SqlOptions,SqlOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseDataContextOptions(this IDataContext dataContext, Func<DataContextOptions,DataContextOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseRetryPolicyOptions(this IDataContext dataContext, Func<RetryPolicyOptions,RetryPolicyOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseBulkCopyOptions(this IDataContext dataContext, Func<BulkCopyOptions,BulkCopyOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseConnectionOptions(this IDataContext dataContext, Func<ConnectionOptions,ConnectionOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseQueryTraceOptions(this IDataContext dataContext, Func<QueryTraceOptions,QueryTraceOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		#endregion
 	}
 }

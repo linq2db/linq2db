@@ -1,4 +1,6 @@
-﻿using LinqToDB.Common.Internal;
+﻿using System;
+
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Common
 {
@@ -13,5 +15,9 @@ namespace LinqToDB.Common
 	/// </summary>
 	public interface IOptionSet : IConfigurationID
 	{
+		/// <summary>
+		/// Gets the default options.
+		/// </summary>
+		IOptionSet Default { get; }
 	}
 }

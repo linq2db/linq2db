@@ -126,5 +126,37 @@ namespace LinqToDB.Common
 					if (item is IApplicable<TA> a)
 						a.Apply(obj);
 		}
+
+		protected Action? Reapply<TA>(TA obj, OptionsContainer<T> previousContainer)
+		{
+			if (ReferenceEquals(_sets, previousContainer._sets))
+				return null;
+
+			Action? actions = null;
+
+			if (_sets != null)
+			{
+				foreach (var item in _sets)
+				{
+					if (item.Value is IReapplicable<TA> a)
+					{
+						IOptionSet? previousItem = null;
+
+						previousContainer._sets?.TryGetValue(item.Key, out previousItem);
+
+						if (!ReferenceEquals(a, previousItem))
+							actions += a.Apply(obj, previousItem);
+					}
+				}
+			}
+
+			if (previousContainer._sets != null)
+				foreach (var item in previousContainer._sets)
+					if (item.Value is IReapplicable<TA> a && _sets?.ContainsKey(item.Key) == false)
+						if (!ReferenceEquals(item.Value.Default, a))
+							actions += ((IReapplicable<TA>)item.Value.Default).Apply(obj, a);
+
+			return actions;
+		}
 	}
 }
