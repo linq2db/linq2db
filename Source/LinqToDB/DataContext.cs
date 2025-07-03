@@ -861,14 +861,14 @@ namespace LinqToDB
 					if (options.CommandTimeout != null)
 						dataContext.CommandTimeout = options.CommandTimeout.Value;
 					else
-						dataContext.ResetCommandTimeout();;
+						dataContext.ResetCommandTimeout();
 
 					action += () =>
 					{
 						if (commandTimeout != null)
 							dataContext.CommandTimeout = commandTimeout.Value;
 						else
-							dataContext.CommandTimeout = -1;
+							dataContext.ResetCommandTimeout();
 					};
 				}
 
