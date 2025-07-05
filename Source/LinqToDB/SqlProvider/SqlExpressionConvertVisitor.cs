@@ -167,7 +167,12 @@ namespace LinqToDB.SqlProvider
 			if (!VisitQueries)
 				return selectQuery;
 
+			var saveNullabilityContext = NullabilityContext;
+			NullabilityContext = NullabilityContext.WithJoinSource(selectQuery);
+
 			var newQuery = base.VisitSqlQuery(selectQuery);
+
+			NullabilityContext = saveNullabilityContext;
 
 			return newQuery;
 		}
