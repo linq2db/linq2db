@@ -396,6 +396,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			ctx.IsSoftDeleteFilterEnabled = true;
 
 			var expected = await query.ToArrayAsync();
+
 			var filtered = await query.ToLinqToDB().ToArrayAsync();
 
 			Assert.That(filtered, Has.Length.EqualTo(expected.Length));

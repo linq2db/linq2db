@@ -26,10 +26,10 @@ namespace LinqToDB.Linq.Builder
 		public static BuildSequenceResult NotSupported()
 			=> new();
 
-		public static BuildSequenceResult Error(Expression errorExpression, string? additionalDetails = null) 
+		public static BuildSequenceResult Error(Expression errorExpression, string? additionalDetails = null)
 			=> new(errorExpression, additionalDetails);
 
-		public static BuildSequenceResult FromContext(IBuildContext buildContext) 
+		public static BuildSequenceResult FromContext(IBuildContext buildContext)
 			=> new(buildContext);
 
 		public IBuildContext? BuildContext      { get; }

@@ -67,7 +67,7 @@ namespace LinqToDB.SqlProvider
 
 		void AddIsNullCheck(ISqlExpression expr)
 		{
-			var predicate = new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(expr, true), false);
+			var predicate = new SqlPredicate.IsNull(expr, false);
 			_predicates.Add(predicate);
 		}
 

@@ -85,3 +85,6 @@ M:System.Attribute.IsDefined(System.Reflection.Module,System.Type); Use Attribut
 M:System.Attribute.IsDefined(System.Reflection.Module,System.Type,System.Boolean); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
 M:System.Attribute.IsDefined(System.Reflection.ParameterInfo,System.Type); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
 M:System.Attribute.IsDefined(System.Reflection.ParameterInfo,System.Type,System.Boolean); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+
+# TODO: still need to review remaining Console vs Debug vs NUnit trace methods use at some point
+T:System.Console;Use BaselinesManager.LogQuery method to log additional data in tests if possible

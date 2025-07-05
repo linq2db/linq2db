@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
 	public class SqlSetOperator : IQueryElement
 	{
@@ -48,6 +50,15 @@
 			writer.AppendElement(SelectQuery);
 
 			return writer;
+		}
+
+		public int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(SelectQuery.GetElementHashCode());
+			hash.Add(Operation);
+			return hash.ToHashCode();
 		}
 	}
 }

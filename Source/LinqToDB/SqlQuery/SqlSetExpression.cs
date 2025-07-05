@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
 	public class SqlSetExpression : IQueryElement
 	{
@@ -98,6 +100,14 @@
 				.AppendElement(Expression);
 
 			return writer;
+		}
+
+		public int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(Column.GetElementHashCode());
+			hash.Add(Expression?.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		#endregion

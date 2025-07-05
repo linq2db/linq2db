@@ -9,11 +9,11 @@ using LinqToDB.SqlQuery;
 namespace LinqToDB.Linq.Builder
 {
 	[BuildsMethodCall(
-		nameof(Queryable.First), 
-		nameof(Queryable.FirstOrDefault), 
-		nameof(Queryable.Single), 
-		nameof(Queryable.SingleOrDefault), 
-		nameof(LinqExtensions.AssociationRecord), 
+		nameof(Queryable.First),
+		nameof(Queryable.FirstOrDefault),
+		nameof(Queryable.Single),
+		nameof(Queryable.SingleOrDefault),
+		nameof(LinqExtensions.AssociationRecord),
 		nameof(LinqExtensions.AssociationOptionalRecord))]
 	[BuildsMethodCall(
 		nameof(AsyncEnumerableExtensions.FirstAsync), 

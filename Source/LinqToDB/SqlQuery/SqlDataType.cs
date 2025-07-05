@@ -454,6 +454,11 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
+		public int GetElementHashCode()
+		{
+			return Type.GetHashCode();
+		}
+
 		#endregion
 
 		#region IEquatable<SqlDataType>

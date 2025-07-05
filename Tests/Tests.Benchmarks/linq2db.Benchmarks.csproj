@@ -8,6 +8,8 @@
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<!--<DefineConstants>JETBRAINS;$(DefineConstants)</DefineConstants>-->
 		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3276</MSBuildWarningsAsMessages>
+
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 	</PropertyGroup>
 
 	<ItemGroup>
