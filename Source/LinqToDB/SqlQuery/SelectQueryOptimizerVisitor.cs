@@ -1292,8 +1292,6 @@ namespace LinqToDB.SqlQuery
 				parentQuery.Having.SearchCondition = QueryHelper.MergeConditions(parentQuery.Having.SearchCondition, subQuery.Having.SearchCondition);
 			}
 
-			
-
 			if (subQuery.Select.IsDistinct)
 				parentQuery.Select.IsDistinct = true;
 

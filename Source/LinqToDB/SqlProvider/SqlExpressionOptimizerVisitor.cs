@@ -630,6 +630,8 @@ namespace LinqToDB.SqlProvider
 			// 1. A IS NOT NULL AND A = B => A = B, when B is not nullable
 			// 2. A OR B OR A => A OR B
 			// 3. A AND B AND A => A AND B
+			// 4. A AND !A => false
+			// 4. A OR !A => true
 			newElement = OptimizeSimilarFlat(element);
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);

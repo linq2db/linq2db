@@ -111,6 +111,14 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
+			// A x !A
+			if (   predicate1.CanInvert(nullabilityContext) && predicate1.Invert(nullabilityContext).Equals(predicate2, SqlExpression.DefaultComparer)
+				|| predicate2.CanInvert(nullabilityContext) && predicate1.Equals(predicate2.Invert(nullabilityContext), SqlExpression.DefaultComparer))
+			{
+				mergedPredicate = isLogicalOr ? SqlPredicate.True : SqlPredicate.False;
+				return true;
+			}
+
 			mergedPredicate = null;
 			return false;
 		}
