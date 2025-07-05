@@ -867,6 +867,18 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
+		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		{
+			var saveNullabilityContext = NullabilityContext;
+			NullabilityContext = NullabilityContext.WithJoinSource(element.Table.Source);
+
+			var newElement = base.VisitSqlJoinedTable(element);
+
+			NullabilityContext = saveNullabilityContext;
+
+			return newElement;
+		}
+
 		protected override IQueryElement VisitSqlExpression(SqlExpression element)
 		{
 			var newElement = base.VisitSqlExpression(element);
