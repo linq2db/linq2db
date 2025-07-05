@@ -743,21 +743,27 @@ namespace LinqToDB.SqlProvider
 
 		public IQueryElement OptimizeSimilarForSinglePredicate(SqlSearchCondition element)
 		{
-			if (element.Predicates.Count != 2)
+			if (element.Predicates.Count < 2)
 				return element;
 
-			if (element.Predicates[0] is SqlSearchCondition search)
+			for (var i = 0; i < element.Predicates.Count - 1; i++)
 			{
-				if (OptimizeSimilarForSearch(element.Predicates[1], search, out var newCondition, out var newPredicate))
+				for (var j = i + 1; j < element.Predicates.Count; j++)
 				{
-					return Optimize(element, newCondition, newPredicate, false);
-				}
-			}
-			else if (element.Predicates[1] is SqlSearchCondition search2)
-			{
-				if (OptimizeSimilarForSearch(element.Predicates[0], search2, out var newCondition, out var newPredicate))
-				{
-					return Optimize(element, newCondition, newPredicate, true);
+					if (element.Predicates[i] is SqlSearchCondition search)
+					{
+						if (OptimizeSimilarForSearch(element.Predicates[j], search, out var newCondition, out var newPredicate))
+						{
+							return Optimize(element, newCondition, newPredicate, false);
+						}
+					}
+					else if (element.Predicates[j] is SqlSearchCondition search2)
+					{
+						if (OptimizeSimilarForSearch(element.Predicates[i], search2, out var newCondition, out var newPredicate))
+						{
+							return Optimize(element, newCondition, newPredicate, true);
+						}
+					}
 				}
 			}
 
