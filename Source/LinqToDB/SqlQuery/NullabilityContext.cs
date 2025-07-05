@@ -86,6 +86,9 @@ namespace LinqToDB.SqlQuery
 
 		public bool? CanBeNullSource(ISqlTableSource source)
 		{
+			if (ReferenceEquals(JoinSource, source))
+				return null;
+
 			for (var index = Queries.Length - 1; index >= 0; index--)
 			{
 				var q     = Queries[index];
