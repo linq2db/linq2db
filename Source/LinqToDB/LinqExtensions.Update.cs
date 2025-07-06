@@ -148,7 +148,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (old data required v18+)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -195,7 +195,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (old data required v18+)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -243,7 +243,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (old data required v18+)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -572,7 +572,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (old data required v18+)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -618,7 +618,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (old data required v18+)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -665,7 +665,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (old data required v18+)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -975,7 +975,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (old data required v18+)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -1016,7 +1016,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (old data required v18+)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -1058,7 +1058,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (old data required v18+)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -1337,7 +1337,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (old data required v18+)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -1375,7 +1375,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (old data required v18+)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -1414,7 +1414,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (old data required v18+)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
