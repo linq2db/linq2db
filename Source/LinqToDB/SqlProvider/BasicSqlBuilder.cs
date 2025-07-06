@@ -889,6 +889,10 @@ namespace LinqToDB.SqlProvider
 		{
 		}
 
+		protected virtual void BuildInsertValuesPrefix(SqlStatement statement, SqlInsertClause insertClause)
+		{
+		}
+
 		protected virtual void BuildOutputSubclause(SqlOutputClause? output)
 		{
 			if (output?.HasOutput == true)
@@ -998,6 +1002,8 @@ namespace LinqToDB.SqlProvider
 
 				BuildOutputSubclause(statement, insertClause);
 
+				BuildInsertValuesPrefix(statement, insertClause);
+
 				BuildEmptyInsert(insertClause);
 			}
 			else
@@ -1026,6 +1032,8 @@ namespace LinqToDB.SqlProvider
 				AppendIndent().AppendLine(")");
 
 				BuildOutputSubclause(statement, insertClause);
+
+				BuildInsertValuesPrefix(statement, insertClause);
 
 				if (statement.QueryType == QueryType.InsertOrUpdate ||
 					statement.QueryType == QueryType.MultiInsert ||
