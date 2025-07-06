@@ -889,7 +889,7 @@ namespace LinqToDB.SqlProvider
 		{
 		}
 
-		protected virtual void BuildInsertValuesPrefix(SqlStatement statement, SqlInsertClause insertClause)
+		protected virtual void BuildInsertValuesOverrideClause(SqlStatement statement, SqlInsertClause insertClause)
 		{
 		}
 
@@ -1002,7 +1002,7 @@ namespace LinqToDB.SqlProvider
 
 				BuildOutputSubclause(statement, insertClause);
 
-				BuildInsertValuesPrefix(statement, insertClause);
+				BuildInsertValuesOverrideClause(statement, insertClause);
 
 				BuildEmptyInsert(insertClause);
 			}
@@ -1033,7 +1033,7 @@ namespace LinqToDB.SqlProvider
 
 				BuildOutputSubclause(statement, insertClause);
 
-				BuildInsertValuesPrefix(statement, insertClause);
+				BuildInsertValuesOverrideClause(statement, insertClause);
 
 				if (statement.QueryType == QueryType.InsertOrUpdate ||
 					statement.QueryType == QueryType.MultiInsert ||
