@@ -41,6 +41,8 @@
 			//"SqlServer.2019.MS",
 			//"SqlServer.2022",
 			//"SqlServer.2022.MS",
+			//"SqlServer.2025",
+			//"SqlServer.2025.MS",
 			//"SqlServer.SA",
 			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
@@ -169,6 +171,8 @@
 			//"SqlServer.2019.MS",
 			//"SqlServer.2022",
 			//"SqlServer.2022.MS",
+			//"SqlServer.2025",
+			//"SqlServer.2025.MS",
 			//"SqlServer.SA",
 			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
@@ -289,6 +293,8 @@
 			//"SqlServer.2019.MS",
 			//"SqlServer.2022",
 			//"SqlServer.2022.MS",
+			//"SqlServer.2025",
+			//"SqlServer.2025.MS",
 			//"SqlServer.SA",
 			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
@@ -438,6 +444,14 @@
 			"SqlServer.2022.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "Server=localhost,1422;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.2025": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "Server=localhost,1425;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.2025.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "Server=localhost,1425;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.SA": {
 				"Provider": "System.Data.SqlClient",

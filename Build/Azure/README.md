@@ -150,6 +150,7 @@ Legend:
 |`ProviderName.PostgreSQL15`|PostgreSQL 15||
 |`TestProvName.PostgreSQL16`|PostgreSQL 16||
 |`TestProvName.PostgreSQL17`|PostgreSQL 17||
+|`TestProvName.PostgreSQL18`|PostgreSQL 18||
 |`ProviderName.Firebird25`|Firebird 2.5||
 |`TestProvName.Firebird3`|Firebird 3.0||
 |`TestProvName.Firebird4`|Firebird 4.0||
@@ -171,6 +172,8 @@ Legend:
 |`TestProvName.SqlServer2019MS`|SQL Server 2019 using Microsoft.Data.SqlClient||
 |`ProviderName.SqlServer2022`|SQL Server 2022 using System.Data.SqlClient||
 |`TestProvName.SqlServer2022MS`|SQL Server 2022 using Microsoft.Data.SqlClient||
+|`ProviderName.SqlServer2025`|SQL Server 2025 using System.Data.SqlClient||
+|`TestProvName.SqlServer2025MS`|SQL Server 2025 using Microsoft.Data.SqlClient||
 |`TestProvName.SqlServerSA`|SQL Server latest (2019) in SequentialAccess mode using System.Data.SqlClient||
 |`TestProvName.SqlServerSAMS`|SQL Server latest (2019) in SequentialAccess mode using Microsoft.Data.SqlClient||
 |`TestProvName.SqlServerContained`|SQL Server latest (2019) in contained database mode using System.Data.SqlClient||

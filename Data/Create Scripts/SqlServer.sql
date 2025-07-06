@@ -486,6 +486,7 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.Contained.MS BEGIN
 
 	jsonDataType             JSON              NULL,
+	vectorDataType           VECTOR            NULL,
 
 -- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
@@ -539,6 +540,8 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2019.MS BEGIN
 -- SKIP SqlServer.2022 BEGIN
 -- SKIP SqlServer.2022.MS BEGIN
+-- SKIP SqlServer.2025 BEGIN
+-- SKIP SqlServer.2025.MS BEGIN
 -- SKIP SqlServer.SA BEGIN
 -- SKIP SqlServer.SA.MS BEGIN
 -- SKIP SqlServer.Contained BEGIN
@@ -573,6 +576,8 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2019.MS END
 -- SKIP SqlServer.2022 END
 -- SKIP SqlServer.2022.MS END
+-- SKIP SqlServer.2025 END
+-- SKIP SqlServer.2025.MS END
 -- SKIP SqlServer.SA END
 -- SKIP SqlServer.SA.MS END
 -- SKIP SqlServer.Contained END
@@ -778,6 +783,8 @@ GO
 -- SKIP SqlServer.2019.MS BEGIN
 -- SKIP SqlServer.2022 BEGIN
 -- SKIP SqlServer.2022.MS BEGIN
+-- SKIP SqlServer.2025 BEGIN
+-- SKIP SqlServer.2025.MS BEGIN
 -- SKIP SqlServer.SA BEGIN
 -- SKIP SqlServer.SA.MS BEGIN
 -- SKIP SqlServer.Contained BEGIN
@@ -815,6 +822,8 @@ GO
 -- SKIP SqlServer.2019.MS END
 -- SKIP SqlServer.2022 END
 -- SKIP SqlServer.2022.MS END
+-- SKIP SqlServer.2025 END
+-- SKIP SqlServer.2025.MS END
 -- SKIP SqlServer.SA END
 -- SKIP SqlServer.SA.MS END
 -- SKIP SqlServer.Contained END
