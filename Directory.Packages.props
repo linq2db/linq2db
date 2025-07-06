@@ -56,7 +56,7 @@
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="10.3.3"                       />
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.9000.4"                  />
-		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="6.1.0-preview1.25120.4"       />
+		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="6.1.0-preview2.25178.5"       />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="9.0.6"                        />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="160.1000.6"                   />
 		<PackageVersion Include="MySqlConnector"                                        Version="2.4.0"                        />
