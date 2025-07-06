@@ -51,7 +51,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SqlProviderFlags.OutputUpdateUseSpecialTables = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputMergeUseSpecialTables  = version >= PostgreSQLVersion.v18;
 
-
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
 			                                         RowFeature.CompareToSelect | RowFeature.In | RowFeature.IsNull |
 			                                         RowFeature.Update          | RowFeature.UpdateLiteral |
