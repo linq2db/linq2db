@@ -26,10 +26,6 @@
 		<ProjectReference Include="..\EntityFrameworkCore.FSharp\Tests.EntityFrameworkCore.FSharp.fsproj" />
 	</ItemGroup>
 
-	<ItemGroup Label="Override Transient Vulnerable Deps">
-		<PackageReference Include="Microsoft.Data.SqlClient" VersionOverride="5.2.3" />
-	</ItemGroup>
-	
 	<ItemGroup Condition="'$(TargetFramework)' == 'net462'" Label="Override Transient Vulnerable Deps">
 		<PackageReference Include="Npgsql" VersionOverride="4.1.14" />
 	</ItemGroup>
