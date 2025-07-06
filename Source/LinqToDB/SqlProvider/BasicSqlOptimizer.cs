@@ -999,7 +999,7 @@ namespace LinqToDB.SqlProvider
 			for (var i = 0; i < query.From.Tables.Count; i++)
 			{
 				var ts = query.From.Tables[i];
-				if (ts.Joins.All(j => j.JoinType is JoinType.Inner or JoinType.Left or JoinType.Cross))
+				if (ts.Joins.All(j => j.JoinType is JoinType.Inner or JoinType.Cross))
 				{
 					if (ts.Source == table)
 					{

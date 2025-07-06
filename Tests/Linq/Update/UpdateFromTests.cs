@@ -574,7 +574,6 @@ namespace Tests.xUpdate
 			});
 		}
 
-		[ActiveIssue("TODO: disabled to not break tests, remove after fix")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		public void Issue2815Test2([DataSources(false, ProviderName.SqlCe, TestProvName.AllAccess)] string context)
@@ -601,10 +600,10 @@ namespace Tests.xUpdate
 			var cnt = query.Update(q => q.ext, x => new Issue2815Table1()
 			{
 				TRANS_CHANNEL = ((TransChannel?)x.channel.Trans_Channel) ?? TransChannel.Swift,
-				IDF = x.channel.Idf
+				IDF = (int?)x.channel.Idf ?? 0
 			});
 
-			Assert.That(cnt, Is.EqualTo(5));
+			Assert.That(cnt, Is.EqualTo(8));
 
 			var res = t1.OrderBy(r => r.SRC_BIC).ThenBy(r => r.DES_BIC).ToArray();
 
