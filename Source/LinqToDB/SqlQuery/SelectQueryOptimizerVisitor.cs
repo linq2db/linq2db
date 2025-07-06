@@ -2423,6 +2423,20 @@ namespace LinqToDB.SqlQuery
 			_columnNestingCorrector.CorrectColumnNesting(query);
 		}
 
+		void MoveToSubQuery(SelectQuery query)
+		{
+			var subQuery = new SelectQuery();
+
+			subQuery.DoNotRemove = true;
+
+			subQuery.From.Tables.AddRange(query.From.Tables);
+
+			query.Select.From.Tables.Clear();
+			_ = query.Select.From.Table(subQuery);
+
+			_columnNestingCorrector.CorrectColumnNesting(query);
+		}
+
 		bool ProviderOuterCanHandleSeveralColumnsQuery(SelectQuery selectQuery)
 		{
 			if (_providerFlags.IsApplyJoinSupported)
@@ -2557,7 +2571,7 @@ namespace LinqToDB.SqlQuery
 										var moveToSubquery = IsInOrderByPart(sq, testedColumn) && !_providerFlags.IsSubQueryOrderBySupported;
 										if (moveToSubquery)
 										{
-											MoveDuplicateUsageToSubQuery(sq, ref doNotRemoveQueries);
+											MoveToSubQuery(sq);
 											// will be processed in the next step
 											ti = -1;
 
@@ -2579,7 +2593,7 @@ namespace LinqToDB.SqlQuery
 													break;
 												}
 
-												MoveDuplicateUsageToSubQuery(sq, ref doNotRemoveQueries);
+												MoveToSubQuery(sq);
 												// will be processed in the next step
 												ti      = -1;
 												isValid = false;
