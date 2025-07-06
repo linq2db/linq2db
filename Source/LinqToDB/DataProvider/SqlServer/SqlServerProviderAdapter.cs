@@ -67,7 +67,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			Func<int, string, SqlBulkCopyColumnMapping>                         createBulkCopyColumnMapping,
 			
 			MappingSchema? mappingSchema,
-			Type? sqlJsonType)
+
+			Type? sqlJsonType,
+			Type? sqlVectorType)
 		{
 			Provider = provider;
 
@@ -96,7 +98,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			_createBulkCopyColumnMapping = createBulkCopyColumnMapping;
 
 			MappingSchema = mappingSchema;
+
 			SqlJsonType   = sqlJsonType;
+			SqlVectorType = sqlVectorType;
 		}
 
 		public SqlServerProvider Provider { get; }
@@ -123,9 +127,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public MappingSchema? MappingSchema { get; }
 
-		public Type?   SqlJsonType { get; }
-		public string? GetSqlJsonReaderMethod => SqlJsonType == null ? null : "GetSqlJson";
-		public SqlDbType JsonDbType => SqlJsonType == null ? SqlDbType.NVarChar : (SqlDbType)35;
+		public Type?     SqlJsonType { get; }
+		public string?   GetSqlJsonReaderMethod => SqlJsonType == null ? null : "GetSqlJson";
+		public SqlDbType JsonDbType             => SqlJsonType == null ? SqlDbType.NVarChar : (SqlDbType)35;
+
+		public Type?     SqlVectorType { get; }
+		public string?   GetSqlVectorReaderMethod => SqlVectorType == null ? null : "GetSqlVector";
+		public SqlDbType VectorDbType             => SqlVectorType == null ? SqlDbType.VarBinary : (SqlDbType)36;
 
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -254,10 +262,12 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			MappingSchema? mappingSchema = null;
 			Type?          sqlJsonType   = null;
+			Type?          sqlVectorType = null;
 
 			if (provider == SqlServerProvider.MicrosoftDataSqlClient)
 			{
-				sqlJsonType = LoadType("SqlJson", DataType.Json, null, true, true);
+				sqlJsonType   = LoadType("SqlJson", DataType.Json, null, true, true);
+
 				if (sqlJsonType != null)
 				{
 					var sb = Expression.Parameter(typeof(StringBuilder));
@@ -299,8 +309,55 @@ namespace LinqToDB.DataProvider.SqlServer
 
 						mappingSchema!.SetValueToSqlConverter(jsonDocumentType, jsdocConverter);
 					}
-
 				}
+
+				// TODO: finish implementation when SQL 2025 support/testing added
+				//sqlVectorType = LoadType("SqlVector`1", DataType.Array | DataType.Single, null, true, true);
+				
+				//if (sqlVectorType != null)
+				//{
+				//	sqlVectorType = sqlVectorType.MakeGenericType(typeof(float));
+
+				//	var sb = Expression.Parameter(typeof(StringBuilder));
+				//	var dt = Expression.Parameter(typeof(SqlDataType));
+				//	var op = Expression.Parameter(typeof(DataOptions));
+				//	var v  = Expression.Parameter(typeof(object));
+
+				//	var converter = Expression.Lambda<Action<StringBuilder,SqlDataType,DataOptions,object>>(
+				//		Expression.Call(
+				//			null,
+				//			Methods.SqlServer.ConvertStringToSql,
+				//			sb,
+				//			ExpressionHelper.Property(ExpressionHelper.Property(dt, nameof(SqlDataType.Type)), nameof(DbDataType.DataType)),
+				//			ExpressionHelper.Property(Expression.Convert(v, sqlVectorType), "Value")
+				//			),
+				//		sb, dt, op, v)
+				//		.CompileExpression();
+
+				//	mappingSchema!.SetValueToSqlConverter(sqlVectorType, converter);
+
+				//	// JsonDocument inlining
+				//	var jsonDocumentType = Type.GetType("System.Text.Json.JsonDocument, System.Text.Json");
+
+				//	if (jsonDocumentType != null)
+				//	{
+				//		mappingSchema.SetScalarType(jsonDocumentType);
+				//		mappingSchema.SetDataType(jsonDocumentType, new SqlDataType(new DbDataType(jsonDocumentType, DataType.Json)));
+
+				//		var jsdocConverter = Expression.Lambda<Action<StringBuilder,SqlDataType,DataOptions,object>>(
+				//		Expression.Call(
+				//			null,
+				//			Methods.SqlServer.ConvertStringToSql,
+				//			sb,
+				//			ExpressionHelper.Property(ExpressionHelper.Property(dt, nameof(SqlDataType.Type)), nameof(DbDataType.DataType)),
+				//			Expression.Call(ExpressionHelper.Property(Expression.Convert(v, jsonDocumentType), "RootElement"), "GetRawText", null)
+				//			),
+				//		sb, dt, op, v)
+				//		.CompileExpression();
+
+				//		mappingSchema!.SetValueToSqlConverter(jsonDocumentType, jsdocConverter);
+				//	}
+				//}
 			}
 
 			return new SqlServerProviderAdapter(
@@ -331,7 +388,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				typeMapper.BuildWrappedFactory((int source, string destination) => new SqlBulkCopyColumnMapping(source, destination)),
 
 				mappingSchema,
-				sqlJsonType);
+				sqlJsonType,
+				sqlVectorType);
 
 			IEnumerable<int> exceptionErrorsGettter(Exception ex) => typeMapper.Wrap<SqlException>(ex).Errors.Errors.Select(err => err.Number);
 
