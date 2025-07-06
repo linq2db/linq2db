@@ -43,7 +43,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						if (options.ConfigurationString.Contains("15")
 							|| options.ConfigurationString.Contains("16")
 							|| options.ConfigurationString.Contains("17"))
+						{
 							return _postgreSQLDataProvider15.Value;
+						}
 
 						if (options.ConfigurationString.Contains("92") || options.ConfigurationString.Contains("9.2"))
 							return _postgreSQLDataProvider92.Value;
