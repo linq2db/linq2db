@@ -198,17 +198,19 @@ namespace LinqToDB.SqlQuery
 					OptimizeColumns(selectQuery);
 				}
 
+				List<SelectQuery>? doNotRemoveQueries = null;
+
 				do
 				{
 					var currentVersion = _version;
 					var isModified     = false;
 
-					if (OptimizeSubQueries(selectQuery))
+					if (OptimizeSubQueries(selectQuery, doNotRemoveQueries))
 					{
 						isModified = true;
 					}
 					
-					if (MoveOuterJoinsToSubQuery(selectQuery, processMultiColumn: false))
+					if (MoveOuterJoinsToSubQuery(selectQuery, ref doNotRemoveQueries, processMultiColumn: false))
 					{
 						isModified = true;
 					}
@@ -219,7 +221,7 @@ namespace LinqToDB.SqlQuery
 						EnsureReferencesCorrected(selectQuery);
 					}
 
-					if (MoveOuterJoinsToSubQuery(selectQuery, processMultiColumn: true))
+					if (MoveOuterJoinsToSubQuery(selectQuery, ref doNotRemoveQueries, processMultiColumn: true))
 					{
 						isModified = true;
 					}
@@ -1969,13 +1971,19 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
-		bool OptimizeSubQueries(SelectQuery selectQuery)
+		bool OptimizeSubQueries(SelectQuery selectQuery, List<SelectQuery>? doNotRemoveQueries)
 		{
 			var replaced = false;
 
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
 				var tableSource = selectQuery.From.Tables[i];
+
+				if (tableSource.Source is SelectQuery innerQuery && doNotRemoveQueries?.Contains(innerQuery) == true)
+				{
+					continue;
+				}
+
 				if (MoveSubQueryUp(selectQuery, tableSource))
 				{
 					replaced = true;
@@ -2400,11 +2408,12 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
-		void MoveDuplicateUsageToSubQuery(SelectQuery query)
+		void MoveDuplicateUsageToSubQuery(SelectQuery query, ref List<SelectQuery>? doNotRemoveQueries)
 		{
 			var subQuery = new SelectQuery();
 
-			subQuery.DoNotRemove = true;
+			doNotRemoveQueries ??= new();
+			doNotRemoveQueries.Add(subQuery);
 
 			subQuery.From.Tables.AddRange(query.From.Tables);
 
@@ -2450,7 +2459,7 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery, bool processMultiColumn)
+		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery, ref List<SelectQuery>? doNotRemoveQueries, bool processMultiColumn)
 		{
 			var currentVersion = _version;
 
@@ -2535,7 +2544,7 @@ namespace LinqToDB.SqlQuery
 
 										if (_providerFlags.IsApplyJoinSupported)
 										{
-											MoveDuplicateUsageToSubQuery(sq);
+											MoveDuplicateUsageToSubQuery(sq, ref doNotRemoveQueries);
 											// will be processed in the next step
 											ti = -1;
 											isValid = false;
@@ -2548,7 +2557,7 @@ namespace LinqToDB.SqlQuery
 										var moveToSubquery = IsInOrderByPart(sq, testedColumn) && !_providerFlags.IsSubQueryOrderBySupported;
 										if (moveToSubquery)
 										{
-											MoveDuplicateUsageToSubQuery(sq);
+											MoveDuplicateUsageToSubQuery(sq, ref doNotRemoveQueries);
 											// will be processed in the next step
 											ti = -1;
 
@@ -2570,7 +2579,7 @@ namespace LinqToDB.SqlQuery
 													break;
 												}
 
-												MoveDuplicateUsageToSubQuery(sq);
+												MoveDuplicateUsageToSubQuery(sq, ref doNotRemoveQueries);
 												// will be processed in the next step
 												ti      = -1;
 												isValid = false;
