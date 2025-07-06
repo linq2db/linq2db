@@ -1810,7 +1810,7 @@ namespace LinqToDB.SqlProvider
 				var param = coalesce.Expressions[i];
 				MarkParameters(param);
 
-				last = new SqlFunction(coalesce.SystemType!, funcName, param, last);
+				last = new SqlFunction(coalesce.SystemType!, funcName, ParametersNullabilityType.IfAllParametersNullable, param, last);
 			}
 
 			return last;
