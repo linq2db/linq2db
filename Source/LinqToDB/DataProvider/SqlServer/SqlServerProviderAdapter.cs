@@ -350,7 +350,7 @@ namespace LinqToDB.DataProvider.SqlServer
 							BuildVectorLiteralMethod,
 							sb,
 #if NETFRAMEWORK || NETSTANDARD2_0
-							Expression.Call(Expression.Convert(v, sqlVectorType), "ToArray", Array.Empty<Type>())
+							Expression.Call(ExpressionHelper.Property(Expression.Convert(v, sqlVectorType), "Memory"), "ToArray", Array.Empty<Type>())
 #else
 							ExpressionHelper.Property(ExpressionHelper.Property(Expression.Convert(v, sqlVectorType), "Memory"), "Span")
 #endif
