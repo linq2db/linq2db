@@ -349,8 +349,12 @@ namespace LinqToDB.DataProvider.SqlServer
 							null,
 							BuildVectorLiteralMethod,
 							sb,
-							ExpressionHelper.Property(Expression.Convert(v, sqlVectorType), "Memory")),
-						sb, dt, op, v)
+#if NETFRAMEWORK || NETSTANDARD2_0
+							Expression.Call(Expression.Convert(v, sqlVectorType), "ToArray", Array.Empty<Type>())
+#else
+							ExpressionHelper.Property(ExpressionHelper.Property(Expression.Convert(v, sqlVectorType), "Memory"), "Span")
+#endif
+							), sb, dt, op, v)
 						.CompileExpression();
 
 					mappingSchema!.SetValueToSqlConverter(sqlVectorType, converter);
@@ -419,7 +423,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		public static readonly MethodInfo BuildVectorLiteralMethod = typeof(SqlServerProviderAdapter).GetMethod(nameof(BuildVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;
-		static void BuildVectorLiteral(StringBuilder sb, ReadOnlyMemory<float> data)
+
+#if NETFRAMEWORK || NETSTANDARD2_0
+		// we need System.Memory dep otherwise
+		static void BuildVectorLiteral(StringBuilder sb, float[] data)
 		{
 			sb.Append("JSON_ARRAY(");
 
@@ -428,11 +435,27 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (i > 0)
 					sb.Append(", ");
 
-				sb.Append(CultureInfo.InvariantCulture, $"{data.Span[i]}");
+				sb.Append(CultureInfo.InvariantCulture, $"{data[i]}");
 			}
 
 			sb.Append(')');
 		}
+#else
+		static void BuildVectorLiteral(StringBuilder sb, ReadOnlySpan<float> data)
+		{
+			sb.Append("JSON_ARRAY(");
+
+			for (var i = 0; i < data.Length; i++)
+			{
+				if (i > 0)
+					sb.Append(", ");
+
+				sb.Append(CultureInfo.InvariantCulture, $"{data[i]}");
+			}
+
+			sb.Append(')');
+		}
+#endif
 
 		sealed class SqlServerAdapterMappingSchema : LockedMappingSchema
 		{
