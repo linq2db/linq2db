@@ -653,6 +653,10 @@ namespace LinqToDB.SqlProvider
 			if (element.Predicates.Count <= 1)
 				return element;
 
+			// We should not slowdown translation with dynamically generate conditions.
+			if (element.Predicates.Count > 100)
+				return element;
+
 			var predicatesToCompare = element.Predicates
 				.SelectMany(p => _similarityMerger.GetSimilarityCodes(p).Select(code => (predicate : p, code)))
 				.GroupBy(x => x.code)
@@ -748,6 +752,10 @@ namespace LinqToDB.SqlProvider
 			if (element.Predicates.Count < 2)
 				return element;
 
+			// We should not slowdown translation with dynamically generate conditions.
+			if (element.Predicates.Count > 100)
+				return element;
+
 			for (var i = 0; i < element.Predicates.Count - 1; i++)
 			{
 				for (var j = i + 1; j < element.Predicates.Count; j++)
@@ -793,10 +801,14 @@ namespace LinqToDB.SqlProvider
 
 		public bool OptimizeSimilarForSearch(ISqlPredicate predicate, SqlSearchCondition searchCondition, out ISqlPredicate newCondition, out ISqlPredicate? newPredicate)
 		{
-			var predicateCodes = _similarityMerger.GetSimilarityCodes(predicate).ToArray();
-
 			newCondition = searchCondition;
 			newPredicate = predicate;
+
+			// We should not slowdown translation with dynamically generate conditions.
+			if (searchCondition.Predicates.Count > 100)
+				return false;
+
+			var predicateCodes = _similarityMerger.GetSimilarityCodes(predicate).ToArray();
 
 			if (predicateCodes.Length == 0)
 				return false;

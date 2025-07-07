@@ -2477,6 +2477,9 @@ namespace LinqToDB.SqlQuery
 		{
 			var currentVersion = _version;
 
+			var isModified        = false;
+			var isMovedToSubquery = false;
+
 			EvaluationContext? evaluationContext = null;
 
 			var selectQueries = QueryHelper.EnumerateAccessibleSources(selectQuery).OfType<SelectQuery>().ToList();
@@ -2560,8 +2563,9 @@ namespace LinqToDB.SqlQuery
 										{
 											MoveDuplicateUsageToSubQuery(sq, ref doNotRemoveQueries);
 											// will be processed in the next step
-											ti = -1;
-											isValid = false;
+											ti         = -1;
+											isValid    = false;
+											isModified = true;
 											break;
 										}	
 									}
@@ -2573,9 +2577,9 @@ namespace LinqToDB.SqlQuery
 										{
 											MoveToSubQuery(sq);
 											// will be processed in the next step
-											ti = -1;
-
-											isValid = false;
+											ti         = -1;
+											isValid    = false;
+											isModified = true;
 											break;
 										}
 									}
@@ -2639,9 +2643,10 @@ namespace LinqToDB.SqlQuery
 										queryToReplace.Select.Columns.Add(sourceColumn);
 									}
 
-									var replacement = isNullable ? SqlNullabilityExpression.ApplyNullability(queryToReplace, true) : queryToReplace;
+									isMovedToSubquery = true;
+									isModified        = true;
 
-									NotifyReplaced(replacement, testedColumn);
+									NotifyReplaced(queryToReplace, testedColumn);
 								}
 							}
 						}
@@ -2655,10 +2660,29 @@ namespace LinqToDB.SqlQuery
 
 				_columnNestingCorrector.CorrectColumnNesting(selectQuery);
 
-				return true;
+				isModified = true;
 			}
 
-			return false;
+			if (isMovedToSubquery)
+			{
+				var queries = QueryHelper.EnumerateAccessibleSources(selectQuery).OfType<SelectQuery>().ToList();
+				foreach (var sq in queries)
+				{
+					var nullabilityContext = NullabilityContext.GetContext(sq);
+					foreach (var column in sq.Select.Columns)
+					{
+						var optimized = _expressionOptimizerVisitor.Optimize(_evaluationContext, nullabilityContext, null, _dataOptions, _mappingSchema, column.Expression, visitQueries: false, reducePredicates: false);
+
+						if (!ReferenceEquals(optimized, column.Expression))
+						{
+							column.Expression = (ISqlExpression)optimized;
+							doNotRemoveQueries?.Clear();
+						}
+					}
+				}
+			}
+
+			return isModified;
 		}
 
 		protected override IQueryElement VisitCteClause(CteClause element)
