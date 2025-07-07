@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SqlTypes;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -28,6 +29,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	sealed class SqlServerDataProvider2017SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2017SystemDataSqlClient   () : base(ProviderName.SqlServer2017, SqlServerVersion.v2017, SqlServerProvider.SystemDataSqlClient)    {} }
 	sealed class SqlServerDataProvider2019SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2019SystemDataSqlClient   () : base(ProviderName.SqlServer2019, SqlServerVersion.v2019, SqlServerProvider.SystemDataSqlClient)    {} }
 	sealed class SqlServerDataProvider2022SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2022SystemDataSqlClient   () : base(ProviderName.SqlServer2022, SqlServerVersion.v2022, SqlServerProvider.SystemDataSqlClient)    {} }
+	sealed class SqlServerDataProvider2025SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2025SystemDataSqlClient   () : base(ProviderName.SqlServer2025, SqlServerVersion.v2025, SqlServerProvider.SystemDataSqlClient)    {} }
 	sealed class SqlServerDataProvider2005MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2005MicrosoftDataSqlClient() : base(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.MicrosoftDataSqlClient) {} }
 	sealed class SqlServerDataProvider2008MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2008MicrosoftDataSqlClient() : base(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient) {} }
 	sealed class SqlServerDataProvider2012MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2012MicrosoftDataSqlClient() : base(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient) {} }
@@ -36,6 +38,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	sealed class SqlServerDataProvider2017MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2017MicrosoftDataSqlClient() : base(ProviderName.SqlServer2017, SqlServerVersion.v2017, SqlServerProvider.MicrosoftDataSqlClient) {} }
 	sealed class SqlServerDataProvider2019MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2019MicrosoftDataSqlClient() : base(ProviderName.SqlServer2019, SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient) {} }
 	sealed class SqlServerDataProvider2022MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2022MicrosoftDataSqlClient() : base(ProviderName.SqlServer2022, SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient) {} }
+	sealed class SqlServerDataProvider2025MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2025MicrosoftDataSqlClient() : base(ProviderName.SqlServer2025, SqlServerVersion.v2025, SqlServerProvider.MicrosoftDataSqlClient) {} }
 
 	public abstract class SqlServerDataProvider : DynamicDataProviderBase<SqlServerProviderAdapter>
 	{
@@ -83,6 +86,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SqlServerVersion.v2017 => new SqlServer2017SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2019 => new SqlServer2019SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2022 => new SqlServer2022SqlOptimizer(SqlProviderFlags),
+				SqlServerVersion.v2025 => new SqlServer2022SqlOptimizer(SqlProviderFlags),
 				_                      => new SqlServer2008SqlOptimizer(SqlProviderFlags),
 			};
 
@@ -115,10 +119,17 @@ namespace LinqToDB.DataProvider.SqlServer
 				}
 			}
 
-			// TODO: finish implementation when SQL 2025 support/testing added
 			if (Adapter.SqlVectorType != null)
 			{
-				SetProviderField(Adapter.SqlVectorType, typeof(byte[]), Adapter.GetSqlVectorReaderMethod!, dataReaderType: Adapter.DataReaderType, typeName: "vector");
+				var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
+				var indexParameter      = Expression.Parameter(typeof(int), "i");
+
+				var methodCall = Expression.Call(dataReaderParameter, Adapter.GetSqlVectorReaderMethod!, new[] { typeof(float) }, indexParameter);
+
+				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlVectorType, FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
+					Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
+
+				SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
 			}
 
 			SetProviderField<DateTimeOffset>(Adapter.GetDateTimeOffsetReaderMethod        , dataReaderType: Adapter.DataReaderType);
@@ -156,6 +167,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					(SqlServerVersion.v2017, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2017MappingSchemaSystem(),
 					(SqlServerVersion.v2019, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2019MappingSchemaSystem(),
 					(SqlServerVersion.v2022, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2022MappingSchemaSystem(),
+					(SqlServerVersion.v2025, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2025MappingSchemaSystem(),
 
 					(SqlServerVersion.v2005, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2005MappingSchemaMicrosoft(),
 					(SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2008MappingSchemaMicrosoft(),
@@ -165,6 +177,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					(SqlServerVersion.v2017, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2017MappingSchemaMicrosoft(),
 					(SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2019MappingSchemaMicrosoft(),
 					(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2022MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2025, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2025MappingSchemaMicrosoft(),
 
 					_ => throw new InvalidOperationException($"Unexpected dialect/provider: {version}, {provider}")
 				};
@@ -206,6 +219,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SqlServerVersion.v2017 => new SqlServer2017SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 				SqlServerVersion.v2019 => new SqlServer2019SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 				SqlServerVersion.v2022 => new SqlServer2022SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				SqlServerVersion.v2025 => new SqlServer2022SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 				_                      => throw new InvalidOperationException(),
 			};
 		}
@@ -375,6 +389,26 @@ namespace LinqToDB.DataProvider.SqlServer
 					}
 
 					break;
+
+				case DataType.Json:
+				{
+					if (Adapter.SqlJsonType != null)
+					{
+						if (parameter is BulkCopyReader.Parameter && value?.GetType() == Adapter.SqlJsonType)
+						{
+#pragma warning disable MA0107 // Do not use culture-sensitive object.ToString
+							value = value.ToString();
+#pragma warning restore MA0107 // Do not use culture-sensitive object.ToString
+						}
+
+						if (Adapter.JsonDocumentType != null && value?.GetType() == Adapter.JsonDocumentType)
+						{
+							value = Adapter.JsonDocumentToStringConverter!(value);
+						}
+					}
+
+					break;
+				}
 
 				case DataType.Undefined:
 					if (value != null

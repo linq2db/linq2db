@@ -486,7 +486,7 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.Contained.MS BEGIN
 
 	jsonDataType             JSON              NULL,
-	vectorDataType           VECTOR            NULL,
+	vectorDataType           VECTOR(5)         NULL,
 
 -- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END

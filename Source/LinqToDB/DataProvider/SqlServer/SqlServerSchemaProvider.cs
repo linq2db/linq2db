@@ -288,6 +288,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
+			// TODO: RECHECK:
+			// SQL25 CTP2.1 returns vector parameter type as varbinary(len), e.g. for vector(3) : varbinary(20)
+			// and sp_describe_first_result_set returns ntext
 			return dataConnection.Query<ProcedureParameterInfo>(
 				@"SELECT
 					SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
@@ -320,6 +323,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			switch (dataType)
 			{
 				case "json"             : return DataType.Json;
+				case "vector"           : return DataType.Array | DataType.Single;
 				case "image"            : return DataType.Image;
 				case "text"             : return DataType.Text;
 				case "binary"           : return DataType.Binary;
@@ -399,6 +403,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				case "hierarchyid"      : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlHierarchyIdType}";
 				case "geography"        : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlGeographyType}";
 				case "geometry"         : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlGeometryType}";
+				case "json"             : return $"{SqlServerProviderAdapter.TypesNamespace}.SqlJson";
+				case "vector"           : return $"{SqlServerProviderAdapter.TypesNamespace}.SqlVector<float>";
 			}
 
 			return base.GetProviderSpecificType(dataType);
@@ -409,6 +415,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			switch (dataType)
 			{
 				case "json"        : return typeof(string);
+				case "vector"      : return typeof(string);
 				case "tinyint"     : return typeof(byte);
 				case "hierarchyid" :
 				case "geography"   :
@@ -424,6 +431,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			// database name for udt not supported by sql server
 			if (udtName != null)
 				return (udtSchema != null ? SqlServerTools.QuoteIdentifier(udtSchema) + '.' : null) + SqlServerTools.QuoteIdentifier(udtName);
+
+			if (columnType == "vector")
+				length = (length - 8) / 4;
 
 			return base.GetDbType(options, columnType, dataType, length, precision, scale, udtCatalog, udtSchema, udtName);
 		}

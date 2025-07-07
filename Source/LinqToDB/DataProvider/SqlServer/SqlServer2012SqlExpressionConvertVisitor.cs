@@ -18,6 +18,5 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return base.ConvertSqlFunction(func);
 		}
-
 	}
 }
