@@ -415,7 +415,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			switch (dataType)
 			{
 				case "json"        : return typeof(string);
-				case "vector"      : return typeof(string);
+				// TODO: currently string mapping is not usable
+				case "vector"      : return Provider.Adapter.SqlVectorType ?? typeof(string);
 				case "tinyint"     : return typeof(byte);
 				case "hierarchyid" :
 				case "geography"   :
