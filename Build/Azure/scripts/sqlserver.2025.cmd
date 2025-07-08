@@ -24,14 +24,14 @@ IF %ERRORLEVEL% EQU 0 (
     GOTO:retry
 )
 
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "SELECT 1"
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "SELECT 1" -C
 if %errorlevel% NEQ 0 goto repeat
 echo "SQL Server is operational"
 
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "SELECT @@Version"
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "SELECT @@Version" -C
 
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;"
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;" -C
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;" -C
 
 goto:eof
 
