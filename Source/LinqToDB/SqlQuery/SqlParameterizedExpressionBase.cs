@@ -57,30 +57,18 @@ namespace LinqToDB.SqlQuery
 				Parameters.Select(p => p.CanBeNullable(nullability)));
 		}
 
-		int? _hashCode;
-
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-		public override int GetHashCode()
+		public override int GetElementHashCode()
 		{
-			if (_hashCode != null)
-				return _hashCode.Value;
-
-			var hashCode = Type.GetHashCode();
-
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ ExprOrName     .GetHashCode());
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ Precedence     .GetHashCode());
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ Flags          .GetHashCode());
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ NullabilityType.GetHashCode());
-			
-			if (CanBeNullNullable != null)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ CanBeNullNullable.Value.GetHashCode());
-
-			for (var i = 0; i < Parameters.Length; i++)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
-
-			_hashCode = hashCode;
-
-			return hashCode;
+			var hash = new HashCode();
+			hash.Add(Type);
+			hash.Add(ExprOrName);
+			hash.Add(Precedence);
+			hash.Add(Flags);
+			hash.Add(NullabilityType);
+			hash.Add(CanBeNullNullable);
+			foreach (var parameter in Parameters)
+				hash.Add(parameter.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		public override bool Equals(ISqlExpression? other, Func<ISqlExpression, ISqlExpression, bool> comparer)

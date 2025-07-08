@@ -67,24 +67,14 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression
 
-		int? _hashCode;
-
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-		public override int GetHashCode()
+		public override int GetElementHashCode()
 		{
-			if (_hashCode != null)
-				return _hashCode.Value;
-
-			var hashCode = Expr.GetHashCode();
-
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ Precedence.GetHashCode());
-
-			for (var i = 0; i < Parameters.Length; i++)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
-
-			_hashCode = hashCode;
-
-			return hashCode;
+			var hash = new HashCode();
+			hash.Add(Expr);
+			hash.Add(Precedence);
+			foreach (var parameter in Parameters)
+				hash.Add(parameter.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)

@@ -602,7 +602,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql == null)
 					throw new InvalidOperationException();
 
-				sql = new SqlFunction(returnType, functionName, isAggregate: true, Precedence.Primary, nullabilityType, canBeNull, sql);
+				sql = new SqlFunction(returnType, functionName, isAggregate: true, nullabilityType, canBeNull, sql);
 
 				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/sql, buildInfo.Expression, convertType: returnType);
 

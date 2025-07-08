@@ -35,6 +35,11 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
+		public SqlFunction(Type systemType, string name, bool isAggregate, ParametersNullabilityType parametersNullability, bool? canBeNull, params ISqlExpression[] parameters)
+			: this(new DbDataType(systemType), name, isAggregate ? SqlFlags.IsAggregate | SqlFlags.IsPure : SqlFlags.IsPure, parametersNullability, canBeNull, parameters)
+		{
+		}
+
 		public SqlFunction(Type systemType, string name, SqlFlags flags, ParametersNullabilityType parametersNullability, bool? canBeNull, params ISqlExpression[] parameters)
 			: this(new DbDataType(systemType), name, flags, parametersNullability, canBeNull, parameters)
 		{
@@ -87,21 +92,12 @@ namespace LinqToDB.SqlQuery
 
 		#region Equals Members
 
-		int? _hashCode;
-
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-		public override int GetHashCode()
+		public override int GetElementHashCode()
 		{
-			if (_hashCode.HasValue)
-				return _hashCode.Value;
-
-			var hashCode = base.GetHashCode();
-
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ DoNotOptimize.GetHashCode());
-
-			_hashCode = hashCode;
-
-			return hashCode;
+			var hash = new HashCode();
+			hash.Add(base.GetElementHashCode());
+			hash.Add(DoNotOptimize);
+			return hash.ToHashCode();
 		}
 
 		public override bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
@@ -144,18 +140,6 @@ namespace LinqToDB.SqlQuery
 				writer.Append("?");
 
 			return writer;
-		}
-
-		public override int GetElementHashCode()
-		{
-			var hash = new HashCode();
-			hash.Add(Type);
-			hash.Add(Name);
-			hash.Add(CanBeNull);
-			hash.Add(DoNotOptimize);
-			foreach (var parameter in Parameters)
-				hash.Add(parameter.GetElementHashCode());
-			return hash.ToHashCode();
 		}
 
 		#endregion
