@@ -139,7 +139,6 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'netstandard2.0' ">
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
-		<PackageReference Include="Microsoft.Bcl.HashCode" />
 		<PackageReference Include="Nullability.Source" />
 	</ItemGroup>
 
