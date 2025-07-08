@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB.EntityFrameworkCore.Tests.Models.Northwind;
 using LinqToDB.Expressions;
@@ -538,7 +538,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var result = temp.Take(2).ToList();
 
-			ctx.Orders.Local.Should().BeEmpty();
+			ctx.Orders.Local.ShouldBeEmpty();
 		}
 
 		[Test]
@@ -768,7 +768,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			AreEqual(resultEF, result);
 
-			str.Should().Contain("Tagged query");
+			str.ShouldContain("Tagged query");
 		}
 
 #if !NETFRAMEWORK

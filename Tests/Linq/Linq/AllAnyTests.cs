@@ -3,7 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 
@@ -296,7 +296,7 @@ namespace Tests.Linq
 			{
 				db.Person
 					.Select(_ => _.Patient)
-					.Any().Should().BeTrue();
+					.Any().ShouldBeTrue();
 			}
 		}
 

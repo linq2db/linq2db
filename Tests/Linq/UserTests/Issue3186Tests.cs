@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -105,8 +105,8 @@ namespace Tests.UserTests
 					).Set(r => r.is_deleted, true)
 					.Update();
 
-				db.GetTable<component_categories>().Where(x => x.is_deleted && x.service_id == "TestProcessService").Should().HaveCount(2);
-				db.GetTable<component_categories>().Where(x => !x.is_deleted && x.service_id != "TestProcessService").Should().HaveCount(2);
+				db.GetTable<component_categories>().Where(x => x.is_deleted && x.service_id == "TestProcessService").ToList().Count.ShouldBe(2);
+				db.GetTable<component_categories>().Where(x => !x.is_deleted && x.service_id != "TestProcessService").ToList().Count.ShouldBe(2);
 			}
 		}
 
@@ -130,8 +130,8 @@ namespace Tests.UserTests
 					).Set(r => r.is_deleted, true)
 					.Update();
 
-				db.GetTable<component_categories>().Where(x => x.is_deleted && x.service_id == "TestProcessService").Should().HaveCount(2);
-				db.GetTable<component_categories>().Where(x => !x.is_deleted && x.service_id != "TestProcessService").Should().HaveCount(2);
+				db.GetTable<component_categories>().Where(x => x.is_deleted && x.service_id == "TestProcessService").ToList().Count.ShouldBe(2);
+				db.GetTable<component_categories>().Where(x => !x.is_deleted && x.service_id != "TestProcessService").ToList().Count.ShouldBe(2);
 			}
 		}
 
@@ -155,8 +155,8 @@ namespace Tests.UserTests
 					).Set(r => r.is_deleted, true)
 					.Update();
 
-				db.GetTable<component_categories>().Where(x => x.is_deleted && x.service_id == "TestProcessService").Should().HaveCount(2);
-				db.GetTable<component_categories>().Where(x => !x.is_deleted && x.service_id != "TestProcessService").Should().HaveCount(2);
+				db.GetTable<component_categories>().Where(x => x.is_deleted && x.service_id == "TestProcessService").ToList().Count.ShouldBe(2);
+				db.GetTable<component_categories>().Where(x => !x.is_deleted && x.service_id != "TestProcessService").ToList().Count.ShouldBe(2);
 			}
 		}
 

@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -231,9 +231,9 @@ namespace Tests.Linq
 
 			var selectQuery = q.GetSelectQuery();
 
-			selectQuery.From.Tables.Should().HaveCount(1);
-			selectQuery.From.Tables[0].Joins.Should().HaveCount(1);
-			selectQuery.From.Tables[0].Joins[0].JoinType.Should().Be(JoinType.Left);
+			selectQuery.From.Tables.Count.ShouldBe(1);
+			selectQuery.From.Tables[0].Joins.Count.ShouldBe(1);
+			selectQuery.From.Tables[0].Joins[0].JoinType.ShouldBe(JoinType.Left);
 		}
 
 	}

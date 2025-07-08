@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB.Common;
 using LinqToDB.Mapping;
@@ -159,10 +159,10 @@ namespace Tests.Mapping
 			{
 				if (isCol == 'C')
 					e.Columns.Single(c => c.MemberName == key)
-					 .CanBeNull.Should().Be(expected, "column {0}", key);
+					 .CanBeNull.ShouldBe(expected, $"column {key}");
 				else
 					e.Associations.Single(a => a.MemberInfo.Name == key)
-					 .CanBeNull.Should().Be(expected, "association {0}", key);
+					 .CanBeNull.ShouldBe(expected, $"association {key}");
 			}
 		}
 	}
