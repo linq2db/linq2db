@@ -91,22 +91,22 @@ namespace Tests.Linq
 						.Select(x => x.NullableValue)
 					),
 					NotNullable = string.Join(", ", g
-						.OrderByDescending(x => x.NullableValue)
-						.ThenByDescending(x => x.NotNullableValue)
+						.OrderByDescending(x => x.NotNullableValue)
+						.ThenByDescending(x => x.NullableValue)
 						.Select(x => x.NotNullableValue)),
 						
 
-					/*NullableDoubleOrder    = string.Join(", ", g
+					NullableDoubleOrder    = string.Join(", ", g
 						.OrderBy(x => x.NotNullableValue)
 						.ThenByDescending(x => x.NullableValue)
-						.OrderByDescending(x => x.NullableValue)
+						.OrderByDescending(x => x.NotNullableValue)
 						.Select(x => x.NullableValue)
 					),
 					NotNullableDoubleOrder = string.Join(", ", g
 						.OrderByDescending(x => x.NullableValue)
 						.ThenByDescending(x => x.NotNullableValue)
 						.OrderByDescending(x => x.NotNullableValue)
-						.Select(x => x.NotNullableValue)),*/
+						.Select(x => x.NotNullableValue)),
 				}
 				into s
 				orderby s.Id
