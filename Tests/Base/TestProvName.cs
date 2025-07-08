@@ -95,7 +95,8 @@ namespace Tests
 		public const string AllPostgreSQL10Plus  = $"{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{AllPostgreSQL13Plus}";
 		public const string AllPostgreSQL13Plus  = $"{PostgreSQL13},{PostgreSQL14},{AllPostgreSQL15Plus}";
 		public const string AllPostgreSQL15Plus  = $"{ProviderName.PostgreSQL15},{PostgreSQL16},{AllPostgreSQL17Plus}";
-		public const string AllPostgreSQL17Plus  = $"{PostgreSQL17}";
+		public const string AllPostgreSQL17Plus  = $"{PostgreSQL17},{AllPostgreSQL18Plus}";
+		public const string AllPostgreSQL18Plus  = ProviderName.PostgreSQL18;
 		public const string AllPostgreSQL        = $"{AllPostgreSQL9},{AllPostgreSQL10Plus}";
 		public const string AllPostgreSQL14Minus = $"{AllPostgreSQL9},{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{PostgreSQL13},{PostgreSQL14}";
 		public const string AllPostgreSQL15Minus = $"{AllPostgreSQL14Minus},{ProviderName.PostgreSQL15}";
@@ -172,8 +173,11 @@ namespace Tests
 		public const string AllSqlServer2012PlusNoAzure  = $"{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019},{AllSqlServer2022}";
 		public const string AllSqlServerNoAzure          = $"{AllSqlServer2005},{AllSqlServer2008},{AllSqlServer2012PlusNoAzure}";
 		public const string AllSqlServer                 = $"{AllSqlServerNoAzure},{AllSqlAzure},{AllSqlAzureMi}";
+		public const string AllSqlServerSystem           = $"{ProviderName.SqlServer2005},{ProviderName.SqlServer2008},{ProviderName.SqlServer2012},{ProviderName.SqlServer2014},{ProviderName.SqlServer2016},{ProviderName.SqlServer2017},{ProviderName.SqlServer2019},{ProviderName.SqlServer2022},{SqlServerSequentialAccess},{SqlServerContained},{SqlAzure}";
 		public const string AllSqlServerMS               = $"{SqlServer2005MS},{SqlServer2008MS},{SqlServer2012MS},{SqlServer2014MS},{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlServer2022MS},{SqlServerSequentialAccessMS},{SqlServerContainedMS},{SqlAzureMS}";
 		public const string AllSqlServer2016PlusMS       = $"{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlServer2022MS},{SqlServerSequentialAccessMS},{SqlServerContainedMS},{SqlAzureMS}";
+		public const string AllSqlServer2019MinusSystem  = $"{ProviderName.SqlServer2005},{ProviderName.SqlServer2008},{ProviderName.SqlServer2012},{ProviderName.SqlServer2014},{ProviderName.SqlServer2016},{ProviderName.SqlServer2017},{ProviderName.SqlServer2019},{SqlServerSequentialAccess},{SqlServerContained},{SqlAzure}";
+		public const string AllSqlServer2019MinusMS      = $"{SqlServer2005MS},{SqlServer2008MS},{SqlServer2012MS},{SqlServer2014MS},{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlServerSequentialAccessMS},{SqlServerContainedMS},{SqlAzureMS}";
 		#endregion
 
 		#region Access

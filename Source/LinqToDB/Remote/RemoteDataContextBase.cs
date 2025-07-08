@@ -50,6 +50,12 @@ namespace LinqToDB.Remote
 		{
 #pragma warning disable CS0618 // Type or member is obsolete
 			MappingSchema    = MappingSchema.CombineSchemas(mappingSchema, MappingSchema);
+			_configurationID = null;
+		}
+
+		void IDataContext.SetMappingSchema(MappingSchema mappingSchema)
+		{
+			MappingSchema    = mappingSchema;
 #pragma warning restore CS0618 // Type or member is obsolete
 			_configurationID = null;
 		}
@@ -264,7 +270,7 @@ namespace LinqToDB.Remote
 
 				// Because setter could be called from constructor, we cannot build composite schemas here to avoid server calls on half-initialized context
 				// Instead we reset schemas status and finish initialization in getters for MappingSchema and SerializationMappingSchema, when they are called
-				if (_providedMappingSchema != value)
+				if (!Equals(_providedMappingSchema, value))
 				{
 					_providedMappingSchema = value;
 					// reset schemas
@@ -334,7 +340,7 @@ namespace LinqToDB.Remote
 		/// <summary>
 		/// Current DataContext LINQ options
 		/// </summary>
-		public DataOptions Options { get; }
+		public DataOptions Options { get; private set; }
 
 		SqlProviderFlags IDataContext.SqlProviderFlags      => GetConfigurationInfo().LinqServiceInfo.SqlProviderFlags;
 		TableOptions     IDataContext.SupportedTableOptions => GetConfigurationInfo().LinqServiceInfo.SupportedTableOptions;
@@ -386,27 +392,27 @@ namespace LinqToDB.Remote
 
 		static readonly ConcurrentDictionary<Tuple<Type,MappingSchema,Type,SqlProviderFlags,DataOptions>,Func<ISqlBuilder>> _sqlBuilders = new ();
 
-		Func<ISqlBuilder>? _createSqlProvider;
+		Func<ISqlBuilder>? _createSqlBuilder;
 
-		Func<ISqlBuilder> IDataContext.CreateSqlProvider
+		Func<ISqlBuilder> IDataContext.CreateSqlBuilder
 		{
 			get
 			{
 				ThrowOnDisposed();
 
-				if (_createSqlProvider == null)
+				if (_createSqlBuilder == null)
 				{
 					var key = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options);
 
 #if NET462 || NETSTANDARD2_0
-					_createSqlProvider = _sqlBuilders.GetOrAdd(
+					_createSqlBuilder = _sqlBuilders.GetOrAdd(
 						key,
 						key =>
 					{
 						var mappingSchema = MappingSchema;
 						var sqlOptimizer  = GetSqlOptimizer(Options);
 #else
-					_createSqlProvider = _sqlBuilders.GetOrAdd(
+					_createSqlBuilder = _sqlBuilders.GetOrAdd(
 						key,
 						static (key, args) =>
 					{
@@ -439,7 +445,7 @@ namespace LinqToDB.Remote
 #endif
 				}
 
-				return _createSqlProvider;
+				return _createSqlBuilder;
 			}
 		}
 
@@ -635,12 +641,127 @@ namespace LinqToDB.Remote
 				}
 			}
 
+			public static Action? Reapply(RemoteDataContextBase dataContext, ConnectionOptions options, ConnectionOptions? previousOptions)
+			{
+				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
+				// Connection string, configuration, data provider, etc. are not reapplyable.
+				//
+				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException($"Option '{nameof(options.ConfigurationString)} cannot be changed for context dynamically.");
+				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException($"Option '{nameof(options.ConnectionString)} cannot be changed for context dynamically.");
+				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException($"Option '{nameof(options.ProviderName)} cannot be changed for context dynamically.");
+				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException($"Option '{nameof(options.DbConnection)} cannot be changed for context dynamically.");
+				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException($"Option '{nameof(options.DbTransaction)} cannot be changed for context dynamically.");
+				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException($"Option '{nameof(options.DisposeConnection)} cannot be changed for context dynamically.");
+				if (options.DataProvider              != previousOptions?.DataProvider)              throw new LinqToDBException($"Option '{nameof(options.DataProvider)} cannot be changed for context dynamically.");
+				if (options.ConnectionFactory         != previousOptions?.ConnectionFactory)         throw new LinqToDBException($"Option '{nameof(options.ConnectionFactory)} cannot be changed for context dynamically.");
+				if (options.DataProviderFactory       != previousOptions?.DataProviderFactory)       throw new LinqToDBException($"Option '{nameof(options.DataProviderFactory)} cannot be changed for context dynamically.");
+				if (options.OnEntityDescriptorCreated != previousOptions?.OnEntityDescriptorCreated) throw new LinqToDBException($"Option '{nameof(options.OnEntityDescriptorCreated)} cannot be changed for context dynamically.");
+
+				Action? action = null;
+
+				if (!ReferenceEquals(options.MappingSchema, previousOptions?.MappingSchema))
+				{
+					var mappingSchema              = dataContext._mappingSchema;
+					var serializationMappingSchema = dataContext._serializationMappingSchema;
+
+					dataContext._mappingSchema = null;
+
+#pragma warning disable CS0618 // Type or member is obsolete
+					if (options.MappingSchema != null)
+					{
+						dataContext.MappingSchema = options.MappingSchema;
+					}
+					else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
+					{
+						dataContext.MappingSchema = new (dataContext.MappingSchema);
+					}
+#pragma warning restore CS0618 // Type or member is obsolete
+
+					action += () =>
+					{
+						dataContext._mappingSchema              = mappingSchema;
+						dataContext._serializationMappingSchema = serializationMappingSchema;
+					};
+				}
+
+				return action;
+			}
+
 			public static void Apply(RemoteDataContextBase dataContext, DataContextOptions options)
 			{
 				if (options.Interceptors != null)
 					foreach (var interceptor in options.Interceptors)
 						dataContext.AddInterceptor(interceptor);
 			}
+
+			public static Action? Reapply(RemoteDataContextBase dataContext, DataContextOptions options, DataContextOptions? previousOptions)
+			{
+				Action? action = null;
+
+				if (!ReferenceEquals(options.Interceptors, previousOptions?.Interceptors))
+				{
+					if (previousOptions?.Interceptors != null)
+						foreach (var interceptor in previousOptions.Interceptors)
+							dataContext.RemoveInterceptor(interceptor);
+
+					if (options.Interceptors != null)
+						foreach (var interceptor in options.Interceptors)
+							dataContext.AddInterceptor(interceptor);
+
+					action += () =>
+					{
+						if (options.Interceptors != null)
+							foreach (var interceptor in options.Interceptors)
+								dataContext.RemoveInterceptor(interceptor);
+
+						if (previousOptions?.Interceptors != null)
+							foreach (var interceptor in previousOptions.Interceptors)
+								dataContext.AddInterceptor(interceptor);
+					};
+				}
+
+				return action;
+			}
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public IDisposable? UseOptions(Func<DataOptions,DataOptions> optionsSetter)
+		{
+			var prevOptions = Options;
+			var newOptions  = optionsSetter(Options) ?? throw new ArgumentNullException(nameof(optionsSetter));
+
+			if (((IConfigurationID)prevOptions).ConfigurationID == ((IConfigurationID)newOptions).ConfigurationID)
+				return null;
+
+			var configurationID = _configurationID;
+
+			Options          = newOptions;
+			_configurationID = null;
+
+			var action = Options.Reapply(this, prevOptions);
+
+			action += () =>
+			{
+				Options          = prevOptions;
+				_configurationID = configurationID;
+			};
+
+			return new DisposableAction(action);
+		}
+
+		/// <inheritdoc cref="IDataContext.UseMappingSchema"/>
+		public IDisposable? UseMappingSchema(MappingSchema mappingSchema)
+		{
+			var oldSchema       = MappingSchema;
+			var configurationID = _configurationID;
+
+			AddMappingSchema(mappingSchema);
+
+			return new DisposableAction(() =>
+			{
+				((IDataContext)this).SetMappingSchema(oldSchema);
+				_configurationID = configurationID;
+			});
 		}
 	}
 }

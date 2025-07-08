@@ -108,6 +108,17 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(Expression.GetElementHashCode());
+			hash.Add(Parent?.SourceID ?? -1);
+			hash.Add(RawAlias);
+
+			return hash.ToHashCode();
+		}
+
 		public override string ToString()
 		{
 #if OVERRIDETOSTRING
@@ -157,7 +168,7 @@ namespace LinqToDB.SqlQuery
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
-			if (this == other)
+			if (ReferenceEquals(this, other))
 				return true;
 
 			if (!(other is SqlColumn otherColumn))

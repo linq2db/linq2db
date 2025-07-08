@@ -24,12 +24,17 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 			return new MathMemberTranslator();
 		}
 
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
 		protected override IMemberTranslator CreateGuidMemberTranslator()
 		{
 			return new GuidMemberTranslator();
 		}
 
-		class SqlTypesTranslation : SqlTypesTranslationDefault
+		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Decimal128).WithPrecisionScale(19, 4));
@@ -213,7 +218,7 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 			}
 		}
 
-		class MathMemberTranslator : MathMemberTranslatorBase
+		sealed class MathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
@@ -232,6 +237,10 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 			}
 		}
 
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+		}
+
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			var factory  = translationContext.ExpressionFactory;
@@ -240,7 +249,7 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 			return timePart;
 		}
 
-		class GuidMemberTranslator : GuidMemberTranslatorBase
+		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{

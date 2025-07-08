@@ -4,9 +4,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Linq;
@@ -1128,7 +1129,7 @@ namespace Tests.Linq
 					.Any(), Is.False);
 
 				if (iteration > 1)
-					db.Patient.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Patient.GetCacheMissCount().ShouldBe(cacheMiss);
 			}
 		}
 

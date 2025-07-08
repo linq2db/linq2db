@@ -658,7 +658,7 @@ namespace LinqToDB.Remote
 			{
 			}
 
-			class QuerySerializationVisitor : QueryElementVisitor
+			sealed class QuerySerializationVisitor : QueryElementVisitor
 			{
 				readonly QuerySerializer   _serializer;
 				readonly EvaluationContext _evaluationContext;
@@ -1142,7 +1142,9 @@ namespace LinqToDB.Remote
 							Append(elem.Expr1);
 							Append((int)elem.Operator);
 							Append(elem.Expr2);
-							Append(elem.WithNull == null ? 3 : elem.WithNull.Value ? 1 : 0);
+							Append(elem.UnknownAsValue);
+							Append(elem.NotNullableExpr1);
+							Append(elem.NotNullableExpr2);
 
 							break;
 						}
@@ -1191,7 +1193,7 @@ namespace LinqToDB.Remote
 							Append(elem.IsNot);
 							Append(elem.TrueValue);
 							Append(elem.FalseValue);
-							Append(elem.WithNull == null ? 3 : elem.WithNull.Value ? 1 : 0);
+							Append(elem.WithNull);
 
 							break;
 						}
@@ -1236,7 +1238,7 @@ namespace LinqToDB.Remote
 							Append(elem.Expr1);
 							Append(elem.IsNot);
 							Append(elem.Values);
-							Append(elem.WithNull == null ? 3 : elem.WithNull.Value ? 1 : 0);
+							Append(elem.WithNull);
 
 							break;
 						}
@@ -1297,6 +1299,7 @@ namespace LinqToDB.Remote
 					case QueryElementType.SearchCondition :
 						{
 							Append(((SqlSearchCondition)e).IsOr);
+							Append(((SqlSearchCondition)e).CanReturnUnknown);
 							Append(((SqlSearchCondition)e).Predicates);
 							break;
 						}
@@ -2182,12 +2185,14 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.ExprExprPredicate :
 						{
-							var expr1     = Read<ISqlExpression>()!;
-							var @operator = (SqlPredicate.Operator)ReadInt();
-							var expr2     = Read<ISqlExpression>()!;
-							var withNull  = ReadInt();
+							var expr1        = Read<ISqlExpression>()!;
+							var @operator    = (SqlPredicate.Operator)ReadInt();
+							var expr2        = Read<ISqlExpression>()!;
+							var unknownValue = ReadNullableBool();
+							var notNullableExpr1 = ReadBool();
+							var notNullableExpr2 = ReadBool();
 
-							obj = new SqlPredicate.ExprExpr(expr1, @operator, expr2, withNull == 3 ? null : withNull == 1);
+							obj = new SqlPredicate.ExprExpr(expr1, @operator, expr2, unknownValue, notNullableExpr1, notNullableExpr2);
 
 							break;
 						}
@@ -2234,9 +2239,9 @@ namespace LinqToDB.Remote
 							var isNot = ReadBool();
 							var trueValue  = Read<ISqlExpression>()!;
 							var falseValue = Read<ISqlExpression>()!;
-							var withNull   = ReadInt();
+							var withNull   = ReadNullableBool();
 
-							obj = new SqlPredicate.IsTrue(expr1, trueValue, falseValue, withNull == 3 ? null : withNull == 1, isNot);
+							obj = new SqlPredicate.IsTrue(expr1, trueValue, falseValue, withNull, isNot);
 
 							break;
 						}
@@ -2279,9 +2284,9 @@ namespace LinqToDB.Remote
 							var expr1  = Read<ISqlExpression>()!;
 							var isNot  = ReadBool();
 							var values = ReadList<ISqlExpression>()!;
-							var withNull = ReadInt();
+							var withNull = ReadNullableBool();
 
-							obj = new SqlPredicate.InList(expr1, withNull == 3 ? null : withNull == 1, isNot, values);
+							obj = new SqlPredicate.InList(expr1, withNull, isNot, values);
 
 							break;
 						}
@@ -2352,7 +2357,7 @@ namespace LinqToDB.Remote
 						}
 
 					case QueryElementType.SearchCondition :
-						obj = new SqlSearchCondition(ReadBool(), ReadArray<ISqlPredicate>()!);
+						obj = new SqlSearchCondition(ReadBool(), ReadNullableBool(), ReadArray<ISqlPredicate>()!);
 						break;
 
 					case QueryElementType.TableSource :

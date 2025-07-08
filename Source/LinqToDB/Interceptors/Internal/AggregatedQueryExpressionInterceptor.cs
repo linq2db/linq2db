@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Interceptors.Internal
 {
-	class AggregatedQueryExpressionInterceptor : AggregatedInterceptor<IQueryExpressionInterceptor>, IQueryExpressionInterceptor
+	sealed class AggregatedQueryExpressionInterceptor : AggregatedInterceptor<IQueryExpressionInterceptor>, IQueryExpressionInterceptor
 	{
 		public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
 		{

@@ -20,12 +20,17 @@ namespace LinqToDB.DataProvider.Informix.Translation
 			return new DateFunctionsTranslator();
 		}
 
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
 		protected override IMemberTranslator CreateGuidMemberTranslator()
 		{
 			return new GuidMemberTranslator();
 		}
 
-		class SqlTypesTranslation : SqlTypesTranslationDefault
+		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Boolean));
@@ -325,10 +330,14 @@ namespace LinqToDB.DataProvider.Informix.Translation
 			}
 		}
 
-		class GuidMemberTranslator : GuidMemberTranslatorBase
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+		}
+
+		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
-			{
+		{
 				// Lower(To_Char({0}))
 
 				var factory        = translationContext.ExpressionFactory;
@@ -337,7 +346,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 				var toLower        = factory.ToLower(toChar);
 
 				return toLower;
-			}
+		}
 		}
 	}
 }

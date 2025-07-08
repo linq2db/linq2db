@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Async;
@@ -320,11 +320,12 @@ namespace Tests.Linq
 
 				foreach (var item in result)
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(ReferenceEquals(item.One.d, item.Two), Is.True);
 						Assert.That(item.Two.SubDetails, Is.Not.Empty);
-					});
+					}
+
 					Assert.That(item.Two.SubDetails[0].Detail, Is.Not.Null);
 				}
 			}
@@ -361,15 +362,15 @@ FROM
 
 			var sql = query.ToSqlQuery().Sql;
 
-			sql.Should().NotContain("LoadWithQueryable");
+			sql.ShouldNotContain("LoadWithQueryable");
 
 			var select = query.GetSelectQuery();
 
 				// one query with join generated
 
-			select.From.Tables.Should().HaveCount(1);
-			select.From.Tables[0].Joins.Should().HaveCount(1);
-			select.From.Tables[0].Joins[0].JoinType.Should().Be(JoinType.Left);
+			select.From.Tables.Count.ShouldBe(1);
+			select.From.Tables[0].Joins.Count.ShouldBe(1);
+			select.From.Tables[0].Joins[0].JoinType.ShouldBe(JoinType.Left);
 		}
 
 		[Test]
@@ -1095,9 +1096,12 @@ FROM
 					Details = x.Details.Select(d => d.DetailValue)
 				});
 
-				FluentActions.Invoking(() => query.FirstOrDefault(x => x.Id1 == 1)).Should().NotThrow();
-				FluentActions.Invoking(() => query.First(x => x.Id1          == 1)).Should().NotThrow();
-				FluentActions.Invoking(() => query.Single(x => x.Id1         == 1)).Should().NotThrow();
+				var act1 = () => query.FirstOrDefault(x => x.Id1 == 1);
+				act1.ShouldNotThrow();
+				var act2 = () => query.First(x => x.Id1          == 1);
+				act2.ShouldNotThrow();
+				var act3 = () => query.Single(x => x.Id1         == 1);
+				act3.ShouldNotThrow();
 			}
 		}
 
@@ -1116,9 +1120,12 @@ FROM
 					Details = x.Details.Select(d => d.DetailValue)
 				});
 
-				await FluentActions.Awaiting(() => query.FirstOrDefaultAsync(x => x.Id1 == 1)).Should().NotThrowAsync();
-				await FluentActions.Awaiting(() => query.FirstAsync(x => x.Id1          == 1)).Should().NotThrowAsync();
-				await FluentActions.Awaiting(() => query.SingleAsync(x => x.Id1         == 1)).Should().NotThrowAsync();
+				var act1 = () => query.FirstOrDefaultAsync(x => x.Id1 == 1);
+				await act1.ShouldNotThrowAsync();
+				var act2 = () => query.FirstAsync(x => x.Id1          == 1);
+				await act2.ShouldNotThrowAsync();
+				var act3 = () => query.SingleAsync(x => x.Id1         == 1);
+				await act3.ShouldNotThrowAsync();
 			}
 		}
 
@@ -1313,22 +1320,15 @@ FROM
 				};
 
 				Assert.That(result.Blog, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Blog[0].Id, Is.EqualTo(1));
 					Assert.That(result.Blog[0].Title, Is.EqualTo("Another .NET Core Guy"));
 					Assert.That(result.Blog[0].Posts, Has.Length.EqualTo(4));
-				});
-
-				Assert.Multiple(() =>
-				{
 					Assert.That(result.Blog[0].Posts[0].Id, Is.EqualTo(1));
 					Assert.That(result.Blog[0].Posts[0].Title, Is.EqualTo("Post 1"));
 					Assert.That(result.Blog[0].Posts[0].PostContent, Is.EqualTo("Content 1 is about EF Core and Razor page"));
 					Assert.That(result.Blog[0].Posts[0].Tags, Has.Length.EqualTo(2));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result.Blog[0].Posts[0].Tags[0].Id, Is.EqualTo(1));
 					Assert.That(result.Blog[0].Posts[0].Tags[0].Name, Is.EqualTo("Razor Page"));
 					Assert.That(result.Blog[0].Posts[0].Tags[1].Id, Is.EqualTo(2));
@@ -1338,9 +1338,6 @@ FROM
 					Assert.That(result.Blog[0].Posts[1].Title, Is.EqualTo("Post 2"));
 					Assert.That(result.Blog[0].Posts[1].PostContent, Is.EqualTo("Content 2 is about Dapper"));
 					Assert.That(result.Blog[0].Posts[1].Tags, Has.Length.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result.Blog[0].Posts[1].Tags[0].Id, Is.EqualTo(3));
 					Assert.That(result.Blog[0].Posts[1].Tags[0].Name, Is.EqualTo("Dapper"));
 
@@ -1353,12 +1350,9 @@ FROM
 					Assert.That(result.Blog[0].Posts[3].Title, Is.EqualTo("Post 4"));
 					Assert.That(result.Blog[0].Posts[3].PostContent, Is.EqualTo("Content 4"));
 					Assert.That(result.Blog[0].Posts[3].Tags, Has.Length.EqualTo(1));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result.Blog[0].Posts[3].Tags[0].Id, Is.EqualTo(5));
 					Assert.That(result.Blog[0].Posts[3].Tags[0].Name, Is.EqualTo("SqlKata"));
-				});
+				}
 			}
 		}
 #endregion
@@ -1659,22 +1653,24 @@ FROM
 			var id = 11;
 			var result = records.LoadWith(a => a.Items, a => a.Where(a => a.Id == id)).ToList();
 			Assert.That(result, Has.Count.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[0].Items, Has.Count.EqualTo(1));
-			});
+			}
+
 			Assert.That(result[0].Items[0].Id, Is.EqualTo(11));
 
 			id = 12;
 			result = records.LoadWith(a => a.Items, a => a.Where(a => a.Id == id)).ToList();
 
 			Assert.That(result, Has.Count.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[0].Items, Has.Count.EqualTo(1));
-			});
+			}
+
 			Assert.That(result[0].Items[0].Id, Is.EqualTo(12));
 		}
 		#endregion
@@ -3170,12 +3166,11 @@ FROM
 
 			var selects = db.LastQuery!.Split(["SELECT"], StringSplitOptions.None).Length - 1;
 			var joins = db.LastQuery.Split(["LEFT JOIN"], StringSplitOptions.None).Length - 1;
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(selects, Is.EqualTo(1));
 				Assert.That(joins, Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3140")]
@@ -3194,12 +3189,11 @@ FROM
 
 			var selects = db.LastQuery!.Split(["SELECT"], StringSplitOptions.None).Length - 1;
 			var joins = db.LastQuery.Split(["LEFT JOIN"], StringSplitOptions.None).Length - 1;
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(selects, Is.EqualTo(1));
 				Assert.That(joins, Is.EqualTo(1));
-			});
+			}
 		}
 
 		sealed class Issue3140Parent
@@ -3528,26 +3522,29 @@ FROM
 				.ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[0].Children, Is.Not.Null);
-			});
+			}
+
 			Assert.That(result[0].Children, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Children.Count(r => r.Id == 1), Is.EqualTo(1));
 				Assert.That(result[0].Children.Count(r => r.Id == 2), Is.EqualTo(1));
-			});
-			Assert.That(result[0].Children[0].Parent, Is.Not.Null);
-			Assert.That(result[0].Children[0].Parent.Children, Is.Not.Null);
-			Assert.Multiple(() =>
+			}
+
+			Assert.That(result[0].Children![0].Parent, Is.Not.Null);
+			Assert.That(result[0].Children![0].Parent!.Children, Is.Not.Null);
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(result[0].Children[0].Parent.Children, Has.Length.EqualTo(2));
-				Assert.That(result[0].Children[1].Parent, Is.Not.Null);
-			});
-			Assert.That(result[0].Children[1].Parent.Children, Is.Not.Null);
-			Assert.That(result[0].Children[1].Parent.Children, Has.Length.EqualTo(2));
+				Assert.That(result[0].Children![0].Parent!.Children, Has.Length.EqualTo(2));
+				Assert.That(result[0].Children![1].Parent, Is.Not.Null);
+			}
+
+			Assert.That(result[0].Children![1].Parent!.Children, Is.Not.Null);
+			Assert.That(result[0].Children![1].Parent!.Children, Has.Length.EqualTo(2));
 
 			// TODO: right now we create separate objects for same record on different levels
 			// if we want to change this behavior - it makes sense to add object equality asserts

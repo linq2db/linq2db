@@ -109,7 +109,7 @@ namespace Tests.xUpdate
 
 				// check that table dropped
 				var exception = Assert.Catch(() => table.ToList());
-				Assert.That(exception is Exception, Is.True);
+				Assert.That(exception, Is.InstanceOf<Exception>());
 
 				// TODO: we need better assertion here
 				// Right now we just check generated sql query, not that it is

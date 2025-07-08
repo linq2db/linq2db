@@ -190,12 +190,12 @@ namespace Tests.Linq
 			Assert.That(records, Has.Length.EqualTo(1));
 
 			var record = records[0];
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(record.Id, Is.EqualTo(2));
 				Assert.That(record.Column, Is.EqualTo(data[1].Column));
 				Assert.That(record.ColumnNullable, Is.EqualTo(data[1].ColumnNullable));
-			});
+			}
 
 			// test literal
 			db.InlineParameters = true;
@@ -212,12 +212,13 @@ namespace Tests.Linq
 			Assert.That(records, Has.Length.EqualTo(1));
 
 			record = records[0];
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(record.Id, Is.EqualTo(2));
 				Assert.That(record.Column, Is.EqualTo(data[1].Column));
 				Assert.That(record.ColumnNullable, Is.EqualTo(data[1].ColumnNullable));
-			});
+			}
+
 			db.InlineParameters = false;
 
 			// test bulk copy
@@ -237,7 +238,7 @@ namespace Tests.Linq
 			db.BulkCopy(options, data);
 			var records = table.OrderBy(r => r.Id).ToArray();
 			Assert.That(records, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(records[0].Id, Is.EqualTo(data[0].Id));
 				Assert.That(records[0].Column, Is.EqualTo(data[0].Column));
@@ -245,7 +246,7 @@ namespace Tests.Linq
 				Assert.That(records[1].Id, Is.EqualTo(data[1].Id));
 				Assert.That(records[1].Column, Is.EqualTo(data[1].Column));
 				Assert.That(records[1].ColumnNullable, Is.EqualTo(data[1].ColumnNullable));
-			});
+			}
 		}
 		#endregion
 
@@ -280,12 +281,11 @@ namespace Tests.Linq
 			}
 
 			var record = tb.Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(record.Id, Is.EqualTo(1));
 				Assert.That(record.Blob, Is.Not.Null);
-			});
+			}
 
 			using var ms = new MemoryStream();
 			record.Blob!.CopyTo(ms);

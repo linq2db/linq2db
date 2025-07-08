@@ -85,7 +85,7 @@ namespace Tests.Model
 
 		public string ContextName => ((IDataContext)Connection).ContextName;
 
-		public Func<ISqlBuilder> CreateSqlProvider => ((IDataContext)Connection).CreateSqlProvider;
+		public Func<ISqlBuilder> CreateSqlBuilder => ((IDataContext)Connection).CreateSqlBuilder;
 
 		public Func<DataOptions, ISqlOptimizer> GetSqlOptimizer => ((IDataContext)Connection).GetSqlOptimizer;
 
@@ -109,7 +109,12 @@ namespace Tests.Model
 
 		public string? ConfigurationString => ((IDataContext)Connection).ConfigurationString;
 
+		public IDisposable? UseOptions(Func<DataOptions, DataOptions> optionsSetter) => null;
+
+		public IDisposable? UseMappingSchema(MappingSchema mappingSchema) => null;
+
 		public void AddMappingSchema(MappingSchema mappingSchema) {}
+		public void SetMappingSchema(MappingSchema mappingSchema) {}
 
 		public int ConfigurationID => ((IConfigurationID)Connection).ConfigurationID;
 

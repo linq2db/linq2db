@@ -457,7 +457,7 @@ namespace LinqToDB.Linq.Builder
 			return _buildVisitor.GenerateComparison(context, left, right, buildPurpose);
 		}
 
-		class PlaceholderCollectVisitor : ExpressionVisitorBase
+		sealed class PlaceholderCollectVisitor : ExpressionVisitorBase
 		{
 			readonly List<SqlPlaceholderExpression> _collected = new();
 			bool                                    _includeDefaultIfEmpty;
@@ -680,7 +680,7 @@ namespace LinqToDB.Linq.Builder
 								discriminatorExpr,
 								notEqual ? SqlPredicate.Operator.NotEqual : SqlPredicate.Operator.Equal,
 								value,
-								withNull: true)
+								unknownAsValue: true)
 						)
 					);
 				}
@@ -1362,13 +1362,14 @@ namespace LinqToDB.Linq.Builder
 										var mi = assignment.MemberInfo.ReflectedType!.GetMemberEx(member);
 										if (mi != null && IsEqualMembers(assignment.MemberInfo, mi))
 										{
-											if (member.ReflectedType?.IsInterface == true && assignment.MemberInfo.ReflectedType?.IsClass == true && member is PropertyInfo propInfo && assignment.MemberInfo is PropertyInfo classPropinfo)
+											if (member is PropertyInfo { ReflectedType.IsInterface: true } propInfo
+												&& assignment.MemberInfo is PropertyInfo { ReflectedType.IsClass: true } classPropInfo)
 											{
 												// Validating that interface property is pointing to the correct class property
 
 												var interfaceMap               = assignment.MemberInfo.ReflectedType.GetInterfaceMapEx(member.ReflectedType);
 												var interfacePropertyGetMethod = propInfo.GetGetMethod();
-												var classPropertyGetMethod     = classPropinfo.GetGetMethod();
+												var classPropertyGetMethod     = classPropInfo.GetGetMethod();
 
 												var methodIndex             = Array.IndexOf(interfaceMap.InterfaceMethods, interfacePropertyGetMethod);
 												var classImplementingMethod = interfaceMap.TargetMethods[methodIndex];

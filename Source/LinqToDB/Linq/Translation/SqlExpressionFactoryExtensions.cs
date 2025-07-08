@@ -270,6 +270,17 @@ namespace LinqToDB.Linq.Translation
 			return factory.Function(factory.GetDbDataType(expression), PseudoFunctions.TO_UPPER, expression);
 		}
 
+		public static ISqlExpression Length(this ISqlExpressionFactory factory, ISqlExpression expression)
+		{
+			return factory.Function(factory.GetDbDataType(typeof(int)), PseudoFunctions.LENGTH, expression);
+		}
+
+		public static ISqlExpression Replace(this ISqlExpressionFactory factory, ISqlExpression expression, ISqlExpression oldSubString, ISqlExpression newSubstring)
+		{
+			var valueType = factory.GetDbDataType(expression);
+			return factory.Function(valueType, PseudoFunctions.REPLACE, expression, factory.EnsureType(oldSubString, valueType), factory.EnsureType(newSubstring, valueType));
+		}
+
 		#endregion
 
 		#region Predicates
@@ -302,6 +313,11 @@ namespace LinqToDB.Linq.Translation
 		public static ISqlPredicate LessOrEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
 		{
 			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.LessOrEqual, expr2, factory.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
+		}
+
+		public static ISqlPredicate IsNull(this ISqlExpressionFactory factory, ISqlExpression expr, bool isNot = false)
+		{
+			return new SqlPredicate.IsNull(expr, isNot);
 		}
 
 		#endregion

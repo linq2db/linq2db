@@ -133,13 +133,12 @@ namespace Tests.UserTests
 
 				var result = query.ToArray();
 				var cnt    = query.Count();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query.ToSqlQuery().Sql, Does.Not.Contain("EXISTS"));
 
 					Assert.That(cnt, Is.EqualTo(result.Length));
-				});
+				}
 			}
 		}
 

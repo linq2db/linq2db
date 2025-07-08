@@ -3,7 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -260,7 +260,7 @@ namespace Tests.Linq
 
 				if (iteration > 1)
 				{
-					query.GetCacheMissCount().Should().Be(save);
+					query.GetCacheMissCount().ShouldBe(save);
 				}
 
 				var expected = table
@@ -539,10 +539,10 @@ namespace Tests.Linq
 
 				if (iteration > 1)
 				{
-					query.GetCacheMissCount().Should().Be(cacheMissCount);
+					query.GetCacheMissCount().ShouldBe(cacheMissCount);
 				}
 
-				query.GetSelectQuery().HasQueryParameter().Should().BeTrue();
+				query.GetSelectQuery().HasQueryParameter().ShouldBeTrue();
 			}
 		}
 
@@ -569,10 +569,10 @@ namespace Tests.Linq
 
 				if (iteration > 1)
 				{
-					query.GetCacheMissCount().Should().Be(cacheMissCount);
+					query.GetCacheMissCount().ShouldBe(cacheMissCount);
 				}
 
-				query.GetSelectQuery().HasQueryParameter().Should().BeTrue();
+				query.GetSelectQuery().HasQueryParameter().ShouldBeTrue();
 			}
 		}
 
@@ -823,11 +823,11 @@ namespace Tests.Linq
 				{
 					var res = db.FromSql<Values<int?>>($"SELECT {new DataParameter("value1", value1, DataType.Int32)} as Value1, {new DataParameter("value2", value2, DataType.Int32)} as Value2 /*TestQueryCaching_ByParameter_Interpolation2*/").ToArray();
 					Assert.That(res, Has.Length.EqualTo(1));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res[0].Value1, Is.EqualTo(value1));
 						Assert.That(res[0].Value2, Is.EqualTo(value2));
-					});
+					}
 				}
 			}
 		}
@@ -847,17 +847,17 @@ namespace Tests.Linq
 				Test(2, null);
 				Test(3, 3);
 
-				Query<Values<int?>>.CacheMissCount.Should().Be(saveCount);
+				Query<Values<int?>>.CacheMissCount.ShouldBe(saveCount);
 
 				void Test(int? value1, int? value2)
 				{
 					var res = db.FromSql<Values<int?>>("SELECT {0} as Value1, {1} as Value2 /*TestQueryCaching_ByParameter_Formatted2*/", new DataParameter("value1", value1, DataType.Int32), new DataParameter("value2", value2, DataType.Int32)).ToArray();
 					Assert.That(res, Has.Length.EqualTo(1));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res[0].Value1, Is.EqualTo(value1));
 						Assert.That(res[0].Value2, Is.EqualTo(value2));
-					});
+					}
 				}
 			}
 		}
@@ -878,11 +878,11 @@ namespace Tests.Linq
 				{
 					var res = db.FromSql<Values<int?>>("SELECT {0} as Value1, {1} as Value2 /*TestQueryCaching_ByParameter_Formatted21*/", new object?[] { new DataParameter("value1", value1, DataType.Int32), new DataParameter("value2", value2, DataType.Int32) }).ToArray();
 					Assert.That(res, Has.Length.EqualTo(1));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res[0].Value1, Is.EqualTo(value1));
 						Assert.That(res[0].Value2, Is.EqualTo(value2));
-					});
+					}
 				}
 			}
 		}
@@ -991,11 +991,11 @@ namespace Tests.Linq
 				{
 					var res = db.FromSql<Values<int?>>($"SELECT {value1} as Value1, {value2} as Value2 /*TestQueryCaching_ByParameter_Interpolation5*/").ToArray();
 					Assert.That(res, Has.Length.EqualTo(1));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res[0].Value1, Is.EqualTo(value1));
 						Assert.That(res[0].Value2, Is.EqualTo(value2));
-					});
+					}
 				}
 			}
 		}
@@ -1016,11 +1016,11 @@ namespace Tests.Linq
 				{
 					var res = db.FromSql<Values<int?>>("SELECT {0} as Value1, {1} as Value2 /*TestQueryCaching_ByParameter_Formatted5*/", value1, value2).ToArray();
 					Assert.That(res, Has.Length.EqualTo(1));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res[0].Value1, Is.EqualTo(value1));
 						Assert.That(res[0].Value2, Is.EqualTo(value2));
-					});
+					}
 				}
 			}
 		}
@@ -1041,11 +1041,11 @@ namespace Tests.Linq
 				{
 					var res = db.FromSql<Values<int?>>("SELECT {0} as Value1, {1} as Value2 /*TestQueryCaching_ByParameter_Formatted51*/", new object?[] { value1, value2 }).ToArray();
 					Assert.That(res, Has.Length.EqualTo(1));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res[0].Value1, Is.EqualTo(value1));
 						Assert.That(res[0].Value2, Is.EqualTo(value2));
-					});
+					}
 				}
 			}
 		}
@@ -1068,11 +1068,11 @@ namespace Tests.Linq
 				{
 					var res = db.FromSql<Values<int?>>(sql, new object?[] { value1, value2 }).ToArray();
 					Assert.That(res, Has.Length.EqualTo(1));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res[0].Value1, Is.EqualTo(value1));
 						Assert.That(res[0].Value2, Is.EqualTo(value2));
-					});
+					}
 				}
 			}
 		}
@@ -1103,7 +1103,7 @@ namespace Tests.Linq
 				select p;
 
 			var result = query.ToArray();
-			result.Should().HaveCount(4);
+			result.Length.ShouldBe(4);
 		}
 
 		[Test]
@@ -1133,7 +1133,7 @@ namespace Tests.Linq
 				select p;
 
 			var result = query.ToArray();
-			result.Should().HaveCount(4);
+			result.Length.ShouldBe(4);
 		}
 
 		const string MyTableNameStringConstant = "Person";

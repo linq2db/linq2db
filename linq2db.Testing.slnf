@@ -1,6 +1,6 @@
 {
   "solution": {
-    "path": "linq2db.sln",
+    "path": "linq2db.slnx",
     "projects": [
       "Source\\CodeGenerators\\CodeGenerators.csproj",
       "Source\\LinqToDB.EntityFrameworkCore\\LinqToDB.EntityFrameworkCore.STS.csproj",

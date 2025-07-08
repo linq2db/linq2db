@@ -55,13 +55,14 @@ namespace LinqToDB.SqlQuery
 			if (ReferenceEquals(this, other))
 				return true;
 
-			if (ElementType != other.ElementType)
+			if (other is not SqlNullabilityExpression otherNullability
+				|| CanBeNull != otherNullability.CanBeNull)
 				return false;
 
 			return SqlExpression.Equals(((SqlNullabilityExpression)other).SqlExpression, comparer);
 		}
 
-		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+		public override bool CanBeNullable(NullabilityContext nullability) => nullability.CanBeNull(this);
 
 		public          bool             CanBeNull   => _isNullable;
 		public override int              Precedence  => SqlExpression.Precedence;
@@ -86,6 +87,16 @@ namespace LinqToDB.SqlQuery
 				writer.Append("?");
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(CanBeNull);
+			hash.Add(SqlExpression.GetElementHashCode());
+
+			return hash.ToHashCode();
 		}
 	}
 }

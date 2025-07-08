@@ -334,6 +334,53 @@ namespace LinqToDB.Extensions
 			}
 		}
 
+		public static MemberInfo? GetImplementation(this Type concreteType, MemberInfo interfaceMember)
+		{
+			if (interfaceMember.DeclaringType is null or { IsInterface: false })
+				throw new ArgumentException("Member must be declared on an interface", nameof(interfaceMember));
+
+			var interfaceType = interfaceMember.DeclaringType!;
+			var map           = concreteType.GetInterfaceMapEx(interfaceType);
+
+			return interfaceMember switch
+			{
+				MethodInfo method     => FindMethod(map, method),
+				PropertyInfo property => FindPropertyMethod(map, concreteType, property),
+				_                     => null,
+			};
+
+			static MethodInfo? FindMethod(in InterfaceMapping map, MethodInfo? target)
+			{
+				if (target is not null)
+				{
+					for (int i = 0; i < map.InterfaceMethods.Length; i++)
+					{
+						if (map.InterfaceMethods[i] == target)
+							return map.TargetMethods[i];
+					}
+				}
+
+				return null;
+			}
+
+			static MemberInfo? FindPropertyMethod(in InterfaceMapping map, Type concreteType, PropertyInfo property)
+			{
+				// Check both get and set methods
+				var targetGet = FindMethod(map, property.GetMethod);
+				var targetSet = FindMethod(map, property.SetMethod);
+
+				// Find matching property in concrete type by methods
+				foreach (var prop in concreteType.GetProperties(
+							 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+				{
+					if (prop.GetMethod == targetGet || prop.SetMethod == targetSet)
+						return prop;
+				}
+
+				return null;
+			}
+		}
+
 		/// <summary>
 		/// Returns true, if type is <see cref="Nullable{T}"/> type.
 		/// </summary>
@@ -565,10 +612,10 @@ namespace LinqToDB.Extensions
 		}
 
 		///<summary>
-		/// Gets the Type of a list item.
+		/// Gets the type of list item.
 		///</summary>
 		/// <param name="list">A <see cref="System.Object"/> instance. </param>
-		///<returns>The Type instance that represents the exact runtime type of a list item.</returns>
+		///<returns>The Type instance that represents the exact runtime type of list item.</returns>
 		public static Type GetListItemType(this IEnumerable? list)
 		{
 			var typeOfObject = typeof(object);
@@ -579,10 +626,10 @@ namespace LinqToDB.Extensions
 			if (list is Array)
 				return list.GetType().GetElementType()!;
 
-			var type = list.GetType();
-
-			if (list is IList || list is ITypedList || list is IListSource)
+			if (list is IList or ITypedList or IListSource)
 			{
+				var type = list.GetType();
+
 				PropertyInfo? last = null;
 
 				foreach (var pi in type.GetPropertiesEx())
@@ -617,10 +664,10 @@ namespace LinqToDB.Extensions
 		}
 
 		///<summary>
-		/// Gets the Type of a list item.
+		/// Gets the Type of list item.
 		///</summary>
 		/// <param name="listType">A <see cref="Type"/> instance. </param>
-		///<returns>The Type instance that represents the exact runtime type of a list item.</returns>
+		///<returns>The Type instance that represents the exact runtime type of list item.</returns>
 		public static Type GetListItemType(this Type listType)
 		{
 			if (listType.IsGenericType)

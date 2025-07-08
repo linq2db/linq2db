@@ -250,7 +250,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			SqlServerTransientExceptionDetector.RegisterExceptionType(sqlExceptionType, exceptionErrorsGettter);
 
-			var connectionFactory = typeMapper.BuildTypedFactory<string, SqlConnection, DbConnection>((string connectionString) => new SqlConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, SqlConnection, DbConnection>(connectionString => new SqlConnection(connectionString));
 
 			MappingSchema? mappingSchema = null;
 			Type?          sqlJsonType   = null;
@@ -375,7 +375,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				= new LambdaExpression[]
 			{
 				// [0]: get Errors
-				(Expression<Func<SqlException, SqlErrorCollection>>)((SqlException this_) => this_.Errors),
+				(Expression<Func<SqlException, SqlErrorCollection>>)(this_ => this_.Errors),
 			};
 
 			public SqlException(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -392,9 +392,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				= new LambdaExpression[]
 			{
 				// [0]: GetEnumerator
-				(Expression<Func<SqlErrorCollection, IEnumerator>>)((SqlErrorCollection this_) => this_.GetEnumerator()),
+				(Expression<Func<SqlErrorCollection, IEnumerator>>)(this_ => this_.GetEnumerator()),
 				// [1]: SqlError wrapper
-				(Expression<Func<object, SqlError>>               )((object error            ) => (SqlError)error),
+				(Expression<Func<object, SqlError>>               )(error => (SqlError)error),
 			};
 
 			public SqlErrorCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -423,7 +423,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				= new LambdaExpression[]
 			{
 				// [0]: get Number
-				(Expression<Func<SqlError, int>>)((SqlError this_) => this_.Number),
+				(Expression<Func<SqlError, int>>)(this_ => this_.Number),
 			};
 
 			public SqlError(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -452,7 +452,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				= new LambdaExpression[]
 			{
 				// [0]: get MultipleActiveResultSets
-				(Expression<Func<SqlConnectionStringBuilder, bool>>)((SqlConnectionStringBuilder this_) => this_.MultipleActiveResultSets),
+				(Expression<Func<SqlConnectionStringBuilder, bool>>)(this_ => this_.MultipleActiveResultSets),
 				// [1]: set MultipleActiveResultSets
 				PropertySetter((SqlConnectionStringBuilder this_) => this_.MultipleActiveResultSets),
 			};
@@ -471,7 +471,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		[Wrapper]
-		internal class SqlConnection
+		internal sealed class SqlConnection
 		{
 			public SqlConnection(string connectionString) => throw new NotImplementedException();
 		}
@@ -483,25 +483,25 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region BulkCopy
 		[Wrapper]
-		internal class SqlBulkCopy : TypeWrapper, IDisposable
+		internal sealed class SqlBulkCopy : TypeWrapper, IDisposable
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
 				// [0]: Dispose
-				(Expression<Action<SqlBulkCopy>>                                  )((SqlBulkCopy this_                    ) => ((IDisposable)this_).Dispose()),
+				(Expression<Action<SqlBulkCopy>>                                  )(this_ => ((IDisposable)this_).Dispose()),
 				// [1]: WriteToServer
-				(Expression<Action<SqlBulkCopy, IDataReader>>                     )((SqlBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
+				(Expression<Action<SqlBulkCopy, IDataReader>>                     )((this_, reader) => this_.WriteToServer(reader)),
 				// [2]: get NotifyAfter
-				(Expression<Func<SqlBulkCopy, int>>                               )((SqlBulkCopy this_                    ) => this_.NotifyAfter),
+				(Expression<Func<SqlBulkCopy, int>>                               )(this_ => this_.NotifyAfter),
 				// [3]: get BatchSize
-				(Expression<Func<SqlBulkCopy, int>>                               )((SqlBulkCopy this_                    ) => this_.BatchSize),
+				(Expression<Func<SqlBulkCopy, int>>                               )(this_ => this_.BatchSize),
 				// [4]: get BulkCopyTimeout
-				(Expression<Func<SqlBulkCopy, int>>                               )((SqlBulkCopy this_                    ) => this_.BulkCopyTimeout),
+				(Expression<Func<SqlBulkCopy, int>>                               )(this_ => this_.BulkCopyTimeout),
 				// [5]: get DestinationTableName
-				(Expression<Func<SqlBulkCopy, string?>>                           )((SqlBulkCopy this_                    ) => this_.DestinationTableName),
+				(Expression<Func<SqlBulkCopy, string?>>                           )(this_ => this_.DestinationTableName),
 				// [6]: get ColumnMappings
-				(Expression<Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>>)((SqlBulkCopy this_                    ) => this_.ColumnMappings),
+				(Expression<Func<SqlBulkCopy, SqlBulkCopyColumnMappingCollection>>)(this_ => this_.ColumnMappings),
 				// [7]: set NotifyAfter
 				PropertySetter((SqlBulkCopy this_) => this_.NotifyAfter),
 				// [8]: set BatchSize
@@ -511,7 +511,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				// [10]: set DestinationTableName
 				PropertySetter((SqlBulkCopy this_) => this_.DestinationTableName),
 				// [11]: WriteToServerAsync
-				(Expression<Func<SqlBulkCopy, IDataReader, CancellationToken, Task>>)((SqlBulkCopy this_, IDataReader reader, CancellationToken token)
+				(Expression<Func<SqlBulkCopy, IDataReader, CancellationToken, Task>>)((this_, reader, token)
 					=> this_.WriteToServerAsync(reader, token)),
 			};
 
@@ -575,9 +575,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				= new LambdaExpression[]
 			{
 				// [0]: get RowsCopied
-				(Expression<Func<SqlRowsCopiedEventArgs, long>>)((SqlRowsCopiedEventArgs this_) => this_.RowsCopied),
+				(Expression<Func<SqlRowsCopiedEventArgs, long>>)(this_ => this_.RowsCopied),
 				// [1]: get Abort
-				(Expression<Func<SqlRowsCopiedEventArgs, bool>>)((SqlRowsCopiedEventArgs this_) => this_.Abort),
+				(Expression<Func<SqlRowsCopiedEventArgs, bool>>)(this_ => this_.Abort),
 				// [2]: set Abort
 				PropertySetter((SqlRowsCopiedEventArgs this_) => this_.Abort),
 			};
@@ -605,7 +605,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				= new LambdaExpression[]
 			{
 				// [0]: Add
-				(Expression<Func<SqlBulkCopyColumnMappingCollection, SqlBulkCopyColumnMapping, SqlBulkCopyColumnMapping>>)((SqlBulkCopyColumnMappingCollection this_, SqlBulkCopyColumnMapping column) => this_.Add(column)),
+				(Expression<Func<SqlBulkCopyColumnMappingCollection, SqlBulkCopyColumnMapping, SqlBulkCopyColumnMapping>>)((this_, column) => this_.Add(column)),
 			};
 
 			public SqlBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)

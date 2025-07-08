@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 
@@ -48,7 +48,7 @@ namespace Tests.xUpdate
 
 				TestQuery(table, source);
 
-				table.GetCacheMissCount().Should().Be(cacheMissCount);
+				table.GetCacheMissCount().ShouldBe(cacheMissCount);
 
 				source = new[]
 				{
@@ -70,7 +70,7 @@ namespace Tests.xUpdate
 
 				TestQuery(table, source);
 
-				table.GetCacheMissCount().Should().Be(cacheMissCount);
+				table.GetCacheMissCount().ShouldBe(cacheMissCount);
 			}
 
 			void TestQuery(ITable<TestMapping1> table, TestMapping1[] source)
@@ -90,13 +90,13 @@ namespace Tests.xUpdate
 
 				for (var i = 0; i < source.Length; i++)
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(result[i].Id, Is.EqualTo(source[i].Id));
 						Assert.That(result[i].Field1, Is.EqualTo(source[i].Field1));
 						Assert.That(result[i].Field2, Is.EqualTo(source[i].Field2));
 						Assert.That(result[i].Field4, Is.EqualTo(source[i].Field4));
-					});
+					}
 				}
 			}
 		}

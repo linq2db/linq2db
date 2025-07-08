@@ -121,7 +121,7 @@ namespace LinqToDB.DataProvider.DB2
 				typeMapper.BuildWrappedFactory((DbConnection connection, DB2BulkCopyOptions options) => new DB2BulkCopy((DB2Connection)(object)connection, options)),
 				typeMapper.BuildWrappedFactory((int source, string destination) => new DB2BulkCopyColumnMapping(source, destination)));
 
-			_connectionFactory = typeMapper.BuildTypedFactory<string, DB2Connection, DbConnection>((string connectionString) => new DB2Connection(connectionString));
+			_connectionFactory = typeMapper.BuildTypedFactory<string, DB2Connection, DbConnection>(connectionString => new DB2Connection(connectionString));
 			ConnectionWrapper  = typeMapper.Wrap<DB2Connection>;
 
 			Type? LoadType(string typeName, DataType dataType, bool optional = false, bool obsolete = false, bool register = true)
@@ -217,7 +217,11 @@ namespace LinqToDB.DataProvider.DB2
 
 		public Func<object, bool> IsDB2BinaryNull { get; }
 
-		internal Func<DbConnection, DB2Connection> ConnectionWrapper { get; }
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
+		public Func<DbConnection, DB2Connection> ConnectionWrapper { get; }
 
 		public BulkCopyAdapter BulkCopy { get; }
 
@@ -263,7 +267,7 @@ namespace LinqToDB.DataProvider.DB2
 				= new LambdaExpression[]
 			{
 				// [0]: get eServerType
-				(Expression<Func<DB2Connection, DB2ServerTypes>>)((DB2Connection this_) => this_.eServerType),
+				(Expression<Func<DB2Connection, DB2ServerTypes>>)(this_ => this_.eServerType),
 			};
 
 			public DB2Connection(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -359,17 +363,17 @@ namespace LinqToDB.DataProvider.DB2
 				= new LambdaExpression[]
 			{
 				// [0]: Dispose
-				(Expression<Action<DB2BulkCopy>>                                  )((DB2BulkCopy this_                    ) => ((IDisposable)this_).Dispose()),
+				(Expression<Action<DB2BulkCopy>>                                  )(this_ => ((IDisposable)this_).Dispose()),
 				// [1]: WriteToServer
-				(Expression<Action<DB2BulkCopy, IDataReader>>                     )((DB2BulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
+				(Expression<Action<DB2BulkCopy, IDataReader>>                     )((this_, reader) => this_.WriteToServer(reader)),
 				// [2]: get NotifyAfter
-				(Expression<Func<DB2BulkCopy, int>>                               )((DB2BulkCopy this_                    ) => this_.NotifyAfter),
+				(Expression<Func<DB2BulkCopy, int>>                               )(this_ => this_.NotifyAfter),
 				// [3]: get BulkCopyTimeout
-				(Expression<Func<DB2BulkCopy, int>>                               )((DB2BulkCopy this_                    ) => this_.BulkCopyTimeout),
+				(Expression<Func<DB2BulkCopy, int>>                               )(this_ => this_.BulkCopyTimeout),
 				// [4]: get DestinationTableName
-				(Expression<Func<DB2BulkCopy, string?>>                           )((DB2BulkCopy this_                    ) => this_.DestinationTableName),
+				(Expression<Func<DB2BulkCopy, string?>>                           )(this_ => this_.DestinationTableName),
 				// [5]: get ColumnMappings
-				(Expression<Func<DB2BulkCopy, DB2BulkCopyColumnMappingCollection>>)((DB2BulkCopy this_                    ) => this_.ColumnMappings),
+				(Expression<Func<DB2BulkCopy, DB2BulkCopyColumnMappingCollection>>)(this_ => this_.ColumnMappings),
 				// [6]: set NotifyAfter
 				PropertySetter((DB2BulkCopy this_) => this_.NotifyAfter),
 				// [7]: set BulkCopyTimeout
@@ -435,9 +439,9 @@ namespace LinqToDB.DataProvider.DB2
 				= new LambdaExpression[]
 			{
 				// [0]: get RowsCopied
-				(Expression<Func<DB2RowsCopiedEventArgs, int>> )((DB2RowsCopiedEventArgs this_) => this_.RowsCopied),
+				(Expression<Func<DB2RowsCopiedEventArgs, int>> )(this_ => this_.RowsCopied),
 				// [1]: get Abort
-				(Expression<Func<DB2RowsCopiedEventArgs, bool>>)((DB2RowsCopiedEventArgs this_) => this_.Abort),
+				(Expression<Func<DB2RowsCopiedEventArgs, bool>>)(this_ => this_.Abort),
 				// [2]: set Abort
 				PropertySetter((DB2RowsCopiedEventArgs this_) => this_.Abort),
 			};
@@ -465,7 +469,7 @@ namespace LinqToDB.DataProvider.DB2
 				= new LambdaExpression[]
 			{
 				// [0]: Add
-				(Expression<Func<DB2BulkCopyColumnMappingCollection, DB2BulkCopyColumnMapping, DB2BulkCopyColumnMapping>>)((DB2BulkCopyColumnMappingCollection this_, DB2BulkCopyColumnMapping column) => this_.Add(column)),
+				(Expression<Func<DB2BulkCopyColumnMappingCollection, DB2BulkCopyColumnMapping, DB2BulkCopyColumnMapping>>)((this_, column) => this_.Add(column)),
 			};
 
 			public DB2BulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)

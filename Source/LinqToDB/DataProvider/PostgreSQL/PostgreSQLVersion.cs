@@ -25,5 +25,9 @@
 		/// PostgreSQL 15+ SQL dialect.
 		/// </summary>
 		v15,
+		/// <summary>
+		/// PostgreSQL 18+ SQL dialect.
+		/// </summary>
+		v18,
 	}
 }

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -93,7 +93,10 @@ namespace Tests.Linq
 					.AsCte();
 
 				if (!db.SqlProviderFlags.IsCTESupportsOrdering)
-					FluentActions.Enumerating(() => query).Should().NotThrow();
+				{
+					var act = () => query.ToArray();
+					act.ShouldNotThrow();
+				}
 				else
 				{
 					var result = query.ToList();
@@ -1211,7 +1214,7 @@ namespace Tests.Linq
 			query.ToArray();
 
 			if (db is TestDataConnection cn)
-				cn.LastQuery!.Should().Contain("SELECT", Exactly.Times(4));
+				cn.LastQuery!.ShouldContain("SELECT", Exactly.Times(4));
 		}
 
 		public record class  Issue3357RecordClass (int Id, string FirstName, string LastName);
@@ -1305,8 +1308,9 @@ namespace Tests.Linq
 
 			if (db is TestDataConnection dc)
 			{
-				dc.LastQuery!.Should().NotContain("N'");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Once());
+				dc.LastQuery!.ShouldNotContain("N'");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS VARCHAR(MAX))");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS VARCHAR(MAX))", Exactly.Once());
 			}
 		}
 
@@ -1391,9 +1395,9 @@ namespace Tests.Linq
 
 			if (db is TestDataConnection dc)
 			{
-				dc.LastQuery!.Should().NotContain("N'");
-				dc.LastQuery!.Should().Contain("'THIS_IS_TWO'");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(50))", Exactly.Once());
+				dc.LastQuery!.ShouldNotContain("N'");
+				dc.LastQuery!.ShouldContain("'THIS_IS_TWO'");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS VARCHAR(50))", Exactly.Once());
 			}
 		}
 
@@ -1455,8 +1459,8 @@ namespace Tests.Linq
 			query.ToArray();
 			if (db is TestDataConnection dc)
 			{
-				dc.LastQuery!.Should().NotContain("N'");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Twice());
+				dc.LastQuery!.ShouldNotContain("N'");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS VARCHAR(MAX))", Exactly.Twice());
 			}
 		}
 
@@ -1721,8 +1725,7 @@ namespace Tests.Linq
 			var data = query.ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0].Id, Is.EqualTo(1));
 				Assert.That(data[0].Byte, Is.Null);
@@ -1743,7 +1746,7 @@ namespace Tests.Linq
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
 				Assert.That(data[1].Bool, Is.True);
 				Assert.That(data[1].BoolN, Is.False);
-			});
+			}
 		}
 
 		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
@@ -1768,8 +1771,7 @@ namespace Tests.Linq
 			var data = query.ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0].Id, Is.EqualTo(2));
 				Assert.That(data[0].Byte, Is.EqualTo(1));
@@ -1790,7 +1792,7 @@ namespace Tests.Linq
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
 				Assert.That(data[1].Bool, Is.False);
 				Assert.That(data[1].BoolN, Is.True);
-			});
+			}
 		}
 
 		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
@@ -1815,8 +1817,7 @@ namespace Tests.Linq
 			var data = query.ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0].Id, Is.EqualTo(2));
 				Assert.That(data[0].Byte, Is.EqualTo(5));
@@ -1837,7 +1838,7 @@ namespace Tests.Linq
 				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
 				Assert.That(data[1].Bool, Is.False);
 				Assert.That(data[1].BoolN, Is.True);
-			});
+			}
 		}
 
 		#endregion
@@ -1862,8 +1863,8 @@ namespace Tests.Linq
 
 			if (db is TestDataConnection dc)
 			{
-				dc.LastQuery!.Should().NotContain("Convert(VarChar");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS NVARCHAR(MAX))", Exactly.Twice());
+				dc.LastQuery!.ShouldNotContain("Convert(VarChar");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS NVARCHAR(MAX))", Exactly.Twice());
 			}
 		}
 
@@ -2027,12 +2028,12 @@ namespace Tests.Linq
 				.ToList();
 
 			Assert.That(result, Has.Count.EqualTo(3));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
 				Assert.That(result[1].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
 				Assert.That(result[2].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NonResident));
-			});
+			}
 		}
 
 		[Test]
@@ -2075,13 +2076,13 @@ namespace Tests.Linq
 			var result = query.ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ID, Is.EqualTo(11));
 				Assert.That(result[0].FirstName, Is.EqualTo("FN2"));
 				Assert.That(result[0].MiddleName, Is.Null);
 				Assert.That(result[0].Gender, Is.EqualTo(Gender.Female));
-			});
+			}
 
 			if (db is DataConnection dc)
 			{
@@ -2102,11 +2103,11 @@ namespace Tests.Linq
 
 			Assert.That(data, Has.Count.EqualTo(1));
 			Assert.That(data[0].Patient, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0].Patient!.Diagnosis, Is.Not.Null);
 				Assert.That(count, Is.EqualTo(4));
-			});
+			}
 		}
 
 		[Test]
@@ -2430,12 +2431,12 @@ namespace Tests.Linq
 			var result = query.ToList();
 
 			Assert.That(result, Has.Count.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ProductId, Is.EqualTo(1));
 				Assert.That(result[0].first, Is.EqualTo(10));
 				Assert.That(result[0].sum, Is.EqualTo(10));
-			});
+			}
 		}
 		#endregion
 
@@ -2507,20 +2508,20 @@ namespace Tests.Linq
 			var booksQuery = db.GetTable<Book>()
 				.Select(b => new
 				{
-					Book = b, 
+					Book = b,
 					b.Author
 				})
 				.AsCte("BooksCte");
 
 			var query1 = booksQuery.Select(r => new
 			{
-				Book = (Book?)r.Book, 
+				Book = (Book?)r.Book,
 				Author = (Author?)null
 			});
 
 			var query2 = booksQuery.Select(r => new
 			{
-				Book = (Book?)null, 
+				Book = (Book?)null,
 				Author = (Author?)r.Author
 			});
 
@@ -2551,7 +2552,7 @@ namespace Tests.Linq
 						select new SequenceBuildFailedRecord(p.PersonID));
 			});
 
-			var query = 
+			var query =
 				from r in cte
 				join p in db.Patient on r.Id equals p.PersonID
 				select new
@@ -2569,7 +2570,7 @@ namespace Tests.Linq
 
 			var cte = db.Person.Select(s => new { s.Patient!.PersonID }).AsCte();
 
-			var query = 
+			var query =
 				from r in cte
 				join p in db.Patient on r.PersonID equals p.PersonID
 				select new

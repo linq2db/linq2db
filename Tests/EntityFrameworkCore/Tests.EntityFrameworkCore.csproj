@@ -8,6 +8,8 @@
 		<TargetFrameworks>net462;net8.0</TargetFrameworks>
 
 		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
+
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 	</PropertyGroup>
 	
 	<ItemGroup>
@@ -26,10 +28,6 @@
 		<ProjectReference Include="..\EntityFrameworkCore.FSharp\Tests.EntityFrameworkCore.FSharp.fsproj" />
 	</ItemGroup>
 
-	<ItemGroup Label="Override Transient Vulnerable Deps">
-		<PackageReference Include="Microsoft.Data.SqlClient" VersionOverride="5.2.3" />
-	</ItemGroup>
-	
 	<ItemGroup Condition="'$(TargetFramework)' == 'net462'" Label="Override Transient Vulnerable Deps">
 		<PackageReference Include="Npgsql" VersionOverride="4.1.14" />
 	</ItemGroup>

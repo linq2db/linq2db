@@ -25,6 +25,11 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 			return new SqlServerMathMemberTranslator();
 		}
 
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
+		}
+
 		protected override IMemberTranslator CreateGuidMemberTranslator()
 		{
 			return new GuidMemberTranslator();
@@ -190,6 +195,28 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 			}
 		}
 
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
+			{
+				/*
+				 * REPLICATE(paddingSymbol, padding - LEN(value)) + value
+				 */
+				var factory         = translationContext.ExpressionFactory;
+				var valueTypeString = factory.GetDbDataType(value);
+				var valueTypeInt    = factory.GetDbDataType(typeof(int));
+				
+				var lengthValue = TranslateLength(translationContext, translationFlags, value);
+				if (lengthValue == null)
+					return null;
+
+				var symbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
+				var stringToAdd  = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
+				
+				return factory.Add(valueTypeString, stringToAdd, value);
+			}
+		}
+
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			var factory  = translationContext.ExpressionFactory;
@@ -198,13 +225,13 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 			return timePart;
 		}
 
-		class GuidMemberTranslator : GuidMemberTranslatorBase
+		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
-			{
+		{
 				//"LOWER(CAST({0} AS char(36)))"
 
-				var factory = translationContext.ExpressionFactory;
+			var factory  = translationContext.ExpressionFactory;
 				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(36);
 
 				var cast  = factory.Cast(guidExpr, stringDataType);

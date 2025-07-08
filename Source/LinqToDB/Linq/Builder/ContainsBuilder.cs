@@ -204,7 +204,7 @@ namespace LinqToDB.Linq.Builder
 					predicate = new SqlPredicate.InSubQuery(inExpr, false, InnerSequence.SelectQuery, false);
 				}
 
-				var subQuerySql = new SqlSearchCondition(false, predicate);
+				var subQuerySql = new SqlSearchCondition(false, canBeUnknown: null, predicate);
 
 				return ExpressionBuilder.CreatePlaceholder(placeholderQuery, subQuerySql, _methodCall, convertType: typeof(bool));
 			}

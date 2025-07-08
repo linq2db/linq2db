@@ -32,6 +32,9 @@ namespace LinqToDB.SqlQuery
 		internal int?       AccessorId       { get; set; }
 
 		public object? Value     { get; }
+		/// <summary>
+		/// Enable parameter wrapping with type-cast. Ignored when <see cref="IsQueryParameter"/> is <c>false</c>.
+		/// </summary>
 		public bool    NeedsCast { get; set; }
 
 		public object? CorrectParameterValue(object? rawValue)
@@ -134,6 +137,19 @@ namespace LinqToDB.SqlQuery
 				writer.Append(")");
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(Name);
+			hash.Add(Type);
+			hash.Add(IsQueryParameter);
+			hash.Add(AccessorId);
+			if (AccessorId == null)
+				hash.Add(Value);
+			return hash.ToHashCode();
 		}
 
 		#endregion

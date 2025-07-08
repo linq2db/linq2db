@@ -2,6 +2,7 @@
 
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Linq.Translation;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
@@ -58,7 +59,7 @@ namespace LinqToDB.DataProvider.SQLite
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
 								new SqlFunction(typeof(string), "Substr", predicate.Expr1, new SqlValue(1),
-									new SqlFunction(typeof(int), "Length", predicate.Expr2)),
+									Factory.Length(predicate.Expr2)),
 								SqlPredicate.Operator.Equal,
 								predicate.Expr2, null);
 
@@ -71,7 +72,7 @@ namespace LinqToDB.DataProvider.SQLite
 							new SqlPredicate.ExprExpr(
 								new SqlFunction(typeof(string), "Substr", predicate.Expr1,
 									new SqlBinaryExpression(typeof(int),
-										new SqlFunction(typeof(int), "Length", predicate.Expr2), "*", new SqlValue(-1),
+										Factory.Length(predicate.Expr2), "*", new SqlValue(-1),
 										Precedence.Multiplicative)
 								),
 								SqlPredicate.Operator.Equal,
@@ -94,7 +95,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 				if (subStrPredicate != null)
 				{
-					var result = new SqlSearchCondition(predicate.IsNot,
+					var result = new SqlSearchCondition(predicate.IsNot, canBeUnknown: null,
 						like,
 						subStrPredicate.MakeNot(predicate.IsNot));
 
@@ -143,14 +144,14 @@ namespace LinqToDB.DataProvider.SQLite
 				if (!(expr1 is SqlCastExpression || expr1 is SqlFunction { DoNotOptimize: true }))
 				{
 					var left = PseudoFunctions.MakeMandatoryCast(predicate.Expr1, dateType, null);
-					predicate = new SqlPredicate.ExprExpr(left, predicate.Operator, predicate.Expr2, predicate.WithNull);
+					predicate = new SqlPredicate.ExprExpr(left, predicate.Operator, predicate.Expr2, predicate.UnknownAsValue);
 				}
 
 				var expr2 = QueryHelper.UnwrapNullablity(predicate.Expr2);
 				if (!(expr2 is SqlCastExpression || expr2 is SqlFunction { DoNotOptimize: true }))
 				{
 					var right = PseudoFunctions.MakeMandatoryCast(predicate.Expr2, dateType, null);
-					predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, right, predicate.WithNull);
+					predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, right, predicate.UnknownAsValue);
 				}
 			}
 

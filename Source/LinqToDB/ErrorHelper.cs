@@ -1,6 +1,10 @@
 ﻿namespace LinqToDB
 {
-	internal static class ErrorHelper
+	/// <summary>
+	/// This is internal API and is not intended for use by Linq To DB applications.
+	/// It may change or be removed without further notice.
+	/// </summary>
+	public static class ErrorHelper
 	{
 		public const string Error_Correlated_Subqueries          = "Provider does not support correlated subqueries.";
 		public const string Error_Correlated_Subqueries_Level    = "Provider does not support correlated subqueries in more than {0} level.";
@@ -36,7 +40,7 @@
 			public const string Error_ColumnSubqueryShouldNotContainParentIsNotNull = "Column expression should not contain parent's IS NOT NULL condition.";
 		}
 
-		internal static class Sybase
+		public static class Sybase
 		{
 			public const string Error_JoinToDerivedTableWithTakeInvalid = "Feature not supported by database: database has issue with JOIN to limited recordset.";
 			public const string Error_UpdateWithTopOrderBy              = "Feature not supported by database: UPDATE statement with the TOP + ORDER BY clause.";
@@ -45,13 +49,13 @@
 			public const string Error_DeleteWithSkip                    = "Feature not supported by database: DELETE statement with the Skip.";
 		}
 
-		internal static class ClickHouse
+		public static class ClickHouse
 		{
 			public const string Error_CorrelatedDelete = "Feature not supported by database: Correlated DELETE";
 			public const string Error_CorrelatedUpdate = "Feature not supported by database: Correlated UPDATE";
 		}
 
-		internal static class MySql
+		public static class MySql
 		{
 			public const string Error_SkipInUpdate = "Feature not supported by database: Skip in UPDATE.";
 		}

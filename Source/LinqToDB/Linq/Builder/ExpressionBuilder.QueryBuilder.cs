@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region BuildExpression
 
-		class FinalizeExpressionVisitor : ExpressionVisitorBase
+		sealed class FinalizeExpressionVisitor : ExpressionVisitorBase
 		{
 			HashSet<Expression>?                                                           _visited;
 			HashSet<Expression>?                                                           _duplicates;
@@ -199,7 +199,7 @@ namespace LinqToDB.Linq.Builder
 			return withColumns;
 		}
 
-		public class ParentInfo
+		public sealed class ParentInfo
 		{
 			Dictionary<SelectQuery, SelectQuery>? _info;
 

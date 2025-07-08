@@ -411,7 +411,7 @@ namespace LinqToDB.SqlQuery
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
-			if (this == other)
+			if (ReferenceEquals(this, other))
 				return true;
 
 			return other is SqlDataType type && Type.Equals(type.Type);
@@ -452,6 +452,11 @@ namespace LinqToDB.SqlQuery
 				writer.Append('(').Append(Type.Precision).Append(',').Append(Type.Scale).Append(')');
 
 			return writer;
+		}
+
+		public int GetElementHashCode()
+		{
+			return Type.GetHashCode();
 		}
 
 		#endregion

@@ -153,7 +153,7 @@ namespace LinqToDB.DataProvider.Informix
 		public Func<TimeSpan, object>? TimeSpanFactory { get; }
 
 		internal BulkCopyAdapter?                    InformixBulkCopy { get; }
-		internal DB2ProviderAdapter.BulkCopyAdapter? DB2BulkCopy      { get; }
+		public   DB2ProviderAdapter.BulkCopyAdapter? DB2BulkCopy      { get; }
 
 		public string? GetDecimalReaderMethod  { get; }
 		public string  GetDateTimeReaderMethod { get; }
@@ -163,7 +163,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		public string ProviderTypesNamespace   { get; }
 
-		internal class BulkCopyAdapter
+		internal sealed class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
 				Func<DbConnection, IfxBulkCopyOptions, IfxBulkCopy> bulkCopyCreator,
@@ -261,7 +261,7 @@ namespace LinqToDB.DataProvider.Informix
 			else
 				typeMapper.FinalizeMappings();
 
-			var connectionFactory = typeMapper.BuildTypedFactory<string, IfxConnection, DbConnection>((string connectionString) => new IfxConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, IfxConnection, DbConnection>(connectionString => new IfxConnection(connectionString));
 
 			var paramMapper   = typeMapper.Type<IfxParameter>();
 			var dbTypeBuilder = paramMapper.Member(p => p.IfxType);
@@ -396,23 +396,23 @@ namespace LinqToDB.DataProvider.Informix
 
 		#region BulkCopy
 		[Wrapper]
-		internal class IfxBulkCopy : TypeWrapper, IDisposable
+		internal sealed class IfxBulkCopy : TypeWrapper, IDisposable
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
 				// [0]: Dispose
-				(Expression<Action<IfxBulkCopy>>                                  )((IfxBulkCopy this_                    ) => ((IDisposable)this_).Dispose()),
+				(Expression<Action<IfxBulkCopy>>                                  )(this_ => ((IDisposable)this_).Dispose()),
 				// [1]: WriteToServer
-				(Expression<Action<IfxBulkCopy, IDataReader>>                     )((IfxBulkCopy this_, IDataReader reader) => this_.WriteToServer(reader)),
+				(Expression<Action<IfxBulkCopy, IDataReader>>                     )((this_, reader) => this_.WriteToServer(reader)),
 				// [2]: get NotifyAfter
-				(Expression<Func<IfxBulkCopy, int>>                               )((IfxBulkCopy this_                    ) => this_.NotifyAfter),
+				(Expression<Func<IfxBulkCopy, int>>                               )(this_ => this_.NotifyAfter),
 				// [3]: get BulkCopyTimeout
-				(Expression<Func<IfxBulkCopy, int>>                               )((IfxBulkCopy this_                    ) => this_.BulkCopyTimeout),
+				(Expression<Func<IfxBulkCopy, int>>                               )(this_ => this_.BulkCopyTimeout),
 				// [4]: get DestinationTableName
-				(Expression<Func<IfxBulkCopy, string?>>                           )((IfxBulkCopy this_                    ) => this_.DestinationTableName),
+				(Expression<Func<IfxBulkCopy, string?>>                           )(this_ => this_.DestinationTableName),
 				// [5]: get ColumnMappings
-				(Expression<Func<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>>)((IfxBulkCopy this_                    ) => this_.ColumnMappings),
+				(Expression<Func<IfxBulkCopy, IfxBulkCopyColumnMappingCollection>>)(this_ => this_.ColumnMappings),
 				// [6]: set NotifyAfter
 				PropertySetter((IfxBulkCopy this_) => this_.NotifyAfter),
 				// [7]: set BulkCopyTimeout
@@ -479,9 +479,9 @@ namespace LinqToDB.DataProvider.Informix
 				= new LambdaExpression[]
 			{
 				// [0]: get RowsCopied
-				(Expression<Func<IfxRowsCopiedEventArgs, int>> )((IfxRowsCopiedEventArgs this_) => this_.RowsCopied),
+				(Expression<Func<IfxRowsCopiedEventArgs, int>> )(this_ => this_.RowsCopied),
 				// [1]: get Abort
-				(Expression<Func<IfxRowsCopiedEventArgs, bool>>)((IfxRowsCopiedEventArgs this_) => this_.Abort),
+				(Expression<Func<IfxRowsCopiedEventArgs, bool>>)(this_ => this_.Abort),
 				// [2]: set Abort
 				PropertySetter((IfxRowsCopiedEventArgs this_) => this_.Abort),
 			};
@@ -509,7 +509,7 @@ namespace LinqToDB.DataProvider.Informix
 				= new LambdaExpression[]
 			{
 				// [0]: Add
-				(Expression<Func<IfxBulkCopyColumnMappingCollection, IfxBulkCopyColumnMapping, IfxBulkCopyColumnMapping>>)((IfxBulkCopyColumnMappingCollection this_, IfxBulkCopyColumnMapping column) => this_.Add(column)),
+				(Expression<Func<IfxBulkCopyColumnMappingCollection, IfxBulkCopyColumnMapping, IfxBulkCopyColumnMapping>>)((this_, column) => this_.Add(column)),
 			};
 
 			public IfxBulkCopyColumnMappingCollection(object instance, Delegate[] wrappers) : base(instance, wrappers)

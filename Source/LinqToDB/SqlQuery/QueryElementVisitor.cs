@@ -2017,7 +2017,7 @@ namespace LinqToDB.SqlQuery
 
 					if (ShouldReplace(element) || element.Predicates != predicates)
 					{
-						return NotifyReplaced(new SqlSearchCondition(element.IsOr, element.Predicates != predicates ? predicates : predicates.ToList()), element);
+						return NotifyReplaced(new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, element.Predicates != predicates ? predicates : predicates.ToList()), element);
 					}
 
 					break;
@@ -2656,7 +2656,7 @@ namespace LinqToDB.SqlQuery
 
 					if (ShouldReplace(predicate) || !ReferenceEquals(predicate.Expr1, expr1) || !ReferenceEquals(predicate.Expr2, expr2))
 					{
-						return NotifyReplaced(new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.WithNull), predicate);
+						return NotifyReplaced(new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.UnknownAsValue, predicate.NotNullableExpr1, predicate.NotNullableExpr2), predicate);
 					}
 
 					break;

@@ -92,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 			return lambdaExpression.GetBody(TargetPropAccess);
 		}
 
-		class CorrectingVisitor: ExpressionVisitorBase
+		sealed class CorrectingVisitor : ExpressionVisitorBase
 		{
 			public   ParameterExpression  TargetParam      { get; }
 			public   ContextRefExpression TargetContextRef { get; }
@@ -320,7 +320,7 @@ namespace LinqToDB.Linq.Builder
 				correctedPath = Builder.UpdateNesting(InnerQueryContext, correctedPath);
 
 				// replace tracking path back
-				var translated = SequenceHelper.CorrectTrackingPath(Builder, correctedPath, path);
+				var translated = SequenceHelper.CorrectTrackingPath(Builder, correctedPath, projectedPath);
 
 				var placeholders = ExpressionBuilder.CollectPlaceholders(translated, true);
 
@@ -347,14 +347,14 @@ namespace LinqToDB.Linq.Builder
 			return SubqueryContext.GetResultStatement();
 		}
 
-		class ProjectionHelper<TTarget, TSource>
+		sealed class ProjectionHelper<TTarget, TSource>
 		{
 			public TTarget? target       { get; set; }
 			public TSource? source       { get; set; }
 			public TTarget? selft_target { get; set; }
 		}
 
-		class SelfTargetContainerContext : BuildContextBase
+		sealed class SelfTargetContainerContext : BuildContextBase
 		{
 			public SelfTargetContainerContext(ParameterExpression targetParam, ContextRefExpression targetContextRef, Expression substitutedExpression, bool needsCloning) : 
 				base(targetContextRef.BuildContext.TranslationModifier, targetContextRef.BuildContext.Builder, targetContextRef.BuildContext.ElementType, targetContextRef.BuildContext.SelectQuery)

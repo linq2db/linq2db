@@ -16,7 +16,7 @@ using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Builder.Visitors
 {
-	class ExposeExpressionVisitor : ExpressionVisitorBase, IExpressionEvaluator
+	sealed class ExposeExpressionVisitor : ExpressionVisitorBase, IExpressionEvaluator
 	{
 		static ObjectPool<IsCompilableVisitor> _isCompilableVisitorPool = new(() => new IsCompilableVisitor(), v => v.Cleanup(), 100);
 
@@ -945,6 +945,16 @@ namespace LinqToDB.Linq.Builder.Visitors
 			mi = type.GetMemberOverride(mi);
 
 			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi);
+
+			if (attr == null && type != mi.ReflectedType && mi.DeclaringType?.IsInterface == true && type.IsClass)
+			{
+				var newInfo = type.GetImplementation(mi);
+				if (newInfo != null)
+				{
+					attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, newInfo);
+					mi   = newInfo;
+				}
+			}
 
 			if (attr != null)
 			{

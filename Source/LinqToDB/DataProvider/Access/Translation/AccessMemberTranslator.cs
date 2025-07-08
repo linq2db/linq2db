@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Access.Translation
 {
 	public class AccessMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		class SqlTypesTranslation : SqlTypesTranslationDefault
+		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 		}
 
@@ -169,7 +169,7 @@ namespace LinqToDB.DataProvider.Access.Translation
 			}
 		}
 
-		class MathMemberTranslator : MathMemberTranslatorBase
+		sealed class MathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
@@ -245,7 +245,27 @@ namespace LinqToDB.DataProvider.Access.Translation
 
 		}
 
-		class GuidMemberTranslator : GuidMemberTranslatorBase
+		public class StringMemberTranslator : StringMemberTranslatorBase
+		{
+			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var valueTypeString = factory.GetDbDataType(value);
+				var valueTypeInt    = factory.GetDbDataType(typeof(int));
+
+				var lengthValue = TranslateLength(translationContext, translationFlags, value);
+				if (lengthValue == null)
+					return null;
+
+				var valueSymbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
+				var fillingString     = factory.Function(valueTypeString, "STRING", valueSymbolsToAdd, paddingChar);
+
+				return factory.Concat(fillingString, value);
+			}
+		}
+
+		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{
@@ -275,6 +295,11 @@ namespace LinqToDB.DataProvider.Access.Translation
 		protected override IMemberTranslator CreateMathMemberTranslator()
 		{
 			return new MathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
 		}
 
 		protected override IMemberTranslator CreateGuidMemberTranslator()

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -72,16 +72,13 @@ namespace Tests.Linq
 				var l = q.ToList();
 
 				Assert.That(l,                  Is.Not.Empty);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(l[0].FullName, Is.Not.Null);
 					Assert.That(l[0].AsSqlFullName, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(l[0].FullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
 					Assert.That(l[0].AsSqlFullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
-				});
+				}
 			}
 		}
 
@@ -119,17 +116,14 @@ namespace Tests.Linq
 				var l = q.ToList();
 
 				Assert.That(l,                    Is.Not.Empty);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(l[0].t.FullName, Is.Not.Null);
 					Assert.That(l[0].t.AsSqlFullName, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(l[0].t.FullName, Is.EqualTo(l[0].t.LastName + ", " + l[0].t.FirstName));
 					Assert.That(l[0].t.AsSqlFullName, Is.EqualTo(l[0].t.LastName + ", " + l[0].t.FirstName));
 					Assert.That(l[0].t.DoctorCount, Is.EqualTo(l[0].cnt));
-				});
+				}
 			}
 		}
 
@@ -161,8 +155,8 @@ namespace Tests.Linq
 						.Select(d => d.FirstName);
 				var l = q.ToList();
 
-				l.Should().NotBeEmpty();
-				l[0].Should().NotBeNull();
+				l.ShouldNotBeEmpty();
+				l[0].ShouldNotBeNull();
 			}
 		}
 

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -319,7 +320,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var expected = Child.Count(ch => ch.ChildID > 20);
-				Assert.That(expected, Is.Not.EqualTo(0));
+				Assert.That(expected, Is.Not.Zero);
 
 				var result = db.Child.Count(ch => ch.ChildID > 20);
 				Assert.That(result, Is.EqualTo(expected));
