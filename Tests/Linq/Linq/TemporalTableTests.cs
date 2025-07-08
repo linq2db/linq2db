@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -39,7 +39,7 @@ namespace Tests.Linq
 
 			using var sy = new SystemDB(db.ConfigurationString!);
 
-			if (!sy.Object.Objects.Any(o => o.ObjectID == SqlFn.ObjectID("dbo.TemporalTest")))
+			if (!sy.System.Object.Objects.Any(o => o.ObjectID == SqlFn.ObjectID("dbo.TemporalTest")))
 			{
 				dc.Execute(@"
 -- ALTER TABLE [dbo].[TemporalTest] SET ( SYSTEM_VERSIONING = OFF)
@@ -231,9 +231,9 @@ namespace Tests.Linq
 
 			var selectQuery = q.GetSelectQuery();
 
-			selectQuery.From.Tables.Should().HaveCount(1);
-			selectQuery.From.Tables[0].Joins.Should().HaveCount(1);
-			selectQuery.From.Tables[0].Joins[0].JoinType.Should().Be(JoinType.Left);
+			selectQuery.From.Tables.Count.ShouldBe(1);
+			selectQuery.From.Tables[0].Joins.Count.ShouldBe(1);
+			selectQuery.From.Tables[0].Joins[0].JoinType.ShouldBe(JoinType.Left);
 		}
 
 	}

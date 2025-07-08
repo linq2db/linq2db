@@ -3,7 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -260,7 +260,7 @@ namespace Tests.Linq
 
 				if (iteration > 1)
 				{
-					query.GetCacheMissCount().Should().Be(save);
+					query.GetCacheMissCount().ShouldBe(save);
 				}
 
 				var expected = table
@@ -539,10 +539,10 @@ namespace Tests.Linq
 
 				if (iteration > 1)
 				{
-					query.GetCacheMissCount().Should().Be(cacheMissCount);
+					query.GetCacheMissCount().ShouldBe(cacheMissCount);
 				}
 
-				query.GetSelectQuery().HasQueryParameter().Should().BeTrue();
+				query.GetSelectQuery().HasQueryParameter().ShouldBeTrue();
 			}
 		}
 
@@ -569,10 +569,10 @@ namespace Tests.Linq
 
 				if (iteration > 1)
 				{
-					query.GetCacheMissCount().Should().Be(cacheMissCount);
+					query.GetCacheMissCount().ShouldBe(cacheMissCount);
 				}
 
-				query.GetSelectQuery().HasQueryParameter().Should().BeTrue();
+				query.GetSelectQuery().HasQueryParameter().ShouldBeTrue();
 			}
 		}
 
@@ -847,7 +847,7 @@ namespace Tests.Linq
 				Test(2, null);
 				Test(3, 3);
 
-				Query<Values<int?>>.CacheMissCount.Should().Be(saveCount);
+				Query<Values<int?>>.CacheMissCount.ShouldBe(saveCount);
 
 				void Test(int? value1, int? value2)
 				{
@@ -1103,7 +1103,7 @@ namespace Tests.Linq
 				select p;
 
 			var result = query.ToArray();
-			result.Should().HaveCount(4);
+			result.Length.ShouldBe(4);
 		}
 
 		[Test]
@@ -1133,7 +1133,7 @@ namespace Tests.Linq
 				select p;
 
 			var result = query.ToArray();
-			result.Should().HaveCount(4);
+			result.Length.ShouldBe(4);
 		}
 
 		const string MyTableNameStringConstant = "Person";
