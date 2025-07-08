@@ -3,9 +3,9 @@ using System.Net;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Async;
-sing LinqToDB.Common.Internal;
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
@@ -24,7 +24,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void LinqOptionsTest()
 		{
-			var lo1 = LinqToDB.Common.Configuration.Linq.Options with { GuardGrouping = false };
+			var lo1 = Configuration.Linq.Options with { GuardGrouping = false };
 			var lo2 = lo1 with { GuardGrouping = true };
 
 			Assert.That(((IConfigurationID)lo1).ConfigurationID, Is.Not.EqualTo(((IConfigurationID)lo2).ConfigurationID));
