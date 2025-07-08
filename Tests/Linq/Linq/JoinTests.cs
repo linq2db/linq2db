@@ -783,7 +783,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LeftJoinSubqueryDoNotOptimize([DataSources] string context)
+		public void LeftJoinSubqueryDoNotOptimize([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 

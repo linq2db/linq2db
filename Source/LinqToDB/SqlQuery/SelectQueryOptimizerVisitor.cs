@@ -1902,7 +1902,7 @@ namespace LinqToDB.SqlQuery
 				foreach (var c in subQuery.Select.Columns)
 				{
 					var columnExpression = QueryHelper.UnwrapCast(c.Expression);
-					if (columnExpression is not SqlField or SqlColumn)
+					if (columnExpression is not (SqlField or SqlColumn))
 					{
 						nullabilityContext ??= NullabilityContext.GetContext(subQuery);
 						if (!c.Expression.CanBeNullable(nullabilityContext))
