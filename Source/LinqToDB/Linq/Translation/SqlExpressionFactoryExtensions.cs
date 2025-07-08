@@ -88,6 +88,11 @@ namespace LinqToDB.Linq.Translation
 			return new SqlFunction(dataType, functionName, false, false, parameters);
 		}
 
+		public static ISqlExpression Null(this ISqlExpressionFactory factory, DbDataType dataType)
+		{
+			return new SqlValue(dataType, null);
+		}
+
 		public static ISqlExpression Value<T>(this ISqlExpressionFactory factory, DbDataType dataType, T value)
 		{
 			return new SqlValue(dataType, value);

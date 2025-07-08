@@ -175,13 +175,12 @@ namespace LinqToDB.Linq.Translation
 						return (null, error);
 
 					ISqlExpression? suffix = null;
+					SqlSearchCondition? filterCondition = null;
+					bool IsNullFiltered = false;
 
 					var factory = translationContext.ExpressionFactory;
 
 					var stringDataType = factory.GetDbDataType(translatedValue);
-
-					// string.Join(", ", ["1", null, "3"]]) generates "1, , 3" , so we need to coalesce nulls to empty strings
-					translatedValue = factory.Coalesce(translatedValue, factory.Value(stringDataType, string.Empty));
 
 					if (info.OrderBy.Length > 0)
 					{
@@ -214,6 +213,46 @@ namespace LinqToDB.Linq.Translation
 						}
 
 						suffix = factory.Fragment(stringDataType, sb.Value.ToString(), arguments);
+					}
+
+					if (info.FilterExpression != null)
+					{
+						if (!info.TranslateExpression(info.FilterExpression, out var filterExpr, out error))
+						{
+							return (null, error);
+						}
+
+						filterCondition = filterExpr as SqlSearchCondition;
+
+						if (filterCondition is { IsAnd: true })
+						{
+							var isNotNull = filterCondition.Predicates.FirstOrDefault(p => p is SqlPredicate.IsNull { IsNot: true } isNull && isNull.Expr1.Equals(translatedValue));
+							if (isNotNull != null)
+							{
+								IsNullFiltered = true;
+								filterCondition.Predicates.Remove(isNotNull);
+								if (filterCondition.Predicates.Count == 0)
+								{
+									filterCondition = null;
+								}
+							}
+						}
+					}
+
+					if (!IsNullFiltered)
+					{
+						// string.Join(", ", ["1", null, "3"]]) generates "1, , 3" , so we need to coalesce nulls to empty strings
+						translatedValue = factory.Coalesce(translatedValue, factory.Value(stringDataType, string.Empty));
+					}
+
+					if (filterCondition != null && !filterCondition.IsTrue())
+					{
+						var caseExpr = factory.Condition(
+							filterCondition,
+							translatedValue,
+							factory.Null(stringDataType));
+
+						translatedValue = caseExpr;
 					}
 
 					var function = factory.WindowFunction(stringDataType, "STRING_AGG",

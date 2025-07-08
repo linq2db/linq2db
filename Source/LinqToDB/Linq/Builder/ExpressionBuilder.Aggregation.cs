@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
 using LinqToDB.Linq.Translation;
+using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
@@ -44,6 +45,15 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				sql = placeholder.Sql;
+
+				if (sql is SqlSearchCondition)
+				{
+					var optimizer         = new SqlExpressionOptimizerVisitor(true);
+					var evaluationContext = new EvaluationContext();
+					var nullability       = NullabilityContext.GetContext(SqlContext?.BuildContext.SelectQuery);
+					var optimized = optimizer.Optimize(evaluationContext, nullability, null, builder.DataOptions, RootContext?.BuildContext.MappingSchema ?? builder.MappingSchema, sql, true, true);
+					sql = (ISqlExpression)optimized;
+				}
 
 				return true;
 			}

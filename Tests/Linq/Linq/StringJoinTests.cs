@@ -74,9 +74,7 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
-			string?[] values = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", null, null, null, null };
-
-			var xx = values.OrderBy(x => x).ToArray();
+			string?[] values = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", null, null, null, null, "", "" };
 
 			var query = from t in table
 				group t by t.Id
@@ -90,7 +88,15 @@ namespace Tests.Linq
 						.ThenByDescending(x => x.NullableValue)
 						.Select(x => x.NullableValue)
 					),
-					NotNullable = string.Join(", ", g
+
+					NullableFiltered = string.Join(", ", g
+						.OrderBy(x => x.NotNullableValue)
+						.ThenByDescending(x => x.NullableValue)
+						.Select(x => x.NullableValue)
+						.Where(x => x != null && x != "")
+					),
+
+                    NotNullable = string.Join(", ", g
 						.OrderByDescending(x => x.NotNullableValue)
 						.ThenByDescending(x => x.NullableValue)
 						.Select(x => x.NotNullableValue)),
