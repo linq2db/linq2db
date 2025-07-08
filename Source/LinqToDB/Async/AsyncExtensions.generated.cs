@@ -5,9 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB
+namespace LinqToDB.Async
 {
-	using Async;
 	using Linq;
 
 	public static partial class AsyncExtensions

@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 {
 	public class Firebird5MemberTranslator : FirebirdMemberTranslator
 	{
-		class Firebird5DateFunctionsTranslator : FirebirdDateFunctionsTranslator
+		sealed class Firebird5DateFunctionsTranslator : FirebirdDateFunctionsTranslator
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{

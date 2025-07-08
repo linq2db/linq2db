@@ -106,10 +106,10 @@ namespace Tests.xUpdate
 				.Where(s => s.Id > 3)
 				.ToList();
 
-			var output = await source
-				.Where(s => s.Id > 3)
-				.DeleteWithOutputAsync()
-				.ToListAsync();
+			var output = await AsyncEnumerableToListAsync(
+				source
+					.Where(s => s.Id > 3)
+					.DeleteWithOutputAsync());
 
 			AreEqual(
 				expected,
@@ -128,10 +128,10 @@ namespace Tests.xUpdate
 					.Where(s => s.Id == 3)
 					.ToArray();
 
-				var output = await source
-					.Where(s => s.Id == 3)
-					.DeleteWithOutputAsync()
-					.ToListAsync();
+				var output = await AsyncEnumerableToListAsync(
+					source
+						.Where(s => s.Id == 3)
+						.DeleteWithOutputAsync());
 
 				AreEqual(
 					expected,
@@ -217,15 +217,15 @@ namespace Tests.xUpdate
 					.Where(s => s.Id > 3)
 					.ToArray();
 
-				var output = await source
-					.Where(s => s.Id > 3)
-					.DeleteWithOutputAsync(
-						deleted => new
-						{
-							Id       = Sql.AsSql(deleted.Id       + 1),
-							ValueStr = Sql.AsSql(deleted.ValueStr + 1),
-						})
-					.ToListAsync();
+				var output = await AsyncEnumerableToListAsync(
+					source
+						.Where(s => s.Id > 3)
+						.DeleteWithOutputAsync(
+							deleted => new
+							{
+								Id       = Sql.AsSql(deleted.Id       + 1),
+								ValueStr = Sql.AsSql(deleted.ValueStr + 1),
+							}));
 
 				AreEqual(
 					expected
@@ -249,15 +249,15 @@ namespace Tests.xUpdate
 					.Where(s => s.Id == 3)
 					.ToArray();
 
-				var output = await source
-					.Where(s => s.Id == 3)
-					.DeleteWithOutputAsync(
-						deleted => new
-						{
-							Id       = Sql.AsSql(deleted.Id       + 1),
-							ValueStr = Sql.AsSql(deleted.ValueStr + 1),
-						})
-					.ToListAsync();
+				var output = await AsyncEnumerableToListAsync(
+					source
+						.Where(s => s.Id == 3)
+						.DeleteWithOutputAsync(
+							deleted => new
+							{
+								Id       = Sql.AsSql(deleted.Id       + 1),
+								ValueStr = Sql.AsSql(deleted.ValueStr + 1),
+							}));
 
 				AreEqual(
 					expected
@@ -351,16 +351,16 @@ namespace Tests.xUpdate
 					.Where(s => s.Id > 3)
 					.ToArray();
 
-				var output = await source
-					.Where(s => s.Id > 3)
-					.DeleteWithOutputAsync(
-						s => new DestinationTable
-						{
-							Id       = s.Id       + param,
-							Value    = s.Value    + param,
-							ValueStr = s.ValueStr + param
-						})
-					.ToListAsync();
+				var output = await AsyncEnumerableToListAsync(
+					source
+						.Where(s => s.Id > 3)
+						.DeleteWithOutputAsync(
+							s => new DestinationTable
+							{
+								Id       = s.Id       + param,
+								Value    = s.Value    + param,
+								ValueStr = s.ValueStr + param
+							}));
 
 				AreEqual(
 					expected
@@ -386,16 +386,16 @@ namespace Tests.xUpdate
 					.Where(s => s.Id == 3)
 					.ToArray();
 
-				var output = await source
-					.Where(s => s.Id == 3)
-					.DeleteWithOutputAsync(
-						s => new DestinationTable
-						{
-							Id       = s.Id       + param,
-							Value    = s.Value    + param,
-							ValueStr = s.ValueStr + param
-						})
-					.ToListAsync();
+				var output = await AsyncEnumerableToListAsync(
+					source
+						.Where(s => s.Id == 3)
+						.DeleteWithOutputAsync(
+							s => new DestinationTable
+							{
+								Id       = s.Id       + param,
+								Value    = s.Value    + param,
+								ValueStr = s.ValueStr + param
+							}));
 
 				AreEqual(
 					expected

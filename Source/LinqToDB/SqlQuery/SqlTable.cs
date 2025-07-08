@@ -341,7 +341,7 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		internal static SqlTable Create<T>(IDataContext dataContext)
+		public static SqlTable Create<T>(IDataContext dataContext)
 		{
 			return new SqlTable(dataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated));
 		}

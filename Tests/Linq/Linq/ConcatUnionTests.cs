@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Shouldly;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

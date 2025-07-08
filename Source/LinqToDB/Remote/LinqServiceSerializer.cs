@@ -643,7 +643,7 @@ namespace LinqToDB.Remote
 			{
 			}
 
-			class QuerySerializationVisitor : QueryElementVisitor
+			sealed class QuerySerializationVisitor : QueryElementVisitor
 			{
 				readonly QuerySerializer   _serializer;
 				readonly EvaluationContext _evaluationContext;
