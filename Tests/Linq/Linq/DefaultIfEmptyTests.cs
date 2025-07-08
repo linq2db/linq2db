@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 
@@ -23,7 +23,7 @@ namespace Tests.Linq
 				.DefaultIfEmpty()
 				.ToList();
 
-			children.Should().HaveCount(1);
+			children.Count.ShouldBe(1);
 		}
 
 		[Test]
@@ -39,9 +39,9 @@ namespace Tests.Linq
 				.DefaultIfEmpty(defaultValue)
 				.ToList();
 
-			children.Should().HaveCount(1);
+			children.Count.ShouldBe(1);
 
-			children[0].Parent1.Should().BeSameAs(defaultValue.Parent1);
+			children[0].Parent1.ShouldBeSameAs(defaultValue.Parent1);
 		}
 
 		[Test]

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.DataProvider.SqlServer;
@@ -17,7 +17,7 @@ using Tests.Model;
 
 namespace Tests.Linq
 {
-	[TestFixture]
+	[TestFixture, NonParallelizable]
 	public class AnalyticTests : TestBase
 	{
 		[Test]
@@ -540,7 +540,7 @@ namespace Tests.Linq
 				Assert.That(q.ToArray(), Is.Not.Empty);
 
 				if (iteration > 1)
-					q.GetCacheMissCount().Should().Be(save);
+					q.GetCacheMissCount().ShouldBe(save);
 			}
 		}
 

@@ -86,7 +86,7 @@ namespace LinqToDB.Remote
 
 					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, DataContext.Options, optimizationContext);
 
-					sqlBuilder.BuildSql(i, statement, sqlStringBuilder.Value, optimizationContext, aliases);
+					sqlBuilder.BuildSql(i, statement, sqlStringBuilder.Value, optimizationContext, aliases, null);
 
 					if (i == 0)
 					{

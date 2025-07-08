@@ -5,16 +5,11 @@
 		<AssemblyName>linq2db.Tests.Playground</AssemblyName>
 
 		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
-		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="..\Linq\app.config" Link="app.config" />
 	</ItemGroup>
 
 </Project>
