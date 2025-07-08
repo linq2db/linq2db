@@ -326,6 +326,55 @@ namespace LinqToDB.SqlQuery
 
 			return writer;
 		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+
+			hash.Add(ElementType);
+			hash.Add(FunctionName);
+			hash.Add(Type);
+
+			if (WithinGroup != null)
+			{
+				foreach (var item in WithinGroup)
+				{
+					hash.Add(item.GetElementHashCode());
+				}
+			}
+
+			if (PartitionBy != null)
+			{
+				foreach (var item in PartitionBy)
+				{
+					hash.Add(item.GetElementHashCode());
+				}
+			}
+
+			if (OrderBy != null)
+			{
+				foreach (var item in OrderBy)
+				{
+					hash.Add(item.GetElementHashCode());
+				}
+			}
+
+			hash.Add(FrameClause?.GetElementHashCode());
+			hash.Add(Filter?.GetElementHashCode());
+			hash.Add(IsAggregate);
+
+			foreach (var t in Arguments)
+			{
+				hash.Add(t.GetElementHashCode());
+			}
+
+			foreach (var t in ArgumentsNullability)
+			{
+				hash.Add(t);
+			}
+
+			return hash.ToHashCode();
+		}
 	}
 
 	public class SqlFunctionArgument : QueryElement
@@ -355,6 +404,18 @@ namespace LinqToDB.SqlQuery
 
 			writer.AppendElement(Expression);
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+
+			hash.Add(ElementType);
+			hash.Add(Expression.GetElementHashCode());
+			hash.Add(Modifier);
+			hash.Add(Suffix?.GetElementHashCode());
+
+			return hash.ToHashCode();
 		}
 
 		public void Modify(ISqlExpression sqlExpression, ISqlExpression? suffix)
@@ -405,6 +466,19 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+
+			hash.Add(ElementType);
+			hash.Add(IsPreceding);
+			hash.Add(BoundaryType);
+			hash.Add(Offset?.GetElementHashCode());
+
+			return hash.ToHashCode();
+		}
+
+
 		public void Modify(ISqlExpression offset)
 		{
 			if (BoundaryType != FrameBoundaryType.Offset)
@@ -442,6 +516,18 @@ namespace LinqToDB.SqlQuery
 				writer.Append(" NULLS ").Append(NullsPosition.ToString().ToUpper(CultureInfo.InvariantCulture));
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+
+			hash.Add(ElementType);
+			hash.Add(Expression.GetElementHashCode());
+			hash.Add(IsDescending);
+			hash.Add(NullsPosition);
+
+			return hash.ToHashCode();
 		}
 
 		public void Modify(ISqlExpression expression)
@@ -486,6 +572,18 @@ namespace LinqToDB.SqlQuery
 			writer.Append(" AND ");
 			End.ToString(writer);
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+
+			hash.Add(ElementType);
+			hash.Add(FrameType);
+			hash.Add(Start.GetElementHashCode());
+			hash.Add(End.GetElementHashCode());
+
+			return hash.ToHashCode();
 		}
 
 		protected bool Equals(SqlFrameClause other)
