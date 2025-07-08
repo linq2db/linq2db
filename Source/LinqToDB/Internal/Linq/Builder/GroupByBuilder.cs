@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -10,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
@@ -288,7 +288,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region Element Context
 
-		internal class ElementContext : SelectContext
+		internal sealed class ElementContext : SelectContext
 		{
 			public ElementContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence, bool isSubQuery) :
 				base(parent, SequenceHelper.PrepareBody(lambda, sequence), sequence, isSubQuery)
@@ -395,7 +395,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region GroupByContext
 
-		internal class GroupByContext : SubQueryContext
+		internal sealed class GroupByContext : SubQueryContext
 		{
 			public GroupByContext(
 				IBuildContext                  sequence,
@@ -643,7 +643,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return buildResult.BuildContext;
 			}
 
-			internal class Grouping<TKey,TElement> : IGrouping<TKey,TElement>
+			internal sealed class Grouping<TKey,TElement> : IGrouping<TKey,TElement>
 			{
 				public TKey                   Key   { get; set; } = default!;
 				public IEnumerable<TElement>? Items { get; set; } = default!;
@@ -661,7 +661,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					return GetEnumerator();
 				}
 			}
-			class GroupingEnumerable<TKey, TElement> : IResultEnumerable<IGrouping<TKey, TElement>>
+
+			sealed class GroupingEnumerable<TKey, TElement> : IResultEnumerable<IGrouping<TKey, TElement>>
 			{
 				readonly IResultEnumerable<TElement> _elements;
 				readonly Func<TElement, TKey>        _groupingKey;
@@ -687,7 +688,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return new GroupingAsyncEnumerator(_elements, _groupingKey, cancellationToken);
 				}
 
-				class GroupingAsyncEnumerator : IAsyncEnumerator<IGrouping<TKey, TElement>>
+				sealed class GroupingAsyncEnumerator : IAsyncEnumerator<IGrouping<TKey, TElement>>
 				{
 					readonly IResultEnumerable<TElement> _elements;
 					readonly Func<TElement, TKey>        _groupingKey;

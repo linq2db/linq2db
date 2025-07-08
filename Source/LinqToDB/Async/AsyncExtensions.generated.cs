@@ -1,14 +1,14 @@
 ﻿#nullable enable
 using System;
-using System.Linq.Expressions;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Linq;
 
-namespace LinqToDB
+namespace LinqToDB.Async
 {
 	public static partial class AsyncExtensions
 	{

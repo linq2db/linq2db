@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Async;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Reflection;
@@ -380,7 +381,7 @@ namespace LinqToDB
 				currentSource.Expression);
 
 			return currentSource.Execute<int>(expr);
-		}
+	}
 
 		/// <summary>
 		/// Executes delete operation asynchronously, using source query as filter for records, that should be deleted.
@@ -401,7 +402,7 @@ namespace LinqToDB
 				currentSource.Expression);
 
 			return currentSource.ExecuteAsync<int>(expr, token);
-		}
+}
 
 		/// <summary>
 		/// Executes delete operation, using source query as initial filter for records, that should be deleted, and predicate expression as additional filter.

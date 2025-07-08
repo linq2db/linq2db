@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Linq.Builder
 {
 	sealed class RecordReaderBuilder
 	{
-		class EntityConstructor : EntityConstructorBase
+		sealed class EntityConstructor : EntityConstructorBase
 		{
 			readonly ParameterExpression _readerVariable;
 			public           RecordReaderBuilder Builder { get; }

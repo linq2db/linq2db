@@ -145,12 +145,12 @@ namespace LinqToDB.Internal.Linq
 			public static PropertyInfo Variables   = PropertyOf(e => e.Variables);
 		}
 
-		public class SqlGenericConstructor : Expressor<SqlGenericConstructorExpression>
+		public sealed class SqlGenericConstructor : Expressor<SqlGenericConstructorExpression>
 		{
 			public static PropertyInfo Assignments = PropertyOf(e => e.Assignments);
 		}
 
-		public class SqlGenericConstructorAssignment : Expressor<SqlGenericConstructorExpression.Assignment>
+		public sealed class SqlGenericConstructorAssignment : Expressor<SqlGenericConstructorExpression.Assignment>
 		{
 			public static PropertyInfo Expression = PropertyOf(e => e.Expression);
 		}

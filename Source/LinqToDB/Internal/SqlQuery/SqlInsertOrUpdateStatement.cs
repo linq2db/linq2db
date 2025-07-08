@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Internal.SqlQuery
+﻿using System;
+
+namespace LinqToDB.Internal.SqlQuery
 {
 	public class SqlInsertOrUpdateStatement: SqlStatementWithQueryBase
 	{
@@ -36,6 +38,16 @@
 				.AppendElement(SelectQuery);
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(base.GetElementHashCode());
+
+			hash.Add(_insert?.GetElementHashCode());
+			hash.Add(_update?.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)

@@ -1,11 +1,12 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-
 using LinqToDB;
+using LinqToDB.Async;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.xUpdate
 {
@@ -13,8 +14,9 @@ namespace Tests.xUpdate
 	{
 		private const string SIMPLE_OUTPUT = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL17Plus},{TestProvName.AllFirebird3Plus}";
 		private const string OUTPUT_WITH_ACTION = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL17Plus}";
-		private const string OUTPUT_WITH_HISTORY = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllFirebird3Plus}";
-		private const string OUTPUT_WITH_ACTION_AND_HISTORY = TestProvName.AllSqlServer2008Plus;
+		private const string OUTPUT_WITH_HISTORY = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllFirebird3Plus},{TestProvName.AllPostgreSQL18Plus}";
+		private const string OUTPUT_WITH_ACTION_AND_HISTORY = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL18Plus}";
+		private const string OUTPUT_INTO_WITH_ACTION_AND_HISTORY = $"{TestProvName.AllSqlServer2008Plus}";
 
 		[Test]
 		public void MergeWithOutputFull([IncludeDataSources(true, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
@@ -34,15 +36,15 @@ namespace Tests.xUpdate
 
 				var result = outputRows.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.a.Should().Be("INSERT");
-				record.deleted.Id.Should().Be(0);
+				record.a.ShouldBe("INSERT");
+				record.deleted.Id.ShouldBe(0);
 
-				record.inserted.Id.Should().Be(5);
-				record.inserted.Field1.Should().Be(10);
+				record.inserted.Id.ShouldBe(5);
+				record.inserted.Field1.ShouldBe(10);
 			}
 		}
 
@@ -64,14 +66,14 @@ namespace Tests.xUpdate
 
 				var result = outputRows.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.deleted.Id.Should().Be(0);
+				record.deleted.Id.ShouldBe(0);
 
-				record.inserted.Id.Should().Be(5);
-				record.inserted.Field1.Should().Be(10);
+				record.inserted.Id.ShouldBe(5);
+				record.inserted.Field1.ShouldBe(10);
 			}
 		}
 
@@ -96,11 +98,11 @@ namespace Tests.xUpdate
 				{
 					cnt++;
 
-					record.a.Should().Be("INSERT");
-					record.deleted.Id.Should().Be(0);
+					record.a.ShouldBe("INSERT");
+					record.deleted.Id.ShouldBe(0);
 
-					record.inserted.Id.Should().Be(5);
-					record.inserted.Field1.Should().Be(10);
+					record.inserted.Id.ShouldBe(5);
+					record.inserted.Field1.ShouldBe(10);
 				}
 
 				Assert.That(cnt, Is.EqualTo(1));
@@ -129,10 +131,10 @@ namespace Tests.xUpdate
 					Assert.That(hasRecord, Is.False);
 					hasRecord = true;
 
-					record.deleted.Id.Should().Be(0);
+					record.deleted.Id.ShouldBe(0);
 
-					record.inserted.Id.Should().Be(5);
-					record.inserted.Field1.Should().Be(10);
+					record.inserted.Id.ShouldBe(5);
+					record.inserted.Field1.ShouldBe(10);
 				}
 
 				Assert.That(hasRecord, Is.True);
@@ -160,10 +162,10 @@ namespace Tests.xUpdate
 				{
 					cnt++;
 
-					record.a.Should().Be("INSERT");
+					record.a.ShouldBe("INSERT");
 
-					record.inserted.Id.Should().Be(5);
-					record.inserted.Field1.Should().Be(10);
+					record.inserted.Id.ShouldBe(5);
+					record.inserted.Field1.ShouldBe(10);
 				}
 
 				Assert.That(cnt, Is.EqualTo(1));
@@ -188,13 +190,13 @@ namespace Tests.xUpdate
 
 				var result = outputRows.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.a.Should().Be("INSERT");
+				record.a.ShouldBe("INSERT");
 
-				record.Id.Should().Be(5);
+				record.Id.ShouldBe(5);
 			}
 		}
 
@@ -222,13 +224,13 @@ namespace Tests.xUpdate
 
 				var result = outputRows.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.a.Should().Be("INSERT");
+				record.a.ShouldBe("INSERT");
 
-				record.Id.Should().Be("5");
+				record.Id.ShouldBe("5");
 			}
 		}
 
@@ -255,11 +257,11 @@ namespace Tests.xUpdate
 
 				var result = outputRows.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Id.Should().Be("5");
+				record.Id.ShouldBe("5");
 			}
 		}
 
@@ -290,10 +292,10 @@ namespace Tests.xUpdate
 
 				var result = outputRows.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 				var record = result[0];
 
-				record.Field2.Should().Be(3);
+				record.Field2.ShouldBe(3);
 			}
 		}
 
@@ -315,11 +317,11 @@ namespace Tests.xUpdate
 
 				var result = outputRows.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Id.Should().Be(5);
+				record.Id.ShouldBe(5);
 			}
 		}
 
@@ -332,7 +334,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputInto([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public void MergeWithOutputInto([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -357,23 +359,23 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.   Should().Be("INSERT");
-				record.NewId.    Should().Be(5);
-				record.DeletedId.Should().BeNull();
-				record.SourceId. Should().Be(6);
+				record.Action.   ShouldBe("INSERT");
+				record.NewId.    ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
+				record.SourceId. ShouldBe(6);
 			}
 		}
 		
 		[Test]
-		public async Task MergeWithOutputIntoWithSourceAsync([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public async Task MergeWithOutputIntoWithSourceAsync([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -398,23 +400,23 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.   Should().Be("INSERT");
-				record.NewId.    Should().Be(5);
-				record.DeletedId.Should().BeNull();
-				record.SourceId. Should().Be(6);
+				record.Action.   ShouldBe("INSERT");
+				record.NewId.    ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
+				record.SourceId. ShouldBe(6);
 			}
 		}
 
 		[Test]
-		public void MergeWithOutputConditionalInto([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public void MergeWithOutputConditionalInto([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -439,23 +441,23 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.   Should().Be("Row Inserted");
-				record.NewId.    Should().Be(5);
-				record.DeletedId.Should().BeNull();
-				record.SourceId. Should().Be(6);
+				record.Action.   ShouldBe("Row Inserted");
+				record.NewId.    ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
+				record.SourceId. ShouldBe(6);
 			}
 		}
 
 		[Test]
-		public void MergeWithOutputIntoTempTable([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public void MergeWithOutputIntoTempTable([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -474,24 +476,24 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
+				record.Action.ShouldBe("INSERT");
 
-				record.NewId.Should().Be(5);
-				record.DeletedId.Should().BeNull();
+				record.NewId.ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
 			}
 		}
 		
 		[Test]
-		public void MergeWithOutputIntoTempTableByTableName([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public void MergeWithOutputIntoTempTableByTableName([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -513,24 +515,24 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
+				record.Action.ShouldBe("INSERT");
 
-				record.NewId.Should().Be(5);
-				record.DeletedId.Should().BeNull();
+				record.NewId.ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
 			}
 		}
 
 		[Test]
-		public void MergeWithOutputIntoNonTemp([IncludeDataSources(true, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public void MergeWithOutputIntoNonTemp([IncludeDataSources(true, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var temp = db.CreateLocalTable<InsertTempTable>())
@@ -548,24 +550,24 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
+				record.Action.ShouldBe("INSERT");
 
-				record.NewId.Should().Be(5);
-				record.DeletedId.Should().BeNull();
+				record.NewId.ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
 			}
 		}
 
 		[Test]
-		public async Task MergeWithOutputIntoAsync([IncludeDataSources(OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public async Task MergeWithOutputIntoAsync([IncludeDataSources(OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -584,24 +586,24 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = await temp.ToArrayAsync();
 
-				result.Should().HaveCount(1);
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
+				record.Action.ShouldBe("INSERT");
 
-				record.NewId.Should().Be(5);
-				record.DeletedId.Should().BeNull();
+				record.NewId.ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
 			}
 		}
 
 		[Test]
-		public async Task MergeWithOutputIntoTempTableByTableNameAsync([IncludeDataSources(OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public async Task MergeWithOutputIntoTempTableByTableNameAsync([IncludeDataSources(OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -623,24 +625,24 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = await temp.ToArrayAsync();
 
-				result.Should().HaveCount(1);
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
+				record.Action.ShouldBe("INSERT");
 
-				record.NewId.Should().Be(5);
-				record.DeletedId.Should().BeNull();
+				record.NewId.ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
 			}
 		}
 
 		[Test]
-		public void MergeWithOutputIntoTempTableByTableNameWithSource([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public void MergeWithOutputIntoTempTableByTableNameWithSource([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -668,23 +670,23 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
-				record.NewId.Should().Be(5);
-				record.DeletedId.Should().BeNull();
-				record.SourceId.Should().Be(6);
+				record.Action.ShouldBe("INSERT");
+				record.NewId.ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
+				record.SourceId.ShouldBe(6);
 			}
 		}
 
 		[Test]
-		public async Task MergeWithOutputIntoTempTableByTableNameWithSourceAsync([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public async Task MergeWithOutputIntoTempTableByTableNameWithSourceAsync([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -712,18 +714,18 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.Should().Be(1);
+				affected.ShouldBe(1);
 
 				var result = temp.ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
-				record.NewId.Should().Be(5);
-				record.DeletedId.Should().BeNull();
-				record.SourceId.Should().Be(6);
+				record.Action.ShouldBe("INSERT");
+				record.NewId.ShouldBe(5);
+				record.DeletedId.ShouldBeNull();
+				record.SourceId.ShouldBe(6);
 			}
 		}
 

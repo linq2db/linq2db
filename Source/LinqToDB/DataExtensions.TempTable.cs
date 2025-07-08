@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using LinqToDB.Data;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.Model;
 
 namespace LinqToDB
 {
@@ -656,7 +655,7 @@ namespace LinqToDB
 		{
 			if (items is IExpressionQuery eq)
 			{
-				EntityDescriptor? tempTableDescriptor = null;
+				TempTableDescriptor? tempTableDescriptor = null;
 				if (setTable != null)
 					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext, setTable);
 
@@ -728,7 +727,7 @@ namespace LinqToDB
 		{
 			if (items is IExpressionQuery eq)
 			{
-				EntityDescriptor? tempTableDescriptor = null;
+				TempTableDescriptor? tempTableDescriptor = null;
 				if (setTable != null)
 					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext, setTable);
 
@@ -738,17 +737,20 @@ namespace LinqToDB
 			throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
 		}
 
-		private static EntityDescriptor GetTempTableDescriptor<T>(IDataContext dataContext, Action<EntityMappingBuilder<T>> setTable)
+		private static TempTableDescriptor GetTempTableDescriptor<T>(IDataContext dataContext, Action<EntityMappingBuilder<T>> setTable)
 		{
-			var ms      = new MappingSchema(dataContext.MappingSchema);
-			var builder = new FluentMappingBuilder(ms);
+			var oldSchema = dataContext.MappingSchema;
+			var newSchema = new MappingSchema("#TempTable", dataContext.MappingSchema);
+			var builder   = new FluentMappingBuilder(newSchema);
 
 			setTable(builder.Entity<T>());
 			builder.Build();
 
-			dataContext.AddMappingSchema(ms);
+			dataContext.SetMappingSchema(newSchema);
 
-			return ms.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
+			return new TempTableDescriptor(
+				newSchema.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated),
+				oldSchema);
 		}
 
 		#endregion

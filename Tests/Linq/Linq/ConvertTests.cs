@@ -4,14 +4,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text.Json;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -1608,7 +1608,7 @@ namespace Tests.Linq
 					})
 					.First();
 
-				sqlConverted.Should().Be(noSqlConverted);
+				sqlConverted.ShouldBeEquivalentTo(noSqlConverted);
 			}
 		}
 

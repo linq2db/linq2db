@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Internal.Expressions
 {
-	class SqlReaderIsNullExpression : Expression, IEquatable<SqlReaderIsNullExpression>
+	sealed class SqlReaderIsNullExpression : Expression, IEquatable<SqlReaderIsNullExpression>
 	{
 		public SqlPlaceholderExpression Placeholder { get; }
 		public bool                     IsNot       { get; }

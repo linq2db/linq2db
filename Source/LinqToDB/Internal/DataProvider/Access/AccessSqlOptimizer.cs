@@ -6,7 +6,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	class AccessSqlOptimizer : BasicSqlOptimizer
+	sealed class AccessSqlOptimizer : BasicSqlOptimizer
 	{
 		public AccessSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

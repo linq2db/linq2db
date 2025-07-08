@@ -3,13 +3,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-
 using LinqToDB;
-using LinqToDB.Internal;
+using LinqToDB.Async;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -955,7 +956,7 @@ namespace Tests.Linq
 					.Concat(db.Parent.Select(p => p.ParentID))
 					.Any();
 
-				result.Should().BeTrue();
+				result.ShouldBeTrue();
 			}
 		}
 
@@ -1192,7 +1193,8 @@ namespace Tests.Linq
 
 			var query = query1.UnionAll(query2);
 
-			query.Invoking(q => q.ToArray()).Should().NotThrow();
+			var act = () => query.ToArray();
+			act.ShouldNotThrow();
 		}
 
 		[Test]
@@ -1205,7 +1207,8 @@ namespace Tests.Linq
 
 			var query = query1.UnionAll(query2);
 
-			query.Invoking(q => q.ToArray()).Should().NotThrow();
+			var act = () => query.ToArray();
+			act.ShouldNotThrow();
 		}
 
 		[Test]
@@ -1221,7 +1224,8 @@ namespace Tests.Linq
 
 			var query = query1.UnionAll(query2);
 
-			query.Invoking(q => q.ToList()).Should().NotThrow();
+			var act = () => query.ToArray();
+			act.ShouldNotThrow();
 		}
 
 		[Test]
@@ -1248,7 +1252,8 @@ namespace Tests.Linq
 
 			query = query.Where(x => x.StrValue != null);
 
-			query.Invoking(q => q.ToList()).Should().NotThrow();
+			var act = () => query.ToArray();
+			act.ShouldNotThrow();
 		}
 
 		[Test(Description = "Test that we generate plain UNION without sub-queries")]
@@ -1262,7 +1267,7 @@ namespace Tests.Linq
 
 			query1.Concat(query2).Concat(query3).ToArray();
 
-			db.LastQuery!.Should().Contain("SELECT", Exactly.Thrice());
+			db.LastQuery!.ShouldContain("SELECT", Exactly.Thrice());
 		}
 
 		[Test(Description = "Test that we generate plain UNION without sub-queries")]
@@ -1279,7 +1284,7 @@ namespace Tests.Linq
 
 			query1.Concat(query2.Concat(query3)).Concat(query4.Concat(query5).Concat(query6)).ToArray();
 
-			db.LastQuery!.Should().Contain("SELECT", Exactly.Times(6));
+			db.LastQuery!.ShouldContain("SELECT", Exactly.Times(6));
 		}
 
 		// only pgsql and CH support all 6 operators right now
@@ -1299,14 +1304,14 @@ namespace Tests.Linq
 
 			var sql = db.LastQuery!;
 			// 6 main queries and 4 subqueries for incompatible operators
-			sql.Should().Contain("SELECT", Exactly.Times(6 + 4));
+			sql.ShouldContain("SELECT", Exactly.Times(6 + 4));
 
 			// operators generated
-			sql.Should().Contain("UNION ALL", Exactly.Once());
-			sql.Should().Contain("UNION", Exactly.Twice());
-			sql.Should().Contain("INTERSECT", Exactly.Twice());
-			sql.Should().Contain("INTERSECT ALL", Exactly.Once());
-			sql.Should().Contain("EXCEPT", Exactly.Once());
+			sql.ShouldContain("UNION ALL", Exactly.Once());
+			sql.ShouldContain("UNION", Exactly.Twice());
+			sql.ShouldContain("INTERSECT", Exactly.Twice());
+			sql.ShouldContain("INTERSECT ALL", Exactly.Once());
+			sql.ShouldContain("EXCEPT", Exactly.Once());
 
 			// operators order correct
 			var i1 = sql.IndexOf("UNION");
@@ -1521,11 +1526,11 @@ namespace Tests.Linq
 
 			query1.Concat(query2).ToArray();
 			if (db is TestDataConnection dc1)
-				dc1.LastQuery!.Should().NotContain("N'");
+				dc1.LastQuery!.ShouldNotContain("N'");
 
 			query2.Concat(query1).ToArray();
 			if (db is TestDataConnection dc2)
-				dc2.LastQuery!.Should().NotContain("N'");
+				dc2.LastQuery!.ShouldNotContain("N'");
 		}
 
 		[ActiveIssue(Configurations = [TestProvName.AllDB2])]
@@ -1553,11 +1558,11 @@ namespace Tests.Linq
 
 			query1.Concat(query2).ToArray();
 			if (db is TestDataConnection dc1)
-				dc1.LastQuery!.Should().NotContain("N'");
+				dc1.LastQuery!.ShouldNotContain("N'");
 
 			query2.Concat(query1).ToArray();
 			if (db is TestDataConnection dc2)
-				dc2.LastQuery!.Should().NotContain("N'");
+				dc2.LastQuery!.ShouldNotContain("N'");
 		}
 
 		[ActiveIssue(Configurations = [TestProvName.AllDB2])]
@@ -1752,10 +1757,10 @@ namespace Tests.Linq
 			// 1. why we cast N-literal to varchar instead of varchar literal generation
 			// 2. why we even mention varchar in expression with N-columns only
 			if (db is TestDataConnection dc1)
-				dc1.LastQuery!.Should().NotContain("Convert(VarChar");
+				dc1.LastQuery!.ShouldNotContain("Convert(VarChar");
 			query2.Concat(query1).ToArray();
 			if (db is TestDataConnection dc2)
-				dc2.LastQuery!.Should().NotContain("Convert(VarChar");
+				dc2.LastQuery!.ShouldNotContain("Convert(VarChar");
 		}
 
 		[Test(Description = "Test that other providers work")]
@@ -1829,9 +1834,9 @@ namespace Tests.Linq
 
 			var result = query1.Concat(query2).AsEnumerable().OrderBy(x => x.ID).ToArray();
 
-			result.Should().HaveCount(2);
-			result[0].Name.Marker.Should().Be("id=1");
-			result[1].Name.Marker.Should().Be("id=2");
+			result.Length.ShouldBe(2);
+			result[0].Name.Marker.ShouldBe("id=1");
+			result[1].Name.Marker.ShouldBe("id=2");
 		}
 
 		public class Issue2948MyModel
@@ -1867,9 +1872,9 @@ namespace Tests.Linq
 			// order is not guaranted by DB
 			res = res.OrderBy(r => r.Id).ToList();
 
-			res.Should().HaveCount(5);
-			res[0].Id.Should().Be(1);
-			res[0].Name.Should().Be("John");
+			res.Count.ShouldBe(5);
+			res[0].Id.ShouldBe(1);
+			res[0].Name.ShouldBe("John");
 		}
 
 		[Test(Description = "invalid SQL for Any() subquery")]
@@ -1903,7 +1908,7 @@ namespace Tests.Linq
 
 			var sql = query.ToSqlQuery().Sql;
 
-			sql.Should().NotContain("ORDER BY");
+			sql.ShouldNotContain("ORDER BY");
 
 			query.ToList();
 		}
@@ -1919,7 +1924,7 @@ namespace Tests.Linq
 
 			var sql = query.ToSqlQuery().Sql;
 
-			sql.Should().NotContain("ORDER BY");
+			sql.ShouldNotContain("ORDER BY");
 
 			query.ToList();
 		}
@@ -1936,8 +1941,8 @@ namespace Tests.Linq
 
 			var sql = query.ToSqlQuery().Sql;
 
-			sql.Should().Contain("ORDER BY", Exactly.Once());
-			sql.Substring(sql.IndexOf("ORDER BY")).Should().Contain("UNION", Exactly.Once());
+			sql.ShouldContain("ORDER BY", Exactly.Once());
+			sql.Substring(sql.IndexOf("ORDER BY")).ShouldContain("UNION", Exactly.Once());
 
 			query.ToList();
 		}
@@ -1954,9 +1959,9 @@ namespace Tests.Linq
 
 			var sql = query.ToSqlQuery().Sql;
 
-			sql.Should().Contain("ORDER BY", Exactly.Once());
-			sql.Should().Contain("UNION", Exactly.Once());
-			sql.Substring(sql.IndexOf("ORDER BY")).Should().NotContain("UNION");
+			sql.ShouldContain("ORDER BY", Exactly.Once());
+			sql.ShouldContain("UNION", Exactly.Once());
+			sql.Substring(sql.IndexOf("ORDER BY")).ShouldNotContain("UNION");
 
 			query.ToList();
 		}
@@ -1996,15 +2001,15 @@ namespace Tests.Linq
 				.Concat(db.Person.LoadWith(p => p.Patient))
 				.ToArray();
 
-			res.Should().HaveCount(6);
+			res.Length.ShouldBe(6);
 
 			var pat = res.Where(r => r.ID == 2).First();
-			pat.Patient.Should().NotBeNull();
+			pat.Patient.ShouldNotBeNull();
 
 			pat = res.Where(r => r.ID == 2).Skip(1).Single();
-			pat.Patient.Should().NotBeNull();
+			pat.Patient.ShouldNotBeNull();
 
-			pat.Patient!.Diagnosis.Should().Be("Hallucination with Paranoid Bugs' Delirium of Persecution");
+			pat.Patient!.Diagnosis.ShouldBe("Hallucination with Paranoid Bugs' Delirium of Persecution");
 		}
 
 		[Test(Description = "Working version of Issue2511_Query2")]
@@ -2025,11 +2030,11 @@ namespace Tests.Linq
 				.OrderBy(x => x.ID)
 				.ToArray();
 
-			res.Should().HaveCount(6);
+			res.Length.ShouldBe(6);
 
 			var patients = res.Where(r => r.ID == 2).ToList();
-			patients.Any(p => p.Patient != null).Should().BeTrue();
-			patients.Any(p => p.Patient == null).Should().BeTrue();
+			patients.Any(p => p.Patient != null).ShouldBeTrue();
+			patients.Any(p => p.Patient == null).ShouldBeTrue();
 		}
 
 		[Test]
@@ -2146,9 +2151,9 @@ namespace Tests.Linq
 						from t3 in table.Where(x => x.Id == 3) select t3);
 
 				var result = query.ToList();
-				result[0].Should().BeOfType<SetEntityA>();
-				result[1].Should().BeOfType<SetEntityB>();
-				result[2].Should().BeOfType<SetEntityC>();
+				result[0].ShouldBeOfType<SetEntityA>();
+				result[1].ShouldBeOfType<SetEntityB>();
+				result[2].ShouldBeOfType<SetEntityC>();
 			}
 		}
 
@@ -2177,9 +2182,9 @@ namespace Tests.Linq
 						});
 
 				var result = query.ToList();
-				result[0].Should().BeOfType<SetEntityA>();
-				result[1].Should().BeOfType<SetEntityB>();
-				result[2].Should().BeOfType<SetEntityC>();
+				result[0].ShouldBeOfType<SetEntityA>();
+				result[1].ShouldBeOfType<SetEntityB>();
+				result[2].ShouldBeOfType<SetEntityC>();
 			}
 		}
 

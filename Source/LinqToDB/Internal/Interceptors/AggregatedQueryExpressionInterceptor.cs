@@ -4,7 +4,7 @@ using LinqToDB.Interceptors;
 
 namespace LinqToDB.Internal.Interceptors
 {
-	class AggregatedQueryExpressionInterceptor : AggregatedInterceptor<IQueryExpressionInterceptor>, IQueryExpressionInterceptor
+	sealed class AggregatedQueryExpressionInterceptor : AggregatedInterceptor<IQueryExpressionInterceptor>, IQueryExpressionInterceptor
 	{
 		public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
 		{

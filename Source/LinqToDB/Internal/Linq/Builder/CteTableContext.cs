@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
 
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
@@ -114,7 +113,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return ctePath;
 		}
 
-		class CteTableProxy : BuildProxyBase<CteTableContext>
+		sealed class CteTableProxy : BuildProxyBase<CteTableContext>
 		{
 			public CteTableProxy(CteTableContext ownerContext, Expression? currentPath, Expression innerExpression) : base(ownerContext, ownerContext.CteContext, currentPath, innerExpression)
 			{

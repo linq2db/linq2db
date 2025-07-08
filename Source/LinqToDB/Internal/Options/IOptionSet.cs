@@ -13,5 +13,9 @@ namespace LinqToDB.Internal.Options
 	/// </summary>
 	public interface IOptionSet : IConfigurationID
 	{
+		/// <summary>
+		/// Gets the default options.
+		/// </summary>
+		IOptionSet Default { get; }
 	}
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -58,6 +59,20 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 
 			return writer;
+		}
+
+		public int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(Into);
+			hash.Add(WithIdentity);
+			foreach (var item in Items)
+			{
+				hash.Add(item.GetElementHashCode());
+			}
+
+			return hash.ToHashCode();
+
 		}
 
 		#endregion

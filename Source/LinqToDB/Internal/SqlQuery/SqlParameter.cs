@@ -137,6 +137,19 @@ namespace LinqToDB.Internal.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(Name);
+			hash.Add(Type);
+			hash.Add(IsQueryParameter);
+			hash.Add(AccessorId);
+			if (AccessorId == null)
+				hash.Add(Value);
+			return hash.ToHashCode();
+		}
+
 		#endregion
 	}
 }

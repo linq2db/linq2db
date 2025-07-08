@@ -17,7 +17,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder.Visitors
 {
-	class ExposeExpressionVisitor : ExpressionVisitorBase, IExpressionEvaluator
+	sealed class ExposeExpressionVisitor : ExpressionVisitorBase, IExpressionEvaluator
 	{
 		static ObjectPool<IsCompilableVisitor> _isCompilableVisitorPool = new(() => new IsCompilableVisitor(), v => v.Cleanup(), 100);
 

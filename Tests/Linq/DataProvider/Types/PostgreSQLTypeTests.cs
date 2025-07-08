@@ -17,21 +17,8 @@ namespace Tests.DataProvider
 	 */
 	public sealed  class PostgreSQLTypeTests : TypeTestsBase
 	{
-		sealed class PostgreSQLDataSourcesAttribute : IncludeDataSourcesAttribute
-		{
-			public PostgreSQLDataSourcesAttribute()
-				: this(true)
-			{
-			}
-
-			public PostgreSQLDataSourcesAttribute(bool includeLinqService)
-				: base(includeLinqService, TestProvName.AllPostgreSQL)
-			{
-			}
-		}
-
 		[Test]
-		public async ValueTask TestJSONTypes([PostgreSQLDataSourcesAttribute(false)] string context, [Values(DataType.Json, DataType.BinaryJson)] DataType dataType)
+		public async ValueTask TestJsonTypes([IncludeDataSources(false, TestProvName.AllPostgreSQL95Plus)] string context, [Values(DataType.Json, DataType.BinaryJson)] DataType dataType)
 		{
 			// https://www.postgresql.org/docs/current/datatype-json.html
 			// https://www.npgsql.org/doc/types/json.html
@@ -138,7 +125,7 @@ namespace Tests.DataProvider
 
 		[ActiveIssue("Lack of reader support, see comment in TestJSONTypes")]
 		[Test]
-		public async ValueTask TestJSONPocoType([PostgreSQLDataSourcesAttribute(false)] string context, [Values(DataType.Json, DataType.BinaryJson)] DataType dataType)
+		public async ValueTask TestJsonPocoType([IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context, [Values(DataType.Json, DataType.BinaryJson)] DataType dataType)
 		{
 			var pocoNull = new Poco();
 

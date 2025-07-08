@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -85,10 +85,10 @@ namespace Tests.UserTests
 
 			// validate that the prior statement executed as a single query, not two distinct queries
 			// LastQuery will only return a single query, so if it was split into two queries, not all name fields would be present
-			var lastQuery = ((DataConnection)db).LastQuery;
-			lastQuery.Should().Contain("NAME1");
-			lastQuery.Should().Contain("NAME2");
-			lastQuery.Should().Contain("NAME3");
+			var lastQuery = ((DataConnection)db).LastQuery!;
+			lastQuery.ShouldContain("NAME1");
+			lastQuery.ShouldContain("NAME2");
+			lastQuery.ShouldContain("NAME3");
 		}
 	}
 }

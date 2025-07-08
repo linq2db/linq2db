@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -56,7 +57,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#endregion
 
-		class CounterContext : BuildContextBase
+		sealed class CounterContext : BuildContextBase
 		{
 			readonly IBuildContext _sequence;
 

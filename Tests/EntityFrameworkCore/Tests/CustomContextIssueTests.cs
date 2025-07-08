@@ -5,8 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
-using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
 using LinqToDB.Interceptors;
 
 using Microsoft.EntityFrameworkCore;

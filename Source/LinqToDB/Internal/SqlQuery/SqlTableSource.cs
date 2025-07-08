@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -198,6 +197,26 @@ namespace LinqToDB.Internal.SqlQuery
 			writer.RemoveVisited(this);
 
 			return writer;
+		}
+
+		public int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(Source.GetElementHashCode());
+			hash.Add(_alias);
+			foreach (var join in Joins)
+				hash.Add(join.GetElementHashCode());
+			if (_uniqueKeys != null)
+			{
+				foreach (var key in _uniqueKeys)
+				{
+					foreach (var expr in key)
+						hash.Add(expr.GetElementHashCode());
+				}
+			}
+
+			return hash.ToHashCode();
 		}
 
 		#endregion

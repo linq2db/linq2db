@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
@@ -10,16 +10,16 @@ using LinqToDB.Internal.SqlQuery;
 namespace LinqToDB.Internal.Linq.Builder
 {
 	[BuildsMethodCall(
-		nameof(Queryable.First),
-		nameof(Queryable.FirstOrDefault),
-		nameof(Queryable.Single),
-		nameof(Queryable.SingleOrDefault),
+		nameof(Queryable.First), 
+		nameof(Queryable.FirstOrDefault), 
+		nameof(Queryable.Single), 
+		nameof(Queryable.SingleOrDefault), 
 		nameof(LinqInternalExtensions.AssociationRecord),
 		nameof(LinqInternalExtensions.AssociationOptionalRecord))]
 	[BuildsMethodCall(
-		nameof(AsyncEnumerableExtensions.FirstAsync),
-		nameof(AsyncEnumerableExtensions.FirstOrDefaultAsync),
-		nameof(AsyncEnumerableExtensions.SingleAsync),
+		nameof(AsyncEnumerableExtensions.FirstAsync), 
+		nameof(AsyncEnumerableExtensions.FirstOrDefaultAsync), 
+		nameof(AsyncEnumerableExtensions.SingleAsync), 
 		nameof(AsyncEnumerableExtensions.SingleOrDefaultAsync), CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class FirstSingleBuilder : MethodCallBuilder
 	{

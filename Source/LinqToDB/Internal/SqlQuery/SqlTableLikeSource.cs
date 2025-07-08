@@ -69,6 +69,17 @@ namespace LinqToDB.Internal.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(SourceEnumerable?.GetElementHashCode());
+			hash.Add(SourceQuery?.GetElementHashCode());
+			foreach (var field in SourceFields)
+				hash.Add(field.GetElementHashCode());
+			return hash.ToHashCode();
+		}
+
 		public override SqlTableType SqlTableType => SqlTableType.MergeSource;
 
 		SqlField?                _all;

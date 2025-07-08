@@ -18,6 +18,7 @@ using LinqToDB.Model;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
+	// add OracleSparseVector type? (23.9+)
 	public class OracleProviderAdapter : IDynamicProviderAdapter
 	{
 		const int NanosecondsPerTick = 100;

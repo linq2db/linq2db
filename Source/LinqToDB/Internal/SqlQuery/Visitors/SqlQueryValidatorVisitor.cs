@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
@@ -255,7 +256,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return visitor.ContainsNotNullExpr;
 		}
 
-		class ValidateThatQueryHasNoIsNotNullParentReferenceVisitor : SqlQueryVisitor
+		sealed class ValidateThatQueryHasNoIsNotNullParentReferenceVisitor : SqlQueryVisitor
 		{
 			public Stack<ISqlTableSource> _currentSources = new Stack<ISqlTableSource>();
 

@@ -4,7 +4,7 @@ using LinqToDB.Internal.Expressions;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	class LambdaResolveVisitor : ExpressionVisitorBase
+	sealed class LambdaResolveVisitor : ExpressionVisitorBase
 	{
 		readonly IBuildContext _context;
 		readonly BuildPurpose  _buildPurpose;

@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Internal.Expressions
 {
-	class SqlEagerLoadExpression: Expression, IEquatable<SqlEagerLoadExpression>
+	sealed class SqlEagerLoadExpression : Expression, IEquatable<SqlEagerLoadExpression>
 	{
 		public Expression  SequenceExpression { get; }
 		public Expression? Predicate          { get; }

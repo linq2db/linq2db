@@ -490,7 +490,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return updatedEagerLoading;
 		}
 
-		class DatachedPreamble<T> : Preamble
+		sealed class DatachedPreamble<T> : Preamble
 		{
 			readonly Query<T> _query;
 
@@ -520,7 +520,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		class Preamble<TKey, T> : Preamble
+		sealed class Preamble<TKey, T> : Preamble
 			where TKey : notnull
 		{
 			readonly Query<KeyDetailEnvelope<TKey, T>> _query;
@@ -567,7 +567,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		class PreambleResult<TKey, T>
+		sealed class PreambleResult<TKey, T>
 			where TKey : notnull
 		{
 			Dictionary<TKey, List<T>>? _items;

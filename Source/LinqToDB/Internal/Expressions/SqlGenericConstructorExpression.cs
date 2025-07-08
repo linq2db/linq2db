@@ -322,7 +322,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public SqlGenericConstructorExpression WithMappingSchema(MappingSchema? mappingSchema)
 		{
-			if (MappingSchema == mappingSchema)
+			if (Equals(MappingSchema, mappingSchema))
 				return this;
 
 			var result = new SqlGenericConstructorExpression(this)

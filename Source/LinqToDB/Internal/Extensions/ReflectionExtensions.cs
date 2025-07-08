@@ -609,10 +609,10 @@ namespace LinqToDB.Internal.Extensions
 		}
 
 		///<summary>
-		/// Gets the Type of a list item.
+		/// Gets the type of list item.
 		///</summary>
 		/// <param name="list">A <see cref="System.Object"/> instance. </param>
-		///<returns>The Type instance that represents the exact runtime type of a list item.</returns>
+		///<returns>The Type instance that represents the exact runtime type of list item.</returns>
 		public static Type GetListItemType(this IEnumerable? list)
 		{
 			var typeOfObject = typeof(object);
@@ -623,10 +623,10 @@ namespace LinqToDB.Internal.Extensions
 			if (list is Array)
 				return list.GetType().GetElementType()!;
 
-			var type = list.GetType();
-
-			if (list is IList || list is ITypedList || list is IListSource)
+			if (list is IList or ITypedList or IListSource)
 			{
+				var type = list.GetType();
+
 				PropertyInfo? last = null;
 
 				foreach (var pi in type.GetPropertiesEx())
@@ -661,10 +661,10 @@ namespace LinqToDB.Internal.Extensions
 		}
 
 		///<summary>
-		/// Gets the Type of a list item.
+		/// Gets the Type of list item.
 		///</summary>
 		/// <param name="listType">A <see cref="Type"/> instance. </param>
-		///<returns>The Type instance that represents the exact runtime type of a list item.</returns>
+		///<returns>The Type instance that represents the exact runtime type of list item.</returns>
 		public static Type GetListItemType(this Type listType)
 		{
 			if (listType.IsGenericType)

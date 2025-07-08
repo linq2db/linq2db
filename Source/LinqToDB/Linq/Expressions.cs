@@ -9,7 +9,6 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
-using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
@@ -1554,7 +1553,7 @@ namespace LinqToDB.Linq
 
 		#region Provider specific functions
 
-		class ConvertToCaseCompareToBuilder : Sql.IExtensionCallBuilder
+		sealed class ConvertToCaseCompareToBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

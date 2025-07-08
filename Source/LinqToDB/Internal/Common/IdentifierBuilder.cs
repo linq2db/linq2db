@@ -2,16 +2,16 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 
-using LinqToDB;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.Common
@@ -51,11 +51,10 @@ namespace LinqToDB.Internal.Common
 
 		public IdentifierBuilder Add(IConfigurationID? data)
 		{
-			_sb.Value.Append(CultureInfo.InvariantCulture, $".{data?.ConfigurationID}");
-
-			return this;
+			return Add(data?.ConfigurationID);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public IdentifierBuilder Add(string? data)
 		{
 			_sb.Value
@@ -69,34 +68,29 @@ namespace LinqToDB.Internal.Common
 		{
 			_sb.Value
 				.Append('.')
-				.Append(data ? "1" : "0")
+				.Append(data ? '1' : '0')
 				;
 			return this;
 		}
 
 		public IdentifierBuilder Add(object? data)
 		{
-			_sb.Value
-				.Append('.')
-				.Append(GetObjectID(data))
-				;
-			return this;
+			return Add(GetObjectID(data));
 		}
 
 		public IdentifierBuilder Add(Delegate? data)
 		{
-			_sb.Value.Append(CultureInfo.InvariantCulture, $".{data?.Method}");
+			return Add(GetObjectID(data?.Method));
+		}
 
-			return this;
+		public IdentifierBuilder Add(Type? data)
+		{
+			return Add(GetObjectID(data));
 		}
 
 		public IdentifierBuilder Add(int? data)
 		{
-			_sb.Value
-				.Append('.')
-				.Append(data == null ? string.Empty : GetIntID(data.Value))
-				;
-			return this;
+			return Add(data == null ? string.Empty : GetIntID(data.Value));
 		}
 
 		public IdentifierBuilder Add(string format, object? data)
@@ -191,11 +185,52 @@ namespace LinqToDB.Internal.Common
 				int  i             => GetIntID(i),
 				null               => string.Empty,
 				string str         => str,
-				IEnumerable col    => $"[{string.Join(",", col.Cast<object?>().Select(GetObjectID))}]",
+				IEnumerable col    => GetIEnumerableID(col),
 				Expression ex      => GetObjectID(ex).ToString(NumberFormatInfo.InvariantInfo),
 				TimeSpan ts        => ts.Ticks.ToString(NumberFormatInfo.InvariantInfo),
 				_                  => GetOrAddObject(obj)
 			};
+
+			static string GetIEnumerableID(IEnumerable col)
+			{
+				var type = col.GetType().GetListItemType();
+
+				using var sb = Pools.StringBuilder.Allocate();
+
+				sb.Value
+					.Append('[')
+					.Append(GetObjectID(type))
+					.Append('.')
+					;
+
+				var len = sb.Value.Length;
+
+				foreach (var item in col)
+				{
+					if (item != null)
+					{
+						var t = item.GetType();
+
+						if (t != type)
+						{
+							sb.Value
+								.Append(GetObjectID(t))
+								.Append(':');
+						}
+
+						sb.Value
+							.Append(GetObjectID(item))
+							.Append(',');
+					}
+				}
+
+				if (sb.Value.Length > len)
+					sb.Value.Length--;
+
+				sb.Value.Append(']');
+
+				return sb.Value.ToString();
+			}
 
 			static string GetOrAddObject(object o)
 			{

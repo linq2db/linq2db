@@ -39,7 +39,7 @@ namespace LinqToDB.Data.RetryPolicy
 		// If you add another parameter here, don't forget to update
 		// RetryPolicyOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
-		: IOptionSet, IApplicable<DataConnection>
+		: IOptionSet, IApplicable<DataConnection>, IReapplicable<DataConnection>
 	{
 		public RetryPolicyOptions() : this((IRetryPolicy?)null)
 		{
@@ -83,6 +83,42 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 			DataConnection.ConfigurationApplier.Apply(obj, this);
 		}
+
+		Action? IReapplicable<DataConnection>.Apply(DataConnection obj, IOptionSet? previousObject)
+		{
+			return ((IConfigurationID)this).ConfigurationID == previousObject?.ConfigurationID
+				? null
+				: DataConnection.ConfigurationApplier.Reapply(obj, this, (RetryPolicyOptions?)previousObject);
+		}
+
+		#region Default Options
+
+		static RetryPolicyOptions _default = new(
+			null,
+			MaxRetryCount   : 5,
+			MaxDelay        : TimeSpan.FromSeconds(30),
+			RandomFactor    : 1.1,
+			ExponentialBase : 2,
+			Coefficient     : TimeSpan.FromSeconds(1));
+
+		/// <summary>
+		/// Gets default <see cref="RetryPolicyOptions"/> instance.
+		/// </summary>
+		public static RetryPolicyOptions Default
+		{
+			get => _default;
+			set
+			{
+				_default = value;
+				DataConnection.ResetDefaultOptions();
+				DataConnection.ConnectionOptionsByConfigurationString.Clear();
+			}
+		}
+
+		/// <inheritdoc />
+		IOptionSet IOptionSet.Default => Default;
+
+		#endregion
 
 		#region IEquatable implementation
 

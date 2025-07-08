@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Internal.Async;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -157,17 +156,17 @@ namespace Tests.xUpdate
 			using (var source = db.CreateLocalTable(sourceData))
 			using (var target = db.CreateLocalTable<DestinationTable>())
 			{
-				var output = await source
-					.Where(s => s.Id > 3)
-					.InsertWithOutputAsync(
-						target,
-						s => new DestinationTable
-						{
-							Id       = s.Id       + param,
-							Value    = s.Value    + param,
-							ValueStr = s.ValueStr + param
-						})
-					.ToListAsync();
+				var output = await AsyncEnumerableToListAsync(
+					source
+						.Where(s => s.Id > 3)
+						.InsertWithOutputAsync(
+							target,
+							s => new DestinationTable
+							{
+								Id       = s.Id       + param,
+								Value    = s.Value    + param,
+								ValueStr = s.ValueStr + param
+							}));
 
 				AreEqual(source.Where(s => s.Id > 3).Select(s => new DestinationTable
 				{
@@ -187,17 +186,17 @@ namespace Tests.xUpdate
 			using (var source = db.CreateLocalTable(sourceData))
 			using (var target = db.CreateLocalTable<DestinationTable>())
 			{
-				var output = await source
-					.Where(s => s.Id == 3)
-					.InsertWithOutputAsync(
-						target,
-						s => new DestinationTable
-						{
-							Id       = s.Id       + param,
-							Value    = s.Value    + param,
-							ValueStr = s.ValueStr + param
-						})
-					.ToListAsync();
+				var output = await AsyncEnumerableToListAsync(
+					source
+						.Where(s => s.Id == 3)
+						.InsertWithOutputAsync(
+							target,
+							s => new DestinationTable
+							{
+								Id       = s.Id       + param,
+								Value    = s.Value    + param,
+								ValueStr = s.ValueStr + param
+							}));
 
 				AreEqual(source.Where(s => s.Id == 3).Select(s => new DestinationTable
 				{

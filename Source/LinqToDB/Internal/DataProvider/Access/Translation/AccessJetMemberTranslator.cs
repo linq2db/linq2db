@@ -1,6 +1,5 @@
 ﻿using System.Linq.Expressions;
 
-using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
@@ -13,7 +12,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 			return new AccessJetStringMemberTranslator();
 		}
 
-		class AccessJetStringMemberTranslator : StringMemberTranslator
+		sealed class AccessJetStringMemberTranslator : StringMemberTranslator
 		{
 			public override ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue,
 				ISqlExpression                                   newValue)

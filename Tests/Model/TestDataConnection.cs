@@ -5,10 +5,11 @@ using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
 namespace Tests.Model
 {
-	public class TestDataConnection : DataConnection, ITestDataContext
+	public class TestDataConnection : DataConnection, ITestDataContext, ISystemSchemaData
 	{
 		//static int _counter;
 
@@ -102,5 +103,8 @@ namespace Tests.Model
 				where p.ParentID == (int)Math.Floor(ch.ChildID / 10.0)
 				select p;
 		}
+
+		SystemSchemaModel? _system;
+		public SystemSchemaModel System => _system ??= new SystemSchemaModel(this);
 	}
 }

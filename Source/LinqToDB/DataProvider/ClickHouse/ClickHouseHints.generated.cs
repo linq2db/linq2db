@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 	public static partial class ClickHouseHints
 	{
 		[ExpressionMethod(nameof(JoinOuterHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.Outer);
@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinOuterTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.Outer);
@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinSemiHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.Semi);
@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinSemiTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.Semi);
@@ -63,7 +63,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAntiHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.Anti);
@@ -76,7 +76,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAntiTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.Anti);
@@ -89,7 +89,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAnyHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.Any);
@@ -102,7 +102,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAnyTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.Any);
@@ -115,7 +115,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAsOfHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.AsOf);
@@ -128,7 +128,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAsOfTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.AsOf);
@@ -141,7 +141,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinGlobalHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinGlobalHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinGlobalHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.Global);
@@ -154,7 +154,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinGlobalTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinGlobalHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinGlobalHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.Global);
@@ -167,7 +167,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinGlobalOuterHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinGlobalOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinGlobalOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.GlobalOuter);
@@ -180,7 +180,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinGlobalOuterTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinGlobalOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinGlobalOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.GlobalOuter);
@@ -193,7 +193,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinGlobalSemiHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinGlobalSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinGlobalSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.GlobalSemi);
@@ -206,7 +206,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinGlobalSemiTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinGlobalSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinGlobalSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.GlobalSemi);
@@ -219,7 +219,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinGlobalAntiHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinGlobalAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinGlobalAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.GlobalAnti);
@@ -232,7 +232,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinGlobalAntiTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinGlobalAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinGlobalAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.GlobalAnti);
@@ -245,7 +245,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinGlobalAnyHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinGlobalAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinGlobalAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.GlobalAny);
@@ -258,7 +258,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinGlobalAnyTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinGlobalAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinGlobalAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.GlobalAny);
@@ -271,7 +271,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinGlobalAsOfHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinGlobalAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinGlobalAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.GlobalAsOf);
@@ -284,7 +284,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinGlobalAsOfTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinGlobalAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinGlobalAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.GlobalAsOf);
@@ -297,7 +297,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAllHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinAllHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinAllHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.All);
@@ -310,7 +310,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAllTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinAllHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinAllHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.All);
@@ -323,7 +323,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAllOuterHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.AllOuter);
@@ -336,7 +336,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAllOuterTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinAllOuterHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.AllOuter);
@@ -349,7 +349,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAllSemiHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.AllSemi);
@@ -362,7 +362,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAllSemiTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinAllSemiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.AllSemi);
@@ -375,7 +375,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAllAntiHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.AllAnti);
@@ -388,7 +388,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAllAntiTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinAllAntiHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.AllAnti);
@@ -401,7 +401,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAllAnyHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.AllAny);
@@ -414,7 +414,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAllAnyTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinAllAnyHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.AllAny);
@@ -427,7 +427,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAllAsOfHintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.AllAsOf);
@@ -440,7 +440,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		[ExpressionMethod(nameof(JoinAllAsOfTableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> JoinAllAsOfHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.AllAsOf);

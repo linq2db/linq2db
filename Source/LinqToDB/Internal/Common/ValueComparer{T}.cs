@@ -10,7 +10,11 @@ using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.Common
 {
-	class ValueComparer<T> : ValueComparer, IEqualityComparer<T>
+	/// <summary>
+	/// This is internal API and is not intended for use by Linq To DB applications.
+	/// It may change or be removed without further notice.
+	/// </summary>
+	public class ValueComparer<T> : ValueComparer, IEqualityComparer<T>
 	{
 		private Func<T?, T?, bool>? _equals;
 		private Func<T?, int>?      _hashCode;

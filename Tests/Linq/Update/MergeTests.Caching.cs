@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.xUpdate
 {
@@ -48,7 +48,7 @@ namespace Tests.xUpdate
 
 				TestQuery(table, source);
 
-				table.GetCacheMissCount().Should().Be(cacheMissCount);
+				table.GetCacheMissCount().ShouldBe(cacheMissCount);
 
 				source = new[]
 				{
@@ -70,7 +70,7 @@ namespace Tests.xUpdate
 
 				TestQuery(table, source);
 
-				table.GetCacheMissCount().Should().Be(cacheMissCount);
+				table.GetCacheMissCount().ShouldBe(cacheMissCount);
 			}
 
 			void TestQuery(ITable<TestMapping1> table, TestMapping1[] source)

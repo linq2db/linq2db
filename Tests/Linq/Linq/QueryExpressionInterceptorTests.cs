@@ -4,14 +4,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 #pragma warning disable CS8618
 
@@ -239,8 +239,8 @@ namespace Tests.Linq
 
 				var result = query.First();
 
-				result.PTOAccrued.Should().Be(1);
-				result.LastName.Should().Be("Enriched");
+				result.PTOAccrued.ShouldBe(1);
+				result.LastName.ShouldBe("Enriched");
 			}
 		}
 
@@ -272,8 +272,8 @@ namespace Tests.Linq
 
 				var result = query.First();
 
-				result.PTOAccrued.Should().Be(1);
-				result.LastName.Should().Be("Enriched");
+				result.PTOAccrued.ShouldBe(1);
+				result.LastName.ShouldBe("Enriched");
 			}
 		}
 	}

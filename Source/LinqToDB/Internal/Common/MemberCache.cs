@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.Common
 			return _defaultInfo;
 		}
 
-		public class Info
+		public sealed class Info
 		{
 			public bool IsQueryable { get; init; }
 		}

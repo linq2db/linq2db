@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.Async
 	/// <summary>
 	/// Contains custom extension methods for <see cref="IAsyncEnumerable{T}"/> interface.
 	/// </summary>
-	internal static class AsyncEnumerableExtensions
+	static class AsyncEnumerableExtensions
 	{
 		/// <summary>
 		///     Asynchronously creates a <see cref="List{T}" /> from <see cref="IAsyncEnumerable{T}" />

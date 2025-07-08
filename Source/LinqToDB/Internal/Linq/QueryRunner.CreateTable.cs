@@ -70,21 +70,21 @@ namespace LinqToDB.Internal.Linq
 			}
 
 			public static async Task<ITable<T>> QueryAsync(
-				IDataContext      dataContext,
-				EntityDescriptor? tableDescriptor,
-				string?           tableName,
-				string?           serverName,
-				string?           databaseName,
-				string?           schemaName,
-				string?           statementHeader,
-				string?           statementFooter,
-				DefaultNullable   defaultNullable,
-				TableOptions      tableOptions,
-				CancellationToken token)
+				IDataContext         dataContext,
+				TempTableDescriptor? tableDescriptor,
+				string?              tableName,
+				string?              serverName,
+				string?              databaseName,
+				string?              schemaName,
+				string?              statementHeader,
+				string?              statementFooter,
+				DefaultNullable      defaultNullable,
+				TableOptions         tableOptions,
+				CancellationToken    token)
 			{
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.CreateTableAsync))
 				{
-					var sqlTable    = tableDescriptor != null ? new SqlTable(tableDescriptor) : SqlTable.Create<T>(dataContext);
+					var sqlTable    = tableDescriptor != null ? new SqlTable(tableDescriptor.EntityDescriptor) : SqlTable.Create<T>(dataContext);
 					var createTable = new SqlCreateTableStatement(sqlTable);
 
 					if (tableName != null || schemaName != null || databaseName != null || serverName != null)
@@ -111,7 +111,7 @@ namespace LinqToDB.Internal.Linq
 
 					await query.GetElementAsync(dataContext, EmptyQueryExpressions, null, null, token).ConfigureAwait(false);
 
-					ITable<T> table = new Table<T>(dataContext, tableDescriptor);
+					ITable<T> table = new Table<T>(dataContext, tableDescriptor?.EntityDescriptor);
 
 					if (sqlTable.TableName.Name     != null) table = table.TableName   (sqlTable.TableName.Name);
 					if (sqlTable.TableName.Server   != null) table = table.ServerName  (sqlTable.TableName.Server);

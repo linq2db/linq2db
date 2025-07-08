@@ -1,4 +1,6 @@
-﻿using LinqToDB.SqlQuery;
+﻿using System;
+
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -38,6 +40,18 @@ namespace LinqToDB.Internal.SqlQuery
 				.AppendLine();
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(base.GetElementHashCode());
+
+			hash.Add(Table.GetElementHashCode());
+			hash.Add(StatementHeader);
+			hash.Add(StatementFooter);
+			hash.Add(DefaultNullable);
+			return hash.ToHashCode();
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)

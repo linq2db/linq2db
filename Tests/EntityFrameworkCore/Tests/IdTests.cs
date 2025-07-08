@@ -2,8 +2,6 @@
 using System.Diagnostics;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB.EntityFrameworkCore.Tests.Models.Shared;
 using LinqToDB.Internal.Logging;
 
@@ -11,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests;
 
@@ -51,7 +51,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			ctx
 				.Arrange(CreateLinqToDBContext)
 				.Act(c => c.Insert(new Entity { Name = name }))
-				.Assert(id => ctx.Entities.Single(e => e.Id == id).Name.Should().Be(name));
+				.Assert(id => ctx.Entities.Single(e => e.Id == id).Name.ShouldBe(name));
 		}
 
 		[Test]
@@ -65,7 +65,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			ctx.Entities
 				.Arrange(e => e.ToLinqToDBTable())
 				.Act(e => e.InsertWithInt64Identity(() => new Entity { Name = name }))
-				.Assert(id => ctx.Entities.Single(e => e.Id == id).Name.Should().Be(name));
+				.Assert(id => ctx.Entities.Single(e => e.Id == id).Name.ShouldBe(name));
 		}
 
 		[Test]
@@ -83,7 +83,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			ctx
 				.Arrange(c => c.Entities.Add(new Entity { Name = "test insert ef" }))
 				.Act(_ => ctx.SaveChanges())
-				.Assert(_ => ctx.Entities.Single().Name.Should().Be(name));
+				.Assert(_ => ctx.Entities.Single().Name.ShouldBe(name));
 		}
 
 		[Test]
@@ -102,7 +102,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					.AsLinqToDB(l2db)
 					.AsTracking(tracking)
 					.ToArray())
-				.Assert(e => e?.First().Details.First().Details.Count().Should().Be(2));
+				.Assert(e => e?.First().Details.First().Details.Count().ShouldBe(2));
 		}
 
 		[Test]
@@ -121,7 +121,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					var s = q.AsLinqToDB(!l2db).AsTracking().ToArray();
 					return (First: f, Second: s);
 				})
-				.Assert(r => r.First[0].Items.Count().Should().Be(r.Second[0].Items.Count()));
+				.Assert(r => r.First[0].Items.Count().ShouldBe(r.Second[0].Items.Count()));
 		}
 
 		[Test]
@@ -140,7 +140,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					.AsLinqToDB(l2db)
 					.AsTracking(tracking)
 					.ToArray())
-				.Assert(m => m?[0].Items.First().Item.Should().BeSameAs(m[1].Items.First().Item));
+				.Assert(m => m?[0].Items.First().Item.ShouldBeSameAs(m[1].Items.First().Item));
 		}
 
 		[Test]
@@ -159,7 +159,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					.AsLinqToDB(l2db)
 					.AsTracking(tracking)
 					.ToArray())
-				.Assert(m => m?[0].Master.Should().BeSameAs(m[1].Master));
+				.Assert(m => m?[0].Master.ShouldBeSameAs(m[1].Master));
 		}
 
 		[Test]
@@ -178,7 +178,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					.AsTracking(tracking)
 					.AsLinqToDB(l2db)
 					.ToArray())
-				.Assert(m => m?[0].Master.Should().BeSameAs(m[1].Master));
+				.Assert(m => m?[0].Master.ShouldBeSameAs(m[1].Master));
 		}
 
 		void Cleanup(IDataContext ctx)

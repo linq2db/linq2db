@@ -3,7 +3,6 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.DataProvider.Access;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;

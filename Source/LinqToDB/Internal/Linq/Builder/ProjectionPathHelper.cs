@@ -2,13 +2,12 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
-using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	class ProjectionPathHelper
+	sealed class ProjectionPathHelper
 	{
 		public ExpressionBuilder  Builder       { get; }
 		public MappingSchema      MappingSchema { get; }

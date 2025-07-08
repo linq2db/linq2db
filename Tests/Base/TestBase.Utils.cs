@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -195,6 +196,24 @@ namespace Tests
 		protected string GetCurrentBaselines()
 		{
 			return CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.BASELINE)?.ToString() ?? string.Empty;
+		}
+
+		/// <summary>
+		/// Helper to test APIs that return <see cref="IAsyncEnumerable{T}"/>.
+		/// </summary>
+		protected static async Task<List<T>> AsyncEnumerableToListAsync<T>(IAsyncEnumerable<T> source)
+		{
+			var result = new List<T>();
+			var enumerator = source.GetAsyncEnumerator();
+			await using (enumerator.ConfigureAwait(false))
+			{
+				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+				{
+					result.Add(enumerator.Current);
+				}
+			}
+
+			return result;
 		}
 	}
 }

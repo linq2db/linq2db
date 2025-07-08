@@ -389,7 +389,7 @@ namespace LinqToDB.Internal.Reflection
 			}
 		}
 
-		internal class SqlServer
+		internal sealed class SqlServer
 		{
 			public static readonly MethodInfo ConvertStringToSql = typeof(SqlServerMappingSchema).GetMethod(nameof(SqlServerMappingSchema.ConvertStringToSql), BindingFlags.Static | BindingFlags.NonPublic)!;
 		}

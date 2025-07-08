@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
-using LinqToDB.Internal;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -592,7 +592,7 @@ namespace Tests.Linq
 
 				query.ToArray();
 
-				db.LastQuery.Should().Contain("2 DESC");
+				db.LastQuery!.ShouldContain("2 DESC");
 			}
 		}
 
@@ -624,11 +624,11 @@ namespace Tests.Linq
 
 				if (withIndex)
 				{
-					firstSource.Should().BeOfType<SqlTable>();
+					firstSource.ShouldBeOfType<SqlTable>();
 				}
 				else
 				{
-					firstSource.Should().BeOfType<SelectQuery>();
+					firstSource.ShouldBeOfType<SelectQuery>();
 				}
 			}
 		}
@@ -647,10 +647,10 @@ namespace Tests.Linq
 						p.Name.LastName
 					};
 
-				FluentActions.Enumerating(() => query)
-					.Should()
-					.Throw<LinqToDBException>()
-					.WithMessage("The LINQ expression 'Sql.Ordinal<string>(p.Name.LastName)' could not be converted to SQL.");
+				var act = () => query.ToArray();
+				act
+					.ShouldThrow<LinqToDBException>()
+					.Message.ShouldBe("The LINQ expression 'Sql.Ordinal<string>(p.Name.LastName)' could not be converted to SQL.");
 			}
 		}
 

@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -130,7 +130,7 @@ namespace Tests.UserTests
 				var query12 = GetParents(db, values1);
 				var result12 = query12.ToArray();
 
-				query12.GetCacheMissCount().Should().Be(cm1);	
+				query12.GetCacheMissCount().ShouldBe(cm1);	
 
 				var query21  = GetParents(db, values2);
 				var result21 = query21.ToArray();
@@ -140,7 +140,7 @@ namespace Tests.UserTests
 				var query22  = GetParents(db, values2);
 				var result22 = query22.ToArray();
 
-				query22.GetCacheMissCount().Should().Be(cm2);	
+				query22.GetCacheMissCount().ShouldBe(cm2);	
 
 			}
 		}

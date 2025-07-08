@@ -7,7 +7,7 @@ namespace LinqToDB.Internal.SqlQuery
 {
 	public partial class QueryHelper
 	{
-		class WrapQueryVisitor<TContext> : SqlQueryVisitor
+		sealed class WrapQueryVisitor<TContext> : SqlQueryVisitor
 		{
 			IQueryElement       _root = default!;
 

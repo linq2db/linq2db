@@ -450,7 +450,7 @@ namespace LinqToDB.Internal.Linq
 			return queryFunc;
 		}
 
-		class BasicResultEnumerable<T> : IResultEnumerable<T>
+		sealed class BasicResultEnumerable<T> : IResultEnumerable<T>
 		{
 			readonly IDataContext      _dataContext;
 			readonly IQueryExpressions _expressions;

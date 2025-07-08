@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.Json;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;

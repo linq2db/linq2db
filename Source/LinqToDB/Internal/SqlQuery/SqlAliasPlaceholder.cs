@@ -19,6 +19,11 @@ namespace LinqToDB.Internal.SqlQuery
 			return writer.Append("%ts%");
 		}
 
+		public int GetElementHashCode()
+		{
+			return 0;
+		}
+
 		public bool Equals(ISqlExpression? other)
 		{
 			return other == this;

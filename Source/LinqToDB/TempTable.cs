@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,7 +11,6 @@ using JetBrains.Annotations;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Async;
-using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Model;
@@ -32,10 +29,10 @@ namespace LinqToDB
 		where T : notnull
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		readonly ITable<T>         _table;
+		readonly ITable<T> _table;
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		readonly EntityDescriptor? _tableDescriptor;
+		readonly TempTableDescriptor? _tableDescriptor;
 
 		/// <summary>
 		/// Gets total number of records, inserted into table using BulkCopy.
@@ -101,20 +98,20 @@ namespace LinqToDB
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		internal TempTable(
-			IDataContext      db,
-			EntityDescriptor? tableDescriptor,
-			IEnumerable<T>    items,
-			BulkCopyOptions?  options,
-			string?           tableName,
-			string?           databaseName,
-			string?           schemaName,
-			string?           serverName,
-			TableOptions      tableOptions)
+			IDataContext         db,
+			TempTableDescriptor? tableDescriptor,
+			IEnumerable<T>       items,
+			BulkCopyOptions?     options,
+			string?              tableName,
+			string?              databaseName,
+			string?              schemaName,
+			string?              serverName,
+			TableOptions         tableOptions)
 		{
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
-			_table           = db.CreateTable<T>(tableDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
+			_table           = db.CreateTable<T>(tableDescriptor?.EntityDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
 			_tableDescriptor = tableDescriptor;
 
 			try
@@ -171,13 +168,13 @@ namespace LinqToDB
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		public TempTable(IDataContext db,
-			IQueryable<T>             items,
-			string?                   tableName    = default,
-			string?                   databaseName = default,
-			string?                   schemaName   = default,
-			Action<ITable<T>>?        action       = default,
-			string?                   serverName   = default,
-			TableOptions              tableOptions = default)
+			IQueryable<T>      items,
+			string?            tableName    = default,
+			string?            databaseName = default,
+			string?            schemaName   = default,
+			Action<ITable<T>>? action       = default,
+			string?            serverName   = default,
+			TableOptions       tableOptions = default)
 			: this(db, null, items, tableName, databaseName, schemaName, action, serverName, tableOptions)
 		{
 		}
@@ -196,20 +193,20 @@ namespace LinqToDB
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		internal TempTable(
-			IDataContext       db,
-			EntityDescriptor?  tableDescriptor,
-			IQueryable<T>      items,
-			string?            tableName,
-			string?            databaseName,
-			string?            schemaName,
-			Action<ITable<T>>? action,
-			string?            serverName,
-			TableOptions       tableOptions)
+			IDataContext         db,
+			TempTableDescriptor? tableDescriptor,
+			IQueryable<T>        items,
+			string?              tableName,
+			string?              databaseName,
+			string?              schemaName,
+			Action<ITable<T>>?   action,
+			string?              serverName,
+			TableOptions         tableOptions)
 		{
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
-			_table           = db.CreateTable<T>(tableDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
+			_table           = db.CreateTable<T>(tableDescriptor?.EntityDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
 			_tableDescriptor = tableDescriptor;
 
 			try
@@ -256,11 +253,11 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Configures a temporary table that will be dropped when this instance is disposed
+		/// Configures a temporary table that will be dropped when this instance is disposed.
 		/// </summary>
 		/// <param name="table">Table instance.</param>
 		/// <param name="tableDescriptor">Temporary table entity descriptor.</param>
-		protected TempTable(ITable<T> table, EntityDescriptor? tableDescriptor)
+		TempTable(ITable<T> table, TempTableDescriptor? tableDescriptor)
 		{
 			_table           = table ?? throw new ArgumentNullException(nameof(table));
 			_tableDescriptor = tableDescriptor;
@@ -303,14 +300,14 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		internal static async Task<TempTable<T>> CreateAsync(
-			IDataContext      db,
-			EntityDescriptor? tableDescriptor,
-			string?           tableName,
-			string?           databaseName,
-			string?           schemaName,
-			string?           serverName,
-			TableOptions      tableOptions,
-			CancellationToken cancellationToken)
+			IDataContext         db,
+			TempTableDescriptor? tableDescriptor,
+			string?              tableName,
+			string?              databaseName,
+			string?              schemaName,
+			string?              serverName,
+			TableOptions         tableOptions,
+			CancellationToken    cancellationToken)
 		{
 			if (db == null) throw new ArgumentNullException(nameof(db));
 
@@ -388,16 +385,16 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		internal static async Task<TempTable<T>> CreateAsync(
-			IDataContext      db,
-			EntityDescriptor? tableDescriptor,
-			string?           tableName,
-			IEnumerable<T>    items,
-			BulkCopyOptions?  options,
-			string?           databaseName,
-			string?           schemaName,
-			string?           serverName,
-			TableOptions      tableOptions,
-			CancellationToken cancellationToken)
+			IDataContext         db,
+			TempTableDescriptor? tableDescriptor,
+			string?              tableName,
+			IEnumerable<T>       items,
+			BulkCopyOptions?     options,
+			string?              databaseName,
+			string?              schemaName,
+			string?              serverName,
+			TableOptions         tableOptions,
+			CancellationToken    cancellationToken)
 		{
 			var table = await CreateAsync(db, tableDescriptor, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken)
 				.ConfigureAwait(false);
@@ -468,7 +465,7 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		internal static async Task<TempTable<T>> CreateAsync(
 			IDataContext          db,
-			EntityDescriptor?     tableDescriptor,
+			TempTableDescriptor?  tableDescriptor,
 			IQueryable<T>         items,
 			string?               tableName,
 			string?               databaseName,
@@ -713,12 +710,32 @@ namespace LinqToDB
 
 		public virtual void Dispose()
 		{
-			_table.DropTable(throwExceptionIfNotExists: false);
+			try
+			{
+				_table.DropTable(throwExceptionIfNotExists: false);
+			}
+			finally
+			{
+				// Restore MappingSchema if it was changed by FluentMapping.
+				//
+				if (_tableDescriptor != null)
+					_table.DataContext.SetMappingSchema(_tableDescriptor.PrevMappingSchema);
+			}
 		}
 
 		public virtual ValueTask DisposeAsync()
 		{
-			return new ValueTask(_table.DropTableAsync(throwExceptionIfNotExists: false));
+			try
+			{
+				return new ValueTask(_table.DropTableAsync(throwExceptionIfNotExists: false));
+			}
+			finally
+			{
+				// Restore MappingSchema if it was changed by FluentMapping.
+				//
+				if (_tableDescriptor != null)
+					_table.DataContext.SetMappingSchema(_tableDescriptor.PrevMappingSchema);
+			}
 		}
 	}
 }

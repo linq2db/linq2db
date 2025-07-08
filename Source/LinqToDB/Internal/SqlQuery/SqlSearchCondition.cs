@@ -91,6 +91,17 @@ namespace LinqToDB.Internal.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(IsOr);
+			hash.Add(CanReturnUnknown);
+			foreach (var predicate in Predicates)
+				hash.Add(predicate.GetElementHashCode());
+			return hash.ToHashCode();
+		}
+
 		#endregion
 
 		#region IPredicate Members

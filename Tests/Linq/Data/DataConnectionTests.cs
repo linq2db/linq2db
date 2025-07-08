@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Transactions;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
@@ -43,7 +44,7 @@ namespace Tests.Data
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(connection.State,         Is.EqualTo(ConnectionState.Open));
-					Assert.That(conn.ConfigurationString, Is.Null);
+					Assert.That(conn.ConfigurationString, Is.EqualTo(dataProvider.Name));
 				}
 			}
 		}

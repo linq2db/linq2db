@@ -26,7 +26,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	class ExpressionBuildVisitor : ExpressionVisitorBase
+	sealed class ExpressionBuildVisitor : ExpressionVisitorBase
 	{
 		public   ExpressionBuilder Builder { get; }
 		BuildPurpose               _buildPurpose;
@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return newVisitor;
 		}
 
-		public class CacheSnapshot : IDisposable
+		public sealed class CacheSnapshot : IDisposable
 		{
 			readonly ExpressionBuildVisitor _visitor;
 
@@ -1647,7 +1647,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			Expression? notNullCheck = null;
-			if (associationDescriptor.IsList && (prevIsOuter && _buildPurpose is BuildPurpose.SubQuery))
+			if (associationDescriptor.IsList && (isOptional == true && _buildPurpose is BuildPurpose.SubQuery))
 			{
 				var keys = BuildExpression(forContext, rootContext, BuildPurpose.Sql, BuildFlags.ForKeys);
 				if (forContext != null)
@@ -3366,7 +3366,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return predicate;
 
 			if (sqlExpression is SqlExpression sqlExpr && sqlExpr.Flags.HasFlag(SqlFlags.IsPredicate))
-				return new SqlPredicate.Expr(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()));
+				return new SqlPredicate.Expr(sqlExpression);
 
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(sqlExpression);
 			var valueConverter   = columnDescriptor?.ValueConverter;
@@ -3389,12 +3389,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (trueValue != null && falseValue != null)
 				{
-					predicate = new SqlPredicate.IsTrue(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()), trueValue.Sql, falseValue.Sql, withNull && DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
+					predicate = new SqlPredicate.IsTrue(sqlExpression, trueValue.Sql, falseValue.Sql, withNull && DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
 					return predicate;
 				}
 			}
 
-			predicate = new SqlPredicate.Expr(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()));
+			predicate = new SqlPredicate.Expr(sqlExpression);
 
 			return predicate;
 		}
@@ -3405,9 +3405,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var saveDescriptor = _columnDescriptor;
 			_columnDescriptor = descriptor;
-
-			if (sqlExpression is SqlColumn col)
-				sqlExpression = ApplyExpressionNullability(sqlExpression, NullabilityContext.GetContext(col.Parent));
 
 			var trueValue  = UpdateNesting(Visit(ExpressionInstances.True));
 			var falseValue = UpdateNesting(Visit(ExpressionInstances.False));
@@ -3455,21 +3452,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			error           = SqlErrorExpression.EnsureError(expr, typeof(bool));
 
 			return false;
-		}
-
-		static ISqlExpression ApplyExpressionNullability(ISqlExpression sqlExpression, NullabilityContext nullabilityContext)
-		{
-			if (sqlExpression is SqlRowExpression rowExpression)
-			{
-				var newColumns = rowExpression.Values.Select(e => ApplyExpressionNullability(e, nullabilityContext)).ToArray();
-				return new SqlRowExpression(newColumns);
-			}
-
-			var isNullable = sqlExpression.CanBeNullable(nullabilityContext);
-			if (!isNullable && sqlExpression is SqlColumn col)
-				isNullable = sqlExpression.CanBeNullable(NullabilityContext.GetContext(col.Parent));
-
-			return SqlNullabilityExpression.ApplyNullability(sqlExpression, isNullable);
 		}
 
 		public SqlSearchCondition GenerateComparison(
@@ -4089,12 +4071,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (predicate == null)
 					{
-						lOriginal = ApplyExpressionNullability(lOriginal, nullability);
-						rOriginal = ApplyExpressionNullability(rOriginal, nullability);
-
 						predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
 							compareNullsAsValues && (lOriginal.CanBeNullable(nullability) || rOriginal.CanBeNullable(nullability))
-								? op == SqlPredicate.Operator.NotEqual
+								? op == SqlPredicate.Operator.Equal
 								: null);
 					}
 				}
@@ -5067,9 +5046,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#endregion
 
-		class TranslationContext : ITranslationContext
+		sealed class TranslationContext : ITranslationContext
 		{
-			class SqlExpressionFactory : ISqlExpressionFactory
+			sealed class SqlExpressionFactory : ISqlExpressionFactory
 			{
 				readonly ITranslationContext _translationContext;
 

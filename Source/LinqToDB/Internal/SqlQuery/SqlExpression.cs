@@ -143,6 +143,19 @@ namespace LinqToDB.Internal.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(Expr);
+			hash.Add(SystemType);
+			hash.Add(Precedence);
+			hash.Add(Flags);
+			hash.Add(NullabilityType);
+			foreach (var parameter in Parameters)
+				hash.Add(parameter.GetElementHashCode());
+			return hash.ToHashCode();
+		}
+
 		#endregion
 
 		public override bool Equals(object? obj)

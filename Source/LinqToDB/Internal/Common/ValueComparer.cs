@@ -11,7 +11,11 @@ using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.Common
 {
-	abstract class ValueComparer : IEqualityComparer, IEqualityComparer<object>
+	/// <summary>
+	/// This is internal API and is not intended for use by Linq To DB applications.
+	/// It may change or be removed without further notice.
+	/// </summary>
+	public abstract class ValueComparer : IEqualityComparer, IEqualityComparer<object>
 	{
 		private protected static readonly MethodInfo _doubleEqualsMethodInfo
 			= MemberHelper.MethodOf<double>(d => d.Equals(0));

@@ -1,9 +1,7 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
-using LinqToDB.Internal;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 

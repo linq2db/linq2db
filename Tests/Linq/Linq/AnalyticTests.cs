@@ -3,22 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Internal;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using Newtonsoft.Json.Linq;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
 {
-	[TestFixture]
+	[TestFixture, NonParallelizable]
 	public class AnalyticTests : TestBase
 	{
 		[Test]
@@ -541,7 +541,7 @@ namespace Tests.Linq
 				Assert.That(q.ToArray(), Is.Not.Empty);
 
 				if (iteration > 1)
-					q.GetCacheMissCount().Should().Be(save);
+					q.GetCacheMissCount().ShouldBe(save);
 			}
 		}
 

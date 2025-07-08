@@ -137,7 +137,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		#endregion
 
-		internal Func<DbConnection, NpgsqlConnection> ConnectionWrapper { get; }
+		public Func<DbConnection, NpgsqlConnection> ConnectionWrapper { get; }
 
 		// removed in v7
 		public Type? NpgsqlDateType     { get; }
@@ -618,7 +618,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		}
 
 		[Wrapper]
-		internal class NpgsqlConnection : TypeWrapper
+		public class NpgsqlConnection : TypeWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; } =
 			{

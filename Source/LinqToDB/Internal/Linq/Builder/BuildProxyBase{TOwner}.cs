@@ -283,7 +283,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		class BuildProxyVisitor : ExpressionVisitorBase
+		sealed class BuildProxyVisitor : ExpressionVisitorBase
 		{
 			public BuildProxyVisitor(BuildProxyBase<TOwner> proxy)
 			{

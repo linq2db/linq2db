@@ -1,6 +1,4 @@
-﻿using System;
-
-using LinqToDB.Data;
+﻿using LinqToDB.Data;
 
 namespace LinqToDB.Remote
 {

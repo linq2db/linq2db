@@ -1277,7 +1277,7 @@ namespace LinqToDB.Internal.SqlQuery
 			};
 		}
 
-		internal class AggregationCheckVisitor : QueryElementVisitor
+		internal sealed class AggregationCheckVisitor : QueryElementVisitor
 		{
 			public bool IsAggregation { get; set; }
 			public bool IsWindow      { get; set; }

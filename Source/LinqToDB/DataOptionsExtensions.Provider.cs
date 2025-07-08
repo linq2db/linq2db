@@ -2,7 +2,6 @@
 
 using JetBrains.Annotations;
 
-using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.DataProvider.DB2;

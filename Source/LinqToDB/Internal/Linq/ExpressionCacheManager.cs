@@ -18,7 +18,7 @@ using static LinqToDB.Internal.Linq.QueryCacheCompareInfo;
 
 namespace LinqToDB.Internal.Linq
 {
-	class ExpressionCacheManager
+	sealed class ExpressionCacheManager
 	{
 		readonly IUniqueIdGenerator<ExpressionCacheManager> _generator;
 

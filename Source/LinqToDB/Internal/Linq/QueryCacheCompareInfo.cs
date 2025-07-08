@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq
 {
-	class QueryCacheCompareInfo
+	sealed class QueryCacheCompareInfo
 	{
 		public Expression MainExpression { get; }
 
@@ -19,7 +19,7 @@ namespace LinqToDB.Internal.Linq
 		public delegate Expression ExpressionAccessorFunc(IDataContext dataContext,      MappingSchema mappingSchema);
 		public delegate object?    ValueAccessorFunc(IQueryExpressions queryExpressions, IDataContext  dataContext, object?[]? compiledParameters);
 
-		public record DynamicExpressionInfo(int ExpressionId, Expression Used, MappingSchema MappingSchema, ExpressionAccessorFunc AccessorFunc);
+		public sealed record DynamicExpressionInfo(int ExpressionId, Expression Used, MappingSchema MappingSchema, ExpressionAccessorFunc AccessorFunc);
 
 		/// <summary>
 		/// Contains functions for retrieving satellite expressions.

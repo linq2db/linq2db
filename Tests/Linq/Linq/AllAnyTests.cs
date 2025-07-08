@@ -3,13 +3,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-
 using LinqToDB;
-using LinqToDB.Internal;
+using LinqToDB.Async;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -298,7 +299,7 @@ namespace Tests.Linq
 			{
 				db.Person
 					.Select(_ => _.Patient)
-					.Any().Should().BeTrue();
+					.Any().ShouldBeTrue();
 			}
 		}
 

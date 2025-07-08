@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -28,6 +29,17 @@ namespace LinqToDB.Internal.SqlQuery
 					.Append("-- ")
 					.AppendLine(part);
 			return writer;
+		}
+
+		public int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			foreach (var line in Lines)
+			{
+				hash.Add(line);
+			}
+
+			return hash.ToHashCode();
 		}
 	}
 }

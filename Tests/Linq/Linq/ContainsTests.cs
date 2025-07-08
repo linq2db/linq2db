@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -48,19 +48,19 @@ namespace Tests.Linq
 			int? result;
 
 			result = FetchId(s => s.Int.In(-1, -2));
-			result.Should().Be(0);
+			result.ShouldBe(0);
 
 			result = FetchId(s => s.Int.In(-1, null));
-			result.Should().Be(withNullCompares ? 1 : 0);
+			result.ShouldBe(withNullCompares ? 1 : 0);
 
 			result = FetchId(s => s.Int.In(-1, 2));
-			result.Should().Be(2);
+			result.ShouldBe(2);
 
 			result = FetchId(s => s.Int.NotIn(null, 2));
-			result.Should().Be(0);
+			result.ShouldBe(0);
 
 			result = FetchId(s => s.Int.NotIn(-1, 2));
-			result.Should().Be(withNullCompares ? 1 : 0);
+			result.ShouldBe(withNullCompares ? 1 : 0);
 
 			int FetchId(Expression<Func<Src, bool>> predicate)
 				=> src.Where(predicate).Select(x => x.Id).FirstOrDefault();
@@ -77,19 +77,19 @@ namespace Tests.Linq
 			int? result;
 
 			result = FetchId(s => s.Enum.In(ContainsEnum.Value3, ContainsEnum.Value4));
-			result.Should().Be(0);
+			result.ShouldBe(0);
 
 			result = FetchId(s => s.Enum.In(ContainsEnum.Value3, null));
-			result.Should().Be(withNullCompares ? 1 : 0);
+			result.ShouldBe(withNullCompares ? 1 : 0);
 
 			result = FetchId(s => s.Enum.In(ContainsEnum.Value3, ContainsEnum.Value2));
-			result.Should().Be(2);
+			result.ShouldBe(2);
 
 			result = FetchId(s => s.Enum.NotIn(null, ContainsEnum.Value2));
-			result.Should().Be(0);
+			result.ShouldBe(0);
 
 			result = FetchId(s => s.Enum.NotIn(ContainsEnum.Value3, ContainsEnum.Value2));
-			result.Should().Be(withNullCompares ? 1 : 0);
+			result.ShouldBe(withNullCompares ? 1 : 0);
 
 			int FetchId(Expression<Func<Src, bool>> predicate)
 				=> src.Where(predicate).Select(x => x.Id).FirstOrDefault();
@@ -106,19 +106,19 @@ namespace Tests.Linq
 			int? result;
 
 			result = FetchId(s => s.CEnum.In(ConvertedEnum.Value3, ConvertedEnum.Value4));
-			result.Should().Be(0);
+			result.ShouldBe(0);
 
 			result = FetchId(s => s.CEnum.In(ConvertedEnum.Value3, null));
-			result.Should().Be(withNullCompares ? 1 : 0);
+			result.ShouldBe(withNullCompares ? 1 : 0);
 
 			result = FetchId(s => s.CEnum.In(ConvertedEnum.Value3, ConvertedEnum.Value2));
-			result.Should().Be(2);
+			result.ShouldBe(2);
 
 			result = FetchId(s => s.CEnum.NotIn(null, ConvertedEnum.Value2));
-			result.Should().Be(0);
+			result.ShouldBe(0);
 
 			result = FetchId(s => s.CEnum.NotIn(ConvertedEnum.Value3, ConvertedEnum.Value2));
-			result.Should().Be(withNullCompares ? 1 : 0);
+			result.ShouldBe(withNullCompares ? 1 : 0);
 
 			int FetchId(Expression<Func<Src, bool>> predicate)
 				=> src.Where(predicate).Select(x => x.Id).FirstOrDefault();
@@ -135,13 +135,13 @@ namespace Tests.Linq
 			int count;
 
 			count = src.Count(s => s.Int.In(Array.Empty<int?>()));
-			count.Should().Be(0);
+			count.ShouldBe(0);
 
 			count = src.Count(s => s.Int.NotIn(Array.Empty<int?>()));
-			count.Should().Be(2);
+			count.ShouldBe(2);
 
 			count = src.Count(s => !s.Int.In(Array.Empty<int?>()));
-			count.Should().Be(2);
+			count.ShouldBe(2);
 		}
 
 		[Test]
@@ -155,13 +155,13 @@ namespace Tests.Linq
 			int count;
 
 			count = src.Count(s => s.Enum.In(Array.Empty<ContainsEnum?>()));
-			count.Should().Be(0);
+			count.ShouldBe(0);
 
 			count = src.Count(s => s.Enum.NotIn(Array.Empty<ContainsEnum?>()));
-			count.Should().Be(2);
+			count.ShouldBe(2);
 
 			count = src.Count(s => !s.Enum.In(Array.Empty<ContainsEnum?>()));
-			count.Should().Be(2);
+			count.ShouldBe(2);
 		}
 
 		[Test]
@@ -175,13 +175,13 @@ namespace Tests.Linq
 			int count;
 
 			count = src.Count(s => s.CEnum.In(Array.Empty<ConvertedEnum?>()));
-			count.Should().Be(0);
+			count.ShouldBe(0);
 
 			count = src.Count(s => s.CEnum.NotIn(Array.Empty<ConvertedEnum?>()));
-			count.Should().Be(2);
+			count.ShouldBe(2);
 
 			count = src.Count(s => !s.CEnum.In(Array.Empty<ConvertedEnum?>()));
-			count.Should().Be(2);
+			count.ShouldBe(2);
 		}
 
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse)]
@@ -199,10 +199,10 @@ namespace Tests.Linq
 			int count;
 
 			count = src.Count(s => s.Int.In(null, null));
-			count.Should().Be(withNullCompares ? 1 : 0);
+			count.ShouldBe(withNullCompares ? 1 : 0);
 
 			count = src.Count(s => s.Int.NotIn(null, null));
-			count.Should().Be(withNullCompares ? 1 : 0);
+			count.ShouldBe(withNullCompares ? 1 : 0);
 		}
 
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse)]
@@ -220,10 +220,10 @@ namespace Tests.Linq
 			int count;
 
 			count = src.Count(s => s.Enum.In(null, null));
-			count.Should().Be(withNullCompares ? 1 : 0);
+			count.ShouldBe(withNullCompares ? 1 : 0);
 
 			count = src.Count(s => s.Enum.NotIn(null, null));
-			count.Should().Be(withNullCompares ? 1 : 0);
+			count.ShouldBe(withNullCompares ? 1 : 0);
 		}
 
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse)]
@@ -241,10 +241,10 @@ namespace Tests.Linq
 			int count;
 
 			count = src.Count(s => s.CEnum.In(null, null));
-			count.Should().Be(withNullCompares ? 1 : 0);
+			count.ShouldBe(withNullCompares ? 1 : 0);
 
 			count = src.Count(s => s.CEnum.NotIn(null, null));
-			count.Should().Be(withNullCompares ? 1 : 0);
+			count.ShouldBe(withNullCompares ? 1 : 0);
 		}
 
 		sealed class Src

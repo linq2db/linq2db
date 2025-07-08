@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
 
 using LinqToDB.Internal.Common;
 
@@ -37,6 +36,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public abstract QueryElementType       ElementType { get; }
 		public abstract QueryElementTextWriter ToString(QueryElementTextWriter writer);
+		public abstract int                    GetElementHashCode();
 
 #if OVERRIDETOSTRING
 		public override string ToString() => DebugText;

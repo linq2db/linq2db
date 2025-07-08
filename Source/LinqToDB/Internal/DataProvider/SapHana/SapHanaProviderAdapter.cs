@@ -7,13 +7,10 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
 using LinqToDB.DataProvider.SapHana;
-using LinqToDB.Extensions;
 using LinqToDB.Internal.Expressions.Types;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using static LinqToDB.Internal.DataProvider.OdbcProviderAdapter;
 
@@ -321,7 +318,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		#region BulkCopy
 		[Wrapper]
-		internal class HanaBulkCopy : TypeWrapper, IDisposable
+		internal sealed class HanaBulkCopy : TypeWrapper, IDisposable
 		{
 			private static object[] Wrappers { get; }
 				= new object[]

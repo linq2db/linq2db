@@ -505,11 +505,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				 *    exception: COUNT aggregate
 				 */
 				bool? canBeNull = null;
+				var nullabilityType = ParametersNullabilityType.IfAnyParameterNullable;
 
 				switch (aggregationType)
 				{
 					case AggregationType.Count:
 					{
+						canBeNull = false;
+						nullabilityType = ParametersNullabilityType.NotNullable;
+
 						if (isSimple)
 						{
 							if (isDistinct)
@@ -522,8 +526,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								if (filterSqlExpression != null)
 #pragma warning restore CA1508
 								{
-									canBeNull = true;
-									sql       = new SqlConditionExpression(filterSqlExpression, new SqlValue(1), new SqlValue(returnType, null));
+									sql = new SqlConditionExpression(filterSqlExpression, new SqlValue(1), new SqlValue(returnType, null));
 								}
 								else
 								{
@@ -601,7 +604,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (sql == null)
 					throw new InvalidOperationException();
 
-				sql = new SqlFunction(returnType, functionName, true, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, canBeNull, sql);
+				sql = new SqlFunction(returnType, functionName, true, true, Precedence.Primary, nullabilityType, canBeNull, sql);
 
 				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/sql, buildInfo.Expression, convertType: returnType);
 

@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -83,7 +83,7 @@ namespace Tests.UserTests
 						IncidentNumber = x.IncidentProperties.FirstOrDefault()!.Incident.EventNumber
 					});
 
-			query.GetSelectQuery().Select.Columns.Should().HaveCount(2);
+			query.GetSelectQuery().Select.Columns.Count.ShouldBe(2);
 
 			query.ToArray();
 		}
@@ -143,7 +143,7 @@ namespace Tests.UserTests
 							.FirstOrDefault()
 					});
 
-			query.GetSelectQuery().Select.Columns.Should().HaveCount(6);
+			query.GetSelectQuery().Select.Columns.Count.ShouldBe(6);
 			query.ToArray();
 		}
 	}

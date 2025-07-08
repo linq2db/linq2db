@@ -74,6 +74,14 @@ namespace LinqToDB.Internal.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ValueType);
+			hash.Add(Value);
+			return hash.ToHashCode();
+		}
+
 		public override int   Precedence => LinqToDB.SqlQuery.Precedence.Primary;
 		public override Type? SystemType => ValueType.SystemType;
 

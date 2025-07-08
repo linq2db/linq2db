@@ -9,7 +9,7 @@ using LinqToDB;
 
 namespace LinqToDB.Internal.Linq
 {
-	class LimitResultEnumerable<T> : IResultEnumerable<T>
+	sealed class LimitResultEnumerable<T> : IResultEnumerable<T>
 	{
 		readonly IResultEnumerable<T> _source;
 		readonly int?                 _skip;
@@ -37,7 +37,7 @@ namespace LinqToDB.Internal.Linq
 			return GetEnumerator();
 		}
 
-		class LimitAsyncEnumerator : IAsyncEnumerator<T>
+		sealed class LimitAsyncEnumerator : IAsyncEnumerator<T>
 		{
 			readonly IAsyncEnumerable<T> _enumerable;
 			readonly int?                _skip;

@@ -290,6 +290,24 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region Overrides
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+
+			hash.Add(ElementType);
+			hash.Add(IsDistinct);
+			hash.Add(SkipValue?.GetElementHashCode());
+			hash.Add(TakeValue?.GetElementHashCode());
+			hash.Add(TakeHints);
+
+			foreach (var column in Columns)
+			{
+				hash.Add(column.GetElementHashCode());
+			}
+
+			return hash.ToHashCode();
+		}
+
 #if OVERRIDETOSTRING
 
 		public override string ToString()

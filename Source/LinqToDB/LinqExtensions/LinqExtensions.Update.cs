@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Async;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;
@@ -146,7 +147,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -193,7 +194,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -241,7 +242,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -570,7 +571,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -616,7 +617,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -663,7 +664,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -973,7 +974,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -1014,7 +1015,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -1056,7 +1057,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -1335,7 +1336,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -1373,7 +1374,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -1412,7 +1413,7 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
-		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
@@ -1611,7 +1612,7 @@ namespace LinqToDB
 				currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter));
 
 			return currentSource.Execute<int>(expr);
-		}
+	}
 
 		/// <summary>
 		/// Executes update-from-source operation asynchronously against target table.
@@ -1644,7 +1645,7 @@ namespace LinqToDB
 				currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter));
 
 			return currentSource.ExecuteAsync<int>(expr, token);
-		}
+}
 
 		/// <summary>
 		/// Executes update operation using source query as record filter.

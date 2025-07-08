@@ -30,7 +30,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region IsServerSideOnly
 
-		class IsServerSideOnlyCheckVisitor : ExpressionVisitorBase
+		sealed class IsServerSideOnlyCheckVisitor : ExpressionVisitorBase
 		{
 			bool                                                 _isServerSideOnly;
 			MappingSchema                                        _mappingSchema  = default!;
@@ -249,7 +249,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static readonly ObjectPool<IsImmutableVisitor> _isImmutableVisitorPool = new(() => new IsImmutableVisitor(), v => v.Cleanup(), 100);
 
-		class IsImmutableVisitor : ExpressionVisitorBase
+		sealed class IsImmutableVisitor : ExpressionVisitorBase
 		{
 			MappingSchema _mappingSchema = default!;
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.DataProvider.Access;
@@ -32,7 +31,7 @@ namespace Tests.Extensions
 					on p.Id equals a.Id //PK column
 				select p;
 
-			Console.WriteLine(query);
+			BaselinesManager.LogQuery(query.ToSqlQuery().Sql);
 
 			Assert.That(query.GetTableSource().Joins, Has.Count.EqualTo(1));
 		}

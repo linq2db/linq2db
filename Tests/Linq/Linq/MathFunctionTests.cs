@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -364,7 +364,7 @@ namespace Tests.Linq
 					q);
 
 				if (iteration > 1)
-					q.GetCacheMissCount().Should().Be(cacheMissCount);
+					q.GetCacheMissCount().ShouldBe(cacheMissCount);
 			}
 		}
 

@@ -6,7 +6,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Expressions
 {
-	class SqlAdjustTypeExpression: Expression, IEquatable<SqlAdjustTypeExpression>
+	sealed class SqlAdjustTypeExpression : Expression, IEquatable<SqlAdjustTypeExpression>
 	{
 		readonly Type          _type;
 		public   Expression    Expression    { get; }

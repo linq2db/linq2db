@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -108,6 +107,17 @@ namespace LinqToDB.Internal.SqlQuery
 			return null;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(Expression.GetElementHashCode());
+			hash.Add(Parent?.SourceID ?? -1);
+			hash.Add(RawAlias);
+
+			return hash.ToHashCode();
+		}
+
 		public override string ToString()
 		{
 #if OVERRIDETOSTRING
@@ -157,7 +167,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
-			if (this == other)
+			if (ReferenceEquals(this, other))
 				return true;
 
 			if (!(other is SqlColumn otherColumn))

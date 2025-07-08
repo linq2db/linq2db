@@ -36,6 +36,17 @@ namespace LinqToDB.Internal.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ToType);
+			hash.Add(Expression.GetElementHashCode());
+			if (FromType != null)
+				hash.Add(FromType.GetElementHashCode());
+			hash.Add(IsMandatory);
+			return hash.ToHashCode();
+		}
+
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (ReferenceEquals(other, this))

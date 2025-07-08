@@ -1,8 +1,8 @@
-﻿using FluentAssertions;
-
-using LinqToDB.Internal.Common;
+﻿using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Common
 {
@@ -27,8 +27,8 @@ namespace Tests.Common
 			string? str1 = null;
 			string? str2 = null;
 
-			comparer.GetHashCode(str1).Should().Be(0);
-			comparer.Equals(str1, str2).Should().BeTrue();
+			comparer.GetHashCode(str1).ShouldBe(0);
+			comparer.Equals(str1, str2).ShouldBeTrue();
 		}
 
 		[Test]
@@ -39,8 +39,8 @@ namespace Tests.Common
 			TestObject? obj1 = null;
 			TestObject? obj2 = null;
 
-			comparer.GetHashCode(obj1).Should().Be(0);
-			comparer.Equals(obj1, obj2).Should().BeTrue();
+			comparer.GetHashCode(obj1).ShouldBe(0);
+			comparer.Equals(obj1, obj2).ShouldBeTrue();
 		}
 
 		[Test]
@@ -51,8 +51,8 @@ namespace Tests.Common
 			ITestObject? obj1 = null;
 			ITestObject? obj2 = null;
 
-			comparer.GetHashCode(obj1).Should().Be(0);
-			comparer.Equals(obj1, obj2).Should().BeTrue();
+			comparer.GetHashCode(obj1).ShouldBe(0);
+			comparer.Equals(obj1, obj2).ShouldBeTrue();
 		}
 
 		[Test]
@@ -63,8 +63,8 @@ namespace Tests.Common
 			int? obj1 = null;
 			int? obj2 = null;
 
-			comparer.GetHashCode(obj1).Should().Be(0);
-			comparer.Equals(obj1, obj2).Should().BeTrue();
+			comparer.GetHashCode(obj1).ShouldBe(0);
+			comparer.Equals(obj1, obj2).ShouldBeTrue();
 		}
 
 	}

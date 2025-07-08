@@ -88,12 +88,23 @@ namespace LinqToDB.DataProvider.SqlServer
 			// see https://github.com/linq2db/linq2db/issues/3630
 			try
 			{
-				var methodAttr = Type.GetType(sqlMethodAttributeType         , true)!;
-				var typeAttr   = Type.GetType(sqlUserDefinedTypeAttributeType, true)!;
+				var methodAttr = Type.GetType(sqlMethodAttributeType, false);
+
+				if (methodAttr == null)
+					return null;
+
+				var typeAttr   = Type.GetType(sqlUserDefinedTypeAttributeType, false);
+
+				if (typeAttr == null)
+					return null;
+
 				return new SystemDataSqlServerAttributeReader(methodAttr, typeAttr);
 			}
 			catch
 			{
+				// Ignore any exceptions, we just return null this is required to avoid issues with assembly loading in .NET Core
+				// where assembly could be not loaded yet and Type.GetType will fail if assembly is not loaded.
+				// We just return null and let caller to handle it.
 			}
 
 			return null;

@@ -13,6 +13,7 @@ using System.Xml;
 using System.Xml.Linq;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Internal.DataProvider.MySql;

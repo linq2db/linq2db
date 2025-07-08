@@ -2,11 +2,11 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
-
 using LinqToDB;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -85,7 +85,7 @@ namespace Tests.UserTests
 				// from cache
 				_ = result2.ToSqlQuery().Sql;
 
-				result1.GetCacheMissCount().Should().Be(cacheMiss);
+				result1.GetCacheMissCount().ShouldBe(cacheMiss);
 			}
 		}
 
@@ -140,7 +140,7 @@ namespace Tests.UserTests
 				// from cache
 				_ = combined2.ToSqlQuery().Sql;
 
-				combined2.GetCacheMissCount().Should().Be(cacheMiss);
+				combined2.GetCacheMissCount().ShouldBe(cacheMiss);
 			}
 		}
 

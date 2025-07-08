@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -135,7 +135,7 @@ namespace Tests.UserTests
 				var selectQuery = query.GetSelectQuery();
 
 				selectQuery.Select.Columns.Any(c =>
-					(c.Expression is SqlField field) && field.Name == "TelegramBotName").Should().BeTrue();
+					(c.Expression is SqlField field) && field.Name == "TelegramBotName").ShouldBeTrue();
 			}
 		}
 	}

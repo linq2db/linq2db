@@ -11,7 +11,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq
 {
-	class CloningContext
+	sealed class CloningContext
 	{
 		Dictionary<IQueryElement, IQueryElement> _queryElements    = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 		Dictionary<IBuildContext, IBuildContext> _buildContexts    = new ();

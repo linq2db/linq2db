@@ -1,16 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlWithClause : IQueryElement
+	public class SqlWithClause : QueryElement
 	{
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
+		public override QueryElementType ElementType => QueryElementType.WithClause;
 
-		public QueryElementType ElementType => QueryElementType.WithClause;
-
-		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			if (Clauses.Count > 0)
 			{
@@ -93,6 +90,18 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			foreach (var clause in Clauses)
+			{
+				hash.Add(clause.GetElementHashCode());
+			}
+
+			return hash.ToHashCode();
 		}
 
 		public List<CteClause> Clauses { get; set; } = new List<CteClause>();

@@ -19,17 +19,48 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
 
-			return statement.QueryType switch
+			switch (statement.QueryType)
 			{
-				QueryType.Delete => CorrectPostgreSqlDelete((SqlDeleteStatement)statement, dataOptions),
-				QueryType.Update => GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement, dataOptions, mappingSchema),
-				_                => statement,
-			};
+				case QueryType.Delete:
+				{
+					statement = CorrectPostgreSqlDelete((SqlDeleteStatement)statement, dataOptions);
+					break;
+				}
+				case QueryType.Update:
+				{
+					statement = GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement, dataOptions, mappingSchema);
+					break;
+				}
+			}
+
+			statement = CorrectPostgreSqlOutput(statement);
+
+			return statement;
 		}
 
 		SqlStatement CorrectPostgreSqlDelete(SqlDeleteStatement statement, DataOptions dataOptions)
 		{
 			statement = GetAlternativeDelete(statement, dataOptions);
+
+			return statement;
+		}
+
+		SqlStatement CorrectPostgreSqlOutput(SqlStatement statement)
+		{
+			if (statement.QueryType is QueryType.Update or QueryType.Merge)
+			{
+				statement.VisitAll(static qe =>
+				{
+					if (qe is not SqlAnchor { AnchorKind: SqlAnchor.AnchorKindEnum.Inserted or SqlAnchor.AnchorKindEnum.Deleted } anchor)
+						return;
+
+					var field = QueryHelper.ExtractField(anchor.SqlExpression);
+					if (field is null)
+						throw new LinqToDBException($"PostgreSQL does not support output columns which are not field.");
+
+					anchor.Modify(field);
+				});
+			}
 
 			return statement;
 		}

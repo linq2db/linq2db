@@ -60,9 +60,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias, NullabilityContext? nullabilityContext)
 		{
-			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, skipAlias);
+			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, skipAlias, nullabilityContext);
 
 			sb
 				.Replace("NULL IS NOT NULL", "1=0")

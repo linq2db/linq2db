@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Remote.SignalR
+﻿namespace LinqToDB.Remote.SignalR
 {
 	public class LinqToDBHub<T> : LinqToDBHub
 		where T : IDataContext

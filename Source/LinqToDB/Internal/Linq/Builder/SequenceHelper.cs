@@ -936,7 +936,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (expr.Type.IsValueType && !expr.Type.IsNullable())
 			{
 				if (expr is SqlPlaceholderExpression placeholder)
-					expr = placeholder.WithSql(SqlNullabilityExpression.ApplyNullability(placeholder.Sql, true)).MakeNullable();
+					expr = placeholder.MakeNullable();
 				else
 					expr = Expression.Convert(expr, expr.Type.AsNullable());
 			}

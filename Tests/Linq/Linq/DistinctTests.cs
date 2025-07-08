@@ -1,12 +1,12 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
-using LinqToDB.Internal;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -66,7 +66,7 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			query2.GetCacheMissCount().Should().Be(cacheMissCount);
+			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
 		[Test]
@@ -81,7 +81,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 
 			if (iteration > 0)
-				query.GetCacheMissCount().Should().Be(cacheMissCount);
+				query.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
 		[Test]

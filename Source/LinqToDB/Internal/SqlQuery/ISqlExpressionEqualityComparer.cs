@@ -23,8 +23,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		int IEqualityComparer<ISqlExpression>.GetHashCode(ISqlExpression obj)
 		{
-			// TODO: we don't have GetHashCode for ISqlExpression currently
-			return obj.GetType().GetHashCode();
+			return obj.GetElementHashCode();
 		}
 	}
 }

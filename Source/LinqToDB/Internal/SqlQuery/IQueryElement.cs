@@ -16,5 +16,7 @@
 		/// Generates debug text representation of AST node.
 		/// </summary>
 		QueryElementTextWriter ToString(QueryElementTextWriter writer);
+
+		int GetElementHashCode();
 	}
 }

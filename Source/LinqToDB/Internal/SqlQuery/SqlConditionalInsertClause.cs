@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Internal.SqlQuery
+﻿using System;
+
+namespace LinqToDB.Internal.SqlQuery
 {
 	public class SqlConditionalInsertClause : IQueryElement
 	{
@@ -37,6 +39,15 @@
 			writer.AppendElement(Insert);
 
 			return writer;
+		}
+
+		public int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(Insert.GetElementHashCode());
+			if (When != null)
+				hash.Add(When.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		#endregion

@@ -5,14 +5,13 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 using Tests.Model;
-
-using static Tests.xUpdate.MergeTests;
 
 namespace Tests.Linq
 {

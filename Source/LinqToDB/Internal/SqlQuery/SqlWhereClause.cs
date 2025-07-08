@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Internal.SqlQuery
+﻿using System;
+
+namespace LinqToDB.Internal.SqlQuery
 {
 	public class SqlWhereClause : ClauseBase<SqlWhereClause>
 	{
@@ -35,6 +37,14 @@
 			}
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(SearchCondition.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		#endregion

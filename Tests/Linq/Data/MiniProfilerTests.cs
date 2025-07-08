@@ -205,9 +205,9 @@ namespace Tests.Data
 		public void TestSapHanaOdbc([IncludeDataSources(ProviderName.SapHanaOdbc)] string context, [Values] ConnectionType type)
 		{
 #if NETFRAMEWORK
-			using (var db = CreateDataConnection(new SapHanaOdbcDataProvider(), context, type, cs => new System.Data.Odbc.OdbcConnection(cs)))
+			using (var db = CreateDataConnection(SapHanaTools.GetDataProvider(SapHanaProvider.ODBC), context, type, cs => new System.Data.Odbc.OdbcConnection(cs)))
 #else
-			using (var db = CreateDataConnection(new SapHanaOdbcDataProvider(), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc"))
+			using (var db = CreateDataConnection(SapHanaTools.GetDataProvider(SapHanaProvider.ODBC), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc"))
 #endif
 			{
 				// provider doesn't use provider-specific API, so we just query schema
@@ -1069,7 +1069,7 @@ namespace Tests.Data
 			var trace = string.Empty;
 
 			var connectionType = ((SapHanaDataProvider)SapHanaTools.GetDataProvider(SapHanaProvider.Unmanaged)).Adapter.ConnectionType;
-			using (var db = CreateDataConnection(new SapHanaNativeDataProvider(), context, type, connectionType, onTrace: ti =>
+			using (var db = CreateDataConnection(SapHanaTools.GetDataProvider(SapHanaProvider.Unmanaged), context, type, connectionType, onTrace: ti =>
 			{
 				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
 					trace = ti.SqlText;

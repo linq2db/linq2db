@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			new LateralJoinParametersCorrector().Visit(statement);
 		}
 
-		class LateralJoinParametersCorrector : QueryElementVisitor
+		sealed class LateralJoinParametersCorrector : QueryElementVisitor
 		{
 			bool _isLateralJoin;
 

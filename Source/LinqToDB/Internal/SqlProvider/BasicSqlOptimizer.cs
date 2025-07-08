@@ -428,7 +428,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return statement;
 		}
 
-		class SqlRowExpandVisitor : SqlQueryVisitor
+		sealed class SqlRowExpandVisitor : SqlQueryVisitor
 		{
 			SelectQuery? _updateSelect;
 
@@ -994,7 +994,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (query.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported) ||
 				!query.GroupBy.IsEmpty)
+			{
 				return false;
+			}
 
 			if (table.SqlQueryExtensions?.Count > 0)
 				return false;
@@ -1002,46 +1004,50 @@ namespace LinqToDB.Internal.SqlProvider
 			for (var i = 0; i < query.From.Tables.Count; i++)
 			{
 				var ts = query.From.Tables[i];
-				if (ts.Joins.All(j => j.JoinType is JoinType.Inner or JoinType.Left or JoinType.Cross))
+				if (ts.Source == table)
 				{
-					if (ts.Source == table)
-					{
-						source = ts;
+					if (!ts.Joins.All(j => j.JoinType is JoinType.Inner or JoinType.Cross))
+						return false;
+						
+					source = ts;
 
-						query.From.Tables.RemoveAt(i);
-						for (var j = 0; j < ts.Joins.Count; j++)
+					query.From.Tables.RemoveAt(i);
+					for (var j = 0; j < ts.Joins.Count; j++)
+					{
+						query.From.Tables.Insert(i + j, ts.Joins[j].Table);
+						query.Where.ConcatSearchCondition(ts.Joins[j].Condition);
+					}
+
+					source.Joins.Clear();
+
+					return true;
+				}
+
+				for (var j = 0; j < ts.Joins.Count; j++)
+				{
+					var join = ts.Joins[j];
+
+					if (join.JoinType is not (JoinType.Inner or JoinType.Cross or JoinType.Left))
+						return false;
+
+					if (join.Table.Source == table)
+					{
+						if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, table)))
+							return false;
+
+						source = join.Table;
+
+						ts.Joins.RemoveAt(j);
+						query.Where.ConcatSearchCondition(join.Condition);
+
+						for (var sj = 0; j < join.Table.Joins.Count; j++)
 						{
-							query.From.Tables.Insert(i + j, ts.Joins[j].Table);
-							query.Where.ConcatSearchCondition(ts.Joins[j].Condition);
+							ts.Joins.Insert(j + sj, join.Table.Joins[sj]);
 						}
 
 						source.Joins.Clear();
 
 						return true;
-					}
-
-					for (var j = 0; j < ts.Joins.Count; j++)
-					{
-						var join = ts.Joins[j];
-						if (join.Table.Source == table)
-						{
-							if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, table)))
-								return false;
-
-							source = join.Table;
-
-							ts.Joins.RemoveAt(j);
-							query.Where.ConcatSearchCondition(join.Condition);
-
-							for (var sj = 0; j < join.Table.Joins.Count; j++)
-							{
-								ts.Joins.Insert(j + sj, join.Table.Joins[sj]);
-							}
-
-							source.Joins.Clear();
-
-							return true;
-						}
 					}
 				}
 			}

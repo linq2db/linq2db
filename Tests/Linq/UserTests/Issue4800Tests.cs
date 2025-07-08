@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -171,7 +171,7 @@ namespace Tests.UserTests
 
 			var result = query2.ToList();
 
-			result.Should().HaveCount(1);
+			result.Count.ShouldBe(1);
 		}
 	}
 }

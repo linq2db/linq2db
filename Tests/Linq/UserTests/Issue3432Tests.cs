@@ -1,11 +1,11 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -50,7 +50,8 @@ namespace Tests.UserTests
 					.DefaultIfEmpty()
 				select new { task.Description, party.Name };
 
-			FluentActions.Enumerating(() => query).Should().NotThrow();
+			var act = () => query.ToArray();
+			act.ShouldNotThrow();
 		}
 	}
 }

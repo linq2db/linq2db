@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Internal;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -1164,13 +1164,13 @@ namespace Tests.Linq
 			{
 			if (includeChild)
 			{
-				result.Child.Should().NotBeNull();
+				result.Child.ShouldNotBeNull();
 			}
 			else
 			{
-				result.Child.Should().BeNull();
+				result.Child.ShouldBeNull();
 
-				((DataConnection)db).LastQuery.Should().NotContain("ChildID");
+				((DataConnection)db).LastQuery!.ShouldNotContain("ChildID");
 			}
 			}
 
@@ -1184,7 +1184,7 @@ namespace Tests.Linq
 
 			if (iteration > 1)
 			{
-				query.GetCacheMissCount().Should().Be(cacheMissCount);
+				query.GetCacheMissCount().ShouldBe(cacheMissCount);
 			}
 		}
 
@@ -1929,16 +1929,16 @@ namespace Tests.Linq
 
 			var p1 = query.ToList();
 
-			p1.All(p => ReferenceEquals(p.Reference, reference)).Should().BeTrue();
+			p1.All(p => ReferenceEquals(p.Reference, reference)).ShouldBeTrue();
 
 			reference = new Parent() { ParentID = 1002 };
 			var cacheMissCount = db.Person.GetCacheMissCount();
 
 			var p2 = query.ToList();
 
-			p2.All(p => ReferenceEquals(p.Reference, reference)).Should().BeTrue();
+			p2.All(p => ReferenceEquals(p.Reference, reference)).ShouldBeTrue();
 
-			db.Person.GetCacheMissCount().Should().Be(cacheMissCount);
+			db.Person.GetCacheMissCount().ShouldBe(cacheMissCount);
 
 		}
 
