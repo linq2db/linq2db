@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 			return new GuidMemberTranslator();
 		}
 
-		class SqlTypesTranslation : SqlTypesTranslationDefault
+		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Boolean));
@@ -334,7 +334,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 		{
 		}
 
-		class GuidMemberTranslator : GuidMemberTranslatorBase
+		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 		{

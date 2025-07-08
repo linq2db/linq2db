@@ -117,7 +117,7 @@ namespace LinqToDB.SqlQuery
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
-			return this == other;
+			return ReferenceEquals(this, other);
 		}
 
 		public override int Precedence => SqlQuery.Precedence.Primary;
@@ -142,6 +142,24 @@ namespace LinqToDB.SqlQuery
 			if (CanBeNull)
 				writer.Append("?");
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(Name);
+			hash.Add(PhysicalName);
+			hash.Add(Alias);
+			hash.Add(CanBeNull);
+			hash.Add(IsPrimaryKey);
+			hash.Add(PrimaryKeyOrder);
+			hash.Add(IsIdentity);
+			hash.Add(IsInsertable);
+			hash.Add(IsUpdatable);
+			hash.Add(CreateFormat);
+			hash.Add(CreateOrder);
+			return hash.ToHashCode();
 		}
 
 		#endregion

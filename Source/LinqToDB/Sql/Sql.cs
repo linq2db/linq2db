@@ -130,7 +130,7 @@ namespace LinqToDB
 				var right = builder.GetExpression(1)!;
 				var isNot = builder.Expression == "NOT";
 
-				var nullability = new NullabilityContext(builder.Query);
+				var nullability = NullabilityContext.GetContext(builder.Query);
 
 				SqlPredicate predicate = left.CanBeNullable(nullability) || right.CanBeNullable(nullability)
 					? new SqlPredicate.IsDistinct(left, isNot, right)
@@ -258,7 +258,7 @@ namespace LinqToDB
 
 		#region Convert Functions
 
-		class ConvertBuilder : IExtensionCallBuilder
+		sealed class ConvertBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -291,7 +291,7 @@ namespace LinqToDB
 			return Common.ConvertTo<TTo>.From(from);
 		}
 
-		class ConvertBuilderSimple : IExtensionCallBuilder
+		sealed class ConvertBuilderSimple : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -311,7 +311,7 @@ namespace LinqToDB
 			return Common.ConvertTo<TTo>.From(obj);
 		}
 
-		class ConvertBuilderInner : IExtensionCallBuilder
+		sealed class ConvertBuilderInner : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -559,7 +559,7 @@ namespace LinqToDB
 			return str.Substring(0, length.Value);
 		}
 
-		class OracleRightBuilder : IExtensionCallBuilder
+		sealed class OracleRightBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -578,7 +578,7 @@ namespace LinqToDB
 			}
 		}
 
-		class SqlCeRightBuilder : IExtensionCallBuilder
+		sealed class SqlCeRightBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{

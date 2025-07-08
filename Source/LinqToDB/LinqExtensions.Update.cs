@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 using LinqToDB.Async;
+using LinqToDB.Internal.Async;
 using LinqToDB.Linq;
 
 namespace LinqToDB

@@ -18,5 +18,5 @@ docker start sybase
 call wait sybase "SYBASE STARTED"
 timeout 5
 docker cp ase.sql sybase:/opt/sap/ase.sql
-docker exec -e SYBASE=/opt/sap sybase bash -c "source /opt/sap/SYBASE.sh && /opt/sap/OCS-16_0/bin/isql -Usa -PmyPassword -SMYSYBASE -i/opt/sap/ase.sql"
+docker exec -e SYBASE=/opt/sap sybase bash -c ". /opt/sap/SYBASE.sh && /opt/sap/OCS-16_0/bin/isql -Usa -PmyPassword -SMYSYBASE -i/opt/sap/ase.sql"
 

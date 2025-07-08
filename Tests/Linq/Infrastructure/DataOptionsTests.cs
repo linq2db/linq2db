@@ -4,7 +4,8 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
+using LinqToDB.Async;
+sing LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;

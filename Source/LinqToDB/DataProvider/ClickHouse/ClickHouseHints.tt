@@ -40,7 +40,7 @@ void GenerateJoinHint(string hint)
 {
 #>
 		[ExpressionMethod(nameof(Join<#= hint #>HintImpl))]
-		internal static IClickHouseSpecificQueryable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+		public static IClickHouseSpecificQueryable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
 			return query.JoinHint(Join.<#= hint #>);
@@ -53,7 +53,7 @@ void GenerateJoinHint(string hint)
 		}
 
 		[ExpressionMethod(nameof(Join<#= hint #>TableHintImpl))]
-		internal static IClickHouseSpecificTable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificTable<TSource> table)
+		public static IClickHouseSpecificTable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
 		{
 			return table.JoinHint(Join.<#= hint #>);

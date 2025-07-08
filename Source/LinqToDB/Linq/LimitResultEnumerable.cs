@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	class LimitResultEnumerable<T> : IResultEnumerable<T>
+	sealed class LimitResultEnumerable<T> : IResultEnumerable<T>
 	{
 		readonly IResultEnumerable<T> _source;
 		readonly int?                 _skip;
@@ -35,7 +35,7 @@ namespace LinqToDB.Linq
 			return GetEnumerator();
 		}
 
-		class LimitAsyncEnumerator : IAsyncEnumerator<T>
+		sealed class LimitAsyncEnumerator : IAsyncEnumerator<T>
 		{
 			readonly IAsyncEnumerable<T> _enumerable;
 			readonly int?                _skip;

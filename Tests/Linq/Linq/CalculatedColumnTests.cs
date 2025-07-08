@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -155,8 +155,8 @@ namespace Tests.Linq
 						.Select(d => d.FirstName);
 				var l = q.ToList();
 
-				l.Should().NotBeEmpty();
-				l[0].Should().NotBeNull();
+				l.ShouldNotBeEmpty();
+				l[0].ShouldNotBeNull();
 			}
 		}
 

@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 {
 	partial class TableBuilder
 	{
-		class SimpleSelectContext : BuildContextBase
+		sealed class SimpleSelectContext : BuildContextBase
 		{
 			public SimpleSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, Type elementType, SelectQuery selectQuery) 
 				: base(translationModifier, builder, elementType, selectQuery)

@@ -8,7 +8,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Linq;
 
-namespace LinqToDB
+namespace LinqToDB.Async
 {
 	/// <summary>
 	/// Provides helper methods for asynchronous operations.
@@ -558,13 +558,13 @@ namespace LinqToDB
 			return await Task.Run(() => source.AsEnumerable().ToLookupWithToken(keySelector, elementSelector, comparer, token), token).ConfigureAwait(false);
 		}
 
-		class Grouping<TKey,TElement>(TKey key) : List<TElement>(1), IGrouping<TKey,TElement>
+		sealed class Grouping<TKey,TElement>(TKey key) : List<TElement>(1), IGrouping<TKey,TElement>
 			where TKey : notnull
 		{
 			public TKey Key { get; } = key;
 		}
 
-		class Lookup<TKey,TElement>(IEqualityComparer<TKey>? comparer)
+		sealed class Lookup<TKey,TElement>(IEqualityComparer<TKey>? comparer)
 			: Dictionary<TKey,Grouping<TKey,TElement>>(comparer), ILookup<TKey,TElement>
 			where TKey : notnull
 		{
