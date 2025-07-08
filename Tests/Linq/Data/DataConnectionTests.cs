@@ -42,7 +42,7 @@ namespace Tests.Data
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(connection.State,         Is.EqualTo(ConnectionState.Open));
-					Assert.That(conn.ConfigurationString, Is.Null);
+					Assert.That(conn.ConfigurationString, Is.EqualTo(dataProvider.Name));
 				}
 			}
 		}
