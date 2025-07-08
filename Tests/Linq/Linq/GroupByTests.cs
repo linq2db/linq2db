@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -2305,10 +2305,11 @@ namespace Tests.Linq
 				var query = db.Person
 					.GroupBy(_ => _.Gender);
 
+				var act = () => query.ToList();
 				if (guard)
-					query.Invoking(q => q.ToList()).Should().Throw<LinqToDBException>();
+					act.ShouldThrow<LinqToDBException>();
 				else
-					query.Invoking(q => q.ToList()).Should().NotThrow();
+					act.ShouldNotThrow();
 			}
 		}
 
@@ -3078,10 +3079,10 @@ namespace Tests.Linq
 			// We check that grouping is left in the subquery
 
 			var sqlJoinedTable = selectQuery.From.Tables[0].Joins[0];
-			sqlJoinedTable.JoinType.Should().Be(JoinType.OuterApply);
+			sqlJoinedTable.JoinType.ShouldBe(JoinType.OuterApply);
 			var joinQuery = (SelectQuery)sqlJoinedTable.Table.Source;
-			joinQuery.GroupBy.IsEmpty.Should().BeTrue();
-			joinQuery.OrderBy.Items.Should().HaveCount(2);
+			joinQuery.GroupBy.IsEmpty.ShouldBeTrue();
+			joinQuery.OrderBy.Items.Count.ShouldBe(2);
 		}
 
 		#region issue 4256
@@ -3225,7 +3226,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Should().HaveCount(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3254,7 +3255,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Should().HaveCount(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3283,7 +3284,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Should().HaveCount(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3312,7 +3313,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Should().HaveCount(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3341,7 +3342,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Should().HaveCount(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3370,7 +3371,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Should().HaveCount(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3640,7 +3641,7 @@ namespace Tests.Linq
 
 			query.ToList();
 
-			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+			db.LastQuery!.ShouldContain("SELECT", Exactly.Once());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3486")]
@@ -3661,7 +3662,7 @@ namespace Tests.Linq
 
 			query.ToList();
 
-			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+			db.LastQuery!.ShouldContain("SELECT", Exactly.Once());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
@@ -3680,7 +3681,7 @@ namespace Tests.Linq
 
 			query.ToList();
 
-			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+			db.LastQuery!.ShouldContain("SELECT", Exactly.Once());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
@@ -3698,7 +3699,7 @@ namespace Tests.Linq
 
 			query.ToList();
 
-			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+			db.LastQuery!.ShouldContain("SELECT", Exactly.Once());
 		}
 
 		[Test]

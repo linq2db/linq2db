@@ -643,7 +643,7 @@ namespace LinqToDB.Remote
 			{
 			}
 
-			class QuerySerializationVisitor : QueryElementVisitor
+			sealed class QuerySerializationVisitor : QueryElementVisitor
 			{
 				readonly QuerySerializer   _serializer;
 				readonly EvaluationContext _evaluationContext;
@@ -1128,6 +1128,8 @@ namespace LinqToDB.Remote
 							Append((int)elem.Operator);
 							Append(elem.Expr2);
 							Append(elem.UnknownAsValue);
+							Append(elem.NotNullableExpr1);
+							Append(elem.NotNullableExpr2);
 
 							break;
 						}
@@ -2107,8 +2109,10 @@ namespace LinqToDB.Remote
 							var @operator    = (SqlPredicate.Operator)ReadInt();
 							var expr2        = Read<ISqlExpression>()!;
 							var unknownValue = ReadNullableBool();
+							var notNullableExpr1 = ReadBool();
+							var notNullableExpr2 = ReadBool();
 
-							obj = new SqlPredicate.ExprExpr(expr1, @operator, expr2, unknownValue);
+							obj = new SqlPredicate.ExprExpr(expr1, @operator, expr2, unknownValue, notNullableExpr1, notNullableExpr2);
 
 							break;
 						}

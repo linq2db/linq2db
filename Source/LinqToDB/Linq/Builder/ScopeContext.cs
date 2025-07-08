@@ -7,7 +7,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	class ScopeContext : BuildContextBase
+	sealed class ScopeContext : BuildContextBase
 	{
 		public IBuildContext Context { get; }
 		public IBuildContext UpTo    { get; }
@@ -71,7 +71,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override bool IsOptional => Context.IsOptional;
 
-		protected bool Equals(ScopeContext other)
+		private bool Equals(ScopeContext other)
 		{
 			return Context.Equals(other.Context) && UpTo.Equals(other.UpTo);
 		}

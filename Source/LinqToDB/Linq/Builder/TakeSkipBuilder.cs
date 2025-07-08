@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		class TakeSkipContext : PassThroughContext
+		sealed class TakeSkipContext : PassThroughContext
 		{
 			public TakeSkipContext(IBuildContext context) : base(context)
 			{

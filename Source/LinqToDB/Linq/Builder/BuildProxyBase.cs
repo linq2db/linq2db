@@ -287,7 +287,7 @@ namespace LinqToDB.Linq.Builder
 			return hashCode.ToHashCode();
 		}
 
-		class BuildProxyVisitor : ExpressionVisitorBase
+		sealed class BuildProxyVisitor : ExpressionVisitorBase
 		{
 			public BuildProxyVisitor(BuildProxyBase<TOwner> proxy)
 			{

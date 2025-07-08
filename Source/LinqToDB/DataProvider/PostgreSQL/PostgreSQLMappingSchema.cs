@@ -170,5 +170,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 			}
 		}
+
+		public sealed class PostgreSQL18MappingSchema : LockedMappingSchema
+		{
+			public PostgreSQL18MappingSchema() : base(ProviderName.PostgreSQL18, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
+			{
+			}
+		}
 	}
 }

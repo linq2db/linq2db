@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -93,7 +93,10 @@ namespace Tests.Linq
 					.AsCte();
 
 				if (!db.SqlProviderFlags.IsCTESupportsOrdering)
-					FluentActions.Enumerating(() => query).Should().NotThrow();
+				{
+					var act = () => query.ToArray();
+					act.ShouldNotThrow();
+				}
 				else
 				{
 					var result = query.ToList();
@@ -1205,7 +1208,7 @@ namespace Tests.Linq
 			query.ToArray();
 
 			if (db is TestDataConnection cn)
-				cn.LastQuery!.Should().Contain("SELECT", Exactly.Times(4));
+				cn.LastQuery!.ShouldContain("SELECT", Exactly.Times(4));
 		}
 
 		public record class  Issue3357RecordClass (int Id, string FirstName, string LastName);
@@ -1299,8 +1302,9 @@ namespace Tests.Linq
 
 			if (db is TestDataConnection dc)
 			{
-				dc.LastQuery!.Should().NotContain("N'");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Once());
+				dc.LastQuery!.ShouldNotContain("N'");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS VARCHAR(MAX))");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS VARCHAR(MAX))", Exactly.Once());
 			}
 		}
 
@@ -1385,9 +1389,9 @@ namespace Tests.Linq
 
 			if (db is TestDataConnection dc)
 			{
-				dc.LastQuery!.Should().NotContain("N'");
-				dc.LastQuery!.Should().Contain("'THIS_IS_TWO'");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(50))", Exactly.Once());
+				dc.LastQuery!.ShouldNotContain("N'");
+				dc.LastQuery!.ShouldContain("'THIS_IS_TWO'");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS VARCHAR(50))", Exactly.Once());
 			}
 		}
 
@@ -1449,8 +1453,8 @@ namespace Tests.Linq
 			query.ToArray();
 			if (db is TestDataConnection dc)
 			{
-				dc.LastQuery!.Should().NotContain("N'");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Twice());
+				dc.LastQuery!.ShouldNotContain("N'");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS VARCHAR(MAX))", Exactly.Twice());
 			}
 		}
 
@@ -1853,8 +1857,8 @@ namespace Tests.Linq
 
 			if (db is TestDataConnection dc)
 			{
-				dc.LastQuery!.Should().NotContain("Convert(VarChar");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS NVARCHAR(MAX))", Exactly.Twice());
+				dc.LastQuery!.ShouldNotContain("Convert(VarChar");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS NVARCHAR(MAX))", Exactly.Twice());
 			}
 		}
 
@@ -2498,20 +2502,20 @@ namespace Tests.Linq
 			var booksQuery = db.GetTable<Book>()
 				.Select(b => new
 				{
-					Book = b, 
+					Book = b,
 					b.Author
 				})
 				.AsCte("BooksCte");
 
 			var query1 = booksQuery.Select(r => new
 			{
-				Book = (Book?)r.Book, 
+				Book = (Book?)r.Book,
 				Author = (Author?)null
 			});
 
 			var query2 = booksQuery.Select(r => new
 			{
-				Book = (Book?)null, 
+				Book = (Book?)null,
 				Author = (Author?)r.Author
 			});
 
@@ -2542,7 +2546,7 @@ namespace Tests.Linq
 						select new SequenceBuildFailedRecord(p.PersonID));
 			});
 
-			var query = 
+			var query =
 				from r in cte
 				join p in db.Patient on r.Id equals p.PersonID
 				select new
@@ -2560,7 +2564,7 @@ namespace Tests.Linq
 
 			var cte = db.Person.Select(s => new { s.Patient!.PersonID }).AsCte();
 
-			var query = 
+			var query =
 				from r in cte
 				join p in db.Patient on r.PersonID equals p.PersonID
 				select new
