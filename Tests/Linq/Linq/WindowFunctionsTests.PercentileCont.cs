@@ -1,11 +1,11 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-
 using LinqToDB;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -39,8 +39,8 @@ namespace Tests.Linq
 
 			var sql = query.ToSqlQuery().Sql;
 
-			sql.Should().Contain("SELECT", Exactly.Once());
-			sql.Should().Contain("PERCENTILE_CONT", Exactly.Times(4));
+			sql.ShouldContain("SELECT", Exactly.Once());
+			sql.ShouldContain("PERCENTILE_CONT", Exactly.Times(4));
 
 			Assert.DoesNotThrow(() =>
 			{
@@ -74,8 +74,8 @@ namespace Tests.Linq
 
 			var sql = query.ToSqlQuery().Sql;
 
-			sql.Should().Contain("SELECT", Exactly.Once());
-			sql.Should().Contain("PERCENTILE_CONT", Exactly.Twice());
+			sql.ShouldContain("SELECT", Exactly.Once());
+			sql.ShouldContain("PERCENTILE_CONT", Exactly.Twice());
 
 			Assert.DoesNotThrow(() =>
 			{
@@ -106,7 +106,7 @@ namespace Tests.Linq
 					PercentileContDecimal = table.Where(x => x.Id > t.Id).Where(x => x.DecimalValue > 1).PercentileCont(0.5, (e, f) => f.OrderBy(e.DecimalValue)),
 				};
 
-			query.ToSqlQuery().Sql.Should().Contain("PERCENTILE_CONT");
+			query.ToSqlQuery().Sql.ShouldContain("PERCENTILE_CONT");
 
 			Assert.DoesNotThrow(() =>
 			{

@@ -478,7 +478,6 @@ namespace LinqToDB.SqlQuery
 			return hash.ToHashCode();
 		}
 
-
 		public void Modify(ISqlExpression offset)
 		{
 			if (BoundaryType != FrameBoundaryType.Offset)
