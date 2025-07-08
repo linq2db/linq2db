@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Tools;
 
 using NUnit.Framework;

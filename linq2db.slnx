@@ -77,6 +77,7 @@
     <File Path="Build/Azure/net80/pgsql15.json" />
     <File Path="Build/Azure/net80/pgsql16.json" />
     <File Path="Build/Azure/net80/pgsql17.json" />
+    <File Path="Build/Azure/net80/pgsql18.json" />
     <File Path="Build/Azure/net80/sqlce.json" />
     <File Path="Build/Azure/net80/sqlite.extras.json" />
     <File Path="Build/Azure/net80/sqlite.json" />
@@ -122,6 +123,7 @@
     <File Path="Build/Azure/net90/pgsql15.json" />
     <File Path="Build/Azure/net90/pgsql16.json" />
     <File Path="Build/Azure/net90/pgsql17.json" />
+    <File Path="Build/Azure/net90/pgsql18.json" />
     <File Path="Build/Azure/net90/sqlce.json" />
     <File Path="Build/Azure/net90/sqlite.extras.json" />
     <File Path="Build/Azure/net90/sqlite.json" />
@@ -198,6 +200,7 @@
     <File Path="Build/Azure/scripts/mac.pgsql15.sh" />
     <File Path="Build/Azure/scripts/mac.pgsql16.sh" />
     <File Path="Build/Azure/scripts/mac.pgsql17.sh" />
+    <File Path="Build/Azure/scripts/mac.pgsql18.sh" />
     <File Path="Build/Azure/scripts/mariadb11.sh" />
     <File Path="Build/Azure/scripts/mysql.sh" />
     <File Path="Build/Azure/scripts/mysql57.sh" />
@@ -212,6 +215,7 @@
     <File Path="Build/Azure/scripts/pgsql15.sh" />
     <File Path="Build/Azure/scripts/pgsql16.sh" />
     <File Path="Build/Azure/scripts/pgsql17.sh" />
+    <File Path="Build/Azure/scripts/pgsql18.sh" />
     <File Path="Build/Azure/scripts/sqlce.ps1" />
     <File Path="Build/Azure/scripts/sqlserver.2005.cmd" />
     <File Path="Build/Azure/scripts/sqlserver.2008.cmd" />
@@ -261,6 +265,7 @@
     <File Path="Data/Setup Scripts/pgsql15.cmd" />
     <File Path="Data/Setup Scripts/pgsql16.cmd" />
     <File Path="Data/Setup Scripts/pgsql17.cmd" />
+    <File Path="Data/Setup Scripts/pgsql18.cmd" />
     <File Path="Data/Setup Scripts/pgsql92.cmd" />
     <File Path="Data/Setup Scripts/pgsql93.cmd" />
     <File Path="Data/Setup Scripts/pgsql95.cmd" />

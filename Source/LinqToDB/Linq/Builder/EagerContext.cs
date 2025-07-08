@@ -6,7 +6,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	class EagerContext : BuildContextBase
+	sealed class EagerContext : BuildContextBase
 	{
 		public override MappingSchema MappingSchema => Context.MappingSchema;
 		public          IBuildContext Context       { get; }

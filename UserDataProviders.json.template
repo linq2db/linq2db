@@ -73,6 +73,7 @@
 			//"PostgreSQL.15",
 			//"PostgreSQL.16",
 			//"PostgreSQL.17",
+			//"PostgreSQL.18",
 
 			// OleDB and ODBC MS Access providers
 			//"Access.Jet.OleDb",
@@ -203,6 +204,7 @@
 			//"PostgreSQL.15",
 			//"PostgreSQL.16",
 			//"PostgreSQL.17",
+			//"PostgreSQL.18",
 
 			// OleDB and ODBC MS Access providers
 			//"Access.Jet.OleDb",
@@ -325,6 +327,7 @@
 			//"PostgreSQL.15",
 			//"PostgreSQL.16",
 			//"PostgreSQL.17",
+			//"PostgreSQL.18",
 
 			// OleDB and ODBC MS Access providers
 			//"Access.Jet.OleDb",
@@ -680,6 +683,10 @@
 			"PostgreSQL.17": {
 				"Provider": "Npgsql",
 				"ConnectionString": "Server=localhost;Port=5417;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+			},
+			"PostgreSQL.18": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=localhost;Port=5418;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
 			},
 
 			"Sybase": {

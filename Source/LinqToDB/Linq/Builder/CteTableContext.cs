@@ -114,7 +114,7 @@ namespace LinqToDB.Linq.Builder
 			return ctePath;
 		}
 
-		class CteTableProxy : BuildProxyBase<CteTableContext>
+		sealed class CteTableProxy : BuildProxyBase<CteTableContext>
 		{
 			public CteTableProxy(CteTableContext ownerContext, Expression? currentPath, Expression innerExpression) : base(ownerContext, ownerContext.CteContext, currentPath, innerExpression)
 			{

@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
 	public class SqlDeleteStatement : SqlStatementWithQueryBase
 	{
@@ -39,5 +41,15 @@
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(base.GetElementHashCode());
+
+			hash.Add(Table?.GetElementHashCode() ?? 0);
+			hash.Add(Top?.GetElementHashCode() ?? 0);
+			hash.Add(Output?.GetElementHashCode() ?? 0);
+			return hash.ToHashCode();
+		}
 	}
 }

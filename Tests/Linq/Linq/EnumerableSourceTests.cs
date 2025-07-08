@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -43,7 +43,7 @@ namespace Tests.Linq
 					var result = q.ToList();
 
 					if (iteration > 1)
-						db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+						db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 					var expected =
 						from p in Person
@@ -72,7 +72,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -100,7 +100,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -134,7 +134,7 @@ namespace Tests.Linq
 					var result = q.ToList();
 
 					if (iteration > 1)
-						db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+						db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 					var expected =
 						from p in Person
@@ -170,7 +170,7 @@ namespace Tests.Linq
 					var result = q.ToList();
 
 					if (iteration > 1)
-						db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+						db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 					var expected =
 						from p in Person
@@ -201,7 +201,7 @@ namespace Tests.Linq
 				var sql    = q.ToSqlQuery().Sql;
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				Assert.That(sql, Contains.Substring("JOIN"));
 
@@ -230,7 +230,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -256,7 +256,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -291,7 +291,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -330,7 +330,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -369,7 +369,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -408,7 +408,7 @@ namespace Tests.Linq
 			var result = q.ToList();
 
 			if (iteration > 1)
-				db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+				db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 			var expected =
 				from p in Person
@@ -439,7 +439,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -469,7 +469,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -501,7 +501,7 @@ namespace Tests.Linq
 				var result = q.ToList();
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -535,7 +535,7 @@ namespace Tests.Linq
 				var result1 = q1.ToList();
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				cacheMiss = db.Person.GetCacheMissCount();
 
@@ -552,9 +552,9 @@ namespace Tests.Linq
 
 				var result2 = q2.ToList();
 
-				db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+				db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
-				result2.Count.Should().NotBe(result1.Count);
+				result2.Count.ShouldNotBe(result1.Count);
 			}
 		}
 
@@ -576,7 +576,7 @@ namespace Tests.Linq
 				var result = records.AsQueryable(db).ToArray();
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 			}
 		}
@@ -598,10 +598,10 @@ namespace Tests.Linq
 
 				var result = records.AsQueryable(db).Where(x => x.Patient!.PersonID == 1).ToArray();
 
-				result.Should().HaveCount(1);
+				result.Length.ShouldBe(1);
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 
 			}
 		}
@@ -624,15 +624,15 @@ namespace Tests.Linq
 
 				var result = query.OrderBy(x => x.ID).ToArray();
 
-				result.Should().HaveCount(2);
+				result.Length.ShouldBe(2);
 
-				result.All(x => x.LastName == null).Should().BeTrue();
+				result.All(x => x.LastName == null).ShouldBeTrue();
 
-				result[0].ID.Should().Be(1 + iteration);
-				result[0].FirstName.Should().Be("Janet");
+				result[0].ID.ShouldBe(1 + iteration);
+				result[0].FirstName.ShouldBe("Janet");
 
-				result[1].ID.Should().Be(2 + iteration);
-				result[1].FirstName.Should().Be("Doe");
+				result[1].ID.ShouldBe(2 + iteration);
+				result[1].FirstName.ShouldBe("Doe");
 			}
 		}
 
@@ -705,7 +705,7 @@ namespace Tests.Linq
 					Assert.That(cnt, Is.Zero);
 
 				if (iteration > 1)
-					table.GetCacheMissCount().Should().Be(cacheMiss);
+					table.GetCacheMissCount().ShouldBe(cacheMiss);
 			}
 		}
 
@@ -743,10 +743,10 @@ namespace Tests.Linq
 					select new { t, r };
 
 				queryToUpdate.Set(u => u.t.Value, u => u.r.Value)
-					.Update().Should().Be(2);
+					.Update().ShouldBe(2);
 
 				if (iteration > 1)
-					table.GetCacheMissCount().Should().Be(cacheMiss);
+					table.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				AreEqual(table, upadedValue);
 			}
@@ -778,10 +778,10 @@ namespace Tests.Linq
 				join r in deleteValue on t.Id equals r.Id
 				select t;
 
-			queryToDelete.Delete().Should().Be(2);
+			queryToDelete.Delete().ShouldBe(2);
 
 			if (iteration > 1)
-				table.GetCacheMissCount().Should().Be(cacheMiss);
+				table.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
 		[Test]
@@ -808,7 +808,7 @@ namespace Tests.Linq
 				AreEqual(table, result);
 
 				if (iteration > 1)
-					table.GetCacheMissCount().Should().Be(cacheMiss);
+					table.GetCacheMissCount().ShouldBe(cacheMiss);
 			}
 		}
 
@@ -827,10 +827,10 @@ namespace Tests.Linq
 					join r in records on new {t.Id, t.Value} equals new {r.Id, r.Value}
 					select t;
 
-				queryToSelect.ToArray().Should().HaveCount(0);
+				queryToSelect.ToArray().Length.ShouldBe(0);
 
 				if (iteration > 1)
-					table.GetCacheMissCount().Should().Be(cacheMiss);
+					table.GetCacheMissCount().ShouldBe(cacheMiss);
 			}
 		}
 
@@ -858,7 +858,7 @@ namespace Tests.Linq
 				AreEqual(table, result);
 
 				if (iteration > 1)
-					table.GetCacheMissCount().Should().Be(cacheMiss);
+					table.GetCacheMissCount().ShouldBe(cacheMiss);
 			}
 		}
 
@@ -877,10 +877,10 @@ namespace Tests.Linq
 					where records.Any(r => t.Id == r.Id && t.Value == r.Value)
 					select t;
 
-				queryToSelect.ToArray().Should().HaveCount(0);
+				queryToSelect.ToArray().Length.ShouldBe(0);
 
 				if (iteration > 1)
-					table.GetCacheMissCount().Should().Be(cacheMiss);
+					table.GetCacheMissCount().ShouldBe(cacheMiss);
 			}
 		}
 
@@ -907,10 +907,10 @@ namespace Tests.Linq
 					where searchStr.Any(x => t.FirstName.IndexOf(x) > 0)
 					select t;
 
-				 queryToSelect.ToArray().Should().HaveCountGreaterThan(0);
+				 queryToSelect.ToArray().Length.ShouldBeGreaterThan(0);
 
 				if (iteration > 1)
-					db.Person.GetCacheMissCount().Should().Be(cacheMiss);
+					db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 			}
 		}
 
@@ -966,8 +966,8 @@ namespace Tests.Linq
 						}
 					).ToList();
 
-				personWithList.Should().HaveCountGreaterThan(0);
-				personWithList.All(p => p.SomeList == null).Should().BeTrue();
+				personWithList.Count.ShouldBeGreaterThan(0);
+				personWithList.All(p => p.SomeList == null).ShouldBeTrue();
 			}
 		}
 
@@ -990,8 +990,8 @@ namespace Tests.Linq
 						}
 					).ToList();
 
-				personWithList.Should().HaveCountGreaterThan(0);
-				personWithList.All(p => p.SomeList!.Count == 0).Should().BeTrue();
+				personWithList.Count.ShouldBeGreaterThan(0);
+				personWithList.All(p => p.SomeList!.Count == 0).ShouldBeTrue();
 			}
 		}
 

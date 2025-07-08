@@ -570,7 +570,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		[Wrapper]
-		internal class SqlConnection
+		internal sealed class SqlConnection
 		{
 			public SqlConnection(string connectionString) => throw new NotImplementedException();
 		}
@@ -582,7 +582,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region BulkCopy
 		[Wrapper]
-		internal class SqlBulkCopy : TypeWrapper, IDisposable
+		internal sealed class SqlBulkCopy : TypeWrapper, IDisposable
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]

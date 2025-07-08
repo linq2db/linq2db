@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		EntityConstructor? _entityConstructor;
 
-		internal class EntityConstructor : EntityConstructorBase
+		internal sealed class EntityConstructor : EntityConstructorBase
 		{
 			public ExpressionBuilder Builder { get; }
 
