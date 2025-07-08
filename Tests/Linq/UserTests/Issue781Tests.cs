@@ -24,12 +24,11 @@ namespace Tests.UserTests
 				var expected = Person
 					.GroupBy(_ => _.Patient == null ? null : Sql.Concat("test", _.Patient.Diagnosis))
 					.Count();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(actual, Is.EqualTo(expected));
 					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				});
+				}
 			}
 		}
 
@@ -45,12 +44,11 @@ namespace Tests.UserTests
 				var expected = Person
 					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient!.Diagnosis)
 					.LongCount();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(actual, Is.EqualTo(expected));
 					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				});
+				}
 			}
 		}
 
@@ -68,12 +66,11 @@ namespace Tests.UserTests
 					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
 					.Where(_ => _.Key != null)
 					.Count();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(actual, Is.EqualTo(expected));
 					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				});
+				}
 			}
 		}
 
@@ -91,12 +88,11 @@ namespace Tests.UserTests
 					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
 					.Where(_ => _.Key != null)
 					.LongCount();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(actual, Is.EqualTo(expected));
 					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				});
+				}
 			}
 		}
 
@@ -114,12 +110,11 @@ namespace Tests.UserTests
 					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
 					.Select(_ => _.Key)
 					.Count();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(actual, Is.EqualTo(expected));
 					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				});
+				}
 			}
 		}
 
@@ -137,12 +132,11 @@ namespace Tests.UserTests
 					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
 					.Select(_ => _.Key)
 					.LongCount();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(actual, Is.EqualTo(expected));
 					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				});
+				}
 			}
 		}
 
@@ -162,12 +156,11 @@ namespace Tests.UserTests
 					.Where(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.Count();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(actual, Is.EqualTo(expected));
 					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				});
+				}
 			}
 		}
 
@@ -190,12 +183,11 @@ namespace Tests.UserTests
 					.Where(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.LongCount();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(actual, Is.EqualTo(expected));
 					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				});
+				}
 			}
 		}
 	}

@@ -157,34 +157,26 @@ namespace LinqToDB.SqlQuery
 					{
 						case SqlPredicate.Operator.Equal:
 						{
-							if (value1 == null && value2 == null && exprExpr.UnknownAsValue != null)
+							if (value1 == null && value2 == null)
 							{
 								result = true;
 							}
-							else if (value1 == null || value2 == null)
-							{
-								result = exprExpr.UnknownAsValue;
-							}
 							else
 							{
-								result = value1.Equals(value2);
+								result = Equals(value1, value2);
 							}
 
 							break;
 						}
 						case SqlPredicate.Operator.NotEqual:
 						{
-							if (value1 == null && value2 == null && exprExpr.UnknownAsValue != null)
+							if (value1 == null && value2 == null)
 							{
 								result = false;
 							}
-							else if (value1 == null || value2 == null)
-							{
-								result = exprExpr.UnknownAsValue;
-							}
 							else
 							{
-								result = !value1.Equals(value2);
+								result = !Equals(value1, value2);
 							}
 
 							break;

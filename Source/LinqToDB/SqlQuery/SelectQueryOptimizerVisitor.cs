@@ -198,17 +198,19 @@ namespace LinqToDB.SqlQuery
 					OptimizeColumns(selectQuery);
 				}
 
+				List<SelectQuery>? doNotRemoveQueries = null;
+
 				do
 				{
 					var currentVersion = _version;
 					var isModified     = false;
 
-					if (OptimizeSubQueries(selectQuery))
+					if (OptimizeSubQueries(selectQuery, doNotRemoveQueries))
 					{
 						isModified = true;
 					}
 					
-					if (MoveOuterJoinsToSubQuery(selectQuery, processMultiColumn: false))
+					if (MoveOuterJoinsToSubQuery(selectQuery, ref doNotRemoveQueries, processMultiColumn: false))
 					{
 						isModified = true;
 					}
@@ -219,7 +221,7 @@ namespace LinqToDB.SqlQuery
 						EnsureReferencesCorrected(selectQuery);
 					}
 
-					if (MoveOuterJoinsToSubQuery(selectQuery, processMultiColumn: true))
+					if (MoveOuterJoinsToSubQuery(selectQuery, ref doNotRemoveQueries, processMultiColumn: true))
 					{
 						isModified = true;
 					}
@@ -1080,7 +1082,7 @@ namespace LinqToDB.SqlQuery
 							if (rnExpression != null)
 							{
 								// we can only optimize equals
-								if (predicate is not SqlPredicate.ExprExpr expExpr || expExpr.Operator != SqlPredicate.Operator.Equal)
+								if (predicate is not (SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } or SqlPredicate.IsNull))
 								{
 									return optimized;
 								}
@@ -1291,8 +1293,6 @@ namespace LinqToDB.SqlQuery
 			{
 				parentQuery.Having.SearchCondition = QueryHelper.MergeConditions(parentQuery.Having.SearchCondition, subQuery.Having.SearchCondition);
 			}
-
-			
 
 			if (subQuery.Select.IsDistinct)
 				parentQuery.Select.IsDistinct = true;
@@ -1971,13 +1971,19 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
-		bool OptimizeSubQueries(SelectQuery selectQuery)
+		bool OptimizeSubQueries(SelectQuery selectQuery, List<SelectQuery>? doNotRemoveQueries)
 		{
 			var replaced = false;
 
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
 				var tableSource = selectQuery.From.Tables[i];
+
+				if (tableSource.Source is SelectQuery innerQuery && doNotRemoveQueries?.Contains(innerQuery) == true)
+				{
+					continue;
+				}
+
 				if (MoveSubQueryUp(selectQuery, tableSource))
 				{
 					replaced = true;
@@ -2402,7 +2408,22 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
-		void MoveDuplicateUsageToSubQuery(SelectQuery query)
+		void MoveDuplicateUsageToSubQuery(SelectQuery query, ref List<SelectQuery>? doNotRemoveQueries)
+		{
+			var subQuery = new SelectQuery();
+
+			doNotRemoveQueries ??= new();
+			doNotRemoveQueries.Add(subQuery);
+
+			subQuery.From.Tables.AddRange(query.From.Tables);
+
+			query.Select.From.Tables.Clear();
+			_ = query.Select.From.Table(subQuery);
+
+			_columnNestingCorrector.CorrectColumnNesting(query);
+		}
+
+		void MoveToSubQuery(SelectQuery query)
 		{
 			var subQuery = new SelectQuery();
 
@@ -2452,9 +2473,12 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery, bool processMultiColumn)
+		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery, ref List<SelectQuery>? doNotRemoveQueries, bool processMultiColumn)
 		{
 			var currentVersion = _version;
+
+			var isModified        = false;
+			var isMovedToSubquery = false;
 
 			EvaluationContext? evaluationContext = null;
 
@@ -2537,10 +2561,11 @@ namespace LinqToDB.SqlQuery
 
 										if (_providerFlags.IsApplyJoinSupported)
 										{
-											MoveDuplicateUsageToSubQuery(sq);
+											MoveDuplicateUsageToSubQuery(sq, ref doNotRemoveQueries);
 											// will be processed in the next step
-											ti = -1;
-											isValid = false;
+											ti         = -1;
+											isValid    = false;
+											isModified = true;
 											break;
 										}	
 									}
@@ -2550,11 +2575,11 @@ namespace LinqToDB.SqlQuery
 										var moveToSubquery = IsInOrderByPart(sq, testedColumn) && !_providerFlags.IsSubQueryOrderBySupported;
 										if (moveToSubquery)
 										{
-											MoveDuplicateUsageToSubQuery(sq);
+											MoveToSubQuery(sq);
 											// will be processed in the next step
-											ti = -1;
-
-											isValid = false;
+											ti         = -1;
+											isValid    = false;
+											isModified = true;
 											break;
 										}
 									}
@@ -2572,7 +2597,7 @@ namespace LinqToDB.SqlQuery
 													break;
 												}
 
-												MoveDuplicateUsageToSubQuery(sq);
+												MoveToSubQuery(sq);
 												// will be processed in the next step
 												ti      = -1;
 												isValid = false;
@@ -2618,9 +2643,10 @@ namespace LinqToDB.SqlQuery
 										queryToReplace.Select.Columns.Add(sourceColumn);
 									}
 
-									var replacement = isNullable ? SqlNullabilityExpression.ApplyNullability(queryToReplace, true) : queryToReplace;
+									isMovedToSubquery = true;
+									isModified        = true;
 
-									NotifyReplaced(replacement, testedColumn);
+									NotifyReplaced(queryToReplace, testedColumn);
 								}
 							}
 						}
@@ -2634,10 +2660,29 @@ namespace LinqToDB.SqlQuery
 
 				_columnNestingCorrector.CorrectColumnNesting(selectQuery);
 
-				return true;
+				isModified = true;
 			}
 
-			return false;
+			if (isMovedToSubquery)
+			{
+				var queries = QueryHelper.EnumerateAccessibleSources(selectQuery).OfType<SelectQuery>().ToList();
+				foreach (var sq in queries)
+				{
+					var nullabilityContext = NullabilityContext.GetContext(sq);
+					foreach (var column in sq.Select.Columns)
+					{
+						var optimized = _expressionOptimizerVisitor.Optimize(_evaluationContext, nullabilityContext, null, _dataOptions, _mappingSchema, column.Expression, visitQueries: false, reducePredicates: false);
+
+						if (!ReferenceEquals(optimized, column.Expression))
+						{
+							column.Expression = (ISqlExpression)optimized;
+							doNotRemoveQueries?.Clear();
+						}
+					}
+				}
+			}
+
+			return isModified;
 		}
 
 		protected override IQueryElement VisitCteClause(CteClause element)

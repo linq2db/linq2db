@@ -15,7 +15,7 @@ IF [%3] EQU [] (SET NET80=1)
 IF [%4] EQU [] (SET NET90=1)
 IF [%5] EQU [] (SET FORMAT=html)
 
-dotnet build linq2db.sln -c %CONFIG% -v m
+dotnet build linq2db.slnx -c %CONFIG% -v m
 
 IF %NETFX% NEQ 0 (dotnet test .build/bin/Tests/%CONFIG%/net462/linq2db.Tests.dll -f net462 -l %FORMAT%;LogFileName=net462.%FORMAT% %EXTRA%)
 IF %NET80%  NEQ 0 (dotnet test .build/bin/Tests/%CONFIG%/net8.0/linq2db.Tests.dll -f net8.0 -l %FORMAT%;LogFileName=net80.%FORMAT% %EXTRA%)

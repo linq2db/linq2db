@@ -67,12 +67,21 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
+	<PropertyGroup Label="Enabled Polyfills">
+		<!--https://github.com/meziantou/Meziantou.Polyfill?tab=readme-ov-file#supported-polyfills-->
+		<Polyfill>T:System.HashCode</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Index</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Range</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Diagnostics.CodeAnalysis</Polyfill>
+		<MeziantouPolyfill_IncludedPolyfills>$(Polyfill)</MeziantouPolyfill_IncludedPolyfills>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" PrivateAssets="All" />
 		<PackageReference Include="Meziantou.Analyzer" PrivateAssets="All" />
-
-		<PackageReference Include="PolySharp" PrivateAssets="All" />
+		<PackageReference Include="Meziantou.Polyfill" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Language)'=='C#'">
