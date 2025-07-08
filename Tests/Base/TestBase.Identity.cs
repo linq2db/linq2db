@@ -108,7 +108,9 @@ CREATE COLUMN TABLE ""Person"" (
 						sql = new[] { $"UPDATE main.sqlite_sequence SET seq = {lastValue} WHERE name = 'Person'" };
 						break;
 					default:
+#pragma warning disable RS0030 // Do not use banned APIs
 						Console.WriteLine($"Unknown provider: {provider}");
+#pragma warning restore RS0030 // Do not use banned APIs
 						break;
 				}
 			}
