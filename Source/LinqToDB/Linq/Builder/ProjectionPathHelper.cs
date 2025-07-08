@@ -7,7 +7,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Builder
 {
-	class ProjectionPathHelper
+	sealed class ProjectionPathHelper
 	{
 		public ExpressionBuilder  Builder       { get; }
 		public MappingSchema      MappingSchema { get; }

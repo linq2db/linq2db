@@ -68,7 +68,7 @@ namespace LinqToDB.Linq
 		}
 	}
 
-	class ExpressionCacheManager
+	sealed class ExpressionCacheManager
 	{
 		readonly IUniqueIdGenerator<ExpressionCacheManager> _generator;
 

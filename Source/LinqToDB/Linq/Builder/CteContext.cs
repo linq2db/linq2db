@@ -12,7 +12,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	internal class CteContext : BuildContextBase
+	internal sealed class CteContext : BuildContextBase
 	{
 		public Expression CteExpression { get; set;  }
 
@@ -221,7 +221,7 @@ namespace LinqToDB.Linq.Builder
 			return newPlaceholder;
 		}
 
-		class CteProxy : BuildProxyBase<CteContext>
+		sealed class CteProxy : BuildProxyBase<CteContext>
 		{
 			public CteProxy(CteContext ownerContext, Expression? currentPath, Expression innerExpression) 
 				: base(ownerContext, ownerContext.CteInnerQueryContext!, currentPath, innerExpression)
