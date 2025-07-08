@@ -12,6 +12,6 @@ ECHO pause to wait for SQL Server startup completion
 timeout 15
 
 REM create test databases
-docker exec sql2025 /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;" -C
-docker exec sql2025 /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;" -C
+docker exec sql2025 /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;" -No -C
+docker exec sql2025 /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;" -No -C
 
