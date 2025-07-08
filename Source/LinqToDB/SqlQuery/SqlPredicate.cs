@@ -63,6 +63,14 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.NotPredicate;
 
+			public override int GetElementHashCode()
+			{
+				var hash = new HashCode();
+				hash.Add(ElementType);
+				hash.Add(Predicate.GetElementHashCode());
+				return hash.ToHashCode();
+			}
+
 			public override bool          CanInvert(NullabilityContext    nullability) => true;
 			public override ISqlPredicate Invert(NullabilityContext       nullability) => Predicate;
 			public override bool          CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased) => Predicate.CanBeUnknown(nullability, withoutUnknownErased);
@@ -72,7 +80,7 @@ namespace LinqToDB.SqlQuery
 				if (other is not Not notPredicate)
 					return false;
 
-				return notPredicate.Predicate.Equals(notPredicate.Predicate, comparer);
+				return Predicate.Equals(notPredicate.Predicate, comparer);
 			}
 
 			public void Modify(ISqlPredicate predicate)
@@ -95,6 +103,13 @@ namespace LinqToDB.SqlQuery
 			}
 
 			public override QueryElementType ElementType => QueryElementType.TruePredicate;
+
+			public override int GetElementHashCode()
+			{
+				var hash = new HashCode();
+				hash.Add(ElementType);
+				return hash.ToHashCode();
+			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -121,6 +136,13 @@ namespace LinqToDB.SqlQuery
 			}
 
 			public override QueryElementType ElementType => QueryElementType.FalsePredicate;
+
+			public override int GetElementHashCode()
+			{
+				var hash = new HashCode();
+				hash.Add(ElementType);
+				return hash.ToHashCode();
+			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -169,6 +191,14 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.ExprPredicate;
 
+			public override int GetElementHashCode()
+			{
+				var hash = new HashCode();
+				hash.Add(ElementType);
+				hash.Add(Expr1.GetElementHashCode());
+				return hash.ToHashCode();
+			}
+
 			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
 				writer.AppendElement(Expr1);
@@ -206,16 +236,20 @@ namespace LinqToDB.SqlQuery
 		//
 		public sealed class ExprExpr : Expr
 		{
-			public ExprExpr(ISqlExpression exp1, Operator op, ISqlExpression exp2, bool? unknownAsValue)
+			public ExprExpr(ISqlExpression exp1, Operator op, ISqlExpression exp2, bool? unknownAsValue, bool notNullableExpr1 = false, bool notNullableExpr2 = false)
 				: base(exp1, SqlQuery.Precedence.Comparison)
 			{
-				Operator       = op;
-				Expr2          = exp2;
-				UnknownAsValue = unknownAsValue;
+				Operator         = op;
+				Expr2            = exp2;
+				UnknownAsValue   = unknownAsValue;
+				NotNullableExpr1 = notNullableExpr1;
+				NotNullableExpr2 = notNullableExpr2;
 			}
 
-			public new Operator       Operator { get; }
-			public     ISqlExpression Expr2    { get; internal set; }
+			public new Operator       Operator         { get; }
+			public     ISqlExpression Expr2            { get; internal set; }
+			public     bool           NotNullableExpr1 { get; }
+			public     bool           NotNullableExpr2 { get; }
 
 			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased)
 			{
@@ -227,26 +261,41 @@ namespace LinqToDB.SqlQuery
 				if (Operator == Operator.Equal)
 					return Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
 
-				if (Operator == Operator.Equal)
+				if (Operator == Operator.NotEqual)
 					return Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
 
 				// comparison
-				return UnknownAsValue != true && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
+				return UnknownAsValue != true && (Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased));
 			}
 
 			/// <summary>
 			/// Specify value, used as UNKNOWN value replacement on reduced predicate with UNKNOWN value erased.
-			/// Replacement only applyed when this property is not null.
+			/// Replacement only applied when this property is not null.
 			/// </summary>
 			public bool? UnknownAsValue { get; }
+
+			public override int GetElementHashCode()
+			{
+				var hash = new HashCode();
+				hash.Add(ElementType);
+				hash.Add(Expr1.GetElementHashCode());
+				hash.Add(Operator);
+				hash.Add(Expr2.GetElementHashCode());
+				hash.Add(UnknownAsValue);
+				hash.Add(NotNullableExpr1);
+				hash.Add(NotNullableExpr2);
+				return hash.ToHashCode();
+			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
 				return other is ExprExpr expr
-					&& UnknownAsValue == expr.UnknownAsValue
-					&& Operator == expr.Operator
-					&& Expr2.Equals(expr.Expr2, comparer)
-					&& base.Equals(other, comparer);
+				       && UnknownAsValue == expr.UnknownAsValue
+				       && Operator       == expr.Operator
+				       && Expr2.Equals(expr.Expr2, comparer)
+				       && base.Equals(other, comparer)
+				       && NotNullableExpr1 == expr.NotNullableExpr1
+				       && NotNullableExpr2 == expr.NotNullableExpr2;
 			}
 
 			public override QueryElementType ElementType => QueryElementType.ExprExprPredicate;
@@ -305,11 +354,14 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			public override bool CanInvert(NullabilityContext nullability) => true;
+			public override bool CanInvert(NullabilityContext nullability) => !NotNullableExpr1 && !NotNullableExpr2;
 
 			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
-				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, !UnknownAsValue);
+				var unknownAsValue = UnknownAsValue == null && Operator is not (Operator.Equal or Operator.NotEqual)
+					? true
+					: !UnknownAsValue;
+				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, unknownAsValue);
 			}
 
 			/// <summary>
@@ -323,7 +375,7 @@ namespace LinqToDB.SqlQuery
 
 				ISqlPredicate MakeWithoutNulls()
 				{
-					return new ExprExpr(Expr1, Operator, Expr2, null);
+					return new ExprExpr(Expr1, Operator, Expr2, null, NotNullableExpr1, NotNullableExpr2);
 				}
 
 				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeClr
@@ -373,8 +425,8 @@ namespace LinqToDB.SqlQuery
 				if (UnknownAsValue == null || nullability.IsEmpty)
 					return this;
 
-				var expr1CanBeUnknown = Expr1.CanBeNullableOrUnknown(nullability, false);
-				var expr2CanBeUnknown = Expr2.CanBeNullableOrUnknown(nullability, false);
+				var expr1CanBeUnknown = !NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, false);
+				var expr2CanBeUnknown = !NotNullableExpr2 && Expr2.CanBeNullableOrUnknown(nullability, false);
 				if (!expr1CanBeUnknown && !expr2CanBeUnknown)
 					return MakeWithoutNulls();
 
@@ -496,6 +548,18 @@ namespace LinqToDB.SqlQuery
 			public ISqlExpression? Escape       { get; internal set; }
 			public string?         FunctionName { get; internal set; }
 
+			public override int GetElementHashCode()
+			{
+				var hash = new HashCode();
+				hash.Add(ElementType);
+				hash.Add(Expr1.GetElementHashCode());
+				hash.Add(IsNot);
+				hash.Add(Expr2.GetElementHashCode());
+				hash.Add(Escape?.GetElementHashCode() ?? 0);
+				hash.Add(FunctionName);
+				return hash.ToHashCode();
+			}
+
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
 				return other is Like expr
@@ -559,6 +623,18 @@ namespace LinqToDB.SqlQuery
 			public ISqlExpression Expr2         { get; internal set; }
 			public SearchKind     Kind          { get; }
 			public ISqlExpression CaseSensitive { get; private set; }
+
+			public override int GetElementHashCode()
+			{
+				var hash = new HashCode();
+				hash.Add(ElementType);
+				hash.Add(Expr1.GetElementHashCode());
+				hash.Add(IsNot);
+				hash.Add(Expr2.GetElementHashCode());
+				hash.Add(Kind);
+				hash.Add(CaseSensitive.GetElementHashCode());
+				return hash.ToHashCode();
+			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -624,6 +700,16 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression Expr2 { get; internal set; }
 
+			public override int GetElementHashCode()
+			{
+				var hash = new HashCode();
+				hash.Add(ElementType);
+				hash.Add(Expr1.GetElementHashCode());
+				hash.Add(IsNot);
+				hash.Add(Expr2.GetElementHashCode());
+				return hash.ToHashCode();
+			}
+
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
 				return other is IsDistinct expr
@@ -662,6 +748,16 @@ namespace LinqToDB.SqlQuery
 			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased)
 			{
 				return Expr1.CanBeNullable(nullability) || Expr2.CanBeNullable(nullability) || Expr3.CanBeNullable(nullability);
+			}
+
+			public override int GetElementHashCode()
+			{
+				var hash = new HashCode();
+				hash.Add(ElementType);
+				hash.Add(Expr1.GetElementHashCode());
+				hash.Add(Expr2.GetElementHashCode());
+				hash.Add(Expr3.GetElementHashCode());
+				return hash.ToHashCode();
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -716,6 +812,18 @@ namespace LinqToDB.SqlQuery
 				TrueValue  = trueValue;
 				FalseValue = falseValue;
 				WithNull   = withNull;
+			}
+
+			public override int GetElementHashCode()
+			{
+				var hash = new HashCode();
+				hash.Add(ElementType);
+				hash.Add(Expr1.GetElementHashCode());
+				hash.Add(TrueValue.GetElementHashCode());
+				hash.Add(FalseValue.GetElementHashCode());
+				hash.Add(WithNull);
+				hash.Add(IsNot);
+				return hash.ToHashCode();
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -782,6 +890,15 @@ namespace LinqToDB.SqlQuery
 				return new IsNull(Expr1, !IsNot);
 			}
 
+			public override int GetElementHashCode()
+			{
+				var hash = new HashCode();
+				hash.Add(ElementType);
+				hash.Add(Expr1.GetElementHashCode());
+				hash.Add(IsNot);
+				return hash.ToHashCode();
+			}
+
 			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased) => false;
 
 			protected override void WritePredicate(QueryElementTextWriter writer)
@@ -815,6 +932,17 @@ namespace LinqToDB.SqlQuery
 			{
 				Expr1    = exp1;
 				SubQuery = subQuery;
+			}
+
+			public override int GetElementHashCode()
+			{
+				var hash = new HashCode();
+				hash.Add(ElementType);
+				hash.Add(Expr1.GetElementHashCode());
+				hash.Add(IsNot);
+				hash.Add(DoNotConvert);
+				hash.Add(SubQuery.GetElementHashCode());
+				return hash.ToHashCode();
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -899,6 +1027,18 @@ namespace LinqToDB.SqlQuery
 			public void Modify(ISqlExpression expr1)
 			{
 				Expr1  = expr1;
+			}
+
+			public override int GetElementHashCode()
+			{
+				var hash = new HashCode();
+				hash.Add(ElementType);
+				hash.Add(Expr1.GetElementHashCode());
+				hash.Add(WithNull);
+				hash.Add(IsNot);
+				foreach (var value in Values)
+					hash.Add(value.GetElementHashCode());
+				return hash.ToHashCode();
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -986,6 +1126,15 @@ namespace LinqToDB.SqlQuery
 			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased) => false;
 
 			public override QueryElementType ElementType => QueryElementType.ExistsPredicate;
+
+			public override int GetElementHashCode()
+			{
+				var hash = new HashCode();
+				hash.Add(ElementType);
+				hash.Add(IsNot);
+				hash.Add(SubQuery.GetElementHashCode());
+				return hash.ToHashCode();
+			}
 
 			protected override void WritePredicate(QueryElementTextWriter writer)
 			{

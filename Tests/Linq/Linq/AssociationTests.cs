@@ -5,7 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using FluentAssertions;
+using Shouldly;
 
 using JetBrains.Annotations;
 
@@ -1454,11 +1454,11 @@ namespace Tests.Linq
 				.OrderBy(_ => _.OwnerId)
 				.ToArray();
 
-			res.Length.Should().Be(2);
-			res[0].Id.Should().Be(1);
-			res[0].OwnerId.Should().Be(1);
-			res[1].OwnerId.Should().Be(2);
-			res[1].Id.Should().BeNull();
+			res.Length.ShouldBe(2);
+			res[0].Id.ShouldBe(1);
+			res[0].OwnerId.ShouldBe(1);
+			res[1].OwnerId.ShouldBe(2);
+			res[1].Id.ShouldBeNull();
 		}
 
 		#endregion
