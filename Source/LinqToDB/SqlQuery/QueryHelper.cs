@@ -154,7 +154,7 @@ namespace LinqToDB.SqlQuery
 			public          bool                    DependencyFound;
 		}
 
-		static bool IsDependsOn(IQueryElement testedRoot, IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore = null)
+		public static bool IsDependsOn(IQueryElement testedRoot, IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore = null)
 		{
 			var ctx = new IsDependsOnElementContext(onElement, elementsToIgnore);
 
@@ -1702,6 +1702,21 @@ namespace LinqToDB.SqlQuery
 					expr = nullability.SqlExpression;
 				}
 				else if (expr is SqlCastExpression sqlCast)
+				{
+					expr = sqlCast.Expression;
+				}
+				else
+					break;
+			} while (true);
+
+			return expr;
+		}
+
+		public static ISqlExpression UnwrapCast(ISqlExpression expr)
+		{
+			do
+			{
+				if (expr is SqlCastExpression sqlCast)
 				{
 					expr = sqlCast.Expression;
 				}

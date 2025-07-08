@@ -1897,18 +1897,20 @@ namespace LinqToDB.SqlQuery
 						return false;
 				}
 
-				if (!subQuery.Select.Columns.All(c =>
-					{
-						var columnExpression = QueryHelper.UnwrapCastAndNullability(c.Expression);
-
-						// handling case when not_null column check is used
-						if (columnExpression is SqlValue { Value: not null })
-							return false;
-
-						return true;
-					}))
+				// Check that all columns in sub-query are allowed to move up
+				NullabilityContext? nullabilityContext = null;
+				foreach (var c in subQuery.Select.Columns)
 				{
-					return false;
+					var columnExpression = QueryHelper.UnwrapCast(c.Expression);
+					if (columnExpression is not SqlField or SqlColumn)
+					{
+						nullabilityContext ??= NullabilityContext.GetContext(subQuery);
+						if (!c.Expression.CanBeNullable(nullabilityContext))
+						{
+							if (QueryHelper.IsDependsOn(selectQuery, c, [joinTable]))
+								return false;
+						}
+					}
 				}
 			}
 

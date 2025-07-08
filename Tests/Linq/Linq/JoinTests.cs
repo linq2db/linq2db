@@ -14,6 +14,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -582,111 +584,66 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin9([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					Parent
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.ParentID },
-							y => new { Id = y.ParentID },
-							(xid, yid) => new { xid, yid }
-						)
-						.SelectMany(
-							y => y.yid.DefaultIfEmpty(),
-							(x1, y) => new { x1.xid, y }
-						)
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x2, y) => new { x2.xid, x2.y, h = y }
-						)
-						.SelectMany(
-							a => a.h.DefaultIfEmpty(),
-							(x3, a) => new { x3.xid, x3.y, a }
-						)
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x4, y) => new { x4.xid, x4.y, x4.a, p = y }
-						)
-						.SelectMany(
-							z => z.p.DefaultIfEmpty(),
-							(x5, z) => new { x5.xid, z, x5.y, x5.a }
-						)
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.Value1 ?? 1 },
-							(x6, y) => new { x6.xid, xy = x6.y, x6.a, x6.z, y }
-						)
-						.SelectMany(
-							z => z.y.DefaultIfEmpty(),
-							(x7, z) => new { x7.xid, z, x7.xy, x7.a, xz = x7.z }
-						)
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x8, y) => new { x8.xid, x8.z, x8.xy, x8.a, x8.xz, y }
-						)
-						.SelectMany(
-							a => a.y.DefaultIfEmpty(),
-							(x9, a) => new { x9.xid, x9.z, x9.xy, xa = x9.a, x9.xz, a }
-						),
-					db.Parent
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.ParentID },
-							y => new { Id = y.ParentID },
-							(xid, yid) => new { xid, yid }
-						)
-						.SelectMany(
-							y => y.yid.DefaultIfEmpty(),
-							(x1, y) => new { x1.xid, y }
-						)
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x2, y) => new { x2.xid, x2.y, h = y }
-						)
-						.SelectMany(
-							a => a.h.DefaultIfEmpty(),
-							(x3, a) => new { x3.xid, x3.y, a }
-						)
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x4, y) => new { x4.xid, x4.y, x4.a, p = y }
-						)
-						.SelectMany(
-							z => z.p.DefaultIfEmpty(),
-							(x5, z) => new { x5.xid, z, x5.y, x5.a }
-						)
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.Value1 ?? 1 },
-							(x6, y) => new { x6.xid, xy = x6.y, x6.a, x6.z, y }
-						)
-						.SelectMany(
-							z => z.y.DefaultIfEmpty(),
-							(x7, z) => new { x7.xid, z, x7.xy, x7.a, xz = x7.z }
-						)
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x8, y) => new { x8.xid, x8.z, x8.xy, x8.a, x8.xz, y }
-						)
-						.SelectMany(
-							a => a.y.DefaultIfEmpty(),
-							(x9, a) => new { x9.xid, x9.z, x9.xy, xa = x9.a, x9.xz, a }
-						)
-					);
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.ParentID },
+					y => new { Id = y.ParentID },
+					(xid, yid) => new { xid, yid }
+				)
+				.SelectMany(
+					y => y.yid.DefaultIfEmpty(),
+					(x1, y) => new { x1.xid, y }
+				)
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.xid.ParentID },
+					y => new { Id = y.ParentID     },
+					(x2, y) => new { x2.xid, x2.y, h = y }
+				)
+				.SelectMany(
+					a => a.h.DefaultIfEmpty(),
+					(x3, a) => new { x3.xid, x3.y, a }
+				)
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.xid.ParentID },
+					y => new { Id = y.ParentID     },
+					(x4, y) => new { x4.xid, x4.y, x4.a, p = y }
+				)
+				.SelectMany(
+					z => z.p.DefaultIfEmpty(),
+					(x5, z) => new { x5.xid, z, x5.y, x5.a }
+				)
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.xid.ParentID },
+					y => new { Id = y.Value1 ?? 1 },
+					(x6, y) => new { x6.xid, xy = x6.y, x6.a, x6.z, y }
+				)
+				.SelectMany(
+					z => z.y.DefaultIfEmpty(),
+					(x7, z) => new { x7.xid, z, x7.xy, x7.a, xz = x7.z }
+				)
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.xid.ParentID },
+					y => new { Id = y.ParentID     },
+					(x8, y) => new { x8.xid, x8.z, x8.xy, x8.a, x8.xz, y }
+				)
+				.SelectMany(
+					a => a.y.DefaultIfEmpty(),
+					(x9, a) => new { x9.xid, x9.z, x9.xy, xa = x9.a, x9.xz, a }
+				);
+
+			var sql = query.ToSqlQuery().Sql;
+
+			// Result SQL should not contain JOINs with subqueries
+			sql.ShouldContain("SELECT", Exactly.Once());
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -823,6 +780,39 @@ namespace Tests.Linq
 							(x4, y4) => new { x4.Parent, Child = x4.Child.FirstOrDefault() })
 						.Where(x5 => x5.Parent.ParentID == 1 && x5.Parent.Value1 != null)
 						.OrderBy(x6 => x6.Parent.ParentID));
+		}
+
+		[Test]
+		public void LeftJoinSubqueryDoNotOptimize([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 =
+				from p in db.Person
+				select new
+				{
+					p.ID,
+					MiddleName = p.MiddleName ?? "default1",
+				};
+
+			var q2 =
+				from p in db.Person
+				join m in q1 on p.ID equals m.ID + 1 into lj1
+				from m in lj1.DefaultIfEmpty()
+				select new
+				{
+					p.ID,
+					MiddleName = Sql.AsSql(m.MiddleName ?? "default2"),
+				};
+
+			var sql = q2.ToSqlQuery().Sql;
+
+			sql.ShouldContain("default1");
+			sql.ShouldContain("default2");
+
+			sql.ShouldContain("SELECT", Exactly.Twice());
+
+			AssertQuery(q2);
 		}
 
 		[Table("Child")]
