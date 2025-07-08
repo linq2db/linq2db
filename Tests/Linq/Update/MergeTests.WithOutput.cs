@@ -14,8 +14,9 @@ namespace Tests.xUpdate
 	{
 		private const string SIMPLE_OUTPUT = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL17Plus},{TestProvName.AllFirebird3Plus}";
 		private const string OUTPUT_WITH_ACTION = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL17Plus}";
-		private const string OUTPUT_WITH_HISTORY = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllFirebird3Plus}";
-		private const string OUTPUT_WITH_ACTION_AND_HISTORY = TestProvName.AllSqlServer2008Plus;
+		private const string OUTPUT_WITH_HISTORY = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllFirebird3Plus},{TestProvName.AllPostgreSQL18Plus}";
+		private const string OUTPUT_WITH_ACTION_AND_HISTORY = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL18Plus}";
+		private const string OUTPUT_INTO_WITH_ACTION_AND_HISTORY = $"{TestProvName.AllSqlServer2008Plus}";
 
 		[Test]
 		public void MergeWithOutputFull([IncludeDataSources(true, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
@@ -333,7 +334,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputInto([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public void MergeWithOutputInto([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -374,7 +375,7 @@ namespace Tests.xUpdate
 		}
 		
 		[Test]
-		public async Task MergeWithOutputIntoWithSourceAsync([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public async Task MergeWithOutputIntoWithSourceAsync([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -415,7 +416,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputConditionalInto([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public void MergeWithOutputConditionalInto([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -456,7 +457,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputIntoTempTable([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public void MergeWithOutputIntoTempTable([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -492,7 +493,7 @@ namespace Tests.xUpdate
 		}
 		
 		[Test]
-		public void MergeWithOutputIntoTempTableByTableName([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public void MergeWithOutputIntoTempTableByTableName([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -531,7 +532,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputIntoNonTemp([IncludeDataSources(true, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public void MergeWithOutputIntoNonTemp([IncludeDataSources(true, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var temp = db.CreateLocalTable<InsertTempTable>())
@@ -566,7 +567,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task MergeWithOutputIntoAsync([IncludeDataSources(OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public async Task MergeWithOutputIntoAsync([IncludeDataSources(OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -602,7 +603,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task MergeWithOutputIntoTempTableByTableNameAsync([IncludeDataSources(OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public async Task MergeWithOutputIntoTempTableByTableNameAsync([IncludeDataSources(OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -641,7 +642,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputIntoTempTableByTableNameWithSource([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public void MergeWithOutputIntoTempTableByTableNameWithSource([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -685,7 +686,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task MergeWithOutputIntoTempTableByTableNameWithSourceAsync([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
+		public async Task MergeWithOutputIntoTempTableByTableNameWithSourceAsync([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

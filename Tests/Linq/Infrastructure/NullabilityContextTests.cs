@@ -96,7 +96,7 @@ namespace Tests.Infrastructure
 
 		static string GenerateSQL(SelectQuery selectQuery)
 		{
-			var dataProvider = new SQLiteDataProviderClassic();
+			var dataProvider = SQLiteTools.GetDataProvider(SQLiteProvider.System);
 
 			var stringBuilder     = new StringBuilder();
 			var evaluationContext = new EvaluationContext();

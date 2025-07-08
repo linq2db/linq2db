@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Common.Internal
 {
-	class DisposableAction(Action action) : IDisposable
+	sealed class DisposableAction(Action action) : IDisposable
 	{
 		public void Dispose() => action();
 	}
