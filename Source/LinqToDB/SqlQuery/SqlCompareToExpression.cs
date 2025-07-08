@@ -29,6 +29,14 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(Expression1.GetElementHashCode());
+			hash.Add(Expression2.GetElementHashCode());
+			return hash.ToHashCode();
+		}
+
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (other is not SqlCompareToExpression compareTo)

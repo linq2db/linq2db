@@ -167,7 +167,12 @@ namespace LinqToDB.SqlProvider
 			if (!VisitQueries)
 				return selectQuery;
 
+			var saveNullabilityContext = NullabilityContext;
+			NullabilityContext = NullabilityContext.WithJoinSource(selectQuery);
+
 			var newQuery = base.VisitSqlQuery(selectQuery);
+
+			NullabilityContext = saveNullabilityContext;
 
 			return newQuery;
 		}
@@ -498,10 +503,10 @@ namespace LinqToDB.SqlProvider
 				var expr2IsConstant = QueryHelper.UnwrapNullablity(predicate.Expr2) is (SqlValue or SqlParameter { IsQueryParameter: false });
 
 				var expr1 = expr1IsPredicate && !expr2IsConstant
-					? WrapBooleanExpression(predicate.Expr1, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
+					? WrapBooleanExpression(predicate.Expr1, includeFields : true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
 					: predicate.Expr1;
 				var expr2 = expr2IsPredicate && !expr1IsConstant
-					? WrapBooleanExpression(predicate.Expr2, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
+					? WrapBooleanExpression(predicate.Expr2, includeFields : true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
 					: predicate.Expr2;
 
 				if (!ReferenceEquals(expr1, predicate.Expr1) || !ReferenceEquals(expr2, predicate.Expr2))
@@ -865,6 +870,18 @@ namespace LinqToDB.SqlProvider
 				return Visit(Optimize(newElement));
 
 			return element;
+		}
+
+		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		{
+			var saveNullabilityContext = NullabilityContext;
+			NullabilityContext = NullabilityContext.WithJoinSource(element.Table.Source);
+
+			var newElement = base.VisitSqlJoinedTable(element);
+
+			NullabilityContext = saveNullabilityContext;
+
+			return newElement;
 		}
 
 		protected override IQueryElement VisitSqlExpression(SqlExpression element)
@@ -1794,7 +1811,7 @@ namespace LinqToDB.SqlProvider
 				var param = coalesce.Expressions[i];
 				MarkParameters(param);
 
-				last = new SqlFunction(coalesce.SystemType!, funcName, param, last);
+				last = new SqlFunction(coalesce.SystemType!, funcName, ParametersNullabilityType.IfAllParametersNullable, param, last);
 			}
 
 			return last;

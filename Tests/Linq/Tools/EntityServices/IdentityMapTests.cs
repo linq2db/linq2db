@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Tools.EntityServices;

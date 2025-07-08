@@ -127,6 +127,18 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
+		public int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			foreach (var parameter in _infoParameters)
+			{
+				hash.Add(parameter.Sql.GetElementHashCode());
+			}
+
+			return hash.ToHashCode();
+		}
+
 		#endregion
 
 		public MappingSchema MappingSchema { get; }

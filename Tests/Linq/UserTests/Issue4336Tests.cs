@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 #if NETFRAMEWORK
 using IBM.Data.DB2;

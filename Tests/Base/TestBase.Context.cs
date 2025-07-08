@@ -64,6 +64,7 @@ namespace Tests
 			}
 
 			var str = configuration.StripRemote();
+
 			return GetServerContainer(transport).CreateContext(
 				GetRemoteContextOptionsBuilder(mappingSchema, str, opt => opt.UseFSharp()),
 				(conf, ms) =>

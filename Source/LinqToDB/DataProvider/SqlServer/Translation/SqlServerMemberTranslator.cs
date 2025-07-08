@@ -225,7 +225,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 			return timePart;
 		}
 
-		class GuidMemberTranslator : GuidMemberTranslatorBase
+		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 		{

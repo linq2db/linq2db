@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 
@@ -171,7 +171,7 @@ namespace Tests.UserTests
 
 			var result = query2.ToList();
 
-			result.Should().HaveCount(1);
+			result.Count.ShouldBe(1);
 		}
 	}
 }

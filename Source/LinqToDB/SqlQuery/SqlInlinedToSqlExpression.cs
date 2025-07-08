@@ -38,6 +38,14 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(Parameter.GetElementHashCode());
+			hash.Add(InlinedValue.GetElementHashCode());
+			return hash.ToHashCode();
+		}
+
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (other is not SqlInlinedToSqlExpression otherInlined)

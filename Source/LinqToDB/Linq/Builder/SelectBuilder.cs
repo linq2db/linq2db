@@ -54,7 +54,7 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		class CounterContext : BuildContextBase
+		sealed class CounterContext : BuildContextBase
 		{
 			readonly IBuildContext _sequence;
 

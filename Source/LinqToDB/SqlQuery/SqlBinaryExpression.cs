@@ -107,6 +107,16 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(Operation);
+			hash.Add(SystemType);
+			hash.Add(Expr1.GetElementHashCode());
+			hash.Add(Expr2.GetElementHashCode());
+			return hash.ToHashCode();
+		}
+
 		#endregion
 
 		public void Deconstruct(out DbDataType type, out ISqlExpression expr1, out string operation, out ISqlExpression expr2)

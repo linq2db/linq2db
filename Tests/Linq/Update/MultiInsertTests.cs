@@ -3,9 +3,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -39,9 +40,9 @@ namespace Tests.xUpdate
 				)
 				.Insert();
 
-			count.Should().Be(3);
-			dest1.Count().Should().Be(2);
-			dest2.Count(x => x.ID == 1003).Should().Be(1);
+			count.ShouldBe(3);
+			dest1.Count().ShouldBe(2);
+			dest2.Count(x => x.ID == 1003).ShouldBe(1);
 		}
 
 		[Test]
@@ -69,10 +70,10 @@ namespace Tests.xUpdate
 				)
 				.InsertAsync();
 
-			count.Should().Be(3);
-			(await dest1.CountAsync()).Should().Be(2);
-			(await dest1.CountAsync()).Should().Be(2);
-			(await dest2.CountAsync(x => x.ID == 1003)).Should().Be(1);
+			count.ShouldBe(3);
+			(await dest1.CountAsync()).ShouldBe(2);
+			(await dest1.CountAsync()).ShouldBe(2);
+			(await dest2.CountAsync(x => x.ID == 1003)).ShouldBe(1);
 		}
 
 		[Test]
@@ -102,11 +103,11 @@ namespace Tests.xUpdate
 				)
 				.InsertAll();
 
-			count.Should().Be(2);
-			dest1.Count().Should().Be(1);
+			count.ShouldBe(2);
+			dest1.Count().ShouldBe(1);
 
-			dest1.Count(x => x.ID == 1001).Should().Be(1);
-			dest2.Count(x => x.ID == 1003).Should().Be(1);
+			dest1.Count(x => x.ID == 1001).ShouldBe(1);
+			dest2.Count(x => x.ID == 1003).ShouldBe(1);
 		}
 
 		[Test]
@@ -144,12 +145,12 @@ namespace Tests.xUpdate
 				)
 				.InsertAll();
 
-			count.Should().Be(4);
-			dest1.Count().Should().Be(2);
-			dest2.Count().Should().Be(2);
+			count.ShouldBe(4);
+			dest1.Count().ShouldBe(2);
+			dest2.Count().ShouldBe(2);
 
-			dest1.Count(x => x.ID == 1001).Should().Be(1);
-			dest2.Count(x => x.ID == 1003).Should().Be(1);
+			dest1.Count(x => x.ID == 1001).ShouldBe(1);
+			dest2.Count(x => x.ID == 1003).ShouldBe(1);
 		}
 
 		[Test]
@@ -180,10 +181,10 @@ namespace Tests.xUpdate
 				)
 				.InsertAllAsync();
 
-			count.Should().Be(2);
-			(await dest1.CountAsync()).Should().Be(1);
-			(await dest1.CountAsync(x => x.ID == 1001)).Should().Be(1);
-			(await dest2.CountAsync(x => x.ID == 1003)).Should().Be(1);
+			count.ShouldBe(2);
+			(await dest1.CountAsync()).ShouldBe(1);
+			(await dest1.CountAsync(x => x.ID == 1001)).ShouldBe(1);
+			(await dest2.CountAsync(x => x.ID == 1003)).ShouldBe(1);
 		}
 
 		[Test]
@@ -211,9 +212,9 @@ namespace Tests.xUpdate
 				)
 				.InsertFirst();
 
-			count.Should().Be(1);
-			dest.Count().Should().Be(1);
-			dest.Count(x => x.ID == 1003).Should().Be(1);
+			count.ShouldBe(1);
+			dest.Count().ShouldBe(1);
+			dest.Count(x => x.ID == 1003).ShouldBe(1);
 		}
 
 		[Test]
@@ -242,9 +243,9 @@ namespace Tests.xUpdate
 				)
 				.InsertFirstAsync();
 
-			count.Should().Be(1);
-			(await dest.CountAsync()).Should().Be(1);
-			(await dest.CountAsync(x => x.ID == 1003)).Should().Be(1);
+			count.ShouldBe(1);
+			(await dest.CountAsync()).ShouldBe(1);
+			(await dest.CountAsync(x => x.ID == 1003)).ShouldBe(1);
 		}
 
 		[Test]
@@ -275,9 +276,9 @@ namespace Tests.xUpdate
 			int count  = command.InsertAll();
 			var record = dest.Where(_ => _.ID > 1000).Single();
 
-			count.Should().Be(1);
-			record.ID.Should().Be(value == null ? id1 : id2);
-			record.StringValue.Should().Be(value);
+			count.ShouldBe(1);
+			record.ID.ShouldBe(value == null ? id1 : id2);
+			record.StringValue.ShouldBe(value);
 		}
 
 		[Test]
@@ -309,9 +310,9 @@ namespace Tests.xUpdate
 			int count  = await command.InsertAllAsync();
 			var record = await dest.Where(_ => _.ID > 1000).SingleAsync();
 
-			count.Should().Be(1);
-			record.ID.Should().Be(value == null ? id1 : id2);
-			record.StringValue.Should().Be(value);
+			count.ShouldBe(1);
+			record.ID.ShouldBe(value == null ? id1 : id2);
+			record.StringValue.ShouldBe(value);
 		}
 
 		[Test]
@@ -342,9 +343,9 @@ namespace Tests.xUpdate
 			int count  = command.InsertAll();
 			var record = dest.Where(_ => _.ID > 1000).Single();
 
-			count.Should().Be(1);
-			record.ID.Should().Be(value == null ? id1 : id2);
-			record.StringValue.Should().Be(value);
+			count.ShouldBe(1);
+			record.ID.ShouldBe(value == null ? id1 : id2);
+			record.StringValue.ShouldBe(value);
 		}
 
 		[Test]
@@ -376,9 +377,9 @@ namespace Tests.xUpdate
 			int count  = await command.InsertAllAsync();
 			var record = await dest.Where(_ => _.ID > 1000).SingleAsync();
 
-			count.Should().Be(1);
-			record.ID.Should().Be(value == null ? id1 : id2);
-			record.StringValue.Should().Be(value);
+			count.ShouldBe(1);
+			record.ID.ShouldBe(value == null ? id1 : id2);
+			record.StringValue.ShouldBe(value);
 		}
 
 		[Test]
@@ -409,9 +410,9 @@ namespace Tests.xUpdate
 			int count  = command.InsertAll();
 			var record = dest.Where(_ => _.ID > 1000).Single();
 
-			count.Should().Be(1);
-			record.ID.Should().Be(value == null ? id1 : id2);
-			record.StringValue.Should().Be(value);
+			count.ShouldBe(1);
+			record.ID.ShouldBe(value == null ? id1 : id2);
+			record.StringValue.ShouldBe(value);
 		}
 
 		[Test]
@@ -443,9 +444,9 @@ namespace Tests.xUpdate
 			int count  = await command.InsertAllAsync();
 			var record = await dest.Where(_ => _.ID > 1000).SingleAsync();
 
-			count.Should().Be(1);
-			record.ID.Should().Be(value == null ? id1 : id2);
-			record.StringValue.Should().Be(value);
+			count.ShouldBe(1);
+			record.ID.ShouldBe(value == null ? id1 : id2);
+			record.StringValue.ShouldBe(value);
 		}
 
 		[Test]
@@ -460,9 +461,9 @@ namespace Tests.xUpdate
 				x  => x.N < 0,
 				x  => new Dest1 { ID = 3002, Value = x.N });
 
-			count.Should().Be(1);
-			dest.Count().Should().Be(1);
-			dest.Count(x => x.ID == 3002).Should().Be(1);
+			count.ShouldBe(1);
+			dest.Count().ShouldBe(1);
+			dest.Count(x => x.ID == 3002).ShouldBe(1);
 
 			// Perform the same INSERT ALL with different expressions
 			count = InsertAll(
@@ -470,8 +471,8 @@ namespace Tests.xUpdate
 				x  => true, 
 				x  => new Dest1 { ID = 4002, Value = x.N });
 
-			count.Should().Be(2);
-			dest.Count(x => x.ID == 4001 || x.ID == 4002).Should().Be(2);
+			count.ShouldBe(2);
+			dest.Count(x => x.ID == 4001 || x.ID == 4002).ShouldBe(2);
 
 			int InsertAll(
 				Expression<Func<TestSource>>                source,
@@ -508,9 +509,9 @@ namespace Tests.xUpdate
 				x  => x.N < 0,
 				x  => new Dest1 { ID = 3002, Value = x.N });
 
-			count.Should().Be(1);
-			(await dest.CountAsync()).Should().Be(1);
-			(await dest.CountAsync(x => x.ID == 3002)).Should().Be(1);
+			count.ShouldBe(1);
+			(await dest.CountAsync()).ShouldBe(1);
+			(await dest.CountAsync(x => x.ID == 3002)).ShouldBe(1);
 
 			// Perform the same INSERT ALL with different expressions
 			count = await InsertAll(
@@ -518,9 +519,9 @@ namespace Tests.xUpdate
 				x  => true, 
 				x  => new Dest1 { ID = 4002, Value = x.N });
 
-			count.Should().Be(2);
-			(await dest.CountAsync()).Should().Be(3);
-			(await dest.CountAsync(x => x.ID == 4001 || x.ID == 4002)).Should().Be(2);
+			count.ShouldBe(2);
+			(await dest.CountAsync()).ShouldBe(3);
+			(await dest.CountAsync(x => x.ID == 4001 || x.ID == 4002)).ShouldBe(2);
 
 			Task<int> InsertAll(
 				Expression<Func<TestSource>>        source,
@@ -566,7 +567,7 @@ namespace Tests.xUpdate
 
 			// INSERT ALL should be generated with OUTER APPLY, as if SELECT was executed alone, and not crash.
 			// #2990 crashes with 'value(TestDataContext).GetTable().Where(x => (x.ID > 5)).First().ID' cannot be converted to SQL.
-			count.Should().Be(0);
+			count.ShouldBe(0);
 		}
 
 		sealed class TestSource
@@ -606,7 +607,7 @@ namespace Tests.xUpdate
 
 			var entity = db.GetTable<Base>().First();
 
-			entity.Should().BeOfType<Derived>();
+			entity.ShouldBeOfType<Derived>();
 		}
 
 		[Table("MULTI_INSERT_INHERIT", IsColumnAttributeRequired = false)]

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Async;
@@ -362,15 +362,15 @@ FROM
 
 			var sql = query.ToSqlQuery().Sql;
 
-			sql.Should().NotContain("LoadWithQueryable");
+			sql.ShouldNotContain("LoadWithQueryable");
 
 			var select = query.GetSelectQuery();
 
 				// one query with join generated
 
-			select.From.Tables.Should().HaveCount(1);
-			select.From.Tables[0].Joins.Should().HaveCount(1);
-			select.From.Tables[0].Joins[0].JoinType.Should().Be(JoinType.Left);
+			select.From.Tables.Count.ShouldBe(1);
+			select.From.Tables[0].Joins.Count.ShouldBe(1);
+			select.From.Tables[0].Joins[0].JoinType.ShouldBe(JoinType.Left);
 		}
 
 		[Test]
@@ -1096,9 +1096,12 @@ FROM
 					Details = x.Details.Select(d => d.DetailValue)
 				});
 
-				FluentActions.Invoking(() => query.FirstOrDefault(x => x.Id1 == 1)).Should().NotThrow();
-				FluentActions.Invoking(() => query.First(x => x.Id1          == 1)).Should().NotThrow();
-				FluentActions.Invoking(() => query.Single(x => x.Id1         == 1)).Should().NotThrow();
+				var act1 = () => query.FirstOrDefault(x => x.Id1 == 1);
+				act1.ShouldNotThrow();
+				var act2 = () => query.First(x => x.Id1          == 1);
+				act2.ShouldNotThrow();
+				var act3 = () => query.Single(x => x.Id1         == 1);
+				act3.ShouldNotThrow();
 			}
 		}
 
@@ -1117,9 +1120,12 @@ FROM
 					Details = x.Details.Select(d => d.DetailValue)
 				});
 
-				await FluentActions.Awaiting(() => query.FirstOrDefaultAsync(x => x.Id1 == 1)).Should().NotThrowAsync();
-				await FluentActions.Awaiting(() => query.FirstAsync(x => x.Id1          == 1)).Should().NotThrowAsync();
-				await FluentActions.Awaiting(() => query.SingleAsync(x => x.Id1         == 1)).Should().NotThrowAsync();
+				var act1 = () => query.FirstOrDefaultAsync(x => x.Id1 == 1);
+				await act1.ShouldNotThrowAsync();
+				var act2 = () => query.FirstAsync(x => x.Id1          == 1);
+				await act2.ShouldNotThrowAsync();
+				var act3 = () => query.SingleAsync(x => x.Id1         == 1);
+				await act3.ShouldNotThrowAsync();
 			}
 		}
 

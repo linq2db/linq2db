@@ -500,7 +500,7 @@ namespace LinqToDB
 		public static ISqlExpression TableExpr(object tableExpr, [SqlQueryDependent] TableQualification qualification)
 			=> throw new ServerSideOnlyException(nameof(TableExpr));
 
-		class AliasExprBuilder : IExtensionCallBuilder
+		sealed class AliasExprBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{

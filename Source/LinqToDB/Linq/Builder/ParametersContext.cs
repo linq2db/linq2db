@@ -42,17 +42,10 @@ namespace LinqToDB.Linq.Builder
 		};
 
 		public readonly List<ParameterAccessor>           CurrentSqlParameters = new();
-		//readonly        Dictionary<Expression,Expression> _expressionAccessors;
 
 		#region Build Parameter
 
-		internal List<(Expression Expression, ColumnDescriptor? Column, ParameterAccessor Accessor)>? _parameters;
-
 		internal Dictionary<int, SqlParameter>? _parametersById;
-
-		internal List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? _parametersDuplicateCheck;
-
-		internal Dictionary<Expression, (Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>? _dynamicAccessors;
 
 		/// <summary>
 		/// Used for comparing query in cache to resolve whether generated expressions are equal.
@@ -326,7 +319,6 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				//providerValueGetter = CorrectAccessorExpression(providerValueGetter, DataContext);
 				if (providerValueGetter.Type != typeof(object))
 					providerValueGetter = Expression.Convert(providerValueGetter, typeof(object));
 			}
