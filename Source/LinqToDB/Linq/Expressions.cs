@@ -1554,7 +1554,7 @@ namespace LinqToDB.Linq
 
 		#region Provider specific functions
 
-		class ConvertToCaseCompareToBuilder : Sql.IExtensionCallBuilder
+		sealed class ConvertToCaseCompareToBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

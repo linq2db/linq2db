@@ -425,7 +425,7 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
-		class SqlRowExpandVisitor : SqlQueryVisitor
+		sealed class SqlRowExpandVisitor : SqlQueryVisitor
 		{
 			SelectQuery? _updateSelect;
 

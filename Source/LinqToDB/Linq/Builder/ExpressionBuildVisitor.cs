@@ -58,7 +58,7 @@ namespace LinqToDB.Linq.Builder
 		ResetPrevious       = 1 << 9,
 	}
 
-	class ExpressionBuildVisitor : ExpressionVisitorBase
+	sealed class ExpressionBuildVisitor : ExpressionVisitorBase
 	{
 		public   ExpressionBuilder Builder { get; }
 		BuildPurpose               _buildPurpose;
@@ -155,7 +155,7 @@ namespace LinqToDB.Linq.Builder
 			return newVisitor;
 		}
 
-		public class CacheSnapshot : IDisposable
+		public sealed class CacheSnapshot : IDisposable
 		{
 			readonly ExpressionBuildVisitor _visitor;
 
@@ -5078,9 +5078,9 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		class TranslationContext : ITranslationContext
+		sealed class TranslationContext : ITranslationContext
 		{
-			class SqlExpressionFactory : ISqlExpressionFactory
+			sealed class SqlExpressionFactory : ISqlExpressionFactory
 			{
 				readonly ITranslationContext _translationContext;
 

@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;

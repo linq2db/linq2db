@@ -6,6 +6,7 @@ using System.Threading;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
