@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 
@@ -49,7 +49,8 @@ namespace Tests.UserTests
 						i =>
 							new { i.ReceiptNo, a = TestCustomer.GetName(i.Customer.BillingGroup) });
 
-				FluentActions.Enumerating(() => query).Should().NotThrow();
+				var act = () => query.ToArray();
+				act.ShouldNotThrow();
 			}
 		}
 	}

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -179,8 +179,8 @@ namespace Tests.UserTests
 					})
 					.ToArray();
 
-				result.Should().HaveCount(1);
-				result[0].DocumentName?.Names.Should().HaveCount(2);
+				result.Count().ShouldBe(1);
+				result[0].DocumentName?.Names.Count().ShouldBe(2);
 			}
 		}
 	}

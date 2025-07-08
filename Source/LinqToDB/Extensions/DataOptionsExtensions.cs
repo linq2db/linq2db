@@ -577,7 +577,7 @@ namespace LinqToDB
 		/// Sets DisposeConnection option.
 		/// </summary>
 		[Pure]
-		public static ConnectionOptions WithDisposeConnection(this ConnectionOptions options, bool disposeConnection)
+		public static ConnectionOptions WithDisposeConnection(this ConnectionOptions options, bool? disposeConnection)
 		{
 			return options with { DisposeConnection = disposeConnection };
 		}
@@ -749,7 +749,7 @@ namespace LinqToDB
 		/// Defines data provider and DbConnection to use with DataOptions.
 		/// </summary>
 		[Pure]
-		public static DataOptions UseConnection(this DataOptions options, IDataProvider dataProvider, DbConnection connection, bool disposeConnection)
+		public static DataOptions UseConnection(this DataOptions options, IDataProvider dataProvider, DbConnection connection, bool? disposeConnection)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, DbConnection = connection, DisposeConnection = disposeConnection });
 		}
@@ -794,7 +794,7 @@ namespace LinqToDB
 			{
 				var ms = o.MappingSchema == null
 					? mappingSchema
-					: MappingSchema.CombineSchemas(o.MappingSchema, mappingSchema);
+					: MappingSchema.CombineSchemas(mappingSchema, o.MappingSchema);
 
 				return o with { MappingSchema = ms };
 			});
