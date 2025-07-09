@@ -293,7 +293,6 @@ namespace LinqToDB.SqlQuery
 		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
-
 			hash.Add(ElementType);
 			hash.Add(IsDistinct);
 			hash.Add(SkipValue?.GetElementHashCode());
@@ -301,9 +300,7 @@ namespace LinqToDB.SqlQuery
 			hash.Add(TakeHints);
 
 			foreach (var column in Columns)
-			{
 				hash.Add(column.GetElementHashCode());
-			}
 
 			return hash.ToHashCode();
 		}

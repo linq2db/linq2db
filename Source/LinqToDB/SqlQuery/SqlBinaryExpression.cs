@@ -104,12 +104,12 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(Operation);
-			hash.Add(SystemType);
-			hash.Add(Expr1.GetElementHashCode());
-			hash.Add(Expr2.GetElementHashCode());
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				Operation,
+				SystemType,
+				Expr1.GetElementHashCode(),
+				Expr2.GetElementHashCode()
+			);
 		}
 
 		#endregion

@@ -278,13 +278,13 @@ namespace LinqToDB.Linq.Builder
 
 		public override int GetHashCode()
 		{
-			var hashCode = new HashCode();
-			hashCode.Add(OwnerContext, EqualityComparer<TOwner>.Default);
-			hashCode.Add(BuildContext);
-			hashCode.Add(OwnerContextRef);
-			hashCode.Add(CurrentPath, ExpressionEqualityComparer.Instance!);
-			hashCode.Add(InnerExpression, ExpressionEqualityComparer.Instance);
-			return hashCode.ToHashCode();
+			return HashCode.Combine(
+				EqualityComparer<TOwner>.Default.GetHashCode(OwnerContext),
+				BuildContext,
+				OwnerContextRef,
+				ExpressionEqualityComparer.Instance.GetHashCode(CurrentPath),
+				ExpressionEqualityComparer.Instance.GetHashCode(InnerExpression)
+			);
 		}
 
 		sealed class BuildProxyVisitor : ExpressionVisitorBase

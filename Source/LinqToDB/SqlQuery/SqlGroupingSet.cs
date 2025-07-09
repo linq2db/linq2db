@@ -46,10 +46,9 @@ namespace LinqToDB.SqlQuery
 		public int GetElementHashCode()
 		{
 			var hash = new HashCode();
+
 			foreach (var item in Items)
-			{
 				hash.Add(item.GetElementHashCode());
-			}
 
 			return hash.ToHashCode();
 		}

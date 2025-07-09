@@ -133,10 +133,9 @@ namespace LinqToDB.SqlQuery
 		{
 			var hash = new HashCode();
 			hash.Add(ElementType);
+
 			foreach (var parameter in _infoParameters)
-			{
 				hash.Add(parameter.Sql.GetElementHashCode());
-			}
 
 			return hash.ToHashCode();
 		}

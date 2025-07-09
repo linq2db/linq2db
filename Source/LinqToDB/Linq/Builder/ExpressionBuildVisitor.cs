@@ -5391,13 +5391,13 @@ namespace LinqToDB.Linq.Builder
 
 				public int GetHashCode(ExprCacheKey obj)
 				{
-					var hashCode = new HashCode();
-					hashCode.Add(ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression));
-					hashCode.Add(obj.Context);
-					hashCode.Add(obj.SelectQuery);
-					hashCode.Add(obj.ColumnDescriptor);
-					hashCode.Add(obj.Flags);
-					return hashCode.ToHashCode();
+					return HashCode.Combine(
+						ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression),
+						obj.Context,
+						obj.SelectQuery,
+						obj.ColumnDescriptor,
+						obj.Flags
+					);
 				}
 			}
 

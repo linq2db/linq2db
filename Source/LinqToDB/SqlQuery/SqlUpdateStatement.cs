@@ -86,12 +86,11 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(base.GetElementHashCode());
-
-			hash.Add(Output?.GetElementHashCode());
-			hash.Add(_update?.GetElementHashCode());
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				base.GetElementHashCode(),
+				Output?.GetElementHashCode(),
+				_update?.GetElementHashCode()
+			);
 		}
 	}
 }

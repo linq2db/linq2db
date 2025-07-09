@@ -43,14 +43,14 @@ namespace LinqToDB.SqlQuery
 			hash.Add(ElementType);
 			hash.Add(Configuration);
 			hash.Add(Scope);
+			hash.Add(BuilderType);
+
 			foreach (var arg in Arguments)
 			{
 				hash.Add(arg.Key);
 				hash.Add(arg.Value.GetElementHashCode());
 			}
 
-			if (BuilderType != null)
-				hash.Add(BuilderType);
 			return hash.ToHashCode();
 		}
 	}

@@ -124,6 +124,7 @@ namespace LinqToDB.SqlQuery
 			var hash = new HashCode();
 			hash.Add(ElementType);
 			hash.Add(OutputTable?.GetElementHashCode());
+
 			if (OutputColumns != null)
 			{
 				foreach (var column in OutputColumns)

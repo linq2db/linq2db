@@ -136,18 +136,14 @@ namespace LinqToDB.Common
 		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
-			if (_hashCode != null)
-				return _hashCode.Value;
-
-			var hashCode = new HashCode();
-			hashCode.Add(SystemType);
-			hashCode.Add(DataType);
-			hashCode.Add(DbType);
-			hashCode.Add(Length);
-			hashCode.Add(Precision);
-			hashCode.Add(Scale);
-			
-			return _hashCode ??= hashCode.ToHashCode();
+			return _hashCode ??= HashCode.Combine(
+				SystemType,
+				DataType,
+				DbType,
+				Length,
+				Precision,
+				Scale
+			);
 		}
 
 #endregion

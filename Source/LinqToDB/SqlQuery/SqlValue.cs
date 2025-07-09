@@ -75,10 +75,10 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(ValueType);
-			hash.Add(Value);
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				ValueType,
+				Value
+			);
 		}
 
 		public override int   Precedence => SqlQuery.Precedence.Primary;

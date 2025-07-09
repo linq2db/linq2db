@@ -36,12 +36,11 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(base.GetElementHashCode());
-
-			hash.Add(Table?.GetElementHashCode());
-			hash.Add(ResetIdentity);
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				base.GetElementHashCode(),
+				Table?.GetElementHashCode(),
+				ResetIdentity
+			);
 		}
 	}
 }

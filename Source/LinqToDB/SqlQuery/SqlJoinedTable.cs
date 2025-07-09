@@ -103,6 +103,7 @@ namespace LinqToDB.SqlQuery
 			hash.Add(Condition.GetElementHashCode());
 			hash.Add(IsWeak);
 			hash.Add(IsSubqueryExpression);
+
 			if (SqlQueryExtensions != null)
 			{
 				foreach (var ext in SqlQueryExtensions)

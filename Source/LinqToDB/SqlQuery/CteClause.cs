@@ -88,10 +88,9 @@ namespace LinqToDB.SqlQuery
 			hash.Add(IsRecursive);
 			hash.Add(Body?.GetElementHashCode());
 			hash.Add(ObjectType);
+
 			foreach (var field in Fields)
-			{
 				hash.Add(field.GetElementHashCode());
-			}
 
 			return hash.ToHashCode();
 		}

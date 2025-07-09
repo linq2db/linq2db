@@ -181,6 +181,7 @@ namespace LinqToDB.SqlQuery
 			hash.Add(SqlTableType);
 			hash.Add(TableOptions);
 			hash.Add(Expression);
+
 			if (TableArguments != null)
 			{
 				foreach (var arg in TableArguments)

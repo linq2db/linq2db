@@ -91,6 +91,7 @@ namespace LinqToDB.SqlQuery
 			var hash = new HashCode();
 			hash.Add(PrimaryExpression.GetElementHashCode());
 			hash.Add(ElseExpression?.GetElementHashCode());
+
 			foreach (var c in Cases)
 			{
 				hash.Add(c.MatchValue.GetElementHashCode());

@@ -46,6 +46,7 @@ namespace LinqToDB.SqlQuery
 			hash.Add(SelectQuery?.GetElementHashCode());
 			hash.Add(IsParameterDependent);
 			hash.Add(Tag?.GetElementHashCode());
+
 			if (SqlQueryExtensions != null)
 			{
 				foreach (var extension in SqlQueryExtensions)

@@ -168,8 +168,10 @@ namespace LinqToDB.SqlQuery
 			hash.Add(OperationType);
 			hash.Add(Where?.GetElementHashCode());
 			hash.Add(WhereDelete?.GetElementHashCode());
+
 			foreach (var item in Items)
 				hash.Add(item.GetElementHashCode());
+
 			return hash.ToHashCode();
 		}
 

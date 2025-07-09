@@ -104,10 +104,10 @@ namespace LinqToDB.SqlQuery
 
 		public int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(Column.GetElementHashCode());
-			hash.Add(Expression?.GetElementHashCode());
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				Column.GetElementHashCode(),
+				Expression?.GetElementHashCode()
+			);
 		}
 
 		#endregion

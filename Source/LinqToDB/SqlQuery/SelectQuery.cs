@@ -300,14 +300,20 @@ namespace LinqToDB.SqlQuery
 			hash.Add(GroupBy.GetElementHashCode());
 			hash.Add(Having.GetElementHashCode());
 			hash.Add(OrderBy.GetElementHashCode());
+			hash.Add(QueryName);
+
 			if (_setOperators != null)
+			{
 				foreach (var u in _setOperators)
 					hash.Add(u.GetElementHashCode());
-			if (QueryName != null)
-				hash.Add(QueryName);
+			}
+
 			if (SqlQueryExtensions != null)
+			{
 				foreach (var ext in SqlQueryExtensions)
 					hash.Add(ext.GetElementHashCode());
+			}
+
 			return hash.ToHashCode();
 		}
 
