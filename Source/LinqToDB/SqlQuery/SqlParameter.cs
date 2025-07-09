@@ -100,11 +100,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		public override int GetHashCode()
-		{
-			return RuntimeHelpers.GetHashCode(this);
-		}
-
 		#region IQueryElement Members
 
 		public override QueryElementType ElementType => QueryElementType.SqlParameter;
