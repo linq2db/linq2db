@@ -2172,8 +2172,7 @@ namespace LinqToDB.SqlQuery
 						leftJoins.Remove(foundJoin);
 						foundJoin.JoinType = JoinType.Inner;
 						foundJoin.IsWeak   = false;
-						leftJoins.Remove(foundJoin);
-						isModified = true;
+						isModified         = true;
 
 						if (leftJoins.Count == 0)
 							break;
@@ -2190,7 +2189,7 @@ namespace LinqToDB.SqlQuery
 					SqlColumn column   => column.Parent,
 					SqlField field     => field.Table,
 					ISqlTableSource ts => ts,
-					_ => null,
+					_                  => null,
 				};
 			}
 		}
