@@ -331,6 +331,14 @@ namespace LinqToDB.DataProvider.SqlServer
 					}
 
 					break;
+				case DataType.Array | DataType.Single:
+					StringBuilder
+						.Append("VECTOR(")
+						// length is required and in 1-1998 range
+						// we use default 0 to produce error when user didn't specify length
+						.Append(CultureInfo.InvariantCulture, $"{type.Length ?? 0}")
+						.Append(')');
+					return;
 
 				case DataType.VarChar   :
 				case DataType.VarBinary :
