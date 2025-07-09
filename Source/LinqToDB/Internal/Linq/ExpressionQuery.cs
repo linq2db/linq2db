@@ -71,7 +71,7 @@ namespace LinqToDB.Internal.Linq
 #if DEBUG
 		public virtual QueryDebugView DebugView
 			=> new(
-				() => new ExpressionPrinter().PrintExpression(Expression),
+				() => new Expressions.ExpressionPrinter().PrintExpression(Expression),
 				() => ((IExpressionQuery)this).GetSqlQueries(null)[0].Sql,
 				() => ((IExpressionQuery)this).GetSqlQueries(new () { InlineParameters = true })[0].Sql
 				);

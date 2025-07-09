@@ -6,7 +6,7 @@ namespace LinqToDB.Internal.SqlQuery
 	public class SqlTableSource : ISqlTableSource
 	{
 #if DEBUG
-		readonly int id = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+		readonly int id = System.Threading.Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 #endif
 
 		public SqlTableSource(ISqlTableSource source, string? alias)

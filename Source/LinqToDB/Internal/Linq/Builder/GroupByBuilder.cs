@@ -174,7 +174,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 #if DEBUG
-			Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
+			System.Diagnostics.Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
 #endif
 
 			if (resultSelector != null)

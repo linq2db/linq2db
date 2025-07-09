@@ -351,7 +351,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			#if DEBUG
 
-			Debug.WriteLine($"Building {builder.GetType().Name}");
+			System.Diagnostics.Debug.WriteLine($"Building {builder.GetType().Name}");
 
 			#endif
 

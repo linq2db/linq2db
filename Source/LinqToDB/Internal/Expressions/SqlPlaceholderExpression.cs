@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Extensions;
@@ -40,7 +41,7 @@ namespace LinqToDB.Internal.Expressions
 			TrackingPath = trackingPath;
 
 #if DEBUG
-			Id = Interlocked.Increment(ref _placeholderCounter);
+			Id = System.Threading.Interlocked.Increment(ref _placeholderCounter);
 
 			if (Id == 0)
 			{

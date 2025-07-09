@@ -165,7 +165,7 @@ namespace LinqToDB
 				Name       = name;
 				Expression = expression;
 #if DEBUG
-				_paramNumber = Interlocked.Add(ref _paramCounter, 1);
+				_paramNumber = System.Threading.Interlocked.Add(ref _paramCounter, 1);
 #endif
 			}
 
@@ -174,7 +174,7 @@ namespace LinqToDB
 				Name      = name;
 				Extension = extension;
 #if DEBUG
-				_paramNumber = Interlocked.Add(ref _paramCounter, 1);
+				_paramNumber = System.Threading.Interlocked.Add(ref _paramCounter, 1);
 #endif
 			}
 

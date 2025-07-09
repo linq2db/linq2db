@@ -20,7 +20,7 @@ namespace LinqToDB.Internal.SqlQuery
 			RawAlias    = alias;
 
 #if DEBUG
-			Number = Interlocked.Increment(ref _columnCounter);
+			Number = System.Threading.Interlocked.Increment(ref _columnCounter);
 
 			// useful for putting breakpoint when finding when SqlColumn was created
 			if (Number is 0)

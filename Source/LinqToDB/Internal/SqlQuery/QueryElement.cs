@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		protected QueryElement()
 		{
-			UniqueId = Interlocked.Increment(ref IdCounter);
+			UniqueId = System.Threading.Interlocked.Increment(ref IdCounter);
 
 			// useful for putting breakpoint when finding when QueryElement was created
 			if (UniqueId is 0)
