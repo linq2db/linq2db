@@ -2335,7 +2335,7 @@ namespace LinqToDB.Linq.Builder
 					if (format == null)
 						return false;
 
-					var arguments = new ISqlExpression[node.Arguments.Count];
+					var arguments = new ISqlExpression[node.Arguments.Count - 1];
 
 					for (var i = 1; i < node.Arguments.Count; i++)
 					{
@@ -2343,7 +2343,7 @@ namespace LinqToDB.Linq.Builder
 						if (expr is not SqlPlaceholderExpression sqlPlaceholder)
 							return false;
 
-						arguments[i] = sqlPlaceholder.Sql;
+						arguments[i - 1] = sqlPlaceholder.Sql;
 					}
 
 					ISqlExpression result;
