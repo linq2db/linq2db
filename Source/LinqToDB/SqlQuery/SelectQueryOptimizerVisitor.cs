@@ -2121,7 +2121,7 @@ namespace LinqToDB.SqlQuery
 				return false;
 			}
 
-			var leftJoins = QueryHelper.EnumerateJoins(selectQuery)
+			var leftJoins = selectQuery.Select.From.Tables.SelectMany(t => t.Joins)
 				.Where(j => j.JoinType == JoinType.Left)
 				.ToList();
 
@@ -2139,6 +2139,14 @@ namespace LinqToDB.SqlQuery
 					if (isNullPredicate.IsNot)
 					{
 						source = ExtractSource(isNullPredicate.Expr1);
+						if (source != null)
+						{
+							var nullability = NullabilityContext.GetContext(source as SelectQuery);
+							if (nullability.CanBeNull(isNullPredicate.Expr1))
+							{
+								source = null; // cannot convert to inner join if source is nullable
+							}
+						}
 					}
 				}
 				else if (predicate is SqlPredicate.ExprExpr exprExPredicate)
