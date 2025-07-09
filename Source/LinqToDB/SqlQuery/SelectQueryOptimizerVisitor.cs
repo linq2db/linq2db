@@ -244,6 +244,11 @@ namespace LinqToDB.SqlQuery
 						EnsureReferencesCorrected(selectQuery);
 					}
 
+					if (CorrectLeftJoins(selectQuery))
+					{
+						isModified = true;
+					}
+
 					if (CorrectMultiTables(selectQuery))
 					{
 						isModified = true;
@@ -2102,6 +2107,84 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return isModified;
+		}
+
+		/// <summary>
+		/// Transforms LEFT JOINs to INNER JOINs if possible.
+		/// </summary>
+		/// <param name="selectQuery"></param>
+		/// <returns></returns>
+		bool CorrectLeftJoins(SelectQuery selectQuery)
+		{
+			if (selectQuery.Where.IsEmpty || selectQuery.Where.SearchCondition.IsOr || selectQuery.Where.SearchCondition.Predicates.Count > 100)
+			{
+				return false;
+			}
+
+			var leftJoins = QueryHelper.EnumerateJoins(selectQuery)
+				.Where(j => j.JoinType == JoinType.Left)
+				.ToList();
+
+			if (leftJoins.Count == 0)
+				return false;
+
+			var isModified = false;
+
+			foreach (var predicate in selectQuery.Where.SearchCondition.Predicates)
+			{
+				ISqlTableSource? source = null;
+
+				if (predicate is SqlPredicate.IsNull isNullPredicate)
+				{
+					if (isNullPredicate.IsNot)
+					{
+						source = ExtractSource(isNullPredicate.Expr1);
+					}
+				}
+				else if (predicate is SqlPredicate.ExprExpr exprExPredicate)
+				{
+					if (exprExPredicate.Operator == SqlPredicate.Operator.Equal)
+					{
+						source = ExtractSource(exprExPredicate.Expr1) ?? ExtractSource(exprExPredicate.Expr2);
+						if (source != null)
+						{
+							if (!(exprExPredicate.Expr1 is SqlValue { Value: not null } || exprExPredicate.Expr2 is SqlValue { Value: not null }))
+							{
+								source = null;
+							}
+						}
+					}
+				}
+
+				if (source != null)
+				{
+					var foundJoin = leftJoins.FirstOrDefault(j => j.Table.Source == source);
+					if (foundJoin != null)
+					{
+						leftJoins.Remove(foundJoin);
+						foundJoin.JoinType = JoinType.Inner;
+						foundJoin.IsWeak   = false;
+						leftJoins.Remove(foundJoin);
+						isModified = true;
+
+						if (leftJoins.Count == 0)
+							break;
+					}
+				}
+			}
+
+			return isModified;
+
+			ISqlTableSource? ExtractSource(ISqlExpression expr)
+			{
+				if (expr is SqlColumn column)
+					return column.Parent;
+				if (expr is SqlField field)
+					return field.Table;
+				if (expr is ISqlTableSource ts)
+					return ts;
+				return null;
+			}
 		}
 
 		SelectQuery MoveMutliTablesToSubquery(SelectQuery selectQuery)
