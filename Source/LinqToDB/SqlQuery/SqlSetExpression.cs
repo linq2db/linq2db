@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSetExpression : IQueryElement
+	public class SqlSetExpression : QueryElement
 	{
 		// These are both nullable refs, but by construction either _column or _row is set.
 
@@ -74,12 +74,9 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.SetExpression;
+		public override QueryElementType ElementType => QueryElementType.SetExpression;
 
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer
 				.AppendElement(Column)
@@ -89,7 +86,7 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public int GetElementHashCode()
+		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
 			hash.Add(Column.GetElementHashCode());

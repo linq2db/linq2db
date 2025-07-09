@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSetOperator : IQueryElement
+	public class SqlSetOperator : QueryElement
 	{
 		public SqlSetOperator(SelectQuery selectQuery, SetOperation operation)
 		{
@@ -13,17 +13,14 @@ namespace LinqToDB.SqlQuery
 		public SelectQuery  SelectQuery { get; private set; }
 		public SetOperation Operation   { get; }
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.SetOperator;
+		public override QueryElementType ElementType => QueryElementType.SetOperator;
 
 		public void Modify(SelectQuery selectQuery)
 		{
 			SelectQuery = selectQuery;
 		}
 
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer.AppendLine(" ");
 
@@ -43,7 +40,7 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public int GetElementHashCode()
+		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
 			hash.Add(ElementType);
