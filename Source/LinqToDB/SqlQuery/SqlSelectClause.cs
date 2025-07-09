@@ -292,15 +292,6 @@ namespace LinqToDB.SqlQuery
 			return hash.ToHashCode();
 		}
 
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
 		#endregion
 
 		#region QueryElement overrides

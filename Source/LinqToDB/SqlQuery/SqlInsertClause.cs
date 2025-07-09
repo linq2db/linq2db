@@ -19,19 +19,6 @@ namespace LinqToDB.SqlQuery
 			Into  = into;
 		}
 
-		#region Overrides
-
-#if OVERRIDETOSTRING
-
-			public override string ToString()
-			{
-				return this.ToDebugString();
-			}
-
-#endif
-
-		#endregion
-
 		#region IQueryElement Members
 
 #if DEBUG

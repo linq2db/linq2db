@@ -23,17 +23,6 @@ namespace LinqToDB.SqlQuery
 			OutputTable   = outputTable;
 		}
 
-		#region Overrides
-
-#if OVERRIDETOSTRING
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-#endif
-
-		#endregion
-
 		#region IQueryElement Members
 
 #if DEBUG

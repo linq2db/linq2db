@@ -23,15 +23,6 @@ namespace LinqToDB.SqlQuery
 			SelectQuery = selectQuery;
 		}
 
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
 		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
 			writer.AppendLine(" ");

@@ -121,15 +121,13 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-#if OVERRIDETOSTRING
+#if DEBUG
 			var writer = new QueryElementTextWriter(NullabilityContext.GetContext(Parent));
 
 			writer
 				.Append('t')
 				.Append(Parent?.SourceID ?? -1)
-#if DEBUG
 				.Append("[Id:").Append(Number).Append(']')
-#endif
 				.Append('.')
 				.Append(Alias ?? "c")
 				.Append(" => ")
