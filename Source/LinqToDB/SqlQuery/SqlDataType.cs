@@ -12,7 +12,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlDataType : ISqlExpression, IEquatable<SqlDataType>
+	public class SqlDataType : SqlExpressionBase
 	{
 		#region Init
 
@@ -380,27 +380,18 @@ namespace LinqToDB.SqlQuery
 
 		#region Overrides
 
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
 		#endregion
 
 		#region ISqlExpression Members
 
-		public int  Precedence => SqlQuery.Precedence.Primary;
-		public Type SystemType => Type.SystemType;
+		public override int  Precedence => SqlQuery.Precedence.Primary;
+		public override Type SystemType => Type.SystemType;
 
 		#endregion
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
+		public override  bool Equals(ISqlExpression? other)
 		{
 			if (ReferenceEquals(this, other))
 				return true;
@@ -412,11 +403,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+		public override bool CanBeNullable(NullabilityContext nullability) => false;
 
-		public bool CanBeNull => false;
-
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			return ((ISqlExpression)this).Equals(other) && comparer(this, other);
 		}
@@ -425,12 +414,9 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.SqlDataType;
+		public override QueryElementType ElementType => QueryElementType.SqlDataType;
 
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer.Append(Type.DataType);
 
@@ -445,7 +431,7 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public int GetElementHashCode()
+		public override int GetElementHashCode()
 		{
 			return Type.GetHashCode();
 		}
@@ -453,7 +439,7 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region IEquatable<SqlDataType>
-
+		// TODO: why equality is only over Type???
 		public override int GetHashCode()
 		{
 			return Type.GetHashCode();
@@ -471,9 +457,9 @@ namespace LinqToDB.SqlQuery
 		{
 			if (ReferenceEquals(null, obj)) return false;
 			if (ReferenceEquals(this, obj)) return true;
-			if (obj.GetType() != GetType()) return false;
+			if (obj is not SqlDataType other) return false;
 
-			return Equals((SqlDataType)obj);
+			return Equals(other);
 		}
 
 		#endregion
