@@ -810,7 +810,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public sealed class SqlServer2019MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2019 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2019 }.Where(ms => ms != null).ToArray()!);
 		public sealed class SqlServer2022MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2022 + SDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2022 }.Where(ms => ms != null).ToArray()!);
 		public sealed class SqlServer2022MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2022 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2022 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2025MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2025 + SDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2022 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2025MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2025 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2022 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2025MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2025 + SDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2025 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2025MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2025 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2025 }.Where(ms => ms != null).ToArray()!);
 	}
 }
