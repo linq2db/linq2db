@@ -53,29 +53,11 @@ namespace LinqToDB.SqlQuery
 
 		public override bool CanBeNullable(NullabilityContext nullability)
 		{
-			if (_canBeNull.HasValue)
-				return _canBeNull.Value;
-
 			foreach (var parameter in _infoParameters)
 				if (parameter.Sql.CanBeNullable(nullability))
 					return true;
 
 			return false;
-		}
-
-		private bool? _canBeNull;
-
-		public bool CanBeNull
-		{
-			get
-			{
-				if (_canBeNull.HasValue)
-					return _canBeNull.Value;
-
-				return false;
-			}
-
-			set => _canBeNull = value;
 		}
 
 		public override bool Equals(ISqlExpression? other, Func<ISqlExpression, ISqlExpression, bool> comparer)
