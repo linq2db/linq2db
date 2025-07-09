@@ -718,6 +718,7 @@ namespace LinqToDB
 		[Extension(PN.SqlServer2017, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
 		[Extension(PN.SqlServer2019, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
 		[Extension(PN.SqlServer2022, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
+		[Extension(PN.SqlServer2025, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
 		[Extension(PN.Access,        typeof(IsNullOrWhiteSpaceAccessBuilder),                      IsPredicate = true)]
 		[Extension(PN.Sybase,        typeof(IsNullOrWhiteSpaceSybaseBuilder),                      IsPredicate = true)]
 		[Extension(PN.MySql,         typeof(IsNullOrWhiteSpaceMySqlBuilder),                       IsPredicate = true)]
