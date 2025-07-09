@@ -2100,7 +2100,8 @@ namespace Tests.Linq
 					where Sql.Ext.SqlServer().Contains("candy OR meat", c)
 					select Sql.Ext.Max(c.CategoryName).Over().PartitionBy(c != null ? 1 : 0).ToValue();
 
-				q.Count().ShouldBe(1);
+				var res = q.ToArray();
+				Assert.That(res, Has.Length.EqualTo(1));
 
 				db.LastQuery!.ShouldContain("*", Exactly.Once());
 			}

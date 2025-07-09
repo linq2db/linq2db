@@ -643,6 +643,7 @@ namespace LinqToDB
 			=> throw new ServerSideOnlyException(nameof(DenseRank));
 
 		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2022, ServerSideOnly = true)]
+		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2025, ServerSideOnly = true)]
 		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ForceApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.ClickHouse, ServerSideOnly = true)]
 		[Sql.Extension("FIRST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> FirstValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
@@ -669,6 +670,7 @@ namespace LinqToDB
 			=> throw new ServerSideOnlyException(nameof(Lag));
 
 		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2022, ServerSideOnly = true)]
+		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2025, ServerSideOnly = true)]
 		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ForceApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.ClickHouse, ServerSideOnly = true)]
 		[Sql.Extension("LAST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> LastValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)

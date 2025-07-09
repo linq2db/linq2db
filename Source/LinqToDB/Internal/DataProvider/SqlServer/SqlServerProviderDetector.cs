@@ -31,6 +31,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2017Sdc = CreateDataProvider<SqlServerDataProvider2017SystemDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2019Sdc = CreateDataProvider<SqlServerDataProvider2019SystemDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2022Sdc = CreateDataProvider<SqlServerDataProvider2022SystemDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2025Sdc = CreateDataProvider<SqlServerDataProvider2025SystemDataSqlClient>();
 		// Microsoft.Data.SqlClient
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2005Mdc = CreateDataProvider<SqlServerDataProvider2005MicrosoftDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2008Mdc = CreateDataProvider<SqlServerDataProvider2008MicrosoftDataSqlClient>();
@@ -40,6 +41,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2017Mdc = CreateDataProvider<SqlServerDataProvider2017MicrosoftDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2019Mdc = CreateDataProvider<SqlServerDataProvider2019MicrosoftDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2022Mdc = CreateDataProvider<SqlServerDataProvider2022MicrosoftDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2025Mdc = CreateDataProvider<SqlServerDataProvider2025MicrosoftDataSqlClient>();
 
 		static IEnumerable<SqlServerDataProvider> GetInstantiatedProviders()
 		{
@@ -101,6 +103,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					if (options.ConfigurationString?.Contains("2017") == true || options.ProviderName?.Contains("2017") == true) return GetDataProvider(options, provider, SqlServerVersion.v2017);
 					if (options.ConfigurationString?.Contains("2019") == true || options.ProviderName?.Contains("2019") == true) return GetDataProvider(options, provider, SqlServerVersion.v2019);
 					if (options.ConfigurationString?.Contains("2022") == true || options.ProviderName?.Contains("2022") == true) return GetDataProvider(options, provider, SqlServerVersion.v2022);
+					if (options.ConfigurationString?.Contains("2025") == true || options.ProviderName?.Contains("2025") == true) return GetDataProvider(options, provider, SqlServerVersion.v2025);
 
 					if (AutoDetectProvider)
 					{
@@ -138,6 +141,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2017)      => _sqlServerDataProvider2017Sdc.Value,
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2019)      => _sqlServerDataProvider2019Sdc.Value,
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2022)      => _sqlServerDataProvider2022Sdc.Value,
+				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2025)      => _sqlServerDataProvider2025Sdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2005)      => _sqlServerDataProvider2005Mdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2008)      => _sqlServerDataProvider2008Mdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2012)      => _sqlServerDataProvider2012Mdc.Value,
@@ -146,6 +150,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2017)      => _sqlServerDataProvider2017Mdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2019)      => _sqlServerDataProvider2019Mdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2022)      => _sqlServerDataProvider2022Mdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2025)      => _sqlServerDataProvider2025Mdc.Value,
 				_                                                                       => _sqlServerDataProvider2008Sdc.Value,
 			};
 		}
@@ -177,8 +182,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			return level switch
 			{
-				// coming soon
-				//>= 170 => SqlServerVersion.v2025,
+				>= 170 => SqlServerVersion.v2025,
 				>= 160 => SqlServerVersion.v2022,
 				>= 150 => SqlServerVersion.v2019,
 				>= 140 => SqlServerVersion.v2017,
@@ -197,7 +201,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					13 => SqlServerVersion.v2016,
 					14 => SqlServerVersion.v2017,
 					15 => SqlServerVersion.v2019,
-					_  => SqlServerVersion.v2022
+					16 => SqlServerVersion.v2022,
+					_  => SqlServerVersion.v2025
 				}
 			};
 		}
