@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Shouldly;
+#if NETFRAMEWORK
+using IBM.Data.DB2;
+#else
+using IBM.Data.Db2;
+#endif
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -16,6 +20,8 @@ namespace Tests.UserTests
 	public class Issue4336Tests : TestBase
 	{
 		[Test]
+		// bug in informix
+		[ThrowsForProvider(typeof(DB2Exception), TestProvName.AllInformix, ErrorMessage = "ERROR [IX000] [IBM][IDS/UNIX64] Internal error in routine opjoin().")]
 		public void Issue4336Test([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
