@@ -2185,13 +2185,13 @@ namespace LinqToDB.SqlQuery
 
 			ISqlTableSource? ExtractSource(ISqlExpression expr)
 			{
-				if (expr is SqlColumn column)
-					return column.Parent;
-				if (expr is SqlField field)
-					return field.Table;
-				if (expr is ISqlTableSource ts)
-					return ts;
-				return null;
+				return expr switch
+				{
+					SqlColumn column   => column.Parent,
+					SqlField field     => field.Table,
+					ISqlTableSource ts => ts,
+					_ => null,
+				};
 			}
 		}
 
