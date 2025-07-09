@@ -162,7 +162,7 @@ namespace LinqToDB.Linq.Translation
 			return factory.Replace(value, oldValue, newValue);
 		}
 
-		public virtual ISqlExpression? TranslateStringFormat(ITranslationContext translationContext, MethodCallExpression methodCall, string format, IList<ISqlExpression> arguments, TranslationFlags translationFlags)
+		public virtual ISqlExpression? TranslateStringFormat(ITranslationContext translationContext, MethodCallExpression methodCall, string format, IReadOnlyList<ISqlExpression> arguments, TranslationFlags translationFlags)
 		{
 			return QueryHelper.ConvertFormatToConcatenation(format, arguments);
 		}

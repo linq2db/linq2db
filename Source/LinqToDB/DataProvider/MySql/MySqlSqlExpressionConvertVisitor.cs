@@ -82,8 +82,8 @@ namespace LinqToDB.DataProvider.MySql
 				if (caseSensitive == false)
 #pragma warning restore CA1508
 				{
-					searchExpr = PseudoFunctions.MakeToLower(searchExpr);
-					dataExpr   = PseudoFunctions.MakeToLower(dataExpr);
+					searchExpr = PseudoFunctions.MakeToLower(searchExpr, MappingSchema);
+					dataExpr   = PseudoFunctions.MakeToLower(dataExpr, MappingSchema);
 				}
 
 				ISqlPredicate? newPredicate = null;
@@ -92,7 +92,7 @@ namespace LinqToDB.DataProvider.MySql
 					case SqlPredicate.SearchString.SearchKind.Contains:
 					{
 						newPredicate = new SqlPredicate.ExprExpr(
-							new SqlFunction(typeof(int), "LOCATE", searchExpr, dataExpr), SqlPredicate.Operator.Greater,
+							new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "LOCATE", searchExpr, dataExpr), SqlPredicate.Operator.Greater,
 							new SqlValue(0), null);
 						break;
 					}
@@ -120,7 +120,7 @@ namespace LinqToDB.DataProvider.MySql
 			else
 			{
 				predicate = new SqlPredicate.SearchString(
-					new SqlExpression(typeof(string), $"{{0}} COLLATE utf8_bin", Precedence.Primary, predicate.Expr1),
+					new SqlExpression(MappingSchema.GetDbDataType(typeof(string)), $"{{0}} COLLATE utf8_bin", Precedence.Primary, predicate.Expr1),
 					predicate.IsNot,
 					predicate.Expr2,
 					predicate.Kind,

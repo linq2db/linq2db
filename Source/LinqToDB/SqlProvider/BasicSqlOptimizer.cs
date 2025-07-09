@@ -1904,10 +1904,10 @@ namespace LinqToDB.SqlProvider
 		/// <param name="supportsEmptyOrderBy">Indicates that database supports OVER () syntax.</param>
 		/// <param name="predicate">Indicates when the transformation is needed</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
-		protected SqlStatement ReplaceTakeSkipWithRowNumber<TContext>(TContext context, SqlStatement statement, Func<TContext, SelectQuery, bool> predicate, bool supportsEmptyOrderBy)
+		protected SqlStatement ReplaceTakeSkipWithRowNumber<TContext>(TContext context, SqlStatement statement, MappingSchema mappingSchema, Func<TContext, SelectQuery, bool> predicate, bool supportsEmptyOrderBy)
 		{
 			return QueryHelper.WrapQuery(
-				(predicate, context, supportsEmptyOrderBy, statement),
+				(predicate, context, supportsEmptyOrderBy, statement, mappingSchema),
 				statement,
 				static (context, query, _) =>
 				{
@@ -1970,8 +1970,8 @@ namespace LinqToDB.SqlProvider
 					query.OrderBy.Items.Clear();
 
 					var rowNumberExpression = parameters.Length == 0
-						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable)
-						: new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, parameters);
+						? new SqlExpression(context.mappingSchema.GetDbDataType(typeof(long)), "ROW_NUMBER() OVER ()", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable)
+						: new SqlExpression(context.mappingSchema.GetDbDataType(typeof(long)), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, parameters);
 
 					var rowNumberColumn = query.Select.AddNewColumn(rowNumberExpression);
 					rowNumberColumn.Alias = "RN";

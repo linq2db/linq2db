@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -1200,7 +1201,7 @@ namespace LinqToDB.SqlQuery
 			return str;
 		}
 
-		public static ISqlExpression ConvertFormatToConcatenation(string format, IList<ISqlExpression> parameters)
+		public static ISqlExpression ConvertFormatToConcatenation(string format, IReadOnlyList<ISqlExpression> parameters)
 		{
 			if (format     == null) throw new ArgumentNullException(nameof(format));
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
@@ -1595,13 +1596,18 @@ namespace LinqToDB.SqlQuery
 			return newSc;
 		}
 
+		internal static bool TypeCanBeNull(Type type)
+		{
+			return type.IsNullableType() || type is INullable;
+		}
+
 		public static bool CalcCanBeNull(Type? type, bool? canBeNull, ParametersNullabilityType isNullable, IEnumerable<bool> nullInfo)
 		{
 			if (canBeNull != null)
 				return canBeNull.Value;
 
 			if (isNullable == ParametersNullabilityType.Undefined)
-				return type == null ? true : SqlDataType.TypeCanBeNull(type);
+				return type == null ? true : TypeCanBeNull(type);
 
 			switch (isNullable)
 			{

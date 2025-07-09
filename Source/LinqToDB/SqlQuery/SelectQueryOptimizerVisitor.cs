@@ -1044,7 +1044,7 @@ namespace LinqToDB.SqlQuery
 
 					rnBuilder.Append(')');
 
-					rnExpression = new SqlExpression(typeof(long), rnBuilder.ToString(), Precedence.Primary,
+					rnExpression = new SqlExpression(_mappingSchema.GetDbDataType(typeof(long)), rnBuilder.ToString(), Precedence.Primary,
 						SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, parameters.ToArray());
 				}
 

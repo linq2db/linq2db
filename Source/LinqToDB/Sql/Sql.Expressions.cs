@@ -55,8 +55,8 @@ namespace LinqToDB
 				if (isExpression)
 				{
 					builder.ResultExpression = qualified
-						? new SqlExpression(typeof(string), "{0}", Precedence.Primary, new SqlField(column))
-						: new SqlExpression(typeof(string), column.ColumnName, Precedence.Primary);
+						? new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "{0}", Precedence.Primary, new SqlField(column))
+						: new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), column.ColumnName, Precedence.Primary);
 				}
 				else
 				{
@@ -85,8 +85,8 @@ namespace LinqToDB
 				if (isExpression)
 				{
 					builder.ResultExpression = qualified
-						? new SqlExpression(typeof(string), "{0}", Precedence.Primary, new SqlField(field))
-						: new SqlExpression(typeof(string), field.PhysicalName, Precedence.Primary);
+						? new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "{0}", Precedence.Primary, new SqlField(field))
+						: new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), field.PhysicalName, Precedence.Primary);
 				}
 				else
 				{
@@ -285,7 +285,7 @@ namespace LinqToDB
 				if (isExpression)
 				{
 					if (qualified == TableQualification.None)
-						builder.ResultExpression = new SqlExpression(typeof(string), tableHelper.TableName, Precedence.Primary);
+						builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), tableHelper.TableName, Precedence.Primary);
 					else
 					{
 						var tableName = new SqlObjectName(
@@ -543,7 +543,7 @@ namespace LinqToDB
 				else
 				{
 					builder.ResultExpression = new SqlExpression(
-						memberType,
+						builder.Mapping.GetDbDataType(memberType),
 						format,
 						Precedence.Primary,
 						memberType == typeof(bool) ? SqlFlags.IsPredicate | SqlFlags.IsPure : SqlFlags.IsPure,

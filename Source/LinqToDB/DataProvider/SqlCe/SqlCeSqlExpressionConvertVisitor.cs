@@ -85,13 +85,13 @@ namespace LinqToDB.DataProvider.SqlCe
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
-									new SqlFunction(typeof(string), "SUBSTRING",
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary,
+									new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "SUBSTRING",
 										predicate.Expr1,
 										new SqlValue(1),
 										Factory.Length(predicate.Expr2))),
 								SqlPredicate.Operator.Equal,
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
 								null
 							);
 						break;
@@ -109,13 +109,13 @@ namespace LinqToDB.DataProvider.SqlCe
 
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
-									new SqlFunction(typeof(string), "SUBSTRING",
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary,
+									new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "SUBSTRING",
 										predicate.Expr1,
 										indexExpression,
 										Factory.Length(predicate.Expr2))),
 								SqlPredicate.Operator.Equal,
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
 								null
 							);
 
@@ -125,10 +125,10 @@ namespace LinqToDB.DataProvider.SqlCe
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "CHARINDEX",
-									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "CHARINDEX",
+									new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary,
 										predicate.Expr2),
-									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+									new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary,
 										predicate.Expr1)),
 								SqlPredicate.Operator.Greater,
 								new SqlValue(0), null);

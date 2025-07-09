@@ -364,7 +364,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence,
-						sequence.SelectQuery.CreateCount(), buildInfo.Expression,
+						sequence.SelectQuery.CreateCount(builder.MappingSchema), buildInfo.Expression,
 						convertType : returnType);
 
 					context = new AggregationContext(buildInfo.Parent, sequence, aggregationType, functionName, returnType);
@@ -391,7 +391,7 @@ namespace LinqToDB.Linq.Builder
 					var sql = sqlPlaceholder.Sql;
 
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence,
-						new SqlFunction(returnType, functionName, isAggregate: true, canBeNull: true, sql), buildInfo.Expression, convertType: returnType);
+						new SqlFunction(builder.MappingSchema.GetDbDataType(returnType), functionName, isAggregate: true, canBeNull: true, sql), buildInfo.Expression, convertType: returnType);
 				}
 			}
 			else
@@ -602,7 +602,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql == null)
 					throw new InvalidOperationException();
 
-				sql = new SqlFunction(returnType, functionName, isAggregate: true, nullabilityType, canBeNull, sql);
+				sql = new SqlFunction(builder.MappingSchema.GetDbDataType(returnType), functionName, isAggregate: true, nullabilityType, canBeNull, sql);
 
 				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/sql, buildInfo.Expression, convertType: returnType);
 

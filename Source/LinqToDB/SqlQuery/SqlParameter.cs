@@ -90,8 +90,8 @@ namespace LinqToDB.SqlQuery
 		public override int  Precedence => SqlQuery.Precedence.Primary;
 		public override Type SystemType => Type.SystemType;
 
-		public override bool CanBeNullable(NullabilityContext nullability) 
-			=> SqlDataType.TypeCanBeNull(Type.SystemType);
+		public override bool CanBeNullable(NullabilityContext nullability)
+			=> QueryHelper.TypeCanBeNull(Type.SystemType);
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{

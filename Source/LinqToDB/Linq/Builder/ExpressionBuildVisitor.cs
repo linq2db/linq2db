@@ -2335,7 +2335,7 @@ namespace LinqToDB.Linq.Builder
 					if (format == null)
 						return false;
 
-					var arguments = new List<ISqlExpression>();
+					var arguments = new ISqlExpression[node.Arguments.Count];
 
 					for (var i = 1; i < node.Arguments.Count; i++)
 					{
@@ -2343,13 +2343,13 @@ namespace LinqToDB.Linq.Builder
 						if (expr is not SqlPlaceholderExpression sqlPlaceholder)
 							return false;
 
-						arguments.Add(sqlPlaceholder.Sql);
+						arguments[i] = sqlPlaceholder.Sql;
 					}
 
 					ISqlExpression result;
 					if (_buildFlags.HasFlag(BuildFlags.FormatAsExpression))
 					{
-						result = new SqlExpression(node.Type, format, Precedence.Primary, arguments.ToArray());
+						result = new SqlExpression(MappingSchema.GetDbDataType(node.Type), format, Precedence.Primary, arguments);
 					}
 					else
 					{
@@ -3112,7 +3112,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Multiply:
 				case ExpressionType.MultiplyChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative), node); break;
 				case ExpressionType.Or:              translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise), node); break;
-				case ExpressionType.Power:           translated = CreatePlaceholder(new SqlFunction(t, "Power", l, r), node); break;
+				case ExpressionType.Power:           translated = CreatePlaceholder(new SqlFunction(MappingSchema.GetDbDataType(t), "Power", l, r), node); break;
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction), node); break;
 				case ExpressionType.Coalesce:        translated = CreatePlaceholder(new SqlCoalesceExpression(l, r), node); break;

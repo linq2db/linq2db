@@ -47,14 +47,9 @@ namespace LinqToDB.Linq.Translation
 			return new SqlExpression(dataType, expr, precedence, SqlFlags.None, ParametersNullabilityType.NotNullable, parameters);
 		}
 
-		public static ISqlExpression Function(this ISqlExpressionFactory factory, Type systemType, string functionName, params ISqlExpression[] parameters)
+		public static ISqlExpression Function(this ISqlExpressionFactory factory, DbDataType type, string functionName, params ISqlExpression[] parameters)
 		{
-			return new SqlFunction(systemType, functionName, parameters);
-		}
-
-		public static ISqlExpression Function(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, params ISqlExpression[] parameters)
-		{
-			return new SqlFunction(dataType, functionName, parameters);
+			return new SqlFunction(type, functionName, parameters);
 		}
 
 		public static ISqlExpression Function(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, ParametersNullabilityType parametersNullability, params ISqlExpression[] parameters)

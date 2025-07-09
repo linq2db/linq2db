@@ -153,7 +153,7 @@ namespace LinqToDB
 
 				var partSql   = new SqlFragment(DatePartToStr(part));
 
-				builder.ResultExpression = new SqlFunction(typeof(int), builder.Expression, partSql, startdate, endDate);
+				builder.ResultExpression = new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), builder.Expression, partSql, startdate, endDate);
 			}
 		}
 
@@ -184,7 +184,7 @@ namespace LinqToDB
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
-				ISqlExpression func = new SqlFunction(typeof(int), funcName, startdate, endDate);
+				ISqlExpression func = new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), funcName, startdate, endDate);
 				if (divider != 1)
 					func = builder.Div(func, divider);
 
@@ -207,13 +207,13 @@ namespace LinqToDB
 				}
 
 				var secondsExpr = builder.Mul<int>(builder.Sub<int>(
-						new SqlFunction(typeof(int), "Days", endDate),
-						new SqlFunction(typeof(int), "Days", startDate)),
+						new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "Days", endDate),
+						new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "Days", startDate)),
 					new SqlValue(86400));
 
 				var midnight = builder.Sub<int>(
-					new SqlFunction(typeof(int), "MIDNIGHT_SECONDS", endDate),
-					new SqlFunction(typeof(int), "MIDNIGHT_SECONDS", startDate));
+					new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "MIDNIGHT_SECONDS", endDate),
+					new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "MIDNIGHT_SECONDS", startDate));
 
 				var resultExpr = builder.Add<int>(secondsExpr, midnight);
 
@@ -228,8 +228,8 @@ namespace LinqToDB
 							builder.Mul(resultExpr, 1000),
 							builder.Div(
 								builder.Sub<int>(
-									new SqlFunction(typeof(int), "MICROSECOND", endDate),
-									new SqlFunction(typeof(int), "MICROSECOND", startDate)),
+									new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "MICROSECOND", endDate),
+									new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "MICROSECOND", startDate)),
 								1000));
 						break;
 					default:
@@ -264,7 +264,7 @@ namespace LinqToDB
 					DateParts.Millisecond => " * 86400000)",
 					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
-				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate );
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(int)), expStr, startDate, endDate );
 			}
 		}
 
@@ -287,7 +287,7 @@ namespace LinqToDB
 					DateParts.Millisecond => "ROUND(EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) * 1000)",
 					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
-				builder.ResultExpression = new SqlExpression(typeof(int), expStr, Precedence.Multiplicative, startDate, endDate);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(int)), expStr, Precedence.Multiplicative, startDate, endDate);
 			}
 		}
 
@@ -327,7 +327,7 @@ namespace LinqToDB
 
 				expStr += "', {0}, {1})";
 
-				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(int)), expStr, startDate, endDate);
 			}
 		}
 
@@ -365,7 +365,7 @@ namespace LinqToDB
 					+ " + 24 * EXTRACT(DAY FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP)))))",
 					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
-				builder.ResultExpression = new SqlExpression(typeof(int), expStr, Precedence.Multiplicative, startDate, endDate);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(int)), expStr, Precedence.Multiplicative, startDate, endDate);
 			}
 		}
 
@@ -397,7 +397,7 @@ namespace LinqToDB
 
 					case DateParts.Millisecond:
 						builder.ResultExpression = new SqlExpression(
-							typeof(long?),
+							builder.Mapping.GetDbDataType(typeof(long?)),
 							"toUnixTimestamp64Milli(toDateTime64({1}, 3)) - toUnixTimestamp64Milli(toDateTime64({0}, 3))",
 							Precedence.Subtraction,
 							startDate,
@@ -409,7 +409,7 @@ namespace LinqToDB
 				}
 
 				if (unit != null)
-					builder.ResultExpression = new SqlFunction(typeof(int), "date_diff", new SqlValue(unit), startDate, endDate);
+					builder.ResultExpression = new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "date_diff", new SqlValue(unit), startDate, endDate);
 			}
 		}
 

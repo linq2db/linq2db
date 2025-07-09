@@ -3764,11 +3764,11 @@ namespace LinqToDB.DataProvider.SqlServer
 					var prop = props[i];
 
 					ps[i] = prop.ParameterType == typeof(T)
-						? new SqlExpression(prop.ParameterType, '\'' + builder.GetValue<T>(prop.Name!)?.ToString() + '\'', Precedence.Primary)
+						? new SqlExpression(builder.Mapping.GetDbDataType(prop.ParameterType), '\'' + builder.GetValue<T>(prop.Name!)?.ToString() + '\'', Precedence.Primary)
 						: builder.GetExpression(prop.Name!)!;
 				}
 
-				builder.ResultExpression = new SqlFunction(method.ReturnType, builder.Expression, ps);
+				builder.ResultExpression = new SqlFunction(builder.Mapping.GetDbDataType(method.ReturnType), builder.Expression, ps);
 			}
 		}
 	}

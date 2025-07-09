@@ -62,7 +62,8 @@ namespace LinqToDB.DataProvider.Access
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr",
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(int)),
+									"InStr",
 									new SqlValue(1),
 									predicate.Expr1,
 									predicate.Expr2,
@@ -83,7 +84,8 @@ namespace LinqToDB.DataProvider.Access
 
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr",
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(int)),
+									"InStr",
 									indexExpr,
 									predicate.Expr1,
 									predicate.Expr2,
@@ -97,7 +99,8 @@ namespace LinqToDB.DataProvider.Access
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr",
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(int)),
+									"InStr",
 									new SqlValue(1),
 									predicate.Expr1,
 									predicate.Expr2,

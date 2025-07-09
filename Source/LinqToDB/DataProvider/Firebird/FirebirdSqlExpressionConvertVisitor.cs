@@ -73,15 +73,15 @@ namespace LinqToDB.DataProvider.Firebird
 					if (caseSensitive == false)
 					{
 						predicate = new SqlPredicate.SearchString(
-							PseudoFunctions.MakeToLower(predicate.Expr1),
+							PseudoFunctions.MakeToLower(predicate.Expr1, MappingSchema),
 							predicate.IsNot,
-							PseudoFunctions.MakeToLower(predicate.Expr2), predicate.Kind,
+							PseudoFunctions.MakeToLower(predicate.Expr2, MappingSchema), predicate.Kind,
 							predicate.CaseSensitive);
 					}
 					else if (caseSensitive == true)
 					{
 						predicate = new SqlPredicate.SearchString(
-							new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1),
+							new SqlExpression(MappingSchema.GetDbDataType(typeof(string)), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1),
 							predicate.IsNot,
 							predicate.Expr2,
 							predicate.Kind,
@@ -92,21 +92,21 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 				case SqlPredicate.SearchString.SearchKind.StartsWith:
 				{
-					expr = new SqlExpression(typeof(bool),
+					expr = new SqlExpression(MappingSchema.GetDbDataType(typeof(bool)),
 						predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}",
 						Precedence.Comparison,
 						SqlFlags.IsPredicate,
 						ParametersNullabilityType.IfAnyParameterNullable,
 						TryConvertToValue(
 							caseSensitive == false
-								? PseudoFunctions.MakeToLower(predicate.Expr1)
+								? PseudoFunctions.MakeToLower(predicate.Expr1, MappingSchema)
 								: caseSensitive == true
-									? new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1)
+									? new SqlExpression(MappingSchema.GetDbDataType(typeof(string)), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1)
 									: predicate.Expr1,
 							EvaluationContext),
 						TryConvertToValue(
 							caseSensitive == false
-								? PseudoFunctions.MakeToLower(predicate.Expr2)
+								? PseudoFunctions.MakeToLower(predicate.Expr2, MappingSchema)
 								: predicate.Expr2, EvaluationContext)) {CanBeNull = false};
 					break;
 				}
@@ -114,7 +114,7 @@ namespace LinqToDB.DataProvider.Firebird
 				{
 					if (caseSensitive == false)
 					{
-						expr = new SqlExpression(typeof(bool),
+						expr = new SqlExpression(MappingSchema.GetDbDataType(typeof(bool)),
 							predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}",
 							precedence : Precedence.Comparison,
 							flags : SqlFlags.IsPredicate,
@@ -127,7 +127,7 @@ namespace LinqToDB.DataProvider.Firebird
 						if (caseSensitive == true)
 						{
 							predicate = new SqlPredicate.SearchString(
-								new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1),
+								new SqlExpression(MappingSchema.GetDbDataType(typeof(string)), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1),
 								predicate.IsNot,
 								predicate.Expr2,
 								predicate.Kind,
@@ -163,7 +163,7 @@ namespace LinqToDB.DataProvider.Firebird
 			else if (cast.SystemType.ToUnderlying() == typeof(string) && cast.Expression.SystemType?.ToUnderlying() == typeof(Guid))
 			{
 				// TODO: think how to use FirebirdMemberTranslator.GuidMemberTranslator.TranslateGuildToString instead of code duplication here
-				return PseudoFunctions.MakeToLower(new SqlFunction(cast.Type, "UUID_TO_CHAR", cast.Expression));
+				return PseudoFunctions.MakeToLower(new SqlFunction(QueryHelper.GetDbDataType(cast, MappingSchema), "UUID_TO_CHAR", cast.Expression), MappingSchema);
 			}
 			else if (cast.SystemType.ToUnderlying() == typeof(Guid) && cast.Expression.SystemType?.ToUnderlying() == typeof(string))
 			{

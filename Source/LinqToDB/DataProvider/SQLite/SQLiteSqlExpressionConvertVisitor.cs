@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.SQLite
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(string), "Substr", predicate.Expr1, new SqlValue(1),
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Substr", predicate.Expr1, new SqlValue(1),
 									Factory.Length(predicate.Expr2)),
 								SqlPredicate.Operator.Equal,
 								predicate.Expr2, null);
@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.SQLite
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(string), "Substr", predicate.Expr1,
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Substr", predicate.Expr1,
 									new SqlBinaryExpression(typeof(int),
 										Factory.Length(predicate.Expr2), "*", new SqlValue(-1),
 										Precedence.Multiplicative)
@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.SQLite
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr", predicate.Expr1, predicate.Expr2),
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "InStr", predicate.Expr1, predicate.Expr2),
 								SqlPredicate.Operator.Greater,
 								new SqlValue(0), null);
 

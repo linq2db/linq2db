@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.Access
 			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
 			statement = CorrectMultiTableQueries(statement);
 			statement = CorrectInnerJoins(statement);
-			statement = CorrectExistsAndIn(statement, dataOptions);
+			statement = CorrectExistsAndIn(statement, dataOptions, mappingSchema);
 
 			return statement.QueryType switch
 			{
@@ -150,7 +150,7 @@ namespace LinqToDB.DataProvider.Access
 			return statement;
 		}
 
-		SqlStatement CorrectExistsAndIn(SqlStatement statement, DataOptions dataOptions)
+		SqlStatement CorrectExistsAndIn(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			statement = statement.Convert(1, (_, e) =>
 			{
@@ -177,7 +177,7 @@ namespace LinqToDB.DataProvider.Access
 
 								var newSearch = new SqlSearchCondition();
 
-								var countExpr = existsQuery.From.Tables[0].CreateCount();
+								var countExpr = existsQuery.From.Tables[0].CreateCount(mappingSchema);
 								if (!isNot)
 									newSearch.AddGreater(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNulls);
 								else
@@ -197,7 +197,7 @@ namespace LinqToDB.DataProvider.Access
 								subquery.Select.Columns.Clear();
 
 								var newSearch = new SqlSearchCondition();
-								var countExpr = subquery.From.Tables[0].CreateCount();
+								var countExpr = subquery.From.Tables[0].CreateCount(mappingSchema);
 
 								isNot = isNot != inSubQuery.IsNot;
 

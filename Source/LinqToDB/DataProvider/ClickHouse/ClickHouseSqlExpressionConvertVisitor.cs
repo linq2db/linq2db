@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 
 using LinqToDB.Common;
+using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
@@ -56,13 +57,13 @@ namespace LinqToDB.DataProvider.ClickHouse
 					{
 						subStrPredicate = new SqlPredicate.Expr(
 							new SqlFunction(
-								typeof(bool), "startsWith",
-								PseudoFunctions.MakeToLower(dataExpr), PseudoFunctions.MakeToLower(searchExpr)));
+								MappingSchema.GetDbDataType(typeof(bool)), "startsWith",
+								PseudoFunctions.MakeToLower(dataExpr, MappingSchema), PseudoFunctions.MakeToLower(searchExpr, MappingSchema)));
 					}
 					else
 					{
 						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "startsWith", dataExpr, searchExpr));
+							new SqlFunction(MappingSchema.GetDbDataType(typeof(bool)), "startsWith", dataExpr, searchExpr));
 					}
 
 					break;
@@ -72,20 +73,20 @@ namespace LinqToDB.DataProvider.ClickHouse
 					{
 						subStrPredicate = new SqlPredicate.Expr(
 							new SqlFunction(
-								typeof(bool), "endsWith",
-								PseudoFunctions.MakeToLower(dataExpr), PseudoFunctions.MakeToLower(searchExpr)));
+								MappingSchema.GetDbDataType(typeof(bool)), "endsWith",
+								PseudoFunctions.MakeToLower(dataExpr, MappingSchema), PseudoFunctions.MakeToLower(searchExpr, MappingSchema)));
 					}
 					else
 					{
 						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "endsWith", dataExpr, searchExpr));
+							new SqlFunction(MappingSchema.GetDbDataType(typeof(bool)), "endsWith", dataExpr, searchExpr));
 					}
 
 					break;
 
 				case SqlPredicate.SearchString.SearchKind.Contains:
 					subStrPredicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(bool), caseSensitive ? "position" : "positionCaseInsensitive", dataExpr, searchExpr),
+						new SqlFunction(MappingSchema.GetDbDataType(typeof(bool)), caseSensitive ? "position" : "positionCaseInsensitive", dataExpr, searchExpr),
 						SqlPredicate.Operator.Greater,
 						new SqlValue(0),
 						null);
@@ -349,7 +350,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						{
 							return new SqlFunction(
 								toType, "trim", canBeNull: true,
-								new SqlExpression(toType.SystemType, "TRAILING '\x00' FROM {0}",
+								new SqlExpression(toType, "TRAILING '\x00' FROM {0}",
 								Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, value));
 						}
 

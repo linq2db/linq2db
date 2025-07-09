@@ -2,7 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 
-using LinqToDB.Common;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
@@ -172,9 +172,9 @@ namespace LinqToDB.SqlQuery
 				: throw new LinqToDBException("Calls to Sql.Row() are the only valid expressions of type SqlRow.");
 		}
 
-		public static SqlFunction CreateCount(this ISqlTableSource table)
+		public static SqlFunction CreateCount(this ISqlTableSource table, MappingSchema mappingSchema)
 		{
-			return new SqlFunction(typeof(int), "COUNT",
+			return new SqlFunction(mappingSchema.GetDbDataType(typeof(int)), "COUNT",
 				isAggregate: true,
 				ParametersNullabilityType.NotNullable,
 				// unused parameter to make expr unique

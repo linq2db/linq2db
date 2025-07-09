@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.DB2
 			{
 				case "%":
 				{
-					var expr1 = !element.Expr1.SystemType!.IsIntegerType() ? new SqlFunction(typeof(int), "Int", element.Expr1) : element.Expr1;
+					var expr1 = !element.Expr1.SystemType!.IsIntegerType() ? new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "Int", element.Expr1) : element.Expr1;
 					return new SqlFunction(element.Type, "Mod", expr1, element.Expr2);
 				}
 				case "&": return new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2);
@@ -82,7 +82,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			if (toType.SystemType == typeof(string) && argumentType.SystemType != typeof(string))
 			{
-				return new SqlFunction(cast.Type, "RTrim", new SqlFunction(typeof(string), "Char", argument));
+				return new SqlFunction(cast.Type, "RTrim", new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Char", argument));
 			}
 
 			if (toType.Length > 0)

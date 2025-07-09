@@ -260,7 +260,7 @@ namespace LinqToDB.DataProvider.DB2.Translation
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
-				var dateFunction = translationContext.ExpressionFactory.Function(dateExpression.SystemType!, "DATE", dateExpression);
+				var dateFunction = translationContext.ExpressionFactory.Function(QueryHelper.GetDbDataType(dateExpression, translationContext.MappingSchema), "DATE", dateExpression);
 
 				return dateFunction;
 			}

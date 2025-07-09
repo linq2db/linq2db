@@ -1,5 +1,4 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq;
 
 using LinqToDB.Common;
@@ -14,48 +13,23 @@ namespace LinqToDB.SqlQuery
 		private const SqlFlags                  DefaultFlags       = SqlFlags.IsPure;
 		private const ParametersNullabilityType DefaultNullability = ParametersNullabilityType.Undefined;
 
-		public SqlExpression(Type systemType, string expr, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), expr, DefaultPrecedence, DefaultFlags, DefaultNullability, null, parameters)
-		{
-		}
-
-		public SqlExpression(Type systemType, string expr, int precedence, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), expr, precedence, DefaultFlags, DefaultNullability, null, parameters)
-		{
-		}
-
-		public SqlExpression(Type systemType, string expr, int precedence, ParametersNullabilityType nullabilityType, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), expr, precedence, DefaultFlags, nullabilityType, null, parameters)
-		{
-		}
-
-		public SqlExpression(Type systemType, string expr, int precedence, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), expr, precedence, DefaultFlags, nullabilityType, canBeNull, parameters)
-		{
-		}
-
-		public SqlExpression(Type systemType, string expr, int precedence, SqlFlags flags, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), expr, precedence, flags, DefaultNullability, null, parameters)
-		{
-		}
-
-		public SqlExpression(Type systemType, string expr, int precedence, SqlFlags flags, bool? canBeNull, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), expr, precedence, flags, DefaultNullability, canBeNull, parameters)
-		{
-		}
-
-		public SqlExpression(Type systemType, string expr, int precedence, SqlFlags flags, ParametersNullabilityType nullabilityType, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), expr, precedence, flags, nullabilityType, null, parameters)
-		{
-		}
-
-		public SqlExpression(Type systemType, string expr, int precedence, SqlFlags flags, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), expr, precedence, flags, nullabilityType, canBeNull, parameters)
-		{
-		}
-
 		public SqlExpression(DbDataType type, string expr, params ISqlExpression[] parameters)
 			: this(type, expr, DefaultPrecedence, DefaultFlags, DefaultNullability, null, parameters)
+		{
+		}
+
+		public SqlExpression(DbDataType type, string expr, int precedence, params ISqlExpression[] parameters)
+			: this(type, expr, precedence, DefaultFlags, DefaultNullability, null, parameters)
+		{
+		}
+
+		public SqlExpression(DbDataType type, string expr, int precedence, ParametersNullabilityType nullabilityType, params ISqlExpression[] parameters)
+			: this(type, expr, precedence, DefaultFlags, nullabilityType, null, parameters)
+		{
+		}
+
+		public SqlExpression(DbDataType type, string expr, int precedence, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters)
+			: this(type, expr, precedence, DefaultFlags, nullabilityType, canBeNull, parameters)
 		{
 		}
 
@@ -66,11 +40,6 @@ namespace LinqToDB.SqlQuery
 
 		public SqlExpression(DbDataType type, string expr, int precedence, SqlFlags flags, bool? canBeNull, params ISqlExpression[] parameters)
 			: this(type, expr, precedence, flags, DefaultNullability, canBeNull, parameters)
-		{
-		}
-
-		public SqlExpression(DbDataType type, string expr, int precedence, params ISqlExpression[] parameters)
-			: this(type, expr, precedence, DefaultFlags, DefaultNullability, null, parameters)
 		{
 		}
 

@@ -4,6 +4,8 @@ using System.Globalization;
 
 #if BUGCHECK
 using System.Linq;
+
+using LinqToDB.Common;
 #endif
 
 namespace LinqToDB.SqlQuery
@@ -72,21 +74,21 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
-		public SqlSelectClause Expr(Type systemType, string expr, params ISqlExpression[] values)
+		public SqlSelectClause Expr(DbDataType type, string expr, params ISqlExpression[] values)
 		{
-			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(systemType, expr, values)));
+			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(type, expr, values)));
 			return this;
 		}
 
-		public SqlSelectClause Expr(Type systemType, string expr, int priority, params ISqlExpression[] values)
+		public SqlSelectClause Expr(DbDataType type, string expr, int priority, params ISqlExpression[] values)
 		{
-			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(systemType, expr, priority, values)));
+			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(type, expr, priority, values)));
 			return this;
 		}
 
-		public SqlSelectClause Expr(Type systemType, string alias, string expr, int priority, params ISqlExpression[] values)
+		public SqlSelectClause Expr(DbDataType type, string alias, string expr, int priority, params ISqlExpression[] values)
 		{
-			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(systemType, expr, priority, values)));
+			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(type, expr, priority, values)));
 			return this;
 		}
 

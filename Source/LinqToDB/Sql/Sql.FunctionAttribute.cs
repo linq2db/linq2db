@@ -102,7 +102,7 @@ namespace LinqToDB
 				if (error != null)
 					return SqlErrorExpression.EnsureError(error, expression.Type);
 
-				var function = new SqlFunction(expression.Type, expressionStr!,
+				var function = new SqlFunction(dataContext.MappingSchema.GetDbDataType(expression.Type), expressionStr!,
 					(IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |
 					(IsPure           ? SqlFlags.IsPure           : SqlFlags.None) |
 					(IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |

@@ -1,4 +1,5 @@
 ﻿using LinqToDB.Common;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
@@ -13,18 +14,18 @@ namespace LinqToDB.SqlQuery
 		/// Function to convert text parameter to lowercased form: <c>TO_LOWER(string)</c>
 		/// </summary>
 		public const string TO_LOWER = "$ToLower$";
-		public static SqlFunction MakeToLower(ISqlExpression value)
+		public static SqlFunction MakeToLower(ISqlExpression value, MappingSchema mappingSchema)
 		{
-			return new SqlFunction(typeof(string), TO_LOWER, value);
+			return new SqlFunction(mappingSchema.GetDbDataType(typeof(string)), TO_LOWER, value);
 		}
 
 		/// <summary>
 		/// Function to convert text parameter to uppercased form: <c>TO_UPPER(string)</c>
 		/// </summary>
 		public const string TO_UPPER = "$ToUpper$";
-		public static SqlFunction MakeToUpper(ISqlExpression value)
+		public static SqlFunction MakeToUpper(ISqlExpression value, MappingSchema mappingSchema)
 		{
-			return new SqlFunction(typeof(string), TO_UPPER, value);
+			return new SqlFunction(mappingSchema.GetDbDataType(typeof(string)), TO_UPPER, value);
 		}
 
 		/// <summary>
@@ -72,9 +73,9 @@ namespace LinqToDB.SqlQuery
 		/// Function to replace one text fragment with another in string: <c>REPLACE(value, oldSubstring, newSubstring)</c>
 		/// </summary>
 		public const string REPLACE = "$Replace$";
-		public static SqlFunction MakeReplace(ISqlExpression value, ISqlExpression oldSubstring, ISqlExpression newSubstring)
+		public static SqlFunction MakeReplace(ISqlExpression value, ISqlExpression oldSubstring, ISqlExpression newSubstring, MappingSchema mappingSchema)
 		{
-			return new SqlFunction(typeof(string), REPLACE, value, oldSubstring, newSubstring);
+			return new SqlFunction(mappingSchema.GetDbDataType(typeof(string)), REPLACE, value, oldSubstring, newSubstring);
 		}
 
 		/// <summary>
@@ -90,9 +91,9 @@ namespace LinqToDB.SqlQuery
 		/// Function for calculating length of string: <c>LENGTH(value)</c>
 		/// </summary>
 		public const string LENGTH = "$Length$";
-		public static SqlFunction MakeLength(ISqlExpression value)
+		public static SqlFunction MakeLength(ISqlExpression value, MappingSchema mappingSchema)
 		{
-			return new SqlFunction(typeof(int), LENGTH, value);
+			return new SqlFunction(mappingSchema.GetDbDataType(typeof(int)), LENGTH, value);
 		}
 
 	}

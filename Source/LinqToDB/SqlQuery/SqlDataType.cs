@@ -270,15 +270,6 @@ namespace LinqToDB.SqlQuery
 			};
 		}
 
-		public static bool TypeCanBeNull(Type type)
-		{
-			if (type.IsNullableType() ||
-				typeof(INullable).IsSameOrParentOf(type))
-				return true;
-
-			return false;
-		}
-
 #endregion
 
 		#region Default Types

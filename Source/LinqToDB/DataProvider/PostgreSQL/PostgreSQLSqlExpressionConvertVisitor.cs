@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						new SqlExpression(type, "Position({0} in {1})", Precedence.Primary,
 							p0,
 							(ISqlExpression)Visit(
-								new SqlFunction(typeof(string), "Substring",
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Substring",
 									p1,
 									p2,
 									Sub<int>(

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Common;
 
@@ -9,41 +8,6 @@ namespace LinqToDB.SqlQuery
 	{
 		private const SqlFlags                  DefaultFlags       = SqlFlags.IsPure;
 		private const ParametersNullabilityType DefaultNullability = ParametersNullabilityType.IfAnyParameterNullable;
-
-		public SqlFunction(Type systemType, string name, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), name, DefaultFlags, DefaultNullability, null, parameters)
-		{
-		}
-
-		public SqlFunction(Type systemType, string name, ParametersNullabilityType parametersNullability, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), name, DefaultFlags, parametersNullability, null, parameters)
-		{
-		}
-
-		public SqlFunction(Type systemType, string name, bool? canBeNull, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), name, DefaultFlags, DefaultNullability, canBeNull, parameters)
-		{
-		}
-
-		public SqlFunction(Type systemType, string name, bool isAggregate, bool? canBeNull, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), name, isAggregate ? SqlFlags.IsAggregate | SqlFlags.IsPure : SqlFlags.IsPure, DefaultNullability, canBeNull, parameters)
-		{
-		}
-
-		public SqlFunction(Type systemType, string name, bool isAggregate, ParametersNullabilityType parametersNullability, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), name, isAggregate ? SqlFlags.IsAggregate | SqlFlags.IsPure : SqlFlags.IsPure, parametersNullability, null, parameters)
-		{
-		}
-
-		public SqlFunction(Type systemType, string name, bool isAggregate, ParametersNullabilityType parametersNullability, bool? canBeNull, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), name, isAggregate ? SqlFlags.IsAggregate | SqlFlags.IsPure : SqlFlags.IsPure, parametersNullability, canBeNull, parameters)
-		{
-		}
-
-		public SqlFunction(Type systemType, string name, SqlFlags flags, ParametersNullabilityType parametersNullability, bool? canBeNull, params ISqlExpression[] parameters)
-			: this(new DbDataType(systemType), name, flags, parametersNullability, canBeNull, parameters)
-		{
-		}
 
 		public SqlFunction(DbDataType type, string name, params ISqlExpression[] parameters)
 			: this(type, name, DefaultFlags, DefaultNullability, null, parameters)
@@ -57,6 +21,16 @@ namespace LinqToDB.SqlQuery
 
 		public SqlFunction(DbDataType type, string name, SqlFlags flags, params ISqlExpression[] parameters)
 			: this(type, name, flags, DefaultNullability, null, parameters)
+		{
+		}
+
+		public SqlFunction(DbDataType type, string name, bool isAggregate, bool? canBeNull, params ISqlExpression[] parameters)
+			: this(type, name, isAggregate ? SqlFlags.IsAggregate | SqlFlags.IsPure : SqlFlags.IsPure, DefaultNullability, canBeNull, parameters)
+		{
+		}
+
+		public SqlFunction(DbDataType type, string name, bool isAggregate, ParametersNullabilityType parametersNullability, params ISqlExpression[] parameters)
+			: this(type, name, isAggregate ? SqlFlags.IsAggregate | SqlFlags.IsPure : SqlFlags.IsPure, parametersNullability, null, parameters)
 		{
 		}
 

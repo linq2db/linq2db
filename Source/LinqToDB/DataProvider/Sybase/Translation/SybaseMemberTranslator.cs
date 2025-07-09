@@ -172,7 +172,7 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 				var factory = translationContext.ExpressionFactory;
 				// CONVERT(date, your_datetime_column)
 
-				var convertFunc = factory.Function(dateExpression.SystemType!, "CONVERT", factory.SqlDataType(DataType.Date), dateExpression);
+				var convertFunc = factory.Function(factory.GetDbDataType(dateExpression), "CONVERT", factory.SqlDataType(DataType.Date), dateExpression);
 				return convertFunc;
 			}
 
