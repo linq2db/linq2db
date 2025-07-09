@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlGroupingSet : SqlExpressionBase
+	public sealed class SqlGroupingSet : SqlExpressionBase
 	{
 		public override QueryElementType ElementType => QueryElementType.GroupingSet;
 

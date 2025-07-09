@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlInsertClause : QueryElement
+	public sealed class SqlInsertClause : QueryElement
 	{
 		public SqlInsertClause()
 		{

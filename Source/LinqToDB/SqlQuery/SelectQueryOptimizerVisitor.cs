@@ -15,7 +15,7 @@ using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SelectQueryOptimizerVisitor : SqlQueryVisitor
+	public sealed class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
 		SqlProviderFlags  _providerFlags     = default!;
 		DataOptions       _dataOptions       = default!;

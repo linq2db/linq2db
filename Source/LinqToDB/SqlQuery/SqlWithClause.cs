@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlWithClause : QueryElement
+	public sealed class SqlWithClause : QueryElement
 	{
 		public override QueryElementType ElementType => QueryElementType.WithClause;
 

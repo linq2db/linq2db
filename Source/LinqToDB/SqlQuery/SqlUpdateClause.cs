@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlUpdateClause : QueryElement
+	public sealed class SqlUpdateClause : QueryElement
 	{
 		public List<SqlSetExpression> Items         { get; set; } = new();
 		public List<SqlSetExpression> Keys          { get; set; } = new();

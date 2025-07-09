@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlAliasPlaceholder : SqlExpressionBase
+	public sealed class SqlAliasPlaceholder : SqlExpressionBase
 	{
 		public static readonly SqlAliasPlaceholder Instance = new();
 

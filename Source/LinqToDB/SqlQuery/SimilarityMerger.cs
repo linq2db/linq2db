@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SimilarityMerger : ISimilarityMerger
+	public sealed class SimilarityMerger : ISimilarityMerger
 	{
 		public static readonly SimilarityMerger Instance = new SimilarityMerger();
 

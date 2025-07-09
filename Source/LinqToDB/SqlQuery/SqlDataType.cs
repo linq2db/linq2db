@@ -12,7 +12,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlDataType : SqlExpressionBase
+	public sealed class SqlDataType : SqlExpressionBase
 	{
 		#region Init
 

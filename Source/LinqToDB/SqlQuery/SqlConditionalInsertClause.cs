@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlConditionalInsertClause : QueryElement
+	public sealed class SqlConditionalInsertClause : QueryElement
 	{
 		public SqlInsertClause     Insert { get; private set; }
 		public SqlSearchCondition? When   { get; private set; }

@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlValuesTable : SqlExpressionBase, ISqlTableSource
+	public sealed class SqlValuesTable : SqlExpressionBase, ISqlTableSource
 	{
 		/// <summary>
 		/// To create new instance in build context.

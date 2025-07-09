@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Globalization;
 
+using LinqToDB.Common;
+
 #if BUGCHECK
 using System.Linq;
-
-using LinqToDB.Common;
 #endif
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSelectClause : ClauseBase, IQueryElement
+	public sealed class SqlSelectClause : ClauseBase, IQueryElement
 	{
 		#region Init
 

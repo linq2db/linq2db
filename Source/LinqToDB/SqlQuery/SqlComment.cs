@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlComment : QueryElement
+	public sealed class SqlComment : QueryElement
 	{
 		public override QueryElementType ElementType => QueryElementType.Comment;
 

@@ -5,7 +5,7 @@ using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlValue : SqlExpressionBase
+	public sealed class SqlValue : SqlExpressionBase
 	{
 		public SqlValue(Type systemType, object? value)
 		{

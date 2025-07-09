@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlConditionExpression : SqlExpressionBase
+	public sealed class SqlConditionExpression : SqlExpressionBase
 	{
 		public SqlConditionExpression(ISqlPredicate condition, ISqlExpression trueValue, ISqlExpression falseValue)
 		{

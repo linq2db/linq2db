@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlCoalesceExpression : SqlExpressionBase
+	public sealed class SqlCoalesceExpression : SqlExpressionBase
 	{
 		public SqlCoalesceExpression(params ISqlExpression[] expressions)
 		{

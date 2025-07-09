@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlTableSource : SqlExpressionBase, ISqlTableSource
+	public sealed class SqlTableSource : SqlExpressionBase, ISqlTableSource
 	{
 #if DEBUG
 		readonly int id = Interlocked.Increment(ref SelectQuery.SourceIDCounter);

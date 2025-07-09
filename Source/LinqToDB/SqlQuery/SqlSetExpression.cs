@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSetExpression : QueryElement
+	public sealed class SqlSetExpression : QueryElement
 	{
 		// These are both nullable refs, but by construction either _column or _row is set.
 

@@ -4,7 +4,7 @@ using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlBinaryExpression : SqlExpressionBase
+	public sealed class SqlBinaryExpression : SqlExpressionBase
 	{
 		public SqlBinaryExpression(DbDataType dbDataType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = SqlQuery.Precedence.Unknown)
 		{

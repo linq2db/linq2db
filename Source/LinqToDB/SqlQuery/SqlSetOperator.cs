@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSetOperator : QueryElement
+	public sealed class SqlSetOperator : QueryElement
 	{
 		public SqlSetOperator(SelectQuery selectQuery, SetOperation operation)
 		{

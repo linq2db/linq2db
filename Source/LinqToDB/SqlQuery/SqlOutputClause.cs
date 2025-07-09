@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlOutputClause : QueryElement
+	public sealed class SqlOutputClause : QueryElement
 	{
 		List<SqlSetExpression>? _outputItems;
 

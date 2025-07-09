@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlMergeOperationClause : QueryElement
+	public sealed class SqlMergeOperationClause : QueryElement
 	{
 		public SqlMergeOperationClause(MergeOperationType type)
 		{

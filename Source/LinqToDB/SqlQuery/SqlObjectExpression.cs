@@ -6,7 +6,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlObjectExpression : SqlExpressionBase
+	public sealed class SqlObjectExpression : SqlExpressionBase
 	{
 		readonly SqlGetValue[] _infoParameters;
 

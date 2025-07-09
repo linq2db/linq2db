@@ -8,7 +8,7 @@ namespace LinqToDB.SqlQuery
 	/// <summary>
 	/// Untyped (doesn't have type of type information should be hidden from Linq To DB) SQL fragment with parameters.
 	/// </summary>
-	public class SqlFragment : SqlExpressionBase
+	public sealed class SqlFragment : SqlExpressionBase
 	{
 		private const int DefaultPrecedence = SqlQuery.Precedence.Primary;
 

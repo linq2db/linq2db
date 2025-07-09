@@ -6,7 +6,7 @@ using LinqToDB.Mapping;
 namespace LinqToDB.SqlQuery
 {
 	//TODO: Investigate how to implement only ISqlTableSource interface
-	public class SqlRawSqlTable : SqlTable
+	public sealed class SqlRawSqlTable : SqlTable
 	{
 		public string SQL      { get; }
 		public bool   IsScalar { get; }

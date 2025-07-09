@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlColumn : SqlExpressionBase
+	public sealed class SqlColumn : SqlExpressionBase
 	{
 		public SqlColumn(SelectQuery? parent, ISqlExpression expression, string? alias)
 		{

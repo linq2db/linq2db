@@ -4,7 +4,7 @@ using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlInlinedToSqlExpression : SqlInlinedBase
+	public sealed class SqlInlinedToSqlExpression : SqlInlinedBase
 	{
 		public override QueryElementType ElementType => QueryElementType.SqlInlinedToSqlExpression;
 

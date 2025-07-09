@@ -6,7 +6,7 @@ using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlParameter : SqlExpressionBase
+	public sealed class SqlParameter : SqlExpressionBase
 	{
 		public SqlParameter(DbDataType type, string? name, object? value)
 		{
