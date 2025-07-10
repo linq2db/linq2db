@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlOrderByClause : ClauseBase, IQueryElement
+	public sealed class SqlOrderByClause : ClauseBase, IQueryElement
 	{
 		internal SqlOrderByClause(SelectQuery selectQuery) : base(selectQuery)
 		{

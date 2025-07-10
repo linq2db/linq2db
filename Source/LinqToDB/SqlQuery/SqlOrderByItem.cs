@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlOrderByItem : QueryElement
+	public sealed class SqlOrderByItem : QueryElement
 	{
 		public SqlOrderByItem(ISqlExpression expression, bool isDescending, bool isPositioned)
 		{

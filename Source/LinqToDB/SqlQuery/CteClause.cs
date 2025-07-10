@@ -7,7 +7,7 @@ using System.Threading;
 namespace LinqToDB.SqlQuery
 {
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
-	public class CteClause : QueryElement
+	public sealed class CteClause : QueryElement
 	{
 		public static int CteIDCounter;
 

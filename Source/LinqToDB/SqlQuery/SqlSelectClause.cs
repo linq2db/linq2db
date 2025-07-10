@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.Globalization;
 
+using LinqToDB.Common;
+
 #if BUGCHECK
 using System.Linq;
 #endif
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSelectClause : ClauseBase, IQueryElement
+	public sealed class SqlSelectClause : ClauseBase, IQueryElement
 	{
 		#region Init
 
@@ -72,39 +74,21 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
-		public SqlSelectClause Expr(string expr, params ISqlExpression[] values)
+		public SqlSelectClause Expr(DbDataType type, string expr, params ISqlExpression[] values)
 		{
-			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(null, expr, values)));
+			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(type, expr, values)));
 			return this;
 		}
 
-		public SqlSelectClause Expr(Type systemType, string expr, params ISqlExpression[] values)
+		public SqlSelectClause Expr(DbDataType type, string expr, int priority, params ISqlExpression[] values)
 		{
-			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(systemType, expr, values)));
+			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(type, expr, priority, values)));
 			return this;
 		}
 
-		public SqlSelectClause Expr(string expr, int priority, params ISqlExpression[] values)
+		public SqlSelectClause Expr(DbDataType type, string alias, string expr, int priority, params ISqlExpression[] values)
 		{
-			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(null, expr, priority, values)));
-			return this;
-		}
-
-		public SqlSelectClause Expr(Type systemType, string expr, int priority, params ISqlExpression[] values)
-		{
-			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(systemType, expr, priority, values)));
-			return this;
-		}
-
-		public SqlSelectClause Expr(string alias, string expr, int priority, params ISqlExpression[] values)
-		{
-			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(null, expr, priority, values)));
-			return this;
-		}
-
-		public SqlSelectClause Expr(Type systemType, string alias, string expr, int priority, params ISqlExpression[] values)
-		{
-			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(systemType, expr, priority, values)));
+			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(type, expr, priority, values)));
 			return this;
 		}
 
@@ -304,15 +288,6 @@ namespace LinqToDB.SqlQuery
 
 			return hash.ToHashCode();
 		}
-
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
 
 		#endregion
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public sealed class SqlQueryExtension : IQueryElement
+	public sealed class SqlQueryExtension : QueryElement
 	{
 		public SqlQueryExtension()
 		{
@@ -26,18 +26,14 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		public Type?                              BuilderType        { get; init; }
 
-#if DEBUG
-		public string           DebugText   => this.ToDebugString();
-#endif
+		public override QueryElementType ElementType => QueryElementType.SqlQueryExtension;
 
-		public QueryElementType ElementType => QueryElementType.SqlQueryExtension;
-
-		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			return writer.Append("extension");
 		}
 
-		public int GetElementHashCode()
+		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
 			hash.Add(ElementType);

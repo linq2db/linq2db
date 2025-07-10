@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlCreateTableStatement : SqlStatement
+	public sealed class SqlCreateTableStatement : SqlStatement
 	{
 		public SqlCreateTableStatement(SqlTable sqlTable)
 		{

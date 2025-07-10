@@ -38,9 +38,5 @@ namespace LinqToDB.SqlQuery
 		public abstract QueryElementType       ElementType { get; }
 		public abstract QueryElementTextWriter ToString(QueryElementTextWriter writer);
 		public abstract int                    GetElementHashCode();
-
-#if OVERRIDETOSTRING
-		public override string ToString() => DebugText;
-#endif
 	}
 }

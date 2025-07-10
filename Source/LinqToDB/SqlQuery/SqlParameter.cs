@@ -6,7 +6,7 @@ using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlParameter : SqlExpressionBase
+	public sealed class SqlParameter : SqlExpressionBase
 	{
 		public SqlParameter(DbDataType type, string? name, object? value)
 		{
@@ -90,8 +90,8 @@ namespace LinqToDB.SqlQuery
 		public override int  Precedence => SqlQuery.Precedence.Primary;
 		public override Type SystemType => Type.SystemType;
 
-		public override bool CanBeNullable(NullabilityContext nullability) 
-			=> SqlDataType.TypeCanBeNull(Type.SystemType);
+		public override bool CanBeNullable(NullabilityContext nullability)
+			=> QueryHelper.TypeCanBeNull(Type.SystemType);
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
@@ -99,11 +99,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
-
-		public override int GetHashCode()
-		{
-			return RuntimeHelpers.GetHashCode(this);
-		}
 
 		#region IQueryElement Members
 

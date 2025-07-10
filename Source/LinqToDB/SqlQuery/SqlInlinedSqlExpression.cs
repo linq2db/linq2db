@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlInlinedSqlExpression : SqlInlinedBase
+	public sealed class SqlInlinedSqlExpression : SqlInlinedBase
 	{
 		public override QueryElementType ElementType  => QueryElementType.SqlInlinedExpression;
 

@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlFromClause : ClauseBase
+	public sealed class SqlFromClause : ClauseBase
 	{
 		#region Join
 

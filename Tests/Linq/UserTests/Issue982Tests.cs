@@ -24,16 +24,16 @@ namespace Tests.UserTests
 			{
 				statement = base.Finalize(mappingSchema, statement, dataOptions);
 
-				AddConditions(statement);
+				AddConditions(mappingSchema, statement);
 
 				return statement;
 			}
 
-			private void AddConditions(SqlStatement statement)
+			private void AddConditions(MappingSchema mappingSchema, SqlStatement statement)
 			{
 				if (statement.SelectQuery?.Where.IsEmpty == false)
 					statement.SelectQuery.Where.SearchCondition.Add(new SqlPredicate.Expr(
-						new SqlExpression(typeof(bool), "'one' != 'two'", Precedence.Comparison, SqlFlags.IsPredicate, ParametersNullabilityType.IfAllParametersNullable, null), 0));
+						new SqlExpression(mappingSchema.GetDbDataType(typeof(bool)), "'one' != 'two'", Precedence.Comparison, SqlFlags.IsPredicate, ParametersNullabilityType.IfAllParametersNullable), 0));
 			}
 		}
 

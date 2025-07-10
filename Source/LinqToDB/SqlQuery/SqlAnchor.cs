@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlAnchor : SqlExpressionBase
+	public sealed class SqlAnchor : SqlExpressionBase
 	{
 		public enum AnchorKindEnum
 		{

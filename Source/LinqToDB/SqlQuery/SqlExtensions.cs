@@ -2,6 +2,8 @@
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.SqlQuery
 {
 	/// <summary>
@@ -10,6 +12,8 @@ namespace LinqToDB.SqlQuery
 	/// </summary>
 	public static class SqlExtensions
 	{
+		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;
+
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
@@ -166,6 +170,26 @@ namespace LinqToDB.SqlQuery
 			return expr is MethodCallExpression { Method.Name: "Row" } call
 				? call.Arguments
 				: throw new LinqToDBException("Calls to Sql.Row() are the only valid expressions of type SqlRow.");
+		}
+
+		public static SqlFunction CreateCount(this ISqlTableSource table, MappingSchema mappingSchema)
+		{
+			return new SqlFunction(mappingSchema.GetDbDataType(typeof(int)), "COUNT",
+				isAggregate: true,
+				ParametersNullabilityType.NotNullable,
+				// unused parameter to make expr unique
+				new SqlFragment("*", new SqlValue(table.SourceID)));
+		}
+
+		public static SqlFunction WithName(this SqlFunction func, string name)
+		{
+			if (name == func.Name)
+				return func;
+
+			return new SqlFunction(func.Type, name, func.Flags, func.NullabilityType, func.CanBeNullNullable, func.Parameters)
+			{
+				DoNotOptimize = func.DoNotOptimize
+			};
 		}
 	}
 }

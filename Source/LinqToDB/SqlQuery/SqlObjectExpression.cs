@@ -6,7 +6,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlObjectExpression : ISqlExpression
+	public sealed class SqlObjectExpression : SqlExpressionBase
 	{
 		readonly SqlGetValue[] _infoParameters;
 
@@ -37,38 +37,22 @@ namespace LinqToDB.SqlQuery
 			return MappingSchema.GetSqlValue(p.ValueType, value, null);
 		}
 
-		public Type? SystemType => null;
-		public int Precedence => SqlQuery.Precedence.Unknown;
-
-		#region Overrides
-
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
-		#endregion
+		public override Type? SystemType => null;
+		public override int Precedence => SqlQuery.Precedence.Unknown;
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
+		public override bool Equals(ISqlExpression? other)
 		{
-			return Equals(other, DefaultComparer);
+			return Equals(other, SqlExtensions.DefaultComparer);
 		}
 
 		#endregion
 
 		#region ISqlExpression Members
 
-		public bool CanBeNullable(NullabilityContext nullability)
+		public override bool CanBeNullable(NullabilityContext nullability)
 		{
-			if (_canBeNull.HasValue)
-				return _canBeNull.Value;
-
 			foreach (var parameter in _infoParameters)
 				if (parameter.Sql.CanBeNullable(nullability))
 					return true;
@@ -76,29 +60,7 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		private bool? _canBeNull;
-
-		public bool CanBeNull
-		{
-			get
-			{
-				if (_canBeNull.HasValue)
-					return _canBeNull.Value;
-
-				return false;
-			}
-
-			set => _canBeNull = value;
-		}
-
-		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;
-
-		public override int GetHashCode()
-		{
-			return RuntimeHelpers.GetHashCode(this);
-		}
-
-		public bool Equals(ISqlExpression? other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		public override bool Equals(ISqlExpression? other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return ReferenceEquals(this, other);
 		}
@@ -107,12 +69,9 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.SqlObjectExpression;
+		public override QueryElementType ElementType => QueryElementType.SqlObjectExpression;
 
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer.Append('(');
 
@@ -129,7 +88,7 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public int GetElementHashCode()
+		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
 			hash.Add(ElementType);

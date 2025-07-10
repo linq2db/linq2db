@@ -11,7 +11,7 @@ namespace LinqToDB.SqlQuery
 		Cube
 	}
 
-	public class SqlGroupByClause : ClauseBase, IQueryElement
+	public sealed class SqlGroupByClause : ClauseBase, IQueryElement
 	{
 		internal SqlGroupByClause(SelectQuery selectQuery) : base(selectQuery)
 		{

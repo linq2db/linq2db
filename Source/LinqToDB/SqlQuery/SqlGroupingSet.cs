@@ -3,12 +3,9 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlGroupingSet : ISqlExpression
+	public sealed class SqlGroupingSet : SqlExpressionBase
 	{
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.GroupingSet;
+		public override QueryElementType ElementType => QueryElementType.GroupingSet;
 
 		public SqlGroupingSet()
 		{
@@ -20,16 +17,7 @@ namespace LinqToDB.SqlQuery
 			Items.AddRange(items);
 		}
 
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
-		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer.Append('(');
 			for (int i = 0; i < Items.Count; i++)
@@ -43,7 +31,7 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public int GetElementHashCode()
+		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
 
@@ -53,9 +41,9 @@ namespace LinqToDB.SqlQuery
 			return hash.ToHashCode();
 		}
 
-		public bool Equals(ISqlExpression? other)
+		public override bool Equals(ISqlExpression? other)
 		{
-			if (this == other)
+			if (ReferenceEquals(this, other))
 				return true;
 
 			if (!(other is SqlGroupingSet otherSet))
@@ -73,7 +61,7 @@ namespace LinqToDB.SqlQuery
 			return true;
 		}
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (this == other)
 				return true;
@@ -93,11 +81,10 @@ namespace LinqToDB.SqlQuery
 			return true;
 		}
 
-		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+		public override	bool CanBeNullable(NullabilityContext nullability) => true;
 
-		public bool  CanBeNull  => true;
-		public int   Precedence => SqlQuery.Precedence.Primary;
-		public Type? SystemType => typeof(object);
+		public override int   Precedence => SqlQuery.Precedence.Primary;
+		public override Type? SystemType => typeof(object);
 
 		public List<ISqlExpression> Items { get; } = new List<ISqlExpression>();
 	}

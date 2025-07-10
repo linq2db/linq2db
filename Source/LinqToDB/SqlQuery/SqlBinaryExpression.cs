@@ -5,7 +5,7 @@ using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlBinaryExpression : SqlExpressionBase
+	public sealed class SqlBinaryExpression : SqlExpressionBase
 	{
 		public SqlBinaryExpression(DbDataType dbDataType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = SqlQuery.Precedence.Unknown)
 		{
@@ -114,12 +114,12 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		public void Deconstruct(out Type systemType, out ISqlExpression expr1, out string operation, out ISqlExpression expr2)
+		public void Deconstruct(out DbDataType type, out ISqlExpression expr1, out string operation, out ISqlExpression expr2)
 		{
-			systemType = SystemType;
-			expr1      = Expr1;
-			operation  = Operation;
-			expr2      = Expr2;
+			type      = Type;
+			expr1     = Expr1;
+			operation = Operation;
+			expr2     = Expr2;
 		}
 
 		public void Deconstruct(out ISqlExpression expr1, out string operation, out ISqlExpression expr2)

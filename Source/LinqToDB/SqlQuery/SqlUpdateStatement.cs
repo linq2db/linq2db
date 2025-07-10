@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlUpdateStatement : SqlStatementWithQueryBase
+	public sealed class SqlUpdateStatement : SqlStatementWithQueryBase
 	{
 		public override QueryType QueryType          => QueryType.Update;
 		public override QueryElementType ElementType => QueryElementType.UpdateStatement;

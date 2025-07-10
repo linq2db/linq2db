@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlWhereClause : ClauseBase<SqlWhereClause>
+	public sealed class SqlWhereClause : ClauseBase<SqlWhereClause>
 	{
 		internal SqlWhereClause(SelectQuery selectQuery) : base(selectQuery)
 		{

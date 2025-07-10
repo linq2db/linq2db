@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlNullabilityExpression : SqlExpressionBase
+	public sealed class SqlNullabilityExpression : SqlExpressionBase
 	{
 		readonly bool           _isNullable;
 		public   ISqlExpression SqlExpression { get; private set; }

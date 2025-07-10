@@ -54,9 +54,9 @@ namespace LinqToDB
 			return builder.AddParameter(name, new SqlValue(value));
 		}
 
-		public static Sql.SqlExtensionParam AddExpression(this Sql.ISqExtensionBuilder builder, string name, string expr)
+		public static Sql.SqlExtensionParam AddFragment(this Sql.ISqExtensionBuilder builder, string name, string expr)
 		{
-			return builder.AddParameter(name, new SqlExpression(expr, Precedence.Primary));
+			return builder.AddParameter(name, new SqlFragment(expr));
 		}
 
 		public static ISqlExpression Add(this Sql.ISqExtensionBuilder builder, ISqlExpression left, ISqlExpression right, Type type)
@@ -205,7 +205,6 @@ namespace LinqToDB
 				Expr             = expr;
 				Precedence       = precedence;
 				ChainPrecedence  = chainPrecedence;
-				IsPredicate      = isPredicate;
 				IsNullable       = isNullable;
 				CanBeNull        = canBeNull;
 				NamedParameters  = parameters.ToLookup(static p => p.Name ?? string.Empty).ToDictionary(static p => p.Key, static p => p.ToList());
@@ -213,12 +212,12 @@ namespace LinqToDB
 				if (isAggregate)      Flags |= SqlFlags.IsAggregate;
 				if (isWindowFunction) Flags |= SqlFlags.IsWindowFunction;
 				if (isPure)           Flags |= SqlFlags.IsPure;
+				if (isPredicate)      Flags |= SqlFlags.IsPredicate;
 			}
 
 			public Type?          SystemType       { get; set; }
 			public string         Expr             { get; set; }
 			public int            Precedence       { get; set; }
-			public bool           IsPredicate      { get; set; }
 			public IsNullableType IsNullable       { get; set; }
 			public bool?          CanBeNull        { get; set; }
 
@@ -227,6 +226,7 @@ namespace LinqToDB
 			public bool IsAggregate      => (Flags & SqlFlags.IsAggregate)      != 0;
 			public bool IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
 			public bool IsPure           => (Flags & SqlFlags.IsPure)           != 0;
+			public bool IsPredicate      => (Flags & SqlFlags.IsPredicate)      != 0;
 
 			public SqlExtensionParam AddParameter(string name, ISqlExpression sqlExpression)
 			{
@@ -464,7 +464,7 @@ namespace LinqToDB
 
 				public ISqlExpression? ConvertToSqlExpression(int precedence)
 				{
-					var converted = BuildSqlExpression(Query, Extension, Extension.SystemType!, precedence,
+					var converted = BuildSqlExpression(Mapping, Query, Extension, Extension.SystemType!, precedence,
 						(Extension.IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |
 						(Extension.IsPure           ? SqlFlags.IsPure           : SqlFlags.None) |
 						(Extension.IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |
@@ -869,7 +869,9 @@ namespace LinqToDB
 				return array.Expressions;
 			}
 
-			public static Expression BuildSqlExpression(SelectQuery query, SqlExtension root, Type systemType, int precedence,
+			public static Expression BuildSqlExpression(
+				MappingSchema mappingSchema,
+				SelectQuery query, SqlExtension root, Type systemType, int precedence,
 				SqlFlags flags, bool? canBeNull, IsNullableType isNullable)
 			{
 				var resolvedParams = new Dictionary<SqlExtensionParam, string?>();
@@ -942,7 +944,7 @@ namespace LinqToDB
 				if (error != null)
 					return error;
 
-				var sqlExpression = new SqlExpression(systemType, expr, precedence, flags,
+				var sqlExpression = new SqlExpression(mappingSchema.GetDbDataType(systemType), expr, precedence, flags,
 					ToParametersNullabilityType(isNullable), canBeNull, newParams.ToArray());
 
 				// Placeholder path will be set later
@@ -1049,7 +1051,7 @@ namespace LinqToDB
 				}
 
 				//TODO: Precedence calculation
-				var res = BuildSqlExpression(query, mainExtension, mainExtension.SystemType,
+				var res = BuildSqlExpression(dataContext.MappingSchema, query, mainExtension, mainExtension.SystemType,
 					mainExtension.Precedence,
 					(isAggregate  ? SqlFlags.IsAggregate      : SqlFlags.None) |
 					(isPure       ? SqlFlags.IsPure           : SqlFlags.None) |

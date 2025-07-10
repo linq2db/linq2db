@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlCompareToExpression : SqlExpressionBase
+	public sealed class SqlCompareToExpression : SqlExpressionBase
 	{
 		public SqlCompareToExpression(ISqlExpression expression1, ISqlExpression expression2)
 		{
