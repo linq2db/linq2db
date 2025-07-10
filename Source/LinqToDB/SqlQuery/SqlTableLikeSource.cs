@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlTableLikeSource : SqlSourceBase
+	public sealed class SqlTableLikeSource : SqlSourceBase
 	{
 		public SqlTableLikeSource()
 		{

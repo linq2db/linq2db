@@ -2,9 +2,8 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlInsertStatement : SqlStatementWithQueryBase
+	public sealed class SqlInsertStatement : SqlStatementWithQueryBase
 	{
-
 		public SqlInsertStatement() : base(null)
 		{
 		}

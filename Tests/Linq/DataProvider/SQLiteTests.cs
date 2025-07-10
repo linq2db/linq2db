@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.Linq;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -16,6 +15,8 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 
 using Tests.Model;
+
+using Binary = System.Data.Linq.Binary;
 
 namespace Tests.DataProvider
 {
@@ -972,5 +973,36 @@ namespace Tests.DataProvider
 			}
 		}
 		#endregion
+
+		[Sql.TableFunction("pragma_table_info")]
+		static ITable<PragmaTableInfoTable> PragmaTableInfo(string tableName) => throw new InvalidOperationException();
+
+		sealed class PragmaTableInfoTable
+		{
+			public string Name { get; set; } = null!;
+		}
+
+		[Table("sqlite_master")]
+		sealed class SQLiteMaster
+		{
+			[Column] public string Name { get; set; } = null!;
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/discussions/4985")]
+		public void CrossApplyJoin([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from sqliteMaster in db.GetTable<SQLiteMaster>()
+						from pragmaTableInfo in PragmaTableInfo(sqliteMaster.Name)
+						select new
+						{
+							TableName = sqliteMaster.Name,
+							PrimaryKeyColumn = pragmaTableInfo.Name
+						};
+
+			_ = query.ToArray();
+		}
 	}
 }

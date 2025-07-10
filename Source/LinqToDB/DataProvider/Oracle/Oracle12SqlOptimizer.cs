@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			if (statement.IsUpdate() || statement.IsInsert() || statement.IsDelete())
-				statement = ReplaceTakeSkipWithRowNum(statement, false);
+				statement = ReplaceTakeSkipWithRowNum(statement, mappingSchema, false);
 
 			return statement;
 		}

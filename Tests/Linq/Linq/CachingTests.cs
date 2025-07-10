@@ -25,8 +25,8 @@ namespace Tests.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				builder.AddExpression("funcName",  builder.GetValue<string>("funcName"));
-				builder.AddExpression("fieldName", builder.GetValue<string>("fieldName"));
+				builder.AddFragment("funcName",  builder.GetValue<string>("funcName"));
+				builder.AddFragment("fieldName", builder.GetValue<string>("fieldName"));
 			}
 		}
 

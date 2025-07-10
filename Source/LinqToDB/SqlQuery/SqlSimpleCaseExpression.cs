@@ -6,7 +6,7 @@ using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSimpleCaseExpression : SqlExpressionBase
+	public sealed class SqlSimpleCaseExpression : SqlExpressionBase
 	{
 		public class CaseExpression
 		{
