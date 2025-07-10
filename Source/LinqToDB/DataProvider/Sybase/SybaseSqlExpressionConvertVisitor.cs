@@ -68,15 +68,15 @@ namespace LinqToDB.DataProvider.Sybase
 				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
-					SystemType: var type,
+					Type: var type,
 				}:
 					return Add<int>(
-						new SqlFunction(func.SystemType, "CharIndex",
+						new SqlFunction(type, "CharIndex",
 							p0,
-							new SqlFunction(typeof(string), "Substring",
+							new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Substring",
 								p1,
 								p2,
-								new SqlFunction(typeof(int), "Len", p1))),
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "Len", p1))),
 						Sub(p2, 1));
 
 				case {

@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlDropTableStatement : SqlStatement
+	public sealed class SqlDropTableStatement : SqlStatement
 	{
 		public SqlDropTableStatement(SqlTable table)
 		{

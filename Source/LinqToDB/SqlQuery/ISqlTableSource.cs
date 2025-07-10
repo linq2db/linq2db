@@ -2,7 +2,6 @@
 
 namespace LinqToDB.SqlQuery
 {
-
 	// TODO: [sdanyliv] ISqlTableSource why it extends ISqlExpression?
 	public interface ISqlTableSource : ISqlExpression
 	{

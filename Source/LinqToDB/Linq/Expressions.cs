@@ -1461,18 +1461,18 @@ namespace LinqToDB.Linq
 				if (chars == null || chars.Length == 0)
 				{
 					builder.ResultExpression = new SqlFunction(
-						typeof(string),
+						builder.Mapping.GetDbDataType(typeof(string)),
 						(string)"LTRIM",
 						stringExpression);
 					return;
 				}
 
 				builder.ResultExpression = new SqlExpression(
-					typeof(string),
+					builder.Mapping.GetDbDataType(typeof(string)),
 					builder.Expression,
 					Precedence.Primary,
 					stringExpression,
-					new SqlExpression(typeof(string), "{0}", new SqlValue(new string(chars))));
+					new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "{0}", new SqlValue(new string(chars))));
 			}
 		}
 
@@ -1485,7 +1485,7 @@ namespace LinqToDB.Linq
 				if (chars == null || chars.Length == 0)
 				{
 					builder.ResultExpression = new SqlExpression(
-						typeof(string),
+						builder.Mapping.GetDbDataType(typeof(string)),
 						"TRIM(TRAILING FROM {0})",
 						stringExpression);
 					return;
@@ -1497,7 +1497,7 @@ namespace LinqToDB.Linq
 				foreach (var c in chars)
 				{
 					result = new SqlExpression(
-						typeof(string),
+						builder.Mapping.GetDbDataType(typeof(string)),
 						builder.Expression,
 						Precedence.Primary,
 						result,
@@ -1517,18 +1517,18 @@ namespace LinqToDB.Linq
 				if (chars == null || chars.Length == 0)
 				{
 					builder.ResultExpression = new SqlFunction(
-						typeof(string),
+						builder.Mapping.GetDbDataType(typeof(string)),
 						"RTRIM",
 						stringExpression);
 					return;
 				}
 
 				builder.ResultExpression = new SqlExpression(
-					typeof(string),
+					builder.Mapping.GetDbDataType(typeof(string)),
 					builder.Expression,
 					Precedence.Primary,
 					stringExpression,
-					new SqlExpression(typeof(string), "{0}", Precedence.Primary, new SqlValue(new string(chars))));
+					new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "{0}", Precedence.Primary, new SqlValue(new string(chars))));
 			}
 		}
 
@@ -1541,7 +1541,7 @@ namespace LinqToDB.Linq
 				if (chars == null || chars.Length == 0)
 				{
 					builder.ResultExpression = new SqlFunction(
-						typeof(string),
+						builder.Mapping.GetDbDataType(typeof(string)),
 						"RTRIM",
 						stringExpression);
 				}

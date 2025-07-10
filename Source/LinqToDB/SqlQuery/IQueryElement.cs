@@ -6,7 +6,7 @@
 	public interface IQueryElement
 	{
 #if DEBUG
-		public string DebugText { get; }
+		string DebugText { get; }
 #endif
 		/// <summary>
 		/// AST node type.

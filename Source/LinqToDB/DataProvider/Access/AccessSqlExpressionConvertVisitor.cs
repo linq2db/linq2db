@@ -62,7 +62,8 @@ namespace LinqToDB.DataProvider.Access
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr",
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(int)),
+									"InStr",
 									new SqlValue(1),
 									predicate.Expr1,
 									predicate.Expr2,
@@ -83,7 +84,8 @@ namespace LinqToDB.DataProvider.Access
 
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr",
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(int)),
+									"InStr",
 									indexExpr,
 									predicate.Expr1,
 									predicate.Expr2,
@@ -97,7 +99,8 @@ namespace LinqToDB.DataProvider.Access
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr",
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(int)),
+									"InStr",
 									new SqlValue(1),
 									predicate.Expr1,
 									predicate.Expr2,
@@ -157,14 +160,14 @@ namespace LinqToDB.DataProvider.Access
 				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],
-					SystemType: var type,
+					Type: var type,
 				}:
 					return new SqlFunction(type, "InStr", new SqlValue(1), p1, p0, new SqlValue(1));
 
 				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
-					SystemType: var type,
+					Type: var type,
 				}:
 					return new SqlFunction(type, "InStr", p2, p1, p0, new SqlValue(1));
 
@@ -201,7 +204,7 @@ namespace LinqToDB.DataProvider.Access
 			if (!string.IsNullOrEmpty(funcName))
 			{
 				var isNotNull = new SqlPredicate.IsNull(expression, true);
-				var funcCall = new SqlFunction(cast.Type, funcName, false, true, Precedence.Primary, nullabilityType : ParametersNullabilityType.NotNullable, canBeNull : false, expression);
+				var funcCall = new SqlFunction(cast.Type, funcName, parametersNullability: ParametersNullabilityType.NotNullable, canBeNull : false, expression);
 				return new SqlConditionExpression(isNotNull, funcCall, new SqlValue(cast.Type, null));
 			}
 

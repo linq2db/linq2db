@@ -7,54 +7,54 @@ namespace LinqToDB.Linq.Translation
 {
 	public static class SqlExpressionFactoryExtensions
 	{
-		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] parameters)
+		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, string fragmentText, params ISqlExpression[] parameters)
 		{
-			return factory.Fragment(dataType, Precedence.Primary, fragmentText, null, parameters);
+			return new SqlFragment(fragmentText, parameters);
 		}
 
-		public static ISqlExpression NotNullFragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] parameters)
+		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, string fragmentText, int precedence, params ISqlExpression[] parameters)
 		{
-			return factory.NotNullFragment(dataType, Precedence.Primary, fragmentText, parameters);
+			return new SqlFragment(fragmentText, precedence, parameters);
 		}
 
-		public static ISqlExpression NonPureFragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] parameters)
+		public static ISqlExpression Expression(this ISqlExpressionFactory factory, DbDataType dataType, string expr, params ISqlExpression[] parameters)
 		{
-			return new SqlExpression(dataType.SystemType, fragmentText, Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, null, parameters);
+			return factory.Expression(dataType, Precedence.Primary, expr, null, parameters);
 		}
 
-		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, params ISqlExpression[] parameters)
+		public static ISqlExpression NotNullExpression(this ISqlExpressionFactory factory, DbDataType dataType, string expr, params ISqlExpression[] parameters)
 		{
-			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.Undefined, null, parameters);
+			return factory.NotNullExpression(dataType, Precedence.Primary, expr, parameters);
 		}
 
-		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, bool? canBeNull, params ISqlExpression[] parameters)
+		public static ISqlExpression NonPureExpression(this ISqlExpressionFactory factory, DbDataType dataType, string expr, params ISqlExpression[] parameters)
 		{
-			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.Undefined, canBeNull, parameters);
+			return new SqlExpression(dataType, expr, Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, null, parameters);
 		}
 
-		public static ISqlExpression NotNullFragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, params ISqlExpression[] parameters)
+		public static ISqlExpression Expression(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string expr, params ISqlExpression[] parameters)
 		{
-			return new SqlExpression(dataType.SystemType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.NotNullable, null, parameters);
+			return new SqlExpression(dataType, expr, precedence, SqlFlags.None, parameters);
 		}
 
-		public static ISqlExpression Function(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, params ISqlExpression[] parameters)
+		public static ISqlExpression Expression(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string expr, bool? canBeNull, params ISqlExpression[] parameters)
 		{
-			return new SqlFunction(dataType, functionName, parameters);
+			return new SqlExpression(dataType, expr, precedence, SqlFlags.None, canBeNull, parameters);
+		}
+
+		public static ISqlExpression NotNullExpression(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string expr, params ISqlExpression[] parameters)
+		{
+			return new SqlExpression(dataType, expr, precedence, SqlFlags.None, ParametersNullabilityType.NotNullable, parameters);
+		}
+
+		public static ISqlExpression Function(this ISqlExpressionFactory factory, DbDataType type, string functionName, params ISqlExpression[] parameters)
+		{
+			return new SqlFunction(type, functionName, parameters);
 		}
 
 		public static ISqlExpression Function(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, ParametersNullabilityType parametersNullability, params ISqlExpression[] parameters)
 		{
 			return new SqlFunction(dataType, functionName, parametersNullability, parameters);
-		}
-
-		public static ISqlPredicate ExprPredicate(this ISqlExpressionFactory factory, ISqlExpression expression)
-		{
-			return new SqlPredicate.Expr(expression);
-		}
-
-		public static ISqlPredicate IsNullPredicate(this ISqlExpressionFactory factory, ISqlExpression expression, bool isNot = false)
-		{
-			return new SqlPredicate.IsNull(expression, isNot);
 		}
 
 		public static SqlSearchCondition SearchCondition(this ISqlExpressionFactory factory, bool isOr = false)
@@ -64,7 +64,7 @@ namespace LinqToDB.Linq.Translation
 
 		public static ISqlExpression NonPureFunction(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, params ISqlExpression[] parameters)
 		{
-			return new SqlFunction(dataType, functionName, false, false, parameters);
+			return new SqlFunction(dataType, functionName, SqlFlags.None, parameters);
 		}
 
 		public static ISqlExpression Value<T>(this ISqlExpressionFactory factory, DbDataType dataType, T value)
@@ -85,6 +85,11 @@ namespace LinqToDB.Linq.Translation
 		public static ISqlExpression Cast(this ISqlExpressionFactory factory, ISqlExpression expression, DbDataType toDbDataType, bool isMandatory = false)
 		{
 			return new SqlCastExpression(expression, toDbDataType, null, isMandatory);
+		}
+
+		public static ISqlExpression Cast(this ISqlExpressionFactory factory, ISqlExpression expression, DbDataType toDbDataType, SqlDataType? fromType, bool isMandatory = false)
+		{
+			return new SqlCastExpression(expression, toDbDataType, fromType, isMandatory);
 		}
 
 		public static ISqlExpression Div(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
@@ -229,6 +234,16 @@ namespace LinqToDB.Linq.Translation
 			return factory.Cast(expression, dbDataType);
 		}
 
+		public static SqlDataType SqlDataType(this ISqlExpressionFactory factory, DbDataType type)
+		{
+			return new SqlDataType(type);
+		}
+
+		public static SqlDataType SqlDataType(this ISqlExpressionFactory factory, DataType dataType)
+		{
+			return new SqlDataType(dataType);
+		}
+
 		#region String functions
 
 		public static ISqlExpression ToLower(this ISqlExpressionFactory factory, ISqlExpression expression)
@@ -255,6 +270,26 @@ namespace LinqToDB.Linq.Translation
 		#endregion
 
 		#region Predicates
+
+		public static ISqlPredicate ExprPredicate(this ISqlExpressionFactory factory, ISqlExpression expression)
+		{
+			return new SqlPredicate.Expr(expression);
+		}
+
+		public static ISqlPredicate IsNullPredicate(this ISqlExpressionFactory factory, ISqlExpression expression, bool isNot = false)
+		{
+			return new SqlPredicate.IsNull(expression, isNot);
+		}
+
+		public static SqlPredicate.Like LikePredicate(this ISqlExpressionFactory factory, ISqlExpression value, bool isNull, ISqlExpression template, ISqlExpression? escape = null, string? functionName = null)
+		{
+			return new SqlPredicate.Like(value, isNull, template, escape, functionName);
+		}
+
+		public static ISqlPredicate Equal(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2, bool? unknownValue)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Equal, expr2, unknownValue);
+		}
 
 		public static ISqlPredicate Equal(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
 		{

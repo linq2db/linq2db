@@ -99,8 +99,8 @@ namespace LinqToDB.Linq.Translation
 			}
 
 			return translationContext.CreatePlaceholder(
-				translationContext.CurrentSelectQuery, 
-				new SqlCastExpression(objPlaceholder.Sql, toType, null), 
+				translationContext.CurrentSelectQuery,
+				translationContext.ExpressionFactory.Cast(objPlaceholder.Sql, toType),
 				methodCall);
 		}
 
@@ -243,10 +243,10 @@ namespace LinqToDB.Linq.Translation
 			}
 			else
 			{
-				defaultValueExpression = new SqlValue(argumentType, translationContext.MappingSchema.GetDefaultValue(argumentType.SystemType.ToNullableUnderlying()));
+				defaultValueExpression = factory.Value(argumentType, translationContext.MappingSchema.GetDefaultValue(argumentType.SystemType.ToNullableUnderlying()));
 			}
 
-			var caseExpression = new SqlConditionExpression(new SqlPredicate.IsNull(sqlExpression, true), sqlExpression, defaultValueExpression);
+			var caseExpression = factory.Condition(factory.IsNull(sqlExpression, true), sqlExpression, defaultValueExpression);
 
 			translated = translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, caseExpression, methodCall);
 
@@ -255,12 +255,12 @@ namespace LinqToDB.Linq.Translation
 
 		protected virtual ISqlExpression? TranslateConvertToBoolean(ITranslationContext translationContext, ISqlExpression sqlExpression, TranslationFlags translationFlags)
 		{
-			var sc = new SqlSearchCondition();
-			var predicate = new SqlPredicate
-				.ExprExpr(
+			var factory = translationContext.ExpressionFactory;
+
+			var sc = factory.SearchCondition();
+			var predicate = factory.Equal(
 					sqlExpression,
-					SqlPredicate.Operator.Equal,
-					new SqlValue(0),
+					factory.Value(0),
 					translationContext.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null)
 				.MakeNot();
 

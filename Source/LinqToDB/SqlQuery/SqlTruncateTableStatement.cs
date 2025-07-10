@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlTruncateTableStatement : SqlStatement
+	public sealed class SqlTruncateTableStatement : SqlStatement
 	{
 		public SqlTable? Table         { get; set; }
 		public bool      ResetIdentity { get; set; }

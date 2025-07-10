@@ -15,7 +15,7 @@ using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SelectQueryOptimizerVisitor : SqlQueryVisitor
+	public sealed class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
 		SqlProviderFlags  _providerFlags     = default!;
 		DataOptions       _dataOptions       = default!;
@@ -1044,8 +1044,8 @@ namespace LinqToDB.SqlQuery
 
 					rnBuilder.Append(')');
 
-					rnExpression = new SqlExpression(typeof(long), rnBuilder.ToString(), Precedence.Primary,
-						SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null, parameters.ToArray());
+					rnExpression = new SqlExpression(_mappingSchema.GetDbDataType(typeof(long)), rnBuilder.ToString(), Precedence.Primary,
+						SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, parameters.ToArray());
 				}
 
 				var whereToIgnore = new List<IQueryElement> { sql.Where, sql.Select };
@@ -2586,10 +2586,8 @@ namespace LinqToDB.SqlQuery
 										}
 									}
 
-									if (testedColumn.Expression is SqlFunction function)
+									if (QueryHelper.IsAggregationFunction(testedColumn.Expression))
 									{
-										if (function.IsAggregate)
-										{
 											if (!_providerFlags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
 											{
 												if (_providerFlags.IsApplyJoinSupported)
@@ -2611,7 +2609,6 @@ namespace LinqToDB.SqlQuery
 												isValid = false;
 												break;
 											}
-										}
 									}
 								}
 

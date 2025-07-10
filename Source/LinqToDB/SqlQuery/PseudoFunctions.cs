@@ -1,4 +1,5 @@
 ﻿using LinqToDB.Common;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
@@ -13,20 +14,18 @@ namespace LinqToDB.SqlQuery
 		/// Function to convert text parameter to lowercased form: <c>TO_LOWER(string)</c>
 		/// </summary>
 		public const string TO_LOWER = "$ToLower$";
-		public static SqlFunction MakeToLower(ISqlExpression value)
+		public static SqlFunction MakeToLower(ISqlExpression value, MappingSchema mappingSchema)
 		{
-			return new SqlFunction(typeof(string), TO_LOWER, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAnyParameterNullable, null, value);
+			return new SqlFunction(mappingSchema.GetDbDataType(typeof(string)), TO_LOWER, value);
 		}
 
 		/// <summary>
 		/// Function to convert text parameter to uppercased form: <c>TO_UPPER(string)</c>
 		/// </summary>
 		public const string TO_UPPER = "$ToUpper$";
-		public static SqlFunction MakeToUpper(ISqlExpression value)
+		public static SqlFunction MakeToUpper(ISqlExpression value, MappingSchema mappingSchema)
 		{
-			return new SqlFunction(typeof(string), TO_UPPER, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAnyParameterNullable, null, value);
+			return new SqlFunction(mappingSchema.GetDbDataType(typeof(string)), TO_UPPER, value);
 		}
 
 		/// <summary>
@@ -57,10 +56,7 @@ namespace LinqToDB.SqlQuery
 		public const string TRY_CONVERT = "$TryConvert$";
 		public static SqlFunction MakeTryConvert(SqlDataType toType, SqlDataType fromType, ISqlExpression value)
 		{
-			return new SqlFunction(toType.SystemType, TRY_CONVERT, false, true, toType, fromType, value)
-			{
-				CanBeNull = true
-			};
+			return new SqlFunction(toType.Type, TRY_CONVERT, canBeNull: true, toType, fromType, value);
 		}
 
 		/// <summary>
@@ -70,18 +66,16 @@ namespace LinqToDB.SqlQuery
 		public const string TRY_CONVERT_OR_DEFAULT = "$TryConvertOrDefault$";
 		public static SqlFunction MakeTryConvertOrDefault(SqlDataType toType, SqlDataType fromType, ISqlExpression value, ISqlExpression defaultValue)
 		{
-			return new SqlFunction(toType.SystemType, TRY_CONVERT_OR_DEFAULT, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAnyParameterNullable, null, toType, fromType, value, defaultValue);
+			return new SqlFunction(toType.Type, TRY_CONVERT_OR_DEFAULT, toType, fromType, value, defaultValue);
 		}
 
 		/// <summary>
 		/// Function to replace one text fragment with another in string: <c>REPLACE(value, oldSubstring, newSubstring)</c>
 		/// </summary>
 		public const string REPLACE = "$Replace$";
-		public static SqlFunction MakeReplace(ISqlExpression value, ISqlExpression oldSubstring, ISqlExpression newSubstring)
+		public static SqlFunction MakeReplace(ISqlExpression value, ISqlExpression oldSubstring, ISqlExpression newSubstring, MappingSchema mappingSchema)
 		{
-			return new SqlFunction(typeof(string), REPLACE, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAnyParameterNullable, null, value, oldSubstring, newSubstring);
+			return new SqlFunction(mappingSchema.GetDbDataType(typeof(string)), REPLACE, value, oldSubstring, newSubstring);
 		}
 
 		/// <summary>
@@ -90,18 +84,16 @@ namespace LinqToDB.SqlQuery
 		public const string REMOVE_CONVERT = "$Convert_Remover$";
 		public static SqlFunction MakeRemoveConvert(ISqlExpression value, SqlDataType resultType)
 		{
-			return new SqlFunction(resultType.SystemType, REMOVE_CONVERT, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAnyParameterNullable, null, value, resultType);
+			return new SqlFunction(resultType.Type, REMOVE_CONVERT, value, resultType);
 		}
 
 		/// <summary>
 		/// Function for calculating length of string: <c>LENGTH(value)</c>
 		/// </summary>
 		public const string LENGTH = "$Length$";
-		public static SqlFunction MakeLength(ISqlExpression value)
+		public static SqlFunction MakeLength(ISqlExpression value, MappingSchema mappingSchema)
 		{
-			return new SqlFunction(typeof(int), LENGTH, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAnyParameterNullable, null, value);
+			return new SqlFunction(mappingSchema.GetDbDataType(typeof(int)), LENGTH, value);
 		}
 
 	}

@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlConditionExpression : SqlExpressionBase
+	public sealed class SqlConditionExpression : SqlExpressionBase
 	{
 		public SqlConditionExpression(ISqlPredicate condition, ISqlExpression trueValue, ISqlExpression falseValue)
 		{
@@ -64,12 +64,12 @@ namespace LinqToDB.SqlQuery
 
 				if (isNullPredicate.IsNot)
 				{
-					if (unwrapped.Equals(TrueValue, SqlExpression.DefaultComparer) && !FalseValue.CanBeNullable(nullability))
+					if (unwrapped.Equals(TrueValue, SqlExtensions.DefaultComparer) && !FalseValue.CanBeNullable(nullability))
 					{
 						return false;
 					}
 				}
-				else if (unwrapped.Equals(FalseValue, SqlExpression.DefaultComparer) && !TrueValue.CanBeNullable(nullability))
+				else if (unwrapped.Equals(FalseValue, SqlExtensions.DefaultComparer) && !TrueValue.CanBeNullable(nullability))
 				{
 					return false;
 				}

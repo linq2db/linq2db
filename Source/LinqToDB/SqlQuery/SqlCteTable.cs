@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlCteTable : SqlTable
+	public sealed class SqlCteTable : SqlTable
 	{
 		public CteClause? Cte { get; set; }
 
