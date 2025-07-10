@@ -726,7 +726,7 @@ namespace LinqToDB.Linq.Translation
 		protected virtual ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			var factory       = translationContext.ExpressionFactory;
-			var currentTimeStamp = factory.NotNullFragment(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
+			var currentTimeStamp = factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
 			return currentTimeStamp;
 		}
 

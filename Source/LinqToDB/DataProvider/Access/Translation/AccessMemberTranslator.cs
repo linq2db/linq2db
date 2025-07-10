@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.Access.Translation
 				if (partStr == null)
 					return null;
 
-				var resultExpression = factory.Function(factory.GetDbDataType(typeof(int)), "DatePart", new SqlValue(typeof(string), partStr), dateTimeExpression);
+				var resultExpression = factory.Function(factory.GetDbDataType(typeof(int)), "DatePart", factory.Value(partStr), dateTimeExpression);
 
 				return resultExpression;
 			}
@@ -164,7 +164,7 @@ namespace LinqToDB.DataProvider.Access.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory       = translationContext.ExpressionFactory;
-				var nowExpression = factory.NotNullFragment(factory.GetDbDataType(typeof(DateTime)), "Now");
+				var nowExpression = factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "Now");
 				return nowExpression;
 			}
 		}

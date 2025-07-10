@@ -22,8 +22,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServerSqlExpressionConvertVisitor(allowModify, SQLVersion);
 		}
 
-		protected SqlStatement ReplaceSkipWithRowNumber(SqlStatement statement)
-			=> ReplaceTakeSkipWithRowNumber((object?)null, statement, static (_, query) => query.Select.SkipValue != null, false);
+		protected SqlStatement ReplaceSkipWithRowNumber(SqlStatement statement, MappingSchema mappingSchema)
+			=> ReplaceTakeSkipWithRowNumber((object?)null, statement, mappingSchema, static (_, query) => query.Select.SkipValue != null, false);
 
 		protected SqlStatement WrapRootTakeSkipOrderBy(SqlStatement statement)
 		{

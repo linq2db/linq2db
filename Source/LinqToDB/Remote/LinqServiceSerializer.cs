@@ -879,14 +879,12 @@ namespace LinqToDB.Remote
 						{
 							var elem = (SqlFunction)e;
 
-							Append(elem.SystemType);
+							Append(elem.Type);
 							Append(elem.Name);
-							Append(elem.IsAggregate);
-							Append(elem.IsPure);
-							Append(elem.Precedence);
-							Append(elem.Parameters);
+							Append((int)elem.Flags);
 							Append((int)elem.NullabilityType);
 							Append(elem.CanBeNullNullable);
+							Append(elem.Parameters);
 							Append(elem.DoNotOptimize);
 
 							break;
@@ -925,7 +923,7 @@ namespace LinqToDB.Remote
 						{
 							var elem = (SqlExpression)e;
 
-							Append(elem.SystemType);
+							Append(elem.Type);
 							Append(elem.Expr);
 							Append(elem.Precedence);
 							Append((int)elem.Flags);
@@ -1497,6 +1495,17 @@ namespace LinqToDB.Remote
 					case QueryElementType.GroupingSet   : Append(((SqlGroupingSet)e).Items);             break;
 					case QueryElementType.OrderByClause : Append(((SqlOrderByClause)e).Items);           break;
 
+					case QueryElementType.SqlFragment:
+					{
+						var elem = (SqlFragment)e;
+
+						Append(elem.Expr);
+						Append(elem.Precedence);
+						Append(elem.Parameters);
+
+						break;
+					}
+
 					case QueryElementType.OrderByItem :
 						{
 							var elem = (SqlOrderByItem)e;
@@ -1858,17 +1867,15 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.SqlFunction :
 						{
-							var systemType    = ReadType()!;
+							var dbDataType    = ReadDbDataType();
 							var name          = ReadString()!;
-							var isAggregate   = ReadBool();
-							var isPure        = ReadBool();
-							var precedence    = ReadInt();
-							var parameters    = ReadArray<ISqlExpression>()!;
+							var flags         = (SqlFlags)ReadInt();
 							var nullability   = (ParametersNullabilityType)ReadInt();
 							var canBeNull     = ReadNullableBool();
+							var parameters    = ReadArray<ISqlExpression>()!;
 							var doNotOptimize = ReadBool();
 
-							obj = new SqlFunction(systemType, name, isAggregate, isPure, precedence, nullability, canBeNull, parameters)
+						obj = new SqlFunction(dbDataType, name, flags, nullability, canBeNull, parameters)
 							{
 								DoNotOptimize = doNotOptimize
 							};
@@ -1896,7 +1903,7 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.SqlExpression :
 						{
-							var systemType  = ReadType();
+							var dbDataType  = ReadDbDataType();
 							var expr        = ReadString()!;
 							var precedence  = ReadInt();
 							var flags       = (SqlFlags)ReadInt();
@@ -1904,7 +1911,7 @@ namespace LinqToDB.Remote
 							var canBeNull   = ReadNullableBool();
 							var parameters  = ReadArray<ISqlExpression>()!;
 
-							obj = new SqlExpression(systemType, expr, precedence, flags, nullability, canBeNull, parameters);
+							obj = new SqlExpression(dbDataType, expr, precedence, flags, nullability, canBeNull, parameters);
 
 							break;
 						}
@@ -2555,6 +2562,17 @@ namespace LinqToDB.Remote
 					case QueryElementType.GroupByClause : obj = new SqlGroupByClause((GroupingType)ReadInt(), ReadArray<ISqlExpression>()!); break;
 					case QueryElementType.GroupingSet   : obj = new SqlGroupingSet  (ReadArray<ISqlExpression>()!);                          break;
 					case QueryElementType.OrderByClause : obj = new SqlOrderByClause(ReadArray<SqlOrderByItem>()!);                break;
+
+					case QueryElementType.SqlFragment:
+					{
+						var expr       = ReadString()!;
+						var precedence = ReadInt();
+						var parameters = ReadArray<ISqlExpression>()!;
+
+						obj = new SqlFragment(expr, precedence, parameters);
+
+						break;
+					}
 
 					case QueryElementType.OrderByItem :
 						{

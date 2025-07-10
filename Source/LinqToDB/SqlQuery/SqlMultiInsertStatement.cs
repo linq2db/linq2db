@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlMultiInsertStatement : SqlStatement
+	public sealed class SqlMultiInsertStatement : SqlStatement
 	{
 		public SqlTableLikeSource               Source     { get; private  set; }
 		public List<SqlConditionalInsertClause> Inserts    { get; private  set; }

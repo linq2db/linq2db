@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlDeleteStatement : SqlStatementWithQueryBase
+	public sealed class SqlDeleteStatement : SqlStatementWithQueryBase
 	{
 		public SqlDeleteStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{

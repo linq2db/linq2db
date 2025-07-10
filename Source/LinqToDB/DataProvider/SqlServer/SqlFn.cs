@@ -157,7 +157,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
 				var dataType = builder.GetObjectValue("data_type");
-				builder.AddExpression("data_type", dataType is SqlType ? string.Format(CultureInfo.InvariantCulture, "{0}", dataType) : ((Func<SqlType>)dataType)().ToString());
+				builder.AddFragment("data_type", dataType is SqlType ? string.Format(CultureInfo.InvariantCulture, "{0}", dataType) : ((Func<SqlType>)dataType)().ToString());
 			}
 		}
 
@@ -744,7 +744,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
 				var datepart = builder.GetValue<DateParts>("datepart");
-				builder.AddExpression("datepart", datepart.ToString());
+				builder.AddFragment("datepart", datepart.ToString());
 			}
 		}
 
@@ -2291,7 +2291,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				builder.AddExpression("sequence_name", builder.GetValue<string>("sequence_name"));
+				builder.AddFragment("sequence_name", builder.GetValue<string>("sequence_name"));
 			}
 		}
 
@@ -3269,8 +3269,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var dataType = builder.GetValue<string>("collation_name");
-				builder.AddExpression("collation_name", dataType);
+				var collationName = builder.GetValue<string>("collation_name");
+				builder.AddFragment("collation_name", collationName);
 			}
 		}
 
@@ -3764,11 +3764,11 @@ namespace LinqToDB.DataProvider.SqlServer
 					var prop = props[i];
 
 					ps[i] = prop.ParameterType == typeof(T)
-						? new SqlExpression('\'' + builder.GetValue<T>(prop.Name!)?.ToString() + '\'', Precedence.Primary)
+						? new SqlExpression(builder.Mapping.GetDbDataType(prop.ParameterType), '\'' + builder.GetValue<T>(prop.Name!)?.ToString() + '\'', Precedence.Primary)
 						: builder.GetExpression(prop.Name!)!;
 				}
 
-				builder.ResultExpression = new SqlFunction(method.ReturnType, builder.Expression, ps);
+				builder.ResultExpression = new SqlFunction(builder.Mapping.GetDbDataType(method.ReturnType), builder.Expression, ps);
 			}
 		}
 	}

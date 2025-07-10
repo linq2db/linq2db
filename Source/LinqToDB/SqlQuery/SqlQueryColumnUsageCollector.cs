@@ -6,7 +6,7 @@ using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlQueryColumnUsageCollector : SqlQueryVisitor
+	public sealed class SqlQueryColumnUsageCollector : SqlQueryVisitor
 	{
 		SelectQuery?                _parentSelectQuery;
 		bool                        _isCteQuery;

@@ -7,7 +7,7 @@ using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlQueryOrderByOptimizer : SqlQueryVisitor
+	public sealed class SqlQueryOrderByOptimizer : SqlQueryVisitor
 	{
 		SqlProviderFlags _providerFlags = default!;
 		bool             _disableOrderBy;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlUpdateClause : IQueryElement
+	public sealed class SqlUpdateClause : QueryElement
 	{
 		public List<SqlSetExpression> Items         { get; set; } = new();
 		public List<SqlSetExpression> Keys          { get; set; } = new();
@@ -17,28 +17,11 @@ namespace LinqToDB.SqlQuery
 			TableSource = tableSource;
 		}
 
-		#region Overrides
-
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
-		#endregion
-
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
+		public override QueryElementType ElementType => QueryElementType.UpdateClause;
 
-		public QueryElementType ElementType => QueryElementType.UpdateClause;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer
 				.Append('\t');
@@ -63,7 +46,7 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public int GetElementHashCode()
+		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
 			foreach (var item in Items)

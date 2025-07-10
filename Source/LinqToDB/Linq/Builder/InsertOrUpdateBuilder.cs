@@ -129,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 				if (Builder.DataContext.SqlProviderFlags.IsInsertOrUpdateSupported)
 					QueryRunner.SetNonQueryQuery(query);
 				else
-					QueryRunner.MakeAlternativeInsertOrUpdate(query);
+					QueryRunner.MakeAlternativeInsertOrUpdate(Builder.DataContext.MappingSchema, query);
 			}
 
 			public override SqlStatement GetResultStatement()
