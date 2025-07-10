@@ -11,8 +11,11 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -824,6 +827,25 @@ namespace Tests.Linq
 						.Where(x5 => x5.Parent.ParentID == 1 && x5.Parent.Value1 != null)
 						.OrderBy(x6 => x6.Parent.ParentID));
 		}
+
+		[Test]
+		public void LeftJoinRemoval([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = 
+				from p in db.Parent
+				from ch in db.Child.Where(ch => p.ParentID == ch.ParentID).DefaultIfEmpty()
+				from ch1 in db.Child.Where(ch1 => ch.ChildID == ch1.ChildID)
+				select ch1;
+
+			var ts = query.GetTableSource();
+
+			ts.Joins.ShouldAllBe(j => j.JoinType == JoinType.Inner);
+
+			AssertQuery(query);
+		}
+
 
 		[Table("Child")]
 		public class CountedChild

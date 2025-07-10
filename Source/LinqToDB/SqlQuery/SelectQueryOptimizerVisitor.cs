@@ -2116,73 +2116,133 @@ namespace LinqToDB.SqlQuery
 		/// <returns></returns>
 		bool CorrectLeftJoins(SelectQuery selectQuery)
 		{
-			if (selectQuery.Where.IsEmpty || selectQuery.Where.SearchCondition.IsOr || selectQuery.Where.SearchCondition.Predicates.Count > 100)
-			{
-				return false;
-			}
-
-			var leftJoins = selectQuery.Select.From.Tables.SelectMany(t => t.Joins)
-				.Where(j => j.JoinType == JoinType.Left)
+			var joins = selectQuery.Select.From.Tables.SelectMany(t => t.Joins)
+				.Where(j => j.JoinType is JoinType.Left or JoinType.Inner)
 				.ToList();
 
-			if (leftJoins.Count == 0)
+			if (joins.Count == 0)
 				return false;
 
-			var isModified = false;
+			var isModified  = false;
+			var nullability = NullabilityContext.GetContext(selectQuery);
 
-			foreach (var predicate in selectQuery.Where.SearchCondition.Predicates)
+			for (var i = 0; i < joins.Count; i++)
 			{
-				ISqlTableSource? source = null;
+				var join = joins[i];
+				if (join.JoinType != JoinType.Left)
+					continue;
 
-				if (predicate is SqlPredicate.IsNull isNullPredicate)
+				var hasStrictCondition = IsStrictCondition(nullability, selectQuery.Where.SearchCondition, join.Table.Source);
+				if (!hasStrictCondition)
 				{
-					if (isNullPredicate.IsNot)
+					for (var j = i + 1; j < joins.Count; j++)
 					{
-						source = ExtractSource(isNullPredicate.Expr1);
-						if (source != null)
+						var nextJoin = joins[j];
+						if (nextJoin.JoinType == JoinType.Inner)
 						{
-							var nullability = NullabilityContext.GetContext(source as SelectQuery);
-							if (nullability.CanBeNull(isNullPredicate.Expr1))
+							if (IsStrictCondition(nullability, nextJoin.Condition, join.Table.Source))
 							{
-								source = null; // cannot convert to inner join if source is nullable
-							}
-						}
-					}
-				}
-				else if (predicate is SqlPredicate.ExprExpr exprExPredicate)
-				{
-					if (exprExPredicate.Operator == SqlPredicate.Operator.Equal)
-					{
-						source = ExtractSource(exprExPredicate.Expr1) ?? ExtractSource(exprExPredicate.Expr2);
-						if (source != null)
-						{
-							if (!(exprExPredicate.Expr1 is SqlValue { Value: not null } || exprExPredicate.Expr2 is SqlValue { Value: not null }))
-							{
-								source = null;
+								//throw new InvalidOperationException("Test");
+								hasStrictCondition = true;
+								break;
 							}
 						}
 					}
 				}
 
-				if (source != null)
+				if (hasStrictCondition)
 				{
-					var foundJoin = leftJoins.FirstOrDefault(j => j.Table.Source == source);
-					if (foundJoin != null)
-					{
-						leftJoins.Remove(foundJoin);
-						foundJoin.JoinType = JoinType.Inner;
-						foundJoin.IsWeak   = false;
-						isModified         = true;
-
-						if (leftJoins.Count == 0)
-							break;
-					}
+					join.JoinType = JoinType.Inner;
+					join.IsWeak   = false;
+					isModified    = true;
+					// reset nullability
+					nullability = NullabilityContext.GetContext(selectQuery);
 				}
+
 			}
 
 			return isModified;
+		}
 
-			ISqlTableSource? ExtractSource(ISqlExpression expr)
+		static bool IsStrictCondition(NullabilityContext nullability, SqlSearchCondition condition, ISqlTableSource testedSource)
+		{
+			if (condition.IsOr || condition.Predicates.Count > 10)
+				return false;
+
+			foreach (var predicate in condition.Predicates)
+			{
+				switch (predicate)
+				{
+					case SqlPredicate.IsNull isNullPredicate:
+					{
+						if (isNullPredicate.IsNot)
+						{
+							var source = ExtractSource(isNullPredicate.Expr1);
+							if (source == testedSource)
+							{
+								var local = NullabilityContext.GetContext(source as SelectQuery);
+								return local.CanBeNull(isNullPredicate.Expr1);
+							}
+						}
+
+						break;
+					}
+					case SqlPredicate.ExprExpr exprExPredicate:
+					{
+						if (exprExPredicate.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.Greater or SqlPredicate.Operator.Less)
+						{
+							var source = ExtractSource(exprExPredicate.Expr1);
+							if (source == testedSource)
+							{
+								var local = NullabilityContext.GetContext(source as SelectQuery);
+								if (!local.CanBeNull(exprExPredicate.Expr1) && IsNotNullable(exprExPredicate.Expr2) == true)
+									return true;
+							}
+
+							source = ExtractSource(exprExPredicate.Expr2);
+							if (source == testedSource)
+							{
+								var local = NullabilityContext.GetContext(source as SelectQuery);
+								if (!local.CanBeNull(exprExPredicate.Expr2) && IsNotNullable(exprExPredicate.Expr1) == true)
+									return true;
+							}
+						}
+
+						break;
+					}
+				}
+
+				bool? IsNotNullable(ISqlExpression expr)
+				{
+					if (expr is SqlValue value)
+					{
+						return value.Value != null;
+					}
+
+					var isValid = true;
+					expr.VisitAll(e =>
+					{
+						if (!isValid)
+							return;
+
+						var exprSource = ExtractSource(expr);
+						if (exprSource == null)
+							return;
+
+						if (nullability.CanBeNullSource(exprSource) == null)
+							isValid = false;
+					});
+
+					if (!isValid)
+						return null;
+
+					return !nullability.CanBeNull(expr);
+				}
+			}
+
+			return false;
+
+			static ISqlTableSource? ExtractSource(ISqlExpression expr)
 			{
 				return expr switch
 				{
@@ -2194,7 +2254,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		SelectQuery MoveMutliTablesToSubquery(SelectQuery selectQuery)
+		SelectQuery MoveMultiTablesToSubquery(SelectQuery selectQuery)
 		{
 			var joins = new List<SqlJoinedTable>(selectQuery.From.Tables.Count);
 			foreach (var t in selectQuery.From.Tables)
@@ -2243,7 +2303,7 @@ namespace LinqToDB.SqlQuery
 			{
 				if (QueryHelper.EnumerateJoins(selectQuery).Any())
 				{
-					MoveMutliTablesToSubquery(selectQuery);
+					MoveMultiTablesToSubquery(selectQuery);
 
 					isModified = true;
 				}
