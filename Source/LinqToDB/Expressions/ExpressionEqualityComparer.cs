@@ -129,8 +129,7 @@ namespace LinqToDB.Expressions
 				{
 					var parameterExpression = (ParameterExpression)obj;
 
-					if (parameterExpression.Name is not null)
-						hashCode.Add(parameterExpression.Name);
+					hashCode.Add(parameterExpression.Type);
 
 					break;
 				}
@@ -560,8 +559,7 @@ namespace LinqToDB.Expressions
 				{
 					if (_parameterScope.TryGetValue(a, out var mapped))
 					{
-						return mapped!.Name == b.Name
-							   && mapped.Type == b.Type;
+						return ReferenceEquals(mapped, b);
 					}
 				}
 
