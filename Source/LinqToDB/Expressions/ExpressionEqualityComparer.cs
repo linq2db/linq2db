@@ -34,11 +34,11 @@ namespace LinqToDB.Expressions
 		public int GetHashCode(Expression? obj)
 		{
 			var hashCode = new HashCode();
-			UpdateHashCode(in hashCode, obj);
+			UpdateHashCode(ref hashCode, obj);
 			return hashCode.ToHashCode();
 		}
 
-		void UpdateHashCode(ref readonly HashCode hashCode, Expression? obj)
+		void UpdateHashCode(ref HashCode hashCode, Expression? obj)
 		{
 			if (obj is null)
 				return;
@@ -151,7 +151,7 @@ namespace LinqToDB.Expressions
 
 					hashCode.Add(methodCallExpression.Method);
 					hashCode.Add(GetHashCode(methodCallExpression.Object));
-					UpdateHashCode(in hashCode, methodCallExpression.Arguments);
+					UpdateHashCode(ref hashCode, methodCallExpression.Arguments);
 
 					break;
 				}
@@ -162,7 +162,7 @@ namespace LinqToDB.Expressions
 
 					hashCode.Add(lambdaExpression.ReturnType);
 					hashCode.Add(GetHashCode(lambdaExpression.Body));
-					UpdateHashCode(in hashCode, lambdaExpression.Parameters);
+					UpdateHashCode(ref hashCode, lambdaExpression.Parameters);
 
 					break;
 				}
@@ -179,7 +179,7 @@ namespace LinqToDB.Expressions
 							hashCode.Add(m);
 					}
 
-					UpdateHashCode(in hashCode, newExpression.Arguments);
+					UpdateHashCode(ref hashCode, newExpression.Arguments);
 
 					break;
 				}
@@ -188,7 +188,7 @@ namespace LinqToDB.Expressions
 				case ExpressionType.NewArrayBounds:
 				{
 					var newArrayExpression = (NewArrayExpression)obj;
-					UpdateHashCode(in hashCode, newArrayExpression.Expressions);
+					UpdateHashCode(ref hashCode, newArrayExpression.Expressions);
 					break;
 				}
 
@@ -197,7 +197,7 @@ namespace LinqToDB.Expressions
 					var invocationExpression = (InvocationExpression)obj;
 
 					hashCode.Add(GetHashCode(invocationExpression.Expression));
-					UpdateHashCode(in hashCode, invocationExpression.Arguments);
+					UpdateHashCode(ref hashCode, invocationExpression.Arguments);
 
 					break;
 				}
@@ -207,7 +207,7 @@ namespace LinqToDB.Expressions
 					var memberInitExpression = (MemberInitExpression)obj;
 
 					hashCode.Add(GetHashCode(memberInitExpression.NewExpression));
-					UpdateHashCode(in hashCode, memberInitExpression.Bindings);
+					UpdateHashCode(ref hashCode, memberInitExpression.Bindings);
 
 					break;
 				}
@@ -219,7 +219,7 @@ namespace LinqToDB.Expressions
 					hashCode.Add(GetHashCode(listInitExpression.NewExpression));
 
 					foreach (var i in listInitExpression.Initializers)
-						UpdateHashCode(in hashCode, i.Arguments);
+						UpdateHashCode(ref hashCode, i.Arguments);
 
 					break;
 				}
@@ -285,7 +285,7 @@ namespace LinqToDB.Expressions
 
 					foreach (var c in switchExpression.Cases)
 					{
-						UpdateHashCode(in hashCode, c.TestValues);
+						UpdateHashCode(ref hashCode, c.TestValues);
 						hashCode.Add(GetHashCode(c.Body));
 					}
 
@@ -298,7 +298,7 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		void UpdateHashCode(ref readonly HashCode hashCode, IList<MemberBinding> bindings)
+		void UpdateHashCode(ref HashCode hashCode, IList<MemberBinding> bindings)
 		{
 			foreach (var memberBinding in bindings)
 			{
@@ -319,7 +319,7 @@ namespace LinqToDB.Expressions
 						var memberListBinding = (MemberListBinding)memberBinding;
 
 						foreach (var i in memberListBinding.Initializers)
-							UpdateHashCode(in hashCode, i.Arguments);
+							UpdateHashCode(ref hashCode, i.Arguments);
 
 						break;
 					}
@@ -327,7 +327,7 @@ namespace LinqToDB.Expressions
 					case MemberBindingType.MemberBinding:
 					{
 						var memberMemberBinding = (MemberMemberBinding)memberBinding;
-						UpdateHashCode(in hashCode, memberMemberBinding.Bindings);
+						UpdateHashCode(ref hashCode, memberMemberBinding.Bindings);
 						break;
 					}
 
@@ -337,11 +337,11 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		void UpdateHashCode<T>(ref readonly HashCode hashCode, IList<T> expressions)
+		void UpdateHashCode<T>(ref HashCode hashCode, IList<T> expressions)
 			where T : Expression
 		{
 			foreach (var e in expressions)
-				UpdateHashCode(in hashCode, e);
+				UpdateHashCode(ref hashCode, e);
 		}
 
 		public bool Equals(Expression? x, Expression? y) => new ExpressionComparer().Compare(x, y);
