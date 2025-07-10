@@ -1714,15 +1714,8 @@ namespace LinqToDB.SqlQuery
 
 		public static ISqlExpression UnwrapCast(ISqlExpression expr)
 		{
-			do
-			{
-				if (expr is SqlCastExpression sqlCast)
-				{
-					expr = sqlCast.Expression;
-				}
-				else
-					break;
-			} while (true);
+			while (expr is SqlCastExpression { Expression: var sqlCast })
+				expr = sqlCast;
 
 			return expr;
 		}
