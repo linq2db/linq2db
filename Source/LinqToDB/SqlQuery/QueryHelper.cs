@@ -155,7 +155,7 @@ namespace LinqToDB.SqlQuery
 			public          bool                    DependencyFound;
 		}
 
-		static bool IsDependsOn(IQueryElement testedRoot, IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore = null)
+		public static bool IsDependsOn(IQueryElement testedRoot, IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore = null)
 		{
 			var ctx = new IsDependsOnElementContext(onElement, elementsToIgnore);
 
@@ -1711,6 +1711,14 @@ namespace LinqToDB.SqlQuery
 				else
 					break;
 			} while (true);
+
+			return expr;
+		}
+
+		public static ISqlExpression UnwrapCast(ISqlExpression expr)
+		{
+			while (expr is SqlCastExpression { Expression: var sqlCast })
+				expr = sqlCast;
 
 			return expr;
 		}
