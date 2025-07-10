@@ -7,7 +7,7 @@ using System.Threading;
 namespace LinqToDB.SqlQuery
 {
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
-	public class SelectQuery : SqlExpressionBase, ISqlTableSource
+	public sealed class SelectQuery : SqlExpressionBase, ISqlTableSource
 	{
 		#region Init
 

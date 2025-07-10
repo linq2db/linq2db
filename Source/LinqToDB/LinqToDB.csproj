@@ -13,10 +13,6 @@
 		<Product>$(Title)</Product>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing'">
-		<DefineConstants>OVERRIDETOSTRING;$(DefineConstants)</DefineConstants>
-	</PropertyGroup>
-
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">
 		<!--bugchecks to run in debug and during CI tests to discover potential issues-->
 		<DefineConstants>BUGCHECK;$(DefineConstants)</DefineConstants>

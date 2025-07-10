@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlValuesTable : ISqlTableSource
+	public sealed class SqlValuesTable : SqlExpressionBase, ISqlTableSource
 	{
 		/// <summary>
 		/// To create new instance in build context.
@@ -138,25 +138,21 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression
 
-		public bool CanBeNullable(NullabilityContext nullability) => throw new NotImplementedException();
+		public override bool CanBeNullable(NullabilityContext nullability) => throw new NotImplementedException();
 
-		int ISqlExpression.Precedence => throw new NotImplementedException();
+		public override int Precedence => throw new NotImplementedException();
 
-		Type ISqlExpression.SystemType => typeof(object);
+		public override Type SystemType => typeof(object);
 
-		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
 
 		#endregion
 
 		#region IQueryElement
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
+		public override QueryElementType ElementType => QueryElementType.SqlValuesTable;
 
-		QueryElementType IQueryElement.ElementType => QueryElementType.SqlValuesTable;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			var rows = Rows;
 			if (rows?.Count > 0)
@@ -213,7 +209,7 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public int GetElementHashCode()
+		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
 			hash.Add(SourceID);
@@ -240,7 +236,7 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region IEquatable
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => throw new NotImplementedException();
+		public override bool Equals(ISqlExpression? other) => throw new NotImplementedException();
 		#endregion
 
 		public void Modify(ISqlExpression? source)

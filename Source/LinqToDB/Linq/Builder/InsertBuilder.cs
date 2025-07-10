@@ -373,9 +373,10 @@ namespace LinqToDB.Linq.Builder
 				var q = insert.Into.IdentityFields
 					.Except(insert.Items.Select(e => e.Column).OfType<SqlField>());
 
+				ISqlExpression? expr = null;
 				foreach (var field in q)
 				{
-					var expr = Builder.DataContext.CreateSqlBuilder().GetIdentityExpression(insert.Into);
+					expr ??= Builder.DataContext.CreateSqlBuilder().GetIdentityExpression(insert.Into);
 
 					if (expr != null)
 					{

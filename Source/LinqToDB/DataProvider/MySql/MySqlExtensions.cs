@@ -25,11 +25,11 @@ namespace LinqToDB.DataProvider.MySql
 						// default modifier, no need to add it to SQL
 						break;
 					case MatchModifier.Boolean:
-						builder.AddExpression("modifier", " IN BOOLEAN MODE");
+						builder.AddFragment("modifier", " IN BOOLEAN MODE");
 						break;
 					case MatchModifier.WithQueryExpansion:
 						// use short form without 'IN NATURAL LANGUAGE MODE' prefix
-						builder.AddExpression("modifier", " WITH QUERY EXPANSION");
+						builder.AddFragment("modifier", " WITH QUERY EXPANSION");
 						break;
 					default:
 						throw new InvalidOperationException($"Unexpected modifier: {modifier}");

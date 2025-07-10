@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlMergeStatement : SqlStatementWithQueryBase
+	public sealed class SqlMergeStatement : SqlStatementWithQueryBase
 	{
 		private const string TargetAlias = "Target";
 
