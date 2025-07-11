@@ -8,7 +8,6 @@ using System.Transactions;
 
 using LinqToDB;
 using LinqToDB.Async;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

@@ -1,11 +1,11 @@
 ﻿using System.Linq;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 

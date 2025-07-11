@@ -10,8 +10,6 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using static Tests.xUpdate.MergeTests;
-
 namespace Tests.UserTests
 {
 	// disabled providers cannot handle concurrent queries well

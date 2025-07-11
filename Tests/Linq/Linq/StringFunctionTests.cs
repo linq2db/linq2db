@@ -12,7 +12,7 @@ using Shouldly;
 
 using LinqToDB;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 using NUnit.Framework;
 

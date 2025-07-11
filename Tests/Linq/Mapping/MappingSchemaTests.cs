@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 

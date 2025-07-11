@@ -2,14 +2,13 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using Shouldly;
-
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -48,49 +47,49 @@ namespace Tests.Linq
 
 		private static readonly (Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls)[] _conditions 
 			= new (Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls)[]
-		{
-			(x => x.A == x.B, new[] { 111 },      new[] { 100, 111 }),
-			(x => x.A != x.B, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
-			(x => x.A >= x.B, new[] { 111, 121 }, new[] { 111, 121 }),
-			(x => x.A >  x.B, new[] { 121 },      new[] { 121 }),
-			(x => x.A <= x.B, new[] { 111, 112 }, new[] { 111, 112 }),
-			(x => x.A <  x.B, new[] { 112 },      new[] { 112 }),
+			{
+				(x => x.A == x.B, new[] { 111 },      new[] { 100, 111 }),
+				(x => x.A != x.B, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+				(x => x.A >= x.B, new[] { 111, 121 }, new[] { 111, 121 }),
+				(x => x.A >  x.B, new[] { 121 },      new[] { 121 }),
+				(x => x.A <= x.B, new[] { 111, 112 }, new[] { 111, 112 }),
+				(x => x.A <  x.B, new[] { 112 },      new[] { 112 }),
 
-			(x => !(x.A == x.B), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
-			(x => !(x.A != x.B), new[] { 111 },      new[] { 100, 111 }),
-			(x => !(x.A >= x.B), new[] { 112 },      new[] { 100, 101, 110, 112 }),
-			(x => !(x.A >  x.B), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
-			(x => !(x.A <= x.B), new[] { 121 },      new[] { 100, 101, 110, 121 }),
-			(x => !(x.A <  x.B), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
+				(x => !(x.A == x.B), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+				(x => !(x.A != x.B), new[] { 111 },      new[] { 100, 111 }),
+				(x => !(x.A >= x.B), new[] { 112 },      new[] { 100, 101, 110, 112 }),
+				(x => !(x.A >  x.B), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
+				(x => !(x.A <= x.B), new[] { 121 },      new[] { 100, 101, 110, 121 }),
+				(x => !(x.A <  x.B), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
 
-			(x => x.EnumA == x.EnumB, new[] { 111 },      new[] { 100, 111 }),
-			(x => x.EnumA != x.EnumB, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
-			(x => x.EnumA >= x.EnumB, new[] { 111, 121 }, new[] { 111, 121 }),
-			(x => x.EnumA >  x.EnumB, new[] { 121 },      new[] { 121 }),
-			(x => x.EnumA <= x.EnumB, new[] { 111, 112 }, new[] { 111, 112 }),
-			(x => x.EnumA <  x.EnumB, new[] { 112 },      new[] { 112 }),
+				(x => x.EnumA == x.EnumB, new[] { 111 },      new[] { 100, 111 }),
+				(x => x.EnumA != x.EnumB, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+				(x => x.EnumA >= x.EnumB, new[] { 111, 121 }, new[] { 111, 121 }),
+				(x => x.EnumA >  x.EnumB, new[] { 121 },      new[] { 121 }),
+				(x => x.EnumA <= x.EnumB, new[] { 111, 112 }, new[] { 111, 112 }),
+				(x => x.EnumA <  x.EnumB, new[] { 112 },      new[] { 112 }),
 
-			(x => !(x.EnumA == x.EnumB), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
-			(x => !(x.EnumA != x.EnumB), new[] { 111 },      new[] { 100, 111 }),
-			(x => !(x.EnumA >= x.EnumB), new[] { 112 },      new[] { 100, 101, 110, 112 }),
-			(x => !(x.EnumA >  x.EnumB), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
-			(x => !(x.EnumA <= x.EnumB), new[] { 121 },      new[] { 100, 101, 110, 121 }),
-			(x => !(x.EnumA <  x.EnumB), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
+				(x => !(x.EnumA == x.EnumB), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+				(x => !(x.EnumA != x.EnumB), new[] { 111 },      new[] { 100, 111 }),
+				(x => !(x.EnumA >= x.EnumB), new[] { 112 },      new[] { 100, 101, 110, 112 }),
+				(x => !(x.EnumA >  x.EnumB), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
+				(x => !(x.EnumA <= x.EnumB), new[] { 121 },      new[] { 100, 101, 110, 121 }),
+				(x => !(x.EnumA <  x.EnumB), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
 
-			(x => x.CEnumA == x.CEnumB, new[] { 111 },      new[] { 100, 111 }),
-			(x => x.CEnumA != x.CEnumB, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
-			(x => x.CEnumA >= x.CEnumB, new[] { 111, 121 }, new[] { 111, 121 }),
-			(x => x.CEnumA >  x.CEnumB, new[] { 121 },      new[] { 121 }),
-			(x => x.CEnumA <= x.CEnumB, new[] { 111, 112 }, new[] { 111, 112 }),
-			(x => x.CEnumA <  x.CEnumB, new[] { 112 },      new[] { 112 }),
+				(x => x.CEnumA == x.CEnumB, new[] { 111 },      new[] { 100, 111 }),
+				(x => x.CEnumA != x.CEnumB, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+				(x => x.CEnumA >= x.CEnumB, new[] { 111, 121 }, new[] { 111, 121 }),
+				(x => x.CEnumA >  x.CEnumB, new[] { 121 },      new[] { 121 }),
+				(x => x.CEnumA <= x.CEnumB, new[] { 111, 112 }, new[] { 111, 112 }),
+				(x => x.CEnumA <  x.CEnumB, new[] { 112 },      new[] { 112 }),
 
-			(x => !(x.CEnumA == x.CEnumB), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
-			(x => !(x.CEnumA != x.CEnumB), new[] { 111 },      new[] { 100, 111 }),
-			(x => !(x.CEnumA >= x.CEnumB), new[] { 112 },      new[] { 100, 101, 110, 112 }),
-			(x => !(x.CEnumA >  x.CEnumB), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
-			(x => !(x.CEnumA <= x.CEnumB), new[] { 121 },      new[] { 100, 101, 110, 121 }),
-			(x => !(x.CEnumA <  x.CEnumB), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
-		};
+				(x => !(x.CEnumA == x.CEnumB), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+				(x => !(x.CEnumA != x.CEnumB), new[] { 111 },      new[] { 100, 111 }),
+				(x => !(x.CEnumA >= x.CEnumB), new[] { 112 },      new[] { 100, 101, 110, 112 }),
+				(x => !(x.CEnumA >  x.CEnumB), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
+				(x => !(x.CEnumA <= x.CEnumB), new[] { 121 },      new[] { 100, 101, 110, 121 }),
+				(x => !(x.CEnumA <  x.CEnumB), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
+			};
 
 		[Test]
 		public void Functional(

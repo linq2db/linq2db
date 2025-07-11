@@ -4,10 +4,7 @@ using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
 
-using Shouldly;
-
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -15,6 +12,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {

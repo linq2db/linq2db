@@ -2,7 +2,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Linq.Translation
 {

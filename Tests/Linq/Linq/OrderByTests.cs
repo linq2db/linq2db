@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq;
 
-using Shouldly;
-
 using LinqToDB;
-using LinqToDB.SqlQuery;
-using LinqToDB.Tools;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Shouldly;
-
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Tests.Models.ForMapping;
@@ -13,6 +11,8 @@ using LinqToDB.Mapping;
 using Microsoft.EntityFrameworkCore;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests;
 

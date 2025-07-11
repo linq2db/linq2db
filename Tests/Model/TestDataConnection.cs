@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Mapping;
 using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
 namespace Tests.Model

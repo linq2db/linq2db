@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Shouldly;
-
 #if NETFRAMEWORK
 using IBM.Data.DB2;
 #else

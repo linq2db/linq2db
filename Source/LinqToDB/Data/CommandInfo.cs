@@ -19,19 +19,23 @@ using System.Text;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Async;
-using LinqToDB.Common.Internal.Cache;
-using LinqToDB.Common.Internal;
 using LinqToDB.Common;
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Async;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
-using LinqToDB.Tools;
-using LinqToDB.Compatibility.System;
+using LinqToDB.Internal.Conversion;
+using LinqToDB.Internal.Cache;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Interceptors;
+using LinqToDB.Metrics;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Data
 {

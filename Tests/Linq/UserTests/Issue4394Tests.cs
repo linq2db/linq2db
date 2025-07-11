@@ -5,8 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Interceptors;

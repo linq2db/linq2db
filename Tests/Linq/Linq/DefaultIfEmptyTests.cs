@@ -1,10 +1,11 @@
 ﻿using System.Linq;
 
-using Shouldly;
-
 using LinqToDB;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 

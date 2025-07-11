@@ -8,13 +8,13 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Async;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.EntityFrameworkCore.Internal;
 using LinqToDB.Expressions;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
@@ -417,8 +417,6 @@ namespace LinqToDB.EntityFrameworkCore
 
 			return dc;
 		}
-
-		static readonly ConcurrentDictionary<Type, Func<DbConnection, string>> _connectionStringExtractors = new();
 
 		/// <summary>
 		/// Extracts database connection information from EF Core provider data.

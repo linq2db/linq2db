@@ -4,15 +4,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 

@@ -1,11 +1,11 @@
 ﻿using System;
 
-using Shouldly;
-
 using LinqToDB.Expressions;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Common
 {

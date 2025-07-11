@@ -56,7 +56,7 @@ namespace LinqToDB.CommandLine
 
 			if (File.Exists(fullPath))
 			{
-				Console.Error.WriteLine($"Template file aleady exists at location {fullPath}");
+				await Console.Error.WriteLineAsync($"Template file aleady exists at location {fullPath}").ConfigureAwait(false);
 				return StatusCodes.EXPECTED_ERROR;
 			}
 

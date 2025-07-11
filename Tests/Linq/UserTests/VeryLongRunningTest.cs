@@ -7,7 +7,6 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
 

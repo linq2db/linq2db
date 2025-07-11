@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using Microsoft.Data.SqlClient;
@@ -539,7 +539,7 @@ namespace Tests.Infrastructure
 			Assert.Throws<LinqToDBException>(
 				() => { using (db.UseOptions(o => o.UseConnectionString("new config"))) { } },
 				"ConnectionString cannot be changed.");
-		}
+	}
 
 		[Test]
 		public void TryUseProviderNameTest()
@@ -548,7 +548,7 @@ namespace Tests.Infrastructure
 			Assert.Throws<LinqToDBException>(
 				() => { using (db.UseOptions(o => o.UseProvider("new provider"))) { } },
 				"ProviderName cannot be changed.");
-		}
+}
 
 		[Test]
 		public void TryWithDbConnectionTest()

@@ -7,7 +7,6 @@ using System.Data.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
-using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Data

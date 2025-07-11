@@ -3,18 +3,18 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
-using LinqToDB.Linq.Builder;
-using LinqToDB.Linq.Internal;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 

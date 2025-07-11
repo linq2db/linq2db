@@ -3,8 +3,6 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using Tests.xUpdate;
-
 namespace Tests.Mapping
 {
 	public class MappingAmbiguityTests : TestBase

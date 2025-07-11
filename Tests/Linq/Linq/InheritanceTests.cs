@@ -13,8 +13,6 @@ using NUnit.Framework;
 
 using Tests.Model;
 
-using static Tests.xUpdate.MergeTests;
-
 namespace Tests.Linq
 {
 	[TestFixture]
