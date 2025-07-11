@@ -75,8 +75,10 @@ namespace LinqToDB.SqlQuery
 			hash.Add(ElementType);
 			hash.Add(SourceEnumerable?.GetElementHashCode());
 			hash.Add(SourceQuery?.GetElementHashCode());
+
 			foreach (var field in SourceFields)
 				hash.Add(field.GetElementHashCode());
+
 			return hash.ToHashCode();
 		}
 

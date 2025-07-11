@@ -91,12 +91,11 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(ElementType);
-			hash.Add(CanBeNull);
-			hash.Add(SqlExpression.GetElementHashCode());
-
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				ElementType,
+				CanBeNull,
+				SqlExpression.GetElementHashCode()
+			);
 		}
 	}
 }

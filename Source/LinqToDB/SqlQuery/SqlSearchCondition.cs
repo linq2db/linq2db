@@ -97,8 +97,10 @@ namespace LinqToDB.SqlQuery
 			hash.Add(ElementType);
 			hash.Add(IsOr);
 			hash.Add(CanReturnUnknown);
+
 			foreach (var predicate in Predicates)
 				hash.Add(predicate.GetElementHashCode());
+
 			return hash.ToHashCode();
 		}
 

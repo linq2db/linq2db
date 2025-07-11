@@ -110,13 +110,12 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(ElementType);
-			hash.Add(Expression.GetElementHashCode());
-			hash.Add(Parent?.SourceID ?? -1);
-			hash.Add(RawAlias);
-
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				ElementType,
+				Expression.GetElementHashCode(),
+				Parent?.SourceID ?? -1,
+				RawAlias
+			);
 		}
 
 		public override string ToString()

@@ -66,8 +66,10 @@ namespace LinqToDB.SqlQuery
 			hash.Add(Flags);
 			hash.Add(NullabilityType);
 			hash.Add(CanBeNullNullable);
+
 			foreach (var parameter in Parameters)
 				hash.Add(parameter.GetElementHashCode());
+
 			return hash.ToHashCode();
 		}
 

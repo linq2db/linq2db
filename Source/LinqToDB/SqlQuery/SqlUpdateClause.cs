@@ -49,10 +49,13 @@ namespace LinqToDB.SqlQuery
 		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
+
 			foreach (var item in Items)
 				hash.Add(item?.GetElementHashCode());
+
 			foreach (var key in Keys)
 				hash.Add(key?.GetElementHashCode());
+
 			hash.Add(Table?.GetElementHashCode());
 			hash.Add(TableSource?.GetElementHashCode());
 			hash.Add(HasComparison);

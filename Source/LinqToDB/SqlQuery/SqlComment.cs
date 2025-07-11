@@ -31,10 +31,9 @@ namespace LinqToDB.SqlQuery
 		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
+
 			foreach (var line in Lines)
-			{
 				hash.Add(line);
-			}
 
 			return hash.ToHashCode();
 		}

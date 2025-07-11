@@ -98,10 +98,7 @@ namespace Tests.UserTests
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return (Id.GetHashCode() * 397) ^ TypeID.GetHashCode();
-				}
+				return HashCode.Combine(Id, TypeID);
 			}
 		}
 
@@ -139,16 +136,14 @@ namespace Tests.UserTests
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					var hashCode = Id.GetHashCode();
-					hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
-					hashCode = (hashCode * 397) ^ (ShortName != null ? ShortName.GetHashCode() : 0);
-					hashCode = (hashCode * 397) ^ Height;
-					hashCode = (hashCode * 397) ^ Depth;
-					hashCode = (hashCode * 397) ^ Width;
-					return hashCode;
-				}
+				return HashCode.Combine(
+					Id,
+					Name,
+					ShortName,
+					Height,
+					Depth,
+					Width
+				);
 			}
 		}
 

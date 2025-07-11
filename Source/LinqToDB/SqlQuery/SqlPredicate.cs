@@ -65,10 +65,10 @@ namespace LinqToDB.SqlQuery
 
 			public override int GetElementHashCode()
 			{
-				var hash = new HashCode();
-				hash.Add(ElementType);
-				hash.Add(Predicate.GetElementHashCode());
-				return hash.ToHashCode();
+				return HashCode.Combine(
+					ElementType,
+					Predicate.GetElementHashCode()
+				);
 			}
 
 			public override bool          CanInvert(NullabilityContext    nullability) => true;
@@ -106,9 +106,7 @@ namespace LinqToDB.SqlQuery
 
 			public override int GetElementHashCode()
 			{
-				var hash = new HashCode();
-				hash.Add(ElementType);
-				return hash.ToHashCode();
+				return HashCode.Combine(ElementType);
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -139,9 +137,7 @@ namespace LinqToDB.SqlQuery
 
 			public override int GetElementHashCode()
 			{
-				var hash = new HashCode();
-				hash.Add(ElementType);
-				return hash.ToHashCode();
+				return HashCode.Combine(ElementType);
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -193,10 +189,10 @@ namespace LinqToDB.SqlQuery
 
 			public override int GetElementHashCode()
 			{
-				var hash = new HashCode();
-				hash.Add(ElementType);
-				hash.Add(Expr1.GetElementHashCode());
-				return hash.ToHashCode();
+				return HashCode.Combine(
+					ElementType,
+					Expr1.GetElementHashCode()
+				);
 			}
 
 			protected override void WritePredicate(QueryElementTextWriter writer)
@@ -550,14 +546,14 @@ namespace LinqToDB.SqlQuery
 
 			public override int GetElementHashCode()
 			{
-				var hash = new HashCode();
-				hash.Add(ElementType);
-				hash.Add(Expr1.GetElementHashCode());
-				hash.Add(IsNot);
-				hash.Add(Expr2.GetElementHashCode());
-				hash.Add(Escape?.GetElementHashCode() ?? 0);
-				hash.Add(FunctionName);
-				return hash.ToHashCode();
+				return HashCode.Combine(
+					ElementType,
+					Expr1.GetElementHashCode(),
+					IsNot,
+					Expr2.GetElementHashCode(),
+					Escape?.GetElementHashCode(),
+					FunctionName
+				);
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -626,14 +622,14 @@ namespace LinqToDB.SqlQuery
 
 			public override int GetElementHashCode()
 			{
-				var hash = new HashCode();
-				hash.Add(ElementType);
-				hash.Add(Expr1.GetElementHashCode());
-				hash.Add(IsNot);
-				hash.Add(Expr2.GetElementHashCode());
-				hash.Add(Kind);
-				hash.Add(CaseSensitive.GetElementHashCode());
-				return hash.ToHashCode();
+				return HashCode.Combine(
+					ElementType,
+					Expr1.GetElementHashCode(),
+					IsNot,
+					Expr2.GetElementHashCode(),
+					Kind,
+					CaseSensitive.GetElementHashCode()
+				);
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -702,12 +698,12 @@ namespace LinqToDB.SqlQuery
 
 			public override int GetElementHashCode()
 			{
-				var hash = new HashCode();
-				hash.Add(ElementType);
-				hash.Add(Expr1.GetElementHashCode());
-				hash.Add(IsNot);
-				hash.Add(Expr2.GetElementHashCode());
-				return hash.ToHashCode();
+				return HashCode.Combine(
+					ElementType,
+					Expr1.GetElementHashCode(),
+					IsNot,
+					Expr2.GetElementHashCode()
+				);
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -752,12 +748,12 @@ namespace LinqToDB.SqlQuery
 
 			public override int GetElementHashCode()
 			{
-				var hash = new HashCode();
-				hash.Add(ElementType);
-				hash.Add(Expr1.GetElementHashCode());
-				hash.Add(Expr2.GetElementHashCode());
-				hash.Add(Expr3.GetElementHashCode());
-				return hash.ToHashCode();
+				return HashCode.Combine(
+					ElementType,
+					Expr1.GetElementHashCode(),
+					Expr2.GetElementHashCode(),
+					Expr3.GetElementHashCode()
+				);
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -816,14 +812,14 @@ namespace LinqToDB.SqlQuery
 
 			public override int GetElementHashCode()
 			{
-				var hash = new HashCode();
-				hash.Add(ElementType);
-				hash.Add(Expr1.GetElementHashCode());
-				hash.Add(TrueValue.GetElementHashCode());
-				hash.Add(FalseValue.GetElementHashCode());
-				hash.Add(WithNull);
-				hash.Add(IsNot);
-				return hash.ToHashCode();
+				return HashCode.Combine(
+					ElementType,
+					Expr1.GetElementHashCode(),
+					TrueValue.GetElementHashCode(),
+					FalseValue.GetElementHashCode(),
+					WithNull,
+					IsNot
+				);
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -892,11 +888,11 @@ namespace LinqToDB.SqlQuery
 
 			public override int GetElementHashCode()
 			{
-				var hash = new HashCode();
-				hash.Add(ElementType);
-				hash.Add(Expr1.GetElementHashCode());
-				hash.Add(IsNot);
-				return hash.ToHashCode();
+				return HashCode.Combine(
+					ElementType,
+					Expr1.GetElementHashCode(),
+					IsNot
+				);
 			}
 
 			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased) => false;
@@ -936,13 +932,13 @@ namespace LinqToDB.SqlQuery
 
 			public override int GetElementHashCode()
 			{
-				var hash = new HashCode();
-				hash.Add(ElementType);
-				hash.Add(Expr1.GetElementHashCode());
-				hash.Add(IsNot);
-				hash.Add(DoNotConvert);
-				hash.Add(SubQuery.GetElementHashCode());
-				return hash.ToHashCode();
+				return HashCode.Combine(
+					ElementType,
+					Expr1.GetElementHashCode(),
+					IsNot,
+					DoNotConvert,
+					SubQuery.GetElementHashCode()
+				);
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -1036,8 +1032,10 @@ namespace LinqToDB.SqlQuery
 				hash.Add(Expr1.GetElementHashCode());
 				hash.Add(WithNull);
 				hash.Add(IsNot);
+
 				foreach (var value in Values)
 					hash.Add(value.GetElementHashCode());
+
 				return hash.ToHashCode();
 			}
 
@@ -1129,11 +1127,11 @@ namespace LinqToDB.SqlQuery
 
 			public override int GetElementHashCode()
 			{
-				var hash = new HashCode();
-				hash.Add(ElementType);
-				hash.Add(IsNot);
-				hash.Add(SubQuery.GetElementHashCode());
-				return hash.ToHashCode();
+				return HashCode.Combine(
+					ElementType,
+					IsNot,
+					SubQuery.GetElementHashCode()
+				);
 			}
 
 			protected override void WritePredicate(QueryElementTextWriter writer)

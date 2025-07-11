@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Common;
 
@@ -55,21 +56,15 @@ namespace LinqToDB.SqlQuery
 
 		int?                   _hashCode;
 
+		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
-			// ReSharper disable NonReadonlyMemberInGetHashCode
-			if (_hashCode.HasValue)
-				return _hashCode.Value;
-
-			var hashCode = Operation.GetHashCode();
-
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr1.GetHashCode());
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr2.GetHashCode());
-
-			_hashCode = hashCode;
-			return hashCode;
-			// ReSharper restore NonReadonlyMemberInGetHashCode
+			return _hashCode ??= HashCode.Combine(
+				Operation,
+				SystemType,
+				Expr1,
+				Expr2
+			);
 		}
 
 		#region ISqlExpression Members
@@ -109,12 +104,12 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(Operation);
-			hash.Add(SystemType);
-			hash.Add(Expr1.GetElementHashCode());
-			hash.Add(Expr2.GetElementHashCode());
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				Operation,
+				SystemType,
+				Expr1.GetElementHashCode(),
+				Expr2.GetElementHashCode()
+			);
 		}
 
 		#endregion

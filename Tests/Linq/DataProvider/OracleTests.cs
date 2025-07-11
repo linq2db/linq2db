@@ -2826,13 +2826,11 @@ namespace Tests.DataProvider
 
 				public int GetHashCode(BooleanMapping obj)
 				{
-					unchecked
-					{
-						var hashCode = obj.Id;
-						hashCode = (hashCode * 397) ^ obj.BoolProp.GetHashCode();
-						hashCode = (hashCode * 397) ^ obj.NullableBoolProp.GetHashCode();
-						return hashCode;
-					}
+					return HashCode.Combine(
+						obj.Id,
+						obj.BoolProp,
+						obj.NullableBoolProp
+					);
 				}
 			}
 

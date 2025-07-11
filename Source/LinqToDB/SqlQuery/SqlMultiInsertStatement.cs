@@ -51,6 +51,7 @@ namespace LinqToDB.SqlQuery
 			hash.Add(base.GetElementHashCode());
 			hash.Add(InsertType);
 			hash.Add(Source.GetElementHashCode());
+
 			foreach (var insert in Inserts)
 				hash.Add(insert.GetElementHashCode());
 

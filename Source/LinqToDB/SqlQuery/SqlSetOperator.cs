@@ -42,11 +42,11 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(ElementType);
-			hash.Add(SelectQuery.GetElementHashCode());
-			hash.Add(Operation);
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				ElementType,
+				SelectQuery.GetElementHashCode(),
+				Operation
+			);
 		}
 	}
 }

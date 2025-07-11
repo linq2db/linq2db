@@ -34,12 +34,12 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(ElementType);
-			hash.Add(Expression.GetElementHashCode());
-			hash.Add(IsDescending);
-			hash.Add(IsPositioned);
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				ElementType,
+				Expression.GetElementHashCode(),
+				IsDescending,
+				IsPositioned
+			);
 		}
 
 		public override string ToString()

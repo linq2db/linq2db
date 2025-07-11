@@ -36,11 +36,11 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(Condition.GetElementHashCode());
-			hash.Add(TrueValue.GetElementHashCode());
-			hash.Add(FalseValue.GetElementHashCode());
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				Condition.GetElementHashCode(),
+				TrueValue.GetElementHashCode(),
+				FalseValue.GetElementHashCode()
+			);
 		}
 
 		public override bool Equals(ISqlExpression  other, Func<ISqlExpression, ISqlExpression, bool> comparer)
