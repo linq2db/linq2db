@@ -846,7 +846,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Table("Child")]
 		public class CountedChild
 		{
