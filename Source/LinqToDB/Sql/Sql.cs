@@ -576,7 +576,7 @@ namespace LinqToDB
 
 				lengthExpr = new SqlBinaryExpression(lengthExpr.SystemType!, new SqlValue(-1), "*", lengthExpr, Precedence.Multiplicative);
 
-				builder.ResultExpression = new SqlFunction(stringExpr.SystemType!, "substr", false, true, stringExpr, lengthExpr);
+				builder.ResultExpression = new SqlFunction(QueryHelper.GetDbDataType(stringExpr, builder.Mapping), "substr", canBeNull: true, stringExpr, lengthExpr);
 			}
 		}
 
@@ -596,11 +596,11 @@ namespace LinqToDB
 				// SUBSTRING(someStr, LEN(someStr) - (len - 1), len)
 
 				var startExpr = new SqlBinaryExpression(lengthExpr.SystemType!,
-					new SqlFunction(lengthExpr.SystemType!, "LEN", stringExpr), "-",
+					new SqlFunction(QueryHelper.GetDbDataType(lengthExpr, builder.Mapping), "LEN", stringExpr), "-",
 					new SqlBinaryExpression(lengthExpr.SystemType!, lengthExpr, "-", new SqlValue(1), Precedence.Subtraction),
 					Precedence.Subtraction);
 
-				builder.ResultExpression = new SqlFunction(stringExpr.SystemType!, "SUBSTRING", false, true, stringExpr, startExpr, lengthExpr);
+				builder.ResultExpression = new SqlFunction(QueryHelper.GetDbDataType(stringExpr, builder.Mapping), "SUBSTRING", canBeNull: true, stringExpr, startExpr, lengthExpr);
 			}
 		}
 
@@ -738,7 +738,7 @@ namespace LinqToDB
 
 				var predicate = new SqlPredicate.ExprExpr(
 						new SqlExpression(
-							typeof(string),
+							builder.Mapping.GetDbDataType(typeof(string)),
 							"REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({0}, '\x09', ''), '\x0a', ''), '\x0b', ''), '\x0c', ''), '\x0d', ''), '\x20', ''), '\x85', ''), '\xa0', ''), '\x1680', ''), '\x2000', ''), '\x2001', ''), '\x2002', ''), '\x2003', ''), '\x2004', ''), '\x2005', ''), '\x2006', ''), '\x2007', ''), '\x2008', ''), '\x2009', ''), '\x200a', ''), '\x2028', ''), '\x2029', ''), '\x205f', ''), '\x3000', '')",
 							str),
 						SqlPredicate.Operator.Equal,
@@ -764,12 +764,11 @@ namespace LinqToDB
 				const string whiteSpaces = $"%[^{WHITESPACES}]%";
 				var predicate = new SqlPredicate.Expr(
 					new SqlExpression(
-						typeof(bool),
+						builder.Mapping.GetDbDataType(typeof(bool)),
 						"{0} SIMILAR TO {1}",
 						Precedence.Comparison,
 						SqlFlags.IsPredicate,
 						ParametersNullabilityType.NotNullable,
-						null,
 						str,
 						new SqlValue(typeof(string), whiteSpaces)))
 					.MakeNot();
@@ -793,12 +792,11 @@ namespace LinqToDB
 				var whiteSpaces = $"[^{WHITESPACES}]";
 				var condition = new SqlPredicate.Expr(
 					new SqlExpression(
-						typeof(bool),
+						builder.Mapping.GetDbDataType(typeof(bool)),
 						"{0} RLIKE {1}",
 						Precedence.Comparison,
 						SqlFlags.IsPredicate,
 						ParametersNullabilityType.NotNullable,
-						null,
 						str,
 						new SqlValue(typeof(string), whiteSpaces)))
 					.MakeNot();
@@ -867,7 +865,7 @@ namespace LinqToDB
 				var str = builder.GetExpression("str")!;
 
 				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(string), "LTRIM", str),
+						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str),
 						SqlPredicate.Operator.Equal,
 						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
 
@@ -889,7 +887,7 @@ namespace LinqToDB
 				var str = builder.GetExpression("str")!;
 
 				var predicate = new SqlPredicate.ExprExpr(
-						new SqlExpression(typeof(string), "TRIM({1} FROM {0})", str, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), WHITESPACES)),
+						new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "TRIM({1} FROM {0})", str, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), WHITESPACES)),
 						SqlPredicate.Operator.Equal,
 						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
 
@@ -910,7 +908,7 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str")!;
 
-				var predicate = new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", ParametersNullabilityType.Nullable, str, new SqlValue(typeof(string), WHITESPACES)), false);
+				var predicate = new SqlPredicate.IsNull(new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", ParametersNullabilityType.Nullable, str, new SqlValue(typeof(string), WHITESPACES)), false);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
@@ -930,7 +928,7 @@ namespace LinqToDB
 				var str = builder.GetExpression("str")!;
 
 				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), ASCII_WHITESPACES)),
+						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str, new SqlValue(typeof(string), ASCII_WHITESPACES)),
 						SqlPredicate.Operator.Equal,
 						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
 
@@ -952,7 +950,7 @@ namespace LinqToDB
 				var str = builder.GetExpression("str")!;
 
 				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)),
+						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)),
 						SqlPredicate.Operator.Equal,
 						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
 

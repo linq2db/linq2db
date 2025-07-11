@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlWhereClause : ClauseBase<SqlWhereClause>
+	public sealed class SqlWhereClause : ClauseBase<SqlWhereClause>
 	{
 		internal SqlWhereClause(SelectQuery selectQuery) : base(selectQuery)
 		{
@@ -41,10 +41,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(ElementType);
-			hash.Add(SearchCondition.GetElementHashCode());
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				ElementType,
+				SearchCondition.GetElementHashCode()
+			);
 		}
 
 		#endregion

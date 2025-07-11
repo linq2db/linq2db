@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlUpdateStatement : SqlStatementWithQueryBase
+	public sealed class SqlUpdateStatement : SqlStatementWithQueryBase
 	{
 		public override QueryType QueryType          => QueryType.Update;
 		public override QueryElementType ElementType => QueryElementType.UpdateStatement;
@@ -86,12 +86,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(base.GetElementHashCode());
-
-			hash.Add(Output?.GetElementHashCode());
-			hash.Add(_update?.GetElementHashCode());
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				base.GetElementHashCode(),
+				Output?.GetElementHashCode(),
+				_update?.GetElementHashCode()
+			);
 		}
 	}
 }

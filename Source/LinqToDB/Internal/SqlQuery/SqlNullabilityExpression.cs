@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlNullabilityExpression : SqlExpressionBase
+	public sealed class SqlNullabilityExpression : SqlExpressionBase
 	{
 		readonly bool           _isNullable;
 		public   ISqlExpression SqlExpression { get; private set; }
@@ -91,12 +91,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(ElementType);
-			hash.Add(CanBeNull);
-			hash.Add(SqlExpression.GetElementHashCode());
-
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				ElementType,
+				CanBeNull,
+				SqlExpression.GetElementHashCode()
+			);
 		}
 	}
 }

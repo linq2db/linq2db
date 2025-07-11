@@ -5,7 +5,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlMultiInsertStatement : SqlStatement
+	public sealed class SqlMultiInsertStatement : SqlStatement
 	{
 		public SqlTableLikeSource               Source     { get; private  set; }
 		public List<SqlConditionalInsertClause> Inserts    { get; private  set; }
@@ -53,6 +53,7 @@ namespace LinqToDB.Internal.SqlQuery
 			hash.Add(base.GetElementHashCode());
 			hash.Add(InsertType);
 			hash.Add(Source.GetElementHashCode());
+
 			foreach (var insert in Inserts)
 				hash.Add(insert.GetElementHashCode());
 

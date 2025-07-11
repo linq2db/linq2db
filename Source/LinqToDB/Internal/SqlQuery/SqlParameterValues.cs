@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlParameterValues : IReadOnlyParameterValues
+	public sealed class SqlParameterValues : IReadOnlyParameterValues
 	{
 		public static readonly IReadOnlyParameterValues Empty = new SqlParameterValues();
 

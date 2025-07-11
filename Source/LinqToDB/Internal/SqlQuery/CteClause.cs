@@ -7,7 +7,7 @@ using System.Threading;
 namespace LinqToDB.Internal.SqlQuery
 {
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
-	public class CteClause : QueryElement
+	public sealed class CteClause : QueryElement
 	{
 		public static int CteIDCounter;
 
@@ -88,10 +88,9 @@ namespace LinqToDB.Internal.SqlQuery
 			hash.Add(IsRecursive);
 			hash.Add(Body?.GetElementHashCode());
 			hash.Add(ObjectType);
+
 			foreach (var field in Fields)
-			{
 				hash.Add(field.GetElementHashCode());
-			}
 
 			return hash.ToHashCode();
 		}

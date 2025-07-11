@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 using LinqToDB.Internal.Mapping;
@@ -41,14 +42,11 @@ namespace LinqToDB.Internal.Reflection
 
 		public int GetHashCode(MemberInfo obj)
 		{
-			unchecked
-			{
-				// We do not support obj.MetadataToken and obj.Module
-				if (obj is VirtualPropertyInfoBase)
-					return obj.GetHashCode();
+			// We do not support obj.MetadataToken and obj.Module
+			if (obj is VirtualPropertyInfoBase)
+				return obj.GetHashCode();
 
-				return obj.MetadataToken * 397 ^ obj.Module.GetHashCode();
-			}
+			return HashCode.Combine(obj.MetadataToken, obj.Module);
 		}
 	}
 }

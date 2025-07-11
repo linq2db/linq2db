@@ -366,7 +366,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence,
-						SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression,
+						sequence.SelectQuery.CreateCount(builder.MappingSchema), buildInfo.Expression,
 						convertType : returnType);
 
 					context = new AggregationContext(buildInfo.Parent, sequence, aggregationType, functionName, returnType);
@@ -393,7 +393,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var sql = sqlPlaceholder.Sql;
 
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence,
-						new SqlFunction(returnType, functionName, true, sql) { CanBeNull = true }, buildInfo.Expression, convertType: returnType);
+						new SqlFunction(builder.MappingSchema.GetDbDataType(returnType), functionName, isAggregate: true, canBeNull: true, sql), buildInfo.Expression, convertType: returnType);
 				}
 			}
 			else
@@ -518,7 +518,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							if (isDistinct)
 							{
-								sql = new SqlExpression("DISTINCT {0}", valueSqlExpression!);
+								sql = new SqlExpression(QueryHelper.GetDbDataType(valueSqlExpression!, builder.MappingSchema), "DISTINCT {0}", valueSqlExpression!);
 							}
 							else
 							{
@@ -530,14 +530,14 @@ namespace LinqToDB.Internal.Linq.Builder
 								}
 								else
 								{
-									sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID)) { CanBeNull = false };
+									sql = new SqlFragment("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
 								}
 							}
 
 						}
 						else
 						{
-							sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID)) { CanBeNull = false };
+							sql = new SqlFragment("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
 						}
 
 						break;
@@ -569,7 +569,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							if (isDistinct)
 							{
-								sql = new SqlExpression("DISTINCT {0}", sql);
+								sql = new SqlExpression(QueryHelper.GetDbDataType(sql, builder.MappingSchema), "DISTINCT {0}", sql);
 							}
 						}
 						else
@@ -604,7 +604,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (sql == null)
 					throw new InvalidOperationException();
 
-				sql = new SqlFunction(returnType, functionName, true, true, Precedence.Primary, nullabilityType, canBeNull, sql);
+				sql = new SqlFunction(builder.MappingSchema.GetDbDataType(returnType), functionName, isAggregate: true, nullabilityType, canBeNull, sql);
 
 				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/sql, buildInfo.Expression, convertType: returnType);
 

@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlDeleteStatement : SqlStatementWithQueryBase
+	public sealed class SqlDeleteStatement : SqlStatementWithQueryBase
 	{
 		public SqlDeleteStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{
@@ -43,13 +43,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(base.GetElementHashCode());
-
-			hash.Add(Table?.GetElementHashCode() ?? 0);
-			hash.Add(Top?.GetElementHashCode() ?? 0);
-			hash.Add(Output?.GetElementHashCode() ?? 0);
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				base.GetElementHashCode(),
+				Table?.GetElementHashCode(),
+				Top?.GetElementHashCode(),
+				Output?.GetElementHashCode()
+			);
+		}
 	}
-}
 }

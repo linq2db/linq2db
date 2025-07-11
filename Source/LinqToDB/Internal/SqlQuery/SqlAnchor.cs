@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlAnchor : SqlExpressionBase
+	public sealed class SqlAnchor : SqlExpressionBase
 	{
 		public enum AnchorKindEnum
 		{
@@ -55,11 +55,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(AnchorKind);
-			hash.Add(SqlExpression.GetElementHashCode());
-
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				AnchorKind,
+				SqlExpression.GetElementHashCode()
+			);
 		}
 	}
 }

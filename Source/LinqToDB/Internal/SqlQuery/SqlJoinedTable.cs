@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlJoinedTable : QueryElement
+	public sealed class SqlJoinedTable : QueryElement
 	{
 		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak, SqlSearchCondition searchCondition)
 		{
@@ -103,6 +103,7 @@ namespace LinqToDB.Internal.SqlQuery
 			hash.Add(Condition.GetElementHashCode());
 			hash.Add(IsWeak);
 			hash.Add(IsSubqueryExpression);
+
 			if (SqlQueryExtensions != null)
 			{
 				foreach (var ext in SqlQueryExtensions)

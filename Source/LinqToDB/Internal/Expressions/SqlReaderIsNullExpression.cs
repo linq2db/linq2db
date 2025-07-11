@@ -74,10 +74,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				return (Placeholder.GetHashCode() * 397) ^ IsNot.GetHashCode();
-			}
+			return HashCode.Combine(Placeholder, IsNot);
 		}
 
 		public static bool operator ==(SqlReaderIsNullExpression? left, SqlReaderIsNullExpression? right)

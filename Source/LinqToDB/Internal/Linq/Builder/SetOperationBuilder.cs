@@ -387,12 +387,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression? GetLeftSetPredicate()
 			{
-				return _leftSetPredicate ??= GetDifferencePredicate(true);
+				return _leftSetPredicate ??= GetDifferencePredicate(isLeft: true);
 			}
 
 			Expression? GetRightSetPredicate()
 			{
-				return _rightSetPredicate ??= GetDifferencePredicate(false);
+				return _rightSetPredicate ??= GetDifferencePredicate(isLeft: false);
 			}
 
 			Expression? GetDifferencePredicate(bool isLeft)
@@ -573,7 +573,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var predicate = GetLeftSetPredicate();
 						if (predicate == null)
-							throw new InvalidOperationException("No way to distinguish difference between tho different sets.");
+							throw new InvalidOperationException("No way to distinguish difference between two different sets.");
 						eagerMapping.Add(e1, e1.AppendPredicate(predicate));
 					}
 				}
@@ -587,7 +587,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var predicate = GetRightSetPredicate();
 					if (predicate == null)
-						throw new InvalidOperationException("No way to distinguish difference between tho different sets.");
+						throw new InvalidOperationException("No way to distinguish difference between two different sets.");
 
 					eagerMapping.Add(e2, e2.AppendPredicate(predicate));
 				}

@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				case {
 					Name: "Space",
 					Parameters: [var p0],
-					SystemType: var type,
+					Type: var type,
 				}:
 					return new SqlFunction(type, "PadR", new SqlValue(" "), p0);
 
@@ -59,7 +59,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
 								new SqlFunction(
-									typeof(string),
+									MappingSchema.GetDbDataType(typeof(string)),
 									"Substr",
 									predicate.Expr1,
 									new SqlValue(1),
@@ -75,10 +75,15 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(string), "Substr", predicate.Expr1,
-									new SqlBinaryExpression(typeof(int),
+								new SqlFunction(
+									MappingSchema.GetDbDataType(typeof(string)),
+									"Substr",
+									predicate.Expr1,
+									new SqlBinaryExpression(
+										typeof(int),
 										Factory.Length(predicate.Expr2), "*", new SqlValue(-1),
-										Precedence.Multiplicative)
+										Precedence.Multiplicative
+									)
 								),
 								SqlPredicate.Operator.Equal,
 								predicate.Expr2, null);
@@ -89,7 +94,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr", predicate.Expr1, predicate.Expr2),
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "InStr", predicate.Expr1, predicate.Expr2),
 								SqlPredicate.Operator.Greater,
 								new SqlValue(0), null);
 
@@ -189,9 +194,9 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				if (!(expression is SqlCastExpression || expression is SqlFunction { DoNotOptimize: true }))
 				{
 					if (IsDateDataType(dbDataType, "Date"))
-						return new SqlFunction(dbDataType.SystemType, "Date", expression) { DoNotOptimize = true };
+						return new SqlFunction(dbDataType, "Date", expression) { DoNotOptimize = true };
 
-					return new SqlFunction(dbDataType.SystemType, "strftime", ParametersNullabilityType.SameAsSecondParameter, new SqlValue("%Y-%m-%d %H:%M:%f"), expression) { DoNotOptimize = true };
+					return new SqlFunction(dbDataType, "strftime", ParametersNullabilityType.SameAsSecondParameter, new SqlValue("%Y-%m-%d %H:%M:%f"), expression) { DoNotOptimize = true };
 				}
 			}
 

@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlHavingClause : ClauseBase<SqlHavingClause>
+	public sealed class SqlHavingClause : ClauseBase<SqlHavingClause>
 	{
 		internal SqlHavingClause(SelectQuery selectQuery) : base(selectQuery)
 		{

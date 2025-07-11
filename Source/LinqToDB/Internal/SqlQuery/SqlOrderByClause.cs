@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlOrderByClause : ClauseBase, IQueryElement
+	public sealed class SqlOrderByClause : ClauseBase, IQueryElement
 	{
 		internal SqlOrderByClause(SelectQuery selectQuery) : base(selectQuery)
 		{
@@ -71,8 +71,10 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			var hash = new HashCode();
 			hash.Add(ElementType);
+
 			foreach (var item in Items)
 				hash.Add(item.GetElementHashCode());
+
 			return hash.ToHashCode();
 		}
 

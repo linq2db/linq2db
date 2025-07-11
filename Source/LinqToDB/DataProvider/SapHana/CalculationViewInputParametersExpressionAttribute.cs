@@ -48,14 +48,14 @@ namespace LinqToDB.DataProvider.SapHana
 
 			var arg = new ISqlExpression[1];
 
-			arg[0] = new SqlExpression(
+			arg[0] = new SqlFragment(
 				string.Join(", ",
 					Enumerable.Range(0, sqlValues.Count)
 						.Select(static x => FormattableString.Invariant($"{{{x}}}"))),
 				sqlValues.ToArray());
 
 			table.SqlTableType   = SqlTableType.Expression;
-			table.Expression     = "{0}('PLACEHOLDER' = {2}) {1}";
+			table.Expression     = "{0}('PLACEHOLDER' = ({2})) {1}";
 			table.TableArguments = arg.ToArray();
 		}
 	}

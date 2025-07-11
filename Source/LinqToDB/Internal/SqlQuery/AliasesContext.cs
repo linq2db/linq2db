@@ -6,7 +6,7 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class AliasesContext
+	public sealed class AliasesContext
 	{
 		readonly HashSet<IQueryElement> _aliasesSet = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 

@@ -3,12 +3,9 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlComment : IQueryElement
+	public sealed class SqlComment : QueryElement
 	{
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.Comment;
+		public override QueryElementType ElementType => QueryElementType.Comment;
 
 		public List<string> Lines { get; }
 
@@ -22,7 +19,7 @@ namespace LinqToDB.Internal.SqlQuery
 			Lines = lines;
 		}
 
-		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			foreach (var part in Lines)
 				writer
@@ -31,13 +28,12 @@ namespace LinqToDB.Internal.SqlQuery
 			return writer;
 		}
 
-		public int GetElementHashCode()
+		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
+
 			foreach (var line in Lines)
-			{
 				hash.Add(line);
-			}
 
 			return hash.ToHashCode();
 		}

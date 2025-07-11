@@ -53,10 +53,10 @@ namespace LinqToDB
 					case Sql.AggregateModifier.None :
 						break;
 					case Sql.AggregateModifier.Distinct :
-						builder.AddExpression("modifier", "DISTINCT");
+						builder.AddFragment("modifier", "DISTINCT");
 						break;
 					case Sql.AggregateModifier.All :
-						builder.AddExpression("modifier", "ALL");
+						builder.AddFragment("modifier", "ALL");
 						break;
 					default :
 						throw new InvalidOperationException($"Unexpected aggregate modifier: {modifier}");
@@ -71,7 +71,7 @@ namespace LinqToDB
 				var nulls = builder.GetValue<Sql.Nulls>("nulls");
 				var nullsStr = GetNullsStr(nulls, false);
 				if (!string.IsNullOrEmpty(nullsStr))
-					builder.AddExpression("modifier", nullsStr);
+					builder.AddFragment("modifier", nullsStr);
 			}
 		}
 
@@ -82,7 +82,7 @@ namespace LinqToDB
 				var nulls = builder.GetValue<Sql.Nulls>("nulls");
 				var nullsStr = GetNullsStr(nulls, true);
 				if (!string.IsNullOrEmpty(nullsStr))
-					builder.AddExpression("modifier", nullsStr);
+					builder.AddFragment("modifier", nullsStr);
 			}
 		}
 
@@ -130,9 +130,9 @@ namespace LinqToDB
 				var nullsStr = GetNullsStr(nulls, false);
 
 				if (!string.IsNullOrEmpty(fromStr))
-					builder.AddExpression("from", fromStr);
+					builder.AddFragment("from", fromStr);
 				if (!string.IsNullOrEmpty(nullsStr))
-					builder.AddExpression("nulls", nullsStr);
+					builder.AddFragment("nulls", nullsStr);
 			}
 		}
 

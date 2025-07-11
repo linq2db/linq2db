@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlTableLikeSource : SqlSourceBase
+	public sealed class SqlTableLikeSource : SqlSourceBase
 	{
 		public SqlTableLikeSource()
 		{
@@ -75,8 +75,10 @@ namespace LinqToDB.Internal.SqlQuery
 			hash.Add(ElementType);
 			hash.Add(SourceEnumerable?.GetElementHashCode());
 			hash.Add(SourceQuery?.GetElementHashCode());
+
 			foreach (var field in SourceFields)
 				hash.Add(field.GetElementHashCode());
+
 			return hash.ToHashCode();
 		}
 

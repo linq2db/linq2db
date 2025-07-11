@@ -24,18 +24,18 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			switch (element.Operation)
 			{
 				case "%":
-					return new SqlFunction(element.SystemType, "MOD", element.Expr1, element.Expr2);
+					return new SqlFunction(element.Type, "MOD", element.Expr1, element.Expr2);
 				case "&":
-					return new SqlFunction(element.SystemType, "BITAND", element.Expr1, element.Expr2);
+					return new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2);
 				case "|":
 					return Sub(
 						Add(element.Expr1, element.Expr2, element.SystemType),
-						new SqlFunction(element.SystemType, "BITAND", element.Expr1, element.Expr2),
+						new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2),
 						element.SystemType);
 				case "^": // (a + b) - BITAND(a, b) * 2
 					return Sub(
 						Add(element.Expr1, element.Expr2, element.SystemType),
-						Mul(new SqlFunction(element.SystemType, "BITAND", element.Expr1, element.Expr2), 2),
+						Mul(new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2), 2),
 						element.SystemType);
 				case "+":
 					return element.SystemType == typeof(string) ?

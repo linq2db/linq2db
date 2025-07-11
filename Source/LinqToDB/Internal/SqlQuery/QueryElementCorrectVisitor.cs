@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class QueryElementCorrectVisitor : QueryElementVisitor
+	public sealed class QueryElementCorrectVisitor : QueryElementVisitor
 	{
 		readonly QueryElementVisitor _visitor;
 		readonly IQueryElement       _toReplace;

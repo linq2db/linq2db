@@ -3,7 +3,7 @@
 namespace LinqToDB.Internal.SqlQuery
 {
 	[DebuggerDisplay("{ProviderValue}, {DbDataType}")]
-	public class SqlParameterValue
+	public sealed class SqlParameterValue
 	{
 		public SqlParameterValue(object? providerValue, object? clientValue, DbDataType dbDataType)
 		{

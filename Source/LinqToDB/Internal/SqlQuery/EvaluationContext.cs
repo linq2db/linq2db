@@ -5,7 +5,7 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class EvaluationContext
+	public sealed class EvaluationContext
 	{
 		private Dictionary<IQueryElement, (object? value, bool success)>? _clientEvaluationCache;
 		private Dictionary<IQueryElement, (object? value, bool success)>? _serverEvaluationCache;

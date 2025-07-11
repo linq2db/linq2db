@@ -11,7 +11,7 @@ using System.Collections.Generic;
 namespace LinqToDB.Internal.Common
 {
 <#
-	var MaxMemberCount = 10;
+	var MaxMemberCount = 8;
 	var prefixes = new[] { "M" };
 #>
 	internal static partial class MutableTuple
@@ -38,34 +38,6 @@ namespace LinqToDB.Internal.Common
 <#
 	}
 #>
-		internal static int CombineHashCodes(int h1, int h2)
-		{
-			return (((h1 << 5) + h1) ^ h2);
-		}
-<#
-	for (var info = 3; info <= MaxMemberCount; info++)
-	{
-		var leftSide           = (info + 1) / 2;
-		var rightSide          = info - leftSide;
-		var leftNames          = Enumerable.Range(1, leftSide);
-		var rightNames         = Enumerable.Range(leftSide + 1, rightSide);
-		var allNames           = Enumerable.Range(1, info);
-		var leftCallArguments  = string.Join(", ", leftNames.Select(i => $"h{i}"));
-		var rightCallArguments = string.Join(", ", rightNames.Select(i => $"h{i}"));
-		var allParameters      = string.Join(", ", allNames.Select(i => $"int h{i}"));
-		var leftCall           = $"CombineHashCodes({leftCallArguments})";
-		string rightCall;
-		if (rightSide == 1)
-			rightCall = rightCallArguments;
-		else
-			rightCall = $"CombineHashCodes({rightCallArguments})";
-		var callStr = $"CombineHashCodes({leftCall}, {rightCall})";
-#>
-		internal static int CombineHashCodes(<#= allParameters #>)
-			=> <#= callStr #>;
-
-<#
-	}#>
 	}
 
 <#
@@ -79,7 +51,7 @@ namespace LinqToDB.Internal.Common
 		var hashCodes    = string.Join(",\r\n\t\t\t\t", indexes.Select(i => $"_item{i}ValueComparer.GetHashCode(Item{i})"));
 		var hashCodesStr = hashCodes;
 		if (info > 1)
-		    hashCodesStr = $"MutableTuple.CombineHashCodes({hashCodes})";
+		    hashCodesStr = $"HashCode.Combine({hashCodes})";
 
 #>
 	internal class <#= prefix #>Tuple<<#= types #>>

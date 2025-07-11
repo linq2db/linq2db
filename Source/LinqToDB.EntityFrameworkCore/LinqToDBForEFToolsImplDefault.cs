@@ -76,10 +76,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return ((ProviderName != null ? ProviderName.GetHashCode() : 0) * 397) ^ (ConnectionString != null ? ConnectionString.GetHashCode() : 0);
-				}
+				return HashCode.Combine(ProviderName, ConnectionString);
 			}
 			
 			#endregion

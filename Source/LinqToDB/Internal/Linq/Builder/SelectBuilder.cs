@@ -131,7 +131,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var parameters = orderQuery.OrderBy.Items.Select(static oi => oi.Expression).ToArray();
 
-						var rn = new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null, parameters);
+						var rn = new SqlExpression(MappingSchema.GetDbDataType(typeof(long)), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, parameters);
 						var intType = MappingSchema.GetDbDataType(typeof(int));
 						var sql = new SqlBinaryExpression(intType, rn, "-", new SqlValue(intType, 1));
 

@@ -346,6 +346,7 @@ namespace LinqToDB.Internal.Extensions
 				_                     => null,
 			};
 
+			[SuppressMessage("Performance", "MA0168:Use readonly struct for in or ref readonly parameter")]
 			static MethodInfo? FindMethod(in InterfaceMapping map, MethodInfo? target)
 			{
 				if (target is not null)
@@ -360,6 +361,7 @@ namespace LinqToDB.Internal.Extensions
 				return null;
 			}
 
+			[SuppressMessage("Performance", "MA0168:Use readonly struct for in or ref readonly parameter")]
 			static MemberInfo? FindPropertyMethod(in InterfaceMapping map, Type concreteType, PropertyInfo property)
 			{
 				// Check both get and set methods

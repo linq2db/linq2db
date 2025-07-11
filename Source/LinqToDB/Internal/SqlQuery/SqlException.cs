@@ -7,7 +7,7 @@ namespace LinqToDB.Internal.SqlQuery
 	// TODO: Remove in v7
 	[Obsolete($"This exception type is not used anymore. Please update your code to handle {nameof(LinqToDBException)}."), EditorBrowsable(EditorBrowsableState.Never)]
 	[Serializable]
-	public class SqlException : Exception
+	public sealed class SqlException : Exception
 	{
 		public SqlException()
 			: base("A LinqToDB Sql error has occurred.")

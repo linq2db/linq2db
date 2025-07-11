@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlTruncateTableStatement : SqlStatement
+	public sealed class SqlTruncateTableStatement : SqlStatement
 	{
 		public SqlTable? Table         { get; set; }
 		public bool      ResetIdentity { get; set; }
@@ -36,12 +36,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(base.GetElementHashCode());
-
-			hash.Add(Table?.GetElementHashCode());
-			hash.Add(ResetIdentity);
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				base.GetElementHashCode(),
+				Table?.GetElementHashCode(),
+				ResetIdentity
+			);
+		}
 	}
-}
 }

@@ -2,8 +2,7 @@
 
 namespace LinqToDB.Internal.SqlQuery
 {
-
-	public class SqlCastExpression : SqlExpressionBase
+	public sealed class SqlCastExpression : SqlExpressionBase
 	{
 		public SqlCastExpression(ISqlExpression expression, DbDataType toType, SqlDataType? fromType, bool isMandatory = false)
 		{

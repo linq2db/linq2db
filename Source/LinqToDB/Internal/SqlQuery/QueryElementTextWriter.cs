@@ -7,7 +7,7 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class QueryElementTextWriter
+	public sealed class QueryElementTextWriter
 	{
 		HashSet<IQueryElement>? _visited;
 		readonly SqlTextWriter  _writer = new();

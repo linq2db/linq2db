@@ -82,20 +82,11 @@ namespace LinqToDB.Internal.Conversion
 			// ReSharper disable NonReadonlyMemberInGetHashCode
 			public override int GetHashCode()
 			{
-				if (_hashCode != null)
-					return _hashCode.Value;
-
-				unchecked
-				{
-					var hashCode = IsSchemaSpecific ? 397 : 0;
-					//if (Delegate != null)
-					//	hashCode ^= Delegate.Method.GetHashCode();
-					hashCode  = (hashCode * 397) ^ CheckNullLambdaID;
-					hashCode  = (hashCode * 397) ^ LambdaID;
-					_hashCode = hashCode;
-				}
-
-				return _hashCode.Value;
+				return _hashCode ??= HashCode.Combine(
+					IsSchemaSpecific,
+					CheckNullLambdaID,
+					LambdaID
+				);
 			}
 		}
 

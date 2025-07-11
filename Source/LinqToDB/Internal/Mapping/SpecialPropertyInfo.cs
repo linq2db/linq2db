@@ -64,7 +64,9 @@ namespace LinqToDB.Internal.Mapping
 		}
 
 		public override int GetHashCode()
-			=> unchecked ((Name.GetHashCode() * 397) ^ DeclaringType.GetHashCode());
+		{
+			return HashCode.Combine(Name, DeclaringType);
+		}
 
 		/// <summary>
 		/// Implements the operator ==.

@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlRowExpression : SqlExpressionBase
+	public sealed class SqlRowExpression : SqlExpressionBase
 	{
 		public SqlRowExpression(ISqlExpression[] values)
 		{
@@ -59,10 +59,9 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			var hash = new HashCode();
 			hash.Add(ElementType);
+
 			foreach (var value in Values)
-			{
 				hash.Add(value.GetElementHashCode());
-			}
 
 			return hash.ToHashCode();
 		}

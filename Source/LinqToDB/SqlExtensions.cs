@@ -20,9 +20,9 @@ namespace LinqToDB
 			return sequence.Contains(value);
 		}
 
-		static Expression<Func<T,IEnumerable<T>,bool>> InImpl1<T>()
+		static Expression<Func<T, IEnumerable<T>, bool>> InImpl1<T>()
 		{
-			return (value,sequence) => sequence.Contains(value);
+			return (value, sequence) => sequence.Contains(value);
 		}
 
 		[ExpressionMethod(nameof(InImpl2))]
@@ -31,9 +31,9 @@ namespace LinqToDB
 			return sequence.Contains(value);
 		}
 
-		static Expression<Func<T,IQueryable<T>,bool>> InImpl2<T>()
+		static Expression<Func<T, IQueryable<T>, bool>> InImpl2<T>()
 		{
-			return (value,sequence) => sequence.Contains(value);
+			return (value, sequence) => sequence.Contains(value);
 		}
 
 		[ExpressionMethod(nameof(InImpl3))]
@@ -42,9 +42,9 @@ namespace LinqToDB
 			return sequence.Contains(value);
 		}
 
-		static Expression<Func<T,T[],bool>> InImpl3<T>()
+		static Expression<Func<T, T[], bool>> InImpl3<T>()
 		{
-			return (value,sequence) => sequence.Contains(value);
+			return (value, sequence) => sequence.Contains(value);
 		}
 
 		[ExpressionMethod(nameof(InImpl4))]
@@ -54,9 +54,9 @@ namespace LinqToDB
 			return comparer.Equals(value, cmp1) || comparer.Equals(value, cmp2);
 		}
 
-		static Expression<Func<T,T,T,bool>> InImpl4<T>()
+		static Expression<Func<T, T, T, bool>> InImpl4<T>()
 		{
-			return (value,cmp1,cmp2) => value.In(new[] { cmp1, cmp2 });
+			return (value, cmp1, cmp2) => value.In(new[] { cmp1, cmp2 });
 		}
 
 		[ExpressionMethod(nameof(InImpl5))]
@@ -66,9 +66,9 @@ namespace LinqToDB
 			return comparer.Equals(value, cmp1) || comparer.Equals(value, cmp2) || comparer.Equals(value, cmp3);
 		}
 
-		static Expression<Func<T,T,T,T,bool>> InImpl5<T>()
+		static Expression<Func<T, T, T, T, bool>> InImpl5<T>()
 		{
-			return (value,cmp1,cmp2,cmp3) => value.In(new[] { cmp1, cmp2, cmp3 });
+			return (value, cmp1, cmp2, cmp3) => value.In(new[] { cmp1, cmp2, cmp3 });
 		}
 
 		[ExpressionMethod(nameof(NotInImpl1))]
@@ -77,9 +77,9 @@ namespace LinqToDB
 			return !sequence.Contains(value);
 		}
 
-		static Expression<Func<T,IEnumerable<T>,bool>> NotInImpl1<T>()
+		static Expression<Func<T, IEnumerable<T>, bool>> NotInImpl1<T>()
 		{
-			return (value,sequence) => !sequence.Contains(value);
+			return (value, sequence) => !sequence.Contains(value);
 		}
 
 		[ExpressionMethod(nameof(NotInImpl2))]
@@ -88,9 +88,9 @@ namespace LinqToDB
 			return !sequence.Contains(value);
 		}
 
-		static Expression<Func<T,IQueryable<T>,bool>> NotInImpl2<T>()
+		static Expression<Func<T, IQueryable<T>, bool>> NotInImpl2<T>()
 		{
-			return (value,sequence) => !sequence.Contains(value);
+			return (value, sequence) => !sequence.Contains(value);
 		}
 
 		[ExpressionMethod(nameof(NotInImpl3))]
@@ -99,9 +99,9 @@ namespace LinqToDB
 			return !sequence.Contains(value);
 		}
 
-		static Expression<Func<T,T[],bool>> NotInImpl3<T>()
+		static Expression<Func<T, T[], bool>> NotInImpl3<T>()
 		{
-			return (value,sequence) => !sequence.Contains(value);
+			return (value, sequence) => !sequence.Contains(value);
 		}
 
 		[ExpressionMethod(nameof(NotInImpl4))]
@@ -111,9 +111,9 @@ namespace LinqToDB
 			return !comparer.Equals(value, cmp1) && !comparer.Equals(value, cmp2);
 		}
 
-		static Expression<Func<T,T,T,bool>> NotInImpl4<T>()
+		static Expression<Func<T, T, T, bool>> NotInImpl4<T>()
 		{
-			return (value,cmp1,cmp2) => value.NotIn(new[] { cmp1, cmp2 });
+			return (value, cmp1, cmp2) => value.NotIn(new[] { cmp1, cmp2 });
 		}
 
 		[ExpressionMethod(nameof(NotInImpl5))]
@@ -123,9 +123,9 @@ namespace LinqToDB
 			return !comparer.Equals(value, cmp1) && !comparer.Equals(value, cmp2) && !comparer.Equals(value, cmp3);
 		}
 
-		static Expression<Func<T,T,T,T,bool>> NotInImpl5<T>()
+		static Expression<Func<T, T, T, T, bool>> NotInImpl5<T>()
 		{
-			return (value,cmp1,cmp2,cmp3) => value.NotIn(new[] { cmp1, cmp2, cmp3 });
+			return (value, cmp1, cmp2, cmp3) => value.NotIn(new[] { cmp1, cmp2, cmp3 });
 		}
 
 		#endregion

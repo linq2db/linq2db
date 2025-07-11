@@ -53,7 +53,6 @@ Custom feature symbols:
 
 Custom debugging symbols:
 
-* `OVERRIDETOSTRING` - enables `ToString()` overrides for AST model (must be enabled in LinqToDB.csproj by renaming existing `OVERRIDETOSTRING1` define)
 * `BUGCHECK` - enables extra bugchecks in debug and ci test builds
 
 #### Test projects

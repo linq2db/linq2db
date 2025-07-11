@@ -78,7 +78,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 
 				var resultExpression = factory.Function(intDbType, "DatePart",
 					ParametersNullabilityType.SameAsSecondParameter,
-					factory.NotNullFragment(intDbType, partStr),
+					factory.NotNullExpression(intDbType, partStr),
 					dateTimeExpression);
 
 				return resultExpression;
@@ -98,7 +98,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 				}
 
 				var resultExpression = factory.Function(dateType, "DateAdd",
-					factory.NotNullFragment(factory.GetDbDataType(typeof(string)), partStr),
+					factory.NotNullExpression(factory.GetDbDataType(typeof(string)), partStr),
 					increment,
 					dateTimeExpression);
 				return resultExpression;
@@ -170,9 +170,10 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
+				var factory = translationContext.ExpressionFactory;
 				// CONVERT(date, your_datetime_column)
 
-				var convertFunc = new SqlFunction(dateExpression.SystemType!, "CONVERT", new SqlDataType(DataType.Date), dateExpression);
+				var convertFunc = factory.Function(factory.GetDbDataType(dateExpression), "CONVERT", factory.SqlDataType(DataType.Date), dateExpression);
 				return convertFunc;
 			}
 

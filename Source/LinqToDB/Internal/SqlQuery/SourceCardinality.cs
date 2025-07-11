@@ -2,7 +2,6 @@
 
 namespace LinqToDB.Internal.SqlQuery
 {
-
 	[Flags]
 	public enum SourceCardinality
 	{

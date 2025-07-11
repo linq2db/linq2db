@@ -16,7 +16,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SelectQueryOptimizerVisitor : SqlQueryVisitor
+	public sealed class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
 		SqlProviderFlags  _providerFlags     = default!;
 		DataOptions       _dataOptions       = default!;
@@ -1045,8 +1045,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 					rnBuilder.Append(')');
 
-					rnExpression = new SqlExpression(typeof(long), rnBuilder.ToString(), Precedence.Primary,
-						SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null, parameters.ToArray());
+					rnExpression = new SqlExpression(_mappingSchema.GetDbDataType(typeof(long)), rnBuilder.ToString(), Precedence.Primary,
+						SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, parameters.ToArray());
 				}
 
 				var whereToIgnore = new List<IQueryElement> { sql.Where, sql.Select };
@@ -1899,15 +1899,13 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 
 				if (!subQuery.Select.Columns.All(c =>
-					{
-						var columnExpression = QueryHelper.UnwrapCastAndNullability(c.Expression);
-
-						if (columnExpression is SqlColumn or SqlField or SqlTable or SqlBinaryExpression)
-							return true;
-						if (columnExpression is SqlFunction func)
-							return !func.IsAggregate;
-						return false;
-					}))
+						QueryHelper.UnwrapCastAndNullability(c.Expression) switch
+						{
+							SqlColumn or SqlField or SqlTable or SqlBinaryExpression => true,
+							SqlParameterizedExpressionBase e => !e.IsAggregate,
+							_ => false,
+						})
+					)
 				{
 					return false;
 				}
@@ -2585,10 +2583,8 @@ namespace LinqToDB.Internal.SqlQuery
 										}
 									}
 
-									if (testedColumn.Expression is SqlFunction function)
+									if (QueryHelper.IsAggregationFunction(testedColumn.Expression))
 									{
-										if (function.IsAggregate)
-										{
 											if (!_providerFlags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
 											{
 												if (_providerFlags.IsApplyJoinSupported)
@@ -2610,7 +2606,6 @@ namespace LinqToDB.Internal.SqlQuery
 												isValid = false;
 												break;
 											}
-										}
 									}
 								}
 

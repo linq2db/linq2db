@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlBinaryExpression : SqlExpressionBase
+	public sealed class SqlBinaryExpression : SqlExpressionBase
 	{
 		public SqlBinaryExpression(DbDataType dbDataType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = LinqToDB.SqlQuery.Precedence.Unknown)
 		{
@@ -53,21 +54,15 @@ namespace LinqToDB.Internal.SqlQuery
 
 		int?                   _hashCode;
 
+		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
-			// ReSharper disable NonReadonlyMemberInGetHashCode
-			if (_hashCode.HasValue)
-				return _hashCode.Value;
-
-			var hashCode = Operation.GetHashCode();
-
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr1.GetHashCode());
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr2.GetHashCode());
-
-			_hashCode = hashCode;
-			return hashCode;
-			// ReSharper restore NonReadonlyMemberInGetHashCode
+			return _hashCode ??= HashCode.Combine(
+				Operation,
+				SystemType,
+				Expr1,
+				Expr2
+			);
 		}
 
 		#region ISqlExpression Members
@@ -107,22 +102,22 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(Operation);
-			hash.Add(SystemType);
-			hash.Add(Expr1.GetElementHashCode());
-			hash.Add(Expr2.GetElementHashCode());
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				Operation,
+				SystemType,
+				Expr1.GetElementHashCode(),
+				Expr2.GetElementHashCode()
+			);
 		}
 
 		#endregion
 
-		public void Deconstruct(out Type systemType, out ISqlExpression expr1, out string operation, out ISqlExpression expr2)
+		public void Deconstruct(out DbDataType type, out ISqlExpression expr1, out string operation, out ISqlExpression expr2)
 		{
-			systemType = SystemType;
-			expr1      = Expr1;
-			operation  = Operation;
-			expr2      = Expr2;
+			type      = Type;
+			expr1     = Expr1;
+			operation = Operation;
+			expr2     = Expr2;
 		}
 
 		public void Deconstruct(out ISqlExpression expr1, out string operation, out ISqlExpression expr2)

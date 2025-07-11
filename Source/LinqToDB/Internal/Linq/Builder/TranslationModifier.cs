@@ -75,13 +75,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override int GetHashCode()
 		{
-			unchecked
+			var hashCode = new HashCode();
+			hashCode.Add(InlineParameters);
+
+			if (IgnoreQueryFilters != null)
 			{
-				var hash = 17;
-				hash = hash * 23 + InlineParameters.GetHashCode();
-				hash = hash * 23 + (IgnoreQueryFilters?.Aggregate(0, (current, type) => current ^ type.GetHashCode()) ?? 0);
-				return hash;
+				foreach (var t in IgnoreQueryFilters)
+					hashCode.Add(t);
 			}
+
+			return hashCode.ToHashCode();
 		}
 	}
 }

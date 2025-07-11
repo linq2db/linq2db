@@ -5,7 +5,7 @@ using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlValue : SqlExpressionBase
+	public sealed class SqlValue : SqlExpressionBase
 	{
 		public SqlValue(Type systemType, object? value)
 		{
@@ -40,7 +40,6 @@ namespace LinqToDB.Internal.SqlQuery
 				if (_valueType == value)
 					return;
 				_valueType = value;
-				_hashCode  = null;
 			}
 		}
 
@@ -76,16 +75,16 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(ValueType);
-			hash.Add(Value);
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				ValueType,
+				Value
+			);
 		}
 
 		public override int   Precedence => LinqToDB.SqlQuery.Precedence.Primary;
 		public override Type? SystemType => ValueType.SystemType;
 
-		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+		public override bool CanBeNullable(NullabilityContext nullability) => Value == null;
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
@@ -99,28 +98,15 @@ namespace LinqToDB.Internal.SqlQuery
 				&& comparer(this, other);
 		}
 
-		int? _hashCode;
-
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
-			if (_hashCode.HasValue)
-				return _hashCode.Value;
-
-			var hashCode = 17;
-
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ ValueType.GetHashCode());
-
-			if (Value != null)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ Value.GetHashCode());
-
-			_hashCode = hashCode;
-			return hashCode;
+			return HashCode.Combine(
+				ValueType,
+				Value
+			);
 		}
 
 		#endregion
-
-		public bool CanBeNull => Value == null;
 
 		public void Deconstruct(out object? value)
 		{

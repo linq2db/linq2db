@@ -22,12 +22,12 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			{
 				case "%":
 				{
-					var expr1 = !element.Expr1.SystemType!.IsIntegerType() ? new SqlFunction(typeof(int), "Int", element.Expr1) : element.Expr1;
-					return new SqlFunction(element.SystemType, "Mod", expr1, element.Expr2);
+					var expr1 = !element.Expr1.SystemType!.IsIntegerType() ? new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "Int", element.Expr1) : element.Expr1;
+					return new SqlFunction(element.Type, "Mod", expr1, element.Expr2);
 				}
-				case "&": return new SqlFunction(element.SystemType, "BitAnd", element.Expr1, element.Expr2);
-				case "|": return new SqlFunction(element.SystemType, "BitOr", element.Expr1, element.Expr2);
-				case "^": return new SqlFunction(element.SystemType, "BitXor", element.Expr1, element.Expr2);
+				case "&": return new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2);
+				case "|": return new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2);
+				case "^": return new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2);
 				case "+": return element.SystemType == typeof(string) ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
 			}
 
@@ -39,27 +39,27 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			switch (func.Name)
 			{
 				case PseudoFunctions.LENGTH: return func.WithName("CHAR_LENGTH");
-				case "Millisecond"   :       return Div(new SqlFunction(func.SystemType, "Microsecond", func.Parameters), 1000);
+				case "Millisecond"   :       return Div(new SqlFunction(func.Type, "Microsecond", func.Parameters), 1000);
 				case "SmallDateTime" :
 				case "DateTime"      :
-				case "DateTime2"     : return new SqlFunction(func.SystemType, "TimeStamp", func.Parameters);
-				case "UInt16"        : return new SqlFunction(func.SystemType, "Int",       func.Parameters);
-				case "UInt32"        : return new SqlFunction(func.SystemType, "BigInt",    func.Parameters);
-				case "UInt64"        : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters);
+				case "DateTime2"     : return new SqlFunction(func.Type, "TimeStamp", func.Parameters);
+				case "UInt16"        : return new SqlFunction(func.Type, "Int",       func.Parameters);
+				case "UInt32"        : return new SqlFunction(func.Type, "BigInt",    func.Parameters);
+				case "UInt64"        : return new SqlFunction(func.Type, "Decimal",   func.Parameters);
 				case "Byte"          :
 				case "SByte"         :
-				case "Int16"         : return new SqlFunction(func.SystemType, "SmallInt",  func.Parameters);
-				case "Int32"         : return new SqlFunction(func.SystemType, "Int",       func.Parameters);
-				case "Int64"         : return new SqlFunction(func.SystemType, "BigInt",    func.Parameters);
-				case "Double"        : return new SqlFunction(func.SystemType, "Float",     func.Parameters);
-				case "Single"        : return new SqlFunction(func.SystemType, "Real",      func.Parameters);
-				case "Money"         : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(19), new SqlValue(4));
-				case "SmallMoney"    : return new SqlFunction(func.SystemType, "Decimal",   func.Parameters[0], new SqlValue(10), new SqlValue(4));
+				case "Int16"         : return new SqlFunction(func.Type, "SmallInt",  func.Parameters);
+				case "Int32"         : return new SqlFunction(func.Type, "Int",       func.Parameters);
+				case "Int64"         : return new SqlFunction(func.Type, "BigInt",    func.Parameters);
+				case "Double"        : return new SqlFunction(func.Type, "Float",     func.Parameters);
+				case "Single"        : return new SqlFunction(func.Type, "Real",      func.Parameters);
+				case "Money"         : return new SqlFunction(func.Type, "Decimal",   func.Parameters[0], new SqlValue(19), new SqlValue(4));
+				case "SmallMoney"    : return new SqlFunction(func.Type, "Decimal",   func.Parameters[0], new SqlValue(10), new SqlValue(4));
 				case "VarChar" when func.Parameters[0].SystemType!.ToUnderlying() == typeof(decimal):
-					return new SqlFunction(func.SystemType, "Char", func.Parameters[0]);
+					return new SqlFunction(func.Type, "Char", func.Parameters[0]);
 
 				case "NChar"         :
-				case "NVarChar"      : return new SqlFunction(func.SystemType, "Char",      func.Parameters);
+				case "NVarChar"      : return new SqlFunction(func.Type, "Char",      func.Parameters);
 			}
 
 			return base.ConvertSqlFunction(func);
@@ -81,14 +81,14 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 			if (toType.SystemType == typeof(string) && argumentType.SystemType != typeof(string))
 			{
-				return new SqlFunction(cast.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", argument));
+				return new SqlFunction(cast.Type, "RTrim", new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Char", argument));
 			}
 
 			if (toType.Length > 0)
-				return new SqlFunction(cast.SystemType, toType.DataType.ToString(), argument, new SqlValue(toType.Length));
+				return new SqlFunction(cast.Type, toType.DataType.ToString(), argument, new SqlValue(toType.Length));
 
 			if (toType.Precision > 0)
-				return new SqlFunction(cast.SystemType, toType.DataType.ToString(), argument, new SqlValue(toType.Precision), new SqlValue(toType.Scale ?? 0));
+				return new SqlFunction(cast.Type, toType.DataType.ToString(), argument, new SqlValue(toType.Precision), new SqlValue(toType.Scale ?? 0));
 
 			if (!cast.IsMandatory && QueryHelper.UnwrapNullablity(argument) is SqlParameter param)
 			{

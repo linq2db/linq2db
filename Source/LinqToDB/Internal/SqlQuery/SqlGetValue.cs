@@ -4,7 +4,7 @@ using LinqToDB.Model;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlGetValue
+	public sealed class SqlGetValue
 	{
 		public SqlGetValue(ISqlExpression sql, Type valueType, ColumnDescriptor? columnDescriptor, Func<object, object>? getValueFunc)
 		{

@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlParameter : SqlExpressionBase
+	public sealed class SqlParameter : SqlExpressionBase
 	{
 		public SqlParameter(DbDataType type, string? name, object? value)
 		{
@@ -88,8 +88,8 @@ namespace LinqToDB.Internal.SqlQuery
 		public override int  Precedence => LinqToDB.SqlQuery.Precedence.Primary;
 		public override Type SystemType => Type.SystemType;
 
-		public override bool CanBeNullable(NullabilityContext nullability) 
-			=> SqlDataType.TypeCanBeNull(Type.SystemType);
+		public override bool CanBeNullable(NullabilityContext nullability)
+			=> QueryHelper.TypeCanBeNull(Type.SystemType);
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
@@ -97,11 +97,6 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		#endregion
-
-		public override int GetHashCode()
-		{
-			return RuntimeHelpers.GetHashCode(this);
-		}
 
 		#region IQueryElement Members
 

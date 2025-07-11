@@ -65,20 +65,20 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],
-					SystemType: var type,
+					Type: var type,
 				}:
 					return new SqlExpression(type, "Position({0} in {1})", Precedence.Primary, p0, p1);
 
 				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
-					SystemType: var type,
+					Type: var type,
 				}:
 					return Add<int>(
 						new SqlExpression(type, "Position({0} in {1})", Precedence.Primary,
 							p0,
 							(ISqlExpression)Visit(
-								new SqlFunction(typeof(string), "Substring",
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Substring",
 									p1,
 									p2,
 									Sub<int>(

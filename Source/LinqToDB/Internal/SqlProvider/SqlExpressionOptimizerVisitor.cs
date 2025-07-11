@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-using LinqToDB;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -169,7 +168,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (element.TrueValue is SqlConditionExpression trueConditional)
 			{
-				if (trueConditional.Condition.Equals(element.Condition, SqlExpression.DefaultComparer))
+				if (trueConditional.Condition.Equals(element.Condition, SqlQuery.SqlExtensions.DefaultComparer))
 				{
 					var newConditionExpression = new SqlConditionExpression(element.Condition, trueConditional.TrueValue, element.FalseValue);
 					return Visit(newConditionExpression);
@@ -208,12 +207,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (isNullPredicate.IsNot)
 				{
-					if (unwrapped.Equals(element.TrueValue, SqlExpression.DefaultComparer) && element.FalseValue is SqlValue { Value: null })
+					if (unwrapped.Equals(element.TrueValue, SqlQuery.SqlExtensions.DefaultComparer) && element.FalseValue is SqlValue { Value: null })
 					{
 						return isNullPredicate.Expr1;
 					}
 				}
-				else if (unwrapped.Equals(element.FalseValue, SqlExpression.DefaultComparer) && element.TrueValue is SqlValue { Value: null })
+				else if (unwrapped.Equals(element.FalseValue, SqlQuery.SqlExtensions.DefaultComparer) && element.TrueValue is SqlValue { Value: null })
 				{
 					return isNullPredicate.Expr1;
 				}
@@ -227,14 +226,14 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (nestedCondition != null)
 			{
-				if (element.TrueValue.Equals(nestedCondition.TrueValue, SqlExpression.DefaultComparer)
-					&& element.FalseValue.Equals(nestedCondition.FalseValue, SqlExpression.DefaultComparer))
+				if (element.TrueValue.Equals(nestedCondition.TrueValue, SqlQuery.SqlExtensions.DefaultComparer)
+					&& element.FalseValue.Equals(nestedCondition.FalseValue, SqlQuery.SqlExtensions.DefaultComparer))
 				{
 					return nestedCondition;
 				}
 
-				if (element.TrueValue.Equals(nestedCondition.FalseValue, SqlExpression.DefaultComparer)
-					&& element.FalseValue.Equals(nestedCondition.TrueValue, SqlExpression.DefaultComparer))
+				if (element.TrueValue.Equals(nestedCondition.FalseValue, SqlQuery.SqlExtensions.DefaultComparer)
+					&& element.FalseValue.Equals(nestedCondition.TrueValue, SqlQuery.SqlExtensions.DefaultComparer))
 				{
 					return new SqlConditionExpression(nestedCondition.Condition, element.FalseValue, element.TrueValue);
 				}
@@ -1279,7 +1278,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				if (function.Parameters[0] is SqlFunction { Parameters.Length: 1, Name: PseudoFunctions.TO_LOWER or PseudoFunctions.TO_UPPER } func)
 				{
-					return new SqlFunction(function.SystemType, function.Name, func.Parameters[0]);
+					return new SqlFunction(function.Type, function.Name, func.Parameters[0]);
 				}
 			}
 

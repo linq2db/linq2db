@@ -237,7 +237,7 @@ namespace LinqToDB
 				return str;
 			}
 
-			static readonly SqlExpression UnknownExpression = new ("!!!");
+			static readonly ISqlExpression UnknownExpression = new SqlFragment("!!!");
 
 			public static void PrepareParameterValues<TContext>(
 				TContext                                                              context,
@@ -554,7 +554,7 @@ namespace LinqToDB
 				if (error != null)
 					return SqlErrorExpression.EnsureError(error, expression.Type);
 
-				var sqlExpression = new SqlExpression(expression.Type, expressionStr!, Precedence,
+				var sqlExpression = new SqlExpression(dataContext.MappingSchema.GetDbDataType(expression.Type), expressionStr!, Precedence,
 					(IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |
 					(IsPure           ? SqlFlags.IsPure           : SqlFlags.None) |
 					(IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |

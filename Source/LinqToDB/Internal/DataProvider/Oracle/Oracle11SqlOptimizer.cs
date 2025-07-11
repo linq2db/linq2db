@@ -26,7 +26,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions, mappingSchema); break;
 			}
 
-			statement = ReplaceTakeSkipWithRowNum(statement, false);
+			statement = ReplaceTakeSkipWithRowNum(statement, mappingSchema, false);
 
 			return statement;
 		}
@@ -74,8 +74,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return false;
 		}
 
-		static readonly ISqlExpression RowNumExpr = new SqlExpression(typeof(long), "ROWNUM", Precedence.Primary,
-			SqlFlags.IsAggregate | SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null);
+		static ISqlExpression GetRowNumExpr(MappingSchema mappingSchema) => new SqlExpression(mappingSchema.GetDbDataType(typeof(long)), "ROWNUM", Precedence.Primary,
+			SqlFlags.IsAggregate | SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable);
 
 		/// <summary>
 		/// Replaces Take/Skip by ROWNUM usage.
@@ -84,12 +84,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		/// <param name="statement">Statement which may contain take/skip modifiers.</param>
 		/// <param name="onlySubqueries">Indicates when transformation needed only for subqueries.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when optimization has been performed.</returns>
-		protected SqlStatement ReplaceTakeSkipWithRowNum(SqlStatement statement, bool onlySubqueries)
+		protected SqlStatement ReplaceTakeSkipWithRowNum(SqlStatement statement, MappingSchema mappingSchema, bool onlySubqueries)
 		{
 			return QueryHelper.WrapQuery(
+				(statement, mappingSchema),
 				statement,
-				statement,
-				static (_, query, _) =>
+				static (context, query, _) =>
 				{
 					if (query.Select.TakeValue == null && query.Select.SkipValue == null)
 						return 0;
@@ -102,7 +102,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 					if (query.Select.TakeValue != null && query.Select.OrderBy.IsEmpty && query.GroupBy.IsEmpty && !query.Select.IsDistinct)
 					{
-						query.Select.Where.EnsureConjunction().AddLessOrEqual(RowNumExpr, query.Select.TakeValue, CompareNulls.LikeSql);
+						query.Select.Where.EnsureConjunction().AddLessOrEqual(GetRowNumExpr(context.mappingSchema), query.Select.TakeValue, CompareNulls.LikeSql);
 
 						query.Select.Take(null, null);
 						return 0;
@@ -110,9 +110,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 					return 1;
 				},
-				static (statement, queries) =>
+				static (context, queries) =>
 				{
-					if (statement.SelectQuery == queries[^1])
+					if (context.statement.SelectQuery == queries[^1])
 					{
 						// move orderby to root
 						for (var i = queries.Count - 1; i > 0; i--)
@@ -142,12 +142,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 					if (query.Select.SkipValue != null)
 					{
-						var rnColumn = processingQuery.Select.AddNewColumn(RowNumExpr);
+						var rnColumn = processingQuery.Select.AddNewColumn(GetRowNumExpr(context.mappingSchema));
 						rnColumn.Alias = "RN";
 
 						if (query.Select.TakeValue != null)
 						{
-							processingQuery.Where.EnsureConjunction().AddLessOrEqual(RowNumExpr, new SqlBinaryExpression(query.Select.SkipValue.SystemType!,
+							processingQuery.Where.EnsureConjunction().AddLessOrEqual(GetRowNumExpr(context.mappingSchema), new SqlBinaryExpression(query.Select.SkipValue.SystemType!,
 									query.Select.SkipValue, "+", query.Select.TakeValue), CompareNulls.LikeSql);
 						}
 
@@ -155,7 +155,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					}
 					else
 					{
-						processingQuery.Where.EnsureConjunction().AddLessOrEqual(RowNumExpr, query.Select.TakeValue!, CompareNulls.LikeSql);
+						processingQuery.Where.EnsureConjunction().AddLessOrEqual(GetRowNumExpr(context.mappingSchema), query.Select.TakeValue!, CompareNulls.LikeSql);
 					}
 
 					query.Select.SkipValue = null;

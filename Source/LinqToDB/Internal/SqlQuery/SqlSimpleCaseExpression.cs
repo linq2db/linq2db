@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlSimpleCaseExpression : SqlExpressionBase
+	public sealed class SqlSimpleCaseExpression : SqlExpressionBase
 	{
 		public class CaseExpression
 		{
@@ -89,6 +89,7 @@ namespace LinqToDB.Internal.SqlQuery
 			var hash = new HashCode();
 			hash.Add(PrimaryExpression.GetElementHashCode());
 			hash.Add(ElseExpression?.GetElementHashCode());
+
 			foreach (var c in Cases)
 			{
 				hash.Add(c.MatchValue.GetElementHashCode());

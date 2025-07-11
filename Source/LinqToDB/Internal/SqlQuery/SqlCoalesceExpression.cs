@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlCoalesceExpression : SqlExpressionBase
+	public sealed class SqlCoalesceExpression : SqlExpressionBase
 	{
 		public SqlCoalesceExpression(params ISqlExpression[] expressions)
 		{
@@ -35,10 +35,9 @@ namespace LinqToDB.Internal.SqlQuery
 		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
+
 			foreach (var expression in Expressions)
-			{
 				hash.Add(expression.GetElementHashCode());
-			}
 
 			return hash.ToHashCode();
 		}

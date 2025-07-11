@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlGroupByClause : ClauseBase, IQueryElement
+	public sealed class SqlGroupByClause : ClauseBase, IQueryElement
 	{
 		internal SqlGroupByClause(SelectQuery selectQuery) : base(selectQuery)
 		{
@@ -115,10 +115,9 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			var hash = new HashCode();
 			hash.Add(GroupingType);
+
 			foreach (var item in Items)
-			{
 				hash.Add(item.GetElementHashCode());
-			}
 
 			return hash.ToHashCode();
 		}

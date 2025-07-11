@@ -1784,7 +1784,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (rawSqlTable.Parameters.Any(e => e.ElementType == QueryElementType.SqlAliasPlaceholder))
 					{
 						buildAlias = false;
-						var aliasExpr = new SqlExpression(ConvertInline(alias!, ConvertType.NameToQueryTableAlias), Precedence.Primary);
+						var aliasExpr = new SqlFragment(ConvertInline(alias!, ConvertType.NameToQueryTableAlias));
 						parameters = rawSqlTable.Parameters.Select(e =>
 								e.ElementType == QueryElementType.SqlAliasPlaceholder ? aliasExpr : e)
 							.ToArray();
@@ -2304,7 +2304,7 @@ namespace LinqToDB.Internal.SqlProvider
 					var idx = selectQuery.Select.Columns.FindIndex(c => c.Expression.Equals(item.Expression));
 					if (idx >= 0)
 					{
-						orderExpression = new SqlExpression(typeof(int), (idx + 1).ToString(CultureInfo.InvariantCulture));
+						orderExpression = new SqlFragment((idx + 1).ToString(CultureInfo.InvariantCulture));
 					}
 				}
 
@@ -3096,6 +3096,18 @@ namespace LinqToDB.Internal.SqlProvider
 					}
 
 					break;
+
+				case QueryElementType.SqlFragment:
+				{
+					var e = (SqlFragment)expr;
+
+					if (e.Expr == "{0}")
+						BuildExpression(e.Parameters[0], buildTableName, checkParentheses, alias, ref addAlias, throwExceptionIfTableNotFound);
+					else
+						BuildFormatValues(e.Expr, e.Parameters, GetPrecedence(e));
+				}
+
+				break;
 
 				case QueryElementType.SqlNullabilityExpression:
 					BuildExpression(((SqlNullabilityExpression)expr).SqlExpression, buildTableName, checkParentheses, alias, ref addAlias, throwExceptionIfTableNotFound);

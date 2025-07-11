@@ -231,14 +231,12 @@ namespace LinqToDB.Internal.Expressions
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var hashCode = SelectQuery != null ? SelectQuery.GetHashCode() : 0;
-				hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(Path);
-				hashCode = (hashCode * 397) ^ Index.GetHashCode();
-				hashCode = (hashCode * 397) ^ ConvertType.GetHashCode();
-				return hashCode;
-			}
+			return HashCode.Combine(
+				SelectQuery,
+				ExpressionEqualityComparer.Instance.GetHashCode(Path),
+				Index,
+				ConvertType
+			);
 		}
 
 		public SqlPlaceholderExpression WithType(Type type)

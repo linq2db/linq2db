@@ -145,7 +145,7 @@ namespace LinqToDB.Internal.Linq
 				if (ei.SqlProviderFlags.IsInsertOrUpdateSupported)
 					SetNonQueryQuery(ei);
 				else
-					MakeAlternativeInsertOrUpdate(ei);
+					MakeAlternativeInsertOrUpdate(dataContext.MappingSchema, ei);
 
 				return ei;
 			}
@@ -251,7 +251,7 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		public static void MakeAlternativeInsertOrUpdate(Query query)
+		public static void MakeAlternativeInsertOrUpdate(MappingSchema mappingSchema, Query query)
 		{
 			var firstStatement  = (SqlInsertOrUpdateStatement)query.Queries[0].Statement;
 			var cloned          = firstStatement.Clone();
@@ -291,7 +291,7 @@ namespace LinqToDB.Internal.Linq
 			else
 			{
 				firstStatement.SelectQuery.Select.Columns.Clear();
-				firstStatement.SelectQuery.Select.Columns.Add(new SqlColumn(firstStatement.SelectQuery, new SqlExpression("1")));
+				firstStatement.SelectQuery.Select.Columns.Add(new SqlColumn(firstStatement.SelectQuery, new SqlExpression(mappingSchema.GetDbDataType(typeof(int)), "1")));
 				query.Queries[0].Statement = new SqlSelectStatement(firstStatement.SelectQuery);
 				query.IsFinalized          = false;
 				SetQueryQuery2(query);

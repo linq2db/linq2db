@@ -1,11 +1,23 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Internal.SqlQuery
 {
+	/// <summary>
+	/// This is internal API and is not intended for use by Linq To DB applications.
+	/// It may change or be removed without further notice.
+	/// </summary>
 	public static class SqlExtensions
 	{
+		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;
+
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static bool IsInsert(this SqlStatement statement)
 		{
 			return
@@ -14,31 +26,55 @@ namespace LinqToDB.Internal.SqlQuery
 				statement.QueryType == QueryType.MultiInsert;
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static bool NeedsIdentity(this SqlStatement statement)
 		{
 			return statement.QueryType == QueryType.Insert && ((SqlInsertStatement)statement).Insert.WithIdentity;
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static bool IsUpdate(this SqlStatement statement)
 		{
 			return statement != null && statement.QueryType == QueryType.Update;
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static bool IsDelete(this SqlStatement statement)
 		{
 			return statement != null && statement.QueryType == QueryType.Delete;
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static bool HasSomeModifiers(this SqlSelectClause select, bool ignoreSkip, bool ignoreTake)
 		{
 			return select.IsDistinct || (!ignoreSkip && select.SkipValue != null) || (!ignoreTake && select.TakeValue != null);
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SqlField? GetIdentityField(this SqlStatement statement)
 		{
 			return statement.GetInsertClause()?.Into!.GetIdentityField();
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SqlInsertClause? GetInsertClause(this SqlStatement statement)
 		{
 			return statement switch
@@ -58,6 +94,10 @@ namespace LinqToDB.Internal.SqlQuery
 			};
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SqlInsertClause RequireInsertClause(this SqlStatement statement)
 		{
 			var result = statement.GetInsertClause();
@@ -66,6 +106,10 @@ namespace LinqToDB.Internal.SqlQuery
 			return result;
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SqlUpdateClause? GetUpdateClause(this SqlStatement statement)
 		{
 			return statement switch
@@ -76,6 +120,10 @@ namespace LinqToDB.Internal.SqlQuery
 			};
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SqlUpdateClause RequireUpdateClause(this SqlStatement statement)
 		{
 			var result = statement.GetUpdateClause();
@@ -84,6 +132,10 @@ namespace LinqToDB.Internal.SqlQuery
 			return result;
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SqlOutputClause? GetOutputClause(this SqlStatement statement)
 		{
 			return statement switch
@@ -95,6 +147,10 @@ namespace LinqToDB.Internal.SqlQuery
 			};
 		}
 
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
 		public static SelectQuery EnsureQuery(this SqlStatement statement)
 		{
 			var selectQuery = statement.SelectQuery;
@@ -125,6 +181,26 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 
 			return table;
+		}
+
+		public static SqlFunction CreateCount(this ISqlTableSource table, MappingSchema mappingSchema)
+		{
+			return new SqlFunction(mappingSchema.GetDbDataType(typeof(int)), "COUNT",
+				isAggregate: true,
+				ParametersNullabilityType.NotNullable,
+				// unused parameter to make expr unique
+				new SqlFragment("*", new SqlValue(table.SourceID)));
+		}
+
+		public static SqlFunction WithName(this SqlFunction func, string name)
+		{
+			if (name == func.Name)
+				return func;
+
+			return new SqlFunction(func.Type, name, func.Flags, func.NullabilityType, func.CanBeNullNullable, func.Parameters)
+			{
+				DoNotOptimize = func.DoNotOptimize
+			};
 		}
 	}
 }

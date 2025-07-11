@@ -199,7 +199,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						newResult = ConvertCastToPredicate(castExpression);
 					}
-					else if (unwrapped is SqlExpression { IsPredicate: true } or SqlValue { Value: null })
+					else if (unwrapped is SqlParameterizedExpressionBase { IsPredicate: true } or SqlValue { Value: null })
 					{
 						// do nothing
 					}
@@ -509,11 +509,11 @@ namespace LinqToDB.Internal.SqlProvider
 					? WrapBooleanExpression(predicate.Expr2, includeFields : true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
 					: predicate.Expr2;
 
-					if (!ReferenceEquals(expr1, predicate.Expr1) || !ReferenceEquals(expr2, predicate.Expr2))
-					{
+				if (!ReferenceEquals(expr1, predicate.Expr1) || !ReferenceEquals(expr2, predicate.Expr2))
+				{
 					return new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.UnknownAsValue);
-					}
 				}
+			}
 
 			return predicate;
 		}
@@ -679,9 +679,9 @@ namespace LinqToDB.Internal.SqlProvider
 			if (predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext) == false)
 			{
 				predicate = new SqlPredicate.SearchString(
-					PseudoFunctions.MakeToLower(predicate.Expr1),
+					PseudoFunctions.MakeToLower(predicate.Expr1, MappingSchema),
 					predicate.IsNot,
-					PseudoFunctions.MakeToLower(predicate.Expr2),
+					PseudoFunctions.MakeToLower(predicate.Expr2, MappingSchema),
 					predicate.Kind,
 					new SqlValue(false));
 			}
@@ -728,20 +728,9 @@ namespace LinqToDB.Internal.SqlProvider
 			return newStr;
 		}
 
-		static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character, ISqlExpression escapeCharacter)
+		ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character, ISqlExpression escapeCharacter)
 		{
-			var result = PseudoFunctions.MakeReplace(expression, character, new SqlBinaryExpression(typeof(string), escapeCharacter, "+", character, Precedence.Additive));
-			return result;
-		}
-
-		public static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character)
-		{
-			var result = PseudoFunctions.MakeReplace(
-				expression,
-				character,
-				new SqlBinaryExpression(typeof(string), new SqlValue("["), "+",
-					new SqlBinaryExpression(typeof(string), character, "+", new SqlValue("]"), Precedence.Additive),
-					Precedence.Additive));
+			var result = PseudoFunctions.MakeReplace(expression, character, new SqlBinaryExpression(typeof(string), escapeCharacter, "+", character, Precedence.Additive), MappingSchema);
 			return result;
 		}
 
@@ -1152,7 +1141,7 @@ namespace LinqToDB.Internal.SqlProvider
 							predicate = new SqlPredicate.Expr(func.Parameters[0]);
 						}
 
-						return new SqlFunction(typeof(int), func.Name, new SqlConditionExpression(predicate, new SqlValue(1), new SqlValue(0)));
+						return new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), func.Name, new SqlConditionExpression(predicate, new SqlValue(1), new SqlValue(0)));
 					}
 
 					break;
@@ -1160,7 +1149,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				case PseudoFunctions.CONVERT_FORMAT:
 				{
-					return new SqlFunction(func.SystemType, "Convert", func.Parameters[0], func.Parameters[2], func.Parameters[3]);
+					return new SqlFunction(func.Type, "Convert", func.Parameters[0], func.Parameters[2], func.Parameters[3]);
 				}
 
 				case PseudoFunctions.TO_LOWER: return func.WithName("Lower");
@@ -1299,7 +1288,7 @@ namespace LinqToDB.Internal.SqlProvider
 							element.SystemType,
 							element.Expr1,
 							element.Operation,
-							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, new DbDataType(typeof(string), DataType.VarChar, null, len.Value))),
+							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, QueryHelper.GetDbDataType(element.Expr1, MappingSchema).WithLength(len.Value))),
 							element.Precedence);
 					}
 
@@ -1312,7 +1301,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 						return new SqlBinaryExpression(
 							element.SystemType,
-							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, new DbDataType(typeof(string), DataType.VarChar, null, len.Value))),
+							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, QueryHelper.GetDbDataType(element.Expr2, MappingSchema).WithLength(len.Value))),
 							element.Operation,
 							element.Expr2,
 							element.Precedence);
@@ -1392,11 +1381,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (wrap)
 				{
-					var predicate = unwrapped as ISqlPredicate;
-					if (predicate == null && unwrapped is SqlExpression { IsPredicate: true })
-						predicate = new SqlPredicate.Expr(expr);
-					if (predicate == null)
-						predicate = ConvertToBooleanSearchCondition(expr);
+					var predicate = unwrapped switch
+					{
+						SqlParameterizedExpressionBase { IsPredicate: true } => new SqlPredicate.Expr(expr),
+						ISqlPredicate isp                                    => isp,
+						_                                                    => ConvertToBooleanSearchCondition(expr),
+					};
 
 					var trueValue  = new SqlValue(true);
 					var falseValue = new SqlValue(false);
@@ -1810,7 +1800,7 @@ namespace LinqToDB.Internal.SqlProvider
 				var param = coalesce.Expressions[i];
 				MarkParameters(param);
 
-				last = new SqlFunction(coalesce.SystemType!, funcName, ParametersNullabilityType.IfAllParametersNullable, param, last);
+				last = new SqlFunction(QueryHelper.GetDbDataType(coalesce, MappingSchema), funcName, ParametersNullabilityType.IfAllParametersNullable, param, last);
 			}
 
 			return last;
@@ -1825,7 +1815,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (e is SqlParameter param)
 						param.IsQueryParameter = false;
 				});
-		}
+			}
 		}
 
 		protected static bool IsDateDataType(DbDataType dataType, string typeName)
@@ -1865,7 +1855,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (cast.Expression is SqlFunction { Name: "Floor" })
 					return cast;
 
-				return cast.WithExpression(new SqlFunction(cast.Expression.SystemType!, "Floor", cast.Expression));
+				return cast.WithExpression(new SqlFunction(QueryHelper.GetDbDataType(cast.Expression, MappingSchema), "Floor", cast.Expression));
 			}
 
 			return cast;

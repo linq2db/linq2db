@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlMergeOperationClause : IQueryElement
+	public sealed class SqlMergeOperationClause : QueryElement
 	{
 		public SqlMergeOperationClause(MergeOperationType type)
 		{
@@ -34,12 +34,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region IQueryElement
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		QueryElementType IQueryElement.ElementType => QueryElementType.MergeOperationClause;
+		public override QueryElementType ElementType => QueryElementType.MergeOperationClause;
 
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			switch (OperationType)
 			{
@@ -162,14 +159,16 @@ namespace LinqToDB.Internal.SqlQuery
 			return writer;
 		}
 
-		public int GetElementHashCode()
+		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
 			hash.Add(OperationType);
 			hash.Add(Where?.GetElementHashCode());
 			hash.Add(WhereDelete?.GetElementHashCode());
+
 			foreach (var item in Items)
 				hash.Add(item.GetElementHashCode());
+
 			return hash.ToHashCode();
 		}
 

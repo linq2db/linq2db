@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlOutputClause : IQueryElement
+	public sealed class SqlOutputClause : QueryElement
 	{
 		List<SqlSetExpression>? _outputItems;
 
@@ -23,25 +23,11 @@ namespace LinqToDB.Internal.SqlQuery
 			OutputTable   = outputTable;
 		}
 
-		#region Overrides
-
-#if OVERRIDETOSTRING
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-#endif
-
-		#endregion
-
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.OutputClause;
+		public override QueryElementType ElementType => QueryElementType.OutputClause;
 
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer.AppendLine()
 				.AppendLine("OUTPUT");
@@ -119,11 +105,12 @@ namespace LinqToDB.Internal.SqlQuery
 			return writer;
 		}
 
-		public int GetElementHashCode()
+		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
 			hash.Add(ElementType);
 			hash.Add(OutputTable?.GetElementHashCode());
+
 			if (OutputColumns != null)
 			{
 				foreach (var column in OutputColumns)

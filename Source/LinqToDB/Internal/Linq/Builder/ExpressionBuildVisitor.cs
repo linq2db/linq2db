@@ -2303,7 +2303,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (format == null)
 						return false;
 
-					var arguments = new List<ISqlExpression>();
+					var arguments = new ISqlExpression[node.Arguments.Count - 1];
 
 					for (var i = 1; i < node.Arguments.Count; i++)
 					{
@@ -2311,13 +2311,13 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (expr is not SqlPlaceholderExpression sqlPlaceholder)
 							return false;
 
-						arguments.Add(sqlPlaceholder.Sql);
+						arguments[i - 1] = sqlPlaceholder.Sql;
 					}
 
 					ISqlExpression result;
 					if (_buildFlags.HasFlag(BuildFlags.FormatAsExpression))
 					{
-						result = new SqlExpression(node.Type, format, Precedence.Primary, arguments.ToArray());
+						result = new SqlExpression(MappingSchema.GetDbDataType(node.Type), format, Precedence.Primary, arguments);
 					}
 					else
 					{
@@ -3080,7 +3080,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.Multiply:
 				case ExpressionType.MultiplyChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative), node); break;
 				case ExpressionType.Or:              translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise), node); break;
-				case ExpressionType.Power:           translated = CreatePlaceholder(new SqlFunction(t, "Power", l, r), node); break;
+				case ExpressionType.Power:           translated = CreatePlaceholder(new SqlFunction(MappingSchema.GetDbDataType(t), "Power", l, r), node); break;
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction), node); break;
 				case ExpressionType.Coalesce:        translated = CreatePlaceholder(new SqlCoalesceExpression(l, r), node); break;
@@ -3365,7 +3365,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (sqlExpression is ISqlPredicate predicate)
 				return predicate;
 
-			if (sqlExpression is SqlExpression sqlExpr && sqlExpr.Flags.HasFlag(SqlFlags.IsPredicate))
+			if (sqlExpression is SqlParameterizedExpressionBase { IsPredicate: true })
 				return new SqlPredicate.Expr(sqlExpression);
 
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(sqlExpression);
@@ -4052,7 +4052,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (trueValue.ElementType == QueryElementType.SqlValue &&
 								falseValue.ElementType == QueryElementType.SqlValue)
 							{
-								if (expression is SqlExpression { IsPredicate: true } predicateExpr)
+								if (expression is SqlParameterizedExpressionBase { IsPredicate: true } predicateExpr)
 								{
 									predicate = new SqlPredicate.Expr(predicateExpr);
 									if (isNot)
@@ -5316,14 +5316,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				public int GetHashCode(ColumnCacheKey obj)
 				{
-					unchecked
-					{
-						var hashCode = obj.ResultType.GetHashCode();
-						hashCode = (hashCode * 397) ^ (obj.Expression != null ? ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression) : 0);
-						hashCode = (hashCode * 397) ^ obj.SelectQuery?.GetHashCode() ?? 0;
-						hashCode = (hashCode * 397) ^ (obj.ParentQuery != null ? obj.ParentQuery.GetHashCode() : 0);
-						return hashCode;
-					}
+					return HashCode.Combine(
+						obj.ResultType,
+						ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression),
+						obj.SelectQuery,
+						obj.ParentQuery
+					);
 				}
 			}
 
@@ -5361,15 +5359,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				public int GetHashCode(ExprCacheKey obj)
 				{
-					unchecked
-					{
-						var hashCode = ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
-						hashCode = (hashCode * 397) ^ (obj.Context          != null ? obj.Context.GetHashCode() : 0);
-						hashCode = (hashCode * 397) ^ (obj.SelectQuery      != null ? obj.SelectQuery.GetHashCode() : 0);
-						hashCode = (hashCode * 397) ^ (obj.ColumnDescriptor != null ? obj.ColumnDescriptor.GetHashCode() : 0);
-						hashCode = (hashCode * 397) ^ (int)obj.Flags;
-						return hashCode;
-					}
+					return HashCode.Combine(
+						ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression),
+						obj.Context,
+						obj.SelectQuery,
+						obj.ColumnDescriptor,
+						obj.Flags
+					);
 				}
 			}
 

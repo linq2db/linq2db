@@ -12,7 +12,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (ReferenceEquals(other, null))
 				return false;
 
-			return Equals(other, SqlExpression.DefaultComparer);
+			return Equals(other, SqlExtensions.DefaultComparer);
 		}
 
 		public abstract bool  Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer);

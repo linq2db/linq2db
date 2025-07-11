@@ -160,7 +160,7 @@ namespace LinqToDB.Internal.Linq.Translation
 
 			if (!xType.EqualsDbOnly(yType))
 			{
-				yValueResult = new SqlCastExpression(yValue, xType, null);
+				yValueResult = factory.Cast(yValue, xType);
 			}
 
 			var result = factory.Condition(factory.GreaterOrEqual(xValue, yValue), xValue, yValueResult);
@@ -177,7 +177,7 @@ namespace LinqToDB.Internal.Linq.Translation
 
 			if (!xType.EqualsDbOnly(yType))
 			{
-				yValueResult = new SqlCastExpression(yValue, xType, null);
+				yValueResult = factory.Cast(yValue, xType);
 			}
 
 			var result = factory.Condition(factory.LessOrEqual(xValue, yValue), xValue, yValueResult);

@@ -2,9 +2,8 @@
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlInsertStatement : SqlStatementWithQueryBase
+	public sealed class SqlInsertStatement : SqlStatementWithQueryBase
 	{
-
 		public SqlInsertStatement() : base(null)
 		{
 		}
@@ -46,12 +45,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(base.GetElementHashCode());
-
-			hash.Add(_insert?.GetElementHashCode());
-			hash.Add(Output?.GetElementHashCode());
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				base.GetElementHashCode(),
+				_insert?.GetElementHashCode(),
+				Output?.GetElementHashCode()
+			);
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)

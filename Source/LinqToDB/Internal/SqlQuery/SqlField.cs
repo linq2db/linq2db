@@ -4,33 +4,28 @@ using LinqToDB.Model;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlField : SqlExpressionBase
+	public sealed class SqlField : SqlExpressionBase
 	{
 		internal static SqlField All(ISqlTableSource table)
 		{
 			return new SqlField(table, "*", "*");
 		}
 
-		protected SqlField()
-		{
-
-		}
-
-		public SqlField(ISqlTableSource table, string name) : this()
+		public SqlField(ISqlTableSource table, string name)
 		{
 			Table     = table;
 			Name      = name;
 			CanBeNull = true;
 		}
 
-		public SqlField(DbDataType dbDataType, string? name, bool canBeNull) : this()
+		public SqlField(DbDataType dbDataType, string? name, bool canBeNull)
 		{
 			Type      = dbDataType;
 			Name      = name!;
 			CanBeNull = canBeNull;
 		}
 
-		SqlField(ISqlTableSource table, string name, string physicalName) : this()
+		SqlField(ISqlTableSource table, string name, string physicalName)
 		{
 			Table        = table;
 			Name         = name;
@@ -38,14 +33,14 @@ namespace LinqToDB.Internal.SqlQuery
 			CanBeNull    = true;
 		}
 
-		public SqlField(string name, string physicalName) : this()
+		public SqlField(string name, string physicalName)
 		{
 			Name         = name;
 			PhysicalName = physicalName;
 			CanBeNull    = true;
 		}
 
-		public SqlField(SqlField field) : this()
+		public SqlField(SqlField field)
 		{
 			Type             = field.Type;
 			Alias            = field.Alias;
@@ -63,7 +58,7 @@ namespace LinqToDB.Internal.SqlQuery
 			IsDynamic        = field.IsDynamic;
 		}
 
-		public SqlField(ColumnDescriptor column) : this()
+		public SqlField(ColumnDescriptor column)
 		{
 			Type              = column.GetDbDataType(true);
 			Name              = column.MemberName;

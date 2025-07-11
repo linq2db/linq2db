@@ -8,7 +8,7 @@ using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlQueryColumnNestingCorrector : SqlQueryVisitor
+	public sealed class SqlQueryColumnNestingCorrector : SqlQueryVisitor
 	{
 		[DebuggerDisplay("QN(S:{TableSource.SourceID})")]
 		sealed class QueryNesting

@@ -16,7 +16,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return true;
 
 			if (x is not null && y is not null)
-				return x.Equals(y, SqlExpression.DefaultComparer);
+				return x.Equals(y, SqlExtensions.DefaultComparer);
 
 			return false;
 		}

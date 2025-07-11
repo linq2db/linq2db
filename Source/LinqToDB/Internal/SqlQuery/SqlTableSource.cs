@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlTableSource : ISqlTableSource
+	public sealed class SqlTableSource : SqlExpressionBase, ISqlTableSource
 	{
 #if DEBUG
 		readonly int id = System.Threading.Interlocked.Increment(ref SelectQuery.SourceIDCounter);
@@ -124,20 +124,11 @@ namespace LinqToDB.Internal.SqlQuery
 			return n;
 		}
 
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
+		public override bool Equals(ISqlExpression? other)
 		{
-			return this == other;
+			return ReferenceEquals(this, other);
 		}
 
 		#endregion
@@ -156,13 +147,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
+		public override QueryElementType ElementType => QueryElementType.TableSource;
 
-		public QueryElementType ElementType => QueryElementType.TableSource;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			if (!writer.AddVisited(this))
 				return writer.Append("...");
@@ -199,14 +186,16 @@ namespace LinqToDB.Internal.SqlQuery
 			return writer;
 		}
 
-		public int GetElementHashCode()
+		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
 			hash.Add(ElementType);
 			hash.Add(Source.GetElementHashCode());
 			hash.Add(_alias);
+
 			foreach (var join in Joins)
 				hash.Add(join.GetElementHashCode());
+
 			if (_uniqueKeys != null)
 			{
 				foreach (var key in _uniqueKeys)
@@ -223,14 +212,14 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNullable(NullabilityContext nullability) => false;
+		public override bool CanBeNullable(NullabilityContext nullability) => false;
 
-		public int   Precedence => Source.Precedence;
-		public Type? SystemType => Source.SystemType;
+		public override int Precedence => Source.Precedence;
+		public override Type? SystemType => Source.SystemType;
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
-			return this == other;
+			return ReferenceEquals(this, other);
 		}
 
 		#endregion

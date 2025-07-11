@@ -26,10 +26,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					case Sql.AggregateModifier.None :
 						break;
 					case Sql.AggregateModifier.Distinct :
-						builder.AddExpression("modifier", "DISTINCT");
+						builder.AddFragment("modifier", "DISTINCT");
 						break;
 					case Sql.AggregateModifier.All :
-						builder.AddExpression("modifier", "ALL");
+						builder.AddFragment("modifier", "ALL");
 						break;
 					default :
 						throw new InvalidOperationException($"Unexpected modifier: {modifier}");

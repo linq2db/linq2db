@@ -64,12 +64,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var hashCode = MappingSchema?.GetHashCode() ?? 0;
-				hashCode = (hashCode * 397) ^ _type.GetHashCode();
-				return hashCode;
-			}
+			return HashCode.Combine(MappingSchema, _type);
 		}
 
 		protected override Expression Accept(ExpressionVisitor visitor)

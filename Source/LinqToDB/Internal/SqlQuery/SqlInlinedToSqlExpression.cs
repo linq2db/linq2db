@@ -4,7 +4,7 @@ using LinqToDB.Internal.Linq.Builder;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlInlinedToSqlExpression : SqlInlinedBase
+	public sealed class SqlInlinedToSqlExpression : SqlInlinedBase
 	{
 		public override QueryElementType ElementType => QueryElementType.SqlInlinedToSqlExpression;
 
@@ -40,10 +40,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(Parameter.GetElementHashCode());
-			hash.Add(InlinedValue.GetElementHashCode());
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				Parameter.GetElementHashCode(),
+				InlinedValue.GetElementHashCode()
+			);
 		}
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)

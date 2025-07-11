@@ -4,7 +4,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlCreateTableStatement : SqlStatement
+	public sealed class SqlCreateTableStatement : SqlStatement
 	{
 		public SqlCreateTableStatement(SqlTable sqlTable)
 		{
@@ -44,14 +44,13 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(base.GetElementHashCode());
-
-			hash.Add(Table.GetElementHashCode());
-			hash.Add(StatementHeader);
-			hash.Add(StatementFooter);
-			hash.Add(DefaultNullable);
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				base.GetElementHashCode(),
+				Table.GetElementHashCode(),
+				StatementHeader,
+				StatementFooter,
+				DefaultNullable
+			);
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)

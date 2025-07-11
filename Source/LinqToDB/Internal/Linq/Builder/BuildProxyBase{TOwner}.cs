@@ -272,15 +272,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var hashCode = EqualityComparer<TOwner>.Default.GetHashCode(OwnerContext);
-				hashCode = (hashCode * 397) ^ BuildContext.GetHashCode();
-				hashCode = (hashCode * 397) ^ OwnerContextRef.GetHashCode();
-				hashCode = (hashCode * 397) ^ (CurrentPath != null ? ExpressionEqualityComparer.Instance.GetHashCode(CurrentPath) : 0);
-				hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(InnerExpression);
-				return hashCode;
-			}
+			return HashCode.Combine(
+				EqualityComparer<TOwner>.Default.GetHashCode(OwnerContext),
+				BuildContext,
+				OwnerContextRef,
+				ExpressionEqualityComparer.Instance.GetHashCode(CurrentPath),
+				ExpressionEqualityComparer.Instance.GetHashCode(InnerExpression)
+			);
 		}
 
 		sealed class BuildProxyVisitor : ExpressionVisitorBase

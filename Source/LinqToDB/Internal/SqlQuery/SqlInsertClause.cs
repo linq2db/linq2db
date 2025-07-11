@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class SqlInsertClause : IQueryElement
+	public sealed class SqlInsertClause : QueryElement
 	{
 		public SqlInsertClause()
 		{
@@ -19,27 +19,11 @@ namespace LinqToDB.Internal.SqlQuery
 			Into  = into;
 		}
 
-		#region Overrides
-
-#if OVERRIDETOSTRING
-
-			public override string ToString()
-			{
-				return this.ToDebugString();
-			}
-
-#endif
-
-		#endregion
-
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.InsertClause;
+		public override QueryElementType ElementType => QueryElementType.InsertClause;
 
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer
 				.Append("INSERT ")
@@ -61,15 +45,14 @@ namespace LinqToDB.Internal.SqlQuery
 			return writer;
 		}
 
-		public int GetElementHashCode()
+		public override int GetElementHashCode()
 		{
 			var hash = new HashCode();
 			hash.Add(Into);
 			hash.Add(WithIdentity);
+
 			foreach (var item in Items)
-			{
 				hash.Add(item.GetElementHashCode());
-			}
 
 			return hash.ToHashCode();
 

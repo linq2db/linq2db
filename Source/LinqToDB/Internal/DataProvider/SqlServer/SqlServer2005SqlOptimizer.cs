@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (statement.IsUpdate() || statement.IsDelete())
 				statement = WrapRootTakeSkipOrderBy(statement);
 
-			statement = ReplaceSkipWithRowNumber(statement);
+			statement = ReplaceSkipWithRowNumber(statement, mappingSchema);
 
 			return statement;
 		}

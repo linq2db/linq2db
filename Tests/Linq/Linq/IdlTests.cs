@@ -87,15 +87,13 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					var result = ID;
-					result = (result * 397) ^ (LastName != null ? LastName.GetHashCode() : 0);
-					result = (result * 397) ^ (MiddleName != null ? MiddleName.GetHashCode() : 0);
-					result = (result * 397) ^ Gender.GetHashCode();
-					result = (result * 397) ^ (FirstName != null ? FirstName.GetHashCode() : 0);
-					return result;
-				}
+				return HashCode.Combine(
+					ID,
+					LastName,
+					MiddleName,
+					Gender,
+					FirstName
+				);
 			}
 		}
 		#endregion

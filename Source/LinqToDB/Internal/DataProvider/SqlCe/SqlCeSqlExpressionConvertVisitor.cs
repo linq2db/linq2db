@@ -85,13 +85,13 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
-									new SqlFunction(typeof(string), "SUBSTRING",
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary,
+									new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "SUBSTRING",
 										predicate.Expr1,
 										new SqlValue(1),
 										Factory.Length(predicate.Expr2))),
 								SqlPredicate.Operator.Equal,
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
 								null
 							);
 						break;
@@ -109,13 +109,13 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
-									new SqlFunction(typeof(string), "SUBSTRING",
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary,
+									new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "SUBSTRING",
 										predicate.Expr1,
 										indexExpression,
 										Factory.Length(predicate.Expr2))),
 								SqlPredicate.Operator.Equal,
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
 								null
 							);
 
@@ -125,10 +125,10 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "CHARINDEX",
-									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "CHARINDEX",
+									new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary,
 										predicate.Expr2),
-									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+									new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary,
 										predicate.Expr1)),
 								SqlPredicate.Operator.Greater,
 								new SqlValue(0), null);
@@ -162,7 +162,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 					if (argumentType.SystemType.IsFloatType())
 					{
-						return PseudoFunctions.MakeCast(new SqlFunction(cast.SystemType, "Floor", argument), toType);
+						return PseudoFunctions.MakeCast(new SqlFunction(cast.Type, "Floor", argument), toType);
 					}
 
 					break;
@@ -177,14 +177,14 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 					{
 						if (type1 == typeof(DateTime) || type1 == typeof(DateTimeOffset))
 							return new SqlExpression(
-								cast.SystemType, "Cast(Convert(NChar, {0}, 114) as DateTime)",
+								cast.Type, "Cast(Convert(NChar, {0}, 114) as DateTime)",
 								Precedence.Primary, argument);
 
 						if (argument.SystemType == typeof(string))
 							return argument;
 
 						return new SqlExpression(
-							cast.SystemType, "Convert(NChar, {0}, 114)", Precedence.Primary,
+							cast.Type, "Convert(NChar, {0}, 114)", Precedence.Primary,
 							argument);
 					}
 
@@ -192,7 +192,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 					{
 						if (IsDateDataType(toType, "Datetime"))
 							return new SqlExpression(
-								cast.SystemType, "Cast(Floor(Cast({0} as Float)) as DateTime)",
+								cast.Type, "Cast(Floor(Cast({0} as Float)) as DateTime)",
 								Precedence.Primary, argument);
 					}
 

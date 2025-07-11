@@ -98,12 +98,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var hashCode = ElementType.GetHashCode();
-				hashCode = (hashCode * 397) ^ BuildContext.GetHashCode();
-				return hashCode;
-			}
+			return HashCode.Combine(ElementType, BuildContext);
 		}
 
 		public static bool operator ==(ContextRefExpression? left, ContextRefExpression? right)

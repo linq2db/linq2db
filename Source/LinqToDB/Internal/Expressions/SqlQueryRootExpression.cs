@@ -79,10 +79,10 @@ namespace LinqToDB.Internal.Expressions
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				return (((IConfigurationID)MappingSchema).ConfigurationID.GetHashCode() * 397) ^ ContextType.GetHashCode();
-			}
+			return HashCode.Combine(
+				((IConfigurationID)MappingSchema).ConfigurationID,
+				ContextType
+			);
 		}
 
 		public static bool operator ==(SqlQueryRootExpression? left, SqlQueryRootExpression? right)

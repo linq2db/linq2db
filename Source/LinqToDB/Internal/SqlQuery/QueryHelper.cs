@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.Model;
@@ -380,7 +382,8 @@ namespace LinqToDB.Internal.SqlQuery
 				case SqlDataType         { Type: var t }: return t;
 				case SqlCastExpression   { Type: var t }: return t;
 				case SqlBinaryExpression { Type: var t }: return t;
-				case SqlFunction         { Type: var t }: return t;
+
+				case SqlParameterizedExpressionBase { Type: var t }: return t;
 
 				case SqlColumn                { Expression:    var e }: return GetDbDataType(e);
 				case SqlNullabilityExpression { SqlExpression: var e }: return GetDbDataType(e);
@@ -391,8 +394,6 @@ namespace LinqToDB.Internal.SqlQuery
 						? GetDbDataType(e)
 						: DbDataType.Undefined;
 				}
-
-				case SqlExpression { Parameters: [var e], Expr: "{0}" }: return GetDbDataType(e);
 
 				case SqlCaseExpression caseExpression          : return GetCaseExpressionType(caseExpression);
 				case SqlConditionExpression conditionExpression: return GetConditionExpressionType(conditionExpression);
@@ -596,7 +597,7 @@ namespace LinqToDB.Internal.SqlQuery
 				case QueryElementType.SqlFunction:
 				{
 					var sqlFunc = (SqlFunction) expr;
-					if (!sqlFunc.IsPure || sqlFunc.IsAggregate)
+					if (!sqlFunc.IsPure || (sqlFunc.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0)
 						return false;
 					return sqlFunc.Parameters.All(static p => IsConstant(p));
 				}
@@ -1202,7 +1203,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return str;
 		}
 
-		public static ISqlExpression ConvertFormatToConcatenation(string format, IList<ISqlExpression> parameters)
+		public static ISqlExpression ConvertFormatToConcatenation(string format, IReadOnlyList<ISqlExpression> parameters)
 		{
 			if (format     == null) throw new ArgumentNullException(nameof(format));
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
@@ -1269,12 +1270,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsAggregationFunction(IQueryElement expr)
 		{
-			return expr switch
-			{
-				SqlFunction func         => func.IsAggregate,
-				SqlExpression expression => (expression.Flags & SqlFlags.IsAggregate) != 0,
-				_                        => false,
-			};
+			if (expr is SqlParameterizedExpressionBase e)
+				return e.IsAggregate;
+
+			return false;
 		}
 
 		internal sealed class AggregationCheckVisitor : QueryElementVisitor
@@ -1374,8 +1373,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsWindowFunction(IQueryElement expr)
 		{
-			if (expr is SqlExpression expression)
-				return (expression.Flags & SqlFlags.IsWindowFunction) != 0;
+			if (expr is SqlParameterizedExpressionBase expression)
+				return expression.IsWindowFunction;
 
 			return false;
 		}
@@ -1599,13 +1598,18 @@ namespace LinqToDB.Internal.SqlQuery
 			return newSc;
 		}
 
+		internal static bool TypeCanBeNull(Type type)
+		{
+			return type.IsNullableType() || type is INullable;
+		}
+
 		public static bool CalcCanBeNull(Type? type, bool? canBeNull, ParametersNullabilityType isNullable, IEnumerable<bool> nullInfo)
 		{
 			if (canBeNull != null)
 				return canBeNull.Value;
 
 			if (isNullable == ParametersNullabilityType.Undefined)
-				return type == null ? true : SqlDataType.TypeCanBeNull(type);
+				return type == null ? true : TypeCanBeNull(type);
 
 			switch (isNullable)
 			{
@@ -1691,7 +1695,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsPredicate(this ISqlExpression expr)
 		{
-			return expr is ISqlPredicate or SqlExpression { IsPredicate: true };
+			return expr is ISqlPredicate or SqlParameterizedExpressionBase { IsPredicate: true };
 		}
 
 		public static ISqlExpression UnwrapCastAndNullability(ISqlExpression expr)

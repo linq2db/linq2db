@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	public class QueryInformation
+	public sealed class QueryInformation
 	{
 		public SelectQuery RootQuery { get; }
 

@@ -38,10 +38,10 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		{
 			switch (element.Operation)
 			{
-				case "%": return new SqlFunction(element.SystemType, "Mod", element.Expr1, element.Expr2);
-				case "&": return new SqlFunction(element.SystemType, "BitAnd", element.Expr1, element.Expr2);
-				case "|": return new SqlFunction(element.SystemType, "BitOr", element.Expr1, element.Expr2);
-				case "^": return new SqlFunction(element.SystemType, "BitXor", element.Expr1, element.Expr2);
+				case "%": return new SqlFunction(element.Type, "Mod", element.Expr1, element.Expr2);
+				case "&": return new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2);
+				case "|": return new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2);
+				case "^": return new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2);
 				case "+": return element.SystemType == typeof(string) ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
 			}
 
@@ -73,17 +73,17 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						var stype = argument.SystemType!.ToUnderlying();
 						if (stype == typeof(DateTime))
 						{
-							return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("%Y-%m-%d %H:%M:%S.%F"));
+							return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("%Y-%m-%d %H:%M:%S.%F"));
 						}
 #if NET8_0_OR_GREATER
 						if (stype == typeof(DateOnly))
 						{
-							return new SqlFunction(cast.SystemType, "To_Char", argument, new SqlValue("%Y-%m-%d"));
+							return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("%Y-%m-%d"));
 						}
 #endif
 						if (stype.IsNumeric())
 						{
-							return new SqlFunction(cast.SystemType, "To_Char", argument);
+							return new SqlFunction(cast.Type, "To_Char", argument);
 						}
 
 						break;
@@ -91,7 +91,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 					case TypeCode.UInt64   :
 						if (argument.SystemType!.IsFloatType())
-							argument = new SqlFunction(cast.SystemType, "Floor", argument);
+							argument = new SqlFunction(cast.Type, "Floor", argument);
 						break;
 
 					case TypeCode.DateTime :
@@ -100,26 +100,28 @@ namespace LinqToDB.Internal.DataProvider.Informix
 							if (argument.SystemType == typeof(string))
 							{
 								return new SqlFunction(
-									cast.SystemType,
+									cast.Type,
 									"Date",
-									new SqlFunction(cast.SystemType, "To_Date", argument, new SqlValue("%Y-%m-%d")));
+									new SqlFunction(cast.Type, "To_Date", argument, new SqlValue("%Y-%m-%d")));
 							}
 
-							return new SqlFunction(cast.SystemType, "Date", argument);
+							return new SqlFunction(cast.Type, "Date", argument);
 						}
 
 						if ((IsDateTime2Type(cast.ToType, "DateTime2")
 								|| IsDateTimeType(cast.ToType, "DateTime")
 								|| IsSmallDateTimeType(cast.ToType, "SmallDateTime"))
 							&& argument.SystemType == typeof(string))
-							return new SqlFunction(cast.SystemType, "To_Date", argument, new SqlValue("%Y-%m-%d %H:%M:%S"));
+						{
+							return new SqlFunction(cast.Type, "To_Date", argument, new SqlValue("%Y-%m-%d %H:%M:%S"));
+						}
 
 						if (IsTimeDataType(cast.ToType))
 						{
-							return new SqlCastExpression(new SqlExpression(cast.Expression.SystemType, "Extend({0}, Hour to Second)", Precedence.Primary, argument), new DbDataType(typeof(string), DataType.Char, null, 8), null, true);
+							return new SqlCastExpression(new SqlExpression(QueryHelper.GetDbDataType(cast.Expression, MappingSchema), "Extend({0}, Hour to Second)", Precedence.Primary, argument), new DbDataType(typeof(string), DataType.Char, null, 8), null, true);
 						}
 
-						return new SqlFunction(cast.SystemType, "To_Date", argument);
+						return new SqlFunction(cast.Type, "To_Date", argument);
 
 					case TypeCode.Boolean:
 						// boolean literal already has explicit cast

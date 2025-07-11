@@ -93,10 +93,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				return (_type.GetHashCode() * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(Expression);
-			}
+			return HashCode.Combine(_type, ExpressionEqualityComparer.Instance.GetHashCode(Expression));
 		}
 
 		public static bool operator ==(SqlAdjustTypeExpression? left, SqlAdjustTypeExpression? right)

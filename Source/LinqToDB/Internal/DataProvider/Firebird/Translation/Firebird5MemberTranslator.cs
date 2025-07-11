@@ -48,7 +48,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 				}
 
 				var resultExpression =
-					factory.Function(extractDbType, "Extract", factory.Fragment(shortIntDataType, partStr + " from {0}", dateTimeExpression));
+					factory.Function(extractDbType, "Extract", factory.Expression(shortIntDataType, partStr + " from {0}", dateTimeExpression));
 
 				switch (datepart)
 				{

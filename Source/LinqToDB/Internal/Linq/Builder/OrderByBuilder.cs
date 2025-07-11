@@ -128,7 +128,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (position <= 0)
 							return BuildSequenceResult.Error(sequenceArgument, $"Invalid Index '{position.ToString(CultureInfo.InvariantCulture)}' for positioned OrderBy. Should be in range 1..N.");
 
-						orderSql     = new SqlExpression(typeof(int), position.ToString(CultureInfo.InvariantCulture));
+						orderSql     = new SqlFragment(position.ToString(CultureInfo.InvariantCulture));
 						isPositioned = false;
 					}
 					else
