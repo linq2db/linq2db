@@ -1,116 +1,66 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq;
+
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlExpression : SqlExpressionBase
+#pragma warning disable CS0659 // Type overrides Object.Equals(object o) but does not override Object.GetHashCode()
+	public sealed class SqlExpression : SqlParameterizedExpressionBase
+#pragma warning restore CS0659 // Type overrides Object.Equals(object o) but does not override Object.GetHashCode()
 	{
-		public SqlExpression(Type? systemType, string expr, int precedence, SqlFlags flags, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters)
-		{
-			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+		private const int                       DefaultPrecedence  = SqlQuery.Precedence.Unknown;
+		private const SqlFlags                  DefaultFlags       = SqlFlags.IsPure;
+		private const ParametersNullabilityType DefaultNullability = ParametersNullabilityType.Undefined;
 
-			foreach (var value in parameters)
-				if (value == null) throw new ArgumentNullException(nameof(parameters));
-
-			SystemType      = systemType;
-			Expr            = expr;
-			Precedence      = precedence;
-			Parameters      = parameters;
-			Flags           = flags;
-			NullabilityType = nullabilityType;
-			_canBeNull      = canBeNull;
-		}
-
-		public SqlExpression(Type? systemType, string expr, int precedence, params ISqlExpression[] parameters)
-			: this(systemType, expr, precedence, SqlFlags.IsPure, ParametersNullabilityType.Undefined, null, parameters)
+		public SqlExpression(DbDataType type, string expr, params ISqlExpression[] parameters)
+			: this(type, expr, DefaultPrecedence, DefaultFlags, DefaultNullability, null, parameters)
 		{
 		}
 
-		public SqlExpression(string expr, int precedence, params ISqlExpression[] parameters)
-			: this(null, expr, precedence, parameters)
+		public SqlExpression(DbDataType type, string expr, int precedence, params ISqlExpression[] parameters)
+			: this(type, expr, precedence, DefaultFlags, DefaultNullability, null, parameters)
 		{
 		}
 
-		public SqlExpression(Type? systemType, string expr, params ISqlExpression[] parameters)
-			: this(systemType, expr, SqlQuery.Precedence.Unknown, parameters)
+		public SqlExpression(DbDataType type, string expr, int precedence, ParametersNullabilityType nullabilityType, params ISqlExpression[] parameters)
+			: this(type, expr, precedence, DefaultFlags, nullabilityType, null, parameters)
 		{
 		}
 
-		public SqlExpression(string expr, params ISqlExpression[] parameters)
-			: this(null, expr, SqlQuery.Precedence.Unknown, parameters)
+		public SqlExpression(DbDataType type, string expr, int precedence, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters)
+			: this(type, expr, precedence, DefaultFlags, nullabilityType, canBeNull, parameters)
 		{
 		}
 
-		public override Type?                     SystemType        { get; }
-		public override int                       Precedence        { get; }
-
-		public          string                    Expr              { get; }
-		public          ISqlExpression[]          Parameters        { get; }
-		public          SqlFlags                  Flags             { get; }
-		public          bool?                     CanBeNullNullable => _canBeNull;
-		public          ParametersNullabilityType NullabilityType   { get; }
-
-		public bool             IsAggregate      => (Flags & SqlFlags.IsAggregate)      != 0;
-		public bool             IsPure           => (Flags & SqlFlags.IsPure)           != 0;
-		public bool             IsPredicate      => (Flags & SqlFlags.IsPredicate)      != 0;
-		public bool             IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
-
-		#region ISqlExpression Members
-
-		public override bool CanBeNullable(NullabilityContext nullability)
+		public SqlExpression(DbDataType type, string expr, int precedence, SqlFlags flags, params ISqlExpression[] parameters)
+			: this(type, expr, precedence, flags, DefaultNullability, null, parameters)
 		{
-			return QueryHelper.CalcCanBeNull(SystemType, _canBeNull, NullabilityType,
-				       Parameters.Select(p => p.CanBeNullable(nullability)));
 		}
 
-		bool? _canBeNull;
-		public  bool   CanBeNull
+		public SqlExpression(DbDataType type, string expr, int precedence, SqlFlags flags, bool? canBeNull, params ISqlExpression[] parameters)
+			: this(type, expr, precedence, flags, DefaultNullability, canBeNull, parameters)
 		{
-			get => _canBeNull ?? true;
-			set => _canBeNull = value;
 		}
 
-		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;
-
-		int? _hashCode;
-
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-		public override int GetHashCode()
+		public SqlExpression(DbDataType type, string expr, int precedence, SqlFlags flags, ParametersNullabilityType nullabilityType, params ISqlExpression[] parameters)
+			: this(type, expr, precedence, flags, nullabilityType, null, parameters)
 		{
-			if (_hashCode != null)
-				return _hashCode.Value;
-
-			var hashCode = Expr.GetHashCode();
-
-			if (SystemType != null)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
-
-			for (var i = 0; i < Parameters.Length; i++)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ Parameters[i].GetHashCode());
-
-			_hashCode = hashCode;
-
-			return hashCode;
 		}
 
-		public override bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public SqlExpression(
+			DbDataType                type,
+			string                    expr,
+			int                       precedence,
+			SqlFlags                  flags,
+			ParametersNullabilityType nullabilityType,
+			bool?                     canBeNull,
+			params ISqlExpression[]   parameters)
+			: base(type, expr, precedence, flags, nullabilityType, canBeNull, parameters)
 		{
-			if (ReferenceEquals(this, other))
-				return true;
-
-			if (!(other is SqlExpression expr) || SystemType != expr.SystemType || Expr != expr.Expr || Parameters.Length != expr.Parameters.Length)
-				return false;
-
-			for (var i = 0; i < Parameters.Length; i++)
-				if (!Parameters[i].Equals(expr.Parameters[i], comparer))
-					return false;
-
-			return comparer(this, expr);
 		}
 
-		#endregion
+		public string Expr => ExprOrName;
 
 		#region IQueryElement Members
 
@@ -147,37 +97,7 @@ namespace LinqToDB.SqlQuery
 
 		public override bool Equals(object? obj)
 		{
-			return Equals(obj, DefaultComparer);
+			return Equals(obj, SqlExtensions.DefaultComparer);
 		}
-
-		#region Public Static Members
-
-		public static bool NeedsEqual(IQueryElement ex)
-		{
-			switch (ex.ElementType)
-			{
-				case QueryElementType.SqlParameter:
-				case QueryElementType.SqlField    :
-				case QueryElementType.SqlQuery    :
-				case QueryElementType.Column      : return true;
-				case QueryElementType.SqlExpression:
-				{
-					var expr = (SqlExpression)ex;
-					if (expr.IsPredicate)
-						return false;
-					if (QueryHelper.IsTransitivePredicate(expr))
-						return false;
-					return true;
-				}
-				case QueryElementType.SearchCondition :
-					return false;
-				case QueryElementType.SqlFunction :
-					return true;
-			}
-
-			return false;
-		}
-
-		#endregion
 	}
 }

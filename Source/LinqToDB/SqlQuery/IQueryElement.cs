@@ -6,7 +6,7 @@
 	public interface IQueryElement
 	{
 #if DEBUG
-		public string DebugText { get; }
+		string DebugText { get; }
 #endif
 		/// <summary>
 		/// AST node type.
@@ -16,5 +16,7 @@
 		/// Generates debug text representation of AST node.
 		/// </summary>
 		QueryElementTextWriter ToString(QueryElementTextWriter writer);
+
+		int GetElementHashCode();
 	}
 }

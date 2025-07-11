@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlAnchor : SqlExpressionBase
+	public sealed class SqlAnchor : SqlExpressionBase
 	{
 		public enum AnchorKindEnum
 		{
@@ -51,6 +51,15 @@ namespace LinqToDB.SqlQuery
 				.AppendElement(SqlExpression);
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(AnchorKind);
+			hash.Add(SqlExpression.GetElementHashCode());
+
+			return hash.ToHashCode();
 		}
 	}
 }

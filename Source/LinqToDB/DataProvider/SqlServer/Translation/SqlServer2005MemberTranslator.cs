@@ -8,13 +8,13 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 {
 	public class SqlServer2005MemberTranslator : SqlServerMemberTranslator
 	{
-		class SqlTypes2005Translation : SqlTypesTranslation
+		sealed class SqlTypes2005Translation : SqlTypesTranslation
 		{
 			protected override Expression? ConvertDate(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.DateTime));
 		}
 
-		class DateFunctionsTranslator2005 : SqlServerDateFunctionsTranslator
+		sealed class DateFunctionsTranslator2005 : SqlServerDateFunctionsTranslator
 		{
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 				var intDataType = factory.GetDbDataType(typeof(int));
 				var dateType = factory.GetDbDataType(dateExpression);
 
-				var datePart = factory.NotNullFragment(DbDataType.Undefined, "dd");
+				var datePart = factory.NotNullExpression(DbDataType.Undefined, "dd");
 				var dateDiff = factory.Function(intDataType, "DateDiff", ParametersNullabilityType.SameAsLastParameter, datePart, factory.Value(intDataType, 0), dateExpression);
 				var dateAdd  = factory.Function(dateType, "DateAdd", ParametersNullabilityType.SameAsSecondParameter, datePart, dateDiff, factory.Value(intDataType, 0));
 

@@ -6,7 +6,6 @@ using System.Linq;
 
 using LinqToDB.Common;
 using LinqToDB.Extensions;
-using LinqToDB.Linq.Builder;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -167,7 +166,12 @@ namespace LinqToDB.SqlProvider
 			if (!VisitQueries)
 				return selectQuery;
 
+			var saveNullabilityContext = NullabilityContext;
+			NullabilityContext = NullabilityContext.WithJoinSource(selectQuery);
+
 			var newQuery = base.VisitSqlQuery(selectQuery);
+
+			NullabilityContext = saveNullabilityContext;
 
 			return newQuery;
 		}
@@ -194,7 +198,7 @@ namespace LinqToDB.SqlProvider
 					{
 						newResult = ConvertCastToPredicate(castExpression);
 					}
-					else if (unwrapped is SqlExpression { IsPredicate: true } or SqlValue { Value: null })
+					else if (unwrapped is SqlParameterizedExpressionBase { IsPredicate: true } or SqlValue { Value: null })
 					{
 						// do nothing
 					}
@@ -498,10 +502,10 @@ namespace LinqToDB.SqlProvider
 				var expr2IsConstant = QueryHelper.UnwrapNullablity(predicate.Expr2) is (SqlValue or SqlParameter { IsQueryParameter: false });
 
 				var expr1 = expr1IsPredicate && !expr2IsConstant
-					? WrapBooleanExpression(predicate.Expr1, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
+					? WrapBooleanExpression(predicate.Expr1, includeFields : true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
 					: predicate.Expr1;
 				var expr2 = expr2IsPredicate && !expr1IsConstant
-					? WrapBooleanExpression(predicate.Expr2, includeFields : true, withNull: true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
+					? WrapBooleanExpression(predicate.Expr2, includeFields : true, forceConvert: !SqlProviderFlags.SupportsPredicatesComparison)
 					: predicate.Expr2;
 
 				if (!ReferenceEquals(expr1, predicate.Expr1) || !ReferenceEquals(expr2, predicate.Expr2))
@@ -674,9 +678,9 @@ namespace LinqToDB.SqlProvider
 			if (predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext) == false)
 			{
 				predicate = new SqlPredicate.SearchString(
-					PseudoFunctions.MakeToLower(predicate.Expr1),
+					PseudoFunctions.MakeToLower(predicate.Expr1, MappingSchema),
 					predicate.IsNot,
-					PseudoFunctions.MakeToLower(predicate.Expr2),
+					PseudoFunctions.MakeToLower(predicate.Expr2, MappingSchema),
 					predicate.Kind,
 					new SqlValue(false));
 			}
@@ -723,20 +727,9 @@ namespace LinqToDB.SqlProvider
 			return newStr;
 		}
 
-		static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character, ISqlExpression escapeCharacter)
+		ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character, ISqlExpression escapeCharacter)
 		{
-			var result = PseudoFunctions.MakeReplace(expression, character, new SqlBinaryExpression(typeof(string), escapeCharacter, "+", character, Precedence.Additive));
-			return result;
-		}
-
-		public static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character)
-		{
-			var result = PseudoFunctions.MakeReplace(
-				expression,
-				character,
-				new SqlBinaryExpression(typeof(string), new SqlValue("["), "+",
-					new SqlBinaryExpression(typeof(string), character, "+", new SqlValue("]"), Precedence.Additive),
-					Precedence.Additive));
+			var result = PseudoFunctions.MakeReplace(expression, character, new SqlBinaryExpression(typeof(string), escapeCharacter, "+", character, Precedence.Additive), MappingSchema);
 			return result;
 		}
 
@@ -865,6 +858,18 @@ namespace LinqToDB.SqlProvider
 				return Visit(Optimize(newElement));
 
 			return element;
+		}
+
+		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		{
+			var saveNullabilityContext = NullabilityContext;
+			NullabilityContext = NullabilityContext.WithJoinSource(element.Table.Source);
+
+			var newElement = base.VisitSqlJoinedTable(element);
+
+			NullabilityContext = saveNullabilityContext;
+
+			return newElement;
 		}
 
 		protected override IQueryElement VisitSqlExpression(SqlExpression element)
@@ -1135,7 +1140,7 @@ namespace LinqToDB.SqlProvider
 							predicate = new SqlPredicate.Expr(func.Parameters[0]);
 						}
 
-						return new SqlFunction(typeof(int), func.Name, new SqlConditionExpression(predicate, new SqlValue(1), new SqlValue(0)));
+						return new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), func.Name, new SqlConditionExpression(predicate, new SqlValue(1), new SqlValue(0)));
 					}
 
 					break;
@@ -1143,7 +1148,7 @@ namespace LinqToDB.SqlProvider
 
 				case PseudoFunctions.CONVERT_FORMAT:
 				{
-					return new SqlFunction(func.SystemType, "Convert", func.Parameters[0], func.Parameters[2], func.Parameters[3]);
+					return new SqlFunction(func.Type, "Convert", func.Parameters[0], func.Parameters[2], func.Parameters[3]);
 				}
 
 				case PseudoFunctions.TO_LOWER: return func.WithName("Lower");
@@ -1282,7 +1287,7 @@ namespace LinqToDB.SqlProvider
 							element.SystemType,
 							element.Expr1,
 							element.Operation,
-							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, new DbDataType(typeof(string), DataType.VarChar, null, len.Value))),
+							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, QueryHelper.GetDbDataType(element.Expr1, MappingSchema).WithLength(len.Value))),
 							element.Precedence);
 					}
 
@@ -1295,7 +1300,7 @@ namespace LinqToDB.SqlProvider
 
 						return new SqlBinaryExpression(
 							element.SystemType,
-							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, new DbDataType(typeof(string), DataType.VarChar, null, len.Value))),
+							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, QueryHelper.GetDbDataType(element.Expr2, MappingSchema).WithLength(len.Value))),
 							element.Operation,
 							element.Expr2,
 							element.Precedence);
@@ -1375,11 +1380,12 @@ namespace LinqToDB.SqlProvider
 
 				if (wrap)
 				{
-					var predicate = unwrapped as ISqlPredicate;
-					if (predicate == null && unwrapped is SqlExpression { IsPredicate: true })
-						predicate = new SqlPredicate.Expr(expr);
-					if (predicate == null)
-						predicate = ConvertToBooleanSearchCondition(expr);
+					var predicate = unwrapped switch
+					{
+						SqlParameterizedExpressionBase { IsPredicate: true } => new SqlPredicate.Expr(expr),
+						ISqlPredicate isp                                    => isp,
+						_                                                    => ConvertToBooleanSearchCondition(expr),
+					};
 
 					var trueValue  = new SqlValue(true);
 					var falseValue = new SqlValue(false);
@@ -1793,7 +1799,7 @@ namespace LinqToDB.SqlProvider
 				var param = coalesce.Expressions[i];
 				MarkParameters(param);
 
-				last = new SqlFunction(coalesce.SystemType!, funcName, param, last);
+				last = new SqlFunction(QueryHelper.GetDbDataType(coalesce, MappingSchema), funcName, ParametersNullabilityType.IfAllParametersNullable, param, last);
 			}
 
 			return last;
@@ -1848,7 +1854,7 @@ namespace LinqToDB.SqlProvider
 				if (cast.Expression is SqlFunction { Name: "Floor" })
 					return cast;
 
-				return cast.WithExpression(new SqlFunction(cast.Expression.SystemType!, "Floor", cast.Expression));
+				return cast.WithExpression(new SqlFunction(QueryHelper.GetDbDataType(cast.Expression, MappingSchema), "Floor", cast.Expression));
 			}
 
 			return cast;

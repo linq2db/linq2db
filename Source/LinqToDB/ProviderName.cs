@@ -144,6 +144,11 @@ namespace LinqToDB
 		/// </summary>
 		public const string SqlServer2022 = "SqlServer.2022";
 		/// <summary>
+		/// Microsoft SQL Server 2025 provider.
+		/// Used as configuration name for SQL Server 2025 mapping schema <see cref="SqlServerMappingSchema.SqlServer2025MappingSchema"/>.
+		/// </summary>
+		public const string SqlServer2025 = "SqlServer.2025";
+		/// <summary>
 		/// MySql provider.
 		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema"/>.
 		/// </summary>
@@ -250,6 +255,10 @@ namespace LinqToDB
 		/// PostgreSQL 15+ data provider.
 		/// </summary>
 		public const string PostgreSQL15 = "PostgreSQL.15";
+		/// <summary>
+		/// PostgreSQL 18+ data provider.
+		/// </summary>
+		public const string PostgreSQL18 = "PostgreSQL.18";
 		/// <summary>
 		/// Microsoft SQL Server Compact Edition provider.
 		/// Used as configuration name for SQL CE mapping schema <see cref="DataProvider.SqlCe.SqlCeMappingSchema"/>.

@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlCompareToExpression : SqlExpressionBase
+	public sealed class SqlCompareToExpression : SqlExpressionBase
 	{
 		public SqlCompareToExpression(ISqlExpression expression1, ISqlExpression expression2)
 		{
@@ -27,6 +27,14 @@ namespace LinqToDB.SqlQuery
 				.Append(')');
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(Expression1.GetElementHashCode());
+			hash.Add(Expression2.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)

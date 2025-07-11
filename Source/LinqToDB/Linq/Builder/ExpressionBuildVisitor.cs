@@ -58,7 +58,7 @@ namespace LinqToDB.Linq.Builder
 		ResetPrevious       = 1 << 9,
 	}
 
-	class ExpressionBuildVisitor : ExpressionVisitorBase
+	sealed class ExpressionBuildVisitor : ExpressionVisitorBase
 	{
 		public   ExpressionBuilder Builder { get; }
 		BuildPurpose               _buildPurpose;
@@ -155,7 +155,7 @@ namespace LinqToDB.Linq.Builder
 			return newVisitor;
 		}
 
-		public class CacheSnapshot : IDisposable
+		public sealed class CacheSnapshot : IDisposable
 		{
 			readonly ExpressionBuildVisitor _visitor;
 
@@ -1679,7 +1679,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			Expression? notNullCheck = null;
-			if (associationDescriptor.IsList && (prevIsOuter && _buildPurpose is BuildPurpose.SubQuery))
+			if (associationDescriptor.IsList && (isOptional == true && _buildPurpose is BuildPurpose.SubQuery))
 			{
 				var keys = BuildExpression(forContext, rootContext, BuildPurpose.Sql, BuildFlags.ForKeys);
 				if (forContext != null)
@@ -2335,7 +2335,7 @@ namespace LinqToDB.Linq.Builder
 					if (format == null)
 						return false;
 
-					var arguments = new List<ISqlExpression>();
+					var arguments = new ISqlExpression[node.Arguments.Count - 1];
 
 					for (var i = 1; i < node.Arguments.Count; i++)
 					{
@@ -2343,13 +2343,13 @@ namespace LinqToDB.Linq.Builder
 						if (expr is not SqlPlaceholderExpression sqlPlaceholder)
 							return false;
 
-						arguments.Add(sqlPlaceholder.Sql);
+						arguments[i - 1] = sqlPlaceholder.Sql;
 					}
 
 					ISqlExpression result;
 					if (_buildFlags.HasFlag(BuildFlags.FormatAsExpression))
 					{
-						result = new SqlExpression(node.Type, format, Precedence.Primary, arguments.ToArray());
+						result = new SqlExpression(MappingSchema.GetDbDataType(node.Type), format, Precedence.Primary, arguments);
 					}
 					else
 					{
@@ -3112,7 +3112,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Multiply:
 				case ExpressionType.MultiplyChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative), node); break;
 				case ExpressionType.Or:              translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise), node); break;
-				case ExpressionType.Power:           translated = CreatePlaceholder(new SqlFunction(t, "Power", l, r), node); break;
+				case ExpressionType.Power:           translated = CreatePlaceholder(new SqlFunction(MappingSchema.GetDbDataType(t), "Power", l, r), node); break;
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction), node); break;
 				case ExpressionType.Coalesce:        translated = CreatePlaceholder(new SqlCoalesceExpression(l, r), node); break;
@@ -3397,8 +3397,8 @@ namespace LinqToDB.Linq.Builder
 			if (sqlExpression is ISqlPredicate predicate)
 				return predicate;
 
-			if (sqlExpression is SqlExpression sqlExpr && sqlExpr.Flags.HasFlag(SqlFlags.IsPredicate))
-				return new SqlPredicate.Expr(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()));
+			if (sqlExpression is SqlParameterizedExpressionBase { IsPredicate: true })
+				return new SqlPredicate.Expr(sqlExpression);
 
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(sqlExpression);
 			var valueConverter   = columnDescriptor?.ValueConverter;
@@ -3421,12 +3421,12 @@ namespace LinqToDB.Linq.Builder
 
 				if (trueValue != null && falseValue != null)
 				{
-					predicate = new SqlPredicate.IsTrue(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()), trueValue.Sql, falseValue.Sql, withNull && DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
+					predicate = new SqlPredicate.IsTrue(sqlExpression, trueValue.Sql, falseValue.Sql, withNull && DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
 					return predicate;
 				}
 			}
 
-			predicate = new SqlPredicate.Expr(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()));
+			predicate = new SqlPredicate.Expr(sqlExpression);
 
 			return predicate;
 		}
@@ -3437,9 +3437,6 @@ namespace LinqToDB.Linq.Builder
 
 			var saveDescriptor = _columnDescriptor;
 			_columnDescriptor = descriptor;
-
-			if (sqlExpression is SqlColumn col)
-				sqlExpression = ApplyExpressionNullability(sqlExpression, NullabilityContext.GetContext(col.Parent));
 
 			var trueValue  = UpdateNesting(Visit(ExpressionInstances.True));
 			var falseValue = UpdateNesting(Visit(ExpressionInstances.False));
@@ -3487,21 +3484,6 @@ namespace LinqToDB.Linq.Builder
 			error           = SqlErrorExpression.EnsureError(expr, typeof(bool));
 
 			return false;
-		}
-
-		static ISqlExpression ApplyExpressionNullability(ISqlExpression sqlExpression, NullabilityContext nullabilityContext)
-		{
-			if (sqlExpression is SqlRowExpression rowExpression)
-			{
-				var newColumns = rowExpression.Values.Select(e => ApplyExpressionNullability(e, nullabilityContext)).ToArray();
-				return new SqlRowExpression(newColumns);
-			}
-
-			var isNullable = sqlExpression.CanBeNullable(nullabilityContext);
-			if (!isNullable && sqlExpression is SqlColumn col)
-				isNullable = sqlExpression.CanBeNullable(NullabilityContext.GetContext(col.Parent));
-
-			return SqlNullabilityExpression.ApplyNullability(sqlExpression, isNullable);
 		}
 
 		public SqlSearchCondition GenerateComparison(
@@ -4102,7 +4084,7 @@ namespace LinqToDB.Linq.Builder
 							if (trueValue.ElementType == QueryElementType.SqlValue &&
 								falseValue.ElementType == QueryElementType.SqlValue)
 							{
-								if (expression is SqlExpression { IsPredicate: true } predicateExpr)
+								if (expression is SqlParameterizedExpressionBase { IsPredicate: true } predicateExpr)
 								{
 									predicate = new SqlPredicate.Expr(predicateExpr);
 									if (isNot)
@@ -4121,12 +4103,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (predicate == null)
 					{
-						lOriginal = ApplyExpressionNullability(lOriginal, nullability);
-						rOriginal = ApplyExpressionNullability(rOriginal, nullability);
-
 						predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
 							compareNullsAsValues && (lOriginal.CanBeNullable(nullability) || rOriginal.CanBeNullable(nullability))
-								? op == SqlPredicate.Operator.NotEqual
+								? op == SqlPredicate.Operator.Equal
 								: null);
 					}
 				}
@@ -5099,9 +5078,9 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		class TranslationContext : ITranslationContext
+		sealed class TranslationContext : ITranslationContext
 		{
-			class SqlExpressionFactory : ISqlExpressionFactory
+			sealed class SqlExpressionFactory : ISqlExpressionFactory
 			{
 				readonly ITranslationContext _translationContext;
 

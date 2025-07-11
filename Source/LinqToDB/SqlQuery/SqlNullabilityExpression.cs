@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlNullabilityExpression : SqlExpressionBase
+	public sealed class SqlNullabilityExpression : SqlExpressionBase
 	{
 		readonly bool           _isNullable;
 		public   ISqlExpression SqlExpression { get; private set; }
@@ -55,7 +55,8 @@ namespace LinqToDB.SqlQuery
 			if (ReferenceEquals(this, other))
 				return true;
 
-			if (ElementType != other.ElementType)
+			if (other is not SqlNullabilityExpression otherNullability
+				|| CanBeNull != otherNullability.CanBeNull)
 				return false;
 
 			return SqlExpression.Equals(((SqlNullabilityExpression)other).SqlExpression, comparer);
@@ -86,6 +87,16 @@ namespace LinqToDB.SqlQuery
 				writer.Append("?");
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(CanBeNull);
+			hash.Add(SqlExpression.GetElementHashCode());
+
+			return hash.ToHashCode();
 		}
 	}
 }

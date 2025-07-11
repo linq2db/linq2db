@@ -54,7 +54,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				{
 					if (value != SkipLocked
 						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL95)
-						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL15))
+						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL15)
+						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL18))
 					{
 						stringBuilder.Append(' ');
 						stringBuilder.Append(value);

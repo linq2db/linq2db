@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:latest
+docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9089:9089 icr.io/informix/informix-developer-database:latest
 
 echo Generate CREATE DATABASE script
 cat <<-EOSQL > informix_init.sql

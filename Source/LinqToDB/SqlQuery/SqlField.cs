@@ -6,33 +6,28 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlField : SqlExpressionBase
+	public sealed class SqlField : SqlExpressionBase
 	{
 		internal static SqlField All(ISqlTableSource table)
 		{
 			return new SqlField(table, "*", "*");
 		}
 
-		protected SqlField()
-		{
-
-		}
-
-		public SqlField(ISqlTableSource table, string name) : this()
+		public SqlField(ISqlTableSource table, string name)
 		{
 			Table     = table;
 			Name      = name;
 			CanBeNull = true;
 		}
 
-		public SqlField(DbDataType dbDataType, string? name, bool canBeNull) : this()
+		public SqlField(DbDataType dbDataType, string? name, bool canBeNull)
 		{
 			Type      = dbDataType;
 			Name      = name!;
 			CanBeNull = canBeNull;
 		}
 
-		SqlField(ISqlTableSource table, string name, string physicalName) : this()
+		SqlField(ISqlTableSource table, string name, string physicalName)
 		{
 			Table        = table;
 			Name         = name;
@@ -40,14 +35,14 @@ namespace LinqToDB.SqlQuery
 			CanBeNull    = true;
 		}
 
-		public SqlField(string name, string physicalName) : this()
+		public SqlField(string name, string physicalName)
 		{
 			Name         = name;
 			PhysicalName = physicalName;
 			CanBeNull    = true;
 		}
 
-		public SqlField(SqlField field) : this()
+		public SqlField(SqlField field)
 		{
 			Type             = field.Type;
 			Alias            = field.Alias;
@@ -65,7 +60,7 @@ namespace LinqToDB.SqlQuery
 			IsDynamic        = field.IsDynamic;
 		}
 
-		public SqlField(ColumnDescriptor column) : this()
+		public SqlField(ColumnDescriptor column)
 		{
 			Type              = column.GetDbDataType(true);
 			Name              = column.MemberName;
@@ -117,7 +112,7 @@ namespace LinqToDB.SqlQuery
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
-			return this == other;
+			return ReferenceEquals(this, other);
 		}
 
 		public override int Precedence => SqlQuery.Precedence.Primary;
@@ -142,6 +137,24 @@ namespace LinqToDB.SqlQuery
 			if (CanBeNull)
 				writer.Append("?");
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(Name);
+			hash.Add(PhysicalName);
+			hash.Add(Alias);
+			hash.Add(CanBeNull);
+			hash.Add(IsPrimaryKey);
+			hash.Add(PrimaryKeyOrder);
+			hash.Add(IsIdentity);
+			hash.Add(IsInsertable);
+			hash.Add(IsUpdatable);
+			hash.Add(CreateFormat);
+			hash.Add(CreateOrder);
+			return hash.ToHashCode();
 		}
 
 		#endregion

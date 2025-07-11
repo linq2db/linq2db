@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlInlinedSqlExpression : SqlInlinedBase
+	public sealed class SqlInlinedSqlExpression : SqlInlinedBase
 	{
 		public override QueryElementType ElementType  => QueryElementType.SqlInlinedExpression;
 
@@ -34,6 +34,14 @@ namespace LinqToDB.SqlQuery
 				.Append(')');
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(Parameter.GetElementHashCode());
+			hash.Add(InlinedValue.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)

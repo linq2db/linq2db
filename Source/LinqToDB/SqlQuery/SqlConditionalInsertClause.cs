@@ -1,6 +1,8 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
-	public class SqlConditionalInsertClause : IQueryElement
+	public sealed class SqlConditionalInsertClause : QueryElement
 	{
 		public SqlInsertClause     Insert { get; private set; }
 		public SqlSearchCondition? When   { get; private set; }
@@ -19,12 +21,9 @@
 
 		#region IQueryElement
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		QueryElementType IQueryElement.ElementType => QueryElementType.ConditionalInsertClause;
+		public override QueryElementType ElementType => QueryElementType.ConditionalInsertClause;
 
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			if (When != null)
 			{
@@ -37,6 +36,15 @@
 			writer.AppendElement(Insert);
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(Insert.GetElementHashCode());
+			if (When != null)
+				hash.Add(When.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		#endregion

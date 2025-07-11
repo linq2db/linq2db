@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlFromClause : ClauseBase
+	public sealed class SqlFromClause : ClauseBase
 	{
 		#region Join
 
@@ -184,6 +184,14 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			foreach (var table in Tables)
+				hash.Add(table.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		#endregion

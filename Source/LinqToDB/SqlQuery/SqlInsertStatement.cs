@@ -1,8 +1,9 @@
-﻿namespace LinqToDB.SqlQuery
-{
-	public class SqlInsertStatement : SqlStatementWithQueryBase
-	{
+﻿using System;
 
+namespace LinqToDB.SqlQuery
+{
+	public sealed class SqlInsertStatement : SqlStatementWithQueryBase
+	{
 		public SqlInsertStatement() : base(null)
 		{
 		}
@@ -40,6 +41,16 @@
 				.AppendLine()
 				.AppendElement(SelectQuery)
 				.AppendElement(Output);
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(base.GetElementHashCode());
+
+			hash.Add(_insert?.GetElementHashCode());
+			hash.Add(Output?.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)

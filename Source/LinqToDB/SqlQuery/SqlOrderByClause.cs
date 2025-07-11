@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlOrderByClause : ClauseBase, IQueryElement
+	public sealed class SqlOrderByClause : ClauseBase, IQueryElement
 	{
 		internal SqlOrderByClause(SelectQuery selectQuery) : base(selectQuery)
 		{
@@ -64,6 +65,15 @@ namespace LinqToDB.SqlQuery
 				}
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			foreach (var item in Items)
+				hash.Add(item.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		#endregion

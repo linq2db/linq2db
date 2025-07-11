@@ -1,6 +1,8 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
-	public class SqlInsertOrUpdateStatement: SqlStatementWithQueryBase
+	public sealed class SqlInsertOrUpdateStatement: SqlStatementWithQueryBase
 	{
 		public override QueryType QueryType          => QueryType.InsertOrUpdate;
 		public override QueryElementType ElementType => QueryElementType.InsertOrUpdateStatement;
@@ -36,6 +38,16 @@
 				.AppendElement(SelectQuery);
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(base.GetElementHashCode());
+
+			hash.Add(_insert?.GetElementHashCode());
+			hash.Add(_update?.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)

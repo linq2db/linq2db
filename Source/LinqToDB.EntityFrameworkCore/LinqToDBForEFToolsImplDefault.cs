@@ -183,6 +183,7 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.SqlServer2017                                                => CreateSqlServerProvider(SqlServerVersion.v2017, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.SqlServer2019                                                => CreateSqlServerProvider(SqlServerVersion.v2019, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.SqlServer2022                                                => CreateSqlServerProvider(SqlServerVersion.v2022, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.SqlServer2025                                                => CreateSqlServerProvider(SqlServerVersion.v2025, connectionInfo.ConnectionString, connectionInfo.Connection),
 
 				ProviderName.MySql                                                        => MySqlTools.GetDataProvider(MySqlVersion.AutoDetect, MySqlProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.MySql57                                                      => MySqlTools.GetDataProvider(MySqlVersion.MySql57, MySqlProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection),
@@ -194,6 +195,7 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.PostgreSQL93                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v93, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.PostgreSQL95                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v95, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.PostgreSQL15                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v15, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.PostgreSQL18                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v18, connectionInfo.ConnectionString, connectionInfo.Connection),
 
 				ProviderName.SQLite or ProviderName.SQLiteMS                              => SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft, connectionInfo.ConnectionString, connectionInfo.Connection),
 

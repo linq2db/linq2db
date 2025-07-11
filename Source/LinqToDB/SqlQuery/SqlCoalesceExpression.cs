@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlCoalesceExpression : SqlExpressionBase
+	public sealed class SqlCoalesceExpression : SqlExpressionBase
 	{
 		public SqlCoalesceExpression(params ISqlExpression[] expressions)
 		{
@@ -30,6 +30,17 @@ namespace LinqToDB.SqlQuery
 			writer.Append(')');
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			foreach (var expression in Expressions)
+			{
+				hash.Add(expression.GetElementHashCode());
+			}
+
+			return hash.ToHashCode();
 		}
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)

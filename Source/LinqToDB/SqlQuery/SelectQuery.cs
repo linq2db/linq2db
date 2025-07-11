@@ -7,7 +7,7 @@ using System.Threading;
 namespace LinqToDB.SqlQuery
 {
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
-	public class SelectQuery : SqlExpressionBase, ISqlTableSource
+	public sealed class SelectQuery : SqlExpressionBase, ISqlTableSource
 	{
 		#region Init
 
@@ -289,6 +289,26 @@ namespace LinqToDB.SqlQuery
 			writer.RemoveVisited(this);
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(Select.GetElementHashCode());
+			hash.Add(From.GetElementHashCode());
+			hash.Add(Where.GetElementHashCode());
+			hash.Add(GroupBy.GetElementHashCode());
+			hash.Add(Having.GetElementHashCode());
+			hash.Add(OrderBy.GetElementHashCode());
+			if (_setOperators != null)
+				foreach (var u in _setOperators)
+					hash.Add(u.GetElementHashCode());
+			if (QueryName != null)
+				hash.Add(QueryName);
+			if (SqlQueryExtensions != null)
+				foreach (var ext in SqlQueryExtensions)
+					hash.Add(ext.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		#endregion

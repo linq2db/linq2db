@@ -1414,6 +1414,7 @@ namespace LinqToDB.Linq
 		[Sql.Extension(ProviderName.SqlServer     , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
 		[Sql.Extension(ProviderName.SqlCe         , "RTRIM({0})"                 , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
 		[Sql.Extension(ProviderName.SqlServer2022 , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SqlServer2025 , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.DB2           , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Informix      , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Oracle        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder), IsNullable = Sql.IsNullableType.Nullable)]
@@ -1434,6 +1435,7 @@ namespace LinqToDB.Linq
 		[Sql.Expression(ProviderName.Firebird     , "TRIM(LEADING FROM {0})"    , ServerSideOnly = false, PreferServerSide = false)]
 		[Sql.Extension(ProviderName.ClickHouse    , "trim(LEADING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SqlServer2022 , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SqlServer2025 , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.DB2           , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Informix      , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Oracle        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder), IsNullable = Sql.IsNullableType.Nullable)]
@@ -1459,18 +1461,18 @@ namespace LinqToDB.Linq
 				if (chars == null || chars.Length == 0)
 				{
 					builder.ResultExpression = new SqlFunction(
-						typeof(string),
+						builder.Mapping.GetDbDataType(typeof(string)),
 						(string)"LTRIM",
 						stringExpression);
 					return;
 				}
 
 				builder.ResultExpression = new SqlExpression(
-					typeof(string),
+					builder.Mapping.GetDbDataType(typeof(string)),
 					builder.Expression,
 					Precedence.Primary,
 					stringExpression,
-					new SqlExpression(typeof(string), "{0}", new SqlValue(new string(chars))));
+					new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "{0}", new SqlValue(new string(chars))));
 			}
 		}
 
@@ -1483,7 +1485,7 @@ namespace LinqToDB.Linq
 				if (chars == null || chars.Length == 0)
 				{
 					builder.ResultExpression = new SqlExpression(
-						typeof(string),
+						builder.Mapping.GetDbDataType(typeof(string)),
 						"TRIM(TRAILING FROM {0})",
 						stringExpression);
 					return;
@@ -1495,7 +1497,7 @@ namespace LinqToDB.Linq
 				foreach (var c in chars)
 				{
 					result = new SqlExpression(
-						typeof(string),
+						builder.Mapping.GetDbDataType(typeof(string)),
 						builder.Expression,
 						Precedence.Primary,
 						result,
@@ -1515,18 +1517,18 @@ namespace LinqToDB.Linq
 				if (chars == null || chars.Length == 0)
 				{
 					builder.ResultExpression = new SqlFunction(
-						typeof(string),
+						builder.Mapping.GetDbDataType(typeof(string)),
 						"RTRIM",
 						stringExpression);
 					return;
 				}
 
 				builder.ResultExpression = new SqlExpression(
-					typeof(string),
+					builder.Mapping.GetDbDataType(typeof(string)),
 					builder.Expression,
 					Precedence.Primary,
 					stringExpression,
-					new SqlExpression(typeof(string), "{0}", Precedence.Primary, new SqlValue(new string(chars))));
+					new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "{0}", Precedence.Primary, new SqlValue(new string(chars))));
 			}
 		}
 
@@ -1539,7 +1541,7 @@ namespace LinqToDB.Linq
 				if (chars == null || chars.Length == 0)
 				{
 					builder.ResultExpression = new SqlFunction(
-						typeof(string),
+						builder.Mapping.GetDbDataType(typeof(string)),
 						"RTRIM",
 						stringExpression);
 				}
@@ -1554,7 +1556,7 @@ namespace LinqToDB.Linq
 
 		#region Provider specific functions
 
-		class ConvertToCaseCompareToBuilder : Sql.IExtensionCallBuilder
+		sealed class ConvertToCaseCompareToBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

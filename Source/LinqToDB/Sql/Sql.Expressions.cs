@@ -31,14 +31,13 @@ namespace LinqToDB
 				for (var i = 0; i < columns.Length; i++)
 					columnExpressions[i] = qualified
 						? new SqlField(columns[i])
-						: new SqlExpression(columns[i].ColumnName, Precedence.Primary);
+						: new SqlExpression(columns[i].GetDbDataType(true), columns[i].ColumnName, Precedence.Primary);
 
 				if (columns.Length == 1)
 					builder.ResultExpression = columnExpressions[0];
 				else
-					builder.ResultExpression = new SqlExpression(
+					builder.ResultExpression = new SqlFragment(
 						string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => FormattableString.Invariant($"{{{i}}}"))),
-						Precedence.Primary,
 						columnExpressions);
 			}
 		}
@@ -56,8 +55,8 @@ namespace LinqToDB
 				if (isExpression)
 				{
 					builder.ResultExpression = qualified
-						? new SqlExpression(typeof(string), "{0}", Precedence.Primary, new SqlField(column))
-						: new SqlExpression(typeof(string), column.ColumnName, Precedence.Primary);
+						? new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "{0}", Precedence.Primary, new SqlField(column))
+						: new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), column.ColumnName, Precedence.Primary);
 				}
 				else
 				{
@@ -86,8 +85,8 @@ namespace LinqToDB
 				if (isExpression)
 				{
 					builder.ResultExpression = qualified
-						? new SqlExpression(typeof(string), "{0}", Precedence.Primary, new SqlField(field))
-						: new SqlExpression(typeof(string), field.PhysicalName, Precedence.Primary);
+						? new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "{0}", Precedence.Primary, new SqlField(field))
+						: new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), field.PhysicalName, Precedence.Primary);
 				}
 				else
 				{
@@ -157,7 +156,7 @@ namespace LinqToDB
 				return new SqlField(column);
 			}
 
-			return new SqlExpression(column.ColumnName, Precedence.Primary);
+			return new SqlExpression(column.GetDbDataType(true), column.ColumnName, Precedence.Primary);
 		}
 
 		[Extension("", BuilderType = typeof(FieldsExprBuilderDirect), ServerSideOnly = false)]
@@ -178,14 +177,13 @@ namespace LinqToDB
 			for (var i = 0; i < columns.Length; i++)
 				columnExpressions[i] = qualified
 					? new SqlField(columns[i])
-					: new SqlExpression(columns[i].ColumnName, Precedence.Primary);
+					: new SqlExpression(columns[i].GetDbDataType(true), columns[i].ColumnName, Precedence.Primary);
 
 			if (columns.Length == 1)
 				return columnExpressions[0];
 
-			return new SqlExpression(
+			return new SqlFragment(
 				string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => FormattableString.Invariant($"{{{i}}}"))),
-				Precedence.Primary,
 				columnExpressions);
 		}
 
@@ -287,7 +285,7 @@ namespace LinqToDB
 				if (isExpression)
 				{
 					if (qualified == TableQualification.None)
-						builder.ResultExpression = new SqlExpression(typeof(string), tableHelper.TableName, Precedence.Primary);
+						builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), tableHelper.TableName, Precedence.Primary);
 					else
 					{
 						var tableName = new SqlObjectName(
@@ -364,7 +362,7 @@ namespace LinqToDB
 				}
 
 				builder.ResultExpression = isExpression
-					? new SqlExpression(name, Precedence.Primary)
+					? new SqlFragment(name)
 					: new SqlValue(name);
 			}
 		}
@@ -491,7 +489,7 @@ namespace LinqToDB
 				name = sb.Value.ToString();
 			}
 
-			return new SqlExpression(name, Precedence.Primary);
+			return new SqlFragment(name);
 		}
 
 		[Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
@@ -502,7 +500,7 @@ namespace LinqToDB
 		public static ISqlExpression TableExpr(object tableExpr, [SqlQueryDependent] TableQualification qualification)
 			=> throw new ServerSideOnlyException(nameof(TableExpr));
 
-		class AliasExprBuilder : IExtensionCallBuilder
+		sealed class AliasExprBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -545,7 +543,7 @@ namespace LinqToDB
 				else
 				{
 					builder.ResultExpression = new SqlExpression(
-						memberType,
+						builder.Mapping.GetDbDataType(memberType),
 						format,
 						Precedence.Primary,
 						memberType == typeof(bool) ? SqlFlags.IsPredicate | SqlFlags.IsPure : SqlFlags.IsPure,

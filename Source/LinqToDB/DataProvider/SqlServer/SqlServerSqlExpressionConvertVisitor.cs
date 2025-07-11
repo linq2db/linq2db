@@ -30,11 +30,11 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, new SqlFunction(
-									typeof(string), "LEFT", predicate.Expr1,
-									new SqlFunction(typeof(int), "LEN", predicate.Expr2))),
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary, new SqlFunction(
+									MappingSchema.GetDbDataType(typeof(string)), "LEFT", predicate.Expr1,
+									new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "LEN", predicate.Expr2))),
 								SqlPredicate.Operator.Equal,
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
 								null
 							);
 
@@ -45,11 +45,11 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, new SqlFunction(
-									typeof(string), "RIGHT", predicate.Expr1,
-									new SqlFunction(typeof(int), "LEN", predicate.Expr2))),
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary, new SqlFunction(
+									MappingSchema.GetDbDataType(typeof(string)), "RIGHT", predicate.Expr1,
+									new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "LEN", predicate.Expr2))),
 								SqlPredicate.Operator.Equal,
-								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
 								null
 							);
 
@@ -59,10 +59,10 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						subStrPredicate =
 							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "CHARINDEX",
-									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "CHARINDEX",
+									new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary,
 										predicate.Expr2),
-									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+									new SqlFunction(MappingSchema.GetDbDataType(typeof(byte[])), "Convert", SqlDataType.DbVarBinary,
 										predicate.Expr1)),
 								SqlPredicate.Operator.Greater,
 								new SqlValue(0), null);
@@ -97,7 +97,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						return new SqlBinaryExpression(
 							element.Expr2.SystemType!,
-							new SqlFunction(typeof(int), "Convert", SqlDataType.Int32, element.Expr1),
+							new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "Convert", SqlDataType.Int32, element.Expr1),
 							element.Operation,
 							element.Expr2);
 					}

@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 			return new GuidMemberTranslator();
 		}
 
-		class SqlTypesTranslation : SqlTypesTranslationDefault
+		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertTinyInt(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Int16));
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 				else*/
 				{
 					resultExpression = factory.Cast(
-						factory.Function(extractDbType, "Extract", factory.Fragment(doubleDbType, $"{partStr} From {{0}}", dateTimeExpression)),
+						factory.Function(extractDbType, "Extract", factory.Expression(doubleDbType, $"{partStr} From {{0}}", dateTimeExpression)),
 						intDbType);
 				}
 
@@ -143,7 +143,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				var factory = translationContext.ExpressionFactory;
 
-				var atTimeZone = factory.Fragment(factory.GetDbDataType(dateExpression), "{0} AT TIME ZONE {1}", dateExpression, factory.Value("UTC"));
+				var atTimeZone = factory.Expression(factory.GetDbDataType(dateExpression), "{0} AT TIME ZONE {1}", dateExpression, factory.Value("UTC"));
 
 				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", ParametersNullabilityType.SameAsSecondParameter, factory.Value("day"), atTimeZone);
 
@@ -159,7 +159,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				ISqlExpression ToInterval(ISqlExpression numberExpression, string intervalKind)
 				{
-					var intervalExpr = factory.NotNullFragment(intervalType, "Interval {0}", factory.Value(intervalKind));
+					var intervalExpr = factory.NotNullExpression(intervalType, "Interval {0}", factory.Value(intervalKind));
 
 					return factory.Multiply(intervalType, numberExpression, intervalExpr);
 				}
@@ -225,7 +225,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 			}
 		}
 
-		class MathMemberTranslator : MathMemberTranslatorBase
+		sealed class MathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
@@ -252,7 +252,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 			}
 		}
 
-		class GuidMemberTranslator : GuidMemberTranslatorBase
+		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{

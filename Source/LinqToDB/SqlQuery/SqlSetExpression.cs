@@ -1,6 +1,8 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
-	public class SqlSetExpression : IQueryElement
+	public sealed class SqlSetExpression : QueryElement
 	{
 		// These are both nullable refs, but by construction either _column or _row is set.
 
@@ -70,27 +72,11 @@
 			}
 		}
 
-		#region Overrides
-
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
-		#endregion
-
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.SetExpression;
+		public override QueryElementType ElementType => QueryElementType.SetExpression;
 
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer
 				.AppendElement(Column)
@@ -98,6 +84,14 @@
 				.AppendElement(Expression);
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(Column.GetElementHashCode());
+			hash.Add(Expression?.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		#endregion

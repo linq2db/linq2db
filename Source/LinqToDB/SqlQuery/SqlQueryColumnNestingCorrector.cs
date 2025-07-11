@@ -8,10 +8,10 @@ using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlQueryColumnNestingCorrector : SqlQueryVisitor
+	public sealed class SqlQueryColumnNestingCorrector : SqlQueryVisitor
 	{
 		[DebuggerDisplay("QN(S:{TableSource.SourceID})")]
-		class QueryNesting
+		sealed class QueryNesting
 		{
 			public QueryNesting(QueryNesting? parent, ISqlTableSource tableSource)
 			{

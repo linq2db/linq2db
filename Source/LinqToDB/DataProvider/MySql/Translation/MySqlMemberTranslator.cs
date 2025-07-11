@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 {
 	public class MySqlMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		class SqlTypesTranslation : SqlTypesTranslationDefault
+		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Boolean));
@@ -61,7 +61,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 
 				dbDataType = dbDataType.WithDataType(DataType.Char);
 
-				return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, new SqlValue(dbDataType, ""), memberExpression);
+				return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translationContext.ExpressionFactory.Value(dbDataType, ""), memberExpression);
 			}
 		}
 
@@ -90,7 +90,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 						var addDaysFunc = factory.Function(factory.GetDbDataType(dateTimeExpression), "Date_Add",
 							ParametersNullabilityType.SameAsFirstParameter,
 							dateTimeExpression,
-							factory.NotNullFragment(intDataType, "interval 1 day"));
+							factory.NotNullExpression(intDataType, "interval 1 day"));
 
 						var weekDayFunc = factory.Function(intDataType, "WeekDay", addDaysFunc);
 
@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 
 				var extractDbType = intDataType;
 
-				var resultExpression = factory.Function(extractDbType, "Extract", factory.Fragment(intDataType, partStr + " from {0}", dateTimeExpression));
+				var resultExpression = factory.Function(extractDbType, "Extract", factory.Expression(intDataType, partStr + " from {0}", dateTimeExpression));
 
 				return resultExpression;
 			}
@@ -143,7 +143,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 						return null;
 				}
 
-				var resultExpression = factory.Function(dateType, "Date_Add", dateTimeExpression, factory.Fragment(intervalType, expStr, increment));
+				var resultExpression = factory.Function(dateType, "Date_Add", dateTimeExpression, factory.Expression(intervalType, expStr, increment));
 
 				return resultExpression;
 			}
@@ -217,7 +217,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 		{
 		}
 
-		class GuidMemberTranslator : GuidMemberTranslatorBase
+		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{

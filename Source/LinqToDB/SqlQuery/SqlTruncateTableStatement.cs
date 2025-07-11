@@ -1,6 +1,8 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
-	public class SqlTruncateTableStatement : SqlStatement
+	public sealed class SqlTruncateTableStatement : SqlStatement
 	{
 		public SqlTable? Table         { get; set; }
 		public bool      ResetIdentity { get; set; }
@@ -30,6 +32,16 @@
 		{
 			noAlias = false;
 			return null;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(base.GetElementHashCode());
+
+			hash.Add(Table?.GetElementHashCode());
+			hash.Add(ResetIdentity);
+			return hash.ToHashCode();
 		}
 	}
 }

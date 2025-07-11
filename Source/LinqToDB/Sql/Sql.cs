@@ -130,7 +130,7 @@ namespace LinqToDB
 				var right = builder.GetExpression(1)!;
 				var isNot = builder.Expression == "NOT";
 
-				var nullability = new NullabilityContext(builder.Query);
+				var nullability = NullabilityContext.GetContext(builder.Query);
 
 				SqlPredicate predicate = left.CanBeNullable(nullability) || right.CanBeNullable(nullability)
 					? new SqlPredicate.IsDistinct(left, isNot, right)
@@ -258,7 +258,7 @@ namespace LinqToDB
 
 		#region Convert Functions
 
-		class ConvertBuilder : IExtensionCallBuilder
+		sealed class ConvertBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -291,7 +291,7 @@ namespace LinqToDB
 			return Common.ConvertTo<TTo>.From(from);
 		}
 
-		class ConvertBuilderSimple : IExtensionCallBuilder
+		sealed class ConvertBuilderSimple : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -311,7 +311,7 @@ namespace LinqToDB
 			return Common.ConvertTo<TTo>.From(obj);
 		}
 
-		class ConvertBuilderInner : IExtensionCallBuilder
+		sealed class ConvertBuilderInner : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -559,7 +559,7 @@ namespace LinqToDB
 			return str.Substring(0, length.Value);
 		}
 
-		class OracleRightBuilder : IExtensionCallBuilder
+		sealed class OracleRightBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -574,11 +574,11 @@ namespace LinqToDB
 
 				lengthExpr = new SqlBinaryExpression(lengthExpr.SystemType!, new SqlValue(-1), "*", lengthExpr, Precedence.Multiplicative);
 
-				builder.ResultExpression = new SqlFunction(stringExpr.SystemType!, "substr", false, true, stringExpr, lengthExpr);
+				builder.ResultExpression = new SqlFunction(QueryHelper.GetDbDataType(stringExpr, builder.Mapping), "substr", canBeNull: true, stringExpr, lengthExpr);
 			}
 		}
 
-		class SqlCeRightBuilder : IExtensionCallBuilder
+		sealed class SqlCeRightBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -594,11 +594,11 @@ namespace LinqToDB
 				// SUBSTRING(someStr, LEN(someStr) - (len - 1), len)
 
 				var startExpr = new SqlBinaryExpression(lengthExpr.SystemType!,
-					new SqlFunction(lengthExpr.SystemType!, "LEN", stringExpr), "-",
+					new SqlFunction(QueryHelper.GetDbDataType(lengthExpr, builder.Mapping), "LEN", stringExpr), "-",
 					new SqlBinaryExpression(lengthExpr.SystemType!, lengthExpr, "-", new SqlValue(1), Precedence.Subtraction),
 					Precedence.Subtraction);
 
-				builder.ResultExpression = new SqlFunction(stringExpr.SystemType!, "SUBSTRING", false, true, stringExpr, startExpr, lengthExpr);
+				builder.ResultExpression = new SqlFunction(QueryHelper.GetDbDataType(stringExpr, builder.Mapping), "SUBSTRING", canBeNull: true, stringExpr, startExpr, lengthExpr);
 			}
 		}
 
@@ -718,6 +718,7 @@ namespace LinqToDB
 		[Extension(PN.SqlServer2017, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
 		[Extension(PN.SqlServer2019, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
 		[Extension(PN.SqlServer2022, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
+		[Extension(PN.SqlServer2025, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
 		[Extension(PN.Access,        typeof(IsNullOrWhiteSpaceAccessBuilder),                      IsPredicate = true)]
 		[Extension(PN.Sybase,        typeof(IsNullOrWhiteSpaceSybaseBuilder),                      IsPredicate = true)]
 		[Extension(PN.MySql,         typeof(IsNullOrWhiteSpaceMySqlBuilder),                       IsPredicate = true)]
@@ -735,7 +736,7 @@ namespace LinqToDB
 
 				var predicate = new SqlPredicate.ExprExpr(
 						new SqlExpression(
-							typeof(string),
+							builder.Mapping.GetDbDataType(typeof(string)),
 							"REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({0}, '\x09', ''), '\x0a', ''), '\x0b', ''), '\x0c', ''), '\x0d', ''), '\x20', ''), '\x85', ''), '\xa0', ''), '\x1680', ''), '\x2000', ''), '\x2001', ''), '\x2002', ''), '\x2003', ''), '\x2004', ''), '\x2005', ''), '\x2006', ''), '\x2007', ''), '\x2008', ''), '\x2009', ''), '\x200a', ''), '\x2028', ''), '\x2029', ''), '\x205f', ''), '\x3000', '')",
 							str),
 						SqlPredicate.Operator.Equal,
@@ -761,12 +762,11 @@ namespace LinqToDB
 				const string whiteSpaces = $"%[^{WHITESPACES}]%";
 				var predicate = new SqlPredicate.Expr(
 					new SqlExpression(
-						typeof(bool),
+						builder.Mapping.GetDbDataType(typeof(bool)),
 						"{0} SIMILAR TO {1}",
 						Precedence.Comparison,
 						SqlFlags.IsPredicate,
 						ParametersNullabilityType.NotNullable,
-						null,
 						str,
 						new SqlValue(typeof(string), whiteSpaces)))
 					.MakeNot();
@@ -790,12 +790,11 @@ namespace LinqToDB
 				var whiteSpaces = $"[^{WHITESPACES}]";
 				var condition = new SqlPredicate.Expr(
 					new SqlExpression(
-						typeof(bool),
+						builder.Mapping.GetDbDataType(typeof(bool)),
 						"{0} RLIKE {1}",
 						Precedence.Comparison,
 						SqlFlags.IsPredicate,
 						ParametersNullabilityType.NotNullable,
-						null,
 						str,
 						new SqlValue(typeof(string), whiteSpaces)))
 					.MakeNot();
@@ -864,7 +863,7 @@ namespace LinqToDB
 				var str = builder.GetExpression("str")!;
 
 				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(string), "LTRIM", str),
+						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str),
 						SqlPredicate.Operator.Equal,
 						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
 
@@ -886,7 +885,7 @@ namespace LinqToDB
 				var str = builder.GetExpression("str")!;
 
 				var predicate = new SqlPredicate.ExprExpr(
-						new SqlExpression(typeof(string), "TRIM({1} FROM {0})", str, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), WHITESPACES)),
+						new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "TRIM({1} FROM {0})", str, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), WHITESPACES)),
 						SqlPredicate.Operator.Equal,
 						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
 
@@ -907,7 +906,7 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str")!;
 
-				var predicate = new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", ParametersNullabilityType.Nullable, str, new SqlValue(typeof(string), WHITESPACES)), false);
+				var predicate = new SqlPredicate.IsNull(new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", ParametersNullabilityType.Nullable, str, new SqlValue(typeof(string), WHITESPACES)), false);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
@@ -927,7 +926,7 @@ namespace LinqToDB
 				var str = builder.GetExpression("str")!;
 
 				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), ASCII_WHITESPACES)),
+						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str, new SqlValue(typeof(string), ASCII_WHITESPACES)),
 						SqlPredicate.Operator.Equal,
 						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
 
@@ -949,7 +948,7 @@ namespace LinqToDB
 				var str = builder.GetExpression("str")!;
 
 				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)),
+						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)),
 						SqlPredicate.Operator.Equal,
 						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
 

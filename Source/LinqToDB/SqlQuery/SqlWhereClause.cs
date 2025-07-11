@@ -1,6 +1,8 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
-	public class SqlWhereClause : ClauseBase<SqlWhereClause>
+	public sealed class SqlWhereClause : ClauseBase<SqlWhereClause>
 	{
 		internal SqlWhereClause(SelectQuery selectQuery) : base(selectQuery)
 		{
@@ -35,6 +37,14 @@
 			}
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(SearchCondition.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		#endregion

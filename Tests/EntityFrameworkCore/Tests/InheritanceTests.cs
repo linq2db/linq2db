@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 using LinqToDB.Data;
 using LinqToDB.EntityFrameworkCore.Tests.Models.Inheritance;
@@ -30,11 +30,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var items = ctx.Blogs.ToArray();
 
-			items[0].Should().BeOfType<Blog>();
-			((Blog)items[0]).Url.Should().Be("BlogUrl");
+			items[0].ShouldBeOfType<Blog>();
+			((Blog)items[0]).Url.ShouldBe("BlogUrl");
 
-			items[1].Should().BeOfType<RssBlog>();
-			((RssBlog)items[1]).Url.Should().Be("RssUrl");
+			items[1].ShouldBeOfType<RssBlog>();
+			((RssBlog)items[1]).Url.ShouldBe("RssUrl");
 		}
 
 		[Test]
@@ -49,11 +49,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var items = ctx.ShadowBlogs.ToArray();
 
-			items[0].Should().BeOfType<ShadowBlog>();
-			((ShadowBlog)items[0]).Url.Should().Be("BlogUrl");
+			items[0].ShouldBeOfType<ShadowBlog>();
+			((ShadowBlog)items[0]).Url.ShouldBe("BlogUrl");
 
-			items[1].Should().BeOfType<ShadowRssBlog>();
-			((ShadowRssBlog)items[1]).Url.Should().Be("RssUrl");
+			items[1].ShouldBeOfType<ShadowRssBlog>();
+			((ShadowRssBlog)items[1]).Url.ShouldBe("RssUrl");
 		}
 	}
 }

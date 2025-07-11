@@ -13,11 +13,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			switch (func.Name)
 			{
 				case PseudoFunctions.TRY_CONVERT:
-					return new SqlFunction(func.SystemType, "TRY_CONVERT", false, true, func.Parameters[0], func.Parameters[2]) { CanBeNull = true };
+					return new SqlFunction(func.Type, "TRY_CONVERT", true, func.Parameters[0], func.Parameters[2]);
 			}
 
 			return base.ConvertSqlFunction(func);
 		}
-
 	}
 }

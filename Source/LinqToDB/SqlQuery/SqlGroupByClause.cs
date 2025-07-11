@@ -11,7 +11,7 @@ namespace LinqToDB.SqlQuery
 		Cube
 	}
 
-	public class SqlGroupByClause : ClauseBase, IQueryElement
+	public sealed class SqlGroupByClause : ClauseBase, IQueryElement
 	{
 		internal SqlGroupByClause(SelectQuery selectQuery) : base(selectQuery)
 		{
@@ -117,6 +117,18 @@ namespace LinqToDB.SqlQuery
 				writer.Append(')');
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(GroupingType);
+			foreach (var item in Items)
+			{
+				hash.Add(item.GetElementHashCode());
+			}
+
+			return hash.ToHashCode();
 		}
 
 		#endregion

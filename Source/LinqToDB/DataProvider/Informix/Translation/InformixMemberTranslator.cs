@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 			return new GuidMemberTranslator();
 		}
 
-		class SqlTypesTranslation : SqlTypesTranslationDefault
+		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Boolean));
@@ -155,7 +155,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 					{
 						//((Extend({date}, year to day) - (Mdy(12, 31 - WeekDay(Mdy(1, 1, year({date}))), Year({date}) - 1) + Interval(1) day to day)) / 7 + Interval(1) day to day)::char(10)::int
 
-						var dateWithoutTime = factory.Function(dateType, "Extend", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.NotNullFragment(dateType, "Year to Day"));
+						var dateWithoutTime = factory.Function(dateType, "Extend", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.NotNullExpression(dateType, "Year to Day"));
 						var year            = factory.Function(intDataType, "Year", dateTimeExpression);
 						var firstDay        = factory.Function(dateType, "Mdy", ParametersNullabilityType.SameAsLastParameter, factory.Value(intDataType, 1), factory.Value(intDataType, 1), year);
 
@@ -167,7 +167,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 							factory.Decrement(year)
 						);
 
-						var interval = factory.NotNullFragment(intervalType, "Interval (1) Day to Day");
+						var interval = factory.NotNullExpression(intervalType, "Interval (1) Day to Day");
 
 						//var result = factory.Sub(dateType, dateWithoutTime, factory.Add(dateType, lastDay, interval));
 						var result = factory.Sub(dateType, dateWithoutTime, lastDay);
@@ -288,7 +288,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 				// interval literal cannot be dynamic so we should try to disable at least parameters
 				QueryHelper.MarkAsNonQueryParameters(increment);
 
-				var intervalExpr     = factory.NotNullFragment(intervalType, "Interval ({0}) " + fragmentStr, increment);
+				var intervalExpr     = factory.NotNullExpression(intervalType, "Interval ({0}) " + fragmentStr, increment);
 				if (multiplier != null)
 				{
 					intervalExpr = factory.Multiply(incrementType, intervalExpr, multiplier);
@@ -304,7 +304,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 				// EXTEND(your_datetime_column, YEAR TO DAY)
 
 				var factory = translationContext.ExpressionFactory;
-				var extend  = new SqlFunction(factory.GetDbDataType(dateExpression).WithDataType(DataType.Date), "Extend", ParametersNullabilityType.SameAsFirstParameter, dateExpression, new SqlExpression("Year to Day") { CanBeNull = false });
+				var extend  = factory.Function(factory.GetDbDataType(dateExpression).WithDataType(DataType.Date), "Extend", ParametersNullabilityType.SameAsFirstParameter, dateExpression, factory.Fragment("Year to Day"));
 
 				return extend;
 			}
@@ -325,7 +325,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory          = translationContext.ExpressionFactory;
-				var currentTimeStamp = factory.NotNullFragment(factory.GetDbDataType(typeof(DateTime)), "CURRENT");
+				var currentTimeStamp = factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "CURRENT");
 				return currentTimeStamp;
 			}
 		}
@@ -334,7 +334,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 		{
 		}
 
-		class GuidMemberTranslator : GuidMemberTranslatorBase
+		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 		{

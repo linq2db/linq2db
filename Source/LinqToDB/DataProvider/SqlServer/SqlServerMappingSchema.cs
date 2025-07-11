@@ -590,6 +590,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		static MappingSchema Instance2017 = new SqlServer2017MappingSchema();
 		static MappingSchema Instance2019 = new SqlServer2019MappingSchema();
 		static MappingSchema Instance2022 = new SqlServer2022MappingSchema();
+		static MappingSchema Instance2025 = new SqlServer2025MappingSchema();
 
 		sealed class SqlServer2005MappingSchema : LockedMappingSchema
 		{
@@ -768,24 +769,48 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
+		sealed class SqlServer2025MappingSchema : LockedMappingSchema
+		{
+			public SqlServer2025MappingSchema() : base(ProviderName.SqlServer2025, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
+
+#if NET8_0_OR_GREATER
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+#endif
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
+		}
+
 		const string SDS = ".System";
 		const string MDS = ".Microsoft";
 
-		public sealed class SqlServer2005MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2005 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2005 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2005MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2005 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2005 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2008MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2008 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2008 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2008MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2008 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2008 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2012MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2012 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2012 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2012MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2012 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2012 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2014MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2014 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2014 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2014MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2014 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2014 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2016MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2016 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2016 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2016MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2016 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2016 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2017MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2017 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2017 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2017MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2017 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2017 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2019MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2019 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2019 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2019MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2019 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2019 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2022MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2022 + SDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2022 }.Where(ms => ms != null).ToArray()!);
-		public sealed class SqlServer2022MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2022 + MDS, new MappingSchema?[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2022 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2005MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2005 + SDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2005 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2005MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2005 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2005 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2008MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2008 + SDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2008 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2008MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2008 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2008 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2012MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2012 + SDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2012 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2012MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2012 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2012 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2014MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2014 + SDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2014 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2014MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2014 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2014 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2016MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2016 + SDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2016 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2016MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2016 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2016 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2017MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2017 + SDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2017 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2017MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2017 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2017 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2019MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2019 + SDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2019 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2019MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2019 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2019 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2022MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2022 + SDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2022 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2022MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2022 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2022 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2025MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2025 + SDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2025 }.Where(ms => ms != null).ToArray()!);
+		public sealed class SqlServer2025MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2025 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2025 }.Where(ms => ms != null).ToArray()!);
 	}
 }

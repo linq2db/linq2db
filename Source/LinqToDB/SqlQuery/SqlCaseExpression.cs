@@ -6,7 +6,7 @@ using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlCaseExpression : SqlExpressionBase
+	public sealed class SqlCaseExpression : SqlExpressionBase
 	{
 		public class CaseItem
 		{
@@ -82,6 +82,22 @@ namespace LinqToDB.SqlQuery
 			writer.AppendLine("END");
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(_dataType);
+			foreach (var c in Cases)
+			{
+				hash.Add(c.Condition.GetElementHashCode());
+				hash.Add(c.ResultExpression.GetElementHashCode());
+			}
+
+			if (ElseExpression != null)
+				hash.Add(ElseExpression.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)

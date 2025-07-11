@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 			return new GuidMemberTranslator();
 		}
 
-		class SqlTypesTranslation : SqlTypesTranslationDefault
+		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Decimal128).WithPrecisionScale(19, 4));
@@ -163,13 +163,13 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
-				var cast = new SqlCastExpression(dateExpression, new DbDataType(typeof(DateTime), DataType.Date32), null, true);
+				var cast = translationContext.ExpressionFactory.Cast(dateExpression, new DbDataType(typeof(DateTime), DataType.Date32), true);
 				return cast;
 			}
 
 			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
-				var cast = new SqlCastExpression(dateExpression, new DbDataType(typeof(DateTime), DataType.Date32), null, true);
+				var cast = translationContext.ExpressionFactory.Cast(dateExpression, new DbDataType(typeof(DateTime), DataType.Date32), true);
 				return cast;
 			}
 
@@ -218,7 +218,7 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 			}
 		}
 
-		class MathMemberTranslator : MathMemberTranslatorBase
+		sealed class MathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
@@ -249,7 +249,7 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 			return timePart;
 		}
 
-		class GuidMemberTranslator : GuidMemberTranslatorBase
+		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{

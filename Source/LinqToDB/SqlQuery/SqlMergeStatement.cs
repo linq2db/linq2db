@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlMergeStatement : SqlStatementWithQueryBase
+	public sealed class SqlMergeStatement : SqlStatementWithQueryBase
 	{
 		private const string TargetAlias = "Target";
 
@@ -76,6 +76,22 @@ namespace LinqToDB.SqlQuery
 			if (Output?.HasOutput == true)
 				writer.AppendElement(Output);
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(base.GetElementHashCode());
+
+			hash.Add(Hint);
+			hash.Add(Target.GetElementHashCode());
+			hash.Add(Source.GetElementHashCode());
+			hash.Add(On.GetElementHashCode());
+			foreach (var operation in Operations)
+				hash.Add(operation.GetElementHashCode());
+			hash.Add(Output?.GetElementHashCode());
+
+			return hash.ToHashCode();
 		}
 
 		public override bool IsParameterDependent

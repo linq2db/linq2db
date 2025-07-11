@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlJoinedTable : QueryElement
+	public sealed class SqlJoinedTable : QueryElement
 	{
 		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak, SqlSearchCondition searchCondition)
 		{
@@ -92,6 +93,23 @@ namespace LinqToDB.SqlQuery
 			writer.RemoveVisited(this);
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(JoinType);
+			hash.Add(Table.GetElementHashCode());
+			hash.Add(Condition.GetElementHashCode());
+			hash.Add(IsWeak);
+			hash.Add(IsSubqueryExpression);
+			if (SqlQueryExtensions != null)
+			{
+				foreach (var ext in SqlQueryExtensions)
+					hash.Add(ext.GetElementHashCode());
+			}
+
+			return hash.ToHashCode();
 		}
 	}
 }

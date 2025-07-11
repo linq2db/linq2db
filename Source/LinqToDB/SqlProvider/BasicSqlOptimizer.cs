@@ -425,7 +425,7 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
-		class SqlRowExpandVisitor : SqlQueryVisitor
+		sealed class SqlRowExpandVisitor : SqlQueryVisitor
 		{
 			SelectQuery? _updateSelect;
 
@@ -848,7 +848,7 @@ namespace LinqToDB.SqlProvider
 						var changed = ctx.WriteableValue || newExpr != expr.Expr;
 
 						if (changed)
-							newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.Flags, expr.NullabilityType, null, newExpressions.ToArray());
+							newExpression = new SqlExpression(expr.Type, newExpr, expr.Precedence, expr.Flags, expr.NullabilityType, null, newExpressions.ToArray());
 
 						return newExpression;
 					}
@@ -900,17 +900,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return deleteStatement;
-		}
-
-		static bool IsAggregationFunction(IQueryElement expr)
-		{
-			if (expr is SqlFunction func)
-				return func.IsAggregate;
-
-			if (expr is SqlExpression expression)
-				return expression.IsAggregate;
-
-			return false;
 		}
 
 		protected bool NeedsEnvelopingForUpdate(SelectQuery query)
@@ -991,7 +980,9 @@ namespace LinqToDB.SqlProvider
 
 			if (query.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported) ||
 				!query.GroupBy.IsEmpty)
+			{
 				return false;
+			}
 
 			if (table.SqlQueryExtensions?.Count > 0)
 				return false;
@@ -999,46 +990,50 @@ namespace LinqToDB.SqlProvider
 			for (var i = 0; i < query.From.Tables.Count; i++)
 			{
 				var ts = query.From.Tables[i];
-				if (ts.Joins.All(j => j.JoinType is JoinType.Inner or JoinType.Left or JoinType.Cross))
+				if (ts.Source == table)
 				{
-					if (ts.Source == table)
-					{
-						source = ts;
+					if (!ts.Joins.All(j => j.JoinType is JoinType.Inner or JoinType.Cross))
+						return false;
+						
+					source = ts;
 
-						query.From.Tables.RemoveAt(i);
-						for (var j = 0; j < ts.Joins.Count; j++)
+					query.From.Tables.RemoveAt(i);
+					for (var j = 0; j < ts.Joins.Count; j++)
+					{
+						query.From.Tables.Insert(i + j, ts.Joins[j].Table);
+						query.Where.ConcatSearchCondition(ts.Joins[j].Condition);
+					}
+
+					source.Joins.Clear();
+
+					return true;
+				}
+
+				for (var j = 0; j < ts.Joins.Count; j++)
+				{
+					var join = ts.Joins[j];
+
+					if (join.JoinType is not (JoinType.Inner or JoinType.Cross or JoinType.Left))
+						return false;
+
+					if (join.Table.Source == table)
+					{
+						if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, table)))
+							return false;
+
+						source = join.Table;
+
+						ts.Joins.RemoveAt(j);
+						query.Where.ConcatSearchCondition(join.Condition);
+
+						for (var sj = 0; j < join.Table.Joins.Count; j++)
 						{
-							query.From.Tables.Insert(i + j, ts.Joins[j].Table);
-							query.Where.ConcatSearchCondition(ts.Joins[j].Condition);
+							ts.Joins.Insert(j + sj, join.Table.Joins[sj]);
 						}
 
 						source.Joins.Clear();
 
 						return true;
-					}
-
-					for (var j = 0; j < ts.Joins.Count; j++)
-					{
-						var join = ts.Joins[j];
-						if (join.Table.Source == table)
-						{
-							if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, table)))
-								return false;
-
-							source = join.Table;
-
-							ts.Joins.RemoveAt(j);
-							query.Where.ConcatSearchCondition(join.Condition);
-
-							for (var sj = 0; j < join.Table.Joins.Count; j++)
-							{
-								ts.Joins.Insert(j + sj, join.Table.Joins[sj]);
-							}
-
-							source.Joins.Clear();
-
-							return true;
-						}
 					}
 				}
 			}
@@ -1909,10 +1904,10 @@ namespace LinqToDB.SqlProvider
 		/// <param name="supportsEmptyOrderBy">Indicates that database supports OVER () syntax.</param>
 		/// <param name="predicate">Indicates when the transformation is needed</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
-		protected SqlStatement ReplaceTakeSkipWithRowNumber<TContext>(TContext context, SqlStatement statement, Func<TContext, SelectQuery, bool> predicate, bool supportsEmptyOrderBy)
+		protected SqlStatement ReplaceTakeSkipWithRowNumber<TContext>(TContext context, SqlStatement statement, MappingSchema mappingSchema, Func<TContext, SelectQuery, bool> predicate, bool supportsEmptyOrderBy)
 		{
 			return QueryHelper.WrapQuery(
-				(predicate, context, supportsEmptyOrderBy, statement),
+				(predicate, context, supportsEmptyOrderBy, statement, mappingSchema),
 				statement,
 				static (context, query, _) =>
 				{
@@ -1964,7 +1959,7 @@ namespace LinqToDB.SqlProvider
 					//}
 
 					if (orderByItems == null || orderByItems.Count == 0)
-						orderByItems = context.supportsEmptyOrderBy ? [] : new[] { new SqlOrderByItem(new SqlExpression("SELECT NULL"), false, false) };
+						orderByItems = context.supportsEmptyOrderBy ? [] : [new SqlOrderByItem(new SqlFragment("(SELECT NULL)"), false, false)];
 
 					var orderBy = string.Join(", ",
 						orderByItems.Select(static (oi, i) => oi.IsDescending ? FormattableString.Invariant($"{{{i}}} DESC") : FormattableString.Invariant($"{{{i}}}")));
@@ -1975,8 +1970,8 @@ namespace LinqToDB.SqlProvider
 					query.OrderBy.Items.Clear();
 
 					var rowNumberExpression = parameters.Length == 0
-						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null)
-						: new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null, parameters);
+						? new SqlExpression(context.mappingSchema.GetDbDataType(typeof(long)), "ROW_NUMBER() OVER ()", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable)
+						: new SqlExpression(context.mappingSchema.GetDbDataType(typeof(long)), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, parameters);
 
 					var rowNumberColumn = query.Select.AddNewColumn(rowNumberExpression);
 					rowNumberColumn.Alias = "RN";

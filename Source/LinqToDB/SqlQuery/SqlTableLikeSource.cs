@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlTableLikeSource : SqlSourceBase
+	public sealed class SqlTableLikeSource : SqlSourceBase
 	{
 		public SqlTableLikeSource()
 		{
@@ -67,6 +67,17 @@ namespace LinqToDB.SqlQuery
 
 			writer.Append(')');
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(SourceEnumerable?.GetElementHashCode());
+			hash.Add(SourceQuery?.GetElementHashCode());
+			foreach (var field in SourceFields)
+				hash.Add(field.GetElementHashCode());
+			return hash.ToHashCode();
 		}
 
 		public override SqlTableType SqlTableType => SqlTableType.MergeSource;

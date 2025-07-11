@@ -7,7 +7,7 @@ using System.Threading;
 namespace LinqToDB.SqlQuery
 {
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
-	public class CteClause : QueryElement
+	public sealed class CteClause : QueryElement
 	{
 		public static int CteIDCounter;
 
@@ -72,13 +72,28 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			return writer
-					.DebugAppendUniqueId(this)
+				.DebugAppendUniqueId(this)
 				.Append("CTE(")
 				.Append(CteID)
 				.Append(", \"")
 				.Append(Name)
-				.Append("\")")
-				;
+				.Append("\")");
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(Name);
+			hash.Add(ElementType);
+			hash.Add(IsRecursive);
+			hash.Add(Body?.GetElementHashCode());
+			hash.Add(ObjectType);
+			foreach (var field in Fields)
+			{
+				hash.Add(field.GetElementHashCode());
+			}
+
+			return hash.ToHashCode();
 		}
 	}
 }

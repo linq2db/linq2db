@@ -11,6 +11,7 @@ using LinqToDB.Common;
 using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Async;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
@@ -490,7 +491,7 @@ namespace LinqToDB.Linq.Builder
 			return updatedEagerLoading;
 		}
 
-		class DatachedPreamble<T> : Preamble
+		sealed class DatachedPreamble<T> : Preamble
 		{
 			readonly Query<T> _query;
 
@@ -520,7 +521,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		class Preamble<TKey, T> : Preamble
+		sealed class Preamble<TKey, T> : Preamble
 			where TKey : notnull
 		{
 			readonly Query<KeyDetailEnvelope<TKey, T>> _query;
@@ -567,7 +568,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		class PreambleResult<TKey, T>
+		sealed class PreambleResult<TKey, T>
 			where TKey : notnull
 		{
 			Dictionary<TKey, List<T>>? _items;

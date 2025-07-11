@@ -1,6 +1,8 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
-	public class SqlOrderByItem : QueryElement
+	public sealed class SqlOrderByItem : QueryElement
 	{
 		public SqlOrderByItem(ISqlExpression expression, bool isDescending, bool isPositioned)
 		{
@@ -28,6 +30,16 @@
 				writer.Append(" DESC");
 
 			return writer;
+		}
+
+		public override int GetElementHashCode()
+		{
+			var hash = new HashCode();
+			hash.Add(ElementType);
+			hash.Add(Expression.GetElementHashCode());
+			hash.Add(IsDescending);
+			hash.Add(IsPositioned);
+			return hash.ToHashCode();
 		}
 
 		public override string ToString()

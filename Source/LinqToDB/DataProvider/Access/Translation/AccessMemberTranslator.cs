@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Access.Translation
 {
 	public class AccessMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		class SqlTypesTranslation : SqlTypesTranslationDefault
+		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 		}
 
@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.Access.Translation
 				if (partStr == null)
 					return null;
 
-				var resultExpression = factory.Function(factory.GetDbDataType(typeof(int)), "DatePart", new SqlValue(typeof(string), partStr), dateTimeExpression);
+				var resultExpression = factory.Function(factory.GetDbDataType(typeof(int)), "DatePart", factory.Value(partStr), dateTimeExpression);
 
 				return resultExpression;
 			}
@@ -164,12 +164,12 @@ namespace LinqToDB.DataProvider.Access.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory       = translationContext.ExpressionFactory;
-				var nowExpression = factory.NotNullFragment(factory.GetDbDataType(typeof(DateTime)), "Now");
+				var nowExpression = factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "Now");
 				return nowExpression;
 			}
 		}
 
-		class MathMemberTranslator : MathMemberTranslatorBase
+		sealed class MathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
@@ -265,7 +265,7 @@ namespace LinqToDB.DataProvider.Access.Translation
 			}
 		}
 
-		class GuidMemberTranslator : GuidMemberTranslatorBase
+		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{

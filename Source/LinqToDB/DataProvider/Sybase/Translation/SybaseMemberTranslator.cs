@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 			return new GuidMemberTranslator();
 		}
 
-		class SqlTypesTranslation : SqlTypesTranslationDefault
+		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertDateTime2(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.DateTime));
@@ -77,7 +77,7 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 
 				var resultExpression = factory.Function(intDbType, "DatePart",
 					ParametersNullabilityType.SameAsSecondParameter,
-					factory.NotNullFragment(intDbType, partStr),
+					factory.NotNullExpression(intDbType, partStr),
 					dateTimeExpression);
 
 				return resultExpression;
@@ -97,7 +97,7 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 				}
 
 				var resultExpression = factory.Function(dateType, "DateAdd",
-					factory.NotNullFragment(factory.GetDbDataType(typeof(string)), partStr),
+					factory.NotNullExpression(factory.GetDbDataType(typeof(string)), partStr),
 					increment,
 					dateTimeExpression);
 				return resultExpression;
@@ -169,9 +169,10 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
+				var factory = translationContext.ExpressionFactory;
 				// CONVERT(date, your_datetime_column)
 
-				var convertFunc = new SqlFunction(dateExpression.SystemType!, "CONVERT", new SqlDataType(DataType.Date), dateExpression);
+				var convertFunc = factory.Function(factory.GetDbDataType(dateExpression), "CONVERT", factory.SqlDataType(DataType.Date), dateExpression);
 				return convertFunc;
 			}
 
@@ -207,7 +208,7 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 			return timePart;
 		}
 
-		class GuidMemberTranslator : GuidMemberTranslatorBase
+		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{

@@ -17,15 +17,14 @@ namespace LinqToDB.SqlQuery
 				return true;
 
 			if (x is not null && y is not null)
-				return x.Equals(y, SqlExpression.DefaultComparer);
+				return x.Equals(y, SqlExtensions.DefaultComparer);
 
 			return false;
 		}
 
 		int IEqualityComparer<ISqlExpression>.GetHashCode(ISqlExpression obj)
 		{
-			// TODO: we don't have GetHashCode for ISqlExpression currently
-			return obj.GetType().GetHashCode();
+			return obj.GetElementHashCode();
 		}
 	}
 }

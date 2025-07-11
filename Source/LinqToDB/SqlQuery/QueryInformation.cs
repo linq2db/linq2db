@@ -7,7 +7,7 @@ namespace LinqToDB.SqlQuery
 	/// This is internal API and is not intended for use by Linq To DB applications.
 	/// It may change or be removed without further notice.
 	/// </summary>
-	public class QueryInformation
+	public sealed class QueryInformation
 	{
 		public SelectQuery RootQuery { get; }
 
