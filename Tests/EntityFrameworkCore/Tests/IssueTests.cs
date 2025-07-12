@@ -326,7 +326,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(result, Is.EqualTo(1));
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4625")]
 		public void Issue4625TestWithConverter([EFDataSources] string provider)
 		{

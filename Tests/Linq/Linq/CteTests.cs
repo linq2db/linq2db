@@ -506,7 +506,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
 		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
 		{
@@ -541,7 +541,7 @@ namespace Tests.Linq
 		}
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
 		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB, TestProvName.AllClickHouse)] string context)
 		{
@@ -562,7 +562,7 @@ namespace Tests.Linq
 		}
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
-		[ActiveIssue(3015, Configurations = [TestProvName.AllOracle, TestProvName.AllSapHana, TestProvName.AllInformix], Details = "Oracle needs special syntax for CTE + UPDATE")]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.InformixDB2], Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
 			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllMariaDB)]
@@ -777,7 +777,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
 		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2)] string context)
 		{
@@ -1955,7 +1955,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
 		public void Issue3945([CteContextSource] string context)
 		{

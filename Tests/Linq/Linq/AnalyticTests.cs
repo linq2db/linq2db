@@ -1550,7 +1550,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("ClickHouse works unstable", Configuration =TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1567,6 +1566,7 @@ namespace Tests.Linq
 
 				var q =
 					from p in db.GetTable<Position>()
+					orderby p.Id
 					where p.Group == @group
 					select new
 					{
@@ -1716,7 +1716,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllSapHana])]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer, TestProvName.AllOracle21Minus, TestProvName.AllSapHana])]
 		[Test]
 		public void Issue2842Test1([DataSources(
 			TestProvName.AllAccess,

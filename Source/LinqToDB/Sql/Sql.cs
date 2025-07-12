@@ -1100,13 +1100,13 @@ namespace LinqToDB
 		}
 
 		[Concat]
-		public static string Concat(params object[] args)
+		public static string? Concat(params object?[] args)
 		{
 			return string.Concat(args);
 		}
 
 		[Concat]
-		public static string Concat(params string[] args)
+		public static string? Concat(params string?[] args)
 		{
 			return string.Concat(args);
 		}

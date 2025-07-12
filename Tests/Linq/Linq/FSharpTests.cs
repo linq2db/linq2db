@@ -21,7 +21,7 @@ namespace Tests.Linq
 			FSharp.WhereTest.RecordParametersMapping(db);
 		}
 
-		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering")]
+		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering", SkipForLinqService = true)]
 		[Test]
 		public void RecordProjectionColumnsOnly([DataSources] string context)
 		{
@@ -34,7 +34,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering")]
+		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering", SkipForLinqService = true)]
 		[Test]
 		public void RecordComplexProjection([DataSources] string context)
 		{

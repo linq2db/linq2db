@@ -871,7 +871,7 @@ namespace Tests.Linq
 
 		sealed class Issue4770Person
 		{
-			public long Id { get; set; }
+			public int Id { get; set; }
 			public Issue4770Address? Address { get; set; }
 			public string ?TestPostcode { get; set; }
 		}

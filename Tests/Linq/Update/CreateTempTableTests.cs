@@ -336,7 +336,6 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue("It is only possible to implement limited set of mapping changes. API should be removed at some point")]
 		public void CreateTempTable_TestSchemaConflicts([DataSources] string context)
 		{
 			using var db    = GetDataContext(context, new MappingSchema());

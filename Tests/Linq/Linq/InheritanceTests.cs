@@ -1079,7 +1079,6 @@ namespace Tests.Linq
 			Assert.That(record.Age, Is.EqualTo(10));
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
 		public void Issue4460Test_InterfaceFilter([DataSources] string context)
 		{

@@ -44,6 +44,7 @@ namespace Tests.Mapping
 
 		[ActiveIssue(
 			Details = "https://github.com/linq2db/linq2db/issues/4987",
+			SkipForLinqService = true,
 			Configurations = [
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana,

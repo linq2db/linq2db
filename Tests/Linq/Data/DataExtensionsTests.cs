@@ -296,7 +296,6 @@ namespace Tests.Data
 			Assert.That(() => conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null }), Throws.TypeOf<NullReferenceException>());
 		}
 
-		[ActiveIssue("Poor parameters support", Configuration = ProviderName.ClickHouseClient)]
 		[Test]
 		public void TestDataParameterMapping3([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
