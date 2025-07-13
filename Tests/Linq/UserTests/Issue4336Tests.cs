@@ -8,12 +8,6 @@ using IBM.Data.DB2;
 using IBM.Data.Db2;
 #endif
 
-#if NETFRAMEWORK
-using IBM.Data.DB2;
-#else
-using IBM.Data.Db2;
-#endif
-
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
