@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Remote
+﻿namespace LinqToDB.Remote
 {
 	/// <summary>
 	/// A factory for creating <see cref="IDataContext"/> instances.

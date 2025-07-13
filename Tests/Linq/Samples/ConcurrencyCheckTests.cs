@@ -6,8 +6,8 @@ using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 

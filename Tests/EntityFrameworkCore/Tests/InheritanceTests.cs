@@ -1,13 +1,13 @@
 ﻿using System.Linq;
 
-using Shouldly;
-
 using LinqToDB.Data;
 using LinqToDB.EntityFrameworkCore.Tests.Models.Inheritance;
 
 using Microsoft.EntityFrameworkCore;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace LinqToDB.EntityFrameworkCore.Tests
 {

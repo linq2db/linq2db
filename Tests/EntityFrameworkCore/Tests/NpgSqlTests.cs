@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 
-using Shouldly;
-
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.EntityFrameworkCore.Tests.Models.NpgSqlEntities;
 
@@ -11,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests;
 

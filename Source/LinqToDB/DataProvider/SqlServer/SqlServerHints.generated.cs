@@ -4,6 +4,8 @@
 using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
 	public static partial class SqlServerHints

@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Interceptors;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 

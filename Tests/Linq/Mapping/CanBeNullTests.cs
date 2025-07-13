@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using Shouldly;
-
 using LinqToDB.Common;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Mapping
 {

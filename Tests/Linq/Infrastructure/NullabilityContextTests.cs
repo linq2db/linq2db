@@ -3,13 +3,12 @@ using System.Linq.Expressions;
 using System.Text;
 
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Expressions;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 

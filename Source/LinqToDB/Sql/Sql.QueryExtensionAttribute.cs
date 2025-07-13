@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Common.Internal;
-using LinqToDB.Linq.Builder;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB
 {
@@ -64,7 +64,7 @@ namespace LinqToDB
 
 			public QueryExtensionScope Scope                { get; }
 			/// <summary>
-			/// Instance of <see cref="ISqlExtensionBuilder"/>.
+			/// Type implementing <see cref="ISqlExtensionBuilder"/>.
 			/// </summary>
 			public Type?               ExtensionBuilderType { get; set; }
 			public string[]?           ExtensionArguments   { get; set; }

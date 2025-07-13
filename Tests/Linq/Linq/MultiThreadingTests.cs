@@ -1,15 +1,13 @@
 ﻿using System.Data;
 using System.Linq;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using Tests.xUpdate;
+using Shouldly;
 
 namespace Tests.Linq
 {

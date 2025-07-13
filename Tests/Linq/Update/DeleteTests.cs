@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
