@@ -2146,7 +2146,6 @@ namespace LinqToDB.Internal.SqlQuery
 						{
 							if (IsStrictCondition(nullability, nextJoin.Condition, join.Table.Source))
 							{
-								//throw new InvalidOperationException("Test");
 								hasStrictCondition = true;
 								break;
 							}
