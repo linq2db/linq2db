@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq;
 
-using Shouldly;
-
 using LinqToDB;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {

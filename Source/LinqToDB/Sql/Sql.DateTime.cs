@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Globalization;
 
-using LinqToDB.Expressions;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 using PN = LinqToDB.ProviderName;

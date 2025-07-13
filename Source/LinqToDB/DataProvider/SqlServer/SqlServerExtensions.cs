@@ -6,10 +6,6 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	public interface ISqlServerExtensions
-	{
-	}
-
 	public static class SqlServerExtensions
 	{
 		public static ISqlServerExtensions? SqlServer(this Sql.ISqlExtension? ext) => null;

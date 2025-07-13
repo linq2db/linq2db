@@ -1,6 +1,6 @@
 ﻿using LinqToDB.Interceptors;
 
-using LinqToDB.Interceptors.Internal;
+using LinqToDB.Internal.Interceptors;
 
 namespace LinqToDB.Remote
 {

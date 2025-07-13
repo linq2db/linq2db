@@ -8,8 +8,10 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.Expressions;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 
 namespace LinqToDB.Reflection
 {

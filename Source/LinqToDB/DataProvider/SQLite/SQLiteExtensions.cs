@@ -4,14 +4,11 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Data;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	public interface ISQLiteExtensions
-	{
-	}
-
 	public static class SQLiteExtensions
 	{
 		public static ISQLiteExtensions? SQLite(this Sql.ISqlExtension? ext) => null;

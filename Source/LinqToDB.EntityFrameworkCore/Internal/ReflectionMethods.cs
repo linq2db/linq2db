@@ -44,14 +44,14 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 #endif
 
 		public static readonly MethodInfo      EFProperty               = MemberHelper.MethodOfGeneric(() => EF.Property<object>(1, ""));
-		public static readonly MethodInfo      L2DBFromSqlMethodInfo    = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.FromSql<object>(new Common.RawSqlString()));
-		public static readonly ConstructorInfo RawSqlStringConstructor  = MemberHelper.ConstructorOf(() => new Common.RawSqlString(""));
+		public static readonly MethodInfo      L2DBFromSqlMethodInfo    = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.FromSql<object>(new RawSqlString()));
+		public static readonly ConstructorInfo RawSqlStringConstructor  = MemberHelper.ConstructorOf(() => new RawSqlString(""));
 		public static readonly ConstructorInfo DataParameterConstructor = MemberHelper.ConstructorOf(() => new DataParameter("", "", DataType.Undefined, ""));
 		public static readonly MethodInfo      ToSql                    = MemberHelper.MethodOfGeneric(() => Sql.ToSql(1));
 		public static readonly MethodInfo      ToLinqToDBTable          = MemberHelper.MethodOfGeneric<DbSet<object>>(q => q.ToLinqToDBTable());
 
 #if !EF31
-		public static readonly MethodInfo AsSqlServerTable    = MemberHelper.MethodOfGeneric<ITable<object>>(q => SqlServerTools.AsSqlServer(q));
+		public static readonly MethodInfo AsSqlServerTable    = MemberHelper.MethodOfGeneric<ITable<object>>(q => SqlServerSpecificExtensions.AsSqlServer(q));
 		public static readonly MethodInfo TemporalAsOfTable   = MemberHelper.MethodOfGeneric<ISqlServerSpecificTable<object>>(t => SqlServerHints.TemporalTableAsOf(t, default));
 		public static readonly MethodInfo TemporalFromTo      = MemberHelper.MethodOfGeneric<ISqlServerSpecificTable<object>>(t => SqlServerHints.TemporalTableFromTo(t, default, default));
 		public static readonly MethodInfo TemporalBetween     = MemberHelper.MethodOfGeneric<ISqlServerSpecificTable<object>>(t => SqlServerHints.TemporalTableBetween(t, default, default));

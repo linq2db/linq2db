@@ -15,16 +15,16 @@ namespace LinqToDB.Tools
 			}
 			catch (Exception ex)
 			{
-				Console.Error.WriteLine($"Unhandled exception: {ex.Message}");
+				await Console.Error.WriteLineAsync($"Unhandled exception: {ex.Message}").ConfigureAwait(false);
 
 				var iex = ex.InnerException;
 				while (iex != null)
 				{
-					Console.Error.WriteLine($"\t{iex.Message}");
+					await Console.Error.WriteLineAsync($"\t{iex.Message}").ConfigureAwait(false);
 					iex = iex.InnerException;
 				}
 
-				Console.Error.WriteLine($"{ex.StackTrace}");
+				await Console.Error.WriteLineAsync($"{ex.StackTrace}").ConfigureAwait(false);
 				
 				return StatusCodes.INTERNAL_ERROR;
 			}

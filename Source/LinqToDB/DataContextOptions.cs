@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Options;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Remote;
 

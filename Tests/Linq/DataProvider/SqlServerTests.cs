@@ -13,14 +13,13 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Linq.Internal;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.SqlServer;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
@@ -28,6 +27,8 @@ using LinqToDB.Tools;
 using Microsoft.SqlServer.Types;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
