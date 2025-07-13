@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Linq;
 
-using Shouldly;
-
 using LinqToDB;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -274,10 +275,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return ((Prev != null ? Prev.GetHashCode() : 0) * 397) ^ (Field != null ? Field.GetHashCode() : 0);
-				}
+				return HashCode.Combine(Prev, Field);
 			}
 		}
 

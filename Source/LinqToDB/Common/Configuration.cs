@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Linq;
 
 #if SUPPORTS_COMPOSITE_FORMAT
@@ -16,46 +17,6 @@ using System.Text;
 
 namespace LinqToDB.Common
 {
-	/// <summary>
-	/// Contains LINQ expression compilation options.
-	/// </summary>
-	public static class Compilation
-	{
-		private static Func<LambdaExpression,Delegate?>? _compiler;
-
-		/// <summary>
-		/// Sets LINQ expression compilation method.
-		/// </summary>
-		/// <param name="compiler">Method to use for expression compilation or <c>null</c> to reset compilation logic to defaults.</param>
-		public static void SetExpressionCompiler(Func<LambdaExpression, Delegate?>? compiler)
-		{
-			_compiler = compiler;
-		}
-
-		/// <summary>
-		/// Internal API.
-		/// </summary>
-		public static TDelegate CompileExpression<TDelegate>(this Expression<TDelegate> expression)
-			where TDelegate : Delegate
-		{
-			return ((TDelegate?)_compiler?.Invoke(expression))
-#pragma warning disable RS0030 // Do not use banned APIs
-				?? expression.Compile();
-#pragma warning restore RS0030 // Do not use banned APIs
-		}
-
-		/// <summary>
-		/// Internal API.
-		/// </summary>
-		public static Delegate CompileExpression(this LambdaExpression expression)
-		{
-			return _compiler?.Invoke(expression)
-#pragma warning disable RS0030 // Do not use banned APIs
-				?? expression.Compile();
-#pragma warning restore RS0030 // Do not use banned APIs
-		}
-	}
-
 	/// <summary>
 	/// Contains global linq2db settings.
 	/// </summary>
@@ -92,8 +53,7 @@ namespace LinqToDB.Common
 
 		/// <summary>
 		/// Determines the length after which logging of binary data in SQL will be truncated.
-		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
-		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>.
 		/// </summary>
 		/// <remarks>
 		/// This value defaults to 100.
@@ -104,8 +64,7 @@ namespace LinqToDB.Common
 
 		/// <summary>
 		/// Determines the length after which logging of string data in SQL will be truncated.
-		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
-		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>.
 		/// </summary>
 		/// <remarks>
 		/// This value defaults to 200.
@@ -116,8 +75,7 @@ namespace LinqToDB.Common
 
 		/// <summary>
 		/// Determines number of items after which logging of collection data in SQL will be truncated.
-		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
-		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>.
 		/// </summary>
 		/// <remarks>
 		/// This value defaults to 8 elements.
@@ -141,7 +99,7 @@ namespace LinqToDB.Common
 			set
 			{
 				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.
-				if (value) Mapping.Nullability.EnsureSupport();
+				if (value) Nullability.EnsureSupport();
 				_useNullableTypesMetadata = value;
 			}
 		}
@@ -366,7 +324,7 @@ namespace LinqToDB.Common
 			/// Default value: <c>false</c>.
 			/// <para />
 			/// It is not recommended to enable this option as it could lead to severe slowdown. Better approach will be
-			/// to call <see cref="Query{T}.ClearCache"/> method to cleanup cache after queries, that produce severe memory leaks you need to fix.
+			/// to use <see cref="NoLinqCache"/> scope around queries, that produce severe memory leaks you need to fix.
 			/// <para />
 			/// <a href="https://github.com/linq2db/linq2db/issues/256">More details</a>.
 			/// </summary>

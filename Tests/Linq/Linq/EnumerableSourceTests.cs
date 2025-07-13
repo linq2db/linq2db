@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -670,10 +670,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return (Id * 397) ^ (Value != null ? Value.GetHashCode() : 0);
-				}
+				return HashCode.Combine(Id, Value);
 			}
 		}
 

@@ -1,20 +1,13 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
+using LinqToDB.Model;
 
 namespace LinqToDB.Linq.Translation
 {
-	[Flags]
-	public enum TranslationFlags
-	{
-		None = 0,
-		Expression = 1,
-		Sql        = 1 << 1,
-	}
-
 	public interface ITranslationContext
 	{
 		Expression Translate(Expression expression, TranslationFlags translationFlags = TranslationFlags.Sql);

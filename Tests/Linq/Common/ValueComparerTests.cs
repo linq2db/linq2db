@@ -1,8 +1,8 @@
-﻿using Shouldly;
-
-using LinqToDB.Common.Internal;
+﻿using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Common
 {

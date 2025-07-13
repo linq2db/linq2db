@@ -2,16 +2,16 @@
 using System.Linq;
 using System.Threading;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 

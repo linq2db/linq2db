@@ -2,8 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 
-using Shouldly;
-
 using LinqToDB.EntityFrameworkCore.Tests.Models.Northwind;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
@@ -12,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests;
 

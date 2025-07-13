@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Tools;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Data.RetryPolicy
 {

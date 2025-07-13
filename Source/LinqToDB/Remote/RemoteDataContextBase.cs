@@ -10,20 +10,24 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Async;
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
-using LinqToDB.Common.Internal.Cache;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.Infrastructure;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Cache;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Interceptors;
+using LinqToDB.Internal.Remote;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
-using LinqToDB.Tools;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Remote
 {
@@ -254,7 +258,7 @@ namespace LinqToDB.Remote
 		private MappingSchema? _mappingSchema;
 		private MappingSchema? _serializationMappingSchema;
 
-		public MappingSchema   MappingSchema
+		public  MappingSchema   MappingSchema
 		{
 			get
 			{
@@ -280,7 +284,7 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, MappingSchema);
+		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, MappingSchema);
 
 		public  bool InlineParameters { get; set; }
 		public  bool CloseAfterUse    { get; set; }

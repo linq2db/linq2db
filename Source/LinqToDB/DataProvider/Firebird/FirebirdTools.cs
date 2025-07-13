@@ -5,6 +5,8 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.Firebird;
 
 namespace LinqToDB.DataProvider.Firebird
 {

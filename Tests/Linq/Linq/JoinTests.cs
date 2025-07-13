@@ -10,6 +10,8 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.Firebird;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -3521,7 +3523,7 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			if (db is DataConnection { DataProvider: FirebirdDataProvider})
+			if (db is DataConnection { DataProvider: FirebirdDataProvider })
 				FirebirdTools.ClearAllPools();
 		}
 	}

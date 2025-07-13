@@ -4,11 +4,13 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.PostgreSQL;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	[PublicAPI]
-	public static partial class PostgreSQLTools
+	public static class PostgreSQLTools
 	{
 		private  static PostgreSQLProviderDetector? _providerDetector;
 		internal static PostgreSQLProviderDetector   ProviderDetector
