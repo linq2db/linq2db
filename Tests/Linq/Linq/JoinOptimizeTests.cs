@@ -168,8 +168,6 @@ namespace Tests.Linq
 		{
 			using (var db = new NorthwindDB(context))
 			{
-				var dd = GetNorthwindAsList(context);
-
 				var q = from od in db.OrderDetail
 					join o1 in db.Order on new {od.OrderID, od.ProductID} equals new {o1.OrderID, ProductID = 39}
 					join e1 in db.Employee on o1.EmployeeID equals e1.EmployeeID
@@ -194,29 +192,7 @@ namespace Tests.Linq
 						OrderID4 = o4 == null ? 0 : o4.OrderID,
 					};
 
-				var q2 = from od in dd.OrderDetail
-					join o1 in dd.Order on new {od.OrderID, od.ProductID} equals new {o1.OrderID, ProductID = 39}
-					from o2 in dd.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
-					from o3 in dd.Order.Where(o => o.OrderID == od.OrderID && od.ProductID == 1).DefaultIfEmpty()
-					from o4 in dd.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
-					from o5 in dd.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
-					from o6 in dd.Order.Where(o => o.OrderID == od.OrderID && od.ProductID == 1).DefaultIfEmpty()
-					from o7 in dd.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
-					join o8 in dd.Order on od.OrderID equals o8.OrderID
-					from o9 in dd.OrderDetail.Where(d => d.OrderID == od.OrderID && d.ProductID == od.ProductID).DefaultIfEmpty()
-					from o10 in dd.OrderDetail.Where(d => d.OrderID == od.OrderID && d.ProductID == od.ProductID).DefaultIfEmpty()
-					where o5 != null && o5.OrderID > 1000
-					orderby o1.OrderID
-					select new
-					{
-						OrderID = od.OrderID,
-						OrderID1 = o1 == null ? 0 : o1.OrderID,
-						OrderID2 = o2 == null ? 0 : o2.OrderID,
-						OrderID3 = o3 == null ? 0 : o3.OrderID,
-						OrderID4 = o4 == null ? 0 : o4.OrderID,
-					};
-
-				Assert.That(q2, Is.EqualTo(q));
+				AssertQuery(q);
 
 				var ts = q.GetTableSource();
 				using (Assert.EnterMultipleScope())

@@ -245,6 +245,11 @@ namespace LinqToDB.Internal.SqlQuery
 						EnsureReferencesCorrected(selectQuery);
 					}
 
+					if (CorrectLeftJoins(selectQuery))
+					{
+						isModified = true;
+					}
+
 					if (CorrectMultiTables(selectQuery))
 					{
 						isModified = true;
@@ -1541,6 +1546,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 				if (QueryHelper.ContainsAggregationFunction(column.Expression))
 				{
+					if (parentQuery.From.Tables.Count != 1)
+					{
+						return false;
+					}
+
 					if (parentQuery.Having.HasElement(column) || parentQuery.Select.GroupBy.HasElement(column))
 					{
 						// aggregate moving not allowed
@@ -2107,7 +2117,151 @@ namespace LinqToDB.Internal.SqlQuery
 			return isModified;
 		}
 
-		SelectQuery MoveMutliTablesToSubquery(SelectQuery selectQuery)
+		/// <summary>
+		/// Transforms LEFT JOINs to INNER JOINs if possible.
+		/// </summary>
+		/// <param name="selectQuery"></param>
+		/// <returns></returns>
+		bool CorrectLeftJoins(SelectQuery selectQuery)
+		{
+			var joins = selectQuery.Select.From.Tables.SelectMany(t => t.Joins)
+				.Where(j => j.JoinType is JoinType.Left or JoinType.Inner)
+				.ToList();
+
+			if (joins.Count == 0)
+				return false;
+
+			var isModified  = false;
+			var nullability = NullabilityContext.GetContext(selectQuery);
+
+			for (var i = 0; i < joins.Count; i++)
+			{
+				var join = joins[i];
+				if (join.JoinType != JoinType.Left)
+					continue;
+
+				var hasStrictCondition = IsStrictCondition(nullability, selectQuery.Where.SearchCondition, join.Table.Source);
+				if (!hasStrictCondition)
+				{
+					for (var j = i + 1; j < joins.Count; j++)
+					{
+						var nextJoin = joins[j];
+						if (nextJoin.JoinType == JoinType.Inner)
+						{
+							if (IsStrictCondition(nullability, nextJoin.Condition, join.Table.Source))
+							{
+								hasStrictCondition = true;
+								break;
+							}
+						}
+					}
+				}
+
+				if (hasStrictCondition)
+				{
+					join.JoinType = JoinType.Inner;
+					join.IsWeak   = false;
+					isModified    = true;
+					// reset nullability
+					nullability = NullabilityContext.GetContext(selectQuery);
+				}
+
+			}
+
+			return isModified;
+		}
+
+		static bool IsStrictCondition(NullabilityContext nullability, SqlSearchCondition condition, ISqlTableSource testedSource)
+		{
+			if (condition.IsOr || condition.Predicates.Count > 10)
+				return false;
+
+			foreach (var predicate in condition.Predicates)
+			{
+				switch (predicate)
+				{
+					case SqlPredicate.IsNull isNullPredicate:
+					{
+						if (isNullPredicate.IsNot)
+						{
+							var source = ExtractSource(isNullPredicate.Expr1);
+							if (source == testedSource)
+							{
+								var local = NullabilityContext.GetContext(source as SelectQuery);
+								return local.CanBeNull(isNullPredicate.Expr1);
+							}
+						}
+
+						break;
+					}
+					case SqlPredicate.ExprExpr exprExPredicate:
+					{
+						if (exprExPredicate.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.Greater or SqlPredicate.Operator.Less)
+						{
+							var source = ExtractSource(exprExPredicate.Expr1);
+							if (source == testedSource)
+							{
+								var local = NullabilityContext.GetContext(source as SelectQuery);
+								if (!local.CanBeNull(exprExPredicate.Expr1) && IsNotNullable(exprExPredicate.Expr2) == true)
+									return true;
+							}
+
+							source = ExtractSource(exprExPredicate.Expr2);
+							if (source == testedSource)
+							{
+								var local = NullabilityContext.GetContext(source as SelectQuery);
+								if (!local.CanBeNull(exprExPredicate.Expr2) && IsNotNullable(exprExPredicate.Expr1) == true)
+									return true;
+							}
+						}
+
+						break;
+					}
+				}
+
+				bool? IsNotNullable(ISqlExpression expr)
+				{
+					if (expr is SqlValue value)
+					{
+						return value.Value != null;
+					}
+
+					var isValid = true;
+					expr.VisitAll(e =>
+					{
+						if (!isValid)
+							return;
+
+						var exprSource = ExtractSource(expr);
+						if (exprSource == null)
+							return;
+
+						if (nullability.CanBeNullSource(exprSource) == null)
+							isValid = false;
+					});
+
+					if (!isValid)
+						return null;
+
+					return !nullability.CanBeNull(expr);
+				}
+			}
+
+			return false;
+
+			static ISqlTableSource? ExtractSource(ISqlExpression expr)
+			{
+				return expr switch
+				{
+					SqlColumn column   => column.Parent,
+					SqlField field     => field.Table,
+					ISqlTableSource ts => ts,
+					_                  => null,
+				};
+			}
+		}
+
+		SelectQuery MoveMultiTablesToSubquery(SelectQuery selectQuery)
 		{
 			var joins = new List<SqlJoinedTable>(selectQuery.From.Tables.Count);
 			foreach (var t in selectQuery.From.Tables)
@@ -2156,7 +2310,7 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				if (QueryHelper.EnumerateJoins(selectQuery).Any())
 				{
-					MoveMutliTablesToSubquery(selectQuery);
+					MoveMultiTablesToSubquery(selectQuery);
 
 					isModified = true;
 				}

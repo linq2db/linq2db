@@ -13,6 +13,7 @@ using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Firebird;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -782,6 +783,24 @@ namespace Tests.Linq
 							(x4, y4) => new { x4.Parent, Child = x4.Child.FirstOrDefault() })
 						.Where(x5 => x5.Parent.ParentID == 1 && x5.Parent.Value1 != null)
 						.OrderBy(x6 => x6.Parent.ParentID));
+		}
+
+		[Test]
+		public void LeftJoinRemoval([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = 
+				from p in db.Parent
+				from ch in db.Child.Where(ch => p.ParentID == ch.ParentID).DefaultIfEmpty()
+				from ch1 in db.Child.Where(ch1 => ch.ChildID == ch1.ChildID)
+				select ch1;
+
+			var ts = query.GetTableSource();
+
+			ts.Joins.ShouldAllBe(j => j.JoinType == JoinType.Inner);
+
+			AssertQuery(query);
 		}
 
 		[Test]
