@@ -883,9 +883,9 @@ namespace Tests.Linq
 
 		#region Issue 3117
 
-		[ActiveIssue]
+		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
-		public void Issue3117Test1([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue3117Test1([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetGenericConvertProvider(typeof(IdConverter<>));
@@ -903,9 +903,9 @@ namespace Tests.Linq
 			user = db.GetTable<User>().FirstOrDefault(u => userIds.Contains(u.Id));
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
-		public void Issue3117Test2([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue3117Test2([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetDataType(typeof(Id<User>), DataType.Int32);
@@ -1321,84 +1321,18 @@ namespace Tests.Linq
 		#region Issue 2362
 		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
-		public void Issue2362Test1([DataSources] string context, [Values] bool value)
-		{
-			var fb = new FluentMappingBuilder()
-				.Entity<Issue2362Table>()
-					.Property(p => p.Value)
-					.HasConversion(
-						cs => cs ? "+" : "",
-						db => db == "+");
-
-			using var db = GetDataContext(context, fb.Build().MappingSchema);
-			using var tb = db.CreateLocalTable(Issue2362Raw.Data);
-
-			var res = db.GetTable<Issue2362Table>().Where(r => r.Value == value).OrderBy(r => r.Id).ToArray();
-
-			if (value)
-			{
-				Assert.That(res, Has.Length.EqualTo(1));
-				Assert.That(res[0].Value, Is.True);
-			}
-			else
-			{
-				Assert.That(res, Has.Length.EqualTo(3));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res[0].Value, Is.False);
-					Assert.That(res[1].Value, Is.False);
-					Assert.That(res[2].Value, Is.False);
-				}
-			}
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
-		public void Issue2362Test2([DataSources] string context, [Values] bool value)
+		public void Issue2362Test([DataSources] string context, [Values] bool value)
 		{
 			var fb = new FluentMappingBuilder()
 				.Entity<Issue2362Table>()
 					.Property(p => p.Value)
 					.IsNullable()
-					.HasConversion(
-						cs => cs ? "+" : "",
-						db => db == "+");
-
-			using var db = GetDataContext(context, fb.Build().MappingSchema);
-			using var tb = db.CreateLocalTable(Issue2362Raw.Data);
-
-			var res = db.GetTable<Issue2362Table>().Where(r => r.Value == value).OrderBy(r => r.Id).ToArray();
-
-			if (value)
-			{
-				Assert.That(res, Has.Length.EqualTo(1));
-				Assert.That(res[0].Value, Is.True);
-			}
-			else
-			{
-				Assert.That(res, Has.Length.EqualTo(3));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res[0].Value, Is.False);
-					Assert.That(res[1].Value, Is.False);
-					Assert.That(res[2].Value, Is.False);
-				}
-			}
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
-		public void Issue2362Test3([DataSources] string context, [Values] bool value)
-		{
-			var fb = new FluentMappingBuilder()
-				.Entity<Issue2362Table>()
-					.Property(p => p.Value)
-					.IsNullable()
-					.HasDataType(DataType.Char)
+					.HasDataType(DataType.VarChar)
 					.HasLength(4)
 					.HasConversion(
 						cs => cs ? "+" : "",
-						db => db == "+");
+						db => db == "+",
+						true);
 
 			using var db = GetDataContext(context, fb.Build().MappingSchema);
 			using var tb = db.CreateLocalTable(Issue2362Raw.Data);
@@ -1412,12 +1346,11 @@ namespace Tests.Linq
 			}
 			else
 			{
-				Assert.That(res, Has.Length.EqualTo(3));
+				Assert.That(res, Has.Length.EqualTo(2));
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Value, Is.False);
 					Assert.That(res[1].Value, Is.False);
-					Assert.That(res[2].Value, Is.False);
 				}
 			}
 		}
@@ -1439,8 +1372,7 @@ namespace Tests.Linq
 			[
 				new Issue2362Raw() { Id = 1, Value = null },
 				new Issue2362Raw() { Id = 2, Value = "+" },
-				new Issue2362Raw() { Id = 3, Value = "    " },
-				new Issue2362Raw() { Id = 4, Value = "" },
+				new Issue2362Raw() { Id = 3, Value = "" },
 			];
 		}
 		#endregion

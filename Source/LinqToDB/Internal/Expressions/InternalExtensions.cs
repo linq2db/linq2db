@@ -208,7 +208,9 @@ namespace LinqToDB.Internal.Expressions
 			return accessors;
 		}
 
+#pragma warning disable RS0060 // API with optional parameter(s) should have the most parameters amongst its public overloads
 		public static bool IsQueryable(this MethodCallExpression method, bool enumerable = true)
+#pragma warning restore RS0060 // API with optional parameter(s) should have the most parameters amongst its public overloads
 		{
 			var type = method.Method.DeclaringType;
 

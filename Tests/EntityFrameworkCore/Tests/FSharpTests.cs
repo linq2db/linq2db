@@ -69,7 +69,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4646")]
 		public void Issue4646TestEF([EFDataSources] string provider)
 		{

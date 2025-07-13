@@ -1,0 +1,15 @@
+﻿#nullable enable
+LinqToDB.Remote.HttpClient.Client.HttpClientDataContext
+LinqToDB.Remote.HttpClient.Client.HttpClientDataContext.Client -> LinqToDB.Remote.HttpClient.Client.HttpClientLinqServiceClient!
+LinqToDB.Remote.HttpClient.Client.HttpClientDataContext.HttpClientDataContext(LinqToDB.Remote.HttpClient.Client.HttpClientLinqServiceClient! client, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
+LinqToDB.Remote.HttpClient.Client.HttpClientDataContext.HttpClientDataContext(System.Net.Http.HttpClient! httpClient, string! requestUri, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
+LinqToDB.Remote.HttpClient.Client.HttpClientDataContext.HttpClientDataContext(System.Uri! baseAddress, string! requestUri, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
+LinqToDB.Remote.HttpClient.Client.HttpClientLinqServiceClient
+LinqToDB.Remote.HttpClient.Client.HttpClientLinqServiceClient.HttpClient.get -> System.Net.Http.HttpClient!
+LinqToDB.Remote.HttpClient.Client.HttpClientLinqServiceClient.HttpClientLinqServiceClient(System.Net.Http.HttpClient! httpClient, string! requestUri) -> void
+LinqToDB.Remote.HttpClient.Client.ServiceConfigurationExtensions
+override LinqToDB.Remote.HttpClient.Client.HttpClientDataContext.ContextIDPrefix.get -> string!
+override LinqToDB.Remote.HttpClient.Client.HttpClientDataContext.GetClient() -> LinqToDB.Remote.ILinqService!
+static LinqToDB.Remote.HttpClient.Client.ServiceConfigurationExtensions.AddLinqToDBHttpClientDataContext<TContext>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! serviceCollection, string! baseAddress, System.Func<LinqToDB.Remote.HttpClient.Client.HttpClientLinqServiceClient!, TContext!>! getContext) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static LinqToDB.Remote.HttpClient.Client.ServiceConfigurationExtensions.AddLinqToDBHttpClientDataContext<TContext>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, string! baseAddress, string! serviceName, System.Func<LinqToDB.Remote.HttpClient.Client.HttpClientLinqServiceClient!, TContext!>! getContext) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static LinqToDB.Remote.HttpClient.Client.ServiceConfigurationExtensions.InitHttpClientAsync(this LinqToDB.IDataContext! dataContext) -> System.Threading.Tasks.Task!

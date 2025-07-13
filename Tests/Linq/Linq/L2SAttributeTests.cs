@@ -77,9 +77,8 @@ namespace Tests.Linq
 		{
 			var ms = new LinqToDB.Mapping.MappingSchema();
 			ms.AddMetadataReader(new SystemComponentModelDataAnnotationsSchemaAttributeReader());
-#if NET472
 			ms.AddMetadataReader(new SystemDataLinqAttributeReader());
-#endif
+
 			using var db = GetDataContext(context, ms);
 			using var tb = db.CreateLocalTable<Issue3691Table>();
 		}
