@@ -25,7 +25,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				selectQuery.From.Table(SubQuery.SelectQuery);
 		}
 
+#pragma warning disable RS0060 // API with optional parameter(s) should have the most parameters amongst its public overloads
 		public SubQueryContext(IBuildContext subQuery, bool addToSql = true)
+#pragma warning restore RS0060 // API with optional parameter(s) should have the most parameters amongst its public overloads
 			: this(subQuery, new SelectQuery(), addToSql)
 		{
 		}

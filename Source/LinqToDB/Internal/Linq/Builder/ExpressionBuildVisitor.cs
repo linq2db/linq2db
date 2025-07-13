@@ -227,7 +227,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			return currentFlags | additional;
 		}
 
+#pragma warning disable RS0059 // Do not add multiple public overloads with optional parameters
 		public Expression BuildExpression(IBuildContext? buildContext, Expression expression, BuildPurpose buildPurpose, BuildFlags buildFlags = BuildFlags.None, string? alias = null)
+#pragma warning restore RS0059 // Do not add multiple public overloads with optional parameters
 		{
 			using var savePurpose      = UsingBuildPurpose(buildPurpose);
 			using var saveBuildContext = UsingBuildContext(buildContext);
@@ -239,7 +241,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			return result;
 		}
 
+#pragma warning disable RS0059 // Do not add multiple public overloads with optional parameters
 		public Expression BuildExpression(IBuildContext? buildContext, Expression expression, BuildFlags buildFlags = BuildFlags.None, string? alias = null)
+#pragma warning restore RS0059 // Do not add multiple public overloads with optional parameters
 		{
 			using var saveBuildContext = UsingBuildContext(buildContext);
 			using var saveAlias        = UsingAlias(alias ?? _alias);
@@ -250,7 +254,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			return result;
 		}
 
+#pragma warning disable RS0059 // Do not add multiple public overloads with optional parameters
 		public Expression BuildExpression(Expression expression, BuildPurpose buildPurpose, BuildFlags? buildFlags = null)
+#pragma warning restore RS0059 // Do not add multiple public overloads with optional parameters
 		{
 			using var savePurpose    = UsingBuildPurpose(buildPurpose);
 			using var saveBuildFlags = UsingBuildFlags(buildFlags ?? _buildFlags);

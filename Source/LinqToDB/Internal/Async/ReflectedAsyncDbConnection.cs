@@ -33,12 +33,12 @@ namespace LinqToDB.Internal.Async
 			_disposeAsync            = disposeAsync;
 		}
 
-		public override ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+		public override ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
 		{
 			return _beginTransactionAsync?.Invoke(Connection, cancellationToken) ?? base.BeginTransactionAsync(cancellationToken);
 		}
 
-		public override ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
+		public override ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
 		{
 			return _beginTransactionIlAsync?.Invoke(Connection, isolationLevel, cancellationToken) ?? base.BeginTransactionAsync(isolationLevel, cancellationToken);
 		}

@@ -1,1 +1,15 @@
 ﻿#nullable enable
+LinqToDB.Remote.SignalR.ServiceConfigurationExtensions
+LinqToDB.Remote.SignalR.SignalRDataContext
+LinqToDB.Remote.SignalR.SignalRDataContext.SignalRDataContext(LinqToDB.Remote.SignalR.SignalRLinqServiceClient! client, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
+LinqToDB.Remote.SignalR.SignalRDataContext.SignalRDataContext(Microsoft.AspNetCore.SignalR.Client.HubConnection! hubConnection, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
+LinqToDB.Remote.SignalR.SignalRLinqServiceClient
+LinqToDB.Remote.SignalR.SignalRLinqServiceClient.DisposeAsync() -> System.Threading.Tasks.ValueTask
+LinqToDB.Remote.SignalR.SignalRLinqServiceClient.SignalRLinqServiceClient(Microsoft.AspNetCore.SignalR.Client.HubConnection! hubConnection) -> void
+override LinqToDB.Remote.SignalR.SignalRDataContext.ContextIDPrefix.get -> string!
+override LinqToDB.Remote.SignalR.SignalRDataContext.DisposeAsync() -> System.Threading.Tasks.ValueTask
+override LinqToDB.Remote.SignalR.SignalRDataContext.GetClient() -> LinqToDB.Remote.ILinqService!
+static LinqToDB.Remote.SignalR.ServiceConfigurationExtensions.AddLinqToDBSignalRDataContext<TContext>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! serviceCollection, string! baseAddress, System.Func<LinqToDB.Remote.SignalR.SignalRLinqServiceClient!, TContext!>! getContext) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static LinqToDB.Remote.SignalR.ServiceConfigurationExtensions.AddLinqToDBSignalRDataContext<TContext>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, string! baseAddress, string! serviceName, System.Func<LinqToDB.Remote.SignalR.SignalRLinqServiceClient!, TContext!>! getContext) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static LinqToDB.Remote.SignalR.ServiceConfigurationExtensions.InitSignalRAsync(this LinqToDB.IDataContext! dataContext) -> System.Threading.Tasks.Task!
+static LinqToDB.Remote.SignalR.ServiceConfigurationExtensions.InitSignalRAsync<T>(this System.IServiceProvider! serviceProvider) -> System.Threading.Tasks.Task!

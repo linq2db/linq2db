@@ -295,14 +295,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			return _buildVisitor.UsingColumnDescriptor(columnDescriptor);
 		}
 
+#pragma warning disable RS0059 // Do not add multiple public overloads with optional parameters
 		public static SqlPlaceholderExpression CreatePlaceholder(IBuildContext? context, ISqlExpression sqlExpression,
+#pragma warning restore RS0059 // Do not add multiple public overloads with optional parameters
 			Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
 		{
 			var placeholder = new SqlPlaceholderExpression(context?.SelectQuery, sqlExpression, path, convertType, alias, index, trackingPath ?? path);
 			return placeholder;
 		}
 
+#pragma warning disable RS0059 // Do not add multiple public overloads with optional parameters
 		public static SqlPlaceholderExpression CreatePlaceholder(SelectQuery? selectQuery, ISqlExpression sqlExpression,
+#pragma warning restore RS0059 // Do not add multiple public overloads with optional parameters
 			Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
 		{
 			var placeholder = new SqlPlaceholderExpression(selectQuery, sqlExpression, path, convertType, alias, index, trackingPath ?? path);

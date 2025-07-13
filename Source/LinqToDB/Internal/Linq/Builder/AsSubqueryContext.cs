@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 		}
 
-		public AsSubqueryContext(IBuildContext subQuery, bool addToSql = true) : base(subQuery, addToSql)
+		public AsSubqueryContext(IBuildContext subQuery, bool addToSql) : base(subQuery, addToSql)
 		{
 		}
 
