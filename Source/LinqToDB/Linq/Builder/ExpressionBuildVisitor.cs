@@ -5348,14 +5348,12 @@ namespace LinqToDB.Linq.Builder
 
 				public int GetHashCode(ColumnCacheKey obj)
 				{
-					unchecked
-					{
-						var hashCode = obj.ResultType.GetHashCode();
-						hashCode = (hashCode * 397) ^ (obj.Expression != null ? ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression) : 0);
-						hashCode = (hashCode * 397) ^ obj.SelectQuery?.GetHashCode() ?? 0;
-						hashCode = (hashCode * 397) ^ (obj.ParentQuery != null ? obj.ParentQuery.GetHashCode() : 0);
-						return hashCode;
-					}
+					return HashCode.Combine(
+						obj.ResultType,
+						ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression),
+						obj.SelectQuery,
+						obj.ParentQuery
+					);
 				}
 			}
 
@@ -5393,15 +5391,13 @@ namespace LinqToDB.Linq.Builder
 
 				public int GetHashCode(ExprCacheKey obj)
 				{
-					unchecked
-					{
-						var hashCode = ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
-						hashCode = (hashCode * 397) ^ (obj.Context          != null ? obj.Context.GetHashCode() : 0);
-						hashCode = (hashCode * 397) ^ (obj.SelectQuery      != null ? obj.SelectQuery.GetHashCode() : 0);
-						hashCode = (hashCode * 397) ^ (obj.ColumnDescriptor != null ? obj.ColumnDescriptor.GetHashCode() : 0);
-						hashCode = (hashCode * 397) ^ (int)obj.Flags;
-						return hashCode;
-					}
+					return HashCode.Combine(
+						ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression),
+						obj.Context,
+						obj.SelectQuery,
+						obj.ColumnDescriptor,
+						obj.Flags
+					);
 				}
 			}
 

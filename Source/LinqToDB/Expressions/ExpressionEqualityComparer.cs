@@ -33,328 +33,314 @@ namespace LinqToDB.Expressions
 
 		public int GetHashCode(Expression? obj)
 		{
-			if (obj == null)
+			var hashCode = new HashCode();
+			UpdateHashCode(ref hashCode, obj);
+			return hashCode.ToHashCode();
+		}
+
+		void UpdateHashCode(ref HashCode hashCode, Expression? obj)
+		{
+			if (obj is null)
+				return;
+
+			hashCode.Add(obj.NodeType);
+			hashCode.Add(obj.Type);
+
+			switch (obj.NodeType)
 			{
-				return 0;
-			}
-
-			unchecked
-			{
-				var hashCode = (int)obj.NodeType;
-
-				hashCode += (hashCode * 397) ^ obj.Type.GetHashCode();
-
-				switch (obj.NodeType)
+				case ExpressionType.Negate:
+				case ExpressionType.NegateChecked:
+				case ExpressionType.Not:
+				case ExpressionType.Convert:
+				case ExpressionType.ConvertChecked:
+				case ExpressionType.ArrayLength:
+				case ExpressionType.Quote:
+				case ExpressionType.TypeAs:
+				case ExpressionType.UnaryPlus:
+				case ExpressionType.Throw:
 				{
-					case ExpressionType.Negate:
-					case ExpressionType.NegateChecked:
-					case ExpressionType.Not:
-					case ExpressionType.Convert:
-					case ExpressionType.ConvertChecked:
-					case ExpressionType.ArrayLength:
-					case ExpressionType.Quote:
-					case ExpressionType.TypeAs:
-					case ExpressionType.UnaryPlus:
-					case ExpressionType.Throw:
-					{
-						var unaryExpression = (UnaryExpression)obj;
+					var unaryExpression = (UnaryExpression)obj;
 
-						if (unaryExpression.Method != null)
-						{
-							hashCode += hashCode * 397 ^ unaryExpression.Method.GetHashCode();
-						}
+					hashCode.Add(unaryExpression.Method);
+					hashCode.Add(GetHashCode(unaryExpression.Operand));
 
-						hashCode += (hashCode * 397) ^ GetHashCode(unaryExpression.Operand);
-
-						break;
-					}
-					case ExpressionType.Add:
-					case ExpressionType.AddChecked:
-					case ExpressionType.Subtract:
-					case ExpressionType.SubtractChecked:
-					case ExpressionType.Multiply:
-					case ExpressionType.MultiplyChecked:
-					case ExpressionType.Divide:
-					case ExpressionType.Modulo:
-					case ExpressionType.And:
-					case ExpressionType.AndAlso:
-					case ExpressionType.Or:
-					case ExpressionType.OrElse:
-					case ExpressionType.LessThan:
-					case ExpressionType.LessThanOrEqual:
-					case ExpressionType.GreaterThan:
-					case ExpressionType.GreaterThanOrEqual:
-					case ExpressionType.Equal:
-					case ExpressionType.NotEqual:
-					case ExpressionType.Coalesce:
-					case ExpressionType.ArrayIndex:
-					case ExpressionType.RightShift:
-					case ExpressionType.LeftShift:
-					case ExpressionType.ExclusiveOr:
-					case ExpressionType.Power:
-					case ExpressionType.Assign:
-					{
-						var binaryExpression = (BinaryExpression)obj;
-
-						hashCode += (hashCode * 397) ^ GetHashCode(binaryExpression.Left);
-						hashCode += (hashCode * 397) ^ GetHashCode(binaryExpression.Right);
-
-						break;
-					}
-					case ExpressionType.TypeIs:
-					{
-						var typeBinaryExpression = (TypeBinaryExpression)obj;
-
-						hashCode += (hashCode * 397) ^ GetHashCode(typeBinaryExpression.Expression);
-						hashCode += (hashCode * 397) ^ typeBinaryExpression.TypeOperand.GetHashCode();
-
-						break;
-					}
-					case ExpressionType.Constant:
-					{
-						var constantExpression = (ConstantExpression)obj;
-
-						if (constantExpression.Value != null
-							&& constantExpression.Value is not IQueryable 
-							&& (constantExpression.Value is string or not IEnumerable))
-						{
-							hashCode += (hashCode * 397) ^ constantExpression.Value.GetHashCode();
-						}
-
-						break;
-					}
-					case ExpressionType.Parameter:
-					{
-						var parameterExpression = (ParameterExpression)obj;
-
-						hashCode += hashCode * 397;
-						// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-						if (parameterExpression.Name != null)
-						{
-							hashCode ^= parameterExpression.Name.GetHashCode();
-						}
-
-						break;
-					}
-					case ExpressionType.MemberAccess:
-					{
-						var memberExpression = (MemberExpression)obj;
-
-						hashCode += (hashCode * 397) ^ MemberInfoEqualityComparer.Default.GetHashCode(memberExpression.Member);
-						hashCode += (hashCode * 397) ^ GetHashCode(memberExpression.Expression);
-
-						break;
-					}
-					case ExpressionType.Call:
-					{
-						var methodCallExpression = (MethodCallExpression)obj;
-
-						hashCode += (hashCode * 397) ^ methodCallExpression.Method.GetHashCode();
-						hashCode += (hashCode * 397) ^ GetHashCode(methodCallExpression.Object);
-						hashCode += (hashCode * 397) ^ GetHashCode(methodCallExpression.Arguments);
-
-						break;
-					}
-					case ExpressionType.Lambda:
-					{
-						var lambdaExpression = (LambdaExpression)obj;
-
-						hashCode += (hashCode * 397) ^ lambdaExpression.ReturnType.GetHashCode();
-						hashCode += (hashCode * 397) ^ GetHashCode(lambdaExpression.Body);
-						hashCode += (hashCode * 397) ^ GetHashCode(lambdaExpression.Parameters);
-
-						break;
-					}
-					case ExpressionType.New:
-					{
-						var newExpression = (NewExpression)obj;
-
-						hashCode += (hashCode * 397) ^ (newExpression.Constructor?.GetHashCode() ?? 0);
-
-						if (newExpression.Members != null)
-						{
-							for (var i = 0; i < newExpression.Members.Count; i++)
-							{
-								hashCode += (hashCode * 397) ^ newExpression.Members[i].GetHashCode();
-							}
-						}
-
-						hashCode += (hashCode * 397) ^ GetHashCode(newExpression.Arguments);
-
-						break;
-					}
-					case ExpressionType.NewArrayInit:
-					case ExpressionType.NewArrayBounds:
-					{
-						var newArrayExpression = (NewArrayExpression)obj;
-
-						hashCode += (hashCode * 397) ^ GetHashCode(newArrayExpression.Expressions);
-
-						break;
-					}
-					case ExpressionType.Invoke:
-					{
-						var invocationExpression = (InvocationExpression)obj;
-
-						hashCode += (hashCode * 397) ^ GetHashCode(invocationExpression.Expression);
-						hashCode += (hashCode * 397) ^ GetHashCode(invocationExpression.Arguments);
-
-						break;
-					}
-					case ExpressionType.MemberInit:
-					{
-						var memberInitExpression = (MemberInitExpression)obj;
-
-						hashCode += (hashCode * 397) ^ GetHashCode(memberInitExpression.NewExpression);
-						hashCode += (hashCode * 397) ^ GetHashCode(memberInitExpression.Bindings);
-
-						break;
-					}
-					case ExpressionType.ListInit:
-					{
-						var listInitExpression = (ListInitExpression)obj;
-
-						hashCode += (hashCode * 397) ^ GetHashCode(listInitExpression.NewExpression);
-
-						for (var i = 0; i < listInitExpression.Initializers.Count; i++)
-						{
-							hashCode += (hashCode * 397) ^ GetHashCode(listInitExpression.Initializers[i].Arguments);
-						}
-
-						break;
-					}
-					case ExpressionType.Conditional:
-					{
-						var conditionalExpression = (ConditionalExpression)obj;
-
-						hashCode += (hashCode * 397) ^ GetHashCode(conditionalExpression.Test);
-						hashCode += (hashCode * 397) ^ GetHashCode(conditionalExpression.IfTrue);
-						hashCode += (hashCode * 397) ^ GetHashCode(conditionalExpression.IfFalse);
-
-						break;
-					}
-					case ExpressionType.Default:
-					{
-						hashCode += (hashCode * 397) ^ obj.Type.GetHashCode();
-						break;
-					}
-					case ExpressionType.Extension:
-					{
-						hashCode += (hashCode * 397) ^ obj.GetHashCode();
-						break;
-					}
-					case ChangeTypeExpression.ChangeTypeType:
-					{
-						hashCode += (hashCode * 397) ^ obj.GetHashCode();
-						break;
-					}
-					case ExpressionType.Block:
-					{
-						var blockExpression = (BlockExpression)obj;
-						for (var i = 0; i < blockExpression.Variables.Count; i++)
-						{
-							hashCode += (hashCode * 397) ^ GetHashCode(blockExpression.Variables[i]);
-						}
-
-						for (var i = 0; i < blockExpression.Expressions.Count; i++)
-						{
-							hashCode += (hashCode * 397) ^ GetHashCode(blockExpression.Expressions[i]);
-						}
-
-						break;
-					}
-					case ExpressionType.Index:
-					{
-						var indexExpression = (IndexExpression)obj;
-						hashCode += (hashCode * 397) ^ GetHashCode(indexExpression.Object);
-						for (var i = 0; i < indexExpression.Arguments.Count; i++)
-						{
-							hashCode += (hashCode * 397) ^ GetHashCode(indexExpression.Arguments[i]);
-						}
-
-						break;
-					}
-					case ExpressionType.Switch:
-					{
-						var switchExpression = (SwitchExpression)obj;
-
-						hashCode += (hashCode * 397) ^ GetHashCode(switchExpression.SwitchValue);
-
-						for (var i = 0; i < switchExpression.Cases.Count; i++)
-						{
-							var switchCase = switchExpression.Cases[i];
-							hashCode += (hashCode * 397) ^ GetHashCode(switchCase.TestValues);
-							hashCode += (hashCode * 397) ^ GetHashCode(switchCase.Body);
-						}
-
-						hashCode += (hashCode * 397) ^ GetHashCode(switchExpression.DefaultBody);
-
-						break;
-					}
-					default:
-						throw new NotImplementedException();
+					break;
 				}
 
-				return hashCode;
+				case ExpressionType.Add:
+				case ExpressionType.AddChecked:
+				case ExpressionType.Subtract:
+				case ExpressionType.SubtractChecked:
+				case ExpressionType.Multiply:
+				case ExpressionType.MultiplyChecked:
+				case ExpressionType.Divide:
+				case ExpressionType.Modulo:
+				case ExpressionType.And:
+				case ExpressionType.AndAlso:
+				case ExpressionType.Or:
+				case ExpressionType.OrElse:
+				case ExpressionType.LessThan:
+				case ExpressionType.LessThanOrEqual:
+				case ExpressionType.GreaterThan:
+				case ExpressionType.GreaterThanOrEqual:
+				case ExpressionType.Equal:
+				case ExpressionType.NotEqual:
+				case ExpressionType.Coalesce:
+				case ExpressionType.ArrayIndex:
+				case ExpressionType.RightShift:
+				case ExpressionType.LeftShift:
+				case ExpressionType.ExclusiveOr:
+				case ExpressionType.Power:
+				case ExpressionType.Assign:
+				{
+					var binaryExpression = (BinaryExpression)obj;
+
+					hashCode.Add(GetHashCode(binaryExpression.Left));
+					hashCode.Add(GetHashCode(binaryExpression.Right));
+
+					break;
+				}
+
+				case ExpressionType.TypeIs:
+				{
+					var typeBinaryExpression = (TypeBinaryExpression)obj;
+
+					hashCode.Add(GetHashCode(typeBinaryExpression.Expression));
+					hashCode.Add(typeBinaryExpression.TypeOperand);
+
+					break;
+				}
+
+				case ExpressionType.Constant:
+				{
+					var constantExpression = (ConstantExpression)obj;
+
+					if (constantExpression.Value != null
+						&& constantExpression.Value is not IQueryable 
+						&& (constantExpression.Value is string or not IEnumerable))
+					{
+						hashCode.Add(constantExpression.Value);
+					}
+
+					break;
+				}
+
+				case ExpressionType.Parameter:
+				{
+					var parameterExpression = (ParameterExpression)obj;
+
+					hashCode.Add(parameterExpression.Type);
+
+					break;
+				}
+
+				case ExpressionType.MemberAccess:
+				{
+					var memberExpression = (MemberExpression)obj;
+
+					hashCode.Add(memberExpression.Member, MemberInfoEqualityComparer.Default);
+					hashCode.Add(GetHashCode(memberExpression.Expression));
+
+					break;
+				}
+
+				case ExpressionType.Call:
+				{
+					var methodCallExpression = (MethodCallExpression)obj;
+
+					hashCode.Add(methodCallExpression.Method);
+					hashCode.Add(GetHashCode(methodCallExpression.Object));
+					UpdateHashCode(ref hashCode, methodCallExpression.Arguments);
+
+					break;
+				}
+
+				case ExpressionType.Lambda:
+				{
+					var lambdaExpression = (LambdaExpression)obj;
+
+					hashCode.Add(lambdaExpression.ReturnType);
+					hashCode.Add(GetHashCode(lambdaExpression.Body));
+					UpdateHashCode(ref hashCode, lambdaExpression.Parameters);
+
+					break;
+				}
+
+				case ExpressionType.New:
+				{
+					var newExpression = (NewExpression)obj;
+
+					hashCode.Add(newExpression.Constructor);
+
+					if (newExpression.Members != null)
+					{
+						foreach (var m in newExpression.Members)
+							hashCode.Add(m);
+					}
+
+					UpdateHashCode(ref hashCode, newExpression.Arguments);
+
+					break;
+				}
+
+				case ExpressionType.NewArrayInit:
+				case ExpressionType.NewArrayBounds:
+				{
+					var newArrayExpression = (NewArrayExpression)obj;
+					UpdateHashCode(ref hashCode, newArrayExpression.Expressions);
+					break;
+				}
+
+				case ExpressionType.Invoke:
+				{
+					var invocationExpression = (InvocationExpression)obj;
+
+					hashCode.Add(GetHashCode(invocationExpression.Expression));
+					UpdateHashCode(ref hashCode, invocationExpression.Arguments);
+
+					break;
+				}
+
+				case ExpressionType.MemberInit:
+				{
+					var memberInitExpression = (MemberInitExpression)obj;
+
+					hashCode.Add(GetHashCode(memberInitExpression.NewExpression));
+					UpdateHashCode(ref hashCode, memberInitExpression.Bindings);
+
+					break;
+				}
+
+				case ExpressionType.ListInit:
+				{
+					var listInitExpression = (ListInitExpression)obj;
+
+					hashCode.Add(GetHashCode(listInitExpression.NewExpression));
+
+					foreach (var i in listInitExpression.Initializers)
+						UpdateHashCode(ref hashCode, i.Arguments);
+
+					break;
+				}
+
+				case ExpressionType.Conditional:
+				{
+					var conditionalExpression = (ConditionalExpression)obj;
+
+					hashCode.Add(GetHashCode(conditionalExpression.Test));
+					hashCode.Add(GetHashCode(conditionalExpression.IfTrue));
+					hashCode.Add(GetHashCode(conditionalExpression.IfFalse));
+
+					break;
+				}
+
+				case ExpressionType.Default:
+				{
+					hashCode.Add(obj.Type);
+					break;
+				}
+
+				case ExpressionType.Extension:
+				{
+					hashCode.Add(obj);
+					break;
+				}
+
+				case ChangeTypeExpression.ChangeTypeType:
+				{
+					hashCode.Add(obj);
+					break;
+				}
+
+				case ExpressionType.Block:
+				{
+					var blockExpression = (BlockExpression)obj;
+
+					foreach (var v in blockExpression.Variables)
+						hashCode.Add(GetHashCode(v));
+
+					foreach (var e in blockExpression.Expressions)
+						hashCode.Add(GetHashCode(e));
+
+					break;
+				}
+
+				case ExpressionType.Index:
+				{
+					var indexExpression = (IndexExpression)obj;
+					hashCode.Add(GetHashCode(indexExpression.Object));
+
+					foreach (var a in indexExpression.Arguments)
+						hashCode.Add(GetHashCode(a));
+
+					break;
+				}
+
+				case ExpressionType.Switch:
+				{
+					var switchExpression = (SwitchExpression)obj;
+
+					hashCode.Add(GetHashCode(switchExpression.SwitchValue));
+
+					foreach (var c in switchExpression.Cases)
+					{
+						UpdateHashCode(ref hashCode, c.TestValues);
+						hashCode.Add(GetHashCode(c.Body));
+					}
+
+					hashCode.Add(GetHashCode(switchExpression.DefaultBody));
+
+					break;
+				}
+				default:
+					throw new NotImplementedException();
 			}
 		}
 
-		int GetHashCode(IList<MemberBinding> bindings)
+		void UpdateHashCode(ref HashCode hashCode, IList<MemberBinding> bindings)
 		{
-			var hashCode = 0;
-			for (var i = 0; i < bindings.Count; i++)
+			foreach (var memberBinding in bindings)
 			{
-				var memberBinding = bindings[i];
-
-				hashCode += (hashCode * 397) ^ memberBinding.Member.GetHashCode();
-				hashCode += (hashCode * 397) ^ (int)memberBinding.BindingType;
+				hashCode.Add(memberBinding.Member);
+				hashCode.Add(memberBinding.BindingType);
 
 				switch (memberBinding.BindingType)
 				{
 					case MemberBindingType.Assignment:
 					{
 						var memberAssignment = (MemberAssignment)memberBinding;
-						hashCode += (hashCode * 397) ^ GetHashCode(memberAssignment.Expression);
+						hashCode.Add(GetHashCode(memberAssignment.Expression));
 						break;
 					}
+
 					case MemberBindingType.ListBinding:
 					{
 						var memberListBinding = (MemberListBinding)memberBinding;
-						for (var j = 0; j < memberListBinding.Initializers.Count; j++)
-						{
-							hashCode += (hashCode * 397) ^
-							            GetHashCode(memberListBinding.Initializers[j].Arguments);
-						}
+
+						foreach (var i in memberListBinding.Initializers)
+							UpdateHashCode(ref hashCode, i.Arguments);
 
 						break;
 					}
+
 					case MemberBindingType.MemberBinding:
 					{
 						var memberMemberBinding = (MemberMemberBinding)memberBinding;
-
-						hashCode += (hashCode * 397) ^ GetHashCode(memberMemberBinding.Bindings);
-
+						UpdateHashCode(ref hashCode, memberMemberBinding.Bindings);
 						break;
 					}
+
 					default:
 						throw new NotImplementedException();
 				}
 			}
-
-			return hashCode;
 		}
 
-		int GetHashCode<T>(IList<T> expressions)
+		void UpdateHashCode<T>(ref HashCode hashCode, IList<T> expressions)
 			where T : Expression
 		{
-			var hashCode = 0;
-
-			for (var i = 0; i < expressions.Count; i++)
-			{
-				hashCode += (hashCode * 397) ^ GetHashCode(expressions[i]);
-			}
-
-			return hashCode;
+			foreach (var e in expressions)
+				UpdateHashCode(ref hashCode, e);
 		}
 
 		public bool Equals(Expression? x, Expression? y) => new ExpressionComparer().Compare(x, y);
@@ -573,8 +559,7 @@ namespace LinqToDB.Expressions
 				{
 					if (_parameterScope.TryGetValue(a, out var mapped))
 					{
-						return mapped!.Name == b.Name
-							   && mapped.Type == b.Type;
+						return ReferenceEquals(mapped, b);
 					}
 				}
 

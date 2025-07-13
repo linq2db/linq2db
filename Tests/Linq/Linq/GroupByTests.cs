@@ -274,10 +274,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return ((Prev != null ? Prev.GetHashCode() : 0) * 397) ^ (Field != null ? Field.GetHashCode() : 0);
-				}
+				return HashCode.Combine(Prev, Field);
 			}
 		}
 

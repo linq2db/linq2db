@@ -193,8 +193,10 @@ namespace LinqToDB.SqlQuery
 			hash.Add(ElementType);
 			hash.Add(Source.GetElementHashCode());
 			hash.Add(_alias);
+
 			foreach (var join in Joins)
 				hash.Add(join.GetElementHashCode());
+
 			if (_uniqueKeys != null)
 			{
 				foreach (var key in _uniqueKeys)

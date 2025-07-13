@@ -40,11 +40,10 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetElementHashCode()
 		{
-			var hash = new HashCode();
-			hash.Add(Insert.GetElementHashCode());
-			if (When != null)
-				hash.Add(When.GetElementHashCode());
-			return hash.ToHashCode();
+			return HashCode.Combine(
+				Insert.GetElementHashCode(),
+				When?.GetElementHashCode()
+			);
 		}
 
 		#endregion
