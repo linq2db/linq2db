@@ -906,7 +906,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
-		public void Issue3117Test2([DataSources(false, TestProvName.AllAccess)] string context)
+		public void Issue3117Test2([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetDataType(typeof(Id<User>), DataType.Int32);

@@ -1566,7 +1566,6 @@ namespace Tests.Linq
 
 				var q =
 					from p in db.GetTable<Position>()
-					orderby p.Id
 					where p.Group == @group
 					select new
 					{
@@ -1575,19 +1574,19 @@ namespace Tests.Linq
 
 					};
 
-				var res = q.ToArray();
+				var res = q.ToArray().OrderBy(r => r.Id).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(res[0].Id, Is.EqualTo(5));
-					Assert.That(res[0].PreviousId, Is.EqualTo(5));
-					Assert.That(res[1].Id, Is.EqualTo(6));
-					Assert.That(res[1].PreviousId, Is.EqualTo(6));
-					Assert.That(res[2].Id, Is.Null);
-					Assert.That(res[2].PreviousId, Is.Null);
-					Assert.That(res[3].Id, Is.Null);
-					Assert.That(res[3].PreviousId, Is.Null);
+					Assert.That(res[0].Id, Is.Null);
+					Assert.That(res[0].PreviousId, Is.Null);
+					Assert.That(res[1].Id, Is.Null);
+					Assert.That(res[1].PreviousId, Is.Null);
+					Assert.That(res[2].Id, Is.EqualTo(5));
+					Assert.That(res[2].PreviousId, Is.EqualTo(5));
+					Assert.That(res[3].Id, Is.EqualTo(6));
+					Assert.That(res[3].PreviousId, Is.EqualTo(6));
 				}
 			}
 		}

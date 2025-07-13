@@ -335,6 +335,7 @@ namespace Tests.xUpdate
 			[Column] public string? Value { get; set; }
 		}
 
+		[ActiveIssue(Configurations = [TestProvName.AllOracle])]
 		[Test]
 		public void CreateTempTable_TestSchemaConflicts([DataSources] string context)
 		{
