@@ -1908,16 +1908,20 @@ namespace LinqToDB.Internal.SqlQuery
 						return false;
 				}
 
-				if (!subQuery.Select.Columns.All(c =>
-						QueryHelper.UnwrapCastAndNullability(c.Expression) switch
-						{
-							SqlColumn or SqlField or SqlTable or SqlBinaryExpression => true,
-							SqlParameterizedExpressionBase e => !e.IsAggregate,
-							_ => false,
-						})
-					)
+				// Check that all columns in sub-query are allowed to move up
+				NullabilityContext? nullabilityContext = null;
+				foreach (var c in subQuery.Select.Columns)
 				{
-					return false;
+					var columnExpression = QueryHelper.UnwrapCast(c.Expression);
+					if (columnExpression is not (SqlField or SqlColumn))
+					{
+						nullabilityContext ??= NullabilityContext.GetContext(subQuery);
+						if (!c.Expression.CanBeNullable(nullabilityContext))
+						{
+							if (QueryHelper.IsDependsOn(selectQuery, c, [joinTable]))
+								return false;
+						}
+					}
 				}
 			}
 
