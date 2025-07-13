@@ -5,12 +5,14 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
+using LinqToDB.Model;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB
@@ -530,7 +532,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				Linq.Builder.TableBuilder.PrepareRawSqlArguments(builder.Arguments[0],
+				Internal.Linq.Builder.TableBuilder.PrepareRawSqlArguments(builder.Arguments[0],
 					builder.Arguments.Length > 1 ? builder.Arguments[1] : null,
 					out var format, out var arguments);
 

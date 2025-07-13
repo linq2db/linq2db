@@ -4,9 +4,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Expressions.Internal;
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Expressions

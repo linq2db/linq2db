@@ -2,9 +2,8 @@
 using System.Data.Common;
 using System.Linq.Expressions;
 
-using LinqToDB.DataProvider;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Data
 {

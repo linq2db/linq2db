@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 
 namespace Tests.Linq
 {

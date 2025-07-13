@@ -5,9 +5,10 @@ using System.Runtime.CompilerServices;
 
 using BenchmarkDotNet.Attributes;
 
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.Types;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.Types;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {

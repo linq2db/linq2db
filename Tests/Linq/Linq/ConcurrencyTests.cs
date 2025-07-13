@@ -3,11 +3,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Concurrency;
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 
 using NUnit.Framework;
 

@@ -3,6 +3,8 @@ using System.Data.Common;
 using System.Reflection;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.SqlCe;
 
 namespace LinqToDB.DataProvider.SqlCe
 {

@@ -81,12 +81,11 @@ namespace Tests.UserTests
 
 			using (var db = new NorthwindDB(context))
 			{
-
 				var jj = from e in db.GetTable<EmployeeWithList>()
 						 where e.Extension == ext
 						 select e;
 
-			    var res1 = jj.ToList();
+				var res1 = jj.ToList();
 
 				var zz =
 					from e in db.Employee

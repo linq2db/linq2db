@@ -4,8 +4,9 @@ using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
-using LinqToDB.Linq.Builder;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlQuery;
 
 // ReSharper disable CheckNamespace
 

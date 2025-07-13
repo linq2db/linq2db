@@ -4,17 +4,12 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	public interface IPostgreSQLExtensions
-	{
-	}
-
 	public static class PostgreSQLExtensions
 	{
 		public static IPostgreSQLExtensions? PostgreSQL(this Sql.ISqlExtension? ext) => null;

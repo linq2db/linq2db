@@ -10,7 +10,7 @@ using Grpc.Core;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

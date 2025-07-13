@@ -20,5 +20,4 @@
 		public string ProviderName     { get; }
 		public bool   IsGlobal => false;
 	}
-
 }

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Options;
 
 namespace LinqToDB.Data
 {

@@ -5,6 +5,7 @@ using System.Linq;
 using JetBrains.Annotations;
 
 using LinqToDB.Mapping;
+using LinqToDB.Model;
 using LinqToDB.Reflection;
 using LinqToDB.Tools.Comparers;
 
