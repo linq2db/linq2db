@@ -1551,7 +1551,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("ClickHouse works unstable", Configuration =TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1576,19 +1575,19 @@ namespace Tests.Linq
 
 					};
 
-				var res = q.ToArray();
+				var res = q.ToArray().OrderBy(r => r.Id).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(res[0].Id, Is.EqualTo(5));
-					Assert.That(res[0].PreviousId, Is.EqualTo(5));
-					Assert.That(res[1].Id, Is.EqualTo(6));
-					Assert.That(res[1].PreviousId, Is.EqualTo(6));
-					Assert.That(res[2].Id, Is.Null);
-					Assert.That(res[2].PreviousId, Is.Null);
-					Assert.That(res[3].Id, Is.Null);
-					Assert.That(res[3].PreviousId, Is.Null);
+					Assert.That(res[0].Id, Is.Null);
+					Assert.That(res[0].PreviousId, Is.Null);
+					Assert.That(res[1].Id, Is.Null);
+					Assert.That(res[1].PreviousId, Is.Null);
+					Assert.That(res[2].Id, Is.EqualTo(5));
+					Assert.That(res[2].PreviousId, Is.EqualTo(5));
+					Assert.That(res[3].Id, Is.EqualTo(6));
+					Assert.That(res[3].PreviousId, Is.EqualTo(6));
 				}
 			}
 		}
@@ -1717,7 +1716,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllSapHana])]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer, TestProvName.AllOracle21Minus, TestProvName.AllSapHana])]
 		[Test]
 		public void Issue2842Test1([DataSources(
 			TestProvName.AllAccess,

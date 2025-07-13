@@ -41,16 +41,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue(3015, Configurations = new[]
-		{
-			ProviderName.DB2,
-			TestProvName.AllFirebird,
-			TestProvName.AllInformix,
-			TestProvName.AllOracle,
-			TestProvName.AllPostgreSQL,
-			TestProvName.AllSapHana
-		})]
-		public void MergeIntoCte([MergeDataContextSource(TestProvName.AllSybase)] string context)
+		public void MergeIntoCte([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -80,16 +71,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue(3015, Configurations = new[]
-		{
-			ProviderName.DB2,
-			TestProvName.AllFirebird,
-			TestProvName.AllInformix,
-			TestProvName.AllOracle,
-			TestProvName.AllPostgreSQL,
-			TestProvName.AllSapHana
-		})]
-		public void MergeIntoCteIssue4107([MergeDataContextSource(TestProvName.AllSybase)] string context)
+		public void MergeIntoCteIssue4107([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -136,16 +118,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue(3015, Configurations = new[]
-		{
-			ProviderName.DB2,
-			TestProvName.AllFirebird,
-			TestProvName.AllInformix,
-			TestProvName.AllOracle,
-			TestProvName.AllPostgreSQL,
-			TestProvName.AllSapHana,
-		})]
-		public void MergeFromCte([MergeDataContextSource(TestProvName.AllSybase)] string context)
+		public void MergeFromCte([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

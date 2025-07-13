@@ -623,8 +623,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			// TODO: update nullability annotations for Sql.Concat to allow nullable parameters
-			var cnt = db.Person.Where(p => Sql.Concat(p.FirstName, p.MiddleName!) != null).Count();
+			var cnt = db.Person.Where(p => Sql.Concat(p.FirstName, p.MiddleName) != null).Count();
 
 			Assert.That(cnt, Is.EqualTo(4));
 		}

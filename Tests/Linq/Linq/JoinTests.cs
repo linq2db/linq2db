@@ -3399,7 +3399,7 @@ namespace Tests.Linq
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(isNullCount, Is.EqualTo(compareNulls == CompareNulls.LikeSql ? 0 : 2));
-				Assert.That(db.LastQuery, Does.Contain(321));
+				Assert.That(db.LastQuery, Does.Contain("321"));
 			}
 		}
 
