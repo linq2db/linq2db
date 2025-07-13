@@ -2574,5 +2574,107 @@ namespace Tests.Linq
 
 			var result = query.ToArray();
 		}
+
+		sealed class Issue4968Menu
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		sealed class Issue4968Item
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int MenuId { get; set; }
+			public int? ParentItemId { get; set; }
+		}
+
+		sealed class Issue4968Projection
+		{ 
+			public int Id1 { get; set; }
+			public int? Id2 { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4968")]
+		public void Issue4968Test_Tuple_Select([CteContextSource(TestProvName.AllClickHouse, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tm = db.CreateLocalTable<Issue4968Menu>();
+			using var ti = db.CreateLocalTable<Issue4968Item>();
+
+			var menuId = 1;
+
+			var cte = db.GetCte<Tuple<int, int?>>(
+				cteQueryable => ti
+					.Where(item => item.MenuId == menuId)
+					.Select(item => Tuple.Create(item.Id, item.ParentItemId))
+					.UnionAll(ti.InnerJoin(
+						cteQueryable,
+						(item, cte) => item.ParentItemId == cte.Item1,
+						(item, cte) => Tuple.Create(item.Id, item.ParentItemId))));
+
+			ti.Where(i => cte.Any(t => t.Item1 == i.Id)).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4968")]
+		public void Issue4968Test_Tuple_Delete([CteContextSource(TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySqlWithCTE, TestProvName.AllClickHouse, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tm = db.CreateLocalTable<Issue4968Menu>();
+			using var ti = db.CreateLocalTable<Issue4968Item>();
+
+			var menuId = 1;
+
+			var cte = db.GetCte<Tuple<int, int?>>(
+				cteQueryable => ti
+					.Where(item => item.MenuId == menuId)
+					.Select(item => Tuple.Create(item.Id, item.ParentItemId))
+					.UnionAll(ti.InnerJoin(
+						cteQueryable,
+						(item, cte) => item.ParentItemId == cte.Item1,
+						(item, cte) => Tuple.Create(item.Id, item.ParentItemId))));
+
+			ti.Where(i => cte.Any(tuple => tuple.Item1 == i.Id)).Delete();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4968")]
+		public void Issue4968Test_Class_Select([CteContextSource(TestProvName.AllClickHouse, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tm = db.CreateLocalTable<Issue4968Menu>();
+			using var ti = db.CreateLocalTable<Issue4968Item>();
+
+			var menuId = 1;
+
+			var cte = db.GetCte<Issue4968Projection>(
+				cteQueryable => ti
+					.Where(item => item.MenuId == menuId)
+					.Select(item => new Issue4968Projection() {Id1 = item.Id, Id2 = item.ParentItemId })
+					.UnionAll(ti.InnerJoin(
+						cteQueryable,
+						(item, cte) => item.ParentItemId == cte.Id1,
+						(item, cte) => new Issue4968Projection() {Id1 = item.Id, Id2 = item.ParentItemId })));
+
+			ti.Where(i => cte.Any(t => t.Id1 == i.Id)).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4968")]
+		public void Issue4968Test_Class_Delete([CteContextSource(TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySqlWithCTE, TestProvName.AllClickHouse, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tm = db.CreateLocalTable<Issue4968Menu>();
+			using var ti = db.CreateLocalTable<Issue4968Item>();
+
+			var menuId = 1;
+
+			var cte = db.GetCte<Issue4968Projection>(
+				cteQueryable => ti
+					.Where(item => item.MenuId == menuId)
+					.Select(item => new Issue4968Projection() {Id1 = item.Id, Id2 = item.ParentItemId })
+					.UnionAll(ti.InnerJoin(
+						cteQueryable,
+						(item, cte) => item.ParentItemId == cte.Id1,
+						(item, cte) => new Issue4968Projection() {Id1 = item.Id, Id2 = item.ParentItemId })));
+
+			ti.Where(i => cte.Any(tuple => tuple.Id1 == i.Id)).Delete();
+		}
 	}
 }

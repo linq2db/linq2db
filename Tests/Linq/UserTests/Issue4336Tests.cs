@@ -22,8 +22,6 @@ namespace Tests.UserTests
 		// bug in informix
 		[ThrowsForProvider(typeof(DB2Exception), TestProvName.AllInformix, ErrorMessage = "ERROR [IX000] [IBM][IDS/UNIX64] Internal error in routine opjoin().")]
 		[Test]
-		// bug in informix
-		[ThrowsForProvider(typeof(DB2Exception), TestProvName.AllInformix, ErrorMessage = "ERROR [IX000] [IBM][IDS/UNIX64] Internal error in routine opjoin().")]
 		public void Issue4336Test([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
