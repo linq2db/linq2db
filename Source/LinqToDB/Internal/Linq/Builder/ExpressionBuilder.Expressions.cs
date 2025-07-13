@@ -15,13 +15,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public ColumnDescriptor? CurrentDescriptor => _buildVisitor.CurrentDescriptor;
 
+#pragma warning disable RS0059 // Do not add multiple public overloads with optional parameters
 		public Expression BuildSqlExpression(IBuildContext? context, Expression expression, BuildPurpose buildPurpose, BuildFlags buildFlags, string? alias = null)
+#pragma warning restore RS0059 // Do not add multiple public overloads with optional parameters
 		{
 			var result = _buildVisitor.BuildExpression(context, expression, buildPurpose, buildFlags, alias);
 			return context != null ? UpdateNesting(context, result) : result;
 		}
 
+#pragma warning disable RS0059 // Do not add multiple public overloads with optional parameters
 		public Expression BuildSqlExpression(IBuildContext? context, Expression expression, BuildFlags buildFlags, string? alias = null)
+#pragma warning restore RS0059 // Do not add multiple public overloads with optional parameters
 		{
 			var result = _buildVisitor.BuildExpression(context, expression, BuildPurpose.Sql, buildFlags, alias);
 			return context != null ? UpdateNesting(context, result) : result;

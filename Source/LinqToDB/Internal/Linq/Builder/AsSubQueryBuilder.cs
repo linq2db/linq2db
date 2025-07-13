@@ -18,7 +18,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (methodCall.Arguments.Count > 1)
 				sequence.SelectQuery.QueryName = (string?)builder.EvaluateExpression(methodCall.Arguments[1]);
 
-			sequence = new AsSubqueryContext(sequence);
+			sequence = new AsSubqueryContext(sequence, true);
 
 			return BuildSequenceResult.FromContext(sequence);
 		}
