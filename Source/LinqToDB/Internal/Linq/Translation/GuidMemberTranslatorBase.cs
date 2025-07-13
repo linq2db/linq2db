@@ -2,10 +2,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
-using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Linq.Translation;
 
-namespace LinqToDB.Linq.Translation
+namespace LinqToDB.Internal.Linq.Translation
 {
 	[SuppressMessage("ReSharper", "ReturnValueOfPureMethodIsNotUsed")]
 	public class GuidMemberTranslatorBase : MemberTranslatorBase
