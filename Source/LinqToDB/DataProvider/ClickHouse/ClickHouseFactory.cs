@@ -3,8 +3,9 @@
 using JetBrains.Annotations;
 
 using LinqToDB.Configuration;
-
-using LinqToDB.DataProvider.MySql;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.ClickHouse;
+using LinqToDB.Internal.DataProvider.MySql;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {

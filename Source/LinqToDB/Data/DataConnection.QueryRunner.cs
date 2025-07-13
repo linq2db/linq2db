@@ -8,14 +8,14 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common.Internal;
-using LinqToDB.DataProvider;
-using LinqToDB.Extensions;
-using LinqToDB.Infrastructure;
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
-using LinqToDB.Tools;
+using LinqToDB.Internal;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {

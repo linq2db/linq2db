@@ -13,8 +13,6 @@ using System.Xml.Linq;
 
 using FirebirdSql.Data.Types;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -23,6 +21,8 @@ using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 

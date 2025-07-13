@@ -1,12 +1,12 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Async;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.xUpdate
 {

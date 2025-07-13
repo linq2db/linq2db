@@ -13,18 +13,16 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq;
-using LinqToDB.Linq.Internal;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.Oracle;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
@@ -33,6 +31,8 @@ using NUnit.Framework;
 
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -2826,13 +2826,11 @@ namespace Tests.DataProvider
 
 				public int GetHashCode(BooleanMapping obj)
 				{
-					unchecked
-					{
-						var hashCode = obj.Id;
-						hashCode = (hashCode * 397) ^ obj.BoolProp.GetHashCode();
-						hashCode = (hashCode * 397) ^ obj.NullableBoolProp.GetHashCode();
-						return hashCode;
-					}
+					return HashCode.Combine(
+						obj.Id,
+						obj.BoolProp,
+						obj.NullableBoolProp
+					);
 				}
 			}
 

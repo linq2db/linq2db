@@ -11,14 +11,14 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.PostgreSQL;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.SqlQuery;
@@ -36,6 +36,8 @@ using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 using NUnit.Framework.Internal.Builders;
+
+using Shouldly;
 
 using Tests.Model;
 

@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -457,10 +457,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return (ChildID * 397) ^ ParentID;
-				}
+				return HashCode.Combine(ChildID, ParentID);
 			}
 
 			public int ChildID  { get; set; }
@@ -867,10 +864,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return ((Child != null ? Child.GetHashCode() : 0) * 397) ^ (Parent != null ? Parent.GetHashCode() : 0);
-				}
+				return HashCode.Combine(Child, Parent);
 			}
 		}
 

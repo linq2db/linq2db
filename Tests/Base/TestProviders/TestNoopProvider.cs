@@ -8,12 +8,13 @@ using System.Diagnostics.CodeAnalysis;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.SQLite.Translation;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.SQLite.Translation;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
 namespace Tests
 {

@@ -19,4 +19,3 @@ using var db = new DataConnection(
     // enables F# Services for connection
     .UseFSharp());
 ```
-
