@@ -107,6 +107,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					break;
 				}
 
+				case MethodCallExpression methodCallExpression:
+				{
+					var parsed = Builder.ParseGenericConstructor(methodCallExpression, ProjectFlags.SQL, columnDescriptor : null);
+					if (!ReferenceEquals(parsed, expression))
+						return ProcessTranslated(parsed, toPath);
+
+					break;
+				}
+
 				case SqlGenericConstructorExpression generic:
 				{
 					List<SqlGenericConstructorExpression.Assignment>? assignments = null;
@@ -294,6 +303,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var newProxy = Proxy.CreateProxy(Proxy.OwnerContext, Proxy.BuildContext, null, node);
 				return SequenceHelper.CreateRef(newProxy);
+			}
+
+			public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
+			{
+				return Proxy.HandleTranslated(null, node);
 			}
 		}
 	}
