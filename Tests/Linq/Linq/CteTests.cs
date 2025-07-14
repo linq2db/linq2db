@@ -1596,6 +1596,36 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
+		[ActiveIssue]
+		[Test]
+		public void Issue3360_TypedNullEnumInAnchor2([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();
+
+			var query = from node in db.GetCte<Issue3360_TypedNullEnumInAnchorProjection>(
+				cte =>
+				{
+					return db.GetTable<Issue3360NullInAnchor>().Select(p => new Issue3360_TypedNullEnumInAnchorProjection(p.Id, VarChar<StrEnum?>(null, 50)))
+						.Concat(
+						from p in db.GetTable<Issue3360NullInAnchor>()
+						join parent in cte on p.Id equals parent.Id + 1
+						select new Issue3360_TypedNullEnumInAnchorProjection(p.Id, StrEnum.One))
+						.Concat(
+						from p in db.GetTable<Issue3360NullInAnchor>()
+						select new Issue3360_TypedNullEnumInAnchorProjection(p.Id, p.Enum1))
+						.Concat(
+						from p in db.GetTable<Issue3360NullInAnchor>()
+						select new Issue3360_TypedNullEnumInAnchorProjection(p.Id, null));
+				})
+						select new Issue3360_TypedNullEnumInAnchorProjection(node.Id, node.Value);
+
+			query.ToArray();
+
+			Assert.That(db.LastQuery!.ToUpper(), Does.Not.Contain("SQL_VARIANT"));
+		}
+
 		#region InvalidColumnIndexMapping issue
 		public enum InvalidColumnIndexMappingEnum1
 		{
