@@ -7,7 +7,7 @@ using System.Text;
 using LinqToDB.DataProvider.SapHana;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
-using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SapHana

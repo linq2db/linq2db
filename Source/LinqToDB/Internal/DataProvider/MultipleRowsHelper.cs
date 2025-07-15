@@ -9,9 +9,8 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
-using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.Model;
 
 namespace LinqToDB.Internal.DataProvider
 {

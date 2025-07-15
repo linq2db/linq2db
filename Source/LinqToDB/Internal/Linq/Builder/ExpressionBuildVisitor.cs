@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.Expressions;
@@ -21,7 +22,6 @@ using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
-using LinqToDB.Model;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder

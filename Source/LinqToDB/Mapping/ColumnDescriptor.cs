@@ -9,11 +9,10 @@ using LinqToDB.Data;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
-using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.Model
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Stores mapping entity column descriptor.
@@ -64,7 +63,7 @@ namespace LinqToDB.Model
 			DbType            = columnAttribute != null ? columnAttribute.DbType   : dataType.Type.DbType;
 			CreateFormat      = columnAttribute?.CreateFormat;
 
-			if (columnAttribute == null || (columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.Type.DataType))
+			if (columnAttribute == null || columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.Type.DataType)
 			{
 				Length    = columnAttribute?.HasLength()    != true ? dataType.Type.Length    : columnAttribute.Length;
 				Precision = columnAttribute?.HasPrecision() != true ? dataType.Type.Precision : columnAttribute.Precision;

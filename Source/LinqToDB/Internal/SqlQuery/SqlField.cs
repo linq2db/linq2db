@@ -1,6 +1,6 @@
 ﻿using System;
 
-using LinqToDB.Model;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlQuery
 {

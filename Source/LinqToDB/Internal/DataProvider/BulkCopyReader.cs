@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Internal.Async;
-using LinqToDB.Model;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider
 {

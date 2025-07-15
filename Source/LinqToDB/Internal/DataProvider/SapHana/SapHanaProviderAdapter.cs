@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.DataProvider.SapHana;
 using LinqToDB.Internal.Expressions.Types;
-using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 using LinqToDB.Mapping;
 
 using static LinqToDB.Internal.DataProvider.OdbcProviderAdapter;

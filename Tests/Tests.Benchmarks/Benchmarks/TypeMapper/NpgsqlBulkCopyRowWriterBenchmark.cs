@@ -8,7 +8,6 @@ using BenchmarkDotNet.Attributes;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;
 using LinqToDB.Mapping;
-using LinqToDB.Model;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {

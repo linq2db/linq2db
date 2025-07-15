@@ -12,7 +12,7 @@ using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.DataProvider.MySql;
 using LinqToDB.Internal.DataProvider.MySql;
 using LinqToDB.Internal.Expressions.Types;
-using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse

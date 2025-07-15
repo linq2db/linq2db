@@ -2,7 +2,6 @@
 using System.Linq.Expressions;
 
 using LinqToDB.Concurrency;
-using LinqToDB.Model;
 
 namespace LinqToDB.Mapping
 {

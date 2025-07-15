@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Internal.SqlQuery
 {
 	// TODO: REFACTORING: it probably makes sense to move Visit calls from element visit switch to upper level to:

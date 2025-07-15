@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using LinqToDB.Concurrency;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Reflection;
-using LinqToDB.Model;
 
 namespace LinqToDB.Mapping
 {

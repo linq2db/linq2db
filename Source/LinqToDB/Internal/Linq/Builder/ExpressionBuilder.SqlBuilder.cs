@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Expressions;
@@ -17,7 +18,6 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.Model;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 

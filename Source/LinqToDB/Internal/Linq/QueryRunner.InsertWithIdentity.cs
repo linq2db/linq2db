@@ -10,7 +10,6 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
-using LinqToDB.Model;
 
 namespace LinqToDB.Internal.Linq
 {

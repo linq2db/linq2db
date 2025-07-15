@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;

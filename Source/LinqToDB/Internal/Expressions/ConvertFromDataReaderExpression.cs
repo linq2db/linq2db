@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
+using LinqToDB.Expressions;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.Extensions;

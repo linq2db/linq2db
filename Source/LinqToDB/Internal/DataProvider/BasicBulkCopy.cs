@@ -14,8 +14,8 @@ using System.Text;
 using LinqToDB.Data;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlProvider;
-using LinqToDB.Model;
 using LinqToDB.SqlQuery;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider
 {

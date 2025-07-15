@@ -61,5 +61,19 @@ namespace LinqToDB
 		{
 			return ((ITableMutable<T>)table).ChangeTableOptions(options);
 		}
+
+		/// <summary>
+		/// Builds table name for <paramref name="table"/>.
+		/// </summary>
+		/// <typeparam name="T">Table record type.</typeparam>
+		/// <param name="table">Table instance.</param>
+		/// <returns>Table name.</returns>
+		public static string GetTableName<T>(this ITable<T> table)
+			where T : notnull
+		{
+			return table.DataContext.CreateSqlBuilder()
+				.BuildObjectName(new(), new(table.TableName, Server: table.ServerName, Database: table.DatabaseName, Schema: table.SchemaName), tableOptions: table.TableOptions)
+				.ToString();
+		}
 	}
 }

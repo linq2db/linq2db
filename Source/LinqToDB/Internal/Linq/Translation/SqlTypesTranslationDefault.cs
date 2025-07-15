@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
@@ -25,7 +26,7 @@ namespace LinqToDB.Internal.Linq.Translation
 
 			_registration.RegisterMember(() => Sql.Types.Money, ConvertMoney);
 			_registration.RegisterMember(() => Sql.Types.SmallMoney, ConvertSmallMoney);
-			
+
 			//TODO: What is it?
 			_registration.RegisterMember(() => Sql.Types.Float, ConvertFloat);
 
@@ -194,7 +195,7 @@ namespace LinqToDB.Internal.Linq.Translation
 
 		#endregion
 
-		protected Expression MakeSqlTypeExpression(ITranslationContext translationContext, Expression basedOn, Func<DbDataType, DbDataType>? correctFunc = null) 
+		protected Expression MakeSqlTypeExpression(ITranslationContext translationContext, Expression basedOn, Func<DbDataType, DbDataType>? correctFunc = null)
 			=> MakeSqlTypeExpression(translationContext, basedOn, basedOn.Type, correctFunc);
 
 		protected Expression MakeSqlTypeExpression(ITranslationContext translationContext, Expression basedOn, Type type, Func<DbDataType, DbDataType>? correctFunc = null)

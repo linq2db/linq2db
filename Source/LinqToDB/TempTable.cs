@@ -13,7 +13,7 @@ using LinqToDB.Data;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
-using LinqToDB.Model;
+using LinqToDB.Mapping;
 
 namespace LinqToDB
 {

@@ -7,7 +7,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.MySql;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
-using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {

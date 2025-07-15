@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB;
+using LinqToDB.Expressions;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
@@ -12,7 +13,6 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Mapping;
-using LinqToDB.Model;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Linq.Builder

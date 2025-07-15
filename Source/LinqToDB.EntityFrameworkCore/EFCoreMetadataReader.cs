@@ -31,7 +31,7 @@ using EfExpressionPrinter = Microsoft.EntityFrameworkCore.Query.ExpressionPrinte
 using EfSqlExpression = Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression;
 
 using LinqToDB.SqlQuery;
-using LinqToDB.Internal.Expressions;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.Extensions;
 
@@ -188,10 +188,10 @@ namespace LinqToDB.EntityFrameworkCore
 
 			if (property == null)
 				return false;
-			
+
 			if (memberInfo.DeclaringType?.IsAssignableFrom(property.DeclaringType) == true
-			    && memberInfo.Name == property.Name 
-			    && memberInfo.MemberType == property.MemberType 
+			    && memberInfo.Name == property.Name
+			    && memberInfo.MemberType == property.MemberType
 			    && memberInfo.GetMemberType() == property.GetMemberType())
 			{
 				return true;
@@ -239,7 +239,7 @@ namespace LinqToDB.EntityFrameworkCore
 				_                            => DataType.Undefined
 			};
 		}
-		
+
 		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
 		{
 			if (typeof(Expression).IsSameOrParentOf(type))
