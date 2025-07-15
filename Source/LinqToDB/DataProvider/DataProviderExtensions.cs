@@ -55,6 +55,8 @@ namespace LinqToDB.DataProvider
 				FieldType         = fieldType,
 				DataTypeName      = dataTypeName
 			}] = expr;
+
+			Linq.Tools.ClearAllCaches();
 		}
 
 		/// <summary>
