@@ -1398,5 +1398,134 @@ namespace Tests.Linq
 
 			query.ToArray();
 		}
+
+		#region Issue 4955
+
+		record MappingTypingByConstant<T>(int Id, T Value);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromEnumerable_Int64([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Test(1L);
+			Test(2147483648L);
+
+			void Test<T>(T value)
+			{
+				_ = db.Person
+					.InnerJoin(
+						new MappingTypingByConstant<T>[] { new(1, value) }.AsQueryable(),
+						(entity, arg) => entity.ID == arg.Id,
+						(entity, arg) => new { arg.Id, arg.Value })
+					.ToArray();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromQuery_Int64([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var value = 1L;
+			var query = db.Person.Select(r => new { Id = r.ID, Value = Sql.AsSql(Sql.Constant(value)) }).AsSubQuery();
+			query.ToArray();
+			value = 2147483648L;
+			query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromEnumerable_UInt64([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Test(1ul);
+			Test(2147483648ul);
+
+			void Test<T>(T value)
+			{
+				_ = db.Person
+					.InnerJoin(
+						new MappingTypingByConstant<T>[] { new(1, value) }.AsQueryable(),
+						(entity, arg) => entity.ID == arg.Id,
+						(entity, arg) => new { arg.Id, arg.Value })
+					.ToArray();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromQuery_UInt64([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var value = 1ul;
+			var query = db.Person.Select(r => new { Id = r.ID, Value = Sql.AsSql(Sql.Constant(value)) }).AsSubQuery();
+			query.ToArray();
+			value = 2147483648ul;
+			query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromEnumerable_UInt32([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Test(1u);
+			Test(2147483648u);
+
+			void Test<T>(T value)
+			{
+				_ = db.Person
+					.InnerJoin(
+						new MappingTypingByConstant<T>[] { new(1, value) }.AsQueryable(),
+						(entity, arg) => entity.ID == arg.Id,
+						(entity, arg) => new { arg.Id, arg.Value })
+					.ToArray();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromQuery_UInt32([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var value = 1u;
+			var query = db.Person.Select(r => new { Id = r.ID, Value = Sql.AsSql(Sql.Constant(value)) }).AsSubQuery();
+			query.ToArray();
+			value = 2147483648u;
+			query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromEnumerable_Decimal([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Test(1m);
+			Test(2147483648m);
+
+			void Test<T>(T value)
+			{
+				_ = db.Person
+					.InnerJoin(
+						new MappingTypingByConstant<T>[] { new(1, value) }.AsQueryable(),
+						(entity, arg) => entity.ID == arg.Id,
+						(entity, arg) => new { arg.Id, arg.Value })
+					.ToArray();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromQuery_Decimal([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var value = 1M;
+			var query = db.Person.Select(r => new { Id = r.ID, Value = Sql.AsSql(Sql.Constant(value)) }).AsSubQuery();
+			query.ToArray();
+			value = 2147483648m;
+			query.ToArray();
+		}
+		#endregion
 	}
 }
