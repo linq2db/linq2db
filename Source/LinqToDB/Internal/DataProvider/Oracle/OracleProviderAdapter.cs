@@ -10,11 +10,11 @@ using System.Xml;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Oracle;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
-using LinqToDB.Model;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {

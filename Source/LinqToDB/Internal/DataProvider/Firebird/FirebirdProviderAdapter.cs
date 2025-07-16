@@ -4,7 +4,7 @@ using System.Data.Common;
 
 using LinqToDB.Internal.Expressions.Types;
 using LinqToDB.Internal.Mapping;
-using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Firebird

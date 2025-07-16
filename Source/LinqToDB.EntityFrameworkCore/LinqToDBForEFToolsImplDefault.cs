@@ -25,9 +25,9 @@ using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Internal;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
+using LinqToDB.SqlQuery;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;

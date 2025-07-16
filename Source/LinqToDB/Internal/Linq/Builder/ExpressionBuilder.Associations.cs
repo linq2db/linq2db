@@ -5,12 +5,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Mapping;
-using LinqToDB.Model;
 
 namespace LinqToDB.Internal.Linq.Builder
 {

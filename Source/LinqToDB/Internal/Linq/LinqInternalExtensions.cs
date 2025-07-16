@@ -9,7 +9,6 @@ using JetBrains.Annotations;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Mapping;
-using LinqToDB.Model;
 
 namespace LinqToDB.Internal.Linq
 {

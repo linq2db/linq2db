@@ -13,8 +13,8 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SchemaProvider;
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SchemaProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL
 {

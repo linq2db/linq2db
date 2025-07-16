@@ -1,6 +1,4 @@
-﻿using LinqToDB.Mapping;
-
-namespace LinqToDB.Model
+﻿namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Stores enum mapping information for single enum value.

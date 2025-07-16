@@ -16,7 +16,6 @@ using LinqToDB.Interceptors;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
-using LinqToDB.Model;
 
 // ReSharper disable once CheckNamespace
 namespace LinqToDB

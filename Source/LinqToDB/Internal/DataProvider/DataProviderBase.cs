@@ -214,7 +214,7 @@ namespace LinqToDB.Internal.DataProvider
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(T), DataTypeName = dataTypeName }] = expr;
 		}
 
-		protected void SetField<TP, T>(string dataTypeName, Type fieldType, Expression<Func<TP, int, T>> expr)
+		protected void SetField<TP,T>(string dataTypeName, Type fieldType, Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { FieldType = fieldType, DataTypeName = dataTypeName }] = expr;
 		}
@@ -224,7 +224,7 @@ namespace LinqToDB.Internal.DataProvider
 			ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T) }] = expr;
 		}
 
-		protected void SetProviderField<TP, T>(Type providerFieldType, Expression<Func<TP, int, T>> expr)
+		protected void SetProviderField<TP, T>(Type providerFieldType, Expression<Func<TP,int,T>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = providerFieldType }] = expr;
 		}

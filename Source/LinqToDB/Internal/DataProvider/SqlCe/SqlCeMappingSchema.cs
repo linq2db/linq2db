@@ -8,7 +8,7 @@ using System.Xml;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
-using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SqlCe

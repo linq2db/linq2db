@@ -4,7 +4,7 @@ using System.Text;
 
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.Internal.Mapping;
-using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {

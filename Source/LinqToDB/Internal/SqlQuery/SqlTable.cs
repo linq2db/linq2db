@@ -5,7 +5,6 @@ using System.Threading;
 
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using LinqToDB.Model;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery

@@ -4,8 +4,9 @@ using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 using LinqToDB.Internal.Common;
+using LinqToDB.Mapping;
 
-namespace LinqToDB.Mapping
+namespace LinqToDB
 {
 	/// <summary>
 	/// When applied to method or property, tells linq2db to replace them in queryable LINQ expression with another expression,

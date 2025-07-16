@@ -135,8 +135,8 @@ namespace Tests.SchemaProvider
 		{
 			var e = mappingSchema.GetEntityDescriptor(typeof(T));
 
-			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName!.Equals(e.Name.Name, StringComparison.OrdinalIgnoreCase))!;
-			Assert.That(schemaTable, Is.Not.Null, e.Name.Name);
+			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName!.Equals(e.TableName, StringComparison.OrdinalIgnoreCase))!;
+			Assert.That(schemaTable, Is.Not.Null, e.TableName);
 
 			Assert.That(schemaTable.Columns, Has.Count.GreaterThanOrEqualTo(e.Columns.Count));
 

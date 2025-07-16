@@ -1,7 +1,5 @@
 ﻿using System;
 
-using LinqToDB.Model;
-
 namespace LinqToDB.Mapping
 {
 	/// <summary>

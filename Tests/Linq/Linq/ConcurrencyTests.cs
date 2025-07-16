@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Concurrency;
 using LinqToDB.Mapping;
-using LinqToDB.Model;
 
 using NUnit.Framework;
 

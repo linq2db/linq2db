@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;

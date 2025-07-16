@@ -9,6 +9,7 @@ using System.Xml;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;

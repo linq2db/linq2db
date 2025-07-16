@@ -6,7 +6,6 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
-using LinqToDB.Model;
 
 namespace LinqToDB.Tools
 {

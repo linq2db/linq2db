@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-using LinqToDB.Model;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlQuery
 {

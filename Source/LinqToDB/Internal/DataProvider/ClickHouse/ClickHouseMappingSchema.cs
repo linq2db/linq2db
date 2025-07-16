@@ -11,8 +11,8 @@ using LinqToDB.Common;
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {

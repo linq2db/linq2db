@@ -24,18 +24,18 @@ namespace LinqToDB.Internal.DataProvider
 		/// </summary>
 		public Type? ProviderFieldType { get; init; }
 
-		private readonly string? _dataTypeName;
+		readonly string? _dataTypeName;
 		/// <summary>
 		/// Type name, returned by <see cref="DbDataReader.GetDataTypeName(int)"/> for column.
 		/// </summary>
 		public string? DataTypeName
 		{
-			get => _dataTypeName;
-			init { _dataTypeName = value?.ToLowerInvariant(); }
+			get  => _dataTypeName;
+			init => _dataTypeName = value?.ToLowerInvariant();
 		}
 
 		/// <summary>
-		/// Type of <see cref="DbDataReader"/> implementation. Could not match Type, implementated by ADO.NET provider if wrapper like MiniProfiler used without proper <see cref="IUnwrapDataObjectInterceptor"/> registration provided.
+		/// Type of <see cref="DbDataReader"/> implementation. Could not match Type, implemented by ADO.NET provider if wrapper like MiniProfiler used without proper <see cref="IUnwrapDataObjectInterceptor"/> registration provided.
 		/// </summary>
 		public Type? DataReaderType { get; init; }
 	}

@@ -5,7 +5,7 @@ using System.Text;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
-using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {

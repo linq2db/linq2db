@@ -6,11 +6,10 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 
-using LinqToDB;
-using LinqToDB.Internal.Extensions;
-using LinqToDB.Model;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
-namespace LinqToDB.Internal.SqlQuery
+namespace LinqToDB.SqlQuery
 {
 	public sealed class SqlDataType : SqlExpressionBase
 	{
@@ -384,7 +383,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region ISqlExpression Members
 
-		public override int  Precedence => LinqToDB.SqlQuery.Precedence.Primary;
+		public override int  Precedence => SqlQuery.Precedence.Primary;
 		public override Type SystemType => Type.SystemType;
 
 		#endregion

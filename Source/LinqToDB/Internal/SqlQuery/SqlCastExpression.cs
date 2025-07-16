@@ -1,5 +1,7 @@
 ﻿using System;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Internal.SqlQuery
 {
 	public sealed class SqlCastExpression : SqlExpressionBase

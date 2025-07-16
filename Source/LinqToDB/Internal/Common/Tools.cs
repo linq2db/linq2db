@@ -115,15 +115,5 @@ namespace LinqToDB.Internal.Common
 
 			return null;
 		}
-
-		/// <summary>
-		/// Clears all linq2db caches.
-		/// </summary>
-		public static void ClearAllCaches()
-		{
-			Query.ClearCaches();
-			MappingSchema.ClearCache();
-			CommandInfo.ClearObjectReaderCache();
-		}
 	}
 }

@@ -2,7 +2,7 @@
 
 using LinqToDB.Reflection;
 
-namespace LinqToDB.Model
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Mapping entity descriptor change interface.

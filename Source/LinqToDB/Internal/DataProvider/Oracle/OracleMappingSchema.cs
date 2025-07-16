@@ -6,10 +6,10 @@ using System.Text;
 
 using LinqToDB.Common;
 using LinqToDB.DataProvider.Oracle;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Mapping;
-using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {

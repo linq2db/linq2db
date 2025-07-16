@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 
-using LinqToDB.Internal.Expressions;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 
