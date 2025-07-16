@@ -21,7 +21,7 @@ namespace Tests.DataProvider
 		private sealed class TypeTable<TType, TNullableType>
 		{
 			[PrimaryKey]
-			public long Id { get; set; }
+			public int Id { get; set; }
 			public TType          Column         { get; set; } = default!;
 			public TNullableType? ColumnNullable { get; set; }
 		}
