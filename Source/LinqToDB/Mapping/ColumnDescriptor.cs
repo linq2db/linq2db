@@ -6,8 +6,9 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
@@ -62,7 +63,7 @@ namespace LinqToDB.Mapping
 			DbType            = columnAttribute != null ? columnAttribute.DbType   : dataType.Type.DbType;
 			CreateFormat      = columnAttribute?.CreateFormat;
 
-			if (columnAttribute == null || (columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.Type.DataType))
+			if (columnAttribute == null || columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.Type.DataType)
 			{
 				Length    = columnAttribute?.HasLength()    != true ? dataType.Type.Length    : columnAttribute.Length;
 				Precision = columnAttribute?.HasPrecision() != true ? dataType.Type.Precision : columnAttribute.Precision;
@@ -691,9 +692,12 @@ namespace LinqToDB.Mapping
 				else
 				{
 					// For DataType.Enum we do not provide any additional conversion
-					if (valueConverter == null && includingEnum && dbDataType.DataType != DataType.Enum)
+					if (valueConverter == null && includingEnum && dbDataType.DataType != DataType.Enum && getterExpr.Type.ToNullableUnderlying().IsEnum)
 					{
-						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, getterExpr.Type);
+						var type = dbDataType.SystemType != typeof(object) && !dbDataType.SystemType.ToNullableUnderlying().IsEnum
+							? dbDataType.SystemType
+							: Converter.GetDefaultMappingFromEnumType(mappingSchema, getterExpr.Type);
+
 						if (type != null)
 						{
 							var enumConverter = mappingSchema.GetConvertExpression(getterExpr.Type, type, conversionType: ConversionType.ToDatabase)!;

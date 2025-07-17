@@ -5,9 +5,9 @@ This directory contains files, used by local and CI builds.
 This script updates assembly `Version` property in `linq2db.Default.props` file using provided version number and path to `props` file
 
 VERSION_PROP should be one of:
+
 - Version - version for majority of projects
 - EF3Version - version for EF.Core 3.1 integration
-- EF6Version - version for EF.Core 6 integration
 - EF8Version - version for EF.Core 8 integration
 - EF9Version - version for EF.Core 9 integration
 

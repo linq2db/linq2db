@@ -2,8 +2,8 @@
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
-using LinqToDB.Linq.Builder;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlQuery;
 
 // ReSharper disable CheckNamespace
 
@@ -79,8 +79,8 @@ namespace LinqToDB
 				if (string.IsNullOrEmpty(name))
 					throw new LinqToDBException($"Cannot retrieve property name for expression '{expression}'.");
 
-				var sqlExpr = new SqlExpression(expression.Type, name!, SqlQuery.Precedence.Primary, SqlFlags.IsPure,
-					ToParametersNullabilityType(IsNullable), _canBeNull);
+				var sqlExpr = new SqlExpression(dataContext.MappingSchema.GetDbDataType(expression.Type), name!, SqlQuery.Precedence.Primary,
+					ToParametersNullabilityType(IsNullable), СonfiguredCanBeNull);
 
 				return ExpressionBuilder.CreatePlaceholder(query, sqlExpr, expression);
 			}

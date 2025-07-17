@@ -1,11 +1,7 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using JetBrains.Annotations;
 
-using JetBrains.Annotations;
-
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
@@ -15,8 +11,6 @@ namespace LinqToDB
 	[PublicAPI]
 	public static class TableExtensions
 	{
-		#region Table Helpers
-
 		/// <summary>
 		/// Overrides IsTemporary flag for the current table. This call will have effect only for databases that support
 		/// temporary tables.
@@ -77,49 +71,9 @@ namespace LinqToDB
 		public static string GetTableName<T>(this ITable<T> table)
 			where T : notnull
 		{
-			return table.DataContext.CreateSqlProvider()
-				.BuildObjectName(new (), new (table.TableName, Server: table.ServerName, Database: table.DatabaseName, Schema: table.SchemaName), tableOptions: table.TableOptions)
+			return table.DataContext.CreateSqlBuilder()
+				.BuildObjectName(new(), new(table.TableName, Server: table.ServerName, Database: table.DatabaseName, Schema: table.SchemaName), tableOptions: table.TableOptions)
 				.ToString();
-		}
-
-		#endregion
-
-		// internal API
-		internal static IDataProvider GetDataProvider<T>(this ITable<T> table)
-			where T : notnull
-		{
-			if (table.DataContext is DataConnection dataConnection)
-				return dataConnection.DataProvider;
-			if (table.DataContext is DataContext dataContext)
-				return dataContext.DataProvider;
-
-			throw new ArgumentException($"Data context must be of {nameof(DataConnection)} or {nameof(DataContext)} type.", nameof(table));
-		}
-
-		// internal API
-		internal static DataConnection GetDataConnection<T>(this ITable<T> table)
-			where T : notnull
-		{
-			if (table.DataContext is DataConnection dataConnection)
-				return dataConnection;
-			if (table.DataContext is DataContext dataContext)
-				return dataContext.GetDataConnection();
-
-			throw new ArgumentException($"Data context must be of {nameof(DataConnection)} or {nameof(DataContext)} type.", nameof(table));
-		}
-
-		// internal API
-		internal static bool TryGetDataConnection<T>(this ITable<T> table, [NotNullWhen(true)] out DataConnection? dataConnection)
-			where T : notnull
-		{
-			if (table.DataContext is DataConnection dc)
-				dataConnection = dc;
-			else if (table.DataContext is DataContext dataContext)
-				dataConnection = dataContext.GetDataConnection();
-			else
-				dataConnection = null;
-
-			return dataConnection != null;
 		}
 	}
 }

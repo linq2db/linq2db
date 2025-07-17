@@ -18,7 +18,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" VersionOverride="9.0.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" VersionOverride="9.0.6" />
 	</ItemGroup>
 
 	<ItemGroup>

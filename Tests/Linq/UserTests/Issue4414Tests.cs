@@ -4,7 +4,6 @@ using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Async;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -33,13 +32,14 @@ namespace Tests.UserTests
 
 			using var table = db.CreateLocalTable<MessageDto>();
 
-			var items = await table
-				.Where(x => !x.Consumed.HasValue)
-				.OrderBy(x => x.Id)
-				.Take(1)
-				.UpdateWithOutputAsync(
-					_ => new MessageDto() { Consumed = Sql.CurrentTimestamp },
-					(d, i) => new { i.Id, i.Key, i.Payload }).ToListAsync();
+			var items = await AsyncEnumerableToListAsync(
+				table
+					.Where(x => !x.Consumed.HasValue)
+					.OrderBy(x => x.Id)
+					.Take(1)
+					.UpdateWithOutputAsync(
+						_ => new MessageDto() { Consumed = Sql.CurrentTimestamp },
+						(d, i) => new { i.Id, i.Key, i.Payload }));
 		}
 	}
 }

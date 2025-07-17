@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
-using LinqToDB.SqlQuery;
-using LinqToDB.Tools;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -592,7 +592,7 @@ namespace Tests.Linq
 
 				query.ToArray();
 
-				db.LastQuery.Should().Contain("2 DESC");
+				db.LastQuery!.ShouldContain("2 DESC");
 			}
 		}
 
@@ -624,11 +624,11 @@ namespace Tests.Linq
 
 				if (withIndex)
 				{
-					firstSource.Should().BeOfType<SqlTable>();
+					firstSource.ShouldBeOfType<SqlTable>();
 				}
 				else
 				{
-					firstSource.Should().BeOfType<SelectQuery>();
+					firstSource.ShouldBeOfType<SelectQuery>();
 				}
 			}
 		}
@@ -647,10 +647,10 @@ namespace Tests.Linq
 						p.Name.LastName
 					};
 
-				FluentActions.Enumerating(() => query)
-					.Should()
-					.Throw<LinqToDBException>()
-					.WithMessage("The LINQ expression 'Sql.Ordinal<string>(p.Name.LastName)' could not be converted to SQL.");
+				var act = () => query.ToArray();
+				act
+					.ShouldThrow<LinqToDBException>()
+					.Message.ShouldBe("The LINQ expression 'Sql.Ordinal<string>(p.Name.LastName)' could not be converted to SQL.");
 			}
 		}
 
@@ -736,6 +736,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void OrderByBoolean([DataSources] string context, [Values] bool offlineBool)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person
+					.OrderBy(i => offlineBool && i.FirstName.Length > 1)
+					.ThenBy(i => !offlineBool && i.FirstName.Length > 4);
+
+				AssertQuery(query);
+			}
+		}
+
+		[Test]
 		public void EnableConstantExpressionInOrderByTest([DataSources(ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
 		{
 			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
@@ -806,11 +819,11 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ID, Is.EqualTo(3));
 				Assert.That(result[1].ID, Is.EqualTo(1));
-			});
+			}
 
 			var selects = db.LastQuery!.Split(["SELECT"], StringSplitOptions.None).Length - 1;
 

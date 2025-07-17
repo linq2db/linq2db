@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace LinqToDB.CommandLine
 {
@@ -44,7 +45,7 @@ namespace LinqToDB.CommandLine
 			AddOption(Output);
 		}
 
-		public override int Execute(
+		public override async ValueTask<int> Execute(
 			CliController                  controller,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
@@ -55,7 +56,7 @@ namespace LinqToDB.CommandLine
 
 			if (File.Exists(fullPath))
 			{
-				Console.Error.WriteLine($"Template file aleady exists at location {fullPath}");
+				await Console.Error.WriteLineAsync($"Template file aleady exists at location {fullPath}").ConfigureAwait(false);
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
@@ -64,7 +65,7 @@ namespace LinqToDB.CommandLine
 			using var template = GetType().Assembly.GetManifestResourceStream("LinqToDB.CLI.Template.tt")!;
 			using var file     = File.Create(fullPath);
 
-			template.CopyTo(file);
+			await template.CopyToAsync(file).ConfigureAwait(false);
 
 			return StatusCodes.SUCCESS;
 		}

@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Options;
 using LinqToDB.Remote;
 
 namespace LinqToDB
@@ -67,12 +67,12 @@ namespace LinqToDB
 		BulkCopyOptions?    _bulkCopyOptions;
 		SqlOptions?         _sqlOptions;
 
-		public LinqOptions        LinqOptions        => _linqOptions        ??= Common.Configuration.Linq.Options;
-		public RetryPolicyOptions RetryPolicyOptions => _retryPolicyOptions ??= Common.Configuration.RetryPolicy.Options;
-		public ConnectionOptions  ConnectionOptions  => _connectionOptions  ??= DataConnection.DefaultDataOptions.ConnectionOptions;
-		public DataContextOptions DataContextOptions => _dataContextOptions ??= DataContextOptions.Empty;
-		public BulkCopyOptions    BulkCopyOptions    => _bulkCopyOptions    ??= BulkCopyOptions.Empty;
-		public SqlOptions         SqlOptions         => _sqlOptions         ??= Common.Configuration.Sql.Options;
+		public LinqOptions        LinqOptions        => _linqOptions        ??= LinqOptions.       Default;
+		public RetryPolicyOptions RetryPolicyOptions => _retryPolicyOptions ??= RetryPolicyOptions.Default;
+		public ConnectionOptions  ConnectionOptions  => _connectionOptions  ??= ConnectionOptions. Default;
+		public DataContextOptions DataContextOptions => _dataContextOptions ??= DataContextOptions.Default;
+		public BulkCopyOptions    BulkCopyOptions    => _bulkCopyOptions    ??= BulkCopyOptions.   Default;
+		public SqlOptions         SqlOptions         => _sqlOptions         ??= SqlOptions.        Default;
 
 		public override IEnumerable<IOptionSet> OptionSets
 		{
@@ -112,13 +112,45 @@ namespace LinqToDB
 
 		public void Apply(DataConnection dataConnection)
 		{
-			((IApplicable<DataConnection>)ConnectionOptions).Apply(dataConnection);
+			((IApplicable<DataConnection>)ConnectionOptions). Apply(dataConnection);
 			((IApplicable<DataConnection>)RetryPolicyOptions).Apply(dataConnection);
 
 			if (_dataContextOptions is IApplicable<DataConnection> a)
 				a.Apply(dataConnection);
 
 			base.Apply(dataConnection);
+		}
+
+		public Action? Reapply(DataConnection dataConnection, DataOptions previousOptions)
+		{
+			Action? actions = null;
+
+			if (!ReferenceEquals(ConnectionOptions, previousOptions.ConnectionOptions))
+				Add(((IReapplicable<DataConnection>)ConnectionOptions). Apply(dataConnection, previousOptions.ConnectionOptions));
+
+			if (!ReferenceEquals(RetryPolicyOptions, previousOptions.RetryPolicyOptions))
+				Add(((IReapplicable<DataConnection>)RetryPolicyOptions).Apply(dataConnection, previousOptions.RetryPolicyOptions));
+
+			if (!ReferenceEquals(_dataContextOptions, previousOptions._dataContextOptions))
+			{
+				if (_dataContextOptions is IReapplicable<DataConnection> a)
+				{
+					Add(a.Apply(dataConnection, previousOptions._dataContextOptions));
+				}
+				else if (previousOptions._dataContextOptions is not null)
+				{
+					Add(((IReapplicable<DataConnection>)DataContextOptions.Default).Apply(dataConnection, previousOptions._dataContextOptions));
+				}
+			}
+
+			Add(base.Reapply(dataConnection, previousOptions));
+
+			return actions;
+
+			void Add(Action? action)
+			{
+				actions += action;
+			}
 		}
 
 		public void Apply(DataContext dataContext)
@@ -131,6 +163,35 @@ namespace LinqToDB
 			base.Apply(dataContext);
 		}
 
+		public Action? Reapply(DataContext dataContext, DataOptions previousOptions)
+		{
+			Action? actions = null;
+
+			if (!ReferenceEquals(ConnectionOptions, previousOptions.ConnectionOptions))
+				Add(((IReapplicable<DataContext>)ConnectionOptions). Apply(dataContext, previousOptions.ConnectionOptions));
+
+			if (!ReferenceEquals(_dataContextOptions, previousOptions._dataContextOptions))
+			{
+				if (_dataContextOptions is IReapplicable<DataContext> a)
+				{
+					Add(a.Apply(dataContext, previousOptions._dataContextOptions));
+				}
+				else if (previousOptions._dataContextOptions is not null)
+				{
+					Add(((IReapplicable<DataContext>)DataContextOptions.Default).Apply(dataContext, previousOptions._dataContextOptions));
+				}
+			}
+
+			Add(base.Reapply(dataContext, previousOptions));
+
+			return actions;
+
+			void Add(Action? action)
+			{
+				actions += action;
+			}
+		}
+
 		public void Apply(RemoteDataContextBase dataContext)
 		{
 			((IApplicable<RemoteDataContextBase>)ConnectionOptions).Apply(dataContext);
@@ -139,6 +200,35 @@ namespace LinqToDB
 				a.Apply(dataContext);
 
 			base.Apply(dataContext);
+		}
+
+		public Action? Reapply(RemoteDataContextBase dataContext, DataOptions previousOptions)
+		{
+			Action? actions = null;
+
+			if (!ReferenceEquals(ConnectionOptions, previousOptions.ConnectionOptions))
+				Add(((IReapplicable<RemoteDataContextBase>)ConnectionOptions). Apply(dataContext, previousOptions.ConnectionOptions));
+
+			if (!ReferenceEquals(_dataContextOptions, previousOptions._dataContextOptions))
+			{
+				if (_dataContextOptions is IReapplicable<RemoteDataContextBase> a)
+				{
+					Add(a.Apply(dataContext, previousOptions._dataContextOptions));
+				}
+				else if (previousOptions._dataContextOptions is not null)
+				{
+					Add(((IReapplicable<RemoteDataContextBase>)DataContextOptions.Default).Apply(dataContext, previousOptions._dataContextOptions));
+				}
+			}
+
+			Add(base.Reapply(dataContext, previousOptions));
+
+			return actions;
+
+			void Add(Action? action)
+			{
+				actions += action;
+			}
 		}
 
 		int? _configurationID;

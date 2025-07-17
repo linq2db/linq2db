@@ -4,9 +4,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Common;
 using LinqToDB.Expressions;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Mapping
@@ -366,7 +366,7 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Sets whether a column can contain <c>NULL</c> values.
+		/// Sets the column as <c>NOT NULL</c>, disallowing any <c>NULL</c> values.
 		/// </summary>
 		/// <returns>Returns current column mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TProperty> IsNotNull()

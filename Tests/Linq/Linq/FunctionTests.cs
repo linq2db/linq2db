@@ -4,9 +4,9 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -287,7 +287,7 @@ namespace Tests.Linq
 					from p in db.Parent where arr.Contains(p.ParentID) select p);
 		}
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 		[Test]
 		public void ContainsReadOnlySet([DataSources] string context)
 		{
@@ -639,6 +639,51 @@ namespace Tests.Linq
 				 Name = tag.Name!.Substring(tag.Name.IndexOf(".") + 1, tag.Name.IndexOf(".", 5) - tag.Name.IndexOf(".") - 1)
 			 }).ToList();
 		}
+
+		sealed class DefaultFunctionNullabiityTable
+		{
+			public int Id     { get; set; }
+			public int? Value { get; set; }
+
+			public static readonly DefaultFunctionNullabiityTable[] Data =
+			[
+				new DefaultFunctionNullabiityTable() { Id = 1, Value = null },
+				new DefaultFunctionNullabiityTable() { Id = 2, Value = 0 },
+				new DefaultFunctionNullabiityTable() { Id = 3, Value = 1 },
+			];
+		}
+
+		[Test]
+		public void TestDefaultFunctionNullability([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(DefaultFunctionNullabiityTable.Data);
+
+			var ids1 = tb.Where(r => Coalesce(r.Value, 0) != 0).Select(r => r.Id).ToArray();
+			var ids2 = tb.Where(r => Coalesce(r.Value, 0) != 1).Select(r => r.Id).ToArray();
+			var ids3 = tb.Where(r => Coalesce(r.Value, 0) == 0).Select(r => r.Id).ToArray();
+			var ids4 = tb.Where(r => Coalesce(r.Value, 0) == 1).Select(r => r.Id).ToArray();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(ids1, Has.Length.EqualTo(1));
+				Assert.That(ids1, Does.Contain(3));
+
+				Assert.That(ids2, Has.Length.EqualTo(2));
+				Assert.That(ids2, Does.Contain(1));
+				Assert.That(ids2, Does.Contain(2));
+
+				Assert.That(ids3, Has.Length.EqualTo(2));
+				Assert.That(ids3, Does.Contain(1));
+				Assert.That(ids3, Does.Contain(2));
+
+				Assert.That(ids4, Has.Length.EqualTo(1));
+				Assert.That(ids4, Does.Contain(3));
+			}
+		}
+
+		[Sql.Function("COALESCE")]
+		static int Coalesce(int? value, int defaultValue) => throw new ServerSideOnlyException(nameof(Coalesce));
 	}
 
 	public static class SqlLite

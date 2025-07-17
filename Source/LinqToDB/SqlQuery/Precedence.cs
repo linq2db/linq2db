@@ -1,5 +1,6 @@
 ﻿namespace LinqToDB.SqlQuery
 {
+	// TODO: precedence requires total refactoring, as it db-specific
 	public sealed class Precedence
 	{
 		public const int Primary            = 100; // (x) x.y f(x) a[x] x++ x-- new typeof sizeof checked unchecked
@@ -7,7 +8,6 @@
 		/// <summary>
 		/// This precedence is only for SQLite's || concatenate operator: https://www.sqlite.org/lang_expr.html
 		/// </summary>
-		public const int Concatenate        =  85; // SQLite's ||
 		public const int Multiplicative     =  80; // * / %
 		public const int Subtraction        =  70; // -
 		public const int Additive           =  60; // +
@@ -16,6 +16,7 @@
 		public const int LogicalNegation    =  30; // NOT
 		public const int LogicalConjunction =  20; // AND
 		public const int LogicalDisjunction =  10; // OR
+		public const int Concatenate        =   5; // SQLite's ||
 		public const int Unknown            =   0;
 	}
 }

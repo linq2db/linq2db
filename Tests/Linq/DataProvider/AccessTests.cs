@@ -31,7 +31,7 @@ namespace Tests.DataProvider
 
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<string>($"SELECT {param}", new { p = 1 }), Is.EqualTo("1"));
 					Assert.That(conn.Execute<string>($"SELECT {param}", new { p = "1" }), Is.EqualTo("1"));
@@ -40,7 +40,7 @@ namespace Tests.DataProvider
 					// doesn't really test ODBC parameters
 					Assert.That(conn.Execute<int>($"SELECT {param1} + {param2}", new { p1 = 2, p2 = 3 }), Is.EqualTo(5));
 					Assert.That(conn.Execute<int>($"SELECT {param2} + {param1}", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
-				});
+				}
 			}
 		}
 
@@ -62,9 +62,9 @@ namespace Tests.DataProvider
 			using (var conn = GetDataConnection(context))
 			{
 				var isODBC = conn.DataProvider.Name.IsAnyOf(TestProvName.AllAccessOdbc);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(TestType<bool>(conn, "bitDataType", DataType.Boolean, skipDefaultNull: isODBC), Is.EqualTo(true));
+					Assert.That(TestType<bool>(conn, "bitDataType", DataType.Boolean, skipDefaultNull: isODBC), Is.True);
 					Assert.That(TestType<short?>(conn, "smallintDataType", DataType.Int16, skipDefaultNull: isODBC), Is.EqualTo(25555));
 					Assert.That(TestType<decimal?>(conn, "decimalDataType", DataType.Decimal, skipDefaultNull: isODBC), Is.EqualTo(2222222m));
 					Assert.That(TestType<int?>(conn, "intDataType", DataType.Int32, skipDefaultNull: isODBC), Is.EqualTo(7777777));
@@ -88,7 +88,7 @@ namespace Tests.DataProvider
 					Assert.That(TestType<byte[]>(conn, "oleobjectDataType", DataType.Variant, skipDefined: true, skipDefaultNull: isODBC), Is.EqualTo(new byte[] { 5, 6, 7, 8 }));
 
 					Assert.That(TestType<Guid?>(conn, "uniqueidentifierDataType", DataType.Guid, skipDefaultNull: isODBC), Is.EqualTo(new Guid("{6F9619FF-8B86-D011-B42D-00C04FC964FF}")));
-				});
+				}
 			}
 		}
 
@@ -118,13 +118,12 @@ namespace Tests.DataProvider
 				}
 
 			var querySql = isODBCNull ? $"SELECT CVar({param})" : $"SELECT {param}";
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(conn.Execute<T>(querySql, new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
 				Assert.That(conn.Execute<T>(querySql, new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
 				Assert.That(conn.Execute<T>(querySql, new { p = expectedValue }), Is.EqualTo(expectedValue));
-			});
+			}
 		}
 
 		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType, bool isODBCNull)
@@ -207,8 +206,7 @@ namespace Tests.DataProvider
 			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<DateTime>("SELECT cdate('2012-12-12 12:12:12')"), Is.EqualTo(dateTime));
 					Assert.That(conn.Execute<DateTime?>("SELECT CDate('2012-12-12 12:12:12')"), Is.EqualTo(dateTime));
@@ -216,7 +214,7 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<DateTime>($"SELECT {param}", DataParameter.DateTime("p", dateTime)), Is.EqualTo(dateTime));
 					Assert.That(conn.Execute<DateTime?>($"SELECT {param}", new DataParameter("p", dateTime)), Is.EqualTo(dateTime));
 					Assert.That(conn.Execute<DateTime?>($"SELECT {param}", new DataParameter("p", dateTime, DataType.DateTime)), Is.EqualTo(dateTime));
-				});
+				}
 			}
 		}
 
@@ -227,7 +225,7 @@ namespace Tests.DataProvider
 
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<char>("SELECT CStr('1')"), Is.EqualTo('1'));
 					Assert.That(conn.Execute<char?>("SELECT CStr('1')"), Is.EqualTo('1'));
@@ -247,7 +245,7 @@ namespace Tests.DataProvider
 
 					Assert.That(conn.Execute<char>($"SELECT {param}", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
 					Assert.That(conn.Execute<char?>($"SELECT {param}", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
-				});
+				}
 			}
 		}
 
@@ -260,7 +258,7 @@ namespace Tests.DataProvider
 
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<string>("SELECT CStr('12345')"), Is.EqualTo("12345"));
 					Assert.That(conn.Execute<string>("SELECT NULL"), Is.Null);
@@ -272,12 +270,12 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<string>($"SELECT {param}", DataParameter.NVarChar("p", "123")), Is.EqualTo("123"));
 					Assert.That(conn.Execute<string>($"SELECT {param}", DataParameter.NText("p", "123")), Is.EqualTo("123"));
 					Assert.That(conn.Execute<string>($"SELECT {param}", DataParameter.Create("p", "123")), Is.EqualTo("123"));
-				});
+				}
 
 				if (isODBC) // ODBC provider doesn't return type for NULL value
-					Assert.That(conn.Execute<string>($"SELECT CVar({param})", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<string>($"SELECT CVar({param})", DataParameter.Create("p", (string?)null)), Is.Null);
 				else
-					Assert.That(conn.Execute<string>($"SELECT {param}", DataParameter.Create("p", (string?)null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<string>($"SELECT {param}", DataParameter.Create("p", (string?)null)), Is.Null);
 
 				Assert.That(conn.Execute<string>($"SELECT {param}", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
@@ -292,26 +290,25 @@ namespace Tests.DataProvider
 			var arr1 = new byte[] { 48, 57 };
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<byte[]>($"SELECT {param}", DataParameter.Binary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>($"SELECT {param}", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>($"SELECT {param}", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
-				});
+				}
 
 				if (isODBC) // ODBC provider doesn't return type for NULL value
-					Assert.That(conn.Execute<byte[]>($"SELECT CVar({param})", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
+					Assert.That(conn.Execute<byte[]>($"SELECT CVar({param})", DataParameter.VarBinary("p", null)), Is.Null);
 				else
-					Assert.That(conn.Execute<byte[]>($"SELECT {param}", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
-
-				Assert.Multiple(() =>
+					Assert.That(conn.Execute<byte[]>($"SELECT {param}", DataParameter.VarBinary("p", null)), Is.Null);
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<byte[]>($"SELECT {param}", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 					Assert.That(conn.Execute<byte[]>($"SELECT {param}", DataParameter.Image("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 					Assert.That(conn.Execute<byte[]>($"SELECT {param}", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>($"SELECT {param}", DataParameter.Create("p", new Binary(arr1))), Is.EqualTo(arr1));
 					Assert.That(conn.Execute<byte[]>($"SELECT {param}", new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
-				});
+				}
 			}
 		}
 
@@ -323,12 +320,11 @@ namespace Tests.DataProvider
 			using (var conn = GetDataConnection(context))
 			{
 				var guid = TestData.Guid1;
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<Guid>($"SELECT {param}", DataParameter.Create("p", guid)), Is.EqualTo(guid));
 					Assert.That(conn.Execute<Guid>($"SELECT {param}", new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
-				});
+				}
 			}
 		}
 
@@ -340,13 +336,13 @@ namespace Tests.DataProvider
 
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<object>("SELECT CVar(1)"), Is.EqualTo("1"));
 					Assert.That(conn.Execute<int>("SELECT CVar(1)"), Is.EqualTo(1));
 					Assert.That(conn.Execute<int?>("SELECT CVar(1)"), Is.EqualTo(1));
 					Assert.That(conn.Execute<string>("SELECT CVar(1)"), Is.EqualTo("1"));
-				});
+				}
 
 				// ODBC doesn't have variant type and maps it to Binary
 				if (!isODBC)
@@ -361,24 +357,23 @@ namespace Tests.DataProvider
 
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<string>("SELECT '<xml/>'"), Is.EqualTo("<xml/>"));
 					Assert.That(conn.Execute<XDocument>("SELECT '<xml/>'").ToString(), Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XmlDocument>("SELECT '<xml/>'").InnerXml, Is.EqualTo("<xml />"));
-				});
+				}
 
 				var xdoc = XDocument.Parse("<xml/>");
 				var xml = Convert<string, XmlDocument>.Lambda("<xml/>");
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<string>($"SELECT {param}", DataParameter.Xml("p", "<xml/>")), Is.EqualTo("<xml/>"));
 					Assert.That(conn.Execute<XDocument>($"SELECT {param}", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XmlDocument>($"SELECT {param}", DataParameter.Xml("p", xml)).InnerXml, Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XDocument>($"SELECT {param}", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
 					Assert.That(conn.Execute<XDocument>($"SELECT {param}", new DataParameter("p", xml)).ToString(), Is.EqualTo("<xml />"));
-				});
+				}
 			}
 		}
 
@@ -393,13 +388,13 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Execute<TestEnum>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 					Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 					Assert.That(conn.Execute<TestEnum>("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
 					Assert.That(conn.Execute<TestEnum?>("SELECT 'B'"), Is.EqualTo(TestEnum.BB));
-				});
+				}
 			}
 		}
 
@@ -410,14 +405,14 @@ namespace Tests.DataProvider
 
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(conn.Query<string>($"SELECT {param}", new { p = TestEnum.AA }).First(), Is.EqualTo("A"));
 					Assert.That(conn.Query<string>($"SELECT {param}", new { p = (TestEnum?)TestEnum.BB }).First(), Is.EqualTo("B"));
 					Assert.That(conn.Query<string>($"SELECT {param}", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }).First(), Is.EqualTo("A"));
 					Assert.That(conn.Query<string>($"SELECT {param}", new { p = ConvertTo<string>.From(TestEnum.AA) }).First(), Is.EqualTo("A"));
 					Assert.That(conn.Query<string>($"SELECT {param}", new { p = conn.MappingSchema.GetConverter<TestEnum?, string>()!(TestEnum.AA) }).First(), Is.EqualTo("A"));
-				});
+				}
 			}
 		}
 
@@ -563,7 +558,7 @@ namespace Tests.DataProvider
 				var res = table.OrderBy(_ => _.ID).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].ID, Is.EqualTo(1));
 					Assert.That(res[0].Date, Is.EqualTo(new DateTime(1899, 12, 29)));
@@ -573,7 +568,7 @@ namespace Tests.DataProvider
 					Assert.That(res[2].Date, Is.EqualTo(new DateTime(1899, 12, 31)));
 					Assert.That(res[3].ID, Is.EqualTo(4));
 					Assert.That(res[3].Date, Is.EqualTo(new DateTime(1900, 1, 1)));
-				});
+				}
 			}
 		}
 

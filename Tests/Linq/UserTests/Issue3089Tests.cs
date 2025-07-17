@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -40,7 +40,8 @@ namespace Tests.UserTests
 					.Union(from x in table
 						select new TableTimeResult {Time = null});
 
-				FluentActions.Invoking(() => query.ToArray()).Should().NotThrow();
+				var act = () => query.ToArray();
+				act.ShouldNotThrow();
 			}
 		}
 
@@ -59,7 +60,8 @@ namespace Tests.UserTests
 					.Union(from x in table
 					select new TableTimeResult {Time = null});
 
-				FluentActions.Invoking(() => query.ToArray()).Should().NotThrow();
+				var act = () => query.ToArray();
+				act.ShouldNotThrow();
 			}
 		}
 
@@ -79,7 +81,8 @@ namespace Tests.UserTests
 					.Union(from x in table
 						select new TableTimeResult {Time = null});
 
-				FluentActions.Invoking(() => query.ToArray()).Should().NotThrow();
+				var act = () => query.ToArray();
+				act.ShouldNotThrow();
 			}
 		}
 
@@ -99,7 +102,8 @@ namespace Tests.UserTests
 					.Union(from x in table
 						select new TableTimeResult {Time = x.Time});
 
-				FluentActions.Invoking(() => query.ToArray()).Should().NotThrow();
+				var act = () => query.ToArray();
+				act.ShouldNotThrow();
 			}
 		}
 

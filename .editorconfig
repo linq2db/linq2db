@@ -139,7 +139,7 @@ dotnet_code_quality.enable_platform_analyzer_on_pre_net5_target = true
 ########################
 # public api analyzers #
 ########################
-# https://github.com/dotnet/roslyn-analyzers/blob/main/src/PublicApiAnalyzers/PublicApiAnalyzers.Help.md
+# https://github.com/dotnet/roslyn/blob/main/src/RoslynAnalyzers/PublicApiAnalyzers/Microsoft.CodeAnalysis.PublicApiAnalyzers.md
 dotnet_public_api_analyzer.require_api_files = true
 dotnet_diagnostic.RS0016.severity = error # Add public types and members to the declared API
 dotnet_diagnostic.RS0017.severity = error # Remove deleted types and members from the declared API
@@ -153,12 +153,12 @@ dotnet_diagnostic.RS0037.severity = error # Enable tracking of nullability of re
 dotnet_diagnostic.RS0041.severity = none # Public members should not use oblivious types
 dotnet_diagnostic.RS0048.severity = error # Missing shipped or unshipped public API file
 dotnet_diagnostic.RS0050.severity = error # API is marked as removed but it exists in source code
-dotnet_diagnostic.RS0051.severity = error # Add internal types and members to the declared API
+dotnet_diagnostic.RS0051.severity = none # Add internal types and members to the declared API
 dotnet_diagnostic.RS0052.severity = error # Remove deleted types and members from the declared internal API
 dotnet_diagnostic.RS0053.severity = error # The contents of the internal API files are invalid
 dotnet_diagnostic.RS0054.severity = error # Do not duplicate symbols in internal API files
 dotnet_diagnostic.RS0055.severity = error # Annotate nullability of internal types and members in the declared API
-dotnet_diagnostic.RS0056.severity = error # Enable tracking of nullability of reference types in the declared API
+dotnet_diagnostic.RS0056.severity = none # (internal API) Enable tracking of nullability of reference types in the declared API
 dotnet_diagnostic.RS0057.severity = error # Internal members should not use oblivious types
 dotnet_diagnostic.RS0058.severity = error # Missing shipped or unshipped internal API file
 dotnet_diagnostic.RS0059.severity = error # Do not add multiple public overloads with optional parameters
@@ -745,6 +745,16 @@ dotnet_diagnostic.MA0163.severity = none
 dotnet_diagnostic.MA0164.severity = none
 # MA0165: Make interpolated string
 dotnet_diagnostic.MA0165.severity = none
+# MA0166: Forward the TimeProvider to methods that take one
+dotnet_diagnostic.MA0166.severity = none
+# MA0167: Use an overload with a TimeProvider argument
+dotnet_diagnostic.MA0167.severity = none
+# MA0168: Use readonly struct for in or ref readonly parameter
+dotnet_diagnostic.MA0168.severity = error
+# MA0169: Use Equals method instead of operator
+dotnet_diagnostic.MA0169.severity = none
+# MA0170: Type cannot be used as an attribute argument
+dotnet_diagnostic.MA0170.severity = none
 ################################################################################################
 # LindhartAnalyserMissingAwaitWarningVariable: Possible unwanted Task returned from method.
 dotnet_diagnostic.LindhartAnalyserMissingAwaitWarningVariable.severity = error

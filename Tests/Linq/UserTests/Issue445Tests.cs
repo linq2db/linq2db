@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 
 using NUnit.Framework;
@@ -122,6 +123,7 @@ namespace Tests.UserTests
 		//}
 
 		[Test]
+		[Explicit("Too slow")]
 		public void ConnectionPoolException1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (new DisableBaseline("Output depends on pool size"))

@@ -2,9 +2,8 @@
 using System.Data.Common;
 using System.Linq.Expressions;
 
-using LinqToDB.DataProvider;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Data
 {
@@ -12,6 +11,8 @@ namespace LinqToDB.Data
 	{
 		protected virtual SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 		{
+			CheckAndThrowOnDisposed();
+
 			return statement;
 		}
 
@@ -25,6 +26,8 @@ namespace LinqToDB.Data
 
 		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
+			CheckAndThrowOnDisposed();
+
 			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 
@@ -35,14 +38,9 @@ namespace LinqToDB.Data
 
 		string IDataContext.ContextName => DataProvider.Name;
 
-		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema, Options);
+		Func<ISqlBuilder> IDataContext.CreateSqlBuilder => () => DataProvider.CreateSqlBuilder(MappingSchema, Options);
 
-		static Func<DataOptions,ISqlOptimizer> GetGetSqlOptimizer(IDataProvider dp)
-		{
-			return dp.GetSqlOptimizer;
-		}
-
-		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer => GetGetSqlOptimizer(DataProvider);
+		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer => DataProvider.GetSqlOptimizer;
 
 		#endregion
 	}

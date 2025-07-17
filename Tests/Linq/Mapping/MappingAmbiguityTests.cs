@@ -3,8 +3,6 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using Tests.xUpdate;
-
 namespace Tests.Mapping
 {
 	public class MappingAmbiguityTests : TestBase
@@ -60,7 +58,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDefaultInsertUpdateMerge([MergeTests.MergeDataContextSource(true, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
+		public void TestDefaultInsertUpdateMerge([MergeDataContextSource(true, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<TestTable>())
@@ -76,7 +74,7 @@ namespace Tests.Mapping
 				if (context.IsAnyOf(TestProvName.AllOracleNative))
 					Assert.That(res, Is.EqualTo(-1));
 				else
-					Assert.That(res, Is.EqualTo(0));
+					Assert.That(res, Is.Zero);
 			}
 		}
 	}

@@ -1,21 +1,18 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Async;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
 namespace LinqToDB
@@ -32,10 +29,10 @@ namespace LinqToDB
 		where T : notnull
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		readonly ITable<T>         _table;
+		readonly ITable<T> _table;
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		readonly EntityDescriptor? _tableDescriptor;
+		readonly TempTableDescriptor? _tableDescriptor;
 
 		/// <summary>
 		/// Gets total number of records, inserted into table using BulkCopy.
@@ -101,20 +98,20 @@ namespace LinqToDB
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		internal TempTable(
-			IDataContext      db,
-			EntityDescriptor? tableDescriptor,
-			IEnumerable<T>    items,
-			BulkCopyOptions?  options,
-			string?           tableName,
-			string?           databaseName,
-			string?           schemaName,
-			string?           serverName,
-			TableOptions      tableOptions)
+			IDataContext         db,
+			TempTableDescriptor? tableDescriptor,
+			IEnumerable<T>       items,
+			BulkCopyOptions?     options,
+			string?              tableName,
+			string?              databaseName,
+			string?              schemaName,
+			string?              serverName,
+			TableOptions         tableOptions)
 		{
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
-			_table           = db.CreateTable<T>(tableDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
+			_table           = db.CreateTable<T>(tableDescriptor?.EntityDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
 			_tableDescriptor = tableDescriptor;
 
 			try
@@ -171,13 +168,13 @@ namespace LinqToDB
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		public TempTable(IDataContext db,
-			IQueryable<T>             items,
-			string?                   tableName    = default,
-			string?                   databaseName = default,
-			string?                   schemaName   = default,
-			Action<ITable<T>>?        action       = default,
-			string?                   serverName   = default,
-			TableOptions              tableOptions = default)
+			IQueryable<T>      items,
+			string?            tableName    = default,
+			string?            databaseName = default,
+			string?            schemaName   = default,
+			Action<ITable<T>>? action       = default,
+			string?            serverName   = default,
+			TableOptions       tableOptions = default)
 			: this(db, null, items, tableName, databaseName, schemaName, action, serverName, tableOptions)
 		{
 		}
@@ -196,20 +193,20 @@ namespace LinqToDB
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		internal TempTable(
-			IDataContext       db,
-			EntityDescriptor?  tableDescriptor,
-			IQueryable<T>      items,
-			string?            tableName,
-			string?            databaseName,
-			string?            schemaName,
-			Action<ITable<T>>? action,
-			string?            serverName,
-			TableOptions       tableOptions)
+			IDataContext         db,
+			TempTableDescriptor? tableDescriptor,
+			IQueryable<T>        items,
+			string?              tableName,
+			string?              databaseName,
+			string?              schemaName,
+			Action<ITable<T>>?   action,
+			string?              serverName,
+			TableOptions         tableOptions)
 		{
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
-			_table           = db.CreateTable<T>(tableDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
+			_table           = db.CreateTable<T>(tableDescriptor?.EntityDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
 			_tableDescriptor = tableDescriptor;
 
 			try
@@ -256,11 +253,11 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Configures a temporary table that will be dropped when this instance is disposed
+		/// Configures a temporary table that will be dropped when this instance is disposed.
 		/// </summary>
 		/// <param name="table">Table instance.</param>
 		/// <param name="tableDescriptor">Temporary table entity descriptor.</param>
-		protected TempTable(ITable<T> table, EntityDescriptor? tableDescriptor)
+		TempTable(ITable<T> table, TempTableDescriptor? tableDescriptor)
 		{
 			_table           = table ?? throw new ArgumentNullException(nameof(table));
 			_tableDescriptor = tableDescriptor;
@@ -303,14 +300,14 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		internal static async Task<TempTable<T>> CreateAsync(
-			IDataContext      db,
-			EntityDescriptor? tableDescriptor,
-			string?           tableName,
-			string?           databaseName,
-			string?           schemaName,
-			string?           serverName,
-			TableOptions      tableOptions,
-			CancellationToken cancellationToken)
+			IDataContext         db,
+			TempTableDescriptor? tableDescriptor,
+			string?              tableName,
+			string?              databaseName,
+			string?              schemaName,
+			string?              serverName,
+			TableOptions         tableOptions,
+			CancellationToken    cancellationToken)
 		{
 			if (db == null) throw new ArgumentNullException(nameof(db));
 
@@ -388,16 +385,16 @@ namespace LinqToDB
 		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		internal static async Task<TempTable<T>> CreateAsync(
-			IDataContext      db,
-			EntityDescriptor? tableDescriptor,
-			string?           tableName,
-			IEnumerable<T>    items,
-			BulkCopyOptions?  options,
-			string?           databaseName,
-			string?           schemaName,
-			string?           serverName,
-			TableOptions      tableOptions,
-			CancellationToken cancellationToken)
+			IDataContext         db,
+			TempTableDescriptor? tableDescriptor,
+			string?              tableName,
+			IEnumerable<T>       items,
+			BulkCopyOptions?     options,
+			string?              databaseName,
+			string?              schemaName,
+			string?              serverName,
+			TableOptions         tableOptions,
+			CancellationToken    cancellationToken)
 		{
 			var table = await CreateAsync(db, tableDescriptor, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken)
 				.ConfigureAwait(false);
@@ -468,7 +465,7 @@ namespace LinqToDB
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		internal static async Task<TempTable<T>> CreateAsync(
 			IDataContext          db,
-			EntityDescriptor?     tableDescriptor,
+			TempTableDescriptor?  tableDescriptor,
 			IQueryable<T>         items,
 			string?               tableName,
 			string?               databaseName,
@@ -713,751 +710,32 @@ namespace LinqToDB
 
 		public virtual void Dispose()
 		{
-			_table.DropTable(throwExceptionIfNotExists: false);
+			try
+			{
+				_table.DropTable(throwExceptionIfNotExists: false);
+			}
+			finally
+			{
+				// Restore MappingSchema if it was changed by FluentMapping.
+				//
+				if (_tableDescriptor != null)
+					_table.DataContext.SetMappingSchema(_tableDescriptor.PrevMappingSchema);
+			}
 		}
 
 		public virtual ValueTask DisposeAsync()
 		{
-			return new ValueTask(_table.DropTableAsync(throwExceptionIfNotExists: false));
-		}
-	}
-
-	public static partial class DataExtensions
-	{
-		#region CreateTempTable
-
-		/// <summary>
-		/// Creates new temporary table.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static TempTable<T> CreateTempTable<T>(
-			this         IDataContext db,
-			string?      tableName    = default,
-			string?      databaseName = default,
-			string?      schemaName   = default,
-			string?      serverName   = default,
-			TableOptions tableOptions = TableOptions.IsTemporary)
-			where T : class
-		{
-			return new TempTable<T>(db, tableName, databaseName, schemaName, serverName, tableOptions);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using BulkCopy.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="items">Initial records to insert into created table.</param>
-		/// <param name="options">Optional BulkCopy options.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext db,
-			IEnumerable<T>    items,
-			BulkCopyOptions?  options      = default,
-			string?           tableName    = default,
-			string?           databaseName = default,
-			string?           schemaName   = default,
-			string?           serverName   = default,
-			TableOptions      tableOptions = TableOptions.IsTemporary)
-			where T : class
-		{
-			return new TempTable<T>(db, items, options, tableName, databaseName, schemaName, serverName, tableOptions);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using BulkCopy.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="items">Initial records to insert into created table.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// Note that context mapping schema must be writable to allow it.
-		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
-		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
-		/// Latter option is not recommended as it will affect performance significantly.</param>
-		/// <param name="options">Optional BulkCopy options.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext               db,
-			IEnumerable<T>                  items,
-			Action<EntityMappingBuilder<T>> setTable,
-			BulkCopyOptions?                options      = default,
-			string?                         tableName    = default,
-			string?                         databaseName = default,
-			string?                         schemaName   = default,
-			string?                         serverName   = default,
-			TableOptions                    tableOptions = TableOptions.IsTemporary)
-			where T : class
-		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
-
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
-
-			return new TempTable<T>(db, tempTableDescriptor, items, options, tableName, databaseName, schemaName, serverName, tableOptions);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using BulkCopy.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="items">Initial records to insert into created table.</param>
-		/// <param name="options">Optional BulkCopy options.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext db,
-			string            tableName,
-			IEnumerable<T>    items,
-			BulkCopyOptions?  options      = default,
-			string?           databaseName = default,
-			string?           schemaName   = default,
-			string?           serverName   = default,
-			TableOptions      tableOptions = TableOptions.IsTemporary)
-			where T : class
-		{
-			return new TempTable<T>(db, tableName, items, options, databaseName, schemaName, serverName, tableOptions);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using BulkCopy.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="items">Initial records to insert into created table.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// Note that context mapping schema must be writable to allow it.
-		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
-		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
-		/// Latter option is not recommended as it will affect performance significantly.</param>
-		/// <param name="options">Optional BulkCopy options.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext               db,
-			string                          tableName,
-			IEnumerable<T>                  items,
-			Action<EntityMappingBuilder<T>> setTable,
-			BulkCopyOptions?                options      = default,
-			string?                         databaseName = default,
-			string?                         schemaName   = default,
-			string?                         serverName   = default,
-			TableOptions                    tableOptions = TableOptions.IsTemporary)
-			where T : class
-		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
-
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
-
-			return new TempTable<T>(db, tempTableDescriptor, items, options, tableName, databaseName, schemaName, serverName, tableOptions);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using data from provided query.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext  db,
-			IQueryable<T>      items,
-			string?            tableName    = default,
-			string?            databaseName = default,
-			string?            schemaName   = default,
-			Action<ITable<T>>? action       = default,
-			string?            serverName   = default,
-			TableOptions       tableOptions = TableOptions.IsTemporary)
-			where T : class
-		{
-			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using data from provided query. Table mapping could be changed
-		/// using fluent mapper.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// Note that context mapping schema must be writable to allow it.
-		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
-		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
-		/// Latter option is not recommended as it will affect performance significantly.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext               db,
-			IQueryable<T>                   items,
-			Action<EntityMappingBuilder<T>> setTable,
-			string?                         tableName    = default,
-			string?                         databaseName = default,
-			string?                         schemaName   = default,
-			Action<ITable<T>>?              action       = default,
-			string?                         serverName   = default,
-			TableOptions                    tableOptions = TableOptions.IsTemporary)
-			where T : class
-		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
-
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
-
-			return new TempTable<T>(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using data from provided query.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext  db,
-			string?            tableName,
-			IQueryable<T>      items,
-			string?            databaseName = default,
-			string?            schemaName   = default,
-			Action<ITable<T>>? action       = default,
-			string?            serverName   = default,
-			TableOptions       tableOptions = TableOptions.IsTemporary)
-			where T : class
-		{
-			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action, serverName, tableOptions);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using data from provided query. Table mapping could be changed
-		/// using fluent mapper.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// Note that context mapping schema must be writable to allow it.
-		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
-		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
-		/// Latter option is not recommended as it will affect performance significantly.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext               db,
-			string?                         tableName,
-			IQueryable<T>                   items,
-			Action<EntityMappingBuilder<T>> setTable,
-			string?                         databaseName = default,
-			string?                         schemaName   = default,
-			Action<ITable<T>>?              action       = default,
-			string?                         serverName   = default,
-			TableOptions                    tableOptions = TableOptions.IsTemporary)
-			where T : class
-		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
-
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
-
-			return new TempTable<T>(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
-		}
-
-		/// <summary>
-		/// Creates new temporary table.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext db,
-			string?           tableName         = default,
-			string?           databaseName      = default,
-			string?           schemaName        = default,
-			string?           serverName        = default,
-			TableOptions      tableOptions      = TableOptions.IsTemporary,
-			CancellationToken cancellationToken = default)
-			where T : class
-		{
-			return TempTable<T>.CreateAsync(db, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using BulkCopy.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="items">Initial records to insert into created table.</param>
-		/// <param name="options">Optional BulkCopy options.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext db,
-			IEnumerable<T>    items,
-			BulkCopyOptions?  options           = default,
-			string?           tableName         = default,
-			string?           databaseName      = default,
-			string?           schemaName        = default,
-			string?           serverName        = default,
-			TableOptions      tableOptions      = TableOptions.IsTemporary,
-			CancellationToken cancellationToken = default)
-			where T : class
-		{
-			return TempTable<T>.CreateAsync(db, items, options, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using BulkCopy.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="items">Initial records to insert into created table.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// Note that context mapping schema must be writable to allow it.
-		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
-		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
-		/// Latter option is not recommended as it will affect performance significantly.</param>
-		/// <param name="options">Optional BulkCopy options.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext               db,
-			IEnumerable<T>                  items,
-			Action<EntityMappingBuilder<T>> setTable,
-			BulkCopyOptions?                options           = default,
-			string?                         tableName         = default,
-			string?                         databaseName      = default,
-			string?                         schemaName        = default,
-			string?                         serverName        = default,
-			TableOptions                    tableOptions      = TableOptions.IsTemporary,
-			CancellationToken               cancellationToken = default)
-			where T : class
-		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
-
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
-
-			return TempTable<T>.CreateAsync(db, tempTableDescriptor, tableName, items, options, databaseName, schemaName, serverName, tableOptions, cancellationToken);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using BulkCopy.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="items">Initial records to insert into created table.</param>
-		/// <param name="options">Optional BulkCopy options.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext db,
-			string            tableName,
-			IEnumerable<T>    items,
-			BulkCopyOptions?  options           = default,
-			string?           databaseName      = default,
-			string?           schemaName        = default,
-			string?           serverName        = default,
-			TableOptions      tableOptions      = TableOptions.IsTemporary,
-			CancellationToken cancellationToken = default)
-			where T : class
-		{
-			return TempTable<T>.CreateAsync(db, tableName, items, options, databaseName, schemaName, serverName, tableOptions, cancellationToken);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using BulkCopy.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="items">Initial records to insert into created table.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// Note that context mapping schema must be writable to allow it.
-		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
-		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
-		/// Latter option is not recommended as it will affect performance significantly.</param>
-		/// <param name="options">Optional BulkCopy options.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext               db,
-			string                          tableName,
-			IEnumerable<T>                  items,
-			Action<EntityMappingBuilder<T>> setTable,
-			BulkCopyOptions?                options           = default,
-			string?                         databaseName      = default,
-			string?                         schemaName        = default,
-			string?                         serverName        = default,
-			TableOptions                    tableOptions      = TableOptions.IsTemporary,
-			CancellationToken               cancellationToken = default)
-			where T : class
-		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
-
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
-
-			return TempTable<T>.CreateAsync(db, tempTableDescriptor, tableName, items, options, databaseName, schemaName, serverName, tableOptions, cancellationToken);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using data from provided query.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext     db,
-			IQueryable<T>         items,
-			string?               tableName         = default,
-			string?               databaseName      = default,
-			string?               schemaName        = default,
-			Func<ITable<T>,Task>? action            = default,
-			string?               serverName        = default,
-			TableOptions          tableOptions      = TableOptions.IsTemporary,
-			CancellationToken     cancellationToken = default)
-			where T : class
-		{
-			return TempTable<T>.CreateAsync(db, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using data from provided query. Table mapping could be changed
-		/// using fluent mapper.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// Note that context mapping schema must be writable to allow it.
-		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
-		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
-		/// Latter option is not recommended as it will affect performance significantly.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext               db,
-			IQueryable<T>                   items,
-			Action<EntityMappingBuilder<T>> setTable,
-			string?                         tableName         = default,
-			string?                         databaseName      = default,
-			string?                         schemaName        = default,
-			Func<ITable<T>,Task>?           action            = default,
-			string?                         serverName        = default,
-			TableOptions                    tableOptions      = TableOptions.IsTemporary,
-			CancellationToken               cancellationToken = default)
-			where T : class
-		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
-
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
-
-			return TempTable<T>.CreateAsync(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using data from provided query.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext     db,
-			string?               tableName,
-			IQueryable<T>         items,
-			string?               databaseName      = default,
-			string?               schemaName        = default,
-			Func<ITable<T>,Task>? action            = default,
-			string?               serverName        = default,
-			TableOptions          tableOptions      = TableOptions.IsTemporary,
-			CancellationToken     cancellationToken = default)
-			where T : class
-		{
-			return TempTable<T>.CreateAsync(db, tableName, items, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using data from provided query. Table mapping could be changed
-		/// using fluent mapper.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// Note that context mapping schema must be writable to allow it.
-		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
-		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
-		/// Latter option is not recommended as it will affect performance significantly.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext               db,
-			string?                         tableName,
-			IQueryable<T>                   items,
-			Action<EntityMappingBuilder<T>> setTable,
-			string?                         databaseName      = default,
-			string?                         schemaName        = default,
-			Func<ITable<T>,Task>?           action            = default,
-			string?                         serverName        = default,
-			TableOptions                    tableOptions      = TableOptions.IsTemporary,
-			CancellationToken               cancellationToken = default)
-			where T : class
-		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
-
-			var tempTableDescriptor = GetTempTableDescriptor(db.MappingSchema, db.Options, setTable);
-
-			return TempTable<T>.CreateAsync(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
-		}
-
-		#endregion
-
-		#region IntoTempTable
-
-		/// <summary>
-		/// Creates new temporary table and populate it using BulkCopy.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="items">Initial records to insert into created table.</param>
-		/// <param name="options">Optional BulkCopy options.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static TempTable<T> IntoTempTable<T>(
-			this IEnumerable<T> items,
-			IDataContext        db,
-			string?             tableName    = default,
-			string?             databaseName = default,
-			string?             schemaName   = default,
-			string?             serverName   = default,
-			TableOptions        tableOptions = TableOptions.IsTemporary,
-			BulkCopyOptions?    options      = default)
-			where T : class
-		{
-			return new TempTable<T>(db, items, options, tableName, databaseName, schemaName, serverName, tableOptions);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using data from provided query.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="action">Optional action that will be executed after table creation, but before it populated with data from <paramref name="items"/>.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// Note that context mapping schema must be writable to allow it.
-		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
-		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
-		/// Latter option is not recommended as it will affect performance significantly.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static TempTable<T> IntoTempTable<T>(
-			this IQueryable<T>               items,
-			string?                          tableName    = default,
-			string?                          databaseName = default,
-			string?                          schemaName   = default,
-			string?                          serverName   = default,
-			TableOptions                     tableOptions = TableOptions.IsTemporary,
-			Action<ITable<T>>?               action       = default,
-			Action<EntityMappingBuilder<T>>? setTable     = default)
-			where T : class
-		{
-			if (items is IExpressionQuery eq)
+			try
 			{
-				EntityDescriptor? tempTableDescriptor = null;
-				if (setTable != null)
-					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext.MappingSchema, eq.DataContext.Options, setTable);
-
-				return new TempTable<T>(eq.DataContext, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
+				return new ValueTask(_table.DropTableAsync(throwExceptionIfNotExists: false));
 			}
-
-			throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using BulkCopy.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="items">Initial records to insert into created table.</param>
-		/// <param name="options">Optional BulkCopy options.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> IntoTempTableAsync<T>(
-			this IEnumerable<T> items,
-			IDataContext        db,
-			string?             tableName         = default,
-			string?             databaseName      = default,
-			string?             schemaName        = default,
-			string?             serverName        = default,
-			TableOptions        tableOptions      = TableOptions.IsTemporary,
-			BulkCopyOptions?    options           = default,
-			CancellationToken   cancellationToken = default)
-			where T : class
-		{
-			return TempTable<T>.CreateAsync(db, items, options, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using data from provided query. Table mapping could be changed
-		/// using fluent mapper.
-		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
-		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
-		/// Note that context mapping schema must be writable to allow it.
-		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
-		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
-		/// Latter option is not recommended as it will affect performance significantly.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Returns temporary table instance.</returns>
-		public static Task<TempTable<T>> IntoTempTableAsync<T>(
-			this IQueryable<T>               items,
-			string?                          tableName         = default,
-			string?                          databaseName      = default,
-			string?                          schemaName        = default,
-			string?                          serverName        = default,
-			TableOptions                     tableOptions      = TableOptions.IsTemporary,
-			Func<ITable<T>,Task>?            action            = default,
-			Action<EntityMappingBuilder<T>>? setTable          = default,
-			CancellationToken                cancellationToken = default)
-			where T : class
-		{
-			if (items is IExpressionQuery eq)
+			finally
 			{
-				EntityDescriptor? tempTableDescriptor = null;
-				if (setTable != null)
-					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext.MappingSchema, eq.DataContext.Options, setTable);
-
-				return TempTable<T>.CreateAsync(eq.DataContext, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
+				// Restore MappingSchema if it was changed by FluentMapping.
+				//
+				if (_tableDescriptor != null)
+					_table.DataContext.SetMappingSchema(_tableDescriptor.PrevMappingSchema);
 			}
-
-			throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
 		}
-
-		private static EntityDescriptor GetTempTableDescriptor<T>(MappingSchema contextSchema, DataOptions options, Action<EntityMappingBuilder<T>> setTable)
-		{
-			var ms = new MappingSchema(contextSchema);
-			var builder = new FluentMappingBuilder(ms);
-			setTable(builder.Entity<T>());
-			builder.Build();
-			return ms.GetEntityDescriptor(typeof(T), options.ConnectionOptions.OnEntityDescriptorCreated);
-		}
-
-		#endregion
 	}
 }

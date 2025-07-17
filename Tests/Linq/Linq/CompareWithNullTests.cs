@@ -2,14 +2,13 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
-
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -48,49 +47,49 @@ namespace Tests.Linq
 
 		private static readonly (Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls)[] _conditions 
 			= new (Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls)[]
-		{
-			(x => x.A == x.B, new[] { 111 },      new[] { 100, 111 }),
-			(x => x.A != x.B, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
-			(x => x.A >= x.B, new[] { 111, 121 }, new[] { 111, 121 }),
-			(x => x.A >  x.B, new[] { 121 },      new[] { 121 }),
-			(x => x.A <= x.B, new[] { 111, 112 }, new[] { 111, 112 }),
-			(x => x.A <  x.B, new[] { 112 },      new[] { 112 }),
+			{
+				(x => x.A == x.B, new[] { 111 },      new[] { 100, 111 }),
+				(x => x.A != x.B, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+				(x => x.A >= x.B, new[] { 111, 121 }, new[] { 111, 121 }),
+				(x => x.A >  x.B, new[] { 121 },      new[] { 121 }),
+				(x => x.A <= x.B, new[] { 111, 112 }, new[] { 111, 112 }),
+				(x => x.A <  x.B, new[] { 112 },      new[] { 112 }),
 
-			(x => !(x.A == x.B), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
-			(x => !(x.A != x.B), new[] { 111 },      new[] { 100, 111 }),
-			(x => !(x.A >= x.B), new[] { 112 },      new[] { 100, 101, 110, 112 }),
-			(x => !(x.A >  x.B), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
-			(x => !(x.A <= x.B), new[] { 121 },      new[] { 100, 101, 110, 121 }),
-			(x => !(x.A <  x.B), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
+				(x => !(x.A == x.B), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+				(x => !(x.A != x.B), new[] { 111 },      new[] { 100, 111 }),
+				(x => !(x.A >= x.B), new[] { 112 },      new[] { 100, 101, 110, 112 }),
+				(x => !(x.A >  x.B), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
+				(x => !(x.A <= x.B), new[] { 121 },      new[] { 100, 101, 110, 121 }),
+				(x => !(x.A <  x.B), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
 
-			(x => x.EnumA == x.EnumB, new[] { 111 },      new[] { 100, 111 }),
-			(x => x.EnumA != x.EnumB, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
-			(x => x.EnumA >= x.EnumB, new[] { 111, 121 }, new[] { 111, 121 }),
-			(x => x.EnumA >  x.EnumB, new[] { 121 },      new[] { 121 }),
-			(x => x.EnumA <= x.EnumB, new[] { 111, 112 }, new[] { 111, 112 }),
-			(x => x.EnumA <  x.EnumB, new[] { 112 },      new[] { 112 }),
+				(x => x.EnumA == x.EnumB, new[] { 111 },      new[] { 100, 111 }),
+				(x => x.EnumA != x.EnumB, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+				(x => x.EnumA >= x.EnumB, new[] { 111, 121 }, new[] { 111, 121 }),
+				(x => x.EnumA >  x.EnumB, new[] { 121 },      new[] { 121 }),
+				(x => x.EnumA <= x.EnumB, new[] { 111, 112 }, new[] { 111, 112 }),
+				(x => x.EnumA <  x.EnumB, new[] { 112 },      new[] { 112 }),
 
-			(x => !(x.EnumA == x.EnumB), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
-			(x => !(x.EnumA != x.EnumB), new[] { 111 },      new[] { 100, 111 }),
-			(x => !(x.EnumA >= x.EnumB), new[] { 112 },      new[] { 100, 101, 110, 112 }),
-			(x => !(x.EnumA >  x.EnumB), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
-			(x => !(x.EnumA <= x.EnumB), new[] { 121 },      new[] { 100, 101, 110, 121 }),
-			(x => !(x.EnumA <  x.EnumB), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
+				(x => !(x.EnumA == x.EnumB), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+				(x => !(x.EnumA != x.EnumB), new[] { 111 },      new[] { 100, 111 }),
+				(x => !(x.EnumA >= x.EnumB), new[] { 112 },      new[] { 100, 101, 110, 112 }),
+				(x => !(x.EnumA >  x.EnumB), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
+				(x => !(x.EnumA <= x.EnumB), new[] { 121 },      new[] { 100, 101, 110, 121 }),
+				(x => !(x.EnumA <  x.EnumB), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
 
-			(x => x.CEnumA == x.CEnumB, new[] { 111 },      new[] { 100, 111 }),
-			(x => x.CEnumA != x.CEnumB, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
-			(x => x.CEnumA >= x.CEnumB, new[] { 111, 121 }, new[] { 111, 121 }),
-			(x => x.CEnumA >  x.CEnumB, new[] { 121 },      new[] { 121 }),
-			(x => x.CEnumA <= x.CEnumB, new[] { 111, 112 }, new[] { 111, 112 }),
-			(x => x.CEnumA <  x.CEnumB, new[] { 112 },      new[] { 112 }),
+				(x => x.CEnumA == x.CEnumB, new[] { 111 },      new[] { 100, 111 }),
+				(x => x.CEnumA != x.CEnumB, new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+				(x => x.CEnumA >= x.CEnumB, new[] { 111, 121 }, new[] { 111, 121 }),
+				(x => x.CEnumA >  x.CEnumB, new[] { 121 },      new[] { 121 }),
+				(x => x.CEnumA <= x.CEnumB, new[] { 111, 112 }, new[] { 111, 112 }),
+				(x => x.CEnumA <  x.CEnumB, new[] { 112 },      new[] { 112 }),
 
-			(x => !(x.CEnumA == x.CEnumB), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
-			(x => !(x.CEnumA != x.CEnumB), new[] { 111 },      new[] { 100, 111 }),
-			(x => !(x.CEnumA >= x.CEnumB), new[] { 112 },      new[] { 100, 101, 110, 112 }),
-			(x => !(x.CEnumA >  x.CEnumB), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
-			(x => !(x.CEnumA <= x.CEnumB), new[] { 121 },      new[] { 100, 101, 110, 121 }),
-			(x => !(x.CEnumA <  x.CEnumB), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
-		};
+				(x => !(x.CEnumA == x.CEnumB), new[] { 112, 121 }, new[] { 101, 110, 112, 121 }),
+				(x => !(x.CEnumA != x.CEnumB), new[] { 111 },      new[] { 100, 111 }),
+				(x => !(x.CEnumA >= x.CEnumB), new[] { 112 },      new[] { 100, 101, 110, 112 }),
+				(x => !(x.CEnumA >  x.CEnumB), new[] { 111, 112 }, new[] { 100, 101, 110, 111, 112 }),
+				(x => !(x.CEnumA <= x.CEnumB), new[] { 121 },      new[] { 100, 101, 110, 121 }),
+				(x => !(x.CEnumA <  x.CEnumB), new[] { 111, 121 }, new[] { 100, 101, 110, 111, 121 }),
+			};
 
 		[Test]
 		public void Functional(
@@ -116,7 +115,7 @@ namespace Tests.Linq
 				.OrderBy(x => x.Id)
 				.Select(x => x.Id)
 				.TagQuery(conditionStr)
-				.ToList();
+				.ToArray();
 
 			// CompareWithNullValues should behave exactly like C#
 			if (withNullCompares)
@@ -124,12 +123,12 @@ namespace Tests.Linq
 				var linqResult = Data
 					.Where(where.Compile())
 					.Select(x => x.Id)
-					.ToList();
+					.ToArray();
 
-				result.Should().Equal(linqResult);
+				result.ShouldBeEquivalentTo(linqResult);
 			}
 
-			result.Should().Equal(withNullCompares ? withNulls : withoutNulls);
+			result.ShouldBeEquivalentTo(withNullCompares ? withNulls : withoutNulls);
 		}
 
 		[Test]
@@ -144,18 +143,18 @@ namespace Tests.Linq
 			
 			// == null always translates to IS NULL
 			var result = src.Where(x => x.A == null).Count();
-			result.Should().Be(2);
+			result.ShouldBe(2);
 			
 			// == default is the same as == null
 			result = src.Where(x => x.A == default).Count();
-			result.Should().Be(2);
+			result.ShouldBe(2);
 
 			// LikeClr should obviously match.
 			// LikeSqlExceptParameters sniffs parameters and should translate to IS NULL.
 			// LikeSql should translate straight to x.A = p, which should have no result.
 			int? p = null;
 			result = src.Where(x => x.A == p).Count();
-			result.Should().Be(option == CompareNulls.LikeSql ? 0 : 2);
+			result.ShouldBe(option == CompareNulls.LikeSql ? 0 : 2);
 		}
 
 		[Test]
@@ -172,12 +171,12 @@ namespace Tests.Linq
 			
 			// "" is the same as null in Oracle and == ""  should always translates to IS NULL
 			int result = src.Where(x => x.Text == "").Select(x => x.Id).FirstOrDefault();
-			result.Should().Be(2);
+			result.ShouldBe(2);
 
 			// LikeSql should translate straight to x.A = p, which should have no result.
 			var p = "";
 			result = src.Where(x => x.Text == p).Select(x => x.Id).FirstOrDefault();
-			result.Should().Be(option == CompareNulls.LikeSql ? 0 : 2);
+			result.ShouldBe(option == CompareNulls.LikeSql ? 0 : 2);
 		}
 
 		public class Src

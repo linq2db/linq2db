@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 
 using NUnit.Framework;
@@ -68,18 +69,17 @@ namespace Tests.Data
 				Assert.That(
 					() => db.GetTable<Child>().ToList(),
 					Throws.TypeOf<ArgumentException>().Or.TypeOf<InvalidOperationException>());
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// steps called once
 					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(1));
 					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 					// steps never called
-					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(0));
-					Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(0));
-					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-				});
+					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.Zero);
+					Assert.That(counters[TraceInfoStep.AfterExecute], Is.Zero);
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+				}
 			}
 		}
 
@@ -102,18 +102,17 @@ namespace Tests.Data
 				Assert.That(
 					() => db.GetTable<Child>().ToListAsync(),
 					Throws.TypeOf<ArgumentException>().Or.TypeOf<InvalidOperationException>());
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					// steps called once
 					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(1));
 					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 					// steps never called
-					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(0));
-					Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(0));
-					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-				});
+					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.Zero);
+					Assert.That(counters[TraceInfoStep.AfterExecute], Is.Zero);
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+				}
 			}
 		}
 
@@ -123,19 +122,17 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataConnection(context, o => o.UseTracing(e =>
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
-
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
+			{
 				var _ = db.GetTable<Northwind.Category>().ToList();
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
 					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.Null);
@@ -147,9 +144,9 @@ namespace Tests.Data
 					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 					// steps never called
-					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-				});
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+					Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+				}
 			}
 		}
 
@@ -159,14 +156,16 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataConnection(context, o => o.UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				using (var reader = db.ExecuteReader(sql))
 				{
@@ -175,7 +174,7 @@ namespace Tests.Data
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
 					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
@@ -187,9 +186,9 @@ namespace Tests.Data
 					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 					// steps never called
-					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-				});
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+					Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+				}
 			}
 		}
 
@@ -199,14 +198,16 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataConnection(context, o => o.UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				await using (var reader = await new CommandInfo(db, sql).ExecuteReaderAsync())
 				{
@@ -215,7 +216,7 @@ namespace Tests.Data
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
 					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
@@ -227,9 +228,9 @@ namespace Tests.Data
 					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 					// steps never called
-					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-				});
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+					Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+				}
 			}
 		}
 
@@ -239,20 +240,22 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				db.SetCommand(sql).Query<Northwind.Category>().ToArray();
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
 					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
@@ -264,9 +267,9 @@ namespace Tests.Data
 					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 					// steps never called
-					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-				});
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+					Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+				}
 			}
 		}
 
@@ -276,14 +279,16 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				using (var reader = db.SetCommand(sql).ExecuteReader())
 				{
@@ -292,7 +297,7 @@ namespace Tests.Data
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
 					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
@@ -304,9 +309,9 @@ namespace Tests.Data
 					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 					// steps never called
-					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-				});
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+					Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+				}
 			}
 		}
 
@@ -316,14 +321,16 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			using (db.BeginTransaction())
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				db.GetTable<Northwind.Category>()
 					.Set(c => c.CategoryName, c => c.CategoryName)
@@ -331,7 +338,7 @@ namespace Tests.Data
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
 					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
@@ -343,9 +350,9 @@ namespace Tests.Data
 					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 					// steps never called
-					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-				});
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+					Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+				}
 
 				db.RollbackTransaction();
 			}
@@ -357,20 +364,22 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			using (db.BeginTransaction())
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
 					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
@@ -382,9 +391,9 @@ namespace Tests.Data
 					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 					// steps never called
-					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-				});
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+					Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+				}
 
 				db.RollbackTransaction();
 			}
@@ -396,20 +405,22 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			using (db.BeginTransaction())
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				db.SetCommand(@"INSERT INTO Categories(CategoryID, CategoryName) VALUES(1024, '1024')").Execute();
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
 					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
@@ -421,9 +432,9 @@ namespace Tests.Data
 					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 					// steps never called
-					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-				});
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+					Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+				}
 
 				db.RollbackTransaction();
 			}
@@ -435,20 +446,22 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			using (db.BeginTransaction())
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				db.SetCommand(@"DELETE FROM Categories WHERE CategoryID = 1024").Execute();
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
 					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
@@ -460,9 +473,9 @@ namespace Tests.Data
 					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 					// steps never called
-					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-				});
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+					Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+				}
 
 				db.RollbackTransaction();
 			}
@@ -474,20 +487,23 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
+			{
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
 			{
 				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+
+				// reset
+				events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
+				counters = GetEnumValues((TraceInfoStep s) => 0);
 
 				db.SetCommand(sql).Execute<Northwind.Category>();
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
 					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
@@ -499,9 +515,9 @@ namespace Tests.Data
 					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 					// steps never called
-					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-				});
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+					Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+				}
 			}
 		}
 
@@ -511,26 +527,24 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
+			{
 				using (db.BeginTransaction())
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						// Begin transaction command is reported on each step
 						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("BeginTransaction"));
 						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("BeginTransaction"));
-					});
+					}
 
 					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 					db.CommitTransaction();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						// Commit transaction command is reported on each step
 						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("CommitTransaction"));
@@ -544,9 +558,9 @@ namespace Tests.Data
 						Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 						// steps never called
-						Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-						Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-					});
+						Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+						Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+					}
 				}
 			}
 
@@ -558,26 +572,24 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
+			{
 				using (await db.BeginTransactionAsync())
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						// Begin transaction command is reported on each step
 						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("BeginTransactionAsync"));
 						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("BeginTransactionAsync"));
-					});
+					}
 
 					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 					await db.CommitTransactionAsync();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						// Commit transaction command is reported on each step
 						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("CommitTransactionAsync"));
@@ -591,9 +603,9 @@ namespace Tests.Data
 						Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 						// steps never called
-						Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-						Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-					});
+						Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+						Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+					}
 				}
 			}
 		}
@@ -604,26 +616,24 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
+			{
 				using (db.BeginTransaction())
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						// Begin transaction command is reported on each step
 						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("BeginTransaction"));
 						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("BeginTransaction"));
-					});
+					}
 
 					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 					db.RollbackTransaction();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						// Commit transaction command is reported on each step
 						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("RollbackTransaction"));
@@ -637,9 +647,9 @@ namespace Tests.Data
 						Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 						// steps never called
-						Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-						Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-					});
+						Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+						Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+					}
 				}
 			}
 		}
@@ -650,26 +660,24 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
+			{
 				using (await db.BeginTransactionAsync())
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						// Begin transaction command is reported on each step
 						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("BeginTransactionAsync"));
 						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("BeginTransactionAsync"));
-					});
+					}
 
 					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 					await db.RollbackTransactionAsync();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						// Commit transaction command is reported on each step
 						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("RollbackTransactionAsync"));
@@ -683,9 +691,9 @@ namespace Tests.Data
 						Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 						// steps never called
-						Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-						Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-					});
+						Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+						Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+					}
 				}
 			}
 		}
@@ -700,26 +708,24 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
+			{
 				using (db.BeginTransaction(IsolationLevel.ReadCommitted))
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						// Begin transaction command is reported on each step
 						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("BeginTransaction(ReadCommitted)"));
 						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("BeginTransaction(ReadCommitted)"));
-					});
+					}
 
 					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 					db.CommitTransaction();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						// Commit transaction command is reported on each step
 						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("CommitTransaction"));
@@ -733,9 +739,9 @@ namespace Tests.Data
 						Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 						// steps never called
-						Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-						Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-					});
+						Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+						Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+					}
 				}
 			}
 
@@ -751,26 +757,24 @@ namespace Tests.Data
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = new DataConnection(new DataOptions().UseConfiguration(context).UseTracing(e =>
 			{
-				db.OnTraceConnection = e =>
-				{
-					events[e.TraceInfoStep] = e;
-					counters[e.TraceInfoStep]++;
-				};
+				events[e.TraceInfoStep] = e;
+				counters[e.TraceInfoStep]++;
+			})))
+			{
 				using (await db.BeginTransactionAsync(IsolationLevel.ReadCommitted))
 				{
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						// Begin transaction command is reported on each step
 						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("BeginTransactionAsync(ReadCommitted)"));
 						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("BeginTransactionAsync(ReadCommitted)"));
-					});
+					}
 
 					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 					await db.CommitTransactionAsync();
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						// Commit transaction command is reported on each step
 						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("CommitTransactionAsync"));
@@ -784,9 +788,9 @@ namespace Tests.Data
 						Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
 						// steps never called
-						Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
-						Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
-					});
+						Assert.That(counters[TraceInfoStep.MapperCreated], Is.Zero);
+						Assert.That(counters[TraceInfoStep.Error], Is.Zero);
+					}
 				}
 			}
 		}
@@ -865,11 +869,11 @@ namespace Tests.Data
 				db.WriteTraceLineConnection("", "", TraceLevel.Info);
 			}
 
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(builderWriteCalled, Is.True, "because the data connection should have used the action from the builder");
 				Assert.That(staticWriteCalled, Is.False, "because the data connection should have used the action from the builder");
-			});
+			}
 
 			DataConnection.WriteTraceLine = wtl;
 		}

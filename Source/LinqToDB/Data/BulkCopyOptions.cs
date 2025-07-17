@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Options;
 
 namespace LinqToDB.Data
 {
@@ -98,12 +98,12 @@ namespace LinqToDB.Data
 	/// This callback will not be used if <see cref="NotifyAfter"/> set to 0.
 	/// </param>
 	/// <param name="UseParameters">
-	/// Gets or sets whether to Always use Parameters for MultipleRowsCopy. Default is false.
-	/// If True, provider's override for <see cref="DataProvider.BasicBulkCopy.MaxParameters"/> will be used to determine the maximum number of rows per insert,
+	/// Gets or sets whether to always use Parameters for MultipleRowsCopy. Default is false.
+	/// If True, provider-specific parameter limit per batch will be used to determine the maximum number of rows per insert,
 	/// Unless overridden by <see cref="MaxParametersForBatch"/>.
 	/// </param>
 	/// <param name="MaxParametersForBatch">
-	/// If set, will override the Maximum parameters per batch statement from <see cref="DataProvider.BasicBulkCopy.MaxParameters"/>.
+	/// If set, will set the maximum parameters per batch statement. Also see <see cref="UseParameters"/>.
 	/// </param>
 	/// <param name="MaxDegreeOfParallelism">
 	/// Implemented only by ClickHouse.Client provider. Defines number of connections, used for parallel insert in <see cref="BulkCopyType.ProviderSpecific"/> mode.
@@ -170,8 +170,6 @@ namespace LinqToDB.Data
 			WithoutSession         = original.WithoutSession;
 		}
 
-		public static readonly BulkCopyOptions Empty = new();
-
 		int? _configurationID;
 		int IConfigurationID.ConfigurationID
 		{
@@ -207,6 +205,29 @@ namespace LinqToDB.Data
 				return _configurationID.Value;
 			}
 		}
+
+		#region Default Options
+
+		static BulkCopyOptions _default = new();
+
+		/// <summary>
+		/// Gets default <see cref="BulkCopyOptions"/> instance.
+		/// </summary>
+		public static BulkCopyOptions Default
+		{
+			get => _default;
+			set
+			{
+				_default = value;
+				DataConnection.ResetDefaultOptions();
+				DataConnection.ConnectionOptionsByConfigurationString.Clear();
+			}
+		}
+
+		/// <inheritdoc />
+		IOptionSet IOptionSet.Default => Default;
+
+		#endregion
 
 		#region IEquatable implementation
 

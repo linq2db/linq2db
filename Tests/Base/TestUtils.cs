@@ -4,10 +4,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Internal.DataProvider.Firebird;
 
 using NUnit.Framework;
 
@@ -194,12 +196,25 @@ namespace Tests
 				FirebirdTools.ClearAllPools();
 				base.Dispose();
 			}
+
+			public override ValueTask DisposeAsync()
+			{
+				if (DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird))
+				{
+					FirebirdTools.ClearAllPools();
+				}
+
+				DataContext.CloseAsync();
+				FirebirdTools.ClearAllPools();
+
+				return base.DisposeAsync();
+			}
 		}
 		class TestTempTable<T> : TempTable<T>
 			where T : notnull
 		{
 			public TestTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
-				: base(db, tableName, databaseName, schemaName, tableOptions: tableOptions)
+				: base(db, tableName: tableName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions)
 			{
 			}
 
@@ -208,17 +223,23 @@ namespace Tests
 				using var _ = new DisableBaseline("Test setup");
 				base.Dispose();
 			}
+
+			public override async ValueTask DisposeAsync()
+			{
+				using var _ = new DisableBaseline("Test setup");
+				await base.DisposeAsync();
+			}
 		}
 
 		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet)
 			where T : notnull =>
-			db.CreateSqlProvider() is FirebirdSqlBuilder ?
+			db.CreateSqlBuilder() is FirebirdSqlBuilder ?
 				new FirebirdTempTable<T>(db, tableName, tableOptions : tableOptions) :
 				new     TestTempTable<T>(db, tableName, tableOptions : tableOptions);
 
 		static void ClearDataContext(IDataContext db)
 		{
-			if (db.CreateSqlProvider() is FirebirdSqlBuilder)
+			if (db.CreateSqlBuilder() is FirebirdSqlBuilder)
 			{
 				db.Close();
 				FirebirdTools.ClearAllPools();
@@ -227,13 +248,8 @@ namespace Tests
 
 		public static Version GetSqliteVersion(DataConnection db)
 		{
-			using (var cmd = db.CreateCommand())
-			{
-				cmd.CommandText = "select sqlite_version();";
-				var version     = (string)cmd.ExecuteScalar()!;
-
-				return new Version(version);
-			}
+			var version = db.Execute<string>("select sqlite_version();");
+			return new Version(version);
 		}
 
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.CheckExistence)
@@ -316,14 +332,12 @@ namespace Tests
 
 		internal static string GetConfigName()
 		{
-#if NET6_0
-			return "NET60";
+#if NETFRAMEWORK
+			return "NETFX";
 #elif NET8_0
 			return "NET80";
 #elif NET9_0
 			return "NET90";
-#elif NETFRAMEWORK
-			return "NETFX";
 #else
 #error Unknown framework
 #endif

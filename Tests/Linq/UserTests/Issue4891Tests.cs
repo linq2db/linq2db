@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Linq.Expressions;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
 
@@ -74,7 +74,7 @@ namespace Tests.UserTests
 					.Where(x => x.Source1.Id == productId);
 
 				var result = query.ToArray();
-				Assert.That(result, Has.Length.EqualTo(0));
+				Assert.That(result, Has.Length.Zero);
 			}
 		}
 	}

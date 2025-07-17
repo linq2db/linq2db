@@ -1,12 +1,11 @@
 ﻿using System;
 
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB
 {
 	partial class Sql
 	{
-
 		[Extension("", "", PreferServerSide = true, IsPredicate = true, BuilderType = typeof(BetweenBuilder))]
 		public static bool Between<T>(this T value, T low, T high)
 			where T : IComparable
@@ -40,7 +39,7 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x)!);
-				builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.Between(args[0], false, args[1], args[2]));
+				builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Between(args[0], false, args[1], args[2]));
 			}
 		}
 
@@ -49,7 +48,7 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x)!);
-				builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.Between(args[0], true, args[1], args[2]));
+				builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Between(args[0], true, args[1], args[2]));
 			}
 		}
 	}

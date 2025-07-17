@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
@@ -20,11 +21,7 @@ namespace Tests.UserTests
 			{
 				return () =>
 				{
-					var db = new MyDB(configuration)
-					{
-						// No exception if policy removed
-						RetryPolicy = new SqlServerRetryPolicy(retryCount, delay, randomFactor, exponentialBase, coefficient, null)
-					};
+					var db = new MyDB(new DataOptions().UseConfiguration(configuration).UseRetryPolicy(new SqlServerRetryPolicy(retryCount, delay, randomFactor, exponentialBase, coefficient, null)));
 					return db;
 				};
 			}
@@ -34,10 +31,11 @@ namespace Tests.UserTests
 			{
 			}
 
-			public MyDB(string configuration)
-				: base(configuration)
+			public MyDB(DataOptions options)
+				: base(options)
 			{
 			}
+
 			public MyDB(IDataProvider dataProvider, string connectionString) : base(new DataOptions().UseConnectionString(dataProvider, connectionString))
 			{
 			}
@@ -71,12 +69,11 @@ namespace Tests.UserTests
 					var user2Task = db2.Users.FirstAsync();
 
 					Assert.DoesNotThrowAsync(() => Task.WhenAll(user1Task, user2Task));
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(user1Task.Result, Is.Not.Null);
 						Assert.That(user2Task.Result, Is.Not.Null);
-					});
+					}
 				}
 			}
 		}

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 namespace LinqToDB.Configuration
 {
@@ -18,10 +17,10 @@ namespace LinqToDB.Configuration
 			_connectionStringSettings = new ConnectionStringSettings(connectionName, connectionString, providerName);
 		}
 
-		public IEnumerable<IDataProviderSettings>     DataProviders        => Enumerable.Empty<IDataProviderSettings>();
+		public IEnumerable<IDataProviderSettings>     DataProviders        => [];
 		public string                                 DefaultConfiguration => _connectionStringSettings.Name;
 		public string                                 DefaultDataProvider  => ProviderName.SqlServer;
-		public IEnumerable<IConnectionStringSettings> ConnectionStrings    => new [] { _connectionStringSettings };
+		public IEnumerable<IConnectionStringSettings> ConnectionStrings    => [_connectionStringSettings];
 	}
 
 }

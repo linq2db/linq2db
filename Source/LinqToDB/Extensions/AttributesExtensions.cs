@@ -9,7 +9,7 @@ using JetBrains.Annotations;
 namespace LinqToDB.Extensions
 {
 	/*
-	 * 1. Implements library-wide Get(Custom)Attribute(s) cache.
+	 * 1. Implements process-wide Get(Custom)Attribute(s) cache.
 	 * 2. Native reflection Get(Custom)Attribute(s) methods are banned to avoid direct non-cached queries for attributes.
 	 *
 	 * Behavior differences compared to runtime GetAttribute(s) methods:

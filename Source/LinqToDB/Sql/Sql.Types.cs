@@ -1,6 +1,6 @@
 ﻿using System;
 
-using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
@@ -24,7 +24,7 @@ namespace LinqToDB
 			public static DateTime DateTime2 => DateTime.Now;
 			public static DateTime SmallDateTime => DateTime.Now;
 			public static DateTime Date => DateTime.Now;
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			public static DateOnly DateOnly => DateOnly.FromDateTime(DateTime.Now);
 #endif
 			public static DateTime Time => DateTime.Now;

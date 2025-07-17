@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Tools;
 using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.DataProvider
 {
@@ -21,7 +23,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DbTS);
-			Console.WriteLine(result.ToDiagnosticString());
+
 			Assert.That(result, Has.Length.EqualTo(8));
 		}
 
@@ -30,7 +32,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.LangID);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThanOrEqualTo(0));
 		}
 
@@ -39,7 +41,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Language);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -49,7 +51,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			db.Execute("SET LOCK_TIMEOUT 1000");
 			var result = db.Select(() => SqlFn.LockTimeout);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1000));
 		}
 
@@ -58,7 +60,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.MaxConnections);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(32767));
 		}
 
@@ -67,7 +69,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.MaxPrecision);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(38));
 		}
 
@@ -76,8 +78,8 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.NestLevel);
-			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -85,8 +87,8 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Options);
-			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -94,7 +96,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.RemServer);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Null);
 		}
 
@@ -103,7 +105,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ServerName);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -112,7 +114,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ServiceName);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -121,8 +123,8 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SpID);
-			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -131,7 +133,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			db.Execute("SET TEXTSIZE 2048");
 			var result = db.Select(() => SqlFn.TextSize);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(2048));
 		}
 
@@ -140,7 +142,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Version);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -153,7 +155,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Cast("10:10:10", SqlType.Time));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new TimeSpan(10, 10, 10)));
 		}
 
@@ -162,7 +164,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Cast("10:10:10", SqlType.Time(3)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new TimeSpan(10, 10, 10)));
 		}
 
@@ -171,7 +173,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Cast<string>(123));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
@@ -180,7 +182,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.VarChar(4), 123));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
@@ -189,7 +191,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal, 123));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(123m));
 		}
 
@@ -198,7 +200,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.NVarChar(10), 123));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
@@ -207,7 +209,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.VarCharMax, 123));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
@@ -216,7 +218,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal(30, 0), 123));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(123m));
 		}
 
@@ -225,7 +227,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert<string>(123));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
@@ -234,7 +236,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.VarChar(4), 123, 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
@@ -243,7 +245,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal, 123, 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(123m));
 		}
 
@@ -252,7 +254,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.NVarChar(10), new DateTime(2022, 02, 22), 105));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("22-02-2022"));
 		}
 
@@ -261,7 +263,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.VarCharMax, 123, 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
@@ -270,7 +272,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal(30, 0), 123, 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(123m));
 		}
 
@@ -279,7 +281,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert<string>(new DateTime(2022, 02, 22), 5));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("22-02-22"));
 		}
 
@@ -288,7 +290,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Parse("Monday, 13 December 2010", SqlType.Date));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new DateTime(2010, 12, 13)));
 		}
 
@@ -297,7 +299,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Parse("123", SqlType.Decimal(30)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(123m));
 		}
 
@@ -306,7 +308,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Parse<int>("123"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(123));
 		}
 
@@ -315,7 +317,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Parse("€345,98", SqlType.Money, "de-DE"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(345.98m));
 		}
 
@@ -324,7 +326,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Parse("345,98", SqlType.Decimal(30,2), "de-DE"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(345.98m));
 		}
 
@@ -333,7 +335,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Parse<decimal>("345,98", "de-DE"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(345.98m));
 		}
 
@@ -342,7 +344,7 @@ namespace Tests.DataProvider
 		{
 			using var db     = new SystemDB(context);
 			var       result = db.Select(() => SqlFn.TryCast("10:10:10", SqlType.Time));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new TimeSpan(10, 10, 10)));
 		}
 
@@ -351,7 +353,7 @@ namespace Tests.DataProvider
 		{
 			using var db     = new SystemDB(context);
 			var       result = db.Select(() => SqlFn.TryCast("10:10:10", SqlType.Time(3)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new TimeSpan(10, 10, 10)));
 		}
 
@@ -360,7 +362,7 @@ namespace Tests.DataProvider
 		{
 			using var db     = new SystemDB(context);
 			var       result = db.Select(() => SqlFn.TryCast<string>(123));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
@@ -369,7 +371,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryConvert(SqlType.VarChar(4), 123));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
@@ -378,7 +380,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryConvert(SqlType.Decimal, 123));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(123m));
 		}
 
@@ -387,7 +389,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryConvert(SqlType.NVarChar(10), 123));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
@@ -396,7 +398,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryConvert(SqlType.VarCharMax, 123));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
@@ -405,7 +407,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryConvert(SqlType.Decimal(30, 0), 123));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(123m));
 		}
 
@@ -414,7 +416,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryConvert<string>(123));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
@@ -423,7 +425,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryConvert(SqlType.VarChar(4), 123, 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
@@ -432,7 +434,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryConvert(SqlType.Decimal, 123, 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(123m));
 		}
 
@@ -441,7 +443,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryConvert(SqlType.NVarChar(10), new DateTime(2022, 02, 22), 105));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("22-02-2022"));
 		}
 
@@ -450,7 +452,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryConvert(SqlType.VarCharMax, 123, 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
@@ -459,7 +461,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryConvert(SqlType.Decimal(30, 0), 123, 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(123m));
 		}
 
@@ -468,7 +470,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryConvert<string>(new DateTime(2022, 02, 22), 5));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("22-02-22"));
 		}
 
@@ -477,7 +479,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryParse("Monday, 13 December 2010", SqlType.Date));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new DateTime(2010, 12, 13)));
 		}
 
@@ -486,7 +488,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryParse("123", SqlType.Decimal(30)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(123m));
 		}
 
@@ -495,7 +497,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryParse<int>("123"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(123));
 		}
 
@@ -504,7 +506,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryParse("€345,98", SqlType.Money, "de-DE"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(345.98m));
 		}
 
@@ -513,7 +515,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryParse("345,98", SqlType.Decimal(30,2), "de-DE"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(345.98m));
 		}
 
@@ -522,7 +524,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TryParse<decimal>("345,98", "de-DE"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(345.98m));
 		}
 
@@ -535,7 +537,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DataLength("123"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(6));
 		}
 
@@ -544,7 +546,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DataLengthBig("123"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(6));
 		}
 
@@ -553,7 +555,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IdentityCurrent("Person"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThanOrEqualTo(0m));
 		}
 
@@ -562,7 +564,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IdentityIncrement("Person"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1m));
 		}
 
@@ -571,7 +573,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IdentitySeed("Person"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1m));
 		}
 
@@ -584,7 +586,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateFirst);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThan(0));
 		}
 
@@ -593,7 +595,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.CurrentTimestamp);
-			Console.WriteLine(result);
+
 			Assert.That(result.Year, Is.EqualTo(DateTime.Today.Year));
 		}
 
@@ -602,7 +604,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.CurrentTimezone());
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -611,7 +613,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.CurrentTimezoneID());
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -620,7 +622,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateAdd(SqlFn.DateParts.Month, -1, "2022-02-22"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new DateTime(2022, 01, 22)));
 		}
 
@@ -629,7 +631,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateAdd(SqlFn.DateParts.Day, 1, TestData.Date));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(TestData.Date.AddDays(1)));
 		}
 
@@ -638,7 +640,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateAdd(SqlFn.DateParts.Year, 1, TestData.DateTimeOffset));
-			Console.WriteLine(result);
+
 			Assert.That(result?.Date, Is.EqualTo(TestData.DateTimeOffset.Date.AddYears(1)));
 		}
 
@@ -647,7 +649,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateAdd(SqlFn.DateParts.Hour, 1, TimeSpan.FromHours(2)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new TimeSpan(3, 0, 0)));
 		}
 
@@ -656,7 +658,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateDiff(SqlFn.DateParts.Day, "2022-02-22", "2022-02-24"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(2));
 		}
 
@@ -665,7 +667,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateDiff(SqlFn.DateParts.Month, TestData.Date, TestData.Date.AddYears(1)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(12));
 		}
 
@@ -674,7 +676,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateDiff(SqlFn.DateParts.Month, TestData.DateTimeOffset, TestData.DateTimeOffset.AddYears(1)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(12));
 		}
 
@@ -683,7 +685,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateDiff(SqlFn.DateParts.Hour, TimeSpan.FromHours(2), TimeSpan.FromHours(3)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -692,7 +694,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateDiffBig(SqlFn.DateParts.Day, "2022-02-22", "2022-02-24"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(2));
 		}
 
@@ -701,7 +703,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateDiffBig(SqlFn.DateParts.Month, TestData.Date, TestData.Date.AddYears(1)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(12));
 		}
 
@@ -710,7 +712,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateDiffBig(SqlFn.DateParts.Month, TestData.DateTimeOffset, TestData.DateTimeOffset.AddYears(1)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(12));
 		}
 
@@ -719,7 +721,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateDiffBig(SqlFn.DateParts.Hour, TimeSpan.FromHours(2), TimeSpan.FromHours(3)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -728,7 +730,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TimeFromParts(1, 1, 1, 0, 0));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new TimeSpan(1, 1, 1)));
 		}
 
@@ -737,7 +739,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TimeFromParts(1, 1, 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new TimeSpan(1, 1, 1)));
 		}
 
@@ -746,7 +748,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateFromParts(2022, 2, 22));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
 		}
 
@@ -755,7 +757,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SmallDateTimeFromParts(2022, 2, 22, 0, 0));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
 		}
 
@@ -764,7 +766,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateTimeFromParts(2022, 2, 22, 0, 0, 0, 0));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
 		}
 
@@ -773,7 +775,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateTimeFromParts(2022, 2, 22, 0, 0, 0));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
 		}
 
@@ -782,7 +784,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateTimeFromParts(2022, 2, 22));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
 		}
 
@@ -791,7 +793,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateTime2FromParts(2022, 2, 22, 0, 0, 0, 0, 0));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
 		}
 
@@ -800,7 +802,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateTime2FromParts(2022, 2, 22, 0, 0, 0));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
 		}
 
@@ -809,7 +811,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateTime2FromParts(2022, 2, 22));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
 		}
 
@@ -818,7 +820,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateTimeOffsetFromParts(2022, 2, 22, 0, 0, 0, 0, 0, 0, 0));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new DateTimeOffset(new DateTime(2022, 2, 22), TimeSpan.Zero)));
 		}
 
@@ -827,7 +829,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateTimeOffsetFromParts(2022, 2, 22, 0, 0, 0));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new DateTimeOffset(new DateTime(2022, 2, 22), TimeSpan.Zero)));
 		}
 
@@ -836,7 +838,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateTimeOffsetFromParts(2022, 2, 22));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(new DateTimeOffset(new DateTime(2022, 2, 22), TimeSpan.Zero)));
 		}
 
@@ -845,7 +847,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateName(SqlFn.DateParts.Day, "2022-02-24"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("24"));
 		}
 
@@ -854,7 +856,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateName(SqlFn.DateParts.Month, new DateTime(2022, 03, 22)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("March"));
 		}
 
@@ -863,7 +865,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateName(SqlFn.DateParts.Month, new DateTimeOffset(new DateTime(2022, 03, 22), TimeSpan.Zero)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("March"));
 		}
 
@@ -872,7 +874,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DateName(SqlFn.DateParts.Hour, TimeSpan.FromHours(2)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("2"));
 		}
 
@@ -881,7 +883,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DatePart(SqlFn.DateParts.Day, "2022-02-24"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(24));
 		}
 
@@ -890,7 +892,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DatePart(SqlFn.DateParts.Month, new DateTime(2022, 02, 22)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(2));
 		}
 
@@ -899,7 +901,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DatePart(SqlFn.DateParts.Month, new DateTimeOffset(new DateTime(2022, 02, 22), TimeSpan.Zero)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(2));
 		}
 
@@ -908,7 +910,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DatePart(SqlFn.DateParts.Hour, TimeSpan.FromHours(2)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(2));
 		}
 
@@ -917,7 +919,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Day("2022-02-24"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(24));
 		}
 
@@ -926,7 +928,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Day(new DateTime(2022, 02, 22)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(22));
 		}
 
@@ -935,7 +937,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Day(new DateTimeOffset(new DateTime(2022, 02, 22), TimeSpan.Zero)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(22));
 		}
 
@@ -944,7 +946,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.EndOfMonth("2022-02-24"));
-			Console.WriteLine(result);
+
 			Assert.That(result?.Day, Is.EqualTo(28));
 		}
 
@@ -953,7 +955,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.EndOfMonth("2022-02-24", 1));
-			Console.WriteLine(result);
+
 			Assert.That(result?.Day, Is.EqualTo(31));
 		}
 
@@ -963,7 +965,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var date   = "2022-02-24";
 			var result = db.Select(() =>  SqlFn.EndOfMonth(date, 1));
-			Console.WriteLine(result);
+
 			Assert.That(result?.Day, Is.EqualTo(31));
 		}
 
@@ -972,7 +974,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.EndOfMonth(new DateTime(2022, 02, 22)));
-			Console.WriteLine(result);
+
 			Assert.That(result?.Day, Is.EqualTo(28));
 		}
 
@@ -981,7 +983,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.EndOfMonth(new DateTime(2022, 02, 22), 1));
-			Console.WriteLine(result);
+
 			Assert.That(result?.Day, Is.EqualTo(31));
 		}
 
@@ -990,7 +992,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.GetDate());
-			Console.WriteLine(result);
+
 			Assert.That(result.Year, Is.EqualTo(DateTime.Today.Year));
 		}
 
@@ -999,7 +1001,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.GetUtcDate());
-			Console.WriteLine(result);
+
 			Assert.That(result.Year, Is.EqualTo(DateTime.UtcNow.Year));
 		}
 
@@ -1008,7 +1010,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SysDatetime());
-			Console.WriteLine(result);
+
 			Assert.That(result.Year, Is.EqualTo(DateTime.Now.Year));
 		}
 
@@ -1017,7 +1019,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SysDatetimeOffset());
-			Console.WriteLine(result);
+
 			Assert.That(result.Year, Is.EqualTo(DateTime.Now.Year));
 		}
 
@@ -1026,7 +1028,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SysUtcDatetime());
-			Console.WriteLine(result);
+
 			Assert.That(result.Year, Is.EqualTo(DateTime.Now.Year));
 		}
 
@@ -1035,7 +1037,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IsDate("2022-02-22"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -1046,7 +1048,7 @@ namespace Tests.DataProvider
 
 			var date   = "2022-02-24";
 			var result = db.Select(() => SqlFn.Month(date));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(2));
 		}
 
@@ -1055,7 +1057,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Month(new DateTime(2022, 02, 22)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(2));
 		}
 
@@ -1064,7 +1066,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Month(new DateTimeOffset(new DateTime(2022, 02, 22), TimeSpan.Zero)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(2));
 		}
 
@@ -1073,7 +1075,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SwitchOffset(new DateTimeOffset(new DateTime(2022, 02, 22), TimeSpan.Zero), "-04:00"));
-			Console.WriteLine(result);
+
 			Assert.That(result?.Year, Is.EqualTo(2022));
 		}
 
@@ -1082,7 +1084,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ToDatetimeOffset(new DateTime(2022, 02, 22), "-04:00"));
-			Console.WriteLine(result);
+
 			Assert.That(result?.Year, Is.EqualTo(2022));
 		}
 
@@ -1091,7 +1093,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Year("2022-02-24"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(2022));
 		}
 
@@ -1100,7 +1102,7 @@ namespace Tests.DataProvider
 		{
 			using var db     = new SystemDB(context);
 			var       result = db.Select(() => SqlFn.Year(new DateTime(2022, 02, 22)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(2022));
 		}
 
@@ -1109,7 +1111,7 @@ namespace Tests.DataProvider
 		{
 			using var db     = new SystemDB(context);
 			var       result = db.Select(() => SqlFn.Year(new DateTimeOffset(new DateTime(2022, 02, 22), TimeSpan.Zero)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(2022));
 		}
 
@@ -1122,7 +1124,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IsJson(/*lang=json,strict*/ "{ \"test\" : 1 }"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.True);
 		}
 
@@ -1131,7 +1133,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.JsonValue(/*lang=json,strict*/ "{ \"test\" : 1 }", "$.test"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("1"));
 		}
 
@@ -1140,7 +1142,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.JsonQuery(/*lang=json,strict*/ "{ \"test\" : 1 }", "$"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(/*lang=json,strict*/ "{ \"test\" : 1 }"));
 		}
 
@@ -1149,7 +1151,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.JsonModify(/*lang=json,strict*/ "{ \"test\" : 1 }", "$.test", "2"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(/*lang=json,strict*/ "{ \"test\" : \"2\" }"));
 		}
 
@@ -1158,7 +1160,6 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.QueryFromExpression(() => SqlFn.OpenJson(/*lang=json,strict*/ "{ \"test\" : 1 }")).ToArray();
-			Console.WriteLine(result);
 
 			var expected = new[]
 			{
@@ -1173,7 +1174,6 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.QueryFromExpression(() => SqlFn.OpenJson(/*lang=json,strict*/ "{ \"test\" : [ 10, 20 ] }", "$.test")).ToArray();
-			Console.WriteLine(result);
 
 			var expected = new[]
 			{
@@ -1193,7 +1193,6 @@ namespace Tests.DataProvider
 				.Where(jd => jd.Value != "60")
 				.Select(jd => jd.Value)
 				.ToArray();
-			Console.WriteLine(result);
 
 			var expected = new[] { "10", "20", "40", "50", "70" };
 
@@ -1205,7 +1204,6 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.OpenJson(/*lang=json,strict*/ "{ \"test\" : 1 }").ToArray();
-			Console.WriteLine(result);
 
 			var expected = new[]
 			{
@@ -1221,7 +1219,6 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.OpenJson(/*lang=json,strict*/ "{ \"test\" : [ 10, 20 ] }", "$.test").ToArray();
-			Console.WriteLine(result);
 
 			var expected = new[]
 			{
@@ -1241,7 +1238,6 @@ namespace Tests.DataProvider
 				.Where(jd => jd.Value != "60")
 				.Select(jd => jd.Value)
 				.ToArray();
-			Console.WriteLine(result);
 
 			var expected = new[] { "10", "20", "40", "50", "70" };
 
@@ -1256,7 +1252,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Abs("-10"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("10"));
 		}
 
@@ -1265,7 +1261,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Abs(-10.01m));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(10.01m));
 		}
 
@@ -1274,7 +1270,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Acos(0.5));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(Math.Acos(0.5)));
 		}
 
@@ -1283,7 +1279,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Asin(0.5));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(Math.Asin(0.5)));
 		}
 
@@ -1292,7 +1288,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Atan(0.5));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(Math.Atan(0.5)));
 		}
 
@@ -1301,8 +1297,8 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Atn2(10, 100));
-			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -1310,7 +1306,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Ceiling(123.45));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(124));
 		}
 
@@ -1319,7 +1315,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Cos(0));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(Math.Cos(0)));
 		}
 
@@ -1328,8 +1324,8 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Cot(1));
-			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -1337,7 +1333,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Degrees(1.5));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThan(0));
 		}
 
@@ -1346,7 +1342,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Exp(10));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThan(0));
 		}
 
@@ -1355,7 +1351,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Floor(10.11));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(10));
 		}
 
@@ -1364,7 +1360,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Log(SqlFn.Exp(10)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(10));
 		}
 
@@ -1373,7 +1369,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Log(10.0, 2));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(Math.Log(10, 2)));
 		}
 
@@ -1382,7 +1378,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Log10(SqlFn.Exp(10)));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(10));
 		}
 
@@ -1391,7 +1387,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.PI());
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(Math.PI));
 		}
 
@@ -1400,7 +1396,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Power(2m, 2));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(Math.Pow(2, 2)));
 		}
 
@@ -1409,7 +1405,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Round(SqlFn.Radians(-45.01m), 4));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(-0.7856m));
 		}
 
@@ -1418,7 +1414,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Random());
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThanOrEqualTo(0).And.LessThanOrEqualTo(1));
 		}
 
@@ -1427,7 +1423,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Random(10));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThanOrEqualTo(0).And.LessThanOrEqualTo(1));
 		}
 
@@ -1436,7 +1432,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Round(12345, -3));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(12000));
 		}
 
@@ -1445,7 +1441,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Round(1.999, 2, 0));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(2));
 		}
 
@@ -1454,7 +1450,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Round(0.999, 1, 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(0.9));
 		}
 
@@ -1463,7 +1459,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Sign(1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -1472,7 +1468,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Sqrt(4));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(2));
 		}
 
@@ -1481,7 +1477,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Square(4));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(16));
 		}
 
@@ -1490,7 +1486,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Round(SqlFn.Tan(SqlFn.PI() / 2), -12));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(16331000000000000.0d));
 		}
 
@@ -1505,7 +1501,7 @@ namespace Tests.DataProvider
 
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Choose(2, "A", b, "C"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("B"));
 		}
 
@@ -1514,7 +1510,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Iif(Sql.AsSql(1) > 2, "A", "B"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("B"));
 		}
 
@@ -1527,7 +1523,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.AppName());
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -1537,11 +1533,11 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 
 			var result = db.Select(() => SqlFn.ColumnLength("Person", "PersonID"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(4));
 
 			result = db.Select(() => SqlFn.ColumnLength("Person", "ID"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Null);
 		}
 
@@ -1550,7 +1546,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ColumnName(SqlFn.ObjectID("dbo.Person", "U"), 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("PersonID"));
 		}
 
@@ -1568,7 +1564,7 @@ namespace Tests.DataProvider
 			})
 			{
 				var result = db.Select(() => SqlFn.ColumnProperty(SqlFn.ObjectID("dbo.Person"), "PersonID", item.Parameter));
-				Console.WriteLine(result);
+	
 				Assert.That(result, Is.EqualTo(item.Result));
 			}
 		}
@@ -1578,13 +1574,13 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DatabasePropertyEx(SqlFn.DbName(), SqlFn.DatabasePropertyName.Version));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result, Is.TypeOf<int>());
 				Assert.That((int)result, Is.GreaterThan(600));
-			});
+			}
 		}
 
 		[Test]
@@ -1592,7 +1588,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DbID(SqlFn.DbName()));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThan(0));
 		}
 
@@ -1601,7 +1597,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DbID());
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThan(0));
 		}
 
@@ -1610,7 +1606,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DbName(SqlFn.DbID()));
-			Console.WriteLine(result);
+
 			Assert.That(result, Contains.Substring("TestData"));
 		}
 
@@ -1619,7 +1615,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DbName());
-			Console.WriteLine(result);
+
 			Assert.That(result, Contains.Substring("TestData"));
 		}
 
@@ -1628,10 +1624,8 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 
-			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
+			var file   = db.System.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FileID(file.Name));
-
-			Console.WriteLine(result);
 
 			Assert.That(result, Is.EqualTo(file.FileID));
 		}
@@ -1641,10 +1635,8 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 
-			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
+			var file   = db.System.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FileIDEx(file.Name));
-
-			Console.WriteLine(result);
 
 			Assert.That(result, Is.EqualTo(file.FileID));
 		}
@@ -1654,10 +1646,8 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 
-			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
+			var file   = db.System.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FileName(file.FileID));
-
-			Console.WriteLine(result);
 
 			Assert.That(result, Is.EqualTo(file.Name));
 		}
@@ -1667,7 +1657,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.FileGroupID("PRIMARY"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -1676,7 +1666,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.FileGroupName(1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("PRIMARY"));
 		}
 
@@ -1685,8 +1675,8 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.FileGroupProperty("PRIMARY", SqlFn.FileGroupPropertyName.IsReadOnly));
-			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -1694,10 +1684,8 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 
-			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
+			var file   = db.System.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FileProperty(file.Name, SqlFn.FilePropertyName.IsPrimaryFile));
-
-			Console.WriteLine(result);
 
 			Assert.That(result, Is.EqualTo(1));
 		}
@@ -1707,10 +1695,8 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 
-			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
+			var file   = db.System.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FilePropertyEx(file.Name, SqlFn.FilePropertyExName.AccountType));
-
-			Console.WriteLine(result);
 
 			Assert.That(result, Is.Not.Null);
 		}
@@ -1720,8 +1706,8 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.FullTextServiceProperty(SqlFn.FullTextServicePropertyName.IsFulltextInstalled));
-			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0).Or.EqualTo(1));
+
+			Assert.That(result, Is.Zero.Or.EqualTo(1));
 		}
 
 		[Test]
@@ -1729,7 +1715,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IndexColumn("Person", 1, 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("PersonID"));
 		}
 
@@ -1738,7 +1724,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IndexKeyProperty(SqlFn.ObjectID("Person", "U"), 1, 1, SqlFn.IndexKeyPropertyName.ColumnId));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -1747,7 +1733,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IndexProperty(SqlFn.ObjectID("dbo.Person"), "PK_Person", SqlFn.IndexPropertyName.IsClustered));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -1756,14 +1742,13 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.NextValueFor("dbo.TestSequence"));
-			Console.WriteLine(result);
 
 			Assert.That(result, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result, Is.TypeOf<long>());
 				Assert.That((long)result, Is.GreaterThan(0L));
-			});
+			}
 		}
 
 		[Test]
@@ -1789,7 +1774,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.ObjectDefinition(SqlFn.ObjectID("PersonSearch")));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -1798,7 +1783,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ObjectName(SqlFn.ObjectID("dbo.Person")));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("Person"));
 		}
 
@@ -1807,7 +1792,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ObjectName(SqlFn.ObjectID("dbo.Person"), SqlFn.DbID()));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("Person"));
 		}
 
@@ -1816,7 +1801,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ObjectSchemaName(SqlFn.ObjectID("dbo.Person")));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("dbo"));
 		}
 
@@ -1825,7 +1810,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ObjectSchemaName(SqlFn.ObjectID("dbo.Person"), SqlFn.DbID()));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("dbo"));
 		}
 
@@ -1834,8 +1819,8 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ObjectProperty(SqlFn.ObjectID("dbo.Person"), SqlFn.ObjectPropertyName.HasDeleteTrigger));
-			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -1843,7 +1828,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ObjectPropertyEx(SqlFn.ObjectID("dbo.Person"), SqlFn.ObjectPropertyExName.IsTable));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -1852,7 +1837,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.OriginalDbName());
-			Console.WriteLine(result);
+
 			Assert.That(result, Contains.Substring("TestData"));
 		}
 
@@ -1861,7 +1846,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ParseName("dbo.Person", 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("Person"));
 		}
 
@@ -1870,7 +1855,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SchemaName(SqlFn.SchemaID("sys")));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("sys"));
 		}
 
@@ -1879,7 +1864,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SchemaName());
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("dbo"));
 		}
 
@@ -1888,7 +1873,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SchemaName(SqlFn.SchemaID()));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("dbo"));
 		}
 
@@ -1897,7 +1882,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ScopeIdentity());
-			Assert.That(result, Is.EqualTo(0));
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -1905,7 +1890,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ServerProperty(SqlFn.ServerPropertyName.Edition));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -1914,7 +1899,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.StatsDate(SqlFn.ObjectID("dbo.Person"), 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null.Or.Null);
 		}
 
@@ -1923,7 +1908,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TypeName(SqlFn.TypeID("int")));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("int"));
 		}
 
@@ -1932,7 +1917,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TypeProperty("int", SqlFn.TypePropertyName.Precision));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(10));
 		}
 
@@ -1945,7 +1930,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.PublishingServerName());
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -1958,7 +1943,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Ascii('A'));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(65));
 		}
 
@@ -1967,7 +1952,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Ascii("ABC"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(65));
 		}
 
@@ -1976,7 +1961,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Char(65));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo('A'));
 		}
 
@@ -1985,7 +1970,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.CharIndex("34", "123456"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(3));
 		}
 
@@ -1994,7 +1979,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.CharIndex("34", "123456340", 4));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(7));
 		}
 
@@ -2003,7 +1988,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.CharIndexBig("34", "123456"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(3));
 		}
 
@@ -2012,7 +1997,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.CharIndexBig("34", "123456340", 4));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(7));
 		}
 
@@ -2021,7 +2006,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.CharIndex("34", "123456340", 4L));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(7));
 		}
 
@@ -2030,7 +2015,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Concat("34", "123456", "abc"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("34123456abc"));
 		}
 
@@ -2039,7 +2024,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ConcatWithSeparator("-", "34", "123456", "abc"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("34-123456-abc"));
 		}
 
@@ -2048,7 +2033,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Difference("Green", "Greene"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(4));
 		}
 
@@ -2057,7 +2042,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Format(123456789, "###-##-####"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("123-45-6789"));
 		}
 
@@ -2066,7 +2051,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Left("1234", 2));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("12"));
 		}
 
@@ -2075,7 +2060,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Len("1234"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(4));
 		}
 
@@ -2084,7 +2069,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.LenBig("1234"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(4L));
 		}
 
@@ -2093,7 +2078,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Lower("AbC"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("abc"));
 		}
 
@@ -2102,7 +2087,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.LeftTrim("  ABC  "));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("ABC  "));
 		}
 
@@ -2111,7 +2096,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.NChar(248));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo('ø'));
 		}
 
@@ -2120,7 +2105,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.PatIndex("%ter%", "interesting data"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(3));
 		}
 
@@ -2129,7 +2114,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.PatIndexBig("%ter%", "interesting data"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(3));
 		}
 
@@ -2138,7 +2123,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.QuoteName("abc[]def"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("[abc[]]def]"));
 		}
 
@@ -2147,7 +2132,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.QuoteName("abc def", "><"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("<abc def>"));
 		}
 
@@ -2156,7 +2141,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Replace("abcdefghicde", "cde", "xxx"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("abxxxfghixxx"));
 		}
 
@@ -2165,7 +2150,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Replicate("ab", 2));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("abab"));
 		}
 
@@ -2174,7 +2159,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Replicate(new byte[] { (int)'a' }, 2));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("aa"));
 		}
 
@@ -2183,7 +2168,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Reverse("abc"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("cba"));
 		}
 
@@ -2192,7 +2177,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Right("12345", 2));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("45"));
 		}
 
@@ -2201,7 +2186,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.RightTrim("  123  "));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("  123"));
 		}
 
@@ -2210,7 +2195,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SoundEx("Bambardu"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("B516"));
 		}
 
@@ -2219,7 +2204,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => "'" + SqlFn.Space(3) + "'");
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("'   '"));
 		}
 
@@ -2228,7 +2213,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Str(10.101));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("        10"));
 		}
 
@@ -2237,7 +2222,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Str(10.101, 3));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(" 10"));
 		}
 
@@ -2246,7 +2231,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Str(10.101, 5, 1));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(" 10.1"));
 		}
 
@@ -2255,7 +2240,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.StringEscape("\\  /  \n\\\\    \"", "json"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("\\\\  \\/  \\n\\\\\\\\    \\\""));
 		}
 
@@ -2264,7 +2249,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Stuff("abcdef", 2, 3, "ijklmn"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("aijklmnef"));
 		}
 
@@ -2273,7 +2258,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Substring("abcdef", 2, 3));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("bcd"));
 		}
 
@@ -2282,7 +2267,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Translate("2*[3+4]/{7-2}", "[]{}", "()()"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("2*(3+4)/(7-2)"));
 		}
 
@@ -2291,7 +2276,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Trim("     test    "));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("test"));
 		}
 
@@ -2300,7 +2285,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Trim(".,! ", "     #     test    ."));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("#     test"));
 		}
 
@@ -2309,7 +2294,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Unicode("Åkergatan 24"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(197));
 		}
 
@@ -2318,7 +2303,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Upper("AbC"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("ABC"));
 		}
 
@@ -2327,7 +2312,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Collate("AbC", "Latin1_General_CI_AS"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("AbC"));
 		}
 
@@ -2340,7 +2325,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Identity);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Null);
 		}
 
@@ -2349,7 +2334,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.PackReceived);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThan(0));
 		}
 
@@ -2358,8 +2343,8 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TransactionCount);
-			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+
+			Assert.That(result, Is.Zero);
 		}
 
 		[Test]
@@ -2373,8 +2358,7 @@ namespace Tests.DataProvider
 
 			var result = q.First();
 
-			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2389,8 +2373,7 @@ namespace Tests.DataProvider
 
 			var result = q.First();
 
-			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2404,8 +2387,7 @@ namespace Tests.DataProvider
 
 			var result = q.First();
 
-			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2420,8 +2402,7 @@ namespace Tests.DataProvider
 
 			var result = q.First();
 
-			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2429,7 +2410,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.Compress("ABC"));
-			Console.WriteLine(result.ToDiagnosticString());
+
 			Assert.That(result[0], Is.EqualTo(31));
 		}
 
@@ -2438,7 +2419,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.Compress(new byte[] { 1, 2, 3 }));
-			Console.WriteLine(result.ToDiagnosticString());
+
 			Assert.That(result[0], Is.EqualTo(31));
 		}
 
@@ -2447,7 +2428,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.ConnectionProperty(SqlFn.ConnectionPropertyName.Net_Transport));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -2456,7 +2437,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.CurrentRequestID());
-			Console.WriteLine(result);
+
 		}
 
 		[Test]
@@ -2464,8 +2445,8 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.CurrentTransactionID());
-			Console.WriteLine(result);
-			Assert.That(result, Is.Not.EqualTo(0));
+
+			Assert.That(result, Is.Not.Zero);
 		}
 
 		[Test]
@@ -2477,7 +2458,7 @@ namespace Tests.DataProvider
 				31, 139, 8, 0, 0, 0, 0, 0, 4, 0, 115, 100, 112, 98, 112, 102, 0, 0, 26, 244, 143, 159, 6, 0, 0, 0
 
 			})));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("ABC"));
 		}
 
@@ -2486,7 +2467,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.FormatMessage(20009, "ABC", "CBA"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Contains.Substring("ABC").And.Contains("CBA"));
 		}
 
@@ -2495,7 +2476,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.FormatMessage("- %i %s -", 1, "A"));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo("- 1 A -"));
 		}
 
@@ -2504,7 +2485,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.GetAnsiNull());
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -2513,7 +2494,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.GetAnsiNull(SqlFn.DbName()));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -2522,7 +2503,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.HostID());
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -2531,7 +2512,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.HostName());
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -2542,7 +2523,7 @@ namespace Tests.DataProvider
 
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.IsNull(p, 10));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(10));
 		}
 
@@ -2551,7 +2532,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.IsNumeric(10));
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -2560,7 +2541,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.MinActiveRowVersion());
-			Console.WriteLine(result);
+
 			Assert.That(result, Has.Length.EqualTo(8));
 		}
 
@@ -2569,7 +2550,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.NewID());
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.EqualTo(Guid.Empty));
 		}
 
@@ -2578,7 +2559,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.RowCount);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThanOrEqualTo(0));
 		}
 
@@ -2587,7 +2568,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.RowCountBig());
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThanOrEqualTo(0));
 		}
 
@@ -2598,13 +2579,13 @@ namespace Tests.DataProvider
 
 			db.BeginTransaction();
 			var result = db.Select(() => SqlFn.XactState());
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(1));
 
 			db.RollbackTransaction();
 			result = db.Select(() => SqlFn.XactState());
-			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo(0));
+
+			Assert.That(result, Is.Zero);
 		}
 
 		#endregion
@@ -2616,7 +2597,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Connections);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThan(0));
 		}
 
@@ -2625,7 +2606,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.CpuBusy);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThan(0));
 		}
 
@@ -2634,7 +2615,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Idle);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThan(0).Or.Not.GreaterThan(0));
 		}
 
@@ -2643,7 +2624,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IOBusy);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThan(0));
 		}
 
@@ -2652,7 +2633,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.PackSent);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThan(0));
 		}
 
@@ -2661,7 +2642,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.PacketErrors);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThanOrEqualTo(0));
 		}
 
@@ -2670,7 +2651,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TimeTicks);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThanOrEqualTo(0));
 		}
 
@@ -2679,7 +2660,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TotalErrors);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThanOrEqualTo(0));
 		}
 
@@ -2688,7 +2669,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TotalRead);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThanOrEqualTo(0));
 		}
 
@@ -2697,10 +2678,35 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TotalWrite);
-			Console.WriteLine(result);
+
 			Assert.That(result, Is.GreaterThanOrEqualTo(0));
 		}
 
 		#endregion
+
+		[Test]
+		public void GetTableRowCountInfoTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new TestDataConnection(context);
+
+			var resultBefore = db.GetTableRowCountInfo().OrderBy(t => t.ObjectID).ToList();
+
+			List<SystemSchemaExtensions.TableRowCountInfo> resultAfter;
+
+			using (var tx = db.BeginTransaction())
+			{
+				db.Insert(new Parent { ParentID = -345 });
+
+				resultAfter = db.GetTableRowCountInfo().OrderBy(t => t.ObjectID).ToList();
+
+				Assert.That(resultAfter, Is.Not.EquivalentTo(resultBefore));
+
+				tx.Rollback();
+			}
+
+			resultAfter = db.GetTableRowCountInfo().OrderBy(t => t.ObjectID).ToList();
+
+			Assert.That(resultAfter, Is.EquivalentTo(resultBefore));
+		}
 	}
 }

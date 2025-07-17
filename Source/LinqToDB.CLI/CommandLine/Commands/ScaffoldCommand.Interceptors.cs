@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
 
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
 using LinqToDB.Scaffold;
 using LinqToDB.Tools;
 
@@ -88,7 +88,7 @@ namespace LinqToDB.CommandLine
 				var assemblyResolver  = new CompositeCompilationAssemblyResolver(resolver);
 				var loadContext       = AssemblyLoadContext.GetLoadContext(interceptorsAssembly);
 
-				loadContext!.Resolving += (AssemblyLoadContext context, AssemblyName name) =>
+				loadContext!.Resolving += (context, name) =>
 				{
 					bool NamesMatch(RuntimeLibrary runtime)
 					{

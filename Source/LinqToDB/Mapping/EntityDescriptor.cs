@@ -5,8 +5,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
@@ -43,25 +43,25 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public SqlObjectName Name { get; private set; }
 
-		string IEntityChangeDescriptor.TableName
+		public string TableName
 		{
 			get => Name.Name;
 			set => Name = Name with { Name = value };
 		}
 
-		string? IEntityChangeDescriptor.SchemaName
+		public string? SchemaName
 		{
 			get => Name.Schema;
 			set => Name = Name with { Schema = value };
 		}
 
-		string? IEntityChangeDescriptor.DatabaseName
+		public string? DatabaseName
 		{
 			get => Name.Database;
 			set => Name = Name with { Database = value };
 		}
 
-		string? IEntityChangeDescriptor.ServerName
+		public string? ServerName
 		{
 			get => Name.Server;
 			set => Name = Name with { Server = value };
@@ -85,7 +85,7 @@ namespace LinqToDB.Mapping
 		/// - <see cref="PrimaryKeyAttribute"/>;
 		/// - <see cref="IdentityAttribute"/>;
 		/// - <see cref="ColumnAliasAttribute"/>.
-		/// Otherwise all supported members of scalar type will be used:
+		/// Otherwise, all supported members of scalar type will be used:
 		/// - public instance fields and properties;
 		/// - explicit interface implementation properties.
 		/// Also see <seealso cref="Common.Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.

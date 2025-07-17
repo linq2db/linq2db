@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SQLite;
 
 using NUnit.Framework;
 
@@ -16,6 +18,94 @@ namespace Tests.Linq
 	[TestFixture]
 	public class DataContextTests : TestBase
 	{
+		sealed class EmptyDefaultSetingsScope : IDisposable
+		{
+			private readonly string? _oldValue;
+#if !NETFRAMEWORK
+			private readonly ILinqToDBSettings? _oldSettings;
+#endif
+
+			public EmptyDefaultSetingsScope()
+			{
+				_oldValue                           = DataConnection.DefaultConfiguration;
+				DataConnection.DefaultConfiguration = null;
+
+#if !NETFRAMEWORK
+				// see TestConfiguration.cctor implementation:
+				// netfx adds connections to DataConnection one-by-one
+				// .net sets DefaultSettings instance
+				// if we reset DefaultSettings, netfx will loose connection strings
+				// We shouldn't reset it for netfx or change init implementation in TestConfiguration
+				_oldSettings                   = DataConnection.DefaultSettings;
+				DataConnection.DefaultSettings = null;
+#endif
+			}
+
+			void IDisposable.Dispose()
+			{
+				DataConnection.DefaultConfiguration = _oldValue;
+#if !NETFRAMEWORK
+				DataConnection.DefaultSettings      = _oldSettings;
+#endif
+			}
+		}
+
+		[Test, NonParallelizable]
+		public void TestNullConfiguration_Unset([Values] bool cleanDefault)
+		{
+			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
+
+			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
+
+			using var db = new DataConnection(new DataOptions().UseSQLite(connectionString, SQLiteProvider.System));
+
+			_ = db.GetTable<Person>().ToArray();
+		}
+
+		[Test, NonParallelizable]
+		public void TestNullConfiguration_UnsetRemote([Values] bool cleanDefault)
+		{
+			if (TestConfiguration.DisableRemoteContext) Assert.Ignore("Remote context disabled");
+
+			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
+
+			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
+
+			using var db = GetServerContainer(DefaultTransport).CreateContext(
+				(s, o) => o,
+				(conf, ms) => new DataConnection(new DataOptions().UseSQLite(connectionString, SQLiteProvider.System)));
+
+			_ = db.GetTable<Person>().ToArray();
+		}
+
+		[Test, NonParallelizable]
+		public void TestNullConfiguration_SetNull([Values] bool cleanDefault)
+		{
+			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
+
+			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
+
+			using var db = new DataConnection(new DataOptions().UseConfiguration(null).UseSQLite(connectionString, SQLiteProvider.System));
+
+			_ = db.GetTable<Person>().ToArray();
+		}
+
+		[Test, NonParallelizable]
+		public void TestNullConfiguration_SetNullRemote([Values] bool cleanDefault)
+		{
+			if (TestConfiguration.DisableRemoteContext) Assert.Ignore("Remote context disabled");
+
+			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
+
+			using var scope = cleanDefault ? new EmptyDefaultSetingsScope() : null;
+
+			using var db = GetServerContainer(DefaultTransport).CreateContext(
+				(s, o) => o,
+				(conf, ms) => new DataConnection(new DataOptions().UseConfiguration(null).UseSQLite(connectionString, SQLiteProvider.System)));
+
+			_ = db.GetTable<Person>().ToArray();
+		}
+
 		[Test]
 		public void TestContext([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
@@ -23,12 +113,11 @@ namespace Tests.Linq
 			{
 				ctx.GetTable<Person>().ToList();
 
-				ctx.KeepConnectionAlive = true;
-
-				ctx.GetTable<Person>().ToList();
-				ctx.GetTable<Person>().ToList();
-
-				ctx.KeepConnectionAlive = false;
+				using (var _ = new KeepConnectionAliveScope(ctx))
+				{
+					ctx.GetTable<Person>().ToList();
+					ctx.GetTable<Person>().ToList();
+				}
 
 				using (var tran = new DataContextTransaction(ctx))
 				{
@@ -64,8 +153,8 @@ namespace Tests.Linq
 		{
 			using (var ctx = new DataContext(context))
 			{
-				ctx.KeepConnectionAlive = true;
-				ctx.KeepConnectionAlive = false;
+				ctx.SetKeepConnectionAlive(true);
+				ctx.SetKeepConnectionAlive(false);
 			}
 		}
 
@@ -98,11 +187,11 @@ namespace Tests.Linq
 			using (var db = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(new DataOptions().UseConnectionString(db.DataProvider.Name, db.ConnectionString!)))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db1.DataProvider.Name, Is.EqualTo(db.DataProvider.Name));
 					Assert.That(db1.ConnectionString, Is.EqualTo(db.ConnectionString));
-				});
+				}
 
 				AreEqual(
 					db.GetTable<Child>().OrderBy(_ => _.ChildID).ToList(),
@@ -176,23 +265,24 @@ namespace Tests.Linq
 		[Test]
 		public void CommandTimeoutTests([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = new TestDataContext(context))
-			{
-				db.KeepConnectionAlive = true;
-				db.CommandTimeout = 10;
-				Assert.That(db.DataConnection, Is.Null);
-				db.GetTable<Person>().ToList();
-				Assert.That(db.DataConnection, Is.Not.Null);
-				Assert.That(db.DataConnection!.CommandTimeout, Is.EqualTo(10));
+			using var db = new TestDataContext(context);
+			using var _ = new KeepConnectionAliveScope(db);
 
-				db.CommandTimeout = -10;
-				Assert.That(db.DataConnection.CommandTimeout, Is.EqualTo(-1));
+			db.CommandTimeout = 10;
+			Assert.That(db.DataConnection, Is.Null);
+			db.GetTable<Person>().ToList();
+			Assert.That(db.DataConnection, Is.Not.Null);
+			Assert.That(db.DataConnection!.CommandTimeout, Is.EqualTo(10));
 
-				db.CommandTimeout = 11;
-				var record = db.GetTable<Child>().First();
+			Assert.That(() => db.CommandTimeout = -10, Throws.InstanceOf<ArgumentOutOfRangeException>());
 
-				Assert.That(db.DataConnection!.CommandTimeout, Is.EqualTo(11));
-			}
+			db.ResetCommandTimeout();
+			Assert.That(db.DataConnection.CommandTimeout, Is.EqualTo(-1));
+
+			db.CommandTimeout = 11;
+			var record = db.GetTable<Child>().First();
+
+			Assert.That(db.DataConnection!.CommandTimeout, Is.EqualTo(11));
 		}
 
 		[Test]
@@ -200,14 +290,16 @@ namespace Tests.Linq
 		{
 			using (var db = new NewDataContext(context))
 			{
-				Assert.That(db.CreateCalled, Is.EqualTo(0));
+				Assert.That(db.CreateCalled, Is.Zero);
 
-				db.KeepConnectionAlive = true;
-				db.GetTable<Person>().ToList();
-				Assert.That(db.CreateCalled, Is.EqualTo(1));
-				db.GetTable<Person>().ToList();
-				Assert.That(db.CreateCalled, Is.EqualTo(1));
-				db.KeepConnectionAlive = false;
+				using (var _ = new KeepConnectionAliveScope(db))
+				{
+					db.GetTable<Person>().ToList();
+					Assert.That(db.CreateCalled, Is.EqualTo(1));
+					db.GetTable<Person>().ToList();
+					Assert.That(db.CreateCalled, Is.EqualTo(1));
+				}
+
 				db.GetTable<Person>().ToList();
 				Assert.That(db.CreateCalled, Is.EqualTo(2));
 			}
@@ -326,12 +418,11 @@ namespace Tests.Linq
 			((IDataContext)db).CloseAfterUse = closeAfterUse;
 
 			db.Query<int>("SELECT 1").SingleOrDefault();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(interceptor.OnClosedCount, Is.EqualTo(closeAfterUse ? 1 : 0));
-				Assert.That(interceptor.OnClosedAsyncCount, Is.EqualTo(0));
-			});
+				Assert.That(interceptor.OnClosedAsyncCount, Is.Zero);
+			}
 		}
 
 	}

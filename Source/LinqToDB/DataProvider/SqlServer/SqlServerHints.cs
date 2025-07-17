@@ -6,9 +6,11 @@ using System.Text;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Expressions;
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internal.DataProvider.SqlServer;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -267,6 +269,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "USE HINT")]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "USE HINT")]
 		[Sql.QueryExtension(ProviderName.SqlServer2022, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "USE HINT")]
+		[Sql.QueryExtension(ProviderName.SqlServer2025, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "USE HINT")]
 		[Sql.QueryExtension(null,                       Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> OptionUseHint<TSource>(
 			this ISqlServerSpecificQueryable<TSource> source,
@@ -316,6 +319,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.QueryHint, typeof(TableParamsExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.QueryHint, typeof(TableParamsExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2022, Sql.QueryExtensionScope.QueryHint, typeof(TableParamsExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2025, Sql.QueryExtensionScope.QueryHint, typeof(TableParamsExtensionBuilder))]
 		[Sql.QueryExtension(null,                       Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> OptionTableHint<TSource>(
 			this ISqlServerSpecificQueryable<TSource> source,
@@ -426,6 +430,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2022, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2025, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                       Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificTable<TSource> TableHint2012Plus<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
@@ -446,6 +451,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2022, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2025, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                       Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		static ISqlServerSpecificTable<TSource> TableHint2014Plus<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
@@ -557,6 +563,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2022, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2025, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                       Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> TablesInScopeHint2012Plus<TSource>(
 			this ISqlServerSpecificQueryable<TSource> source,
@@ -585,6 +592,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2022, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2025, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                       Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> TablesInScopeHint2014Plus<TSource>(
 			this ISqlServerSpecificQueryable<TSource> source,
@@ -743,6 +751,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2022, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2025, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                       Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> QueryHint2019Plus<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
@@ -771,6 +780,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2022, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2025, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> QueryHint2008Plus<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
@@ -798,6 +808,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2022, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2025, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> QueryHint2012Plus<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
@@ -823,6 +834,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2022, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2025, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> QueryHint2016Plus<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull

@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Mapping
 {
@@ -23,7 +23,7 @@ namespace LinqToDB.Mapping
 	/// records. To load data into association, you should explicitly specify it in your query using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> method.
 	/// </summary>
 	[PublicAPI]
-	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
+	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple=true)]
 	public class AssociationAttribute : MappingAttribute
 	{
 		/// <summary>
@@ -175,7 +175,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{AssociationSetterExpressionMethod}.{IdentifierBuilder.GetObjectID(AssociationSetterExpression)}.{(CanBeNull?1:0)}.{AliasName}.");
+			return FormattableString.Invariant($".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{AssociationSetterExpressionMethod}.{IdentifierBuilder.GetObjectID(AssociationSetterExpression)}.{(ConfiguredCanBeNull switch { null => -1, true => 1, _ => 0 })}.{AliasName}.");
 		}
 	}
 }

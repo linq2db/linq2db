@@ -4,8 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
@@ -228,11 +226,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(gc, Is.Not.Null);
 		}
 
-#if NET6_0
-		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllMySql])]
-#else
 		[ActiveIssue(TestProvName.AllPostgreSQL)]
-#endif
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4333")]
 		public void Issue4333Test([EFDataSources] string provider)
 		{
@@ -250,14 +244,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var result = table.OrderBy(e => e.Id).ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[0].Name, Is.EqualTo("Bar"));
 				Assert.That(result[1].Id, Is.EqualTo(2));
 				Assert.That(result[1].Name, Is.EqualTo("Baz"));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -331,7 +324,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(result, Is.EqualTo(1));
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4625")]
 		public void Issue4625TestWithConverter([EFDataSources] string provider)
 		{
@@ -348,7 +341,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
-		public void Issue4626Test1([EFDataSources(TestProvName.AllSQLite, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllSqlServer2022Minus, TestProvName.AllPostgreSQL15Minus)] string provider)
+		public void Issue4626Test1([EFDataSources(TestProvName.AllSQLite, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL15Minus)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -438,13 +431,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var result = db.GetTable<Issue155Table>().Where(e => e.Id == 1).Single();
 			Assert.That(result.Linked, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Linked[0], Is.EqualTo(2));
 				Assert.That(result.LinkedFrom, Has.Length.EqualTo(2));
 				Assert.That(result.LinkedFrom, Does.Contain(2));
 				Assert.That(result.LinkedFrom, Does.Contain(3));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -458,20 +451,21 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.ToArrayAsyncLinqToDB();
 
 			Assert.That(res, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Id, Is.EqualTo(1));
 				Assert.That(res[0].Values, Has.Count.EqualTo(1));
-			});
+			}
+
 			var value = res[0].Values.Single();
 			Assert.That(value, Is.TypeOf<Issue4628Inherited>());
 			var typedValue = (Issue4628Inherited)value;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(typedValue.Id, Is.EqualTo(11));
 				Assert.That(typedValue.OtherId, Is.EqualTo(1));
 				Assert.That(typedValue.SomeValue, Is.EqualTo("Value 11"));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4629")]
@@ -489,16 +483,16 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					Count = Sql.Ext.Count().Over().ToValue(),
 					Id = id,
 				})
-				.ToLinqToDB().ToArray();
+				.ToLinqToDB().ToArray().OrderBy(r => r.Id.Id).ToArray();
 
 			Assert.That(posts, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(posts[0].Id.Id, Is.EqualTo(2));
+				Assert.That(posts[0].Id.Id, Is.EqualTo(1));
 				Assert.That(posts[0].Count, Is.EqualTo(2));
-				Assert.That(posts[1].Id.Id, Is.EqualTo(1));
+				Assert.That(posts[1].Id.Id, Is.EqualTo(2));
 				Assert.That(posts[1].Count, Is.EqualTo(2));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/201")]
@@ -612,20 +606,20 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				}).Merge();
 
 			var record = ctx.Issue4640.ToLinqToDB().Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(record.Id, Is.EqualTo(1));
 				Assert.That(record.Items, Is.Not.Null);
-			});
+			}
+
 			Assert.That(record.Items, Has.Count.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(record.Items[0].Name, Is.EqualTo("record 1"));
 				Assert.That(record.Items[0].Offset, Is.EqualTo(-1));
 				Assert.That(record.Items[1].Name, Is.EqualTo("record 2"));
 				Assert.That(record.Items[1].Offset, Is.EqualTo(20));
-			});
+			}
 
 			items[0].Items![1] = new Issue4640Items() { Name = "record 3", Offset = 4 };
 
@@ -644,20 +638,20 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				}).Merge();
 
 			record = ctx.Issue4640.ToLinqToDB().Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(record.Id, Is.EqualTo(1));
 				Assert.That(record.Items, Is.Not.Null);
-			});
+			}
+
 			Assert.That(record.Items, Has.Count.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(record.Items[0].Name, Is.EqualTo("record 1"));
 				Assert.That(record.Items[0].Offset, Is.EqualTo(-1));
 				Assert.That(record.Items[1].Name, Is.EqualTo("record 3"));
 				Assert.That(record.Items[1].Offset, Is.EqualTo(4));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -673,12 +667,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var result = ((LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel.IssueContext)ctx).Issue4641Table.OrderBy(r => r.Id).ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[1].Id, Is.EqualTo(2));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4642")]
@@ -721,11 +714,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var result = ctx.Set<Issue4643Table>().ToLinqToDB().Single();
 
 			Assert.That(result.Value, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Value[0], Is.EqualTo(DayOfWeek.Friday));
 				Assert.That(result.Value[1], Is.EqualTo(DayOfWeek.Saturday));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -886,11 +879,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.ToListAsyncEF();
 		}
 
-#if NET6_0
-		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllMySql])]
-#else
 		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL)]
-#endif
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
 		public void Issue4671Test1([EFDataSources] string provider)
 		{
@@ -910,12 +899,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var res1 = t1.Single();
 			var res2 = t2.Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res1.Id, Is.EqualTo(1));
 				Assert.That(res2.Id, Is.EqualTo(1));
-			});
+			}
 		}
 
 		[ActiveIssue]
@@ -938,12 +926,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var res1 = t1.Single();
 			var res2 = t2.Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res1.Id, Is.EqualTo(1));
 				Assert.That(res2.Id, Is.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]

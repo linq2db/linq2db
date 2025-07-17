@@ -53,7 +53,11 @@ namespace Tests.DataProvider
 				yield return new ParameterFactory("DataTable", _ => GetDataTable());
 
 				// as IEnumerable<SqlDataRecord>
-				yield return new ParameterFactory("SqlDataRecords", _ => _.Connection is Microsoft.Data.SqlClient.SqlConnection ? (object)SqlServerTestUtils.GetSqlDataRecordsMS() : SqlServerTestUtils.GetSqlDataRecords());
+				yield return new ParameterFactory("SqlDataRecords", db =>
+				{
+					var connection = db.OpenDbConnection();
+					return connection is Microsoft.Data.SqlClient.SqlConnection ? (object)SqlServerTestUtils.GetSqlDataRecordsMS() : SqlServerTestUtils.GetSqlDataRecords();
+				});
 
 				// TODO: doesn't work now as DbDataReader converted to Lst<object> of DbDataRecordInternal somewhere in linq2db
 				// before we can pass it to provider
@@ -187,19 +191,15 @@ namespace Tests.DataProvider
 					.Merge();
 
 				var data = table.OrderBy(_ => _.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt, Is.EqualTo(2));
 					Assert.That(data, Has.Length.EqualTo(2));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(data[0].Id, Is.EqualTo(1));
 					Assert.That(data[0].Name, Is.EqualTo("Value1"));
 					Assert.That(data[1].Id, Is.EqualTo(2));
 					Assert.That(data[1].Name, Is.EqualTo("Value2"));
-				});
+				}
 			}
 		}
 

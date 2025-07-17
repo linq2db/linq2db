@@ -3,7 +3,6 @@
 This directory contains test configs and setup scripts for test jobs on Azure Pipelines.
 
 - `netfx` folder stores test job configs for .NET 4.6.2 Windows tests
-- `net60` folder stores test job configs for `net6.0` test runs for Windows, Linux and MacOS
 - `net80` folder stores test job configs for `net8.0` test runs for Windows, Linux and MacOS
 - `net90` folder stores test job configs for `net9.0` test runs for Windows, Linux and MacOS
 - `scripts` folder stores test job setup scripts (`*.cmd` for Windows jobs, `*.sh` for Linux and MacOS, `*.ps1` for PowerShell scripts)
@@ -63,7 +62,7 @@ Legend:
 - :heavy_check_mark: - test job implemented
 - :x: - test job not implemented yet
 - `netfx`: .NET Framework (4.6.2)
-- `netcore`: .NET 6 OR .NET 8
+- `netcore`: .NET 8 OR .NET 9
 - :door: - Windows 2022
 - :penguin: - Linux (Ununtu 24.04)
 - :green_apple: - MacOS 13 (MacOS testing currently disabled)
@@ -87,6 +86,7 @@ Legend:
 |PostgreSQL 15<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 16<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 17<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 18<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 2.5<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 3.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 4.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
@@ -102,6 +102,7 @@ Legend:
 |MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2019<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |MS SQL Server 2022<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|MS SQL Server 2025<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |Azure SQL<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)|:x:|:x:|:x:|:x:|
 |Access<br>Jet 4.0 OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access><br>ACE 12 OLE DB|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
@@ -151,6 +152,7 @@ Legend:
 |`ProviderName.PostgreSQL15`|PostgreSQL 15||
 |`TestProvName.PostgreSQL16`|PostgreSQL 16||
 |`TestProvName.PostgreSQL17`|PostgreSQL 17||
+|`ProviderName.PostgreSQL18`|PostgreSQL 18||
 |`ProviderName.Firebird25`|Firebird 2.5||
 |`TestProvName.Firebird3`|Firebird 3.0||
 |`TestProvName.Firebird4`|Firebird 4.0||
@@ -172,6 +174,8 @@ Legend:
 |`TestProvName.SqlServer2019MS`|SQL Server 2019 using Microsoft.Data.SqlClient||
 |`ProviderName.SqlServer2022`|SQL Server 2022 using System.Data.SqlClient||
 |`TestProvName.SqlServer2022MS`|SQL Server 2022 using Microsoft.Data.SqlClient||
+|`ProviderName.SqlServer2025`|SQL Server 2025 using System.Data.SqlClient||
+|`TestProvName.SqlServer2025MS`|SQL Server 2025 using Microsoft.Data.SqlClient||
 |`TestProvName.SqlServerSA`|SQL Server latest (2019) in SequentialAccess mode using System.Data.SqlClient||
 |`TestProvName.SqlServerSAMS`|SQL Server latest (2019) in SequentialAccess mode using Microsoft.Data.SqlClient||
 |`TestProvName.SqlServerContained`|SQL Server latest (2019) in contained database mode using System.Data.SqlClient||

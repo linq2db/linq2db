@@ -8,12 +8,16 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Expressions;
-using LinqToDB.Expressions.Internal;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.Options;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB
@@ -77,8 +81,11 @@ namespace LinqToDB
 
 				for (var i = 0; i < parameters.Length; i++)
 				{
-					var type = pis[i].ParameterType;
-					args.Add(Expression.Constant(parameters[i], (type.IsByRef ? type.GetElementType() : type)!));
+					var        type    = pis[i].ParameterType;
+					Expression argExpr = Expression.Constant(parameters[i], (type.IsByRef ? type.GetElementType() : type)!);
+					argExpr = SequenceHelper.WrapAsParameter(argExpr);
+
+					args.Add(argExpr);
 				}
 
 				expr = Expression.Call(instance == null ? null : Expression.Constant(instance), methodInfo, args);
@@ -1094,55 +1101,6 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Internal API to support table creation using custom entity descriptor <paramref name="tableDescriptor"/>.
-		/// Creates new table in database for mapping class <typeparamref name="T"/>.
-		/// Information about table name, columns names and types is taken from mapping class.
-		/// </summary>
-		/// <typeparam name="T">Mapping class.</typeparam>
-		/// <param name="dataContext">Database connection context.</param>
-		/// <param name="tableDescriptor">Temporary table entity descriptor.</param>
-		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
-		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
-		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
-		/// <param name="defaultNullable">Defines how columns nullability flag should be generated:
-		/// <para> - <see cref="DefaultNullable.Null"/> - generate only <c>NOT NULL</c> for non-nullable fields. Missing nullability information treated as <c>NULL</c> by database.</para>
-		/// <para> - <see cref="DefaultNullable.NotNull"/> - generate only <c>NULL</c> for nullable fields. Missing nullability information treated as <c>NOT NULL</c> by database.</para>
-		/// <para> - <see cref="DefaultNullable.None"/> - explicitly generate <c>NULL</c> and <c>NOT NULL</c> for all columns.</para>
-		/// Default value: <see cref="DefaultNullable.None"/>.
-		/// </param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
-		/// <returns>Created table as queryable source.</returns>
-		internal static ITable<T> CreateTable<T>(
-			this IDataContext dataContext,
-			EntityDescriptor? tableDescriptor,
-			string?           tableName       = default,
-			string?           databaseName    = default,
-			string?           schemaName      = default,
-			string?           statementHeader = default,
-			string?           statementFooter = default,
-			DefaultNullable   defaultNullable = DefaultNullable.None,
-			string?           serverName      = default,
-			TableOptions      tableOptions    = default)
-			where T: notnull
-		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.CreateTable<T>.Query(
-				dataContext,
-				tableDescriptor: tableDescriptor,
-				tableName      : tableName,
-				serverName     : serverName,
-				databaseName   : databaseName,
-				schemaName     : schemaName,
-				statementHeader: statementHeader,
-				statementFooter: statementFooter,
-				defaultNullable: defaultNullable,
-				tableOptions   : tableOptions);
-		}
-
-		/// <summary>
 		/// Asynchronously creates new table in database for mapping class <typeparamref name="T"/>.
 		/// Information about table name, columns names and types is taken from mapping class.
 		/// </summary>
@@ -1180,58 +1138,6 @@ namespace LinqToDB
 			return QueryRunner.CreateTable<T>.QueryAsync(dataContext,
 				tableDescriptor: null,
 				tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, statementHeader, statementFooter, defaultNullable, tableOptions, token);
-		}
-
-		/// <summary>
-		/// Internal API to support table creation using custom entity descriptor <paramref name="tableDescriptor"/>.
-		/// Asynchronously creates new table in database for mapping class <typeparamref name="T"/>.
-		/// Information about table name, columns names and types is taken from mapping class.
-		/// </summary>
-		/// <typeparam name="T">Mapping class.</typeparam>
-		/// <param name="dataContext">Database connection context.</param>
-		/// <param name="tableDescriptor">Temporary table entity descriptor.</param>
-		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
-		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
-		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
-		/// <param name="defaultNullable">Defines how columns nullability flag should be generated:
-		/// <para> - <see cref="DefaultNullable.Null"/> - generate only <c>NOT NULL</c> for non-nullable fields. Missing nullability information treated as <c>NULL</c> by database.</para>
-		/// <para> - <see cref="DefaultNullable.NotNull"/> - generate only <c>NULL</c> for nullable fields. Missing nullability information treated as <c>NOT NULL</c> by database.</para>
-		/// <para> - <see cref="DefaultNullable.None"/> - explicitly generate <c>NULL</c> and <c>NOT NULL</c> for all columns.</para>
-		/// Default value: <see cref="DefaultNullable.None"/>.
-		/// </param>
-		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Created table as queryable source.</returns>
-		internal static Task<ITable<T>> CreateTableAsync<T>(
-			this IDataContext dataContext,
-			EntityDescriptor? tableDescriptor,
-			string?           tableName       = default,
-			string?           databaseName    = default,
-			string?           schemaName      = default,
-			string?           statementHeader = default,
-			string?           statementFooter = default,
-			DefaultNullable   defaultNullable = DefaultNullable.None,
-			string?           serverName      = default,
-			TableOptions      tableOptions    = default,
-			CancellationToken token           = default)
-			where T : notnull
-		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.CreateTable<T>.QueryAsync(
-				dataContext,
-				tableDescriptor: tableDescriptor,
-				tableName      : tableName,
-				serverName     : serverName,
-				databaseName   : databaseName,
-				schemaName     : schemaName,
-				statementHeader: statementHeader,
-				statementFooter: statementFooter,
-				defaultNullable: defaultNullable,
-				tableOptions   : tableOptions,
-				token          : token);
 		}
 
 		#endregion
@@ -1499,10 +1405,15 @@ namespace LinqToDB
 		{
 			var argumentsExpr = Expression.NewArrayInit(typeof(object), arguments.Select(p =>
 			{
-				Expression constant = Expression.Constant(p, p?.GetType() ?? typeof(object));
-				if (constant.Type != typeof(object))
-					constant = Expression.Convert(constant, typeof(object));
-				return constant;
+				if (p == null)
+					return Expression.Constant(null, typeof(object));
+				
+				var argumentType    = p.GetType();
+				var valueExpression = SequenceHelper.WrapAsParameter(Expression.Constant(p, argumentType));
+				if (valueExpression.Type != typeof(object))
+					valueExpression = Expression.Convert(valueExpression, typeof(object));
+
+				return valueExpression;
 			}));
 
 			return argumentsExpr;
@@ -1566,6 +1477,12 @@ namespace LinqToDB
 		///         you supply will automatically be converted to a DbParameter -
 		///         <code>context.FromSqlScalar&lt;Blogs&gt;($"UNNEST({array})");</code>
 		///     </para>
+		///		<para>
+		///			An alias for the scalar value will be generated automatically with the name <c>value</c>. For most databases, the following SQL will be generated:
+		///			<code>SELECT t.value FROM (SELECT '1') AS t(value)</code>
+		///			For databases that do not support this syntax, ensure that your query provides an alias for the column named <c>value</c> to allow correct translation, for example:
+		///			<code>SELECT t.value FROM (SELECT '1' AS value) AS t</code>
+		///		</para>
 		/// </summary>
 		/// <typeparam name="TEntity">Source query record type.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
@@ -1635,7 +1552,7 @@ namespace LinqToDB
 
 		#region SelectQuery
 
-		public static MethodInfo SelectQueryMethodInfo =
+		internal static MethodInfo SelectQueryMethodInfo =
 			MemberHelper.MethodOf(() => SelectQuery<int>(null!, null!)).GetGenericMethodDefinition();
 
 		/// <summary>
@@ -1718,5 +1635,57 @@ namespace LinqToDB
 			return new ExpressionQueryImpl<TResult>(dataContext, expression.Body);
 		}
 
+		#region UseOptions
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseOptions<TSet>(this IDataContext dataContext, Func<TSet,TSet> optionSetter)
+			where TSet : class, IOptionSet, new()
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+	}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseLinqOptions(this IDataContext dataContext, Func<LinqOptions,LinqOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseSqlOptions(this IDataContext dataContext, Func<SqlOptions,SqlOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseDataContextOptions(this IDataContext dataContext, Func<DataContextOptions,DataContextOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseRetryPolicyOptions(this IDataContext dataContext, Func<RetryPolicyOptions,RetryPolicyOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseBulkCopyOptions(this IDataContext dataContext, Func<BulkCopyOptions,BulkCopyOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseConnectionOptions(this IDataContext dataContext, Func<ConnectionOptions,ConnectionOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public static IDisposable? UseQueryTraceOptions(this IDataContext dataContext, Func<QueryTraceOptions,QueryTraceOptions> optionSetter)
+		{
+			return dataContext.UseOptions(o => o.WithOptions(optionSetter));
+		}
+
+		#endregion
 	}
 }

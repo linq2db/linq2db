@@ -2,8 +2,8 @@
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -34,13 +34,12 @@ namespace Tests.Linq
 					};
 
 				var result = query.First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.FieldIdName1, Is.EqualTo("[id]"));
 					Assert.That(result.FieldIdName2, Is.EqualTo("[id]"));
 					Assert.That(result.FieldIdNameNQ, Is.EqualTo("id"));
-				});
+				}
 			}
 		}
 
@@ -59,8 +58,7 @@ namespace Tests.Linq
 					};
 
 				var result = query.First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.FieldIdName1, Is.EqualTo("[id]"));
 					Assert.That(result.FieldIdName2, Is.EqualTo("[id]"));
@@ -69,7 +67,7 @@ namespace Tests.Linq
 					Assert.That(Sql.FieldName(table, _ => _.Value), Is.EqualTo("[value]"));
 					Assert.That(Sql.FieldName(table, _ => _.Value, true), Is.EqualTo("[value]"));
 					Assert.That(Sql.FieldName(table, _ => _.Value, false), Is.EqualTo("value"));
-				});
+				}
 			}
 		}
 
@@ -93,8 +91,7 @@ namespace Tests.Linq
 					};
 
 				var result = query.First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.TableName1, Is.EqualTo("[database].[schema].[table_name]"));
 					Assert.That(result.TableName2, Is.EqualTo("[database].[schema].[table_name]"));
@@ -102,7 +99,7 @@ namespace Tests.Linq
 					Assert.That(result.TableName4, Is.EqualTo("table_name"));
 					Assert.That(result.TableName_Schema, Is.EqualTo("[schema].[table_name]"));
 					Assert.That(result.TableName_Database, Is.EqualTo("[database]..[table_name]"));
-				});
+				}
 			}
 		}
 
@@ -133,7 +130,7 @@ namespace Tests.Linq
 					return (string)((SqlValue)ast.Select.Columns[index].Expression).Value!;
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(GetColumnValue(0), Is.EqualTo("[database].[schema].[table_name]"));
 					Assert.That(GetColumnValue(1), Is.EqualTo("[database].[schema].[table_name]"));
@@ -141,7 +138,7 @@ namespace Tests.Linq
 					Assert.That(GetColumnValue(3), Is.EqualTo("table_name"));
 					Assert.That(GetColumnValue(4), Is.EqualTo("[schema].[table_name]"));
 					Assert.That(GetColumnValue(5), Is.EqualTo("[database]..[table_name]"));
-				});
+				}
 			}
 		}
 
@@ -165,8 +162,7 @@ namespace Tests.Linq
 					};
 
 				var result = query.First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.TableName1, Is.EqualTo("[database].[schema].[table_name]"));
 					Assert.That(result.TableName2, Is.EqualTo("[database].[schema].[table_name]"));
@@ -174,7 +170,7 @@ namespace Tests.Linq
 					Assert.That(result.TableName4, Is.EqualTo("table_name"));
 					Assert.That(result.TableName_Schema, Is.EqualTo("[schema].[table_name]"));
 					Assert.That(result.TableName_Database, Is.EqualTo("[database]..[table_name]"));
-				});
+				}
 			}
 		}
 
@@ -202,10 +198,10 @@ namespace Tests.Linq
 
 				string GetColumnValue(int index)
 				{
-					return ((SqlExpression)ast.Select.Columns[index].Expression).Expr;
+					return ((SqlFragment)ast.Select.Columns[index].Expression).Expr;
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(GetColumnValue(0), Is.EqualTo("[database].[schema].[table_name]"));
 					Assert.That(GetColumnValue(1), Is.EqualTo("[database].[schema].[table_name]"));
@@ -213,7 +209,7 @@ namespace Tests.Linq
 					Assert.That(GetColumnValue(3), Is.EqualTo("table_name"));
 					Assert.That(GetColumnValue(4), Is.EqualTo("[schema].[table_name]"));
 					Assert.That(GetColumnValue(5), Is.EqualTo("[database]..[table_name]"));
-				});
+				}
 			}
 		}
 
@@ -280,13 +276,12 @@ namespace Tests.Linq
 				var query3Str = query3.ToSqlQuery().Sql;
 
 				BaselinesManager.LogQuery(query3Str);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query1Str, Does.Contain("FREETEXTTABLE([database].[schema].[table_name], [value],"));
 					Assert.That(query2Str, Does.Contain("FREETEXTTABLE([database].[schema].[table_name], [value],"));
 					Assert.That(query3Str, Does.Contain("FREETEXTTABLE([database].[schema].[table_name], [value],"));
-				});
+				}
 			}
 		}
 

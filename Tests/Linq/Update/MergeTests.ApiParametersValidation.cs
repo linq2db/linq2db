@@ -7,7 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Async;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Linq;
 
 using NUnit.Framework;
@@ -189,13 +190,14 @@ namespace Tests.xUpdate
 		sealed class FakeTable<TEntity> : ITable<TEntity>
 			where TEntity : notnull
 		{
-			IDataContext            IExpressionQuery.   DataContext                                  => throw new NotImplementedException();
-			Expression              IExpressionQuery.   Expression                                   => throw new NotImplementedException();
-			IReadOnlyList<QuerySql> IExpressionQuery.   GetSqlQueries(SqlGenerationOptions? options) => throw new NotImplementedException();
-			Type                    IQueryable.         ElementType                                  => throw new NotImplementedException();
-			Expression              IQueryable.         Expression                                   => throw new NotImplementedException();
-			IQueryProvider          IQueryable.         Provider                                     => new FakeQueryProvider();
-			Expression              IQueryProviderAsync.Expression                                   => throw new NotImplementedException();
+			IDataContext            IExpressionQuery.DataContext                                  => throw new NotImplementedException();
+			Expression              IExpressionQuery.Expression                                   => throw new NotImplementedException();
+			IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => throw new NotImplementedException();
+
+			Type                    IQueryable.         ElementType                               => throw new NotImplementedException();
+			Expression              IQueryable.         Expression                                => throw new NotImplementedException();
+			IQueryProvider          IQueryable.         Provider                                  => new FakeQueryProvider();
+			Expression              IQueryProviderAsync.Expression                                => throw new NotImplementedException();
 
 			Expression IExpressionQuery<TEntity>.Expression => Expression.Constant((ITable<TEntity>)this);
 

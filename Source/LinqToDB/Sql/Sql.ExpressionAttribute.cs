@@ -8,11 +8,13 @@ using System.Text.RegularExpressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
-using LinqToDB.Expressions.ExpressionVisitors;
 using LinqToDB.Extensions;
-using LinqToDB.Linq.Builder;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -161,14 +163,15 @@ namespace LinqToDB
 			/// </summary>
 			public bool IgnoreGenericParameters { get; set; }
 
-			internal  bool? _canBeNull;
+			protected bool? СonfiguredCanBeNull { get; private set; }
 			/// <summary>
-			/// If <c>true</c>, result can be null
+			/// If <c>true</c>, result can be null.
+			/// If value is not set explicitly, nullability calculated based on return type and <see cref="IsNullable"/> value.
 			/// </summary>
 			public    bool   CanBeNull
 			{
-				get => _canBeNull ?? true;
-				set => _canBeNull = value;
+				get => СonfiguredCanBeNull ?? true;
+				set => СonfiguredCanBeNull = value;
 			}
 
 			const  string MatchParamPattern = @"{([0-9a-z_A-Z?]*)(,\s'(.*)')?}";
@@ -234,7 +237,7 @@ namespace LinqToDB
 				return str;
 			}
 
-			public static readonly SqlExpression UnknownExpression = new ("!!!");
+			static readonly ISqlExpression UnknownExpression = new SqlFragment("!!!");
 
 			public static void PrepareParameterValues<TContext>(
 				TContext                                                              context,
@@ -551,17 +554,17 @@ namespace LinqToDB
 				if (error != null)
 					return SqlErrorExpression.EnsureError(error, expression.Type);
 
-				var sqlExpression = new SqlExpression(expression.Type, expressionStr!, Precedence,
+				var sqlExpression = new SqlExpression(dataContext.MappingSchema.GetDbDataType(expression.Type), expressionStr!, Precedence,
 					(IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |
 					(IsPure           ? SqlFlags.IsPure           : SqlFlags.None) |
 					(IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |
 					(IsWindowFunction ? SqlFlags.IsWindowFunction : SqlFlags.None),
 					ToParametersNullabilityType(IsNullable),
-					_canBeNull,
+					СonfiguredCanBeNull,
 					parameters!);
 
-				if (_canBeNull != null)
-					sqlExpression.CanBeNull = _canBeNull.Value;
+				if (СonfiguredCanBeNull != null)
+					sqlExpression.CanBeNull = СonfiguredCanBeNull.Value;
 
 				// placeholder will be updated later by concrete path
 				return ExpressionBuilder.CreatePlaceholder(query, sqlExpression, expression);
@@ -576,7 +579,7 @@ namespace LinqToDB
 
 			public override string GetObjectID()
 			{
-				return FormattableString.Invariant($".{Configuration}.{Expression}.{IdentifierBuilder.GetObjectID(ArgIndices)}.{Precedence}.{(ServerSideOnly ? 1 : 0)}.{(PreferServerSide ? 1 : 0)}.{(InlineParameters ? 1 : 0)}.{(ExpectExpression ? 1 : 0)}.{(IsPredicate ? 1 : 0)}.{(IsAggregate ? 1 : 0)}.{(IsWindowFunction ? 1 : 0)}.{(IsPure ? 1 : 0)}.{(int)IsNullable}.{(IgnoreGenericParameters ? 1 : 0)}.{(CanBeNull ? 1 : 0)}.");
+				return FormattableString.Invariant($".{Configuration}.{Expression}.{IdentifierBuilder.GetObjectID(ArgIndices)}.{Precedence}.{(ServerSideOnly ? 1 : 0)}.{(PreferServerSide ? 1 : 0)}.{(InlineParameters ? 1 : 0)}.{(ExpectExpression ? 1 : 0)}.{(IsPredicate ? 1 : 0)}.{(IsAggregate ? 1 : 0)}.{(IsWindowFunction ? 1 : 0)}.{(IsPure ? 1 : 0)}.{(int)IsNullable}.{(IgnoreGenericParameters ? 1 : 0)}.{(СonfiguredCanBeNull switch { null => -1, true => 1, _ => 0 })}.");
 			}
 		}
 	}

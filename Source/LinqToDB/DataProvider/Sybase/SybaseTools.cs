@@ -2,6 +2,8 @@
 using System.Reflection;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.Sybase;
 
 namespace LinqToDB.DataProvider.Sybase
 {
@@ -15,9 +17,9 @@ namespace LinqToDB.DataProvider.Sybase
 			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider(SybaseProvider provider = SybaseProvider.AutoDetect, string? connectionString = null)
+		public static IDataProvider GetDataProvider(SybaseProvider provider = SybaseProvider.AutoDetect, string? connectionString = null, DbConnection? connection = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection), provider, default);
 		}
 
 		public static void ResolveSybase(string path, string? assemblyName = null)

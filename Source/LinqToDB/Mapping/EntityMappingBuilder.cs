@@ -7,7 +7,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Mapping
 {
@@ -528,6 +528,19 @@ namespace LinqToDB.Mapping
 		public EntityMappingBuilder<TEntity> HasQueryFilter(Expression<Func<TEntity, IDataContext, bool>> filter)
 		{
 			return HasQueryFilter<IDataContext>(filter);
+		}
+
+		/// <summary>
+		///     Specifies a LINQ predicate expression that will automatically be applied to any queries targeting
+		///     this entity type.
+		/// </summary>
+		/// <param name="filter"> The LINQ predicate expression. </param>
+		/// <returns> The same builder instance so that multiple configuration calls can be chained. </returns>
+		public EntityMappingBuilder<TEntity> HasQueryFilter(Expression<Func<TEntity, bool>> filter)
+		{
+			var dcParam = Expression.Parameter(typeof(IDataContext), "dc");
+			var newFilter = Expression.Lambda<Func<TEntity, IDataContext, bool>>(filter.Body, [..filter.Parameters, dcParam]);
+			return HasQueryFilter<IDataContext>(newFilter);
 		}
 
 		/// <summary>

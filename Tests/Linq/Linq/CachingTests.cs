@@ -5,11 +5,10 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
-using LinqToDB.Mapping;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -25,8 +24,8 @@ namespace Tests.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				builder.AddExpression("funcName",  builder.GetValue<string>("funcName"));
-				builder.AddExpression("fieldName", builder.GetValue<string>("fieldName"));
+				builder.AddFragment("funcName",  builder.GetValue<string>("funcName"));
+				builder.AddFragment("fieldName", builder.GetValue<string>("fieldName"));
 			}
 		}
 
@@ -180,13 +179,12 @@ namespace Tests.Linq
 
 				var sql = query.ToSqlQuery().Sql;
 				BaselinesManager.LogQuery(sql);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(CountOccurrences(sql, tableName), Is.EqualTo(2));
 					Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
 					Assert.That(CountOccurrences(sql, schemaName), Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -212,13 +210,12 @@ namespace Tests.Linq
 
 				var sql = query.ToSqlQuery().Sql;
 				BaselinesManager.LogQuery(sql);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(CountOccurrences(sql, tableName), Is.EqualTo(2));
 					Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
 					Assert.That(CountOccurrences(sql, schemaName), Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -360,7 +357,7 @@ namespace Tests.Linq
 
 				dataTable.AcceptChanges();
 
-				var param = new SqlParameter(new LinqToDB.Common.DbDataType(dataTable.GetType() ?? typeof(object), "IntTableType"), parameterName, dataTable);
+				var param = new SqlParameter(new DbDataType(dataTable.GetType() ?? typeof(object), "IntTableType"), parameterName, dataTable);
 
 				builder.AddParameter("values", param);
 			}

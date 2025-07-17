@@ -1,0 +1,21 @@
+﻿#nullable enable
+LinqToDB.Remote.HttpClient.Server.LinqToDBController
+LinqToDB.Remote.HttpClient.Server.LinqToDBController.LinqToDBController() -> void
+LinqToDB.Remote.HttpClient.Server.LinqToDBController<T>
+LinqToDB.Remote.HttpClient.Server.LinqToDBController<T>.LinqToDBController(LinqToDB.Remote.ILinqService<T>! linqService) -> void
+LinqToDB.Remote.HttpClient.Server.ServiceConfigurationExtensions
+override LinqToDB.Remote.HttpClient.Server.LinqToDBController<T>.LinqService.get -> LinqToDB.Remote.ILinqService!
+static LinqToDB.Remote.HttpClient.Server.ServiceConfigurationExtensions.AddLinqToDBController(this Microsoft.Extensions.DependencyInjection.IMvcBuilder! builder, string! route = "api/linq2db") -> Microsoft.Extensions.DependencyInjection.IMvcBuilder!
+static LinqToDB.Remote.HttpClient.Server.ServiceConfigurationExtensions.AddLinqToDBController<TContext>(this Microsoft.Extensions.DependencyInjection.IMvcBuilder! builder, string! route = "api/linq2db", bool allowUpdate = false) -> Microsoft.Extensions.DependencyInjection.IMvcBuilder!
+virtual LinqToDB.Remote.HttpClient.Server.LinqToDBController.CreateLinqService() -> LinqToDB.Remote.ILinqService!
+virtual LinqToDB.Remote.HttpClient.Server.LinqToDBController.ExecuteBatch(string? configuration, string! queryData) -> int
+virtual LinqToDB.Remote.HttpClient.Server.LinqToDBController.ExecuteBatchAsync(string? configuration, string! queryData, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+virtual LinqToDB.Remote.HttpClient.Server.LinqToDBController.ExecuteNonQuery(string? configuration, string! queryData) -> int
+virtual LinqToDB.Remote.HttpClient.Server.LinqToDBController.ExecuteNonQueryAsync(string? configuration, string! queryData, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+virtual LinqToDB.Remote.HttpClient.Server.LinqToDBController.ExecuteReader(string? configuration, string! queryData) -> string!
+virtual LinqToDB.Remote.HttpClient.Server.LinqToDBController.ExecuteReaderAsync(string? configuration, string! queryData, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<string!>!
+virtual LinqToDB.Remote.HttpClient.Server.LinqToDBController.ExecuteScalar(string? configuration, string! queryData) -> string?
+virtual LinqToDB.Remote.HttpClient.Server.LinqToDBController.ExecuteScalarAsync(string? configuration, string! queryData, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<string?>!
+virtual LinqToDB.Remote.HttpClient.Server.LinqToDBController.GetInfo(string? configuration) -> LinqToDB.Remote.LinqServiceInfo!
+virtual LinqToDB.Remote.HttpClient.Server.LinqToDBController.GetInfoAsync(string? configuration, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<LinqToDB.Remote.LinqServiceInfo!>!
+virtual LinqToDB.Remote.HttpClient.Server.LinqToDBController.LinqService.get -> LinqToDB.Remote.ILinqService!

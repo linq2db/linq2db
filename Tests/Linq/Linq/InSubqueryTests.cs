@@ -2,15 +2,14 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
-
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Linq;
-using LinqToDB.Tools;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -135,7 +134,8 @@ namespace Tests.Linq
 
 			if (db.SqlProviderFlags.SupportedCorrelatedSubqueriesLevel == 0)
 			{
-				FluentActions.Invoking(() => AssertQuery(query)).Should().Throw<LinqToDBException>();
+				var act = () => AssertQuery(query);
+				act.ShouldThrow<LinqToDBException>();
 			}
 			else
 			{
@@ -155,7 +155,8 @@ namespace Tests.Linq
 
 			if (db.SqlProviderFlags.SupportedCorrelatedSubqueriesLevel == 0)
 			{
-				FluentActions.Invoking(() => AssertQuery(query)).Should().Throw<LinqToDBException>();
+				var act = () => AssertQuery(query);
+				act.ShouldThrow<LinqToDBException>();
 			}
 			else
 			{

@@ -1,15 +1,13 @@
 ﻿using System.Data;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using Tests.xUpdate;
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -123,7 +121,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MergeInsert([MergeTests.MergeDataContextSource(false, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void MergeInsert([MergeDataContextSource(false, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
@@ -215,7 +213,7 @@ namespace Tests.Linq
 							})
 							.ToList();
 
-						result.Count.Should().Be(expected.Count);
+						result.Count.ShouldBe(expected.Count);
 
 						if (expected.Count > 0)
 							AreEqualWithComparer(result, expected);

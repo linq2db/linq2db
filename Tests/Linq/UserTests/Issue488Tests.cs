@@ -3,13 +3,13 @@ using System.Data;
 using System.Data.Linq;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -45,8 +45,8 @@ namespace Tests.UserTests
 				var _ = q.FirstOrDefault();
 
 				var dc = (DataConnection)db;
-				commandInterceptor.Parameters.Should().HaveCount(1);
-				commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Should().HaveCount(1);;
+				commandInterceptor.Parameters.Length.ShouldBe(1);
+				commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Count().ShouldBe(1);;
 			}
 		}
 
@@ -66,8 +66,8 @@ namespace Tests.UserTests
 				var _ = q.FirstOrDefault();
 
 				var dc = (DataConnection)db;
-				commandInterceptor.Parameters.Should().HaveCount(1);
-				commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Should().HaveCount(1);;
+				commandInterceptor.Parameters.Length.ShouldBe(1);
+				commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Count().ShouldBe(1);;
 			}
 		}
 	}

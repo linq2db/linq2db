@@ -4,15 +4,13 @@ using LinqToDB;
 
 using NUnit.Framework;
 
-using Tests.Linq;
-
 namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue1284Tests : TestBase
 	{
 		[Test]
-		public void TestCteExpressionIsNotATable([CteTests.CteContextSource] string context)
+		public void TestCteExpressionIsNotATable([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -27,7 +25,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestCteNoFieldList([CteTests.CteContextSource] string context)
+		public void TestCteNoFieldList([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -46,7 +44,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestCteInvalidMapping([CteTests.CteContextSource] string context)
+		public void TestCteInvalidMapping([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -67,7 +65,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestCteInvalidMappingUnion([CteTests.CteContextSource] string context)
+		public void TestCteInvalidMappingUnion([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -90,7 +88,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestCteReservedWords([CteTests.CteContextSource] string context)
+		public void TestCteReservedWords([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

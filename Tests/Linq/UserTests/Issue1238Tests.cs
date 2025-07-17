@@ -6,8 +6,6 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using Tests.xUpdate;
-
 namespace Tests.UserTests
 {
 	[TestFixture]
@@ -91,7 +89,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestMerge([MergeTests.MergeDataContextSource(false)] string context)
+		public void TestMerge([MergeDataContextSource(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -128,7 +126,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestMergeOnExplicit([MergeTests.MergeDataContextSource(false)] string context)
+		public void TestMergeOnExplicit([MergeDataContextSource(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())

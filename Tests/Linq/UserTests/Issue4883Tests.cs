@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 
 using NUnit.Framework;
@@ -9,7 +10,7 @@ using NUnit.Framework;
 namespace Tests.UserTests
 {
 	[TestFixture]
-	public class Issue4883Tests
+	public class Issue4883Tests : TestBase
 	{
 		[Test]
 		public async Task TestDataConnection()

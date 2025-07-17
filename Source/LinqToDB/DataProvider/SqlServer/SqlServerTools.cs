@@ -1,17 +1,17 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Reflection;
 using System.Text;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.SqlServer;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
 	[PublicAPI]
-	public static partial class SqlServerTools
+	public static class SqlServerTools
 	{
 		#region Init
 
@@ -50,9 +50,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IDataProvider GetDataProvider(
 			SqlServerVersion  version          = SqlServerVersion.AutoDetect,
 			SqlServerProvider provider         = SqlServerProvider.AutoDetect,
-			string?           connectionString = null)
+			string?           connectionString = null,
+			DbConnection?     connection       = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection), provider, version);
 		}
 
 		/// <summary>

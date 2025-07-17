@@ -4,10 +4,7 @@ using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -15,6 +12,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -183,8 +182,7 @@ namespace Tests.Linq
 			{
 				// Table Materialization
 				var result = table.OrderBy(_ => _.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Value1, Is.Not.Null);
 					Assert.That(result[0].Value2!, Is.Not.Empty);
@@ -211,11 +209,11 @@ namespace Tests.Linq
 					Assert.That(result[9].Value1, Is.Null);
 					Assert.That(result[9].Value2, Is.Null);
 
-					Assert.That(result[0].BoolValue, Is.EqualTo(true));
-					Assert.That(result[1].BoolValue, Is.EqualTo(false));
-					Assert.That(result[2].BoolValue, Is.EqualTo(false));
-					Assert.That(result[3].BoolValue, Is.EqualTo(false));
-				});
+					Assert.That(result[0].BoolValue, Is.True);
+					Assert.That(result[1].BoolValue, Is.False);
+					Assert.That(result[2].BoolValue, Is.False);
+					Assert.That(result[3].BoolValue, Is.False);
+				}
 
 				var query = from t in table
 					select new
@@ -226,36 +224,34 @@ namespace Tests.Linq
 					};
 
 				var selectResult = query.OrderBy(_ => _.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(selectResult[0].Value1, Is.Not.Null);
 					Assert.That(selectResult[0].Value2!, Is.Not.Empty);
-				});
+				}
 
 				var subqueryResult = query.AsSubQuery().OrderBy(_ => _.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(subqueryResult[0].Value1, Is.Not.Null);
 					Assert.That(subqueryResult[0].Value2!, Is.Not.Empty);
-				});
+				}
 
 				var unionResult = query.Concat(query.AsSubQuery()).OrderBy(_ => _.Id).ToArray();
 
 				var firstItem = unionResult.First();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(firstItem.Value1, Is.Not.Null);
 					Assert.That(firstItem.Value2!, Is.Not.Empty);
-				});
+				}
 
 				var lastItem = unionResult.Last();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(lastItem.Value1, Is.Null);
 					Assert.That(lastItem.Value2, Is.Null);
-				});
+				}
 
 				var firstList = query.AsSubQuery().OrderBy(e => e.Id).Skip(1).Select(q => q.Value2).FirstOrDefault();
 				Assert.That(firstList![0].Value, Is.EqualTo("Value2"));
@@ -429,7 +425,7 @@ namespace Tests.Linq
 
 				var selectResult = query.ToArray();
 
-				selectResult.Should().HaveCount(10);
+				selectResult.Length.ShouldBe(10);
 			}
 		}
 
@@ -450,7 +446,7 @@ namespace Tests.Linq
 
 				var selectResult = query.Concat(query).ToArray();
 
-				selectResult.Should().HaveCount(20);
+				selectResult.Length.ShouldBe(20);
 			}
 		}
 
@@ -473,7 +469,7 @@ namespace Tests.Linq
 
 				var selectResult = query.Union(query).ToArray();
 
-				selectResult.Should().HaveCount(10);
+				selectResult.Length.ShouldBe(10);
 			}
 		}
 
@@ -569,14 +565,13 @@ namespace Tests.Linq
 					.Update();
 
 				var update1Check = rawTable.First(e => e.Id == 1);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(update1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(testData[0].Value1)));
 					Assert.That(update1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(updated)));
 					Assert.That(update1Check.EnumWithNull, Is.Null);
 					Assert.That(update1Check.EnumWithNullDeclarative, Is.Null);
-				});
+				}
 
 				var toUpdate2 = new MainClass
 				{
@@ -590,14 +585,13 @@ namespace Tests.Linq
 				db.Update(toUpdate2);
 
 				var update2Check = rawTable.First(e => e.Id == 2);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(update2Check.Value1, Is.EqualTo(/*lang=json,strict*/ "{\"some\":\"updated2}\"}"));
 					Assert.That(update2Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "updated2" } })));
 					Assert.That(update2Check.EnumWithNull, Is.EqualTo("Value2"));
 					Assert.That(update2Check.EnumWithNullDeclarative, Is.EqualTo("Value2"));
-				});
+				}
 
 				var toUpdate3 = new MainClass
 				{
@@ -610,14 +604,13 @@ namespace Tests.Linq
 				db.Update(toUpdate3);
 
 				var update3Check = rawTable.First(e => e.Id == 3)!;
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(update3Check.Value1, Is.Null);
 					Assert.That(update3Check.Value2, Is.Null);
 					Assert.That(update3Check.EnumWithNull, Is.Null);
 					Assert.That(update3Check.EnumWithNullDeclarative, Is.Null);
-				});
+				}
 
 			}
 		}
@@ -642,8 +635,7 @@ namespace Tests.Linq
 					.Value(e => e.AnotherBoolValue, true)
 					.Insert();
 				var insert1Check = rawTable.First(e => e.Id == 1);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(insert1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(new JArray())));
 					Assert.That(insert1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(inserted)));
@@ -652,7 +644,7 @@ namespace Tests.Linq
 					Assert.That(insert1Check.EnumWithNullDeclarative, Is.Null);
 					Assert.That(insert1Check.BoolValue, Is.EqualTo('Y'));
 					Assert.That(insert1Check.AnotherBoolValue, Is.EqualTo('T'));
-				});
+				}
 
 				table
 					.Value(e => e.Id, 2)
@@ -664,8 +656,7 @@ namespace Tests.Linq
 					.Insert();
 
 				var insert2Check = rawTable.First(e => e.Id == 2);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(insert2Check.Value1, Is.Null);
 					Assert.That(insert2Check.Value2, Is.Null);
@@ -674,7 +665,7 @@ namespace Tests.Linq
 					Assert.That(insert2Check.EnumWithNullDeclarative, Is.Null);
 					Assert.That(insert2Check.BoolValue, Is.EqualTo('N'));
 					Assert.That(insert2Check.AnotherBoolValue, Is.EqualTo('F'));
-				});
+				}
 
 				var toInsert = new MainClass
 				{
@@ -689,8 +680,7 @@ namespace Tests.Linq
 				db.Insert(toInsert);
 
 				var insert3Check = rawTable.First(e => e.Id == 3);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(insert3Check.Value1, Is.EqualTo(/*lang=json,strict*/ "{\"some\":\"inserted3}\"}"));
 					Assert.That(insert3Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "inserted3" } })));
@@ -702,7 +692,7 @@ namespace Tests.Linq
 					Assert.That(insert3Check.AnotherBoolValue, Is.EqualTo('T'));
 
 					Assert.That(table.Count(), Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
@@ -730,14 +720,14 @@ namespace Tests.Linq
 
 				var record = rawTable.Single(e => e.Id == iteration);
 
-				record.Id.Should().Be(iteration);
-				record.Value1.Should().Be(JsonConvert.SerializeObject(new JArray()));
-				record.Value2.Should().Be(JsonConvert.SerializeObject(inserted));
-				record.Enum.Should().Be("Value1");
-				record.EnumWithNull.Should().BeNull();
-				record.EnumWithNullDeclarative.Should().BeNull();
-				record.BoolValue.Should().Be(boolValue ? 'Y' : 'N');
-				record.AnotherBoolValue.Should().Be(boolValue ? 'T' : 'F');
+				record.Id.ShouldBe(iteration);
+				record.Value1.ShouldBe(JsonConvert.SerializeObject(new JArray()));
+				record.Value2.ShouldBe(JsonConvert.SerializeObject(inserted));
+				record.Enum.ShouldBe("Value1");
+				record.EnumWithNull.ShouldBeNull();
+				record.EnumWithNullDeclarative.ShouldBeNull();
+				record.BoolValue.ShouldBe(boolValue ? 'Y' : 'N');
+				record.AnotherBoolValue.ShouldBe(boolValue ? 'T' : 'F');
 
 			}
 		}
@@ -790,8 +780,7 @@ namespace Tests.Linq
 			var data = table.OrderBy(_ => _.Id).ToArray();
 
 			Assert.That(data, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data[0].Id, Is.EqualTo(1));
 				Assert.That(data[0].FirstAppointmentTime, Is.Null);
@@ -800,7 +789,7 @@ namespace Tests.Linq
 				Assert.That(data[1].Id, Is.EqualTo(2));
 				Assert.That(data[1].FirstAppointmentTime, Is.EqualTo(TestData.DateTime0));
 				Assert.That(data[1].PassportDateOfIssue, Is.EqualTo(TestData.DateTime3));
-			});
+			}
 		}
 
 		sealed class BoolConverterAttribute : ValueConverterAttribute
@@ -815,7 +804,7 @@ namespace Tests.Linq
 		{
 			public BoolConverterNullableAttribute()
 			{
-				ValueConverter = new ValueConverter<bool?, string>((bool? b) => b == true ? "Y" : "N", m => m == "Y", false);
+				ValueConverter = new ValueConverter<bool?, string>(b => b == true ? "Y" : "N", m => m == "Y", false);
 			}
 		}
 
@@ -870,13 +859,13 @@ namespace Tests.Linq
 			static void AssertRecord(Issue3830TestTable record, Issue3830TestTable[] result)
 			{
 				Assert.That(result, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Id, Is.EqualTo(record.Id));
 					Assert.That(result[0].Bool1, Is.EqualTo(record.Bool1));
 					Assert.That(result[0].Bool2, Is.EqualTo(record.Bool2));
 					Assert.That(result[0].Bool3, Is.EqualTo(record.Bool3));
-				});
+				}
 			}
 		}
 

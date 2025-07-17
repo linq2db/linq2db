@@ -5,17 +5,18 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if !NET6_0_OR_GREATER
+#if !NET8_0_OR_GREATER
 using System.Text;
 #endif
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal;
+using LinqToDB.Internal.Remote;
 
 namespace LinqToDB.Remote
 {
@@ -24,6 +25,7 @@ namespace LinqToDB.Remote
 		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 		{
 			ThrowOnDisposed();
+
 			return new QueryRunner(query, queryNumber, this, parametersContext, expressions, parameters, preambles);
 		}
 
@@ -52,16 +54,22 @@ namespace LinqToDB.Remote
 			public override IReadOnlyList<QuerySql> GetSqlText()
 			{
 				SetCommand(true);
+				return GetSqlTextImpl();
+			}
 
-				var query                  = Query.Queries[QueryNumber];
-				var sqlBuilder             = DataContext.CreateSqlProvider();
-				var sqlOptimizer           = DataContext.GetSqlOptimizer(DataContext.Options);
+			private IReadOnlyList<QuerySql> GetSqlTextImpl()
+			{
+				var query        = Query.Queries[QueryNumber];
+				var sqlBuilder   = DataContext.CreateSqlBuilder();
+				var sqlOptimizer = DataContext.GetSqlOptimizer(DataContext.Options);
+				var factory      = sqlOptimizer.CreateSqlExpressionFactory(DataContext.MappingSchema, DataContext.Options);
+				var commandCount = sqlBuilder.CommandCount(query.Statement);
+
 				using var sqlStringBuilder = Pools.StringBuilder.Allocate();
-				var cc                     = sqlBuilder.CommandCount(query.Statement);
 
-				var queries = new QuerySql[cc];
+				var queries = new QuerySql[commandCount];
 
-				for (var i = 0; i < cc; i++)
+				for (var i = 0; i < commandCount; i++)
 				{
 					AliasesHelper.PrepareQueryAndAliases(new IdentifierServiceSimple(128), query.Statement, query.Aliases, out var aliases);
 
@@ -72,13 +80,14 @@ namespace LinqToDB.Remote
 						DataContext.MappingSchema,
 						sqlOptimizer.CreateOptimizerVisitor(false),
 						sqlOptimizer.CreateConvertVisitor(false),
+						factory,
 						isParameterOrderDepended : DataContext.SqlProviderFlags.IsParameterOrderDependent,
 						isAlreadyOptimizedAndConverted : true,
-						static () => NoopQueryParametersNormalizer.Instance);
+						parametersNormalizerFactory : static () => NoopQueryParametersNormalizer.Instance);
 
 					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, DataContext.Options, optimizationContext);
 
-					sqlBuilder.BuildSql(i, statement, sqlStringBuilder.Value, optimizationContext, aliases);
+					sqlBuilder.BuildSql(i, statement, sqlStringBuilder.Value, optimizationContext, aliases, null);
 
 					if (i == 0)
 					{
@@ -101,13 +110,13 @@ namespace LinqToDB.Remote
 					if (optimizationContext.HasParameters())
 					{
 						var sqlParameters = optimizationContext.GetParameters();
-						parameters        = new DataParameter[sqlParameters.Count];
+						parameters = new DataParameter[sqlParameters.Count];
 
 						for (var pIdx = 0; pIdx < sqlParameters.Count; pIdx++)
 						{
 							var p              = sqlParameters[pIdx];
 							var parameterValue = p.GetParameterValue(_evaluationContext.ParameterValues);
-							parameters[pIdx]   = new DataParameter(p.Name, parameterValue.ProviderValue, parameterValue.DbDataType);
+							parameters[pIdx] = new DataParameter(p.Name, parameterValue.ProviderValue, parameterValue.DbDataType);
 						}
 					}
 
@@ -117,22 +126,20 @@ namespace LinqToDB.Remote
 				return queries;
 			}
 
-#endregion
+			#endregion
 
 			public override void Dispose()
 			{
-				if (_client is IDisposable disposable)
-					disposable.Dispose();
+				if (_client != null)
+					DisposeClient(_client);
 
 				base.Dispose();
 			}
 
 			public override async ValueTask DisposeAsync()
 			{
-				if (_client is IAsyncDisposable asyncDisposable)
-					await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-				else if (_client is IDisposable disposable)
-					disposable.Dispose();
+				if (_client != null)
+					await DisposeClientAsync(_client).ConfigureAwait(false);
 
 				await base.DisposeAsync().ConfigureAwait(false);
 			}
@@ -242,18 +249,7 @@ namespace LinqToDB.Remote
 
 				public Task<bool> ReadAsync(CancellationToken cancellationToken)
 				{
-					cancellationToken.ThrowIfCancellationRequested();
-
-					try
-					{
-						return DataReader.Read() ? TaskCache.True : TaskCache.False;
-					}
-					catch (Exception ex)
-					{
-						var task = new TaskCompletionSource<bool>();
-						task.SetException(ex);
-						return task.Task;
-					}
+					return DataReader.ReadAsync(cancellationToken);
 				}
 
 				public void Dispose()
@@ -263,8 +259,12 @@ namespace LinqToDB.Remote
 
 				public ValueTask DisposeAsync()
 				{
+#if NET8_0_OR_GREATER
+					return DataReader.DisposeAsync();
+#else
 					DataReader.Dispose();
 					return default;
+#endif
 				}
 			}
 

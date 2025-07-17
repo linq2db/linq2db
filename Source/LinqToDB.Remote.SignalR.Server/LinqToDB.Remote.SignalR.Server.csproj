@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+		<AssemblyName>linq2db.Remote.SignalR.Server</AssemblyName>
+		<RootNamespace>LinqToDB.Remote.SignalR</RootNamespace>
+		<OutputType>Library</OutputType>
+
+		<TargetFrameworks>netstandard2.0;net462;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net9.0</TargetFrameworks>
+
+		<IsAotCompatible Condition="$(TargetFramework) == 'net8.0' OR $(TargetFramework) == 'net9.0'">true</IsAotCompatible>
+
+		<Title>Linq to DB Signal/R Server Remote</Title>
+		<Description>Linq to DB support for querying remote data contexts over Signal/R</Description>
+		<Product>$(Title)</Product>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$(TargetFramework) == 'net462' OR $(TargetFramework) == 'netstandard2.0'">
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Core" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+	</ItemGroup>
+</Project>

@@ -1,6 +1,6 @@
 ﻿using LinqToDB.Interceptors;
 
-using LinqToDB.Interceptors.Internal;
+using LinqToDB.Internal.Interceptors;
 
 namespace LinqToDB.Remote
 {
@@ -24,12 +24,16 @@ namespace LinqToDB.Remote
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
+			ThrowOnDisposed();
+
 			this.AddInterceptorImpl(interceptor);
 		}
 
 		/// <inheritdoc cref="IDataContext.RemoveInterceptor(IInterceptor)"/>
 		public void RemoveInterceptor(IInterceptor interceptor)
 		{
+			ThrowOnDisposed();
+
 			this.RemoveInterceptorImpl(interceptor);
 		}
 	}
