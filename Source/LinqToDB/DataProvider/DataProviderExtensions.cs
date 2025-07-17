@@ -2,11 +2,14 @@
 using System.Data.Common;
 using System.Linq.Expressions;
 
+using JetBrains.Annotations;
+
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.DataProvider;
 
 namespace LinqToDB.DataProvider
 {
+	[PublicAPI]
 	public static class DataProviderExtensions
 	{
 		/// <summary>
@@ -98,6 +101,50 @@ namespace LinqToDB.DataProvider
 		where TDbDataReader : DbDataReader
 		{
 			dataProvider.SetFieldReaderExpression(null, null, null, fieldType : typeof(T), null, expr);
+		}
+
+		/// <summary>
+		/// Sets the reader expression for a field of type <typeparamref name="T"/> in the data provider.
+		/// <code>
+		/// var dataProvider = SqlServerTools.GetDataProvider(SqlServerVersion.v2019);
+		///
+		/// dataProvider.SetFieldReaderExpression&lt;SqlDataReader,decimal&gt;((r, i) => GetDecimal(r, i));
+		///
+		/// static decimal GetDecimal(SqlDataReader rd, int index)
+		/// {
+		///     var value = rd.GetSqlDecimal(index);
+		///
+		///     if (value.Precision > 29)
+		///     {
+		///         var str = value.ToString();
+		///         var val = decimal.Parse(str);
+		///         return val;
+		///     }
+		///
+		///     return value.Value;
+		/// }
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TDbDataReader">
+		/// Type of the database data reader, e.g. <see cref="DbDataReader"/>.
+		/// </typeparam>
+		/// <typeparam name="T">
+		/// Type of the field to be read, e.g. <see cref="decimal"/> or <see cref="string"/>.
+		/// </typeparam>
+		/// <param name="dataProvider">
+		/// The data provider instance where the reader expression will be set.
+		/// </param>
+		/// <param name="includeDataReaderType">
+		/// Flag indicating whether to include the data reader type in the reader expression.
+		/// </param>
+		/// <param name="expr">
+		/// The expression that defines how to read the field from the data reader.
+		/// The expression should take two parameters: the data reader and the index of the field.
+		/// </param>
+		public static void SetFieldReaderExpression<TDbDataReader,T>(this IDataProvider dataProvider, bool includeDataReaderType, Expression<Func<TDbDataReader,int,T>> expr)
+		where TDbDataReader : DbDataReader
+		{
+			dataProvider.SetFieldReaderExpression(includeDataReaderType ? typeof(TDbDataReader) : null, null, null, fieldType : typeof(T), null, expr);
 		}
 
 		/// <summary>
