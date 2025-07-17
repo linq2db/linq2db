@@ -42,6 +42,11 @@ namespace Tests.Mapping
 						.HasPrecision(38)
 						.HasScale    (37));
 
+			var dataProvider = (DataProviderBase)db.DataProvider;
+
+			dataProvider.SetFieldReaderExpression<System.Data.SqlClient.SqlDataReader,    decimal>(true, (r, i) => r.GetDecimal(i));
+			dataProvider.SetFieldReaderExpression<Microsoft.Data.SqlClient.SqlDataReader, decimal>(true, (r, i) => r.GetDecimal(i));
+
 			Assert.That(() => _ = tmp.ToList(), Throws.TypeOf<OverflowException>());
 		}
 
