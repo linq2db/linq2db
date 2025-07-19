@@ -68,14 +68,12 @@ namespace LinqToDB.Internal.Linq
 			return sqlText;
 		}
 
-#if DEBUG
 		public virtual QueryDebugView DebugView
 			=> new(
 				() => new Expressions.ExpressionPrinter().PrintExpression(Expression),
 				() => ((IExpressionQuery)this).GetSqlQueries(null)[0].Sql,
 				() => ((IExpressionQuery)this).GetSqlQueries(new () { InlineParameters = true })[0].Sql
 				);
-#endif
 
 		#endregion
 
