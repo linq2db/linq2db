@@ -1,12 +1,14 @@
-﻿using System.Linq;
+﻿using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq;
+
 using BenchmarkDotNet.Attributes;
+
 using LinqToDB.Benchmarks.Mappings;
+using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.Benchmarks.TestProvider;
-using System;
-using System.Data.Common;
 
 namespace LinqToDB.Benchmarks.Queries
 {
@@ -39,7 +41,7 @@ namespace LinqToDB.Benchmarks.Queries
 			};
 
 			_cn = new MockDbConnection(result, ConnectionState.Open);
-			_db = new DataConnection(PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v95), _cn);
+			_db = new DataConnection(new DataOptions().UseConnection(PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v95), _cn));
 
 			_compiled = CompiledQuery.Compile<DataConnection, long, IQueryable<User>>(
 				(db, userId) => from c in db.GetTable<User>()

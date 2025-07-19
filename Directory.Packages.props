@@ -23,9 +23,6 @@
 		<PackageVersion Include="Nullability.Source"                                    Version="2.3.0"         />
 		<PackageVersion Include="PolySharp"                                             Version="1.14.1"        />
 		<!--build support-->
-		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.139"       />
-		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="8.0.0-preview.23364.2" />
-		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.11.0-beta1.23420.2" />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="1.1.1"         />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="2.3.1"         />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.7.0"         />
@@ -57,7 +54,7 @@
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="4.5.0"         />
 		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="17.7.2"        />
 		<PackageVersion Include="FluentAssertions"                                      Version="6.12.0"        />
-		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.13.9"        />
+		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.15.2"        />
 		<PackageVersion Include="JetBrains.Profiler.Api"                                Version="1.1.8"         />
 		<PackageVersion Include="FSharp.Core"                                           Version="7.0.400"       />
 		<!--packages for test projects-->
@@ -83,57 +80,22 @@
 		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.3"        />
 	</ItemGroup>
 
-	<!--linq2db source-->
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' ">
-		<!--downgrade-->
-		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="1.1.1"         />
-		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="1.1.2"         />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-		<!--v7+ dropped support of netcoreapp3.1 and ns2.0 build is useless as it throws PNSE ¯\_(ツ)_/¯ -->
-		<PackageVersion Include="System.Data.Odbc"                                      Version="6.0.1"         />
-		<PackageVersion Include="System.Data.OleDb"                                     Version="6.0.0"         />
-		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="6.0.0"         />
-		<PackageVersion Include="System.Text.Json"                                      Version="6.0.8"         />
-		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.0.179"       />
-		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.0.179"       />
-		<PackageVersion Include="MySql.Data"                                            Version="8.0.32.1"      />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
-		<!--main version-->
-		<!--
-		pin abstractions packages to lowest supported runtime (.net 6 currently)
-		https://github.com/linq2db/linq2db/issues/3953
-		-->
+	<ItemGroup>
 		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="6.0.1"         />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="6.0.4"         />
 	</ItemGroup>
 
-	<!--test dependencies-->
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
-		<PackageVersion Include="System.Text.Json"                                      Version="7.0.3"         />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net8.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
 		<PackageVersion Include="System.Data.Odbc"                                      Version="7.0.0"         />
 		<PackageVersion Include="System.Data.OleDb"                                     Version="7.0.0"         />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="7.0.0"         />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net8.0' ">
-		<PackageVersion Include="Npgsql"                                                Version="8.0.2"    />
+	<ItemGroup>
+		<PackageVersion Include="Npgsql"                                                Version="8.0.3"    />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net7.0' AND '$(TargetFramework)' != 'net8.0' ">
-		<PackageVersion Include="Npgsql"                                                Version="7.0.6"         />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
+	<ItemGroup>
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.1.1"         />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.1.1"         />
 		<PackageVersion Include="MySql.Data"                                            Version="8.1.0"         />

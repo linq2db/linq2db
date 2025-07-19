@@ -7,11 +7,18 @@
 		<OutputType>Exe</OutputType>
 		<PlatformTarget>AnyCPU</PlatformTarget>
 		<!--<DefineConstants>JETBRAINS;$(DefineConstants)</DefineConstants>-->
+		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3276</MSBuildWarningsAsMessages>
+
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<TargetFrameworks>net462;net8.0;net9.0</TargetFrameworks>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<DefineConstants>SKIPVT;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+	
 	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" />
-		<PackageReference Condition="$(DefineConstants.Contains('JETBRAINS'))" Include="JetBrains.Profiler.Api" />
 	</ItemGroup>
 
 </Project>

@@ -46,9 +46,6 @@
 
 	<PropertyGroup Label="Code Analysis Setup">
 		<RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
-		<!--enable on release build only to not slowdown development/testing-->
-		<RunAnalyzersDuringBuild Condition="$(Configuration) != 'Debug'">true</RunAnalyzersDuringBuild>
-		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
 
 		<AnalysisLevel>preview-All</AnalysisLevel>
 		<!--enable IDExxxx analyzers during build-->
@@ -58,19 +55,13 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net8.0'">
+	<PropertyGroup Condition="'$(TargetFramework)' != 'net462'">
 		<DefineConstants>NETSTANDARD2_1PLUS;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="PolySharp" />
-		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" />
-		<PackageReference Include="Meziantou.Analyzer" />
 
-		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>build; analyzers</IncludeAssets>
-		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Language)'=='C#'">

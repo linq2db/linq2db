@@ -9,8 +9,6 @@
 		<!-- T4 support -->
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 
-		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
-
 		<None Update="Extensions\MySqlTests.tt">
 			<LastGenOutput>MySqlTests.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>

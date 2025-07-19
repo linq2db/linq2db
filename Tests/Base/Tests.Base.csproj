@@ -6,7 +6,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 
 		<PackageReference Include="NUnit" />
 	</ItemGroup>

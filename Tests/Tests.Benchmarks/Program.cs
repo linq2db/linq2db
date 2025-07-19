@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
+
 using BenchmarkDotNet.Running;
+
 using LinqToDB.Benchmarks.Queries;
 using LinqToDB.Benchmarks.QueryGeneration;
 
@@ -286,7 +288,6 @@ namespace LinqToDB.Benchmarks
 			SelectBenchmark_WarmUp(b);
 			SelectBenchmark_Measure(b);
 		}
-
 
 		private static void SelectBenchmark_WarmUp(SelectBenchmark b)
 		{

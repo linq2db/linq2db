@@ -76,7 +76,9 @@ namespace LinqToDB.Linq
 		/// reconstitute the exception object transmitted over a stream.
 		/// </remarks>
 		protected LinqException(SerializationInfo info, StreamingContext context)
+#pragma warning disable SYSLIB0051 // Type or member is obsolete
 			: base(info, context)
+#pragma warning restore SYSLIB0051 // Type or member is obsolete
 		{
 		}
 	}

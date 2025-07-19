@@ -53,7 +53,7 @@ namespace LinqToDB.Metadata
 
 		MappingAttribute[] GetNoInheritMappingAttributes(Key key)
 		{
-#if NET45 || NET46 || NETSTANDARD2_0
+#if NETFRAMEWORK
 			var attrs = _noInheritMappingAttributes.GetOrAdd(key, key =>
 			{
 				var res = _attributesGetter(key.SourceOwner, key.Source);

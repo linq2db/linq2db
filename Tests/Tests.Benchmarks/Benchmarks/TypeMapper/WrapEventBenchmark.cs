@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+
 using LinqToDB.Expressions;
 
 namespace LinqToDB.Benchmarks.TypeMapping

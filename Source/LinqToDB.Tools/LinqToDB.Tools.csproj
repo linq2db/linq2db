@@ -7,13 +7,15 @@
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.Tools.xml</DocumentationFile>
 
 		<!--published targets-->
-		<TargetFrameworks>net45;net46;netstandard2.0</TargetFrameworks>
-		<!--add test-only targets separately for better visibility-->
-		<TargetFrameworks>$(TargetFrameworks);net472;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net462;net8.0;net9.0</TargetFrameworks>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
+	<PropertyGroup Condition=" '$(TargetFramework)' != 'net462'">
 		<DefineConstants>NATIVE_ASYNC;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<DefineConstants>SKIPVT;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>

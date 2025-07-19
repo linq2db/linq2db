@@ -25,3 +25,4 @@ linq2db.sln.ide/
 .vs/
 packages/
 .vscode/
+/UserDataProviders.json

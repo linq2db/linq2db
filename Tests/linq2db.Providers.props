@@ -18,7 +18,7 @@
 		<PackageReference Include="Devart.Data.Oracle" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
 		<PackageReference Include="Oracle.ManagedDataAccess" />
 		<PackageReference Include="Microsoft.SqlServer.Types" />
 
@@ -36,7 +36,7 @@
 		</Reference>-->
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
@@ -54,19 +54,14 @@
 	<!--some magic to not include x64 reference to IBM.Data.DB2.Core in x86 builds, as it fails x86 tests-->
 	<Choose>
 		<When Condition="$(X86) == ''">
-			<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
+			<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
 				<!--PackageReference + Reference beelongs to same nuget-->
 				<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />
 				<Reference Include="IBM.Data.DB2">
 					<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll</HintPath>
 				</Reference>
 			</ItemGroup>
-			<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-				<PackageReference Include="IBM.Data.DB2.Core" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
-				<PackageReference Include="IBM.Data.DB2.Core-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
-				<PackageReference Include="IBM.Data.DB2.Core-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
-			</ItemGroup>
-			<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' ">
+			<ItemGroup Condition=" '$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0' ">
 				<PackageReference Include="Net.IBM.Data.Db2" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
 				<PackageReference Include="Net.IBM.Data.Db2-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
 				<PackageReference Include="Net.IBM.Data.Db2-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>

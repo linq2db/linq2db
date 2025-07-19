@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+
 using BenchmarkDotNet.Attributes;
+
 using LinqToDB.Benchmarks.Models;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
@@ -22,8 +24,8 @@ namespace LinqToDB.Benchmarks.QueryGeneration
 			if (_dataProviders.Count > 0)
 				return;
 
-			_dataProviders.Add(ProviderName.Access,   new AccessOleDbDataProvider());
-			_dataProviders.Add(ProviderName.Firebird, new FirebirdDataProvider());
+			_dataProviders.Add(ProviderName.Access,   AccessTools.GetDataProvider(ProviderName.Access));
+			_dataProviders.Add(ProviderName.Firebird, FirebirdTools.GetDataProvider());
 
 			/*
 			_dataProviders.Add(ProviderName.SQLiteMS,              new SQLiteDataProvider(ProviderName.SQLiteMS));

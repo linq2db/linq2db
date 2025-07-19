@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+
 using BenchmarkDotNet.Attributes;
+
 using LinqToDB.Expressions;
 
 namespace LinqToDB.Benchmarks.TypeMapping
@@ -55,7 +57,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			{
 				public static OracleDecimal Instance { get; } = new OracleDecimal();
 
-				public static OracleDecimal SetPrecision(OracleDecimal value1, int precision) => OracleDecimal.Instance;
+				public static OracleDecimal SetPrecision(OracleDecimal value1, int precision) => Instance;
 
 				public static explicit operator decimal(OracleDecimal value1) => 1m;
 			}

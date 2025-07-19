@@ -2,8 +2,9 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+
 using BenchmarkDotNet.Attributes;
-using LinqToDB.Common;
+
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
@@ -59,7 +60,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 					= new LambdaExpression[]
 				{
 					// [0]: StartRow
-					(Expression<Action<NpgsqlBinaryImporter>>)((NpgsqlBinaryImporter this_) => this_.StartRow()),
+					(Expression<Action<NpgsqlBinaryImporter>>)(this_ => this_.StartRow()),
 				};
 
 				public NpgsqlBinaryImporter(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -109,7 +110,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 						pWriter,
 						"Write",
 						new[] { typeof(object) },
-						Expression.Call(Expression.ArrayIndex(pColumns, Expression.Constant(i)), "GetProviderValue", Array<Type>.Empty, pEntity),
+						Expression.Call(Expression.ArrayIndex(pColumns, Expression.Constant(i)), "GetProviderValue", [], pEntity),
 						Expression.Convert(Expression.Constant(Wrapped.NpgsqlDbType.Test), typeof(Original.NpgsqlDbType))));
 			}
 
