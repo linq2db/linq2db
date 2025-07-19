@@ -23,18 +23,22 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			this IDataContext db,
-			string? tableName = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary)
+			string?           tableName       = default,
+			string?           databaseName    = default,
+			string?           schemaName      = default,
+			string?           serverName      = default,
+			string?           statementHeader = default,
+			string?           statementFooter = default,
+			TableOptions      tableOptions    = TableOptions.IsTemporary)
 			where T : class
 		{
-			return new TempTable<T>(db, tableName, databaseName, schemaName, serverName, tableOptions);
+			return new TempTable<T>(db, tableName, databaseName, schemaName, serverName, statementHeader, statementFooter, tableOptions);
 		}
 
 		/// <summary>
@@ -48,20 +52,24 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			this IDataContext db,
-			IEnumerable<T> items,
-			BulkCopyOptions? options = default,
-			string? tableName = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary)
+			IEnumerable<T>    items,
+			BulkCopyOptions?  options         = default,
+			string?           tableName       = default,
+			string?           databaseName    = default,
+			string?           schemaName      = default,
+			string?           serverName      = default,
+			string?           statementHeader = default,
+			string?           statementFooter = default,
+			TableOptions      tableOptions    = TableOptions.IsTemporary)
 			where T : class
 		{
-			return new TempTable<T>(db, items, options, tableName, databaseName, schemaName, serverName, tableOptions);
+			return new TempTable<T>(db, items, options, tableName, databaseName, schemaName, serverName, statementHeader, statementFooter, tableOptions);
 		}
 
 		/// <summary>
@@ -80,25 +88,29 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext db,
-			IEnumerable<T> items,
+			this IDataContext               db,
+			IEnumerable<T>                  items,
 			Action<EntityMappingBuilder<T>> setTable,
-			BulkCopyOptions? options = default,
-			string? tableName = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary)
+			BulkCopyOptions?                options         = default,
+			string?                         tableName       = default,
+			string?                         databaseName    = default,
+			string?                         schemaName      = default,
+			string?                         serverName      = default,
+			string?                         statementHeader = default,
+			string?                         statementFooter = default,
+			TableOptions                    tableOptions    = TableOptions.IsTemporary)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
 			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
-			return new TempTable<T>(db, tempTableDescriptor, items, options, tableName, databaseName, schemaName, serverName, tableOptions);
+			return new TempTable<T>(db, tempTableDescriptor, items, options, tableName, databaseName, schemaName, serverName, statementHeader, statementFooter, tableOptions);
 		}
 
 		/// <summary>
@@ -112,20 +124,24 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
 			this IDataContext db,
-			string tableName,
-			IEnumerable<T> items,
-			BulkCopyOptions? options = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary)
+			string            tableName,
+			IEnumerable<T>    items,
+			BulkCopyOptions?  options         = default,
+			string?           databaseName    = default,
+			string?           schemaName      = default,
+			string?           serverName      = default,
+			string?           statementHeader = default,
+			string?           statementFooter = default,
+			TableOptions      tableOptions    = TableOptions.IsTemporary)
 			where T : class
 		{
-			return new TempTable<T>(db, tableName, items, options, databaseName, schemaName, serverName, tableOptions);
+			return new TempTable<T>(db, tableName, items, options, databaseName, schemaName, serverName, statementHeader, statementFooter, tableOptions);
 		}
 
 		/// <summary>
@@ -144,25 +160,29 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext db,
-			string tableName,
-			IEnumerable<T> items,
+			this IDataContext               db,
+			string                          tableName,
+			IEnumerable<T>                  items,
 			Action<EntityMappingBuilder<T>> setTable,
-			BulkCopyOptions? options = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary)
+			BulkCopyOptions?                options         = default,
+			string?                         databaseName    = default,
+			string?                         schemaName      = default,
+			string?                         serverName      = default,
+			string?                         statementHeader = default,
+			string?                         statementFooter = default,
+			TableOptions                    tableOptions    = TableOptions.IsTemporary)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
 			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
-			return new TempTable<T>(db, tempTableDescriptor, items, options, tableName, databaseName, schemaName, serverName, tableOptions);
+			return new TempTable<T>(db, tempTableDescriptor, items, options, tableName, databaseName, schemaName, serverName, statementHeader, statementFooter, tableOptions);
 		}
 
 		/// <summary>
@@ -176,20 +196,24 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext db,
-			IQueryable<T> items,
-			string? tableName = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			Action<ITable<T>>? action = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary)
+			this IDataContext  db,
+			IQueryable<T>      items,
+			string?            tableName       = default,
+			string?            databaseName    = default,
+			string?            schemaName      = default,
+			Action<ITable<T>>? action          = default,
+			string?            serverName      = default,
+			string?            statementHeader = default,
+			string?            statementFooter = default,
+			TableOptions       tableOptions    = TableOptions.IsTemporary)
 			where T : class
 		{
-			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
+			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action, serverName, statementHeader, statementFooter, tableOptions);
 		}
 
 		/// <summary>
@@ -209,25 +233,29 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext db,
-			IQueryable<T> items,
+			this IDataContext               db,
+			IQueryable<T>                   items,
 			Action<EntityMappingBuilder<T>> setTable,
-			string? tableName = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			Action<ITable<T>>? action = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary)
+			string?                         tableName       = default,
+			string?                         databaseName    = default,
+			string?                         schemaName      = default,
+			Action<ITable<T>>?              action          = default,
+			string?                         serverName      = default,
+			string?                         statementHeader = default,
+			string?                         statementFooter = default,
+			TableOptions                    tableOptions    = TableOptions.IsTemporary)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
 			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
-			return new TempTable<T>(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
+			return new TempTable<T>(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, statementHeader, statementFooter, tableOptions);
 		}
 
 		/// <summary>
@@ -241,20 +269,24 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext db,
-			string? tableName,
-			IQueryable<T> items,
-			string? databaseName = default,
-			string? schemaName = default,
-			Action<ITable<T>>? action = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary)
+			this IDataContext  db,
+			string?            tableName,
+			IQueryable<T>      items,
+			string?            databaseName    = default,
+			string?            schemaName      = default,
+			Action<ITable<T>>? action          = default,
+			string?            serverName      = default,
+			string?            statementHeader = default,
+			string?            statementFooter = default,
+			TableOptions       tableOptions    = TableOptions.IsTemporary)
 			where T : class
 		{
-			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action, serverName, tableOptions);
+			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action, serverName, statementHeader, statementFooter, tableOptions);
 		}
 
 		/// <summary>
@@ -274,25 +306,29 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext db,
-			string? tableName,
-			IQueryable<T> items,
+			this IDataContext               db,
+			string?                         tableName,
+			IQueryable<T>                   items,
 			Action<EntityMappingBuilder<T>> setTable,
-			string? databaseName = default,
-			string? schemaName = default,
-			Action<ITable<T>>? action = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary)
+			string?                         databaseName    = default,
+			string?                         schemaName      = default,
+			Action<ITable<T>>?              action          = default,
+			string?                         serverName      = default,
+			string?                         statementHeader = default,
+			string?                         statementFooter = default,
+			TableOptions                    tableOptions    = TableOptions.IsTemporary)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
 			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
-			return new TempTable<T>(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
+			return new TempTable<T>(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, statementHeader, statementFooter, tableOptions);
 		}
 
 		/// <summary>
@@ -304,20 +340,24 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
 			this IDataContext db,
-			string? tableName = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary,
+			string?           tableName         = default,
+			string?           databaseName      = default,
+			string?           schemaName        = default,
+			string?           serverName        = default,
+			string?           statementHeader   = default,
+			string?           statementFooter   = default,
+			TableOptions      tableOptions      = TableOptions.IsTemporary,
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
-			return TempTable<T>.CreateAsync(db, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken);
+			return TempTable<T>.CreateAsync(db, tableName, databaseName, schemaName, serverName, statementHeader, statementFooter, tableOptions, cancellationToken);
 		}
 
 		/// <summary>
@@ -331,22 +371,26 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
 			this IDataContext db,
-			IEnumerable<T> items,
-			BulkCopyOptions? options = default,
-			string? tableName = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary,
+			IEnumerable<T>    items,
+			BulkCopyOptions?  options           = default,
+			string?           tableName         = default,
+			string?           databaseName      = default,
+			string?           schemaName        = default,
+			string?           serverName        = default,
+			string?           statementHeader   = default,
+			string?           statementFooter   = default,
+			TableOptions      tableOptions      = TableOptions.IsTemporary,
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
-			return TempTable<T>.CreateAsync(db, items, options, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken);
+			return TempTable<T>.CreateAsync(db, items, options, tableName, databaseName, schemaName, serverName, statementHeader, statementFooter, tableOptions, cancellationToken);
 		}
 
 		/// <summary>
@@ -365,27 +409,31 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext db,
-			IEnumerable<T> items,
+			this IDataContext               db,
+			IEnumerable<T>                  items,
 			Action<EntityMappingBuilder<T>> setTable,
-			BulkCopyOptions? options = default,
-			string? tableName = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary,
-			CancellationToken cancellationToken = default)
+			BulkCopyOptions?                options           = default,
+			string?                         tableName         = default,
+			string?                         databaseName      = default,
+			string?                         schemaName        = default,
+			string?                         serverName        = default,
+			string?                         statementHeader   = default,
+			string?                         statementFooter   = default,
+			TableOptions                    tableOptions      = TableOptions.IsTemporary,
+			CancellationToken               cancellationToken = default)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
 			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
-			return TempTable<T>.CreateAsync(db, tempTableDescriptor, tableName, items, options, databaseName, schemaName, serverName, tableOptions, cancellationToken);
+			return TempTable<T>.CreateAsync(db, tempTableDescriptor, tableName, items, options, databaseName, schemaName, serverName, statementHeader, statementFooter, tableOptions, cancellationToken);
 		}
 
 		/// <summary>
@@ -399,22 +447,26 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
 			this IDataContext db,
-			string tableName,
-			IEnumerable<T> items,
-			BulkCopyOptions? options = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary,
+			string            tableName,
+			IEnumerable<T>    items,
+			BulkCopyOptions?  options           = default,
+			string?           databaseName      = default,
+			string?           schemaName        = default,
+			string?           serverName        = default,
+			string?           statementHeader   = default,
+			string?           statementFooter   = default,
+			TableOptions      tableOptions      = TableOptions.IsTemporary,
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
-			return TempTable<T>.CreateAsync(db, tableName, items, options, databaseName, schemaName, serverName, tableOptions, cancellationToken);
+			return TempTable<T>.CreateAsync(db, tableName, items, options, databaseName, schemaName, serverName, statementHeader, statementFooter, tableOptions, cancellationToken);
 		}
 
 		/// <summary>
@@ -433,27 +485,31 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext db,
-			string tableName,
-			IEnumerable<T> items,
+			this IDataContext               db,
+			string                          tableName,
+			IEnumerable<T>                  items,
 			Action<EntityMappingBuilder<T>> setTable,
-			BulkCopyOptions? options = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary,
-			CancellationToken cancellationToken = default)
+			BulkCopyOptions?                options           = default,
+			string?                         databaseName      = default,
+			string?                         schemaName        = default,
+			string?                         serverName        = default,
+			string?                         statementHeader   = default,
+			string?                         statementFooter   = default,
+			TableOptions                    tableOptions      = TableOptions.IsTemporary,
+			CancellationToken               cancellationToken = default)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
 			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
-			return TempTable<T>.CreateAsync(db, tempTableDescriptor, tableName, items, options, databaseName, schemaName, serverName, tableOptions, cancellationToken);
+			return TempTable<T>.CreateAsync(db, tempTableDescriptor, tableName, items, options, databaseName, schemaName, serverName, statementHeader, statementFooter, tableOptions, cancellationToken);
 		}
 
 		/// <summary>
@@ -467,22 +523,26 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext db,
-			IQueryable<T> items,
-			string? tableName = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			Func<ITable<T>, Task>? action = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary,
-			CancellationToken cancellationToken = default)
+			this IDataContext      db,
+			IQueryable<T>          items,
+			string?                tableName         = default,
+			string?                databaseName      = default,
+			string?                schemaName        = default,
+			Func<ITable<T>, Task>? action            = default,
+			string?                serverName        = default,
+			string?                statementHeader   = default,
+			string?                statementFooter   = default,
+			TableOptions           tableOptions      = TableOptions.IsTemporary,
+			CancellationToken      cancellationToken = default)
 			where T : class
 		{
-			return TempTable<T>.CreateAsync(db, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
+			return TempTable<T>.CreateAsync(db, items, tableName, databaseName, schemaName, action, serverName, statementHeader, statementFooter, tableOptions, cancellationToken);
 		}
 
 		/// <summary>
@@ -502,27 +562,31 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext db,
-			IQueryable<T> items,
+			this IDataContext               db,
+			IQueryable<T>                   items,
 			Action<EntityMappingBuilder<T>> setTable,
-			string? tableName = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			Func<ITable<T>, Task>? action = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary,
-			CancellationToken cancellationToken = default)
+			string?                         tableName         = default,
+			string?                         databaseName      = default,
+			string?                         schemaName        = default,
+			Func<ITable<T>, Task>?          action            = default,
+			string?                         serverName        = default,
+			string?                         statementHeader   = default,
+			string?                         statementFooter   = default,
+			TableOptions                    tableOptions      = TableOptions.IsTemporary,
+			CancellationToken               cancellationToken = default)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
 			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
-			return TempTable<T>.CreateAsync(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
+			return TempTable<T>.CreateAsync(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, statementHeader, statementFooter, tableOptions, cancellationToken);
 		}
 
 		/// <summary>
@@ -536,22 +600,26 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext db,
-			string? tableName,
-			IQueryable<T> items,
-			string? databaseName = default,
-			string? schemaName = default,
-			Func<ITable<T>, Task>? action = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary,
-			CancellationToken cancellationToken = default)
+			this IDataContext      db,
+			string?                tableName,
+			IQueryable<T>          items,
+			string?                databaseName      = default,
+			string?                schemaName        = default,
+			Func<ITable<T>, Task>? action            = default,
+			string?                serverName        = default,
+			string?                statementHeader   = default,
+			string?                statementFooter   = default,
+			TableOptions           tableOptions      = TableOptions.IsTemporary,
+			CancellationToken      cancellationToken = default)
 			where T : class
 		{
-			return TempTable<T>.CreateAsync(db, tableName, items, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
+			return TempTable<T>.CreateAsync(db, tableName, items, databaseName, schemaName, action, serverName, statementHeader, statementFooter, tableOptions, cancellationToken);
 		}
 
 		/// <summary>
@@ -571,27 +639,31 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> CreateTempTableAsync<T>(
-			this IDataContext db,
-			string? tableName,
-			IQueryable<T> items,
+			this IDataContext               db,
+			string?                         tableName,
+			IQueryable<T>                   items,
 			Action<EntityMappingBuilder<T>> setTable,
-			string? databaseName = default,
-			string? schemaName = default,
-			Func<ITable<T>, Task>? action = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary,
-			CancellationToken cancellationToken = default)
+			string?                         databaseName      = default,
+			string?                         schemaName        = default,
+			Func<ITable<T>, Task>?          action            = default,
+			string?                         serverName        = default,
+			string?                         statementHeader   = default,
+			string?                         statementFooter   = default,
+			TableOptions                    tableOptions      = TableOptions.IsTemporary,
+			CancellationToken               cancellationToken = default)
 			where T : class
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
 			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
-			return TempTable<T>.CreateAsync(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
+			return TempTable<T>.CreateAsync(db, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, statementHeader, statementFooter, tableOptions, cancellationToken);
 		}
 
 		#endregion
@@ -609,20 +681,24 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> IntoTempTable<T>(
 			this IEnumerable<T> items,
-			IDataContext db,
-			string? tableName = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary,
-			BulkCopyOptions? options = default)
+			IDataContext        db,
+			string?             tableName       = default,
+			string?             databaseName    = default,
+			string?             schemaName      = default,
+			string?             serverName      = default,
+			string?             statementHeader = default,
+			string?             statementFooter = default,
+			TableOptions        tableOptions    = TableOptions.IsTemporary,
+			BulkCopyOptions?    options         = default)
 			where T : class
 		{
-			return new TempTable<T>(db, items, options, tableName, databaseName, schemaName, serverName, tableOptions);
+			return new TempTable<T>(db, items, options, tableName, databaseName, schemaName, serverName, statementHeader, statementFooter, tableOptions);
 		}
 
 		/// <summary>
@@ -635,6 +711,8 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation, but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
 		/// Note that context mapping schema must be writable to allow it.
@@ -643,14 +721,16 @@ namespace LinqToDB
 		/// Latter option is not recommended as it will affect performance significantly.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> IntoTempTable<T>(
-			this IQueryable<T> items,
-			string? tableName = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary,
-			Action<ITable<T>>? action = default,
-			Action<EntityMappingBuilder<T>>? setTable = default)
+			this IQueryable<T>               items,
+			string?                          tableName       = default,
+			string?                          databaseName    = default,
+			string?                          schemaName      = default,
+			string?                          serverName      = default,
+			string?                          statementHeader = default,
+			string?                          statementFooter = default,
+			TableOptions                     tableOptions    = TableOptions.IsTemporary,
+			Action<ITable<T>>?               action          = default,
+			Action<EntityMappingBuilder<T>>? setTable        = default)
 			where T : class
 		{
 			if (items is IExpressionQuery eq)
@@ -659,7 +739,7 @@ namespace LinqToDB
 				if (setTable != null)
 					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext, setTable);
 
-				return new TempTable<T>(eq.DataContext, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
+				return new TempTable<T>(eq.DataContext, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, statementHeader, statementFooter, tableOptions);
 			}
 
 			throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
@@ -676,22 +756,26 @@ namespace LinqToDB
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> IntoTempTableAsync<T>(
 			this IEnumerable<T> items,
-			IDataContext db,
-			string? tableName = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary,
-			BulkCopyOptions? options = default,
-			CancellationToken cancellationToken = default)
+			IDataContext        db,
+			string?             tableName         = default,
+			string?             databaseName      = default,
+			string?             schemaName        = default,
+			string?             serverName        = default,
+			string?             statementHeader   = default,
+			string?             statementFooter   = default,
+			TableOptions        tableOptions      = TableOptions.IsTemporary,
+			BulkCopyOptions?    options           = default,
+			CancellationToken   cancellationToken = default)
 			where T : class
 		{
-			return TempTable<T>.CreateAsync(db, items, options, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken);
+			return TempTable<T>.CreateAsync(db, items, options, tableName, databaseName, schemaName, serverName, statementHeader, statementFooter, tableOptions, cancellationToken);
 		}
 
 		/// <summary>
@@ -710,19 +794,23 @@ namespace LinqToDB
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
+		/// <param name="statementHeader">Optional replacement for <c>"CREATE TABLE table_name"</c> header. Header is a template with <c>{0}</c> parameter for table name.</param>
+		/// <param name="statementFooter">Optional SQL, appended to generated create table statement.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static Task<TempTable<T>> IntoTempTableAsync<T>(
-			this IQueryable<T> items,
-			string? tableName = default,
-			string? databaseName = default,
-			string? schemaName = default,
-			string? serverName = default,
-			TableOptions tableOptions = TableOptions.IsTemporary,
-			Func<ITable<T>, Task>? action = default,
-			Action<EntityMappingBuilder<T>>? setTable = default,
-			CancellationToken cancellationToken = default)
+			this IQueryable<T>               items,
+			string?                          tableName         = default,
+			string?                          databaseName      = default,
+			string?                          schemaName        = default,
+			string?                          serverName        = default,
+			string?                          statementHeader   = default,
+			string?                          statementFooter   = default,
+			TableOptions                     tableOptions      = TableOptions.IsTemporary,
+			Func<ITable<T>, Task>?           action            = default,
+			Action<EntityMappingBuilder<T>>? setTable          = default,
+			CancellationToken                cancellationToken = default)
 			where T : class
 		{
 			if (items is IExpressionQuery eq)
@@ -731,7 +819,7 @@ namespace LinqToDB
 				if (setTable != null)
 					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext, setTable);
 
-				return TempTable<T>.CreateAsync(eq.DataContext, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
+				return TempTable<T>.CreateAsync(eq.DataContext, tempTableDescriptor, items, tableName, databaseName, schemaName, action, serverName, statementHeader, statementFooter, tableOptions, cancellationToken);
 			}
 
 			throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
