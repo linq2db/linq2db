@@ -2,8 +2,7 @@
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
-	public class SqlQueryCloneVisitor<TContext> : SqlQueryCloneVisitorBase
-
+	public sealed class SqlQueryCloneVisitor<TContext> : SqlQueryCloneVisitorBase
 	{
 		TContext                            _context   = default!;
 		Func<TContext, IQueryElement, bool> _cloneFunc = default!;

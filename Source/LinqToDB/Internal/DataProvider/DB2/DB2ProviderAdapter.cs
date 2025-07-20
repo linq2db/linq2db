@@ -12,7 +12,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
-	public class DB2ProviderAdapter : IDynamicProviderAdapter
+	public sealed class DB2ProviderAdapter : IDynamicProviderAdapter
 	{
 		public const string ProviderFactoryName  = "IBM.Data.DB2";
 		public const string TypesNamespace       = "IBM.Data.DB2Types";

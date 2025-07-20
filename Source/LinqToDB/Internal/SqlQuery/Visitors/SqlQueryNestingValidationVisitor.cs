@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
-	public class SqlQueryNestingValidationVisitor : QueryElementVisitor
+	public sealed class SqlQueryNestingValidationVisitor : QueryElementVisitor
 	{
 		readonly bool                         _isSubQuery;
 		readonly IQueryElement                _forStatement;
@@ -40,7 +40,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return selectQuery;
 		}
 
-		protected Exception CreateErrorMessage(bool sourceInQuery, IQueryElement element)
+		Exception CreateErrorMessage(bool sourceInQuery, IQueryElement element)
 		{
 			var messageString = $"Element: '{element.ToDebugString()}' ";
 

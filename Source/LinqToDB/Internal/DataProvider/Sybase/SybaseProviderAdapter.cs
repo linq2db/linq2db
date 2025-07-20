@@ -8,7 +8,7 @@ using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Internal.DataProvider.Sybase
 {
-	public class SybaseProviderAdapter : IDynamicProviderAdapter
+	public sealed class SybaseProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _nativeSyncRoot = new ();
 		private static readonly Lock _managedSyncRoot = new ();
@@ -110,7 +110,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		private static SybaseProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string? dbFactoryName, bool supportsBulkCopy)
 		{
-			var assembly = Internal.Common.Tools.TryLoadAssembly(assemblyName, dbFactoryName);
+			var assembly = Common.Tools.TryLoadAssembly(assemblyName, dbFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 

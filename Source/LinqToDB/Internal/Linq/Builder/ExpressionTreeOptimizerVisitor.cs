@@ -6,7 +6,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	public class ExpressionTreeOptimizerVisitor : ExpressionVisitorBase
+	sealed class ExpressionTreeOptimizerVisitor : ExpressionVisitorBase
 	{
 		protected override Expression VisitConditional(ConditionalExpression node)
 		{

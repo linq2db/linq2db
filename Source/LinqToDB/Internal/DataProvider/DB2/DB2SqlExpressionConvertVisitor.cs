@@ -4,7 +4,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
-	public class DB2SqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	sealed class DB2SqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public DB2SqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{

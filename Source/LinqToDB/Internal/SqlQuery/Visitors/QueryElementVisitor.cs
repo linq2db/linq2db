@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.Internal.SqlQuery
+namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	// TODO: REFACTORING: it probably makes sense to move Visit calls from element visit switch to upper level to:
 	// - reduce function/code size

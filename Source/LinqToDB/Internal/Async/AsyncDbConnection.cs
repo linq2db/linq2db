@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.Async
 	/// synchronous implementation of asynchronous methods.
 	/// Providers with async operations support could override its methods with asynchronous implementations.
 	/// </summary>
-	public class AsyncDbConnection : IAsyncDbConnection
+	class AsyncDbConnection : IAsyncDbConnection
 	{
 		protected internal AsyncDbConnection(DbConnection connection)
 		{

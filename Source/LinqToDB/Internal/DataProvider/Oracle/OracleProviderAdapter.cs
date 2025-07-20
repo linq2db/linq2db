@@ -19,7 +19,7 @@ using LinqToDB.Mapping;
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
 	// add OracleSparseVector type? (23.9+)
-	public class OracleProviderAdapter : IDynamicProviderAdapter
+	public sealed class OracleProviderAdapter : IDynamicProviderAdapter
 	{
 		const int NanosecondsPerTick = 100;
 		private static readonly Type[] IndexParams = new[] {typeof(int) };

@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	public class Firebird3SqlBuilder : FirebirdSqlBuilder
+	class Firebird3SqlBuilder : FirebirdSqlBuilder
 	{
 		public Firebird3SqlBuilder(IDataProvider provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)

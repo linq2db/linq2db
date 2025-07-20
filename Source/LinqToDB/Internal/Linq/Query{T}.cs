@@ -15,7 +15,7 @@ using LinqToDB.Metrics;
 
 namespace LinqToDB.Internal.Linq
 {
-	public class Query<T> : Query
+	public sealed class Query<T> : Query
 	{
 		#region Init
 

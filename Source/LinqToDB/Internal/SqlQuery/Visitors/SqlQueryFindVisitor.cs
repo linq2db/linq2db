@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
-	public class SqlQueryFindVisitor : QueryElementVisitor
+	public sealed class SqlQueryFindVisitor : QueryElementVisitor
 	{
 		Func<IQueryElement, bool> _findFunc = default!;
 		IQueryElement?            _found;

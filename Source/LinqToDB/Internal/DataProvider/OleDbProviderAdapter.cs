@@ -7,7 +7,7 @@ using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public class OleDbProviderAdapter : IDynamicProviderAdapter
+	public sealed class OleDbProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _syncRoot = new();
 		private static OleDbProviderAdapter? _instance;
@@ -75,7 +75,7 @@ namespace LinqToDB.Internal.DataProvider
 #if NETFRAMEWORK
 						var assembly = typeof(System.Data.OleDb.OleDbConnection).Assembly;
 #else
-						var assembly = Internal.Common.Tools.TryLoadAssembly(AssemblyName, null);
+						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 #endif

@@ -3,13 +3,13 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.Informix.Translation
 {
-	public class InformixMemberTranslator : ProviderMemberTranslatorDefault
+	sealed class InformixMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -46,7 +46,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Decimal).WithPrecisionScale(10, 4));
 		}
 
-		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		sealed class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateMakeDateTime(ITranslationContext translationContext, DbDataType      resulType, ISqlExpression  year, ISqlExpression month, ISqlExpression day, ISqlExpression? hour,
 				ISqlExpression?                                                          minute,             ISqlExpression? second,    ISqlExpression? millisecond)
@@ -331,7 +331,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 			}
 		}
 
-		public class StringMemberTranslator : StringMemberTranslatorBase
+		sealed class StringMemberTranslator : StringMemberTranslatorBase
 		{
 		}
 

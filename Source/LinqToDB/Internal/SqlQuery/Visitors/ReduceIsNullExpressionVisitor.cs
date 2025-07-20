@@ -3,10 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Internal.SqlQuery.Visitors;
 
-namespace LinqToDB.Internal.SqlProvider
+namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	sealed class ReduceIsNullExpressionVisitor : SqlQueryVisitor
 	{

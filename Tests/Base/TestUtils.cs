@@ -233,13 +233,13 @@ namespace Tests
 
 		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet)
 			where T : notnull =>
-			db.CreateSqlBuilder() is FirebirdSqlBuilder ?
+			db.ContextName.IsAnyOf(TestProvName.AllFirebird) ?
 				new FirebirdTempTable<T>(db, tableName, tableOptions : tableOptions) :
 				new     TestTempTable<T>(db, tableName, tableOptions : tableOptions);
 
 		static void ClearDataContext(IDataContext db)
 		{
-			if (db.CreateSqlBuilder() is FirebirdSqlBuilder)
+			if (db.ContextName.IsAnyOf(TestProvName.AllFirebird))
 			{
 				db.Close();
 				FirebirdTools.ClearAllPools();

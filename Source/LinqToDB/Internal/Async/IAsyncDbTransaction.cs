@@ -9,7 +9,7 @@ namespace LinqToDB.Internal.Async
 	/// Wrapper over <see cref="DbTransaction"/> instance with asynchronous operations, missing from <see cref="DbTransaction"/>.
 	/// Includes only operations, used by Linq To DB.
 	/// </summary>
-	public interface IAsyncDbTransaction : IDisposable, IAsyncDisposable
+	interface IAsyncDbTransaction : IDisposable, IAsyncDisposable
 	{
 		/// <summary>
 		/// Gets underlying transaction instance.

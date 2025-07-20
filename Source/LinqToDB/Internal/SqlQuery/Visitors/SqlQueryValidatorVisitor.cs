@@ -8,7 +8,7 @@ using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
-	public class SqlQueryValidatorVisitor : QueryElementVisitor
+	public sealed class SqlQueryValidatorVisitor : QueryElementVisitor
 	{
 		SelectQuery?     _parentQuery;
 		SqlJoinedTable?  _fakeJoin;

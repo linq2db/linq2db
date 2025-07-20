@@ -6,7 +6,7 @@ using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Internal.DataProvider.SQLite
 {
-	public class SQLiteProviderAdapter : IDynamicProviderAdapter
+	public sealed class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _systemSyncRoot = new ();
 		private static readonly Lock _msSyncRoot     = new ();

@@ -6,7 +6,7 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
-	public class SqlQueryParentFirstVisitor : QueryElementVisitor
+	public sealed class SqlQueryParentFirstVisitor : QueryElementVisitor
 	{
 		Func<IQueryElement, bool> _action = default!;
 		HashSet<IQueryElement>?   _visited;

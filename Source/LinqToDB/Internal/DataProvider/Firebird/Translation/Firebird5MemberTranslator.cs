@@ -1,10 +1,10 @@
-﻿using LinqToDB.Internal.Linq.Translation;
+﻿using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 {
-	public class Firebird5MemberTranslator : FirebirdMemberTranslator
+	sealed class Firebird5MemberTranslator : FirebirdMemberTranslator
 	{
 		sealed class Firebird5DateFunctionsTranslator : FirebirdDateFunctionsTranslator
 		{

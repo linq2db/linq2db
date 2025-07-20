@@ -10,6 +10,6 @@ namespace LinqToDB.Internal.Cache
 	/// <param name="value">The value of the entry being evicted.</param>
 	/// <param name="reason">The <see cref="EvictionReason"/>.</param>
 	/// <param name="state">The information that was passed when registering the callback.</param>
-	public delegate void PostEvictionDelegate<TKey>(TKey key, object? value, EvictionReason reason, object? state)
+	delegate void PostEvictionDelegate<TKey>(TKey key, object? value, EvictionReason reason, object? state)
 		where TKey: notnull;
 }

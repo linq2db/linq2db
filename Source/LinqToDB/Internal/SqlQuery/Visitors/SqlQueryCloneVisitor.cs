@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
-	public class SqlQueryCloneVisitor : SqlQueryCloneVisitorBase
+	public sealed class SqlQueryCloneVisitor : SqlQueryCloneVisitorBase
 	{
 		Func<IQueryElement, bool>? _cloneFunc;
 

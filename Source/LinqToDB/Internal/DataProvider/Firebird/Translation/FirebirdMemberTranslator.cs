@@ -3,13 +3,13 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 {
-	public class FirebirdMemberTranslator : ProviderMemberTranslatorDefault
+	class FirebirdMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -245,7 +245,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			}
 		}
 
-		public class StringMemberTranslator : StringMemberTranslatorBase
+		sealed class StringMemberTranslator : StringMemberTranslatorBase
 		{
 		}
 

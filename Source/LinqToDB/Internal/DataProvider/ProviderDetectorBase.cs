@@ -9,7 +9,7 @@ using LinqToDB.Metrics;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	abstract class ProviderDetectorBase<TProvider,TVersion>
+	public abstract class ProviderDetectorBase<TProvider,TVersion>
 		where TProvider   : struct, Enum
 		where TVersion    : struct, Enum
 	{

@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.Linq
 {
-	public static class QueryExpressionsExtensions
+	static class QueryExpressionsExtensions
 	{
 		public static IQueryExpressions WithMainExpressions(this IQueryExpressions expressions, Expression mainExpression)
 		{

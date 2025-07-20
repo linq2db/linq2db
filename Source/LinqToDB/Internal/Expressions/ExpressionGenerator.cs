@@ -7,7 +7,7 @@ using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Internal.Expressions
 {
-	public class ExpressionGenerator
+	public sealed class ExpressionGenerator
 	{
 		public static TypeMapper NoOpTypeMapper = new TypeMapper();
 

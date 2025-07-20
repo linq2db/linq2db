@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Internal.Expressions
 {
-	public class MarkerExpression : Expression
+	public sealed class MarkerExpression : Expression
 	{
 		public MarkerType MarkerType   { get; }
 		public Expression InnerExpression { get; }

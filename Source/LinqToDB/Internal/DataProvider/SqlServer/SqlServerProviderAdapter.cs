@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 	// old System.Data.SqlClient versions for .net core (< 4.5.0)
 	// miss UDT and BulkCopy support
 	// We don't take it into account, as there is no reason to use such old provider versions
-	public class SqlServerProviderAdapter : IDynamicProviderAdapter
+	public sealed class SqlServerProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _sysSyncRoot = new ();
 		private static readonly Lock _msSyncRoot  = new ();
@@ -214,7 +214,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			else
 #endif
 			{
-				assembly = Internal.Common.Tools.TryLoadAssembly(assemblyName, factoryName);
+				assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
 			}
 
 			if (assembly == null)
@@ -731,7 +731,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		}
 
 		[Wrapper]
-		public class SqlBulkCopyColumnMapping : TypeWrapper
+		public sealed class SqlBulkCopyColumnMapping : TypeWrapper
 		{
 			public SqlBulkCopyColumnMapping(object instance) : base(instance, null)
 			{

@@ -8,7 +8,7 @@ namespace LinqToDB.Internal.Cache
 	/// <summary>
 	/// Propagates notifications that a change has occurred.
 	/// </summary>
-	public interface IChangeToken
+	interface IChangeToken
 	{
 		/// <summary>
 		/// Gets a value that indicates if a change has occurred.

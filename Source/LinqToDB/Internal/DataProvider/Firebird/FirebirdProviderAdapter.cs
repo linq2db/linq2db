@@ -9,7 +9,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	public class FirebirdProviderAdapter : IDynamicProviderAdapter
+	public sealed class FirebirdProviderAdapter : IDynamicProviderAdapter
 	{
 		public const string AssemblyName    = "FirebirdSql.Data.FirebirdClient";
 		public const string ClientNamespace = "FirebirdSql.Data.FirebirdClient";

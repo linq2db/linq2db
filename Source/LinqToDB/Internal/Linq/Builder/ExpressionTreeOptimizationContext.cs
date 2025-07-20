@@ -18,7 +18,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	public class ExpressionTreeOptimizationContext
+	public sealed class ExpressionTreeOptimizationContext
 	{
 		public IDataContext  DataContext   { get; }
 		public MappingSchema MappingSchema { get; }

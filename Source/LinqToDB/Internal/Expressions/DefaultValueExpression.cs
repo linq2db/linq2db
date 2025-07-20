@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Expressions
 {
-	public class DefaultValueExpression : Expression
+	public sealed class DefaultValueExpression : Expression
 	{
 		public DefaultValueExpression(MappingSchema? mappingSchema, Type type, bool isNull = false)
 		{
@@ -37,7 +37,7 @@ namespace LinqToDB.Internal.Expressions
 			return $"Default({Type.Name})";
 		}
 
-		protected bool Equals(DefaultValueExpression other)
+		bool Equals(DefaultValueExpression other)
 		{
 			return Equals(MappingSchema, other.MappingSchema) && _type.Equals(other._type);
 		}

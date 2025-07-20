@@ -3,13 +3,13 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 {
-	public class OracleMemberTranslator : ProviderMemberTranslatorDefault
+	sealed class OracleMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -48,7 +48,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			}
 		}
 
-		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		sealed class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
@@ -221,7 +221,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			}
 		}
 
-		protected class OracleMathMemberTranslator : MathMemberTranslatorBase
+		sealed class OracleMathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
 			{

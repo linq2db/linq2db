@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Internal.SqlQuery
+﻿namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	/// <summary>
 	/// Defines query visitor behavior of <see cref="QueryElementVisitor"/> visitor implementation when visiting query element.
@@ -18,5 +18,4 @@
 		/// </summary>
 		Transform
 	}
-
 }

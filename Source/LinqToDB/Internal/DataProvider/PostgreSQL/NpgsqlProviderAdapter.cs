@@ -20,7 +20,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL
 {
-	public class NpgsqlProviderAdapter : IDynamicProviderAdapter
+	public sealed class NpgsqlProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _syncRoot = new ();
 		private static NpgsqlProviderAdapter? _instance;
@@ -207,7 +207,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					if (_instance == null)
 #pragma warning restore CA1508 // Avoid dead conditional code
 					{
-						var assembly = Internal.Common.Tools.TryLoadAssembly(AssemblyName, null);
+						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 

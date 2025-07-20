@@ -18,7 +18,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL
 {
-	public class PostgreSQLSchemaProvider : SchemaProviderBase
+	sealed class PostgreSQLSchemaProvider : SchemaProviderBase
 	{
 		const int v93 = 90300;
 		const int v10 = 100000;

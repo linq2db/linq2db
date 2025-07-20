@@ -6,7 +6,7 @@ using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public class OdbcProviderAdapter : IDynamicProviderAdapter
+	public sealed class OdbcProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _syncRoot = new();
 		private static OdbcProviderAdapter? _instance;

@@ -1,5 +1,6 @@
 ﻿using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.DB2

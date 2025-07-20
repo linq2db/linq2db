@@ -7,7 +7,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 	/// Search for element in query using search condition predicate.
 	/// Do not visit provided element.
 	/// </summary>
-	public class SqlQueryFindExceptVisitor<TContext> : QueryElementVisitor
+	public sealed class SqlQueryFindExceptVisitor<TContext> : QueryElementVisitor
 	{
 		TContext                            _context  = default!;
 		Func<TContext, IQueryElement, bool> _findFunc = default!;

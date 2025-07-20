@@ -17,7 +17,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlProvider
 {
-	public class BasicSqlOptimizer : ISqlOptimizer
+	public abstract class BasicSqlOptimizer : ISqlOptimizer
 	{
 		#region Init
 

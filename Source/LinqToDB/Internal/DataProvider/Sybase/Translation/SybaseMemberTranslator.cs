@@ -3,13 +3,13 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 {
-	public class SybaseMemberTranslator : ProviderMemberTranslatorDefault
+	sealed class SybaseMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -45,7 +45,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.DateTime));
 		}
 
-		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		sealed class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			public static string? DatePartToStr(Sql.DateParts part)
 			{
@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 			}
 		}
 
-		public class SybaseMathMemberTranslator : MathMemberTranslatorBase
+		public sealed class SybaseMathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
@@ -197,7 +197,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 			}
 		}
 
-		public class SybaseStingMemberTranslator : StringMemberTranslatorBase
+		public sealed class SybaseStingMemberTranslator : StringMemberTranslatorBase
 		{
 		}
 

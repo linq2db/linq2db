@@ -7,7 +7,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {
-	public class MySqlSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	sealed class MySqlSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public MySqlSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{
