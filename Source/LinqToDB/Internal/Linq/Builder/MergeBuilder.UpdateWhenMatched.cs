@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		[BuildsMethodCall(nameof(LinqExtensions.UpdateWhenMatchedAnd))]
 		internal sealed class UpdateWhenMatched : MethodCallBuilder
 		{
-			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			public static bool CanBuildMethod(MethodCallExpression call)
 				=> call.IsSameGenericMethod(UpdateWhenMatchedAndMethodInfo);
 
 			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

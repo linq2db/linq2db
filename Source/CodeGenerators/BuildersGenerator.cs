@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
@@ -63,7 +64,10 @@ namespace CodeGenerators
 
 			var symbol = (INamedTypeSymbol)context.TargetSymbol;
 			var className = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-			return new(className, "", BuilderKind.Any, "CanBuild");
+
+			var parameters = GetMethodParameters(symbol, "CanBuild");
+
+			return new(className, "", BuilderKind.Any, "CanBuild", parameters);
 		}
 
 		static EquatableReadOnlyList<BuilderNode> TransformBuildsExpression(
@@ -85,18 +89,41 @@ namespace CodeGenerators
 					.Value.Value?.ToString()
 					?? "CanBuild";
 
+				var parameters = GetMethodParameters(symbol, check);
+
 				foreach (var argument in attribute.ConstructorArguments)
 				{
 					nodes.Add(new(
 						className,
 						((ExpressionType)(int)argument.Value!).ToString(),
 						BuilderKind.Expr,
-						check
+						check,
+						parameters
 					));
 				}
 			}
 
 			return nodes.ToEquatableReadOnlyList();
+		}
+
+		private static CallParams GetMethodParameters(INamedTypeSymbol type, string methodName)
+		{
+			var method = type.GetMembers(methodName).OfType<IMethodSymbol>().SingleOrDefault()
+					?? throw new InvalidOperationException($"Cannot find method {methodName} in {type.Name}");
+
+			var parameters = CallParams.None;
+			foreach (var parameter in method.Parameters)
+			{
+				parameters |= parameter.Type.Name switch
+				{
+					"MethodCallExpression" or "Expression" => CallParams.Call,
+					"BuildInfo" => CallParams.Info,
+					"ExpressionBuilder" => CallParams.Builder,
+					_ => throw new InvalidOperationException($"Unknown method {type.Name}.{methodName} parameter type: {parameter.Type.Name}")
+				};
+			}
+
+			return parameters;
 		}
 
 		static EquatableReadOnlyList<BuilderNode> TransformBuildsMethodCall(
@@ -118,13 +145,16 @@ namespace CodeGenerators
 
 				token.ThrowIfCancellationRequested();
 
+				var parameters = GetMethodParameters(symbol, check);
+
 				foreach (var argument in attribute.ConstructorArguments)
 				{
 					nodes.Add(new(
 						className,
 						argument.Value!.ToString(),
 						BuilderKind.Call,
-						check
+						check,
+						parameters
 					));
 				}
 			}
@@ -208,12 +238,24 @@ namespace CodeGenerators
 			);
 
 		static string RenderExpressionNode(BuilderNode n) =>
+			n.Params switch
+			{
+				CallParams.Call | CallParams.Info | CallParams.Builder =>
 			$$"""
 							if ({{n.Builder}}.{{n.Check}}(expr, info, builder))
 								return Builder<{{n.Builder}}>.Instance;
 
 
-			""";
+			""",
+				CallParams.Call | CallParams.Builder =>
+			$$"""
+							if ({{n.Builder}}.{{n.Check}}(expr, builder))
+								return Builder<{{n.Builder}}>.Instance;
+
+
+			""",
+				_ => throw new InvalidOperationException($"{nameof(RenderExpressionNode)} doesn't implement call with {n.Params} parameters")
+			};
 
 		static string RenderMethodCallNodes(ImmutableArray<BuilderNode> expressionNodes) =>
 			string.Join(
@@ -239,12 +281,38 @@ namespace CodeGenerators
 			);
 
 		static string RenderCallNode(BuilderNode n) =>
+			n.Params switch
+			{
+				CallParams.Call | CallParams.Info | CallParams.Builder =>
 			$$"""
 									if ({{n.Builder}}.{{n.Check}}(call, info, builder))
 										return Builder<{{n.Builder}}>.Instance;
 
 
-			""";
+			""",
+                CallParams.Call | CallParams.Builder =>
+            $$"""
+									if ({{n.Builder}}.{{n.Check}}(call, builder))
+										return Builder<{{n.Builder}}>.Instance;
+
+
+			""",
+                CallParams.Call =>
+			$$"""
+									if ({{n.Builder}}.{{n.Check}}(call))
+										return Builder<{{n.Builder}}>.Instance;
+
+
+			""",
+				CallParams.None =>
+			$$"""
+									if ({{n.Builder}}.{{n.Check}}())
+										return Builder<{{n.Builder}}>.Instance;
+
+
+			""",
+				_ => throw new InvalidOperationException($"{nameof(RenderCallNode)} doesn't implement call with {n.Params} parameters")
+			};
 
 		static string RenderExpressionCallNodes(ImmutableArray<BuilderNode> expressionNodes) =>
 			string.Join(
@@ -261,11 +329,16 @@ namespace CodeGenerators
 			);
 
 		static string RenderAnyNode(BuilderNode n) =>
+			n.Params switch
+			{
+				CallParams.Info | CallParams.Builder =>
 			$$"""
 					if ({{n.Builder}}.{{n.Check}}(info, builder))
 						return Builder<{{n.Builder}}>.Instance;
 
 
-			""";
+			""",
+				_ => throw new InvalidOperationException($"{nameof(RenderAnyNode)} doesn't implement call with {n.Params} parameters")
+			};
 	}
 }

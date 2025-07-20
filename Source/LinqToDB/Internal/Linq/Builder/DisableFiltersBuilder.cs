@@ -8,7 +8,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall(nameof(LinqInternalExtensions.DisableFilterInternal))]
 	sealed class DisableFiltersBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsSameGenericMethod(Methods.LinqToDB.DisableFilterInternal);
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

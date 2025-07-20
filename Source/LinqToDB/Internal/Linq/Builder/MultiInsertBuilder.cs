@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		#region MultiInsertBuilder
 
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.Method.DeclaringType == typeof(MultiInsertExtensions);
 
 		static readonly Dictionary<MethodInfo, Func<ExpressionBuilder, MethodCallExpression, BuildInfo, IBuildContext>> _methodBuilders = new()
