@@ -47,6 +47,7 @@
 
 		<!--feature flags-->
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_COMPOSITE_FORMAT;$(DefineConstants)</DefineConstants>
+		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_DATEONLY;$(DefineConstants)</DefineConstants>
 
 		<ArtifactsPath>$(MSBuildThisFileDirectory).build</ArtifactsPath>
 		<ArtifactsPivots>$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)</ArtifactsPivots>
@@ -73,6 +74,8 @@
 		<Polyfill>$(Polyfill)|T:System.Range</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Diagnostics.CodeAnalysis</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Threading.Lock</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd``1(`0,System.Func{`0,``0,`1},``0)</Polyfill>
 		<MeziantouPolyfill_IncludedPolyfills>$(Polyfill)</MeziantouPolyfill_IncludedPolyfills>
 	</PropertyGroup>
 
