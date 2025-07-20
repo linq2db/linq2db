@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
-	public sealed class SqlQueryNestingValidationVisitor : QueryElementVisitor
+	public class SqlQueryNestingValidationVisitor : QueryElementVisitor
 	{
 		readonly bool                         _isSubQuery;
 		readonly IQueryElement                _forStatement;

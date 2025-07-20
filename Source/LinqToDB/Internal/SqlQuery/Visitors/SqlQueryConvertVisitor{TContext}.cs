@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
-	public sealed class SqlQueryConvertVisitor<TContext> : SqlQueryConvertVisitorBase
+	public class SqlQueryConvertVisitor<TContext> : SqlQueryConvertVisitorBase
 	{
 		Func<SqlQueryConvertVisitor<TContext>, IQueryElement, IQueryElement> _convertFunc = default!;
 
