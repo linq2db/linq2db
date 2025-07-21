@@ -23,10 +23,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		nameof(AsyncEnumerableExtensions.SingleOrDefaultAsync), CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable() && call.Arguments.Count <= 2;
 
-		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildAsyncMethod(MethodCallExpression call)
 			=> call.IsAsyncExtension() && call.Arguments.Count <= 3;
 
 		public enum MethodKind

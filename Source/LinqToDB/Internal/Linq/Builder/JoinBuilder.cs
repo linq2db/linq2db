@@ -12,7 +12,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall("Join")]
 	sealed class JoinBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 		{
 			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable())
 				return false;

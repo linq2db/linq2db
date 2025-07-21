@@ -12,7 +12,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class ScalarSelectBuilder : MethodCallBuilder
 	{
 
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder) 
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsSameGenericMethod(Methods.LinqToDB.Select);
 
 		public override bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo) => true;

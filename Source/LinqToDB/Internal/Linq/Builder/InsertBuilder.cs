@@ -21,7 +21,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		#region InsertBuilder
 
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable();
 
 		static void ExtractSequence(ref IBuildContext sequence, out InsertContext insertContext)
@@ -439,7 +439,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		[BuildsMethodCall("Into")]
 		internal sealed class Into : MethodCallBuilder
 		{
-			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			public static bool CanBuildMethod(MethodCallExpression call)
 				=> call.IsQueryable();
 
 			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder,
@@ -497,7 +497,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		[BuildsMethodCall("Value")]
 		internal sealed class Value : MethodCallBuilder
 		{
-			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			public static bool CanBuildMethod(MethodCallExpression call)
 				=> call.IsQueryable();
 
 			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder,

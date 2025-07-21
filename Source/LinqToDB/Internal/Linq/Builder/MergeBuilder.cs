@@ -12,8 +12,8 @@ using static LinqToDB.Internal.Reflection.Methods.LinqToDB.Merge;
 namespace LinqToDB.Internal.Linq.Builder
 {
 	[BuildsMethodCall(
-		nameof(LinqExtensions.Merge), 
-		nameof(LinqExtensions.MergeWithOutput), 
+		nameof(LinqExtensions.Merge),
+		nameof(LinqExtensions.MergeWithOutput),
 		nameof(LinqExtensions.MergeWithOutputInto))]
 	internal sealed partial class MergeBuilder : MethodCallBuilder
 	{
@@ -26,7 +26,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			MergeWithOutputIntoSource
 		};
 
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsSameGenericMethod(_supportedMethods);
 
 		enum MergeKind
