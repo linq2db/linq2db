@@ -400,7 +400,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		[Wrapper]
 		internal sealed class IfxBulkCopy : TypeWrapper, IDisposable
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static LambdaExpression[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: Dispose
@@ -425,7 +427,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				PropertySetter((IfxBulkCopy this_) => this_.ColumnMappings),
 			};
 
+#pragma warning disable IDE0051 // Remove unused private members
 			private static string[] Events { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 				= new[]
 			{
 				nameof(IfxRowsCopied)
@@ -477,7 +481,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		[Wrapper]
 		public class IfxRowsCopiedEventArgs : TypeWrapper
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static LambdaExpression[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: get RowsCopied
@@ -507,7 +513,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		[Wrapper]
 		public class IfxBulkCopyColumnMappingCollection : TypeWrapper
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static LambdaExpression[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: Add

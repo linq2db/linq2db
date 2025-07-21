@@ -245,7 +245,9 @@ namespace LinqToDB.Internal.SqlQuery
 		public static T Convert<TContext, T>(this T element, TContext context, bool allowMutation, Func<SqlQueryConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, bool withStack)
 			where T : class, IQueryElement
 		{
-			using var convertVisitor = PoolHolder<TContext>.ConvertPool.Allocate();
+			using var convertVisitor = allowMutation
+				? PoolHolder<TContext>.ConvertMutationPool.Allocate()
+				: PoolHolder<TContext>.ConvertPool.Allocate();
 
 			return (T?)convertVisitor.Value.Convert(element, context, convertAction, withStack) ?? element;
 		}

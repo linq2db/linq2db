@@ -141,7 +141,11 @@ namespace LinqToDB.Tools.Comparers
 		/// <returns>Instance of <see cref="IEqualityComparer{T}" />.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
-		public static IEqualityComparer<T> GetEqualityComparer<T>(IEnumerable<T> ignored) =>
+		public static IEqualityComparer<T> GetEqualityComparer<T>(
+#pragma warning disable IDE0060 // Remove unused parameter
+			IEnumerable<T> ignored
+#pragma warning restore IDE0060 // Remove unused parameter
+			) =>
 			GetEqualityComparer<T>();
 
 		/// <summary>

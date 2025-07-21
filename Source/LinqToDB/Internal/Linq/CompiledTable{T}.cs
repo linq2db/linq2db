@@ -70,7 +70,9 @@ namespace LinqToDB.Internal.Linq
 			return result;
 		}
 
+#pragma warning disable IDE0060 // Remove unused parameter
 		public IQueryable<T> Create(object[] parameters, object[] preambles)
+#pragma warning restore IDE0060 // Remove unused parameter
 		{
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);

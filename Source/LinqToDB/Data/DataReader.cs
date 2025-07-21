@@ -70,7 +70,11 @@ namespace LinqToDB.Data
 
 		#region Query with template
 
-		public IEnumerable<T> Query<T>(T template)
+		public IEnumerable<T> Query<T>(
+#pragma warning disable IDE0060 // Remove unused parameter
+			T template
+#pragma warning restore IDE0060 // Remove unused parameter
+			)
 		{
 			return Query<T>();
 		}

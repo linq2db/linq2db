@@ -12,7 +12,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 {
 	public static class PostgreSQLExtensions
 	{
-		public static IPostgreSQLExtensions? PostgreSQL(this Sql.ISqlExtension? ext) => null;
+		public static IPostgreSQLExtensions? PostgreSQL(
+#pragma warning disable IDE0060 // Remove unused parameter
+			this Sql.ISqlExtension? ext
+#pragma warning restore IDE0060 // Remove unused parameter
+			) => null;
 
 		#region Analytic Functions
 

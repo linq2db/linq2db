@@ -414,7 +414,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				StringBuilder.Append("DELETE FROM ");
 		}
 
-		protected void BuildIdentityInsert(NullabilityContext nullability, SqlTableSource table, bool enable)
+		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
 		{
 			StringBuilder.Append("SET IDENTITY_INSERT ");
 			BuildTableName(table, true, false);

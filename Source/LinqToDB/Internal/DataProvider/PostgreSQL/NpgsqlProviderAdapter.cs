@@ -259,7 +259,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 						if (connectionType.GetMethod(nameof(BeginBinaryImportAsync)) != null)
 						{
 							beginBinaryImportAsync = Expression.Lambda<Func<DbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>>(
-									typeMapper.MapExpression((DbConnection conn, string command, CancellationToken cancellationToken) => typeMapper.WrapTask<NpgsqlBinaryImporter>(((NpgsqlConnection)(object)conn).BeginBinaryImportAsync(command, cancellationToken), npgsqlBinaryImporterType, cancellationToken), pConnection, pCommand, pToken),
+									typeMapper.MapExpression((DbConnection conn, string command, CancellationToken cancellationToken) => typeMapper.WrapTask<NpgsqlBinaryImporter>(((NpgsqlConnection)(object)conn).BeginBinaryImportAsync(command, cancellationToken)), pConnection, pCommand, pToken),
 									pConnection, pCommand, pToken)
 								.CompileExpression();
 						}
@@ -620,7 +620,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		[Wrapper]
 		public class NpgsqlConnection : TypeWrapper
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static LambdaExpression[] Wrappers { get; } =
+#pragma warning restore IDE0051 // Remove unused private members
 			{
 				// [0]: get PostgreSqlVersion
 				(Expression<Func<NpgsqlConnection, Version>>)(this_ => this_.PostgreSqlVersion),
@@ -641,9 +643,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		#region BulkCopy
 		[Wrapper]
-		public class NpgsqlBinaryImporter : TypeWrapper
+		public sealed class NpgsqlBinaryImporter : TypeWrapper
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static object[] Wrappers {get;}
+#pragma warning restore IDE0051 // Remove unused private members
 				= new object[]
 			{
 				// depending on npgsql version, [0] or [1] will fail to compile and CompiledWrappers will contain null

@@ -29,7 +29,11 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <param name="dbSet">EF.Core <see cref="DbSet{TEntity}"/> instance.</param>
 		/// <param name="dataContext">LINQ To DB data context instance.</param>
 		/// <returns>LINQ To DB <see cref="ITable{T}"/> instance.</returns>
-		public static ITable<T> ToLinqToDBTable<T>(this DbSet<T> dbSet, IDataContext dataContext)
+		public static ITable<T> ToLinqToDBTable<T>(
+#pragma warning disable IDE0060 // Remove unused parameter
+			this DbSet<T> dbSet,
+#pragma warning restore IDE0060 // Remove unused parameter
+			IDataContext dataContext)
 			where T : class
 		{
 			return dataContext.GetTable<T>();

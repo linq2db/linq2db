@@ -320,7 +320,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		[Wrapper]
 		internal sealed class HanaBulkCopy : TypeWrapper, IDisposable
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static object[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 				= new object[]
 			{
 				// [0]: Dispose
@@ -350,7 +352,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				((Expression<Func<HanaBulkCopy, IDataReader, CancellationToken, Task>>)((this_, reader, cancellationToken) => this_.WriteToServerAsync(reader, cancellationToken)), true),
 			};
 
+#pragma warning disable IDE0051 // Remove unused private members
 			private static string[] Events { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 				= new[]
 			{
 				nameof(HanaRowsCopied)
@@ -410,7 +414,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		[Wrapper]
 		public class HanaRowsCopiedEventArgs : TypeWrapper
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static LambdaExpression[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: get RowsCopied
@@ -440,7 +446,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		[Wrapper]
 		public class HanaBulkCopyColumnMappingCollection : TypeWrapper
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static LambdaExpression[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: Add

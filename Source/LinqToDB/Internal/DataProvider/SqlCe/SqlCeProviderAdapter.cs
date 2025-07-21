@@ -147,7 +147,9 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		[Wrapper]
 		public class SqlCeEngine : TypeWrapper, IDisposable
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static LambdaExpression[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: CreateDatabase

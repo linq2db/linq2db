@@ -417,7 +417,7 @@ namespace LinqToDB.Internal.Expressions.Types
 
 		private static readonly MethodInfo _wrapInstanceMethodInfo = MemberHelper.MethodOf<TypeMapper>(t => t.Wrap(null!, null));
 
-		private Expression BuildValueMapper(ExpressionGenerator generator, Expression expression)
+		private Expression BuildValueMapper(Expression expression)
 		{
 			var valueType = expression.Type;
 			if (!TryMapType(valueType, out var replacementType))
@@ -429,7 +429,7 @@ namespace LinqToDB.Internal.Expressions.Types
 			return _enumFromWrapperCache[valueType].GetBody(expression);
 		}
 
-		private Expression BuildValueMapperToType<TTarget>(ExpressionGenerator generator, Expression expression)
+		private Expression BuildValueMapperToType<TTarget>(Expression expression)
 		{
 			var valueType = expression.Type;
 			var toType    = typeof(TTarget);
@@ -1026,7 +1026,7 @@ namespace LinqToDB.Internal.Expressions.Types
 				generator.Assign(requiredVariable, newParameter);
 
 				var left  = propLambda.GetBody(requiredVariable).Unwrap();
-				var right = _mapper.BuildValueMapper(generator, valueParameter);
+				var right = _mapper.BuildValueMapper(valueParameter);
 
 				generator.Assign(left, right);
 
@@ -1052,7 +1052,7 @@ namespace LinqToDB.Internal.Expressions.Types
 				var left  = propLambda.GetBody(requiredVariable);
 
 				if (left.Type != typeof(TV))
-					left = _mapper.BuildValueMapperToType<TV>(generator, left);
+					left = _mapper.BuildValueMapperToType<TV>(left);
 
 				generator.AddExpression(left);
 
@@ -1304,7 +1304,7 @@ namespace LinqToDB.Internal.Expressions.Types
 			return factory(instance);
 		}
 
-		public async Task<TR?> WrapTask<TR>(Task instanceTask, Type instanceType, CancellationToken cancellationToken)
+		public async Task<TR?> WrapTask<TR>(Task instanceTask)
 			where TR : TypeWrapper
 		{
 			await instanceTask.ConfigureAwait(false);

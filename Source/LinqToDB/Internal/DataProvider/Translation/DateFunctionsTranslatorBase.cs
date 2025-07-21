@@ -193,51 +193,51 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, makeExpression, methodCall);
 		}
 
-		Expression? TranslateDateTimeOffsetConstructor(ITranslationContext translationContext, Expression expression, TranslationFlags translationFlags)
-		{
-			if (expression is not NewExpression newExpression)
-				return null;
+		//Expression? TranslateDateTimeOffsetConstructor(ITranslationContext translationContext, Expression expression, TranslationFlags translationFlags)
+		//{
+		//	if (expression is not NewExpression newExpression)
+		//		return null;
 
-			if (newExpression.Arguments.Count < 3)
-				return null;
+		//	if (newExpression.Arguments.Count < 3)
+		//		return null;
 
-			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+		//	using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
-			if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[0], out var year)  ||
-			    !translationContext.TranslateToSqlExpression(newExpression.Arguments[1], out var month) ||
-			    !translationContext.TranslateToSqlExpression(newExpression.Arguments[2], out var day))
-			{
-				return null;
-			}
+		//	if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[0], out var year)  ||
+		//	    !translationContext.TranslateToSqlExpression(newExpression.Arguments[1], out var month) ||
+		//	    !translationContext.TranslateToSqlExpression(newExpression.Arguments[2], out var day))
+		//	{
+		//		return null;
+		//	}
 
-			ISqlExpression? hour        = null;
-			ISqlExpression? minute      = null;
-			ISqlExpression? second      = null;
-			ISqlExpression? millisecond = null;
+		//	ISqlExpression? hour        = null;
+		//	ISqlExpression? minute      = null;
+		//	ISqlExpression? second      = null;
+		//	ISqlExpression? millisecond = null;
 
-			if (newExpression.Arguments.Count > 3)
-			{
-				if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[3], out hour)   ||
-				    !translationContext.TranslateToSqlExpression(newExpression.Arguments[4], out minute) ||
-				    !translationContext.TranslateToSqlExpression(newExpression.Arguments[5], out second))
-				{
-					return null;
-				}
-			}
+		//	if (newExpression.Arguments.Count > 3)
+		//	{
+		//		if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[3], out hour)   ||
+		//		    !translationContext.TranslateToSqlExpression(newExpression.Arguments[4], out minute) ||
+		//		    !translationContext.TranslateToSqlExpression(newExpression.Arguments[5], out second))
+		//		{
+		//			return null;
+		//		}
+		//	}
 
-			if (newExpression.Arguments.Count > 6)
-			{
-				if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[6], out millisecond))
-					return null;
-			}
+		//	if (newExpression.Arguments.Count > 6)
+		//	{
+		//		if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[6], out millisecond))
+		//			return null;
+		//	}
 
-			var makeExpression = TranslateMakeDateTime(translationContext, translationContext.ExpressionFactory.GetDbDataType(expression.Type), year, month, day, hour, minute, second, millisecond);
+		//	var makeExpression = TranslateMakeDateTime(translationContext, translationContext.ExpressionFactory.GetDbDataType(expression.Type), year, month, day, hour, minute, second, millisecond);
 
-			if (makeExpression == null)
-				return null;
+		//	if (makeExpression == null)
+		//		return null;
 
-			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, makeExpression, newExpression);
-		}
+		//	return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, makeExpression, newExpression);
+		//}
 
 		Expression? TranslateMakeDateTime(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
@@ -463,6 +463,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
 		}
 
+#if NET8_0_OR_GREATER
 		Expression? TranslateDateOnlyAddMember(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, Sql.DateParts datepart)
 		{
 			var datePlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Object, translationFlags, false);
@@ -485,6 +486,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
 		}
+#endif
 
 		Expression? TranslateDateTimeDateAdd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{

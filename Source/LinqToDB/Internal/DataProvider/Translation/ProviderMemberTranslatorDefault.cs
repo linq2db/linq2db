@@ -59,7 +59,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			CombinedMemberTranslator.Add(CreateGuidMemberTranslator());
 		}
 
-		protected SqlPlaceholderExpression? TranslateNoRequiredObjectExpression(ITranslationContext translationContext, Expression? objExpression, TranslationFlags translationFlags)
+		protected SqlPlaceholderExpression? TranslateNoRequiredObjectExpression(ITranslationContext translationContext, Expression? objExpression)
 		{
 			if (objExpression == null)
 				return null;
@@ -82,7 +82,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			var obj = methodCall.Object!;
 
-			var objPlaceholder = TranslateNoRequiredObjectExpression(translationContext, obj, translationFlags);
+			var objPlaceholder = TranslateNoRequiredObjectExpression(translationContext, obj);
 
 			if (objPlaceholder == null)
 				return null;
@@ -165,7 +165,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				if (methodCall.Arguments[0].Type != typeof(bool))
 					return false;
 				
-				var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Arguments[1], translationFlags);
+				var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Arguments[1]);
 
 				if (argumentPlaceholder == null)
 					return false;
@@ -195,7 +195,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (methodCall.Arguments.Count != 1)
 				return false;
 
-			var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Arguments[0], translationFlags);
+			var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Arguments[0]);
 
 			if (argumentPlaceholder == null)
 				return true;
@@ -210,7 +210,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return true;
 		}
 
-		protected bool ProcessGetValueOrDefault(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, out Expression? translated)
+		protected bool ProcessGetValueOrDefault(ITranslationContext translationContext, MethodCallExpression methodCall, out Expression? translated)
 		{
 			translated = null;
 
@@ -221,7 +221,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (methodCall.Method.Name != nameof(Nullable<int>.GetValueOrDefault))
 				return false;
 
-			var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Object, translationFlags);
+			var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Object);
 
 			if (argumentPlaceholder == null)
 				return true;
@@ -282,7 +282,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (ProcessConvertToBoolean(translationContext, methodCall, translationFlags, out translated))
 				return translated;
 
-			if (ProcessGetValueOrDefault(translationContext, methodCall, translationFlags, out translated))
+			if (ProcessGetValueOrDefault(translationContext, methodCall, out translated))
 				return translated;
 
 			return null;

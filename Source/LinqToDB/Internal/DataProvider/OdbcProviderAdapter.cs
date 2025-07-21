@@ -114,7 +114,9 @@ namespace LinqToDB.Internal.DataProvider
 		[Wrapper]
 		internal sealed class OdbcConnection : TypeWrapper
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static LambdaExpression[] Wrappers { get; } =
+#pragma warning restore IDE0051 // Remove unused private members
 			{
 				// [0]: get Driver
 				(Expression<Func<OdbcConnection, string>>)(this_ => this_.Driver),

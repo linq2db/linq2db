@@ -8,7 +8,11 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	public static class SqlServerExtensions
 	{
-		public static ISqlServerExtensions? SqlServer(this Sql.ISqlExtension? ext) => null;
+		public static ISqlServerExtensions? SqlServer(
+#pragma warning disable IDE0060 // Remove unused parameter
+			this Sql.ISqlExtension? ext
+#pragma warning restore IDE0060 // Remove unused parameter
+			) => null;
 
 		#region FTS
 		public class FreeTextKey<TKey>

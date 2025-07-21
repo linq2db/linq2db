@@ -498,46 +498,47 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			[Wrapper]
 			internal sealed class MySqlBulkCopy : TypeWrapper
 			{
+#pragma warning disable IDE0051 // Remove unused private members
 				private static object[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 					= new object[]
 				{
-					// [0]: WriteToServer (version < 2.0.0)
+					// [0]: get NotifyAfter
+					(Expression<Func<MySqlBulkCopy, int>>                         )(this_ => this_.NotifyAfter),
+					// [1]: get BulkCopyTimeout
+					(Expression<Func<MySqlBulkCopy, int>>                         )(this_ => this_.BulkCopyTimeout),
+					// [2]: get DestinationTableName
+					(Expression<Func<MySqlBulkCopy, string?>>                     )(this_ => this_.DestinationTableName),
+					// [3]: this.ColumnMappings.Add(column)
+					(Expression<Action<MySqlBulkCopy, MySqlBulkCopyColumnMapping>>)((this_, column) => this_.ColumnMappings.Add(column)),
+					// [4]: set NotifyAfter
+					PropertySetter((MySqlBulkCopy this_) => this_.NotifyAfter),
+					// [5]: set BulkCopyTimeout
+					PropertySetter((MySqlBulkCopy this_) => this_.BulkCopyTimeout),
+					// [6]: set DestinationTableName
+					PropertySetter((MySqlBulkCopy this_) => this_.DestinationTableName),
+
+					// [7]: WriteToServer (version < 2.0.0)
 					new Tuple<LambdaExpression, bool>
 					((Expression<Action<MySqlBulkCopy, IDataReader>>              )((this_, dataReader) => this_.WriteToServer1(dataReader)), true),
-					// [1]: get NotifyAfter
-					(Expression<Func<MySqlBulkCopy, int>>                         )(this_ => this_.NotifyAfter),
-					// [2]: get BulkCopyTimeout
-					(Expression<Func<MySqlBulkCopy, int>>                         )(this_ => this_.BulkCopyTimeout),
-					// [3]: get DestinationTableName
-					(Expression<Func<MySqlBulkCopy, string?>>                     )(this_ => this_.DestinationTableName),
-					// [4]: this.ColumnMappings.Add(column)
-					(Expression<Action<MySqlBulkCopy, MySqlBulkCopyColumnMapping>>)((this_, column) => this_.ColumnMappings.Add(column)),
-					// [5]: set NotifyAfter
-					PropertySetter((MySqlBulkCopy this_) => this_.NotifyAfter),
-					// [6]: set BulkCopyTimeout
-					PropertySetter((MySqlBulkCopy this_) => this_.BulkCopyTimeout),
-					// [7]: set DestinationTableName
-					PropertySetter((MySqlBulkCopy this_) => this_.DestinationTableName),
-					// [8]: WriteToServerAsync (version < 2.0.0)
-					new Tuple<LambdaExpression, bool>
-					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>>)((this_, dataReader, cancellationToken) => this_.WriteToServerAsync1 (dataReader, cancellationToken)), true),
-					// [9]: WriteToServer (version >= 2.0.0)
+					// [8]: WriteToServer (version >= 2.0.0)
 					new Tuple<LambdaExpression, bool>
 					((Expression<Func<MySqlBulkCopy, IDataReader, MySqlBulkCopyResult>>)((this_, dataReader) => this_.WriteToServer2(dataReader)), true),
-					// [10]: WriteToServerAsync (version >= 2.0.0)
+
+					// [9]: Task WriteToServerAsync (version < 2.0.0, NS2.0-)
 					new Tuple<LambdaExpression, bool>
-					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, Task<MySqlBulkCopyResult>>>)((this_, dataReader, cancellationToken) => this_.WriteToServerAsync2 (dataReader, cancellationToken)), true),
-#if !NETFRAMEWORK
-					// [11]: WriteToServerAsync (version < 2.0.0)
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>>)((this_, dataReader, cancellationToken) => this_.WriteToServerAsync1 (dataReader, cancellationToken)), true),
+					// [10]: ValueTask WriteToServerAsync (version < 2.0.0, NS2.1+)
 					new Tuple<LambdaExpression, bool>
-					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>>)((this_, dataReader, cancellationToken) => this_.WriteToServerAsync3(dataReader, cancellationToken)), true),
-					// [12]: WriteToServerAsync (version >= 2.0.0)
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>>)((this_, dataReader, cancellationToken) => this_.WriteToServerAsync2(dataReader, cancellationToken)), true),
+					// [11]: ValueTask<MySqlBulkCopyResult> WriteToServerAsync (version >= 2.0.0)
 					new Tuple<LambdaExpression, bool>
-					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask<MySqlBulkCopyResult>>>)((this_, dataReader, cancellationToken) => this_.WriteToServerAsync4(dataReader, cancellationToken)), true),
-#endif
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask<MySqlBulkCopyResult>>>)((this_, dataReader, cancellationToken) => this_.WriteToServerAsync3(dataReader, cancellationToken)), true),
 				};
 
+#pragma warning disable IDE0051 // Remove unused private members
 				private static string[] Events { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 					= new[]
 				{
 					nameof(MySqlRowsCopied)
@@ -550,38 +551,24 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => throw new NotImplementedException();
 
 #pragma warning disable RS0030 // API mapping must preserve type (IDataReader)
-				[TypeWrapperName("WriteToServer")]
-				private void WriteToServer1(IDataReader dataReader) => ((Action<MySqlBulkCopy, IDataReader>)CompiledWrappers[0])(this, dataReader);
-				[TypeWrapperName("WriteToServer")]
-				private MySqlBulkCopyResult WriteToServer2(IDataReader dataReader) => ((Func<MySqlBulkCopy, IDataReader, MySqlBulkCopyResult>)CompiledWrappers[9])(this, dataReader);
+				private bool CanWriteToServer1 => CompiledWrappers[7] != null;
+				private bool CanWriteToServer2 => CompiledWrappers[8] != null;
 
-				[TypeWrapperName("WriteToServerAsync")]
-				private Task WriteToServerAsync1      (IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken,      Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
-				[TypeWrapperName("WriteToServerAsync")]
-				[return: CustomMapper(typeof(GenericTaskToTaskMapper))]
-				private Task<MySqlBulkCopyResult> WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
+				[TypeWrapperName("WriteToServer")]
+				private void WriteToServer1(IDataReader dataReader) => ((Action<MySqlBulkCopy, IDataReader>)CompiledWrappers[7])(this, dataReader);
+				[TypeWrapperName("WriteToServer")]
+				private MySqlBulkCopyResult WriteToServer2(IDataReader dataReader) => ((Func<MySqlBulkCopy, IDataReader, MySqlBulkCopyResult>)CompiledWrappers[8])(this, dataReader);
 
-				private bool CanWriteToServer1 => CompiledWrappers[0] != null;
-				private bool CanWriteToServer2 => CompiledWrappers[9] != null;
-				private bool CanWriteToServerAsync1 => CompiledWrappers[8] != null;
+				private bool CanWriteToServerAsync1 => CompiledWrappers[9] != null;
 				private bool CanWriteToServerAsync2 => CompiledWrappers[10] != null;
-#if !NETFRAMEWORK
-				[TypeWrapperName("WriteToServerAsync")]
-				private ValueTask WriteToServerAsync3(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[11])(this, dataReader, cancellationToken);
-				[TypeWrapperName("WriteToServerAsync")]
-				[return: CustomMapper(typeof(GenericTaskToTaskMapper))]
-				private ValueTask<MySqlBulkCopyResult> WriteToServerAsync4(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
 				private bool CanWriteToServerAsync3 => CompiledWrappers[11] != null;
-				private bool CanWriteToServerAsync4 => CompiledWrappers[12] != null;
-#else
 				[TypeWrapperName("WriteToServerAsync")]
-				private Task WriteToServerAsync3(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
+				private Task WriteToServerAsync1(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[9])(this, dataReader, cancellationToken);
+				[TypeWrapperName("WriteToServerAsync")]
+				private ValueTask WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[10])(this, dataReader, cancellationToken);
 				[TypeWrapperName("WriteToServerAsync")]
 				[return: CustomMapper(typeof(GenericTaskToTaskMapper))]
-				private Task<MySqlBulkCopyResult> WriteToServerAsync4(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
-				private bool CanWriteToServerAsync3 => false;
-				private bool CanWriteToServerAsync4 => false;
-#endif
+				private ValueTask<MySqlBulkCopyResult> WriteToServerAsync3(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask<MySqlBulkCopyResult>>)CompiledWrappers[11])(this, dataReader, cancellationToken);
 #pragma warning restore RS0030 //  API mapping must preserve type (IDataReader)
 
 				public void WriteToServer(DbDataReader dataReader)
@@ -594,26 +581,14 @@ namespace LinqToDB.Internal.DataProvider.MySql
 						throw new InvalidOperationException("BulkCopy.WriteToServer implementation not configured");
 				}
 
-				public bool HasWriteToServerAsync => CanWriteToServerAsync1 || CanWriteToServerAsync2 || CanWriteToServerAsync3 || CanWriteToServerAsync4;
+				public bool HasWriteToServerAsync => CanWriteToServerAsync1 || CanWriteToServerAsync2 || CanWriteToServerAsync3;
 
 				public async Task WriteToServerAsync(DbDataReader dataReader, CancellationToken cancellationToken)
 				{
-					if (CanWriteToServerAsync4)
-					{
-						var action = (Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[12];
-#pragma warning disable RS0030 // API mapping must preserve type (IDataReader)
-						await action(this, dataReader, cancellationToken).ConfigureAwait(false);
-#pragma warning restore RS0030 //  API mapping must preserve type (IDataReader)
-					}
-					else if (CanWriteToServerAsync3)
+					if (CanWriteToServerAsync3)
 						await WriteToServerAsync3(dataReader, cancellationToken).ConfigureAwait(false);
 					else if (CanWriteToServerAsync2)
-					{
-						var action = (Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[10];
-#pragma warning disable RS0030 // API mapping must preserve type (IDataReader)
-						await action(this, dataReader, cancellationToken).ConfigureAwait(false);
-#pragma warning restore RS0030 //  API mapping must preserve type (IDataReader)
-					}
+						await WriteToServerAsync2(dataReader, cancellationToken).ConfigureAwait(false);
 					else if (CanWriteToServerAsync1)
 						await WriteToServerAsync1(dataReader, cancellationToken).ConfigureAwait(false);
 					else
@@ -622,20 +597,20 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 				public int NotifyAfter
 				{
-					get => ((Func<MySqlBulkCopy, int>)CompiledWrappers[1])(this);
-					set => ((Action<MySqlBulkCopy, int>)CompiledWrappers[5])(this, value);
+					get => ((Func<MySqlBulkCopy, int>)CompiledWrappers[0])(this);
+					set => ((Action<MySqlBulkCopy, int>)CompiledWrappers[4])(this, value);
 				}
 
 				public int BulkCopyTimeout
 				{
-					get => ((Func<MySqlBulkCopy  , int>)CompiledWrappers[2])(this);
-					set => ((Action<MySqlBulkCopy, int>)CompiledWrappers[6])(this, value);
+					get => ((Func<MySqlBulkCopy  , int>)CompiledWrappers[1])(this);
+					set => ((Action<MySqlBulkCopy, int>)CompiledWrappers[5])(this, value);
 				}
 
 				public string? DestinationTableName
 				{
-					get => ((Func<MySqlBulkCopy  , string?>)CompiledWrappers[3])(this);
-					set => ((Action<MySqlBulkCopy, string?>)CompiledWrappers[7])(this, value);
+					get => ((Func<MySqlBulkCopy  , string?>)CompiledWrappers[2])(this);
+					set => ((Action<MySqlBulkCopy, string?>)CompiledWrappers[6])(this, value);
 				}
 
 				private MySqlRowsCopiedEventHandler?     _MySqlRowsCopied;
@@ -655,7 +630,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			[Wrapper]
 			public sealed class MySqlRowsCopiedEventArgs : TypeWrapper
 			{
+#pragma warning disable IDE0051 // Remove unused private members
 				private static LambdaExpression[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 					= new LambdaExpression[]
 				{
 					// [0]: get RowsCopied

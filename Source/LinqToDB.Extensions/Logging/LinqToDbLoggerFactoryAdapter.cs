@@ -10,7 +10,7 @@ namespace LinqToDB.Extensions.Logging
 	{
 		private readonly ILogger<DataConnection> _logger = loggerFactory.CreateLogger<DataConnection>();
 
-		public void OnTrace(string? message, string? category, TraceLevel level)
+		public void OnTrace(string? message, TraceLevel level)
 		{
 			var logLevel = level switch
 			{

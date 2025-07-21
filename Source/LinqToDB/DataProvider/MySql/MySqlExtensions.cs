@@ -6,7 +6,11 @@ namespace LinqToDB.DataProvider.MySql
 {
 	public static class MySqlExtensions
 	{
-		public static IMySqlExtensions? MySql(this Sql.ISqlExtension? ext) => null;
+		public static IMySqlExtensions? MySql(
+#pragma warning disable IDE0060 // Remove unused parameter
+			this Sql.ISqlExtension? ext
+#pragma warning restore IDE0060 // Remove unused parameter
+			) => null;
 
 		#region FTS
 		sealed class ModifierBuilder : Sql.IExtensionCallBuilder

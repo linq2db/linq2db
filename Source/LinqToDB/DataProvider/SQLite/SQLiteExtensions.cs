@@ -11,7 +11,11 @@ namespace LinqToDB.DataProvider.SQLite
 {
 	public static class SQLiteExtensions
 	{
-		public static ISQLiteExtensions? SQLite(this Sql.ISqlExtension? ext) => null;
+		public static ISQLiteExtensions? SQLite(
+#pragma warning disable IDE0060 // Remove unused parameter
+			this Sql.ISqlExtension? ext
+#pragma warning restore IDE0060 // Remove unused parameter
+			) => null;
 
 		#region FTS
 		/// <summary>

@@ -134,7 +134,9 @@ namespace LinqToDB.Internal.DataProvider
 		[Wrapper]
 		internal sealed class OleDbConnection : TypeWrapper
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static LambdaExpression[] Wrappers { get; } =
+#pragma warning restore IDE0051 // Remove unused private members
 			{
 				// [0]: get Provider
 				(Expression<Func<OleDbConnection, string>>)(this_ => this_.Provider),

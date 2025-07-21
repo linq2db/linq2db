@@ -105,7 +105,10 @@ namespace LinqToDB.Internal.Linq
 		[Pure]
 		public static TSource LoadWithInternal<TSource>(
 			this TSource             source,
-			LoadWithEntity           loadWith)
+#pragma warning disable IDE0060 // Remove unused parameter
+			LoadWithEntity           loadWith
+#pragma warning restore IDE0060 // Remove unused parameter
+			)
 			where TSource : class
 		{
 			return source;

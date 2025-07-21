@@ -295,7 +295,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				.CompileExpression();
 
 			var createColumnWriterAsync = Expression.Lambda<Func<DbConnection, string, CancellationToken, Task<OctonicaWrappers.ClickHouseColumnWriter>>>(
-					typeMapper.MapExpression((DbConnection conn, string insertFormatCommand, CancellationToken cancellationToken) => typeMapper.WrapTask<OctonicaWrappers.ClickHouseColumnWriter>(((OctonicaWrappers.ClickHouseConnection)(object)conn).CreateColumnWriterAsync(insertFormatCommand, cancellationToken), bulkCopyType, cancellationToken), pConnection, pCommand, pToken),
+					typeMapper.MapExpression((DbConnection conn, string insertFormatCommand, CancellationToken cancellationToken) => typeMapper.WrapTask<OctonicaWrappers.ClickHouseColumnWriter>(((OctonicaWrappers.ClickHouseConnection)(object)conn).CreateColumnWriterAsync(insertFormatCommand, cancellationToken)), pConnection, pCommand, pToken),
 					pConnection, pCommand, pToken)
 				.CompileExpression();
 
@@ -348,7 +348,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			public sealed class ClickHouseConnectionStringBuilder : TypeWrapper
 			{
+#pragma warning disable IDE0051 // Remove unused private members
 				private static LambdaExpression[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 					= new LambdaExpression[]
 				{
 					// [0]: get UseSession
@@ -383,7 +385,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseBulkCopy : TypeWrapper, IDisposable
 			{
+#pragma warning disable IDE0051 // Remove unused private members
 				private static object[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 					= new []
 				{
 					// [0]: Dispose
@@ -482,7 +486,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			public class ClickHouseColumnWriter : TypeWrapper, IDisposable, IAsyncDisposable
 			{
+#pragma warning disable IDE0051 // Remove unused private members
 				private static object[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 					= new object[]
 				{
 					// [0]: Dispose
@@ -520,7 +526,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseException : TypeWrapper
 			{
+#pragma warning disable IDE0051 // Remove unused private members
 				private static LambdaExpression[] Wrappers { get; } =
+#pragma warning restore IDE0051 // Remove unused private members
 				[
 						// [0]: get ErrorCode
 						(Expression<Func<ClickHouseException, int>>)(this_ => this_.ErrorCode),

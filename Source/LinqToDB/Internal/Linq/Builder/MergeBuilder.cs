@@ -12,8 +12,8 @@ using static LinqToDB.Internal.Reflection.Methods.LinqToDB.Merge;
 namespace LinqToDB.Internal.Linq.Builder
 {
 	[BuildsMethodCall(
-		nameof(LinqExtensions.Merge),
-		nameof(LinqExtensions.MergeWithOutput),
+		nameof(LinqExtensions.Merge), 
+		nameof(LinqExtensions.MergeWithOutput), 
 		nameof(LinqExtensions.MergeWithOutputInto))]
 	internal sealed partial class MergeBuilder : MethodCallBuilder
 	{
@@ -53,7 +53,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (kind != MergeKind.Merge)
 			{
-				var actionField   = SqlField.FakeField(new DbDataType(typeof(string)), PseudoFunctions.MERGE_ACTION, false);
+				var actionField   = SqlField.FakeField(new DbDataType(typeof(string)), PseudoFunctions.MERGE_ACTION);
 
 				var (deletedContext, insertedContext) = UpdateBuilder.CreateDeletedInsertedContexts(builder, mergeContext.TargetContext, out var outputContext);
 

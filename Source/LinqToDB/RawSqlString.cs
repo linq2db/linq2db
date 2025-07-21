@@ -18,7 +18,11 @@ namespace LinqToDB
 		///     Implicitly converts a <see cref="FormattableString" /> to a <see cref="RawSqlString" />
 		/// </summary>
 		/// <param name="fs"> The string format. </param>
-		public static implicit operator RawSqlString(FormattableString fs) => default;
+		public static implicit operator RawSqlString(
+#pragma warning disable IDE0060 // Remove unused parameter
+			FormattableString fs
+#pragma warning restore IDE0060 // Remove unused parameter
+			) => default;
 
 		/// <summary>
 		///     Constructs a <see cref="RawSqlString" /> from a <see cref="string" />

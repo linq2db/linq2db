@@ -31,7 +31,7 @@ namespace LinqToDB.Extensions.Logging
 		public static DataOptions UseLoggerFactory(this DataOptions options, ILoggerFactory factory)
 		{
 			var adapter = new LinqToDBLoggerFactoryAdapter(factory);
-			return options.WithOptions<QueryTraceOptions>(o => o with { TraceLevel = TraceLevel.Verbose, WriteTrace = adapter.OnTrace });
+			return options.WithOptions<QueryTraceOptions>(o => o with { TraceLevel = TraceLevel.Verbose, WriteTrace = (m, c, l) => adapter.OnTrace(m, l) });
 		}
 	}
 }

@@ -214,12 +214,20 @@ namespace LinqToDB.Data
 			return QueryForEachAsync(template, action, CancellationToken.None);
 		}
 
-		public Task QueryForEachAsync<T>(T template, Action<T> action, CancellationToken cancellationToken)
+		public Task QueryForEachAsync<T>(
+#pragma warning disable IDE0060 // Remove unused parameter
+			T template,
+#pragma warning restore IDE0060 // Remove unused parameter
+			Action<T> action, CancellationToken cancellationToken)
 		{
 			return QueryForEachAsync(action, cancellationToken);
 		}
 
-		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(T template)
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(
+#pragma warning disable IDE0060 // Remove unused parameter
+			T template
+#pragma warning restore IDE0060 // Remove unused parameter
+			)
 		{
 			return QueryToAsyncEnumerable<T>();
 		}

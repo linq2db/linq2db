@@ -14,8 +14,10 @@ namespace LinqToDB
 			public static short    SmallInt => 0;
 			public static byte     TinyInt => 0;
 			public static decimal  DefaultDecimal => 0m;
+#pragma warning disable IDE0060 // Remove unused parameter
 			public static decimal  Decimal(int precision) => 0m;
 			public static decimal  Decimal([SqlQueryDependent] int precision, [SqlQueryDependent] int scale) => 0m;
+#pragma warning restore IDE0060 // Remove unused parameter
 			public static decimal  Money => 0m;
 			public static decimal  SmallMoney => 0m;
 			public static double   Float => 0.0;
@@ -29,13 +31,21 @@ namespace LinqToDB
 #endif
 			public static DateTime Time => DateTime.Now;
 			public static DateTimeOffset DateTimeOffset => DateTimeOffset.Now;
+#pragma warning disable IDE0060 // Remove unused parameter
 			public static string  Char(int length) => "";
+#pragma warning restore IDE0060 // Remove unused parameter
 			public static string  DefaultChar => "";
+#pragma warning disable IDE0060 // Remove unused parameter
 			public static string  VarChar(int length) => "";
+#pragma warning restore IDE0060 // Remove unused parameter
 			public static string  DefaultVarChar => "";
+#pragma warning disable IDE0060 // Remove unused parameter
 			public static string  NChar(int length) => "";
+#pragma warning restore IDE0060 // Remove unused parameter
 			public static string  DefaultNChar => "";
+#pragma warning disable IDE0060 // Remove unused parameter
 			public static string  NVarChar(int length) => "";
+#pragma warning restore IDE0060 // Remove unused parameter
 			public static string  DefaultNVarChar => "";
 		}
 	}

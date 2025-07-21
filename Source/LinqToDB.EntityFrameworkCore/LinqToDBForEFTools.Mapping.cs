@@ -15,6 +15,7 @@ namespace LinqToDB.EntityFrameworkCore
 		static void InitializeMapping()
 		{
 			Linq.Expressions.MapMember((DbFunctions f, string m, string p) => f.Like(m, p), (f, m, p) => Sql.Like(m, p));
+			InitializeSqlServerMapping();
 		}
 
 		#region Sql Server

@@ -264,7 +264,9 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		[Wrapper]
 		public class DB2Connection : TypeWrapper
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static LambdaExpression[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: get eServerType
@@ -360,7 +362,9 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		[Wrapper]
 		public class DB2BulkCopy : TypeWrapper, IDisposable
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static LambdaExpression[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: Dispose
@@ -385,7 +389,9 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				PropertySetter((DB2BulkCopy this_) => this_.ColumnMappings),
 			};
 
+#pragma warning disable IDE0051 // Remove unused private members
 			private static string[] Events { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 				= new[]
 			{
 				nameof(DB2RowsCopied)
@@ -436,7 +442,9 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		[Wrapper]
 		public class DB2RowsCopiedEventArgs : TypeWrapper
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static LambdaExpression[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: get RowsCopied
@@ -466,7 +474,9 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		[Wrapper]
 		public class DB2BulkCopyColumnMappingCollection : TypeWrapper
 		{
+#pragma warning disable IDE0051 // Remove unused private members
 			private static LambdaExpression[] Wrappers { get; }
+#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: Add
