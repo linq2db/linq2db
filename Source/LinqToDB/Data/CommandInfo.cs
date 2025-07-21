@@ -13,10 +13,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if NETFRAMEWORK || NETSTANDARD2_0
-using System.Text;
-#endif
-
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
@@ -275,14 +271,12 @@ namespace LinqToDB.Data
 
 				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 				{
-#if NET8_0_OR_GREATER
 					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false);
 					await using (rd.ConfigureAwait(false))
-#else
-					using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false))
-#endif
+					{
 						while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(false))
 							yield return objectReader(rd.DataReader!);
+					}
 				}
 			}
 		}
@@ -531,12 +525,8 @@ namespace LinqToDB.Data
 
 				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 				{
-#if NET8_0_OR_GREATER
 					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false);
 					await using (rd.ConfigureAwait(false))
-#else
-					using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false))
-#endif
 					{
 						if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(false))
 						{

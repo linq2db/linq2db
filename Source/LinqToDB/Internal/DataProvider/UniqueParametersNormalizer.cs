@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.DataProvider
 
 			if (badIdx != -1)
 			{
-#if NET8_0_OR_GREATER
+#if SUPPORTS_SPAN
 				// allocate memory on the stack if possible, and prepopulate it with the original string
 				Span<char> newName = name.Length < 500 ? stackalloc char[name.Length] : name.ToCharArray();
 				if (name.Length < 500)
@@ -66,7 +66,7 @@ namespace LinqToDB.Internal.DataProvider
 
 				if (newNameLength > 0)
 				{
-#if NET8_0_OR_GREATER
+#if SUPPORTS_SPAN
 					name = new string(newName.Slice(0, newNameLength));
 #else
 					name = new string(newName, 0, newNameLength);
@@ -81,24 +81,12 @@ namespace LinqToDB.Internal.DataProvider
 
 		protected virtual bool IsValidFirstCharacter(char chr)
 		{
-#if NET8_0_OR_GREATER
-			return char.IsAsciiLetter(chr);
-#else
-			return chr is >= 'a' and <= 'z'
-				|| chr is >= 'A' and <= 'Z';
-#endif
+			return chr.IsAsciiLetter();
 		}
 
 		protected virtual bool IsValidCharacter(char chr)
 		{
-#if NET8_0_OR_GREATER
-			return chr == '_' || char.IsAsciiLetterOrDigit(chr);
-#else
-			return chr == '_'
-				|| chr is >= 'a' and <= 'z'
-				|| chr is >= 'A' and <= 'Z'
-				|| chr is >= '0' and <= '9';
-#endif
+			return chr == '_' || chr.IsAsciiLetterOrDigit();
 		}
 
 		protected virtual bool IsReserved(string name) => false;

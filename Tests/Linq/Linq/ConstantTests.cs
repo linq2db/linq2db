@@ -164,7 +164,7 @@ namespace Tests.Linq
 			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_READONLY
 		[Test]
 		public void static_readonly_field_readonly_struct([DataSources] string context)
 		{

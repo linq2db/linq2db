@@ -177,11 +177,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 							// starts from non-letter/underscore
 							|| (value.Length > 0 && value[0] != '_' && !char.IsLetter(value[0]))
 							// contains non-letter/underscore/digit(0-9 only)/$
-#if NET8_0_OR_GREATER
-							|| value.Skip(1).Any(c => !char.IsLetter(c) && !char.IsAsciiDigit(c) && c is not '_' and not '$')
-#else
-							|| value.Skip(1).Any(c => !char.IsLetter(c) && c is (< '0' or > '9') and not '_' and not '$')
-#endif
+							|| value.Skip(1).Any(c => !char.IsLetter(c) && !c.IsAsciiDigit() && c is not '_' and not '$')
 							;
 
 						if (quote)

@@ -45,9 +45,23 @@
 		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
 		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
 
-		<!--feature flags-->
+		<!--feature flags to manage floating tfm in one place-->
+		<!--CompositeFormat type-->
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_COMPOSITE_FORMAT;$(DefineConstants)</DefineConstants>
+		<!--both DateOnly and TimeOnly-->
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_DATEONLY;$(DefineConstants)</DefineConstants>
+		<!--list.EnsureCapacity and enumerable.TryGetNonEnumeratedCount methods-->
+		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_ENSURE_CAPACITY;$(DefineConstants)</DefineConstants>
+		<!--Async transaction APIs, DbConnection.CloseAsync, etc-->
+		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">ADO_ASYNC;$(DefineConstants)</DefineConstants>
+		<!--DbException.IsTransient-->
+		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">ADO_IS_TRANSIENT;$(DefineConstants)</DefineConstants>
+		<!--Span operations-->
+		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_SPAN;$(DefineConstants)</DefineConstants>
+		<!--IsReadOnlyAttribute-->
+		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) OR $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net472')) ">SUPPORTS_READONLY;$(DefineConstants)</DefineConstants>
+		<!--regex generators-->
+		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_REGEX_GENERATORS;$(DefineConstants)</DefineConstants>
 
 		<ArtifactsPath>$(MSBuildThisFileDirectory).build</ArtifactsPath>
 		<ArtifactsPivots>$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)</ArtifactsPivots>
@@ -76,6 +90,7 @@
 		<Polyfill>$(Polyfill)|T:System.Diagnostics.CodeAnalysis</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Threading.Lock</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd``1(`0,System.Func{`0,``0,`1},``0)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.String.Contains(System.String,System.StringComparison)</Polyfill>
 		<MeziantouPolyfill_IncludedPolyfills>$(Polyfill)</MeziantouPolyfill_IncludedPolyfills>
 	</PropertyGroup>
 

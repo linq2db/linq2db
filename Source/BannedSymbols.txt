@@ -271,3 +271,8 @@ M:System.Activator.CreateInstance(System.Type,System.Reflection.BindingFlags,Sys
 M:System.Activator.CreateInstance(System.Type,System.Reflection.BindingFlags,System.Reflection.Binder,System.Object[],System.Globalization.CultureInfo); Use CreateInstanceExt extension (TODO 25:implement when needed)
 M:System.Activator.CreateInstance(System.Type); Use ActivatorExt.CreateInstance extension
 M:System.Activator.CreateInstance``1; Use CreateInstanceExt extension (TODO 27:implement when needed)
+
+# don't call command dispose directly, use provider API
+M:System.Data.Common.DbCommand.DisposeAsync; use IDataProvider.DisposeCommandAsync
+M:System.ComponentModel.Component.Dispose; use IDataProvider.DisposeCommand
+M:AdoAsyncDispose.DisposeAsync(System.Data.Common.DbCommand); use IDataProvider.DisposeCommandAsync

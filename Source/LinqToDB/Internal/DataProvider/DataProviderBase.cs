@@ -156,16 +156,18 @@ namespace LinqToDB.Internal.DataProvider
 		public virtual void DisposeCommand(DbCommand command)
 		{
 			ClearCommandParameters(command);
+#pragma warning disable RS0030 // Do not use banned APIs
 			command.Dispose();
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
 
-#if NET8_0_OR_GREATER
 		public virtual ValueTask DisposeCommandAsync(DbCommand command)
 		{
 			ClearCommandParameters(command);
+#pragma warning disable RS0030 // Do not use banned APIs
 			return command.DisposeAsync();
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
-#endif
 
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
