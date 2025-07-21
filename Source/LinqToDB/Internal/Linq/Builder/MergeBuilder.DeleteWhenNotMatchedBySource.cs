@@ -12,7 +12,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		[BuildsMethodCall(nameof(LinqExtensions.DeleteWhenNotMatchedBySourceAnd))]
 		internal sealed class DeleteWhenNotMatchedBySource : MethodCallBuilder
 		{
-			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			public static bool CanBuildMethod(MethodCallExpression call)
 				=> call.IsSameGenericMethod(DeleteWhenNotMatchedBySourceAndMethodInfo);
 
 			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

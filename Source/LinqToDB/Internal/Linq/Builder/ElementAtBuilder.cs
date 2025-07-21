@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall("ElementAt", "ElementAtOrDefault", "ElementAtAsync", "ElementAtOrDefaultAsync")]
 	sealed class ElementAtBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo buildInfo, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable();
 
 		public enum MethodKind

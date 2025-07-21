@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		static readonly MethodInfo[] _supportedMethods = { Methods.Queryable.Distinct, Methods.Enumerable.Distinct, Methods.LinqToDB.SelectDistinct };
 
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsSameGenericMethod(_supportedMethods);
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

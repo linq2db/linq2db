@@ -8,7 +8,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall(nameof(LinqExtensions.InlineParameters))]
 	sealed class InlineParametersBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsSameGenericMethod(Methods.LinqToDB.InlineParameters);
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
