@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						{
 							return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("%Y-%m-%d %H:%M:%S.%F"));
 						}
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 						if (stype == typeof(DateOnly))
 						{
 							return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("%Y-%m-%d"));

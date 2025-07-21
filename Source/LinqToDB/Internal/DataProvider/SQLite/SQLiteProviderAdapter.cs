@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Common;
+using System.Threading;
 
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.Expressions.Types;

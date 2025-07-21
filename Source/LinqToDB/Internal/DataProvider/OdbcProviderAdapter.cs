@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
 
 using LinqToDB.Internal.Expressions.Types;
 
@@ -68,7 +69,7 @@ namespace LinqToDB.Internal.DataProvider
 #if NETFRAMEWORK
 						var assembly = typeof(System.Data.Odbc.OdbcConnection).Assembly;
 #else
-						var assembly = Internal.Common.Tools.TryLoadAssembly(AssemblyName, null);
+						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 #endif

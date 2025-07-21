@@ -6,9 +6,6 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
-#if NETFRAMEWORK || NETSTANDARD2_0
-using System.Text;
-#endif
 
 using JetBrains.Annotations;
 
@@ -984,7 +981,6 @@ namespace LinqToDB.Data
 		}
 
 		private int? _commandTimeout;
-#if NET8_0_OR_GREATER
 		/// <summary>
 		/// Gets or sets command execution timeout in seconds.
 		/// Supported values:
@@ -995,18 +991,6 @@ namespace LinqToDB.Data
 		/// <item> negative value on property set : throws <see cref="InvalidOperationException"/> exception. To reset timeout to provider/connection defaults use <see cref="ResetCommandTimeout"/> or <see cref="ResetCommandTimeoutAsync"/> methods</item>
 		/// </list>
 		/// </summary>
-#else
-		/// <summary>
-		/// Gets or sets command execution timeout in seconds.
-		/// Supported values:
-		/// <list type="bullet">
-		/// <item>0 : infinite timeout</item>
-		/// <item> &gt; 0 : command timeout in seconds</item>
-		/// <item> -1 on property get : default provider/connection command timeout value used (not controlled by Linq To DB)</item>
-		/// <item> negative value on property set : throws <see cref="InvalidOperationException"/> exception. To reset timeout to provider/connection defaults use <see cref="ResetCommandTimeout"/> method</item>
-		/// </list>
-		/// </summary>
-#endif
 		public int   CommandTimeout
 		{
 			get => _commandTimeout ?? -1;
@@ -1016,11 +1000,7 @@ namespace LinqToDB.Data
 
 				if (value < 0)
 				{
-#if NET8_0_OR_GREATER
 					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout or ResetCommandTimeoutAsync methods instead.");
-#else
-					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout method instead.");
-#endif
 				}
 
 				if (_commandTimeout != value)

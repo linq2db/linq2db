@@ -1739,7 +1739,7 @@ namespace Tests.Linq
 				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		[Table]
 		public sealed class Issue4371Table2
 		{

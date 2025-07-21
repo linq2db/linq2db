@@ -12,9 +12,9 @@
 	Model.Namespace.Name = "Tests.T4.Wpf";
 	Model.Types.Add(
 		new Class("ViewModel",
-			new NotifyingProperty("double", "NotifiedProp1", "NotifiedProp1", "NotifiedBrush1") { Conditional = "NET462" },
-			new NotifyingProperty("int",    "NotifiedProp2", "NotifiedProp1", "NotifiedProp2")  { Conditional = "NET462", InitValue = "500" },
-			new NotifyingProperty("System.Windows.Media.Brush", "NotifiedBrush1")     { Conditional = "NET462" }.InitGetter("GetBrush()"),
+			new NotifyingProperty("double", "NotifiedProp1", "NotifiedProp1", "NotifiedBrush1") { Conditional = "NETFRAMEWORK" },
+			new NotifyingProperty("int",    "NotifiedProp2", "NotifiedProp1", "NotifiedProp2")  { Conditional = "NETFRAMEWORK", InitValue = "500" },
+			new NotifyingProperty("System.Windows.Media.Brush", "NotifiedBrush1")     { Conditional = "NETFRAMEWORK" }.InitGetter("GetBrush()"),
 			new NotifyingProperty(ModelType.Create<string>(false), "ConditionalProp") { InitValue = "string.Empty", CustomValidation = true, Conditional = "DEBUG" },
 			new NotifyingProperty(ModelType.Create<string>(false), "NotifiedProp3")   { InitValue = "string.Empty", CustomValidation = true }));
 

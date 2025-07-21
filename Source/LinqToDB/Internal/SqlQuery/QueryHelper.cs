@@ -1168,7 +1168,7 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_REGEX_GENERATORS
 		[GeneratedRegex(@"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)")]
 		private static partial Regex ParamsRegex();
 #else

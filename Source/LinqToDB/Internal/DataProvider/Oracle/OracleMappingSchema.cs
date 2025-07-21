@@ -78,7 +78,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			SetValueToSqlConverter(typeof(byte[]),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Binary)v).ToArray()));
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly),       (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
 #endif
 
@@ -208,7 +208,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dataType, DateOnly value)
 		{
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);

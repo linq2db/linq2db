@@ -7,10 +7,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if NETFRAMEWORK || NETSTANDARD2_0
-using System.Text;
-#endif
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Oracle;

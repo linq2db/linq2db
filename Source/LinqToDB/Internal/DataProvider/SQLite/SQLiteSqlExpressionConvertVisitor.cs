@@ -173,7 +173,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			var underlying = cast.SystemType.ToUnderlying();
 
 			if (underlying == typeof(DateTime) || underlying == typeof(DateTimeOffset)
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			                                   || underlying == typeof(DateOnly)
 #endif
 			   )

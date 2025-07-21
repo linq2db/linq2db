@@ -69,7 +69,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			if (Adapter.GetIPAddressReaderMethod      != null) SetProviderField<IPAddress     >(Adapter.GetIPAddressReaderMethod,      Adapter.DataReaderType);
 			if (Adapter.GetDateTimeOffsetReaderMethod != null) SetProviderField<DateTimeOffset>(Adapter.GetDateTimeOffsetReaderMethod, Adapter.DataReaderType);
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			if (Adapter.GetDateOnlyReaderMethod != null) SetProviderField<DateOnly>(Adapter.GetDateOnlyReaderMethod, Adapter.DataReaderType);
 #endif
 
@@ -185,7 +185,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					(ClickHouseProvider.Octonica, DataType.DateTime or DataType.DateTime64/* or DataType.DateTime2*/, DateTime val)                                       => new DateTimeOffset(val.Ticks, default),
 					(ClickHouseProvider.Octonica, DataType.VarChar or DataType.NVarChar, Guid val)                                                                        => val.ToString("D"),
 					(ClickHouseProvider.Octonica, DataType.Char or DataType.NChar, Guid val)                                                                              => Encoding.UTF8.GetBytes(val.ToString("D")),
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 					(ClickHouseProvider.Octonica, DataType.Date32 or DataType.Date, DateTime val)                                                                         => DateOnly.FromDateTime(val),
 					(ClickHouseProvider.Octonica, DataType.Date32 or DataType.Date, DateTimeOffset val)                                                                   => DateOnly.FromDateTime(val.Date),
 #else
@@ -198,7 +198,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					(ClickHouseProvider.Octonica, DataType.IPv6, byte[] val)                                                                                              => new IPAddress(val),
 
 					// CLIENT provider
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 					(ClickHouseProvider.ClickHouseClient, DataType.Date or  DataType.Date32, DateOnly val)      => val.ToDateTime(default),
 #endif
 					(ClickHouseProvider.ClickHouseClient, DataType.Date or DataType.Date32, DateTimeOffset val) => val.Date,

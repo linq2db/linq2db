@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 using JetBrains.Annotations;
 
@@ -621,7 +622,7 @@ namespace LinqToDB.Linq
 			{ M(() => ulong.   Parse("")), N(() => L<string,ulong>   (p0 => Sql.ConvertTo<ulong>.   From(p0))) },
 #pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 #pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => DateOnly.Parse("")), N(() => L<string,DateOnly>(p0 => Sql.ConvertTo<DateOnly>.From(p0))) },
 #pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs

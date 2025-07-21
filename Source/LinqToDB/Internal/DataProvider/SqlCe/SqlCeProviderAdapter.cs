@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SqlTypes;
 using System.Linq.Expressions;
+using System.Threading;
 
 using LinqToDB.Internal.Expressions.Types;
 
