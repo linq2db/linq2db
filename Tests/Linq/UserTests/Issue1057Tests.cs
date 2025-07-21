@@ -74,11 +74,11 @@ namespace Tests.UserTests
 					var res = query.ToArray();
 
 					Assert.That(res, Has.Length.EqualTo(1));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res[0].Instance, Is.Not.Null);
 						Assert.That(res[0].ActualStageId, Is.EqualTo(2));
-					});
+					}
 				}
 			}
 		}
@@ -105,11 +105,11 @@ namespace Tests.UserTests
 					var res = query.ToArray();
 
 					Assert.That(res, Has.Length.EqualTo(1));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res[0].Instance, Is.Not.Null);
 						Assert.That(res[0].ActualStageId, Is.EqualTo(2));
-					});
+					}
 
 					var query2 = db.GetTable<Task>()
 						.Select(p => new
@@ -121,11 +121,11 @@ namespace Tests.UserTests
 					var res2 = query2.OrderBy(_ => _.Instance.Id).ToArray();
 
 					Assert.That(res2, Has.Length.EqualTo(2));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res2[0].Instance, Is.Not.Null);
 						Assert.That(res2[0].ActualStageId, Is.EqualTo(2));
-					});
+					}
 				}
 			}
 		}

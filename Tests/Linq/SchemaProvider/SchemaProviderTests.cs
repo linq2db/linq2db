@@ -4,6 +4,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.SchemaProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 
@@ -100,11 +101,11 @@ namespace Tests.SchemaProvider
 					case string when context.IsAnyOf(TestProvName.AllInformix):
 						{
 							var indexTable = dbSchema.Tables.First(t => t.TableName == "testunique");
-						Assert.Multiple(() =>
-						{
-							Assert.That(indexTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
-							Assert.That(indexTable.ForeignKeys, Has.Count.EqualTo(2));
-						});
+							using (Assert.EnterMultipleScope())
+							{
+								Assert.That(indexTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
+								Assert.That(indexTable.ForeignKeys, Has.Count.EqualTo(2));
+							}
 					}
 
 						break;
@@ -116,16 +117,13 @@ namespace Tests.SchemaProvider
 						{
 							var tbl = dbSchema.Tables.Single(at => at.TableName == "AllTypes");
 							var col = tbl.Columns.First(c => c.ColumnName == "datetimeoffset3DataType");
-						Assert.Multiple(() =>
-						{
-							Assert.That(col.DataType, Is.EqualTo(DataType.DateTimeOffset));
-							Assert.That(col.Length, Is.Null);
-						});
-						Assert.Multiple(() =>
-						{
-							Assert.That(col.Precision, Is.EqualTo(3));
-							Assert.That(col.Scale, Is.Null);
-						});
+							using (Assert.EnterMultipleScope())
+							{
+								Assert.That(col.DataType, Is.EqualTo(DataType.DateTimeOffset));
+								Assert.That(col.Length, Is.Null);
+								Assert.That(col.Precision, Is.EqualTo(3));
+								Assert.That(col.Scale, Is.Null);
+							}
 					}
 
 						break;
@@ -137,8 +135,8 @@ namespace Tests.SchemaProvider
 		{
 			var e = mappingSchema.GetEntityDescriptor(typeof(T));
 
-			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName!.Equals(e.Name.Name, StringComparison.OrdinalIgnoreCase))!;
-			Assert.That(schemaTable, Is.Not.Null, e.Name.Name);
+			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName!.Equals(e.TableName, StringComparison.OrdinalIgnoreCase))!;
+			Assert.That(schemaTable, Is.Not.Null, e.TableName);
 
 			Assert.That(schemaTable.Columns, Has.Count.GreaterThanOrEqualTo(e.Columns.Count));
 
@@ -176,13 +174,12 @@ namespace Tests.SchemaProvider
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn);
 				var table    = dbSchema.Tables.Single(t => t.TableName!.Equals("alltypes", StringComparison.OrdinalIgnoreCase));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(table.Columns[0].MemberType, Is.Not.EqualTo("object"));
 
 					Assert.That(table.Columns.Single(c => c.ColumnName.Equals("intUnsignedDataType", StringComparison.OrdinalIgnoreCase)).MemberType, Is.EqualTo("uint?"));
-				});
+				}
 
 				var view = dbSchema.Tables.Single(t => t.TableName!.Equals("personview", StringComparison.OrdinalIgnoreCase));
 
@@ -241,24 +238,23 @@ namespace Tests.SchemaProvider
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn);
 				var table    = dbSchema.Tables.Single(t => t.TableName == "ALLTYPES");
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(table.Columns.Single(c => c.ColumnName == "BINARYDATATYPE").ColumnType, Is.EqualTo("CHAR (5) FOR BIT DATA"));
 					Assert.That(table.Columns.Single(c => c.ColumnName == "VARBINARYDATATYPE").ColumnType, Is.EqualTo("VARCHAR (5) FOR BIT DATA"));
-				});
+				}
 			}
 		}
 
 		[Test]
 		public void ToValidNameTest()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(SchemaProviderBase.ToValidName("1"), Is.EqualTo("_1"));
 				Assert.That(SchemaProviderBase.ToValidName("    1   "), Is.EqualTo("_1"));
 				Assert.That(SchemaProviderBase.ToValidName("\t1\t"), Is.EqualTo("_1"));
-			});
+			}
 		}
 
 		[Test]
@@ -273,12 +269,11 @@ namespace Tests.SchemaProvider
 
 				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {ExcludedCatalogs = exclude.ToArray()});
 				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {IncludedCatalogs = new []{ "IncludeExcludeCatalogTest" }});
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(schema1.Tables, Is.Empty);
 					Assert.That(schema2.Tables, Is.Empty);
-				});
+				}
 			}
 		}
 
@@ -299,12 +294,11 @@ namespace Tests.SchemaProvider
 
 				var schema1 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = exclude.ToArray()});
 				var schema2 = conn.DataProvider.GetSchemaProvider().GetSchema(conn, new GetSchemaOptions {IncludedSchemas = new []{ "IncludeExcludeSchemaTest" } });
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(schema1.Tables, Is.Empty);
 					Assert.That(schema2.Tables, Is.Empty);
-				});
+				}
 			}
 		}
 
@@ -461,8 +455,7 @@ namespace Tests.SchemaProvider
 
 					var t1 = p1.ResultTable;
 					var t2 = p2.ResultTable!;
-
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(t1.ID, Is.EqualTo(t2.ID));
 						Assert.That(t1.CatalogName, Is.EqualTo(t2.CatalogName));
@@ -475,14 +468,13 @@ namespace Tests.SchemaProvider
 						Assert.That(t1.TypeName, Is.EqualTo(t2.TypeName));
 						Assert.That(t1.IsProviderSpecific, Is.EqualTo(t2.IsProviderSpecific));
 						Assert.That(t1.Columns, Has.Count.EqualTo(t2.Columns.Count));
-					});
+					}
 
 					for (var j = 0; j < p1.ResultTable.Columns.Count; j++)
 					{
 						var c1 = t1.Columns[j];
 						var c2 = t2.Columns[j];
-
-						Assert.Multiple(() =>
+						using (Assert.EnterMultipleScope())
 						{
 							Assert.That(c1.ColumnName, Is.EqualTo(c2.ColumnName));
 							Assert.That(c1.ColumnType, Is.EqualTo(c2.ColumnType));
@@ -499,12 +491,9 @@ namespace Tests.SchemaProvider
 							Assert.That(c1.SkipOnInsert, Is.EqualTo(c2.SkipOnInsert));
 							Assert.That(c1.SkipOnUpdate, Is.EqualTo(c2.SkipOnUpdate));
 							Assert.That(c1.Length, Is.EqualTo(c2.Length));
-						});
-						Assert.Multiple(() =>
-						{
 							Assert.That(c1.Precision, Is.EqualTo(c2.Precision));
 							Assert.That(c1.Scale, Is.EqualTo(c2.Scale));
-						});
+						}
 					}
 				}
 			}

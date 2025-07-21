@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.Informix;
-using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal.DataProvider.Informix;
+using LinqToDB.Internal.DataProvider.SqlServer;
 
 using Tests.Model;
 using Tests.Tools;
@@ -196,6 +197,24 @@ namespace Tests
 		protected string GetCurrentBaselines()
 		{
 			return CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.BASELINE)?.ToString() ?? string.Empty;
+		}
+
+		/// <summary>
+		/// Helper to test APIs that return <see cref="IAsyncEnumerable{T}"/>.
+		/// </summary>
+		protected static async Task<List<T>> AsyncEnumerableToListAsync<T>(IAsyncEnumerable<T> source)
+		{
+			var result = new List<T>();
+			var enumerator = source.GetAsyncEnumerator();
+			await using (enumerator.ConfigureAwait(false))
+			{
+				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+				{
+					result.Add(enumerator.Current);
+				}
+			}
+
+			return result;
 		}
 	}
 }

@@ -21,17 +21,19 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
-using LinqToDB.SqlQuery;
 
 using EfExpressionPrinter = Microsoft.EntityFrameworkCore.Query.ExpressionPrinter;
 using EfSqlExpression = Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression;
+
+using LinqToDB.SqlQuery;
+using LinqToDB.Expressions;
+using LinqToDB.Internal.Mapping;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.EntityFrameworkCore
 {
@@ -49,6 +51,7 @@ namespace LinqToDB.EntityFrameworkCore
 		private readonly IModel?                                                      _model;
 		private readonly RelationalSqlTranslatingExpressionVisitorDependencies?       _dependencies;
 		private readonly IRelationalTypeMappingSource?                                _mappingSource;
+		private readonly IValueConverterSelector?                                     _valueConverterSelector;
 #if !EF31
 		private readonly IRelationalAnnotationProvider?                               _annotationProvider;
 #else
@@ -68,14 +71,15 @@ namespace LinqToDB.EntityFrameworkCore
 
 			if (accessor != null)
 			{
-				_dependencies         = accessor.GetService<RelationalSqlTranslatingExpressionVisitorDependencies>();
-				_mappingSource        = accessor.GetService<IRelationalTypeMappingSource>();
+				_dependencies           = accessor.GetService<RelationalSqlTranslatingExpressionVisitorDependencies>();
+				_mappingSource          = accessor.GetService<IRelationalTypeMappingSource>();
+				_valueConverterSelector = accessor.GetService<IValueConverterSelector>();
 #if EF31
-				_annotationProvider   = accessor.GetService<IMigrationsAnnotationProvider>();
+				_annotationProvider     = accessor.GetService<IMigrationsAnnotationProvider>();
 #else
-				_annotationProvider   = accessor.GetService<IRelationalAnnotationProvider>();
-				_logger               = accessor.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();
-				_databaseDependencies = accessor.GetService<DatabaseDependencies>();
+				_annotationProvider     = accessor.GetService<IRelationalAnnotationProvider>();
+				_logger                 = accessor.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();
+				_databaseDependencies   = accessor.GetService<DatabaseDependencies>();
 #endif
 			}
 
@@ -184,10 +188,10 @@ namespace LinqToDB.EntityFrameworkCore
 
 			if (property == null)
 				return false;
-			
+
 			if (memberInfo.DeclaringType?.IsAssignableFrom(property.DeclaringType) == true
-			    && memberInfo.Name == property.Name 
-			    && memberInfo.MemberType == property.MemberType 
+			    && memberInfo.Name == property.Name
+			    && memberInfo.MemberType == property.MemberType
 			    && memberInfo.GetMemberType() == property.GetMemberType())
 			{
 				return true;
@@ -235,7 +239,7 @@ namespace LinqToDB.EntityFrameworkCore
 				_                            => DataType.Undefined
 			};
 		}
-		
+
 		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
 		{
 			if (typeof(Expression).IsSameOrParentOf(type))
@@ -345,7 +349,7 @@ namespace LinqToDB.EntityFrameworkCore
 						}
 						else
 						{
-							var ms = _model != null ? LinqToDBForEFTools.GetMappingSchema(_model, null, null) : MappingSchema.Default;
+							var ms = _model != null ? LinqToDBForEFTools.GetMappingSchema(_model, _mappingSource, _valueConverterSelector, null) : MappingSchema.Default;
 							dataType = ms.GetDataType(typeMapping.ClrType).Type.DataType;
 						}
 					}
@@ -663,7 +667,7 @@ namespace LinqToDB.EntityFrameworkCore
 #else
 					var newExpression = ctx.this_._dependencies!.MemberTranslatorProvider.Translate(objExpr, ctx.propInfo, ctx.propInfo.GetMemberType());
 #endif
-					if (newExpression != null && newExpression != objExpr)
+					if (newExpression?.Equals(objExpr) == false)
 					{
 						var parametersArray = new Expression[] { objExpr };
 						result = ConvertToExpressionAttribute(ctx.propInfo, newExpression, parametersArray);

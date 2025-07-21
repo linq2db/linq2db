@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -58,7 +58,8 @@ namespace Tests.Exceptions
 					where p1.ID == 1
 					select new Person { ID = p1.ID, FirstName = p2.FirstName };
 
-				FluentActions.Enumerating(() => q.ToList()).Should().Throw<LinqToDBException>();
+				var act = () => q.ToList();
+				act.ShouldThrow<LinqToDBException>();
 			}
 		}
 

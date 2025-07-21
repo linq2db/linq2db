@@ -62,15 +62,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			FSharpTestMethods.Issue4646TestLinqToDB(ctx);
 
 			var result = db.GetTable<Issue4646Table>().Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Value, Is.Null);
 				Assert.That(result.ValueN, Is.Null);
-			});
+			}
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4646")]
 		public void Issue4646TestEF([EFDataSources] string provider)
 		{
@@ -81,12 +79,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			ctx.SaveChanges();
 
 			var result = db.GetTable<Issue4646Table>().Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.Value, Is.Null);
 				Assert.That(result.ValueN, Is.Null);
-			});
+			}
 		}
 
 		#endregion

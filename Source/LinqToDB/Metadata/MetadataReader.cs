@@ -3,9 +3,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Metadata
@@ -17,7 +17,7 @@ namespace LinqToDB.Metadata
 	{
 		/// <summary>
 		/// Default instance of <see cref="MetadataReader"/>, used by <see cref="MappingSchema.Default"/>.
-		/// By default contains only <see cref="AttributeReader"/>.
+		/// By default, contains only <see cref="AttributeReader"/>.
 		/// </summary>
 		public static MetadataReader Default = new (new AttributeReader());
 
@@ -32,10 +32,7 @@ namespace LinqToDB.Metadata
 
 		public MetadataReader(params IMetadataReader[] readers)
 		{
-			if (readers == null)
-				throw new ArgumentNullException(nameof(readers));
-
-			_readers  = readers;
+			_readers  = readers ?? throw new ArgumentNullException(nameof(readers));
 			_objectId = $"[{string.Join(",", _readers.Select(r => r.GetObjectID()))}]";
 
 			_cache = new(

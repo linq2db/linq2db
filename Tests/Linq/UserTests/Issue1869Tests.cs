@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -158,7 +158,7 @@ namespace Tests.UserTests
 
 				var result = query3.ToArray();
 
-				query3.GetSelectQuery().Select.Columns.Should().HaveCount(3);
+				query3.GetSelectQuery().Select.Columns.Count.ShouldBe(3);
 			}
 		}
 

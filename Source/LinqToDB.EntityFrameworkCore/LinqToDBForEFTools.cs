@@ -8,13 +8,13 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Async;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.EntityFrameworkCore.Internal;
 using LinqToDB.Expressions;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
@@ -222,8 +222,26 @@ namespace LinqToDB.EntityFrameworkCore
 			DataOptions? dataOptions)
 		{
 			var converterSelector = accessor?.GetService<IValueConverterSelector>();
-
-			return Implementation.GetMappingSchema(model, GetMetadataReader(model, accessor), converterSelector, dataOptions);
+			var mappingSource = accessor?.GetService<IRelationalTypeMappingSource>();
+			
+			return Implementation.GetMappingSchema(model, mappingSource, GetMetadataReader(model, accessor), converterSelector, dataOptions);
+		}
+		
+		/// <summary>
+		/// Creates mapping schema using provided EF Core data model.
+		/// </summary>
+		/// <param name="model">EF Core data model.</param>
+		/// <param name="mappingSource">EF Core mapping source.</param>
+		/// <param name="converterSelector">EF Core converter selector.</param>
+		/// <param name="dataOptions">Linq To DB context options.</param>
+		/// <returns>Mapping schema for provided EF Core model.</returns>
+		public static MappingSchema GetMappingSchema(
+			IModel                        model,
+			IRelationalTypeMappingSource? mappingSource,
+			IValueConverterSelector?      converterSelector,
+			DataOptions?                  dataOptions)
+		{
+			return Implementation.GetMappingSchema(model, mappingSource, GetMetadataReader(model, null), converterSelector, dataOptions);
 		}
 
 		/// <summary>
@@ -399,8 +417,6 @@ namespace LinqToDB.EntityFrameworkCore
 
 			return dc;
 		}
-
-		static readonly ConcurrentDictionary<Type, Func<DbConnection, string>> _connectionStringExtractors = new();
 
 		/// <summary>
 		/// Extracts database connection information from EF Core provider data.

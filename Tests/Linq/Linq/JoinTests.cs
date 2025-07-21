@@ -7,10 +7,17 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.Firebird;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -290,19 +297,18 @@ namespace Tests.Linq
 				var list = q.ToList();
 
 				Assert.That(list, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list[0].p.ParentID, Is.EqualTo(1));
 					Assert.That(list[0].lj.Count(), Is.EqualTo(1));
-				});
+				}
 
 				var ch = list[0].lj.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(ch[0].ParentID, Is.EqualTo(1));
 					Assert.That(ch[0].ChildID, Is.EqualTo(11));
-				});
+				}
 			}
 		}
 
@@ -336,11 +342,11 @@ namespace Tests.Linq
 				var list2 = q2.ToList();
 
 				Assert.That(list2, Has.Count.EqualTo(list1.Count));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list2[0].p.ParentID, Is.EqualTo(list1[0].p.ParentID));
 					Assert.That(list2[0].lj1.lj1.Count(), Is.EqualTo(list1[0].lj1.lj1.Count()));
-				});
+				}
 			}
 		}
 
@@ -370,11 +376,11 @@ namespace Tests.Linq
 				var list2 = q2.ToList();
 
 				Assert.That(list2, Has.Count.EqualTo(list1.Count));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list2[0].p.ParentID, Is.EqualTo(list1[0].p.ParentID));
 					Assert.That(list2[0].lj1.Count(), Is.EqualTo(list1[0].lj1.Count()));
-				});
+				}
 			}
 		}
 
@@ -496,7 +502,7 @@ namespace Tests.Linq
 
 				var list1 = q1.ToList();
 				var ch1   = list1[0].lj.ToList();
- 
+
 				var q2 =
 					from p in db.Parent
 						join c in db.Child on p.ParentID + n equals c.ParentID into lj
@@ -506,19 +512,18 @@ namespace Tests.Linq
 				var list2 = q2.ToList();
 
 				Assert.That(list2, Has.Count.EqualTo(list1.Count));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list2[0].p.ParentID, Is.EqualTo(list1[0].p.ParentID));
 					Assert.That(list2[0].lj.Count(), Is.EqualTo(list1[0].lj.Count()));
-				});
+				}
 
 				var ch2 = list2[0].lj.OrderBy(_ => _.ChildID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(ch2[0].ParentID, Is.EqualTo(ch1[0].ParentID));
 					Assert.That(ch2[0].ChildID, Is.EqualTo(ch1[0].ChildID));
-				});
+				}
 			}
 		}
 
@@ -547,19 +552,18 @@ namespace Tests.Linq
 				var list2 = q2.ToList();
 
 				Assert.That(list2, Has.Count.EqualTo(list1.Count));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list2[0].p.ParentID, Is.EqualTo(list1[0].p.ParentID));
 					Assert.That(list2[0].j.Count(), Is.EqualTo(list1[0].j.Count()));
-				});
+				}
 
 				var ch2 = list2[0].j.OrderBy(_ => _.ChildID).ThenBy(_ => _.ParentID).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(ch2[0].ParentID, Is.EqualTo(ch1[0].ParentID));
 					Assert.That(ch2[0].ChildID, Is.EqualTo(ch1[0].ChildID));
-				});
+				}
 			}
 		}
 
@@ -583,111 +587,66 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin9([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					Parent
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.ParentID },
-							y => new { Id = y.ParentID },
-							(xid, yid) => new { xid, yid }
-						)
-						.SelectMany(
-							y => y.yid.DefaultIfEmpty(),
-							(x1, y) => new { x1.xid, y }
-						)
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x2, y) => new { x2.xid, x2.y, h = y }
-						)
-						.SelectMany(
-							a => a.h.DefaultIfEmpty(),
-							(x3, a) => new { x3.xid, x3.y, a }
-						)
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x4, y) => new { x4.xid, x4.y, x4.a, p = y }
-						)
-						.SelectMany(
-							z => z.p.DefaultIfEmpty(),
-							(x5, z) => new { x5.xid, z, x5.y, x5.a }
-						)
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.Value1 ?? 1 },
-							(x6, y) => new { x6.xid, xy = x6.y, x6.a, x6.z, y }
-						)
-						.SelectMany(
-							z => z.y.DefaultIfEmpty(),
-							(x7, z) => new { x7.xid, z, x7.xy, x7.a, xz = x7.z }
-						)
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x8, y) => new { x8.xid, x8.z, x8.xy, x8.a, x8.xz, y }
-						)
-						.SelectMany(
-							a => a.y.DefaultIfEmpty(),
-							(x9, a) => new { x9.xid, x9.z, x9.xy, xa = x9.a, x9.xz, a }
-						),
-					db.Parent
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.ParentID },
-							y => new { Id = y.ParentID },
-							(xid, yid) => new { xid, yid }
-						)
-						.SelectMany(
-							y => y.yid.DefaultIfEmpty(),
-							(x1, y) => new { x1.xid, y }
-						)
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x2, y) => new { x2.xid, x2.y, h = y }
-						)
-						.SelectMany(
-							a => a.h.DefaultIfEmpty(),
-							(x3, a) => new { x3.xid, x3.y, a }
-						)
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x4, y) => new { x4.xid, x4.y, x4.a, p = y }
-						)
-						.SelectMany(
-							z => z.p.DefaultIfEmpty(),
-							(x5, z) => new { x5.xid, z, x5.y, x5.a }
-						)
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.Value1 ?? 1 },
-							(x6, y) => new { x6.xid, xy = x6.y, x6.a, x6.z, y }
-						)
-						.SelectMany(
-							z => z.y.DefaultIfEmpty(),
-							(x7, z) => new { x7.xid, z, x7.xy, x7.a, xz = x7.z }
-						)
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x8, y) => new { x8.xid, x8.z, x8.xy, x8.a, x8.xz, y }
-						)
-						.SelectMany(
-							a => a.y.DefaultIfEmpty(),
-							(x9, a) => new { x9.xid, x9.z, x9.xy, xa = x9.a, x9.xz, a }
-						)
-					);
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.ParentID },
+					y => new { Id = y.ParentID },
+					(xid, yid) => new { xid, yid }
+				)
+				.SelectMany(
+					y => y.yid.DefaultIfEmpty(),
+					(x1, y) => new { x1.xid, y }
+				)
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.xid.ParentID },
+					y => new { Id = y.ParentID     },
+					(x2, y) => new { x2.xid, x2.y, h = y }
+				)
+				.SelectMany(
+					a => a.h.DefaultIfEmpty(),
+					(x3, a) => new { x3.xid, x3.y, a }
+				)
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.xid.ParentID },
+					y => new { Id = y.ParentID     },
+					(x4, y) => new { x4.xid, x4.y, x4.a, p = y }
+				)
+				.SelectMany(
+					z => z.p.DefaultIfEmpty(),
+					(x5, z) => new { x5.xid, z, x5.y, x5.a }
+				)
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.xid.ParentID },
+					y => new { Id = y.Value1 ?? 1 },
+					(x6, y) => new { x6.xid, xy = x6.y, x6.a, x6.z, y }
+				)
+				.SelectMany(
+					z => z.y.DefaultIfEmpty(),
+					(x7, z) => new { x7.xid, z, x7.xy, x7.a, xz = x7.z }
+				)
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.xid.ParentID },
+					y => new { Id = y.ParentID     },
+					(x8, y) => new { x8.xid, x8.z, x8.xy, x8.a, x8.xz, y }
+				)
+				.SelectMany(
+					a => a.y.DefaultIfEmpty(),
+					(x9, a) => new { x9.xid, x9.z, x9.xy, xa = x9.a, x9.xz, a }
+				);
+
+			var sql = query.ToSqlQuery().Sql;
+
+			// Result SQL should not contain JOINs with subqueries
+			sql.ShouldContain("SELECT", Exactly.Once());
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -826,6 +785,57 @@ namespace Tests.Linq
 						.OrderBy(x6 => x6.Parent.ParentID));
 		}
 
+		[Test]
+		public void LeftJoinRemoval([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = 
+				from p in db.Parent
+				from ch in db.Child.Where(ch => p.ParentID == ch.ParentID).DefaultIfEmpty()
+				from ch1 in db.Child.Where(ch1 => ch.ChildID == ch1.ChildID)
+				select ch1;
+
+			var ts = query.GetTableSource();
+
+			ts.Joins.ShouldAllBe(j => j.JoinType == JoinType.Inner);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void LeftJoinSubqueryDoNotOptimize([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 =
+				from p in db.Person
+				select new
+				{
+					p.ID,
+					MiddleName = p.MiddleName ?? "default1",
+				};
+
+			var q2 =
+				from p in db.Person
+				join m in q1 on p.ID equals m.ID + 1 into lj1
+				from m in lj1.DefaultIfEmpty()
+				select new
+				{
+					p.ID,
+					MiddleName = Sql.AsSql(m.MiddleName ?? "default2"),
+				};
+
+			var sql = q2.ToSqlQuery().Sql;
+
+			sql.ShouldContain("default1");
+			sql.ShouldContain("default2");
+
+			sql.ShouldContain("SELECT", Exactly.Twice());
+
+			AssertQuery(q2);
+		}
+
 		[Table("Child")]
 		public class CountedChild
 		{
@@ -856,7 +866,7 @@ namespace Tests.Linq
 
 				var _ = q.ToList();
 
-				Assert.That(CountedChild.Count, Is.EqualTo(0));
+				Assert.That(CountedChild.Count, Is.Zero);
 			}
 		}
 
@@ -2257,13 +2267,13 @@ namespace Tests.Linq
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].fact.Id, Is.EqualTo(4));
 					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
 					Assert.That(results[1].fact.Id, Is.EqualTo(5));
 					Assert.That(results[1].leftTag, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -2283,13 +2293,13 @@ namespace Tests.Linq
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].fact.Id, Is.EqualTo(4));
 					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
 					Assert.That(results[1].fact.Id, Is.EqualTo(5));
 					Assert.That(results[1].leftTag, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -2309,13 +2319,13 @@ namespace Tests.Linq
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].fact.Id, Is.EqualTo(4));
 					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
 					Assert.That(results[1].fact.Id, Is.EqualTo(5));
 					Assert.That(results[1].leftTag, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -2335,13 +2345,13 @@ namespace Tests.Linq
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].fact.Id, Is.EqualTo(4));
 					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
 					Assert.That(results[1].fact.Id, Is.EqualTo(5));
 					Assert.That(results[1].leftTag, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -2360,13 +2370,13 @@ namespace Tests.Linq
 				var results = q.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].fact.Id, Is.EqualTo(4));
 					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
 					Assert.That(results[1].fact.Id, Is.EqualTo(5));
 					Assert.That(results[1].leftTag, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -2385,13 +2395,13 @@ namespace Tests.Linq
 				var results = q.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].fact.Id, Is.EqualTo(4));
 					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
 					Assert.That(results[1].fact.Id, Is.EqualTo(5));
 					Assert.That(results[1].leftTag, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -2411,13 +2421,13 @@ namespace Tests.Linq
 				var results = t.OrderBy(_ => _.fact.Id).ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].fact.Id, Is.EqualTo(4));
 					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
 					Assert.That(results[1].fact.Id, Is.EqualTo(5));
 					Assert.That(results[1].leftTag, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -2437,13 +2447,13 @@ namespace Tests.Linq
 				var results = t.ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].fact.Id, Is.EqualTo(4));
 					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
 					Assert.That(results[1].fact.Id, Is.EqualTo(5));
 					Assert.That(results[1].leftTag, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -2463,13 +2473,13 @@ namespace Tests.Linq
 				var results = t.ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].fact.Id, Is.EqualTo(4));
 					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
 					Assert.That(results[1].fact.Id, Is.EqualTo(5));
 					Assert.That(results[1].leftTag, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -2488,13 +2498,13 @@ namespace Tests.Linq
 				var results = q.ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].fact.Id, Is.EqualTo(4));
 					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
 					Assert.That(results[1].fact.Id, Is.EqualTo(5));
 					Assert.That(results[1].leftTag, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -2513,13 +2523,13 @@ namespace Tests.Linq
 				var results = q.ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(2));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results[0].fact.Id, Is.EqualTo(4));
 					Assert.That(results[0].leftTag.Name, Is.EqualTo("Tag4"));
 					Assert.That(results[1].fact.Id, Is.EqualTo(5));
 					Assert.That(results[1].leftTag, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -2544,12 +2554,12 @@ namespace Tests.Linq
 				var results = t.ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null), Is.EqualTo(1));
 					Assert.That(results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"), Is.EqualTo(1));
 					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -2574,12 +2584,12 @@ namespace Tests.Linq
 				var results = t.ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null), Is.EqualTo(1));
 					Assert.That(results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"), Is.EqualTo(1));
 					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -2603,12 +2613,12 @@ namespace Tests.Linq
 				var results = q.ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null), Is.EqualTo(1));
 					Assert.That(results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"), Is.EqualTo(1));
 					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -2632,12 +2642,12 @@ namespace Tests.Linq
 				var results = q.ToArray();
 
 				Assert.That(results, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 5 && r.leftTag == null), Is.EqualTo(1));
 					Assert.That(results.Count(r => r.fact == null && r.leftTag != null && r.leftTag.Name == "Tag6"), Is.EqualTo(1));
 					Assert.That(results.Count(r => r.fact != null && r.fact.Id == 4 && r.leftTag != null && r.leftTag.Name == "Tag4"), Is.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -2694,19 +2704,19 @@ namespace Tests.Linq
 
 				var r = query2.SingleOrDefault(x => x.LinkId == 1)!;
 				Assert.That(r, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r.MinQuantity, Is.EqualTo(1));
 					Assert.That(r.MaxQuantity, Is.EqualTo(2));
-				});
+				}
 
 				var r2 = query2.SingleOrDefault(x => x.LinkId == 2)!;
 				Assert.That(r2, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r2.MinQuantity, Is.EqualTo(3));
 					Assert.That(r2.MaxQuantity, Is.EqualTo(4));
-				});
+				}
 			}
 		}
 
@@ -2736,19 +2746,19 @@ namespace Tests.Linq
 
 				var r = query2.SingleOrDefault(x => x.LinkId == 1)!;
 				Assert.That(r, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r.MinQuantity, Is.EqualTo(1));
 					Assert.That(r.MaxQuantity, Is.EqualTo(2));
-				});
+				}
 
 				var r2 = query2.SingleOrDefault(x => x.LinkId == 2)!;
 				Assert.That(r2, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r2.MinQuantity, Is.EqualTo(3));
 					Assert.That(r2.MaxQuantity, Is.EqualTo(4));
-				});
+				}
 			}
 		}
 
@@ -2778,19 +2788,19 @@ namespace Tests.Linq
 
 				var r = query2.SingleOrDefault(x => x.LinkId == 1)!;
 				Assert.That(r, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r.MinQuantity, Is.EqualTo(1));
 					Assert.That(r.MaxQuantity, Is.EqualTo(2));
-				});
+				}
 
 				var r2 = query2.SingleOrDefault(x => x.LinkId == 2)!;
 				Assert.That(r2, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r2.MinQuantity, Is.EqualTo(3));
 					Assert.That(r2.MaxQuantity, Is.EqualTo(4));
-				});
+				}
 			}
 		}
 
@@ -3123,7 +3133,7 @@ namespace Tests.Linq
 					.Where(q => q.LeftCount == null || q.RightCount == null)
 					.Count();
 
-				Assert.That(count, Is.Not.EqualTo(0));
+				Assert.That(count, Is.Not.Zero);
 			}
 		}
 
@@ -3371,11 +3381,11 @@ namespace Tests.Linq
 			query.ToArray();
 
 			var isNullCount = db.LastQuery!.Split(["IS NULL"], StringSplitOptions.None).Length - 1;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(isNullCount, Is.EqualTo(0));
+				Assert.That(isNullCount, Is.Zero);
 				Assert.That(db.LastQuery, Does.Contain(" Jr."));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
@@ -3405,11 +3415,11 @@ namespace Tests.Linq
 			query.ToArray();
 
 			var isNullCount = db.LastQuery!.Split(["IS NULL"], StringSplitOptions.None).Length - 1;
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(isNullCount, Is.EqualTo(compareNulls == CompareNulls.LikeSql ? 0 : 2));
-				Assert.That(db.LastQuery, Does.Contain(321));
-			});
+				Assert.That(db.LastQuery, Does.Contain("321"));
+			}
 		}
 
 		#region Issue 4714
@@ -3462,5 +3472,47 @@ namespace Tests.Linq
 				.ToList();
 		}
 		#endregion
+
+		[Test]
+		public void NullableCoalesceJoinTest([DataSources(false, [TestProvName.AllAccess, TestProvName.AllClickHouse])] string context)
+		{
+			using var db   = GetDataContext(context);
+
+			var data1 = new []
+			{
+				new { ID = 1, Value = (string?)"Value1" },
+				new { ID = 2, Value = (string?)null     },
+			};
+
+			var data2 = new []
+			{
+				new { ID = 1, Value = "Value1" },
+				new { ID = 3, Value = "Value2" },
+			};
+
+			var data3 = new []
+			{
+				new { ID = 1, Value = (string?)"Value1" },
+				new { ID = 2, Value = (string?)null     },
+			};
+
+			using var temp1 = db.CreateTempTable("tmptbl1", data1, ed => ed.Property(p => p.Value).IsNullable());
+			using var temp2 = db.CreateTempTable("tmptbl2", data2, ed => ed.Property(p => p.Value).IsNotNull());
+			using var temp3 = db.CreateTempTable("tmptbl3", data3, ed => ed.Property(p => p.Value).IsNullable());
+
+			var query =
+				from t2 in temp1
+				join t3 in temp2 on t2.ID equals t3.ID into gt3
+				from t3 in gt3.DefaultIfEmpty()
+				let Value = t3.Value ?? t2.Value
+				join t4 in temp3 on new { Value } equals new { t4.Value } into gt5
+				from t4 in gt5.DefaultIfEmpty()
+				select t4;
+
+			AssertQuery(query);
+
+			if (db is DataConnection { DataProvider: FirebirdDataProvider })
+				FirebirdTools.ClearAllPools();
+		}
 	}
 }

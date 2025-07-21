@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -100,7 +99,7 @@ namespace Tests.xUpdate
 
 		private void AssertRow(TestMapping1 expected, TestMapping1 actual, int? exprected3, int? exprected4)
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(actual.Id, Is.EqualTo(expected.Id));
 				Assert.That(actual.Field1, Is.EqualTo(expected.Field1));
@@ -108,7 +107,7 @@ namespace Tests.xUpdate
 				Assert.That(actual.Field3, Is.EqualTo(exprected3));
 				Assert.That(actual.Field4, Is.EqualTo(exprected4));
 				Assert.That(actual.Field5, Is.Null);
-			});
+			}
 		}
 
 #pragma warning disable NUnit1028 // The non-test method is public
@@ -173,12 +172,11 @@ namespace Tests.xUpdate
 
 				var result1 = GetTarget(db). OrderBy(_ => _.Id).ToList();
 				var result2 = GetSource1(db).OrderBy(_ => _.Id).ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result1, Has.Count.EqualTo(4));
 					Assert.That(result2, Has.Count.EqualTo(4));
-				});
+				}
 
 				AssertRow(InitialTargetData[0], result1[0], null, null);
 				AssertRow(InitialTargetData[1], result1[1], null, null);

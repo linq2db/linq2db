@@ -4,8 +4,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 
-using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
+using LinqToDB.Data;
 using LinqToDB.Interceptors;
 
 using Microsoft.EntityFrameworkCore;
@@ -48,6 +47,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				var connectionString = GetConnectionString(provider);
 
 				var optionsBuilder = new DbContextOptionsBuilder();
+				optionsBuilder.UseLoggerFactory(LoggerFactory);
 
 				optionsBuilder = provider switch
 				{
@@ -123,6 +123,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var connectionString = GetConnectionString(provider);
 
 			var optionsBuilder = new DbContextOptionsBuilder().UseSqlServer(connectionString);
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
 
 			using var ctx = new Issue4657Context(optionsBuilder.Options);
 
@@ -159,6 +160,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var connectionString = GetConnectionString(provider);
 
 			var optionsBuilder = new DbContextOptionsBuilder();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
 			optionsBuilder.UseSqlite(connectionString);
 			optionsBuilder.UseLinqToDB(builder =>
 			{
@@ -230,24 +232,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		#region Issue 4783
 
 #if NET9_0_OR_GREATER
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4783")]
 		public async ValueTask Issue4783Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
 		{
 			var connectionString = GetConnectionString(provider);
 
 			var optionsBuilder = new DbContextOptionsBuilder();
-
-			var dataSource = new NpgsqlDataSourceBuilder(connectionString)
-				.MapEnum<Issue4783DBStatus>()
-				.Build();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
 
 			optionsBuilder = optionsBuilder.UseNpgsql(
-				dataSource,
-				o => o.UseNodaTime().MapEnum<Issue4783DBStatus>())
-				// TODO: remove and fix connection detection logic to use existing connection without extra connection
-				//.UseLinqToDB(builder => builder.AddCustomOptions(o => o.UsePostgreSQL(connectionString, PostgreSQLVersion.v15)))
-				;
+				connectionString,
+				o => o.UseNodaTime().MapEnum<Issue4783DBStatus>());
 
 			using var ctx = new Issue4783Context(optionsBuilder.Options);
 
@@ -296,7 +291,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			int Id,
 			string Source,
 			Issue4783DBStatus Status,
-				Issue4783DBStatus? NullableStatus);
+			Issue4783DBStatus? NullableStatus);
 
 		[LinqToDB.Mapping.Table("Issue4783DBRecords", IsColumnAttributeRequired = false)]
 		public record Issue4783RecordDbRaw(
@@ -312,6 +307,221 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 #endif
 
+#if NET8_0_OR_GREATER
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4917")]
+		public async ValueTask Issue4917Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
+		{
+			var connectionString = GetConnectionString(provider);
+			var dataSource = new NpgsqlDataSourceBuilder(connectionString).Build();
+			var optionsBuilder = new DbContextOptionsBuilder().UseLoggerFactory(LoggerFactory).UseNpgsql(dataSource);
+
+			using var ctx = new Issue4917Context(optionsBuilder.Options);
+			using (new DisableBaseline("create db"))
+			{
+				ctx.Database.EnsureDeleted();
+				ctx.Database.EnsureCreated();
+			}
+
+			using var db  = ctx.CreateLinqToDBConnection(); //should not throw an exception
+			await db.GetTable<Issue4917RecordDb>().ToListAsyncLinqToDB(); 
+		}
+
+		public sealed class Issue4917Context(DbContextOptions options) : DbContext(options)
+		{
+			public DbSet<Issue4917RecordDb> Issue4917DBRecords { get; set; } = null!;
+
+			protected override void OnModelCreating(ModelBuilder modelBuilder)
+			{
+				modelBuilder.Entity<Issue4917RecordDb>();
+			}
+		}
+
+		public record Issue4917RecordDb(int Id, string Name);
+#endif
+		#endregion
+		
+		#region Issue 4940
+		
+#if NET9_0_OR_GREATER
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4940")]
+		public async ValueTask Issue4940Test_NotMapped([EFIncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string provider)
+		{
+			var connectionString = GetConnectionString(provider);
+
+			var optionsBuilder = new DbContextOptionsBuilder();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
+
+			optionsBuilder = optionsBuilder.UseNpgsql(
+				connectionString,
+				o => o.MapEnum<Issue4940DBStatus>());
+
+			using var ctx = new Issue4940Context(optionsBuilder.Options);
+			using var db  = ctx.CreateLinqToDBConnection();
+
+			using (new DisableBaseline("create db"))
+			{
+				ctx.Database.EnsureDeleted();
+				ctx.Database.EnsureCreated();
+			}
+
+			var notMappedEntitiesForTempTable = new List<Issue4940RecordNotMapped>
+			{
+				new(1, "TempTable", Issue4940DBStatus.Open, Issue4940DBStatus.Open),
+				new(2, "TempTable", Issue4940DBStatus.Closed, null)
+			};
+			var tempTable = db.CreateTempTable(notMappedEntitiesForTempTable);//check valid sql for temp table and insert without parameters
+
+			var notMappedEntityForInsert = new Issue4940RecordNotMapped(3, "Insert", Issue4940DBStatus.Open, null);
+			db.Insert(notMappedEntityForInsert, tableName: tempTable.TableName, tableOptions: tempTable.TableOptions); //check enum as parameter
+			
+			var notMappedEntitiesForBulkCopy = new List<Issue4940RecordNotMapped>
+			{
+				new(4, "BulkCopy", Issue4940DBStatus.Closed, Issue4940DBStatus.Closed),
+				new(5, "BulkCopy", Issue4940DBStatus.Open, null)
+			};
+			tempTable.BulkCopy(new BulkCopyOptions {BulkCopyType = BulkCopyType.ProviderSpecific}, notMappedEntitiesForBulkCopy); //check bulk copy
+
+			var notMappedEntitiesForMerge = new List<Issue4940RecordNotMapped>
+			{
+				new(6, "Merge", Issue4940DBStatus.Open, Issue4940DBStatus.Closed),
+				new(7, "Merge", Issue4940DBStatus.Open, null)
+			};
+			tempTable
+				.Merge()
+				.Using(notMappedEntitiesForMerge)
+				.On(s => s.Source, t => t.Source)
+				.InsertWhenNotMatched()
+				.UpdateWhenMatched()
+				.Merge(); // check merge
+
+			//it is impossible to select raw data from temp table
+			var results = await tempTable.OrderBy(x => x.Id).ToArrayAsync();
+			var allItems = notMappedEntitiesForTempTable
+				.Concat([notMappedEntityForInsert])
+				.Concat(notMappedEntitiesForBulkCopy)
+				.Concat(notMappedEntitiesForMerge)
+				.ToArray();
+			
+			using (Assert.EnterMultipleScope())
+			{
+				for (var i = 0; i < results.Length; i++)
+				{
+					Assert.That(results[i].Status,         Is.EqualTo(allItems[i].Status),         $"{results[i].Source}");
+					Assert.That(results[i].NullableStatus, Is.EqualTo(allItems[i].NullableStatus), $"{results[i].Source}");
+				}
+			}
+		}
+		
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4940")]
+		public async ValueTask Issue4940Test([EFIncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string provider)
+		{
+			var connectionString = GetConnectionString(provider);
+
+			var optionsBuilder = new DbContextOptionsBuilder();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
+
+			optionsBuilder = optionsBuilder.UseNpgsql(
+				connectionString,
+				o => o.MapEnum<Issue4940DBStatus>());
+
+			using var ctx = new Issue4940Context(optionsBuilder.Options);
+			using var db  = ctx.CreateLinqToDBConnection();
+
+			using (new DisableBaseline("create db"))
+			{
+				ctx.Database.EnsureDeleted();
+				ctx.Database.EnsureCreated();
+			}
+
+			var entitiesForTempTable = new List<Issue4940RecordDb>
+			{
+				new(1, "TempTable", Issue4940DBStatus.Open, Issue4940DBStatus.Closed),
+				new(2, "TempTable", Issue4940DBStatus.Closed, null)
+			};
+			var tempTable = db.CreateTempTable(entitiesForTempTable, tableName: "issue_4940_temp_table");
+			
+			var entitiesForInsert = new List<Issue4940RecordDb>
+			{
+				new(1, "Insert", Issue4940DBStatus.Open, Issue4940DBStatus.Closed),
+				new(2, "Insert", Issue4940DBStatus.Closed, null)
+			};
+			entitiesForInsert.ForEach(x => db.Insert(x));
+			
+			var entitiesForBulkCopy = new List<Issue4940RecordDb>
+			{
+				new(3, "BulkCopy", Issue4940DBStatus.Closed, Issue4940DBStatus.Closed),
+				new(4, "BulkCopy", Issue4940DBStatus.Closed, null)
+			};
+			db.GetTable<Issue4940RecordDb>().BulkCopy(new BulkCopyOptions {BulkCopyType = BulkCopyType.ProviderSpecific}, entitiesForBulkCopy);
+
+			var entitiesForMerge = new List<Issue4940RecordDb>
+			{
+				new(5, "Merge", Issue4940DBStatus.Open, Issue4940DBStatus.Open),
+				new(6, "Merge", Issue4940DBStatus.Open, null)
+			};
+			db.GetTable<Issue4940RecordDb>()
+				.Merge()
+				.Using(entitiesForMerge)
+				.On(s => s.Source, t => t.Source)
+				.InsertWhenNotMatched()
+				.UpdateWhenMatched()
+				.Merge();
+
+			var inMemoryRecords = entitiesForInsert.Concat(entitiesForBulkCopy).Concat(entitiesForMerge).ToArray();
+			var rawDbRecords  = await db.GetTable<Issue4940RecordDbRaw>().OrderBy(x => x.Id).ToArrayAsync();
+			var tempTableRecords = await tempTable.OrderBy(x => x.Id).ToArrayAsync();
+
+			using (Assert.EnterMultipleScope())
+			{
+				for (var i = 0; i < tempTableRecords.Length; i++)
+				{
+					Assert.That(tempTableRecords[i].Status,         Is.EqualTo(entitiesForTempTable[i].Status),         $"{tempTableRecords[i].Source}");
+					Assert.That(tempTableRecords[i].NullableStatus, Is.EqualTo(entitiesForTempTable[i].NullableStatus), $"{tempTableRecords[i].Source}");
+				}
+				
+				for (var i = 0; i < rawDbRecords.Length; i++)
+				{
+					Assert.That(rawDbRecords[i].Status,         Is.EqualTo(inMemoryRecords[i].Status),         $"{rawDbRecords[i].Source}");
+					Assert.That(rawDbRecords[i].NullableStatus, Is.EqualTo(inMemoryRecords[i].NullableStatus), $"{rawDbRecords[i].Source}");
+				}
+			}
+		}
+		
+		public sealed class Issue4940Context(DbContextOptions options) : DbContext(options)
+		{
+			public DbSet<Issue4940RecordDb> Issue4940DBRecords { get; set; } = null!;
+
+			protected override void OnModelCreating(ModelBuilder modelBuilder)
+			{
+				modelBuilder.Entity<Issue4940RecordDb>().HasNoKey();
+			}
+		}
+
+		public record Issue4940RecordDb(
+			int                Id,
+			string             Source,
+			Issue4940DBStatus  Status,
+			Issue4940DBStatus? NullableStatus);
+
+		[LinqToDB.Mapping.Table("Issue4940DBRecords", IsColumnAttributeRequired = false)]
+		public record Issue4940RecordDbRaw(
+			int     Id,
+			string  Source,
+			object  Status,
+			object? NullableStatus);
+
+		public record Issue4940RecordNotMapped(
+			int                Id,
+			string             Source,
+			Issue4940DBStatus  Status,
+			Issue4940DBStatus? NullableStatus);
+
+		public enum Issue4940DBStatus
+		{
+			Open,
+			Closed
+		}
+#endif
 		#endregion
 	}
 }

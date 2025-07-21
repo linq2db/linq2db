@@ -4,11 +4,13 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.PostgreSQL;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	[PublicAPI]
-	public static partial class PostgreSQLTools
+	public static class PostgreSQLTools
 	{
 		private  static PostgreSQLProviderDetector? _providerDetector;
 		internal static PostgreSQLProviderDetector   ProviderDetector
@@ -23,9 +25,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.AutoDetect, string? connectionString = null)
+		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.AutoDetect, string? connectionString = null, DbConnection? connection = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), default, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection, ConnectionString: connectionString), default, version);
 		}
 
 		public static void ResolvePostgreSQL(string path)

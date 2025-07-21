@@ -4,14 +4,13 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -110,7 +109,7 @@ namespace Tests.Linq
 		{
 			using (var db = new MyContext(context))
 			{
-				db.SomeValue.Should().Be(10);
+				db.SomeValue.ShouldBe(10);
 			}
 		}
 
@@ -163,19 +162,17 @@ namespace Tests.Linq
 			Assert.That(res, Has.Length.EqualTo(3));
 
 			Assert.That(res[0].Array, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Array.Count(), Is.EqualTo(3));
 
 				Assert.That(res[1].Array, Is.Not.Null);
-			});
-			Assert.Multiple(() =>
-			{
 				Assert.That(res[1].Array.Count(), Is.EqualTo(2));
 
 				Assert.That(res[2].Array, Is.Not.Null);
-			});
-			Assert.That(res[2].Array.Count(), Is.EqualTo(0));
+			}
+
+			Assert.That(res[2].Array.Count(), Is.Zero);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
@@ -195,13 +192,12 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(1));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Id, Is.EqualTo(1));
 				Assert.That(res[0].Array.Count(), Is.EqualTo(3));
 				Assert.That(res[0].Array, Is.EqualTo(new string[] { "one", "two", "three" }));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
@@ -221,13 +217,12 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(1));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Id, Is.EqualTo(1));
 				Assert.That(res[0].Array.Count(), Is.EqualTo(3));
 				Assert.That(res[0].Array, Is.EqualTo(new string[] { "one", "two", "three" }));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
@@ -247,13 +242,12 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(1));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Id, Is.EqualTo(1));
 				Assert.That(res[0].Array.Count(), Is.EqualTo(3));
 				Assert.That(res[0].Array, Is.EqualTo(new string[] { "one", "two", "three" }));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
@@ -273,13 +267,12 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(1));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Id, Is.EqualTo(1));
 				Assert.That(res[0].Array.Count(), Is.EqualTo(3));
 				Assert.That(res[0].Array, Is.EqualTo(new string[] { "one", "two", "three" }));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
@@ -299,13 +292,12 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(1));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Id, Is.EqualTo(1));
 				Assert.That(res[0].Array.Count(), Is.EqualTo(3));
 				Assert.That(res[0].Array, Is.EqualTo(new string[] { "one", "two", "three" }));
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
@@ -325,13 +317,12 @@ namespace Tests.Linq
 				.ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(1));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res[0].Id, Is.EqualTo(1));
 				Assert.That(res[0].Array.Count(), Is.EqualTo(3));
 				Assert.That(res[0].Array, Is.EqualTo(new string[] { "one", "two", "three" }));
-			});
+			}
 		}
 
 		static partial class SqlFnEx
@@ -404,5 +395,44 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		[ExpressionMethod(nameof(GetValueNullableExpr))]
+		static int? GetValue(int? value) => throw new InvalidOperationException();
+
+		// this function should be a blackbox for linq2db
+		[Sql.Expression("IIF({0} IS NULL, -1, {0} + 1)", ServerSideOnly = true)]
+		static int GetValueFinal(int value) => throw new InvalidOperationException();
+
+		static Expression<Func<int?, int?>> GetValueNullableExpr()
+		{
+			return value => value == null ? null : GetValueFinal(value.Value);
+		}
+
+		[Sql.Expression("{0}", ServerSideOnly = true, IgnoreGenericParameters = true)]
+		static T Wrap<T>(T value) => throw new InvalidOperationException();
+
+		[Test]
+		//public void Test_ConditionalExpressionOptimization([IncludeDataSources(true, TestProvName.AllSqlServer)] string context, [Values] bool inline)
+		public void Test_ConditionalExpressionOptimization(
+			[DataSources(
+			// no IIF or other syntax issues
+			ProviderName.SqlCe,
+			TestProvName.AllClickHouse,
+			TestProvName.AllDB2,
+			TestProvName.AllInformix,
+			TestProvName.AllMySql,
+			TestProvName.AllOracle,
+			TestProvName.AllSybase,
+			TestProvName.AllSapHana,
+			TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.Person.Where(r => GetValue(Wrap<int?>(null)) == null).Count(), Is.EqualTo(4));
+				Assert.That(db.Person.Where(r => GetValue(Wrap<int?>(null)) != null).Count(), Is.Zero);
+				Assert.That(db.Person.Where(r => !(GetValue(Wrap<int?>(null)) != null)).Count(), Is.EqualTo(4));
+			}
+		}
 	}
 }

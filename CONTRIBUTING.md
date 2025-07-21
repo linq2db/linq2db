@@ -16,6 +16,7 @@ uid: contributing
 |.\Source\CodeGenerators| LINQ to DB internal source generators source code|
 |.\Source\LinqToDB| LINQ to DB source code|
 |.\Source\LinqToDB.CLI| LINQ to DB CLI scaffold tool source code|
+|.\Source\LinqToDB.Compat| LINQ to DB Compat library source code|
 |.\Source\LinqToDB.EntityFrameworkCore| LINQ to DB integration with Entity Framework Core source code|
 |.\Source\LinqToDB.Extensions| LINQ to DB Dependency Injection and Logging extensions library source code|
 |.\Source\LinqToDB.FSharp | F# support extension for Linq To DB|
@@ -32,17 +33,17 @@ uid: contributing
 |.\Tests\Linq|Main project for LINQ to DB unit tests|
 |.\Tests\Model|Model classes for tests|
 |.\Tests\Tests.Benchmarks| Benchmarks|
-|.\Tests\Tests.PLayground| Test project for use with linq2db.playground.sln lite test solution. Used for work on specific test without full solution load|
+|.\Tests\Tests.PLayground| Test project for use with linq2db.playground.slnf lite test solution. Used for work on specific test without full solution load|
 |.\Tests\Tests.T4|T4 templates test project|
 |.\Tests\Tests.T4.Nugets|T4 nugets test project|
 |.\Tests\VisualBasic|Visual Basic models and tests support|
 
 #### Solutions
 
-* `.\linq2db.sln` - full linq2db solution
+* `.\linq2db.slnx` - full linq2db solution
 * `.\linq2db.playground.slnf` - ligthweight linq2db test solution. Used to work on specific test without loading of all payload of full solution
 * `.\linq2db.Benchmarks.slnf` - ligthweight linq2db benchmarks solution. Used to work on benchmarks without loading of all payload of full solution
-* `.\Tests\Tests.T4.Nugets\Tests.T4.Nugets.sln` - separate solution for T4 nugets testing
+* `.\Tests\Tests.T4.Nugets\Tests.T4.Nugets.slnx` - separate solution for T4 nugets testing
 
 #### Source projects
 
@@ -52,7 +53,6 @@ Custom feature symbols:
 
 Custom debugging symbols:
 
-* `OVERRIDETOSTRING` - enables `ToString()` overrides for AST model (must be enabled in LinqToDB.csproj by renaming existing `OVERRIDETOSTRING1` define)
 * `BUGCHECK` - enables extra bugchecks in debug and ci test builds
 
 #### Test projects
@@ -107,14 +107,11 @@ public class Test: TestBase
         // TestBase.GetDataContext - creates new IDataContext
         // also supports creation of remote client and server
         // for remote contexts
-        using(var db = GetDataContext(context))
-        {
-            // Here is the most interesting
-            // this.Person - list of persons, corresponding Person table in database (derived from TestBase)
-            // db.Person - database table
-            // So test checks that LINQ to Objects query produces the same result as executed database query
-            AreEqual(this.Person.Where(_ => _.Name == "John"), db.Person.Where(_ => _.Name == "John"));
-        }
+        using var db = GetDataContext(context);
+
+        // AssertQuery method will execute query against both DB and memory-based collections
+        // and check that both return same results
+        AssertQuery(db.Person.Where(_ => _.Name == "John"));
     }
 
 }

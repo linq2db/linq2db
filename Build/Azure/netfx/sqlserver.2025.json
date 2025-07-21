@@ -1,0 +1,8 @@
+﻿{
+	"NETFX.Azure": {
+		"Providers": [
+			"SqlServer.2025",
+			"SqlServer.2025.MS"
+		]
+	}
+}

@@ -24,7 +24,6 @@
 		<Features>strict</Features>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
-		<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)/Build/linq2db.snk</AssemblyOriginatorKeyFile>
@@ -67,12 +66,21 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
+	<PropertyGroup Label="Enabled Polyfills">
+		<!--https://github.com/meziantou/Meziantou.Polyfill?tab=readme-ov-file#supported-polyfills-->
+		<Polyfill>T:System.HashCode</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Index</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Range</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Diagnostics.CodeAnalysis</Polyfill>
+		<MeziantouPolyfill_IncludedPolyfills>$(Polyfill)</MeziantouPolyfill_IncludedPolyfills>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" PrivateAssets="All" />
 		<PackageReference Include="Meziantou.Analyzer" PrivateAssets="All" />
-
-		<PackageReference Include="PolySharp" PrivateAssets="All" />
+		<PackageReference Include="Meziantou.Polyfill" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Language)'=='C#'">
@@ -82,5 +90,39 @@
 	<PropertyGroup Condition="'$(Configuration)'=='Testing'">
 		<TargetFrameworks>net9.0</TargetFrameworks>
 		<DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Label="Properties for templates">
+		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory).build\bin\NuGet\Debug\</LinqToDBT4SharedTools>
+		<LinqToDBT4DatabasesPath>$(LinqToDBT4SharedTools)Database\</LinqToDBT4DatabasesPath>
+		<LinqToDBT4TemplatesPath>$(MSBuildThisFileDirectory)Source\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
+
+		<LinqToDBT4AccessClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4AccessClientPath>
+		<LinqToDBT4ClickHouseClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4ClickHouseClientPath>
+		<LinqToDBT4DB2ClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4DB2ClientPath>
+		<LinqToDBT4FirebirdClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4FirebirdClientPath>
+		<LinqToDBT4InformixClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4InformixClientPath>
+		<LinqToDBT4MySqlClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4MySqlClientPath>
+		<LinqToDBT4OracleClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4OracleClientPath>
+		<LinqToDBT4PostgreSQLClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4PostgreSQLClientPath>
+		<LinqToDBT4SapHanaClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SapHanaClientPath>
+		<LinqToDBT4SqlCeClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SqlCeClientPath>
+		<LinqToDBT4SQLiteClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SQLiteClientPath>
+		<LinqToDBT4SqlServerClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SqlServerClientPath>
+		<LinqToDBT4SybaseClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SybaseClientPath>
+
+		<LinqToDBT4AccessTemplatesPath>$(MSBuildThisFileDirectory)Nuget\Access\</LinqToDBT4AccessTemplatesPath>
+		<LinqToDBT4ClickHouseTemplatesPath>$(MSBuildThisFileDirectory)Nuget\ClickHouse\</LinqToDBT4ClickHouseTemplatesPath>
+		<LinqToDBT4DB2TemplatesPath>$(MSBuildThisFileDirectory)Nuget\DB2\</LinqToDBT4DB2TemplatesPath>
+		<LinqToDBT4FirebirdTemplatesPath>$(MSBuildThisFileDirectory)Nuget\Firebird\</LinqToDBT4FirebirdTemplatesPath>
+		<LinqToDBT4InformixTemplatesPath>$(MSBuildThisFileDirectory)Nuget\Informix\</LinqToDBT4InformixTemplatesPath>
+		<LinqToDBT4MySqlTemplatesPath>$(MSBuildThisFileDirectory)Nuget\MySql\</LinqToDBT4MySqlTemplatesPath>
+		<LinqToDBT4OracleTemplatesPath>$(MSBuildThisFileDirectory)Nuget\Oracle\</LinqToDBT4OracleTemplatesPath>
+		<LinqToDBT4PostgreSQLTemplatesPath>$(MSBuildThisFileDirectory)Nuget\PostgreSQL\</LinqToDBT4PostgreSQLTemplatesPath>
+		<LinqToDBT4SapHanaTemplatesPath>$(MSBuildThisFileDirectory)Nuget\SapHana\</LinqToDBT4SapHanaTemplatesPath>
+		<LinqToDBT4SqlCeTemplatesPath>$(MSBuildThisFileDirectory)Nuget\SqlCe\</LinqToDBT4SqlCeTemplatesPath>
+		<LinqToDBT4SQLiteTemplatesPath>$(MSBuildThisFileDirectory)Nuget\SQLite\</LinqToDBT4SQLiteTemplatesPath>
+		<LinqToDBT4SqlServerTemplatesPath>$(MSBuildThisFileDirectory)Nuget\SqlServer\</LinqToDBT4SqlServerTemplatesPath>
+		<LinqToDBT4SybaseTemplatesPath>$(MSBuildThisFileDirectory)Nuget\Sybase\</LinqToDBT4SybaseTemplatesPath>
 	</PropertyGroup>
 </Project>

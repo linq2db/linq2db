@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -49,7 +49,8 @@ namespace Tests.UserTests
 						i =>
 							new { i.ReceiptNo, a = TestCustomer.GetName(i.Customer.BillingGroup) });
 
-				FluentActions.Enumerating(() => query).Should().NotThrow();
+				var act = () => query.ToArray();
+				act.ShouldNotThrow();
 			}
 		}
 	}

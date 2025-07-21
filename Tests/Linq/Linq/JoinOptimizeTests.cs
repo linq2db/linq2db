@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -96,31 +96,30 @@ namespace Tests.Linq
 						OrderID2 = o2.OrderID,
 						OrderID3 = o3.OrderID,
 					};
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(q2, Is.EqualTo(q));
 
 					Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1));
-				});
+				}
 
 				var proj1 = q.Select(v => v.OrderID);
 				proj1.ToArray();
 				var sq1 = proj1.GetSelectQuery();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sq1.GetTableSource().Joins, Has.Count.EqualTo(1));
 					Assert.That(sq1.GetWhere().Predicates, Is.Empty);
-				});
+				}
 
 				var proj2 = q.Select(v => v.OrderDate);
 				proj2.ToArray();
 				var sq2 = proj2.GetSelectQuery();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sq2.GetTableSource().Joins, Has.Count.EqualTo(1));
 					Assert.That(sq2.GetWhere().Predicates, Is.Empty);
-				});
+				}
 			}
 		}
 
@@ -169,8 +168,6 @@ namespace Tests.Linq
 		{
 			using (var db = new NorthwindDB(context))
 			{
-				var dd = GetNorthwindAsList(context);
-
 				var q = from od in db.OrderDetail
 					join o1 in db.Order on new {od.OrderID, od.ProductID} equals new {o1.OrderID, ProductID = 39}
 					join e1 in db.Employee on o1.EmployeeID equals e1.EmployeeID
@@ -195,36 +192,14 @@ namespace Tests.Linq
 						OrderID4 = o4 == null ? 0 : o4.OrderID,
 					};
 
-				var q2 = from od in dd.OrderDetail
-					join o1 in dd.Order on new {od.OrderID, od.ProductID} equals new {o1.OrderID, ProductID = 39}
-					from o2 in dd.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
-					from o3 in dd.Order.Where(o => o.OrderID == od.OrderID && od.ProductID == 1).DefaultIfEmpty()
-					from o4 in dd.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
-					from o5 in dd.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
-					from o6 in dd.Order.Where(o => o.OrderID == od.OrderID && od.ProductID == 1).DefaultIfEmpty()
-					from o7 in dd.Order.Where(o => o.OrderID == od.OrderID).DefaultIfEmpty()
-					join o8 in dd.Order on od.OrderID equals o8.OrderID
-					from o9 in dd.OrderDetail.Where(d => d.OrderID == od.OrderID && d.ProductID == od.ProductID).DefaultIfEmpty()
-					from o10 in dd.OrderDetail.Where(d => d.OrderID == od.OrderID && d.ProductID == od.ProductID).DefaultIfEmpty()
-					where o5 != null && o5.OrderID > 1000
-					orderby o1.OrderID
-					select new
-					{
-						OrderID = od.OrderID,
-						OrderID1 = o1 == null ? 0 : o1.OrderID,
-						OrderID2 = o2 == null ? 0 : o2.OrderID,
-						OrderID3 = o3 == null ? 0 : o3.OrderID,
-						OrderID4 = o4 == null ? 0 : o4.OrderID,
-					};
-
-				Assert.That(q2, Is.EqualTo(q));
+				AssertQuery(q);
 
 				var ts = q.GetTableSource();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(ts.Joins.Count(j => j.JoinType == JoinType.Inner), Is.EqualTo(2));
 					Assert.That(ts.Joins.Count(j => j.JoinType == JoinType.Left), Is.EqualTo(3));
-				});
+				}
 			}
 		}
 
@@ -357,19 +332,19 @@ namespace Tests.Linq
 
 				var sql = q.GetSelectQuery();
 				Assert.That(sql.GetTableSource().Joins, Has.Count.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sql.GetTableSource().Joins.First().Condition.Predicates, Has.Count.EqualTo(2));
 					Assert.That(sql.GetWhere().Predicates, Is.Empty);
-				});
+				}
 
 				var proj1 = q.Select(v => v.OrderID);
 				var sql1 = proj1.GetSelectQuery();
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sql1.GetTableSource().Joins, Has.Count.EqualTo(1));
 					Assert.That(sql1.GetWhere().Predicates, Is.Empty);
-				});
+				}
 			}
 		}
 

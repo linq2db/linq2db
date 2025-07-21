@@ -9,12 +9,15 @@ using System.Threading.Tasks;
 using System.Transactions;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.DataProvider.DB2;
+using LinqToDB.Internal.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
 
@@ -38,12 +41,11 @@ namespace Tests.Data
 			using (var conn = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString)))
 			{
 				var connection = conn.OpenDbConnection();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(connection.State,         Is.EqualTo(ConnectionState.Open));
-					Assert.That(conn.ConfigurationString, Is.Null);
-				});
+					Assert.That(conn.ConfigurationString, Is.EqualTo(dataProvider.Name));
+				}
 			}
 		}
 
@@ -53,12 +55,11 @@ namespace Tests.Data
 			using (var conn = new DataConnection())
 			{
 				var connection = conn.OpenDbConnection();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 					Assert.That(conn.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
-				});
+				}
 			}
 		}
 
@@ -73,12 +74,11 @@ namespace Tests.Data
 			using (var conn = GetDataConnection(context))
 			{
 				var connection = conn.OpenDbConnection();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(connection.State, Is.EqualTo(ConnectionState.Open));
 					Assert.That(conn.ConfigurationString, Is.EqualTo(context));
-				});
+				}
 
 				if (context.EndsWith(".2005"))
 				{
@@ -280,20 +280,16 @@ namespace Tests.Data
 					(args, cn) => opened = true,
 					null,
 					async (args, cn, се) => await Task.Run(() => openedAsync = true)));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(opened, Is.False);
 					Assert.That(openedAsync, Is.False);
 
 					var connection = conn.OpenDbConnection();
 					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(opened, Is.True);
 					Assert.That(openedAsync, Is.False);
-				});
+				}
 			}
 		}
 
@@ -309,18 +305,18 @@ namespace Tests.Data
 					(args, cn) => opened = true,
 					null,
 					async (args, cn, ct) => await Task.Run(() => openedAsync = true, ct)));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(opened, Is.False);
 					Assert.That(openedAsync, Is.False);
-				});
+				}
+
 				await conn.SelectAsync(() => 1);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(opened, Is.False);
 					Assert.That(openedAsync, Is.True);
-				});
+				}
 			}
 		}
 
@@ -350,11 +346,11 @@ namespace Tests.Data
 			collection.AddLinqToDB((serviceProvider, options) => options.UseConfiguration(context));
 			var provider = collection.BuildServiceProvider();
 			var con = provider.GetRequiredService<IDataContext>();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(con is DataConnection, Is.True);
+				Assert.That(con, Is.InstanceOf<DataConnection>());
 				Assert.That(((DataConnection)con).ConfigurationString, Is.EqualTo(context));
-			});
+			}
 		}
 
 		[Test]
@@ -450,11 +446,11 @@ namespace Tests.Data
 		{
 			public DbConnection5(DataOptions options) : base(options)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(options.DataContextOptions.CommandTimeout, Is.EqualTo(91));
 					Assert.That(CommandTimeout,                            Is.EqualTo(91));
-				});
+				}
 			}
 		}
 
@@ -481,11 +477,11 @@ namespace Tests.Data
 			var serviceProvider = collection.BuildServiceProvider();
 			var c1 = serviceProvider.GetRequiredService<DbConnection1>();
 			var c2 = serviceProvider.GetRequiredService<DbConnection2>();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(c1.ConfigurationString, Is.EqualTo(context));
 				Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
-			});
+			}
 		}
 
 		#region issue 4811
@@ -502,11 +498,11 @@ namespace Tests.Data
 			var serviceProvider = collection.BuildServiceProvider();
 			var c1 = serviceProvider.GetRequiredService<DbConnection1>();
 			var c2 = serviceProvider.GetRequiredService<DbConnection2>();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(c1.ConnectionString, Is.EqualTo(cs1));
 				Assert.That(c2.ConnectionString, Is.EqualTo(cs2));
-			});
+			}
 		}
 
 		public class DbConnection11 : DataConnection
@@ -537,11 +533,11 @@ namespace Tests.Data
 			var serviceProvider = collection.BuildServiceProvider();
 			var c1 = serviceProvider.GetRequiredService<DbConnection11>();
 			var c2 = serviceProvider.GetRequiredService<DbConnection12>();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(c1.ConnectionString, Is.EqualTo(cs1));
 				Assert.That(c2.ConnectionString, Is.EqualTo(cs2));
-			});
+			}
 		}
 
 		#endregion
@@ -642,19 +638,15 @@ namespace Tests.Data
 						openAsync = true;
 					}, ct),
 					null));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(open, Is.False);
 					Assert.That(openAsync, Is.False);
 					var connection = conn.OpenDbConnection();
 					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(open, Is.True);
 					Assert.That(openAsync, Is.False);
-				});
+				}
 			}
 		}
 
@@ -678,18 +670,18 @@ namespace Tests.Data
 								openAsync = true;
 					}, ct),
 					null));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(open, Is.False);
 					Assert.That(openAsync, Is.False);
-				});
+				}
+
 				await conn.SelectAsync(() => 1);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(open, Is.False);
 					Assert.That(openAsync, Is.True);
-				});
+				}
 			}
 		}
 
@@ -932,11 +924,11 @@ namespace Tests.Data
 					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
 
 					Assert.That(ids, Has.Length.EqualTo(2));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(ids[0], Is.EqualTo(1));
 						Assert.That(ids[1], Is.EqualTo(3));
-					});
+					}
 				}
 			}
 			finally
@@ -1002,11 +994,11 @@ namespace Tests.Data
 					}
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.GreaterThan(0));
 					Assert.That(cnt2, Is.EqualTo(cnt1));
-				});
+				}
 			}
 		}
 
@@ -1135,11 +1127,11 @@ namespace Tests.Data
 					}
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.GreaterThan(0));
 					Assert.That(cnt2, Is.EqualTo(cnt1));
-				});
+				}
 			}
 		}
 
@@ -1275,11 +1267,11 @@ namespace Tests.Data
 					}
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.GreaterThan(0));
 					Assert.That(cnt2, Is.EqualTo(cnt1));
-				});
+				}
 			}
 		}
 
@@ -1363,11 +1355,11 @@ namespace Tests.Data
 					cnt2++;
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.GreaterThan(0));
 					Assert.That(cnt2, Is.EqualTo(cnt1));
-				});
+				}
 			}
 		}
 
@@ -1454,11 +1446,11 @@ namespace Tests.Data
 					cnt2++;
 				}
 
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(cnt1, Is.GreaterThan(0));
 					Assert.That(cnt2, Is.EqualTo(cnt1));
-				});
+				}
 			}
 		}
 

@@ -109,7 +109,7 @@ namespace Tests.Tools
 			Assert.That(a, Is.EqualTo(b2), "MethodInfo fails");
 
 			Assert.That(a.MethodHandle, Is.Not.EqualTo(b.MethodHandle), "MethodHandle fails");
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(a.MethodHandle, Is.EqualTo(b2.MethodHandle), "MethodHandle fails");
 
@@ -118,7 +118,7 @@ namespace Tests.Tools
 
 				Assert.That(comparer.Equals(a, b), Is.False, "ComparerBuilder fails");
 				Assert.That(comparer.Equals(a, b2), Is.True, "ComparerBuilder fails");
-			});
+			}
 		}
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
@@ -141,35 +141,32 @@ namespace Tests.Tools
 		public void GetHashCodeTest()
 		{
 			var eq = ComparerBuilder.GetEqualityComparer<TestClass?>();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(eq.GetHashCode(new TestClass()), Is.Not.EqualTo(0));
-				Assert.That(eq.GetHashCode(null!), Is.EqualTo(0));
-			});
+				Assert.That(eq.GetHashCode(new TestClass()), Is.Not.Zero);
+				Assert.That(eq.GetHashCode(null!), Is.Zero);
+			}
 		}
 
 		[Test]
 		public void EqualsTest()
 		{
 			var eq = ComparerBuilder.GetEqualityComparer<TestClass?>();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(eq.Equals(new TestClass(), new TestClass()), Is.True);
 				Assert.That(eq.Equals(null, null), Is.True);
 				Assert.That(eq.Equals(null, new TestClass()), Is.False);
 				Assert.That(eq.Equals(new TestClass(), null), Is.False);
 				Assert.That(eq.Equals(new TestClass(), new TestClass { Field1 = 1 }), Is.False);
-			});
+			}
 		}
 
 		[Test]
 		public void StructEqualsTest()
 		{
 			var eq = ComparerBuilder.GetEqualityComparer<TestStruct?>();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(eq.Equals(new TestStruct(), new TestStruct()), Is.True);
 				Assert.That(eq.Equals(null, null), Is.True);
@@ -179,7 +176,7 @@ namespace Tests.Tools
 				Assert.That(eq.Equals(new TestStruct() { Field1 = 1 }, new TestStruct { Field1 = 1 }), Is.True);
 				Assert.That(eq.Equals(new TestStruct() { Field2 = 1 }, new TestStruct { Field2 = 2 }), Is.False);
 				Assert.That(eq.Equals(new TestStruct() { Field2 = 1 }, new TestStruct { Field2 = 1 }), Is.True);
-			});
+			}
 		}
 
 		sealed class NoMemberClass
@@ -190,14 +187,13 @@ namespace Tests.Tools
 		public void NoMemberTest()
 		{
 			var eq = ComparerBuilder.GetEqualityComparer<NoMemberClass?>();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(eq.GetHashCode(new NoMemberClass()), Is.Not.EqualTo(0));
+				Assert.That(eq.GetHashCode(new NoMemberClass()), Is.Not.Zero);
 
 				Assert.That(eq.Equals(new NoMemberClass(), new NoMemberClass()), Is.True);
 				Assert.That(eq.Equals(new NoMemberClass(), null), Is.False);
-			});
+			}
 		}
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
@@ -210,15 +206,14 @@ namespace Tests.Tools
 		public void OneMemberTest()
 		{
 			var eq = ComparerBuilder.GetEqualityComparer<OneMemberClass?>();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(eq.GetHashCode(new OneMemberClass()), Is.Not.EqualTo(0));
+				Assert.That(eq.GetHashCode(new OneMemberClass()), Is.Not.Zero);
 
 				Assert.That(eq.Equals(new OneMemberClass(), new OneMemberClass()), Is.True);
 				Assert.That(eq.Equals(new OneMemberClass(), null), Is.False);
 				Assert.That(eq.Equals(new OneMemberClass(), new OneMemberClass { Field1 = 1 }), Is.False);
-			});
+			}
 		}
 
 		[Test]

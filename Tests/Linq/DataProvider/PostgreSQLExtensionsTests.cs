@@ -3,7 +3,6 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
@@ -316,17 +315,18 @@ namespace Tests.DataProvider
 			var result = tb.Where(x => !Sql.Ext.PostgreSQL().Overlaps(x.Statuses!, notAcceptedStatuses)).ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(2));
 				Assert.That(result[0].Statuses, Is.Not.Null);
-			});
+			}
+
 			Assert.That(result[0].Statuses, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Statuses![0], Is.EqualTo(StatusType.Value1));
 				Assert.That(result[0].Statuses![1], Is.EqualTo(StatusType.Value4));
-			});
+			}
 		}
 
 		[Table]

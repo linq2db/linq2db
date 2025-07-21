@@ -5,12 +5,13 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB
@@ -31,14 +32,13 @@ namespace LinqToDB
 				for (var i = 0; i < columns.Length; i++)
 					columnExpressions[i] = qualified
 						? new SqlField(columns[i])
-						: new SqlExpression(columns[i].ColumnName, Precedence.Primary);
+						: new SqlExpression(columns[i].GetDbDataType(true), columns[i].ColumnName, Precedence.Primary);
 
 				if (columns.Length == 1)
 					builder.ResultExpression = columnExpressions[0];
 				else
-					builder.ResultExpression = new SqlExpression(
+					builder.ResultExpression = new SqlFragment(
 						string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => FormattableString.Invariant($"{{{i}}}"))),
-						Precedence.Primary,
 						columnExpressions);
 			}
 		}
@@ -56,15 +56,15 @@ namespace LinqToDB
 				if (isExpression)
 				{
 					builder.ResultExpression = qualified
-						? new SqlExpression(typeof(string), "{0}", Precedence.Primary, new SqlField(column))
-						: new SqlExpression(typeof(string), column.ColumnName, Precedence.Primary);
+						? new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "{0}", Precedence.Primary, new SqlField(column))
+						: new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), column.ColumnName, Precedence.Primary);
 				}
 				else
 				{
 					var name = column.ColumnName;
 
 					if (qualified)
-						name = builder.DataContext.CreateSqlProvider().ConvertInline(name, ConvertType.NameToQueryField);
+						name = builder.DataContext.CreateSqlBuilder().ConvertInline(name, ConvertType.NameToQueryField);
 
 					builder.ResultExpression = new SqlValue(name);
 				}
@@ -86,15 +86,15 @@ namespace LinqToDB
 				if (isExpression)
 				{
 					builder.ResultExpression = qualified
-						? new SqlExpression(typeof(string), "{0}", Precedence.Primary, new SqlField(field))
-						: new SqlExpression(typeof(string), field.PhysicalName, Precedence.Primary);
+						? new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "{0}", Precedence.Primary, new SqlField(field))
+						: new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), field.PhysicalName, Precedence.Primary);
 				}
 				else
 				{
 					var name = field.PhysicalName;
 
 					if (qualified)
-						name = builder.DataContext.CreateSqlProvider().ConvertInline(name, ConvertType.NameToQueryField);
+						name = builder.DataContext.CreateSqlBuilder().ConvertInline(name, ConvertType.NameToQueryField);
 
 					builder.ResultExpression = new SqlValue(name);
 				}
@@ -119,7 +119,7 @@ namespace LinqToDB
 			var result = column.ColumnName;
 			if (qualified)
 			{
-				var sqlBuilder = table.DataContext.CreateSqlProvider();
+				var sqlBuilder = table.DataContext.CreateSqlBuilder();
 				result         = sqlBuilder.ConvertInline(result, ConvertType.NameToQueryField);
 			}
 
@@ -157,7 +157,7 @@ namespace LinqToDB
 				return new SqlField(column);
 			}
 
-			return new SqlExpression(column.ColumnName, Precedence.Primary);
+			return new SqlExpression(column.GetDbDataType(true), column.ColumnName, Precedence.Primary);
 		}
 
 		[Extension("", BuilderType = typeof(FieldsExprBuilderDirect), ServerSideOnly = false)]
@@ -178,14 +178,13 @@ namespace LinqToDB
 			for (var i = 0; i < columns.Length; i++)
 				columnExpressions[i] = qualified
 					? new SqlField(columns[i])
-					: new SqlExpression(columns[i].ColumnName, Precedence.Primary);
+					: new SqlExpression(columns[i].GetDbDataType(true), columns[i].ColumnName, Precedence.Primary);
 
 			if (columns.Length == 1)
 				return columnExpressions[0];
 
-			return new SqlExpression(
+			return new SqlFragment(
 				string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => FormattableString.Invariant($"{{{i}}}"))),
-				Precedence.Primary,
 				columnExpressions);
 		}
 
@@ -287,7 +286,7 @@ namespace LinqToDB
 				if (isExpression)
 				{
 					if (qualified == TableQualification.None)
-						builder.ResultExpression = new SqlExpression(typeof(string), tableHelper.TableName, Precedence.Primary);
+						builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), tableHelper.TableName, Precedence.Primary);
 					else
 					{
 						var tableName = new SqlObjectName(
@@ -311,7 +310,7 @@ namespace LinqToDB
 					if (qualified != TableQualification.None)
 					{
 						using var sb = Pools.StringBuilder.Allocate();
-						builder.DataContext.CreateSqlProvider().BuildObjectName(
+						builder.DataContext.CreateSqlBuilder().BuildObjectName(
 							sb.Value,
 							new SqlObjectName(
 								name,
@@ -349,7 +348,7 @@ namespace LinqToDB
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
-					builder.DataContext.CreateSqlProvider().BuildObjectName(
+					builder.DataContext.CreateSqlBuilder().BuildObjectName(
 						sb.Value,
 						new SqlObjectName(
 							sqlTable.TableName.Name,
@@ -364,7 +363,7 @@ namespace LinqToDB
 				}
 
 				builder.ResultExpression = isExpression
-					? new SqlExpression(name, Precedence.Primary)
+					? new SqlFragment(name)
 					: new SqlValue(name);
 			}
 		}
@@ -433,7 +432,7 @@ namespace LinqToDB
 
 			if (qualification != TableQualification.None)
 			{
-				var sqlBuilder = table.DataContext.CreateSqlProvider();
+				var sqlBuilder = table.DataContext.CreateSqlBuilder();
 				using var sb   = Pools.StringBuilder.Allocate();
 				sqlBuilder.BuildObjectName(
 					sb.Value,
@@ -474,7 +473,7 @@ namespace LinqToDB
 
 			if (qualification != TableQualification.None)
 			{
-				var sqlBuilder = table.DataContext.CreateSqlProvider();
+				var sqlBuilder = table.DataContext.CreateSqlBuilder();
 				using var sb   = Pools.StringBuilder.Allocate();
 
 				sqlBuilder.BuildObjectName(
@@ -491,7 +490,7 @@ namespace LinqToDB
 				name = sb.Value.ToString();
 			}
 
-			return new SqlExpression(name, Precedence.Primary);
+			return new SqlFragment(name);
 		}
 
 		[Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
@@ -502,7 +501,7 @@ namespace LinqToDB
 		public static ISqlExpression TableExpr(object tableExpr, [SqlQueryDependent] TableQualification qualification)
 			=> throw new ServerSideOnlyException(nameof(TableExpr));
 
-		class AliasExprBuilder : IExtensionCallBuilder
+		sealed class AliasExprBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -532,7 +531,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				Linq.Builder.TableBuilder.PrepareRawSqlArguments(builder.Arguments[0],
+				Internal.Linq.Builder.TableBuilder.PrepareRawSqlArguments(builder.Arguments[0],
 					builder.Arguments.Length > 1 ? builder.Arguments[1] : null,
 					out var format, out var arguments);
 
@@ -545,7 +544,7 @@ namespace LinqToDB
 				else
 				{
 					builder.ResultExpression = new SqlExpression(
-						memberType,
+						builder.Mapping.GetDbDataType(memberType),
 						format,
 						Precedence.Primary,
 						memberType == typeof(bool) ? SqlFlags.IsPredicate | SqlFlags.IsPure : SqlFlags.IsPure,

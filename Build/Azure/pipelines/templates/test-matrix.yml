@@ -325,6 +325,24 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
             enabled: false
 
+        - name: PostgreSQL18
+          title: PostgreSQL 18
+          config_linux: pgsql18
+          config_macos: pgsql18
+          script_linux_global: pgsql18.sh
+          script_macos_global: mac.pgsql18.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
+            enabled: false
+
 # SQL Server
         - name: SqlServer2005
           title: SQL Server 2005
@@ -411,8 +429,8 @@ jobs:
           script_macos_global: sqlserver.2017.sh
           install_docker_macos: true
           enable_os_windows: true
-          enable_os_ubuntu: false # true ; disabled temporary (I hope) till MS fix crash in linux version
-          enable_os_macos: false # true ; disabled temporary (I hope) till MS fix crash in linux version
+          enable_os_ubuntu: true
+          enable_os_macos: true
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
@@ -500,6 +518,26 @@ jobs:
           ${{ if contains(parameters.db_filter, '[metrics]') }}:
             enabled: true
           ${{ if not(contains(parameters.db_filter, '[metrics]')) }}:
+            enabled: false
+
+        - name: SqlServer2025
+          title: SQL Server 2025
+          config_win: sqlserver.2025
+          config_linux: sqlserver.2025
+          config_macos: sqlserver.2025
+          script_win_global: sqlserver.2025.cmd
+          script_linux_global: sqlserver.2025.sh
+          script_macos_global: sqlserver.2025.sh
+          install_docker_macos: true
+          enable_os_windows: true
+          enable_os_ubuntu: true
+          enable_os_macos:  true
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
 # Sybase ASE

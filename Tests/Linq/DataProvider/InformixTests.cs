@@ -4,8 +4,8 @@ using System.Data.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.Informix;
 using LinqToDB.Mapping;
 
 #if NETFRAMEWORK
@@ -15,6 +15,8 @@ using IBM.Data.Informix;
 using NUnit.Framework;
 
 using Tests.Model;
+
+using LinqToDB.Internal.DataProvider.Informix;
 
 namespace Tests.DataProvider
 {
@@ -38,8 +40,7 @@ namespace Tests.DataProvider
 				// TimeSpan cannot be passed as parameter if it is not IfxTimeSpan
 				// for Linq queries we handle it by converting parameters to literals, but Execute uses parameters
 				var isIDSProvider = ((InformixDataProvider)conn.DataProvider).Adapter.IsIDSProvider;
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(TestType<long?>(conn, "bigintDataType", DataType.Int64), Is.EqualTo(1000000L));
 					Assert.That(TestType<long?>(conn, "int8DataType", DataType.Int64), Is.EqualTo(1000001L));
@@ -60,17 +61,17 @@ namespace Tests.DataProvider
 
 					Assert.That(TestType<DateTime?>(conn, "dateDataType", DataType.Date), Is.EqualTo(new DateTime(2012, 12, 12)));
 					Assert.That(TestType<DateTime?>(conn, "datetimeDataType", DataType.DateTime2), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-				});
+				}
+
 				if (!isIDSProvider)
 					Assert.That(TestType<TimeSpan?>   (conn, "intervalDataType", DataType.Time),      Is.EqualTo(new TimeSpan(12, 12, 12)));
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(TestType<string>(conn, "textDataType", DataType.Text, skipPass: true), Is.EqualTo("BBBBB"));
 					Assert.That(TestType<string>(conn, "textDataType", DataType.NText, skipPass: true), Is.EqualTo("BBBBB"));
 					Assert.That(TestType<byte[]>(conn, "byteDataType", DataType.Binary, skipPass: true), Is.EqualTo(new byte[] { 1, 2 }));
 					Assert.That(TestType<byte[]>(conn, "byteDataType", DataType.VarBinary, skipPass: true), Is.EqualTo(new byte[] { 1, 2 }));
-				});
+				}
 
 #if NETFRAMEWORK
 				if (context == ProviderName.Informix)
@@ -78,11 +79,11 @@ namespace Tests.DataProvider
 					Assert.That(TestType<IfxDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new IfxDateTime(new DateTime(2012, 12, 12, 12, 12, 12))));
 					if (!isIDSProvider)
 					{
-						Assert.Multiple(() =>
+						using (Assert.EnterMultipleScope())
 						{
 							Assert.That(TestType<IfxDecimal?>(conn, "decimalDataType", DataType.Decimal), Is.EqualTo(new IfxDecimal(9999999m)));
 							Assert.That(TestType<IfxTimeSpan?>(conn, "intervalDataType", DataType.Time), Is.EqualTo(new IfxTimeSpan(new TimeSpan(12, 12, 12))));
-						});
+						}
 					}
 				}
 #endif

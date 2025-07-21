@@ -1,15 +1,13 @@
 ﻿using System.Data;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using Tests.xUpdate;
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -215,7 +213,7 @@ namespace Tests.Linq
 							})
 							.ToList();
 
-						result.Count.Should().Be(expected.Count);
+						result.Count.ShouldBe(expected.Count);
 
 						if (expected.Count > 0)
 							AreEqualWithComparer(result, expected);

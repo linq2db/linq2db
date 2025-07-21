@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 
 using LinqToDB;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -122,8 +122,7 @@ namespace Tests.Linq
 
 						R9 = Sql.Ext.TestGenericExpression<byte, long>(123, 45)
 					}).First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.R1, Is.EqualTo("T5=(CHAR: X, STRING: some string)"));
 					Assert.That(result.R2, Is.EqualTo("T5=(CHAR: null, STRING: another string)"));
@@ -134,7 +133,7 @@ namespace Tests.Linq
 					Assert.That(result.R7, Is.EqualTo("T2=(BYTE: null)"));
 					Assert.That(result.R8, Is.EqualTo("T2=(BYTE: 45)"));
 					Assert.That(result.R9, Is.EqualTo("T1=UNSUPPORTED PARAMETERS"));
-				});
+				}
 			}
 		}
 	}

@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -73,13 +74,11 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					var hashCode = Id;
-					hashCode = (hashCode * 397) ^ (OwnerStr != null ? OwnerStr.GetHashCode() : 0);
-					hashCode = (hashCode * 397) ^ (Other != null ? Other.GetHashCode() : 0);
-					return hashCode;
-				}
+				return HashCode.Combine(
+					Id,
+					OwnerStr,
+					Other
+				);
 			}
 
 			#endregion
@@ -108,10 +107,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return (Id * 397) ^ (StrValue != null ? StrValue.GetHashCode() : 0);
-				}
+				return HashCode.Combine(Id, StrValue);
 			}
 		}
 
@@ -620,13 +616,12 @@ WHERE
 						LanguageName = x.Entity2Language.Language.Name
 					})
 					.First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(value.EntityId, Is.EqualTo(1));
 					Assert.That(value.LanguageId, Is.EqualTo(1));
 					Assert.That(value.LanguageName, Is.EqualTo("English"));
-				});
+				}
 			}
 		}
 
@@ -920,12 +915,11 @@ WHERE
 						LanguageName = x.FirstUsersWithLanguage(db, 1)!.Language!.Name
 					})
 					.First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data.FirstUserId, Is.EqualTo(1));
 					Assert.That(data.LanguageName, Is.EqualTo("English"));
-				});
+				}
 			}
 		}
 
@@ -995,13 +989,12 @@ WHERE
 					LanguagesWithLisCount = x.UsersWithLanguageLike(db, "Lis").Count()
 				})
 				.First();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(data.LanguagesWithEnCount, Is.EqualTo(IsCaseSensitiveDB(context) ? 2 : 3));
 				Assert.That(data.LanguagesWithLisCount, Is.EqualTo(IsCaseSensitiveDB(context) ? 0 : 2));
 				Assert.That(db.LastQuery!.ToUpper(), Does.Not.Contain("REPLACE"));
-			});
+			}
 		}
 
 		[Test]
@@ -1065,12 +1058,11 @@ WHERE
 						FrenchhUserCount = x.UsersWithLanguage(db, 2).Count()
 					})
 					.First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data.EnglishUserCount, Is.EqualTo(2));
-					Assert.That(data.FrenchhUserCount, Is.EqualTo(0));
-				});
+					Assert.That(data.FrenchhUserCount, Is.Zero);
+				}
 			}
 		}
 
@@ -1102,12 +1094,11 @@ WHERE
 						FrenchhUserCount = x.UsersWithLanguageEM(db, 2).Count()
 					})
 					.First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(data.EnglishUserCount, Is.EqualTo(2));
-					Assert.That(data.FrenchhUserCount, Is.EqualTo(0));
-				});
+					Assert.That(data.FrenchhUserCount, Is.Zero);
+				}
 			}
 		}
 
@@ -1239,12 +1230,12 @@ WHERE
 			var records = t1.LoadWith(x => x.Association).ToArray();
 
 			Assert.That(records, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(records[0].Id, Is.EqualTo(1));
 				Assert.That(records[0].Association, Is.EqualTo("Value 1"));
 				Assert.That(records[0].ExpressionMethod, Is.EqualTo("Value 1"));
-			});
+			}
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
@@ -1263,12 +1254,12 @@ WHERE
 			var records = query.ToArray();
 
 			Assert.That(records, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(records[0].Id, Is.EqualTo(1));
 				Assert.That(records[0].x1, Is.EqualTo("Value 1"));
 				Assert.That(records[0].x2, Is.EqualTo("Value 1"));
-			});
+			}
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
@@ -1282,12 +1273,12 @@ WHERE
 			var records = t1.ToArray();
 
 			Assert.That(records, Has.Length.EqualTo(1));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(records[0].Id, Is.EqualTo(1));
 				Assert.That(records[0].Association, Is.Null);
 				Assert.That(records[0].ExpressionMethod, Is.EqualTo("Value 1"));
-			});
+			}
 		}
 		#endregion
 	}

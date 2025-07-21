@@ -348,19 +348,16 @@ namespace Tests.Linq
 
 				var result = query.ToArray();
 				Assert.That(result, Has.Length.EqualTo(3));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Count, Is.EqualTo(2));
 					Assert.That(result[1].Count, Is.EqualTo(2));
 					Assert.That(result[2].Count, Is.EqualTo(2));
 
 					Assert.That(result[0].Aggregated, Is.EqualTo("V1 -> Z1").Or.EqualTo("Z1 -> V1"));
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[1].Aggregated, Is.EqualTo("V1 -> Z1").Or.EqualTo("Z1 -> V1"));
 					Assert.That(result[2].Aggregated, Is.EqualTo("V1 -> Z1").Or.EqualTo("Z1 -> V1"));
-				});
+				}
 			}
 		}
 
@@ -626,8 +623,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			// TODO: update nullability annotations for Sql.Concat to allow nullable parameters
-			var cnt = db.Person.Where(p => Sql.Concat(p.FirstName, p.MiddleName!) != null).Count();
+			var cnt = db.Person.Where(p => Sql.Concat(p.FirstName, p.MiddleName) != null).Count();
 
 			Assert.That(cnt, Is.EqualTo(4));
 		}

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB
 {
@@ -35,7 +35,7 @@ namespace LinqToDB
 					return;
 				}
 
-				builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.ExprExpr(args[0]!, SqlPredicate.Operator.Overlaps, args[1]!, false));
+				builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.ExprExpr(args[0]!, SqlPredicate.Operator.Overlaps, args[1]!, false));
 			}
 		}
 	}

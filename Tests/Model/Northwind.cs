@@ -203,7 +203,18 @@ namespace Tests.Model
 		}
 
 		public class ActiveProduct       : Product {}
-		public class DiscontinuedProduct : Product {}
+		public class DiscontinuedProduct : Product
+		{
+			public override int GetHashCode()
+			{
+				return ProductID.GetHashCode();
+			}
+
+			public override bool Equals(object? obj)
+			{
+				return obj is DiscontinuedProduct other && ProductID == other.ProductID;
+			}
+		}
 
 		[Table(Name="Region")]
 		public class Region

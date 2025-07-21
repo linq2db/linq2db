@@ -9,11 +9,16 @@
 		<IsRoslynComponent>true</IsRoslynComponent>
 	</PropertyGroup>
 
+	<PropertyGroup Label="Enabled Polyfills">
+		<Polyfill>T:System.HashCode</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.IsExternalInit</Polyfill>
+		<MeziantouPolyfill_IncludedPolyfills>$(Polyfill)</MeziantouPolyfill_IncludedPolyfills>
+	</PropertyGroup>
+
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Bcl.HashCode" />
 		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
-		<PackageReference Include="PolySharp" PrivateAssets="All" />
+		<PackageReference Include="Meziantou.Polyfill" PrivateAssets="All" />
 	</ItemGroup>
 
 </Project>

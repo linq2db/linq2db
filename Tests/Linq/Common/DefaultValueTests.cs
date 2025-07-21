@@ -1,6 +1,6 @@
 ﻿using System;
 
-using LinqToDB.Common;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -12,7 +12,7 @@ namespace Tests.Common
 		[Test]
 		public void BaseTypes()
 		{
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(DefaultValue<int>.Value, Is.Default);
 				Assert.That(DefaultValue<uint>.Value, Is.Default);
@@ -27,18 +27,18 @@ namespace Tests.Common
 				Assert.That(DefaultValue<float>.Value, Is.Default);
 				Assert.That(DefaultValue<double>.Value, Is.Default);
 				Assert.That(DefaultValue<decimal>.Value, Is.Default);
-				Assert.That(DefaultValue<DateTime>.Value, Is.EqualTo(default(DateTime)));
-				Assert.That(DefaultValue<TimeSpan>.Value, Is.EqualTo(default(TimeSpan)));
-				Assert.That(DefaultValue<DateTimeOffset>.Value, Is.EqualTo(default(DateTimeOffset)));
-				Assert.That(DefaultValue<Guid>.Value, Is.EqualTo(default(Guid)));
+				Assert.That(DefaultValue<DateTime>.Value, Is.Default);
+				Assert.That(DefaultValue<TimeSpan>.Value, Is.Default);
+				Assert.That(DefaultValue<DateTimeOffset>.Value, Is.Default);
+				Assert.That(DefaultValue<Guid>.Value, Is.Default);
 				Assert.That(DefaultValue<string>.Value, Is.Null);
-			});
+			}
 		}
 
 		[Test]
 		public void Int()
 		{
-			Assert.That(DefaultValue<int>.Value, Is.EqualTo(0));
+			Assert.That(DefaultValue<int>.Value, Is.Zero);
 			DefaultValue<int>.Value = 5;
 			Assert.That(DefaultValue<int>.Value, Is.EqualTo(5));
 			DefaultValue<int>.Value = 0;
@@ -47,7 +47,7 @@ namespace Tests.Common
 		[Test]
 		public void UInt()
 		{
-			Assert.That(DefaultValue.GetValue(typeof(uint)), Is.EqualTo(0u));
+			Assert.That(DefaultValue.GetValue(typeof(uint)), Is.TypeOf<uint>().And.Zero);
 			DefaultValue<uint>.Value = 10;
 			Assert.That(DefaultValue.GetValue(typeof(uint)), Is.EqualTo(10u));
 			DefaultValue<uint>.Value = 0;

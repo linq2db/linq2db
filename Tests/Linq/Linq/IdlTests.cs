@@ -4,7 +4,8 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Extensions;
+using LinqToDB.Async;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -86,15 +87,13 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					var result = ID;
-					result = (result * 397) ^ (LastName != null ? LastName.GetHashCode() : 0);
-					result = (result * 397) ^ (MiddleName != null ? MiddleName.GetHashCode() : 0);
-					result = (result * 397) ^ Gender.GetHashCode();
-					result = (result * 397) ^ (FirstName != null ? FirstName.GetHashCode() : 0);
-					return result;
-				}
+				return HashCode.Combine(
+					ID,
+					LastName,
+					MiddleName,
+					Gender,
+					FirstName
+				);
 			}
 		}
 		#endregion
@@ -304,11 +303,12 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.Patient.Where(x => x.PersonID < 0).Select(x => (int?)x.PersonID).Max(), Is.Null);
 					Assert.That(db.Patient.Where(x => x.PersonID < 0).Max(x => (int?)x.PersonID), Is.Null);
-				});
+				}
+
 				Assert.Catch<InvalidOperationException>(
 					() => db.Patient.Where(x => x.PersonID < 0).Select(x => x.PersonID).Max());
 				Assert.Catch<InvalidOperationException>(
@@ -324,12 +324,11 @@ namespace Tests.Linq
 				var ds = new IdlPatientSource(db);
 				var r1 = ds.Patients().ToList();
 				var r2 = ds.Persons().ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r1, Is.Not.Empty);
 					Assert.That(r2, Is.Not.Empty);
-				});
+				}
 
 				var r3 = ds.Patients().ToIdlPatientEx(ds);
 				var r4 = r3.ToList();

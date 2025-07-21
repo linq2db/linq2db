@@ -5,6 +5,8 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
+using LinqToDB.Mapping;
 using LinqToDB.Tools.EntityServices;
 
 using NUnit.Framework;
@@ -24,11 +26,11 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query(db, "1", 1), Is.EqualTo("11"));
 					Assert.That(query(db, "2", 2), Is.EqualTo("22"));
-				});
+				}
 			}
 		}
 
@@ -40,11 +42,11 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query(db, 1).ToList(), Has.Count.EqualTo(1));
 					Assert.That(query(db, 2).ToList(), Has.Count.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -56,27 +58,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query(db, 1).ToList(), Has.Count.EqualTo(1));
 					Assert.That(query(db, 2).ToList(), Has.Count.EqualTo(2));
-				});
+				}
 			}
 		}
 
 		[Test]
-		public void CompiledTest3Async([DataSources] string context)
+		public async Task CompiledTest3Async([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.GetTable<Child>().Where(c => c.ParentID == n).Take(n).ToListAsync(default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(async () =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That((await query(db, 1)), Has.Count.EqualTo(1));
 					Assert.That((await query(db, 2)), Has.Count.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -98,11 +100,11 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query(db, new object[] { 1, 1 }).ToList(), Has.Count.EqualTo(1));
 					Assert.That(query(db, new object?[] { 2, null }).ToList(), Has.Count.EqualTo(1));
-				});
+				}
 			}
 		}
 
@@ -284,43 +286,43 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query(db, 1).ParentID, Is.EqualTo(1));
 					Assert.That(query(db, 2).ParentID, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
 		[Test]
-		public void ElementTestAsync1([DataSources] string context)
+		public async Task ElementTestAsync1([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Where(c => c.ParentID == n).FirstAsync(default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(async () =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That((await query(db, 1)).ParentID, Is.EqualTo(1));
 					Assert.That((await query(db, 2)).ParentID, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
 		[Test]
-		public void ElementTestAsync2([DataSources] string context)
+		public async Task ElementTestAsync2([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.FirstAsync(c => c.ParentID == n, default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(async () =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That((await query(db, 1)).ParentID, Is.EqualTo(1));
 					Assert.That((await query(db, 2)).ParentID, Is.EqualTo(2));
-				});
+				}
 			}
 		}
 
@@ -369,27 +371,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query(db, 1), Is.True);
 					Assert.That(query(db, -1), Is.False);
-				});
+				}
 			}
 		}
 
 		[Test]
-		public void ContainsTestAsync([DataSources] string context)
+		public async Task ContainsTestAsync([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Select(c => c.ParentID).ContainsAsync(n, default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(async () =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(await query(db, 1), Is.True);
 					Assert.That(await query(db, -1), Is.False);
-				});
+				}
 			}
 		}
 
@@ -401,27 +403,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query(db, 1), Is.True);
 					Assert.That(query(db, -1), Is.False);
-				});
+				}
 			}
 		}
 
 		[Test]
-		public void AnyTestAsync([DataSources] string context)
+		public async Task AnyTestAsync([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.AnyAsync(c => c.ParentID == n, default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(async () =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(await query(db, 1), Is.True);
 					Assert.That(await query(db, -1), Is.False);
-				});
+				}
 			}
 		}
 
@@ -433,27 +435,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query(db, 1), Is.True);
 					Assert.That(query(db, -1), Is.False);
-				});
+				}
 			}
 		}
 
 		[Test]
-		public void AnyTestAsync2([DataSources] string context)
+		public async Task AnyTestAsync2([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Where(c => c.ParentID == n).AnyAsync(default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(async () =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(await query(db, 1), Is.True);
 					Assert.That(await query(db, -1), Is.False);
-				});
+				}
 			}
 		}
 
@@ -465,27 +467,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query(db, 1), Is.EqualTo(1));
-					Assert.That(query(db, -1), Is.EqualTo(0));
-				});
+					Assert.That(query(db, -1), Is.Zero);
+				}
 			}
 		}
 
 		[Test]
-		public void CountTestAsync([DataSources] string context)
+		public async Task CountTestAsync([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.LongCountAsync(c => c.ParentID == n, default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(async () =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(await query(db, 1), Is.EqualTo(1L));
-					Assert.That(await query(db, -1), Is.EqualTo(0L));
-				});
+					Assert.That(await query(db, -1), Is.Zero);
+				}
 			}
 		}
 
@@ -497,27 +499,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query(db, 1), Is.EqualTo(1));
-					Assert.That(query(db, -1), Is.EqualTo(0));
-				});
+					Assert.That(query(db, -1), Is.Zero);
+				}
 			}
 		}
 
 		[Test]
-		public void CountTestAsync2([DataSources] string context)
+		public async Task CountTestAsync2([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Where(c => c.ParentID == n).CountAsync(default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(async () =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(await query(db, 1), Is.EqualTo(1));
-					Assert.That(await query(db, -1), Is.EqualTo(0));
-				});
+					Assert.That(await query(db, -1), Is.Zero);
+				}
 			}
 		}
 
@@ -529,27 +531,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query(db, 1), Is.EqualTo(1));
 					Assert.That(query(db, -1), Is.Null);
-				});
+				}
 			}
 		}
 
 		[Test]
-		public void MaxTestAsync([DataSources] string context)
+		public async Task MaxTestAsync([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Where(c => c.ParentID == n).MaxAsync(p => (int?)p.ParentID, default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(async () =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(await query(db, 1), Is.EqualTo(1));
 					Assert.That(await query(db, -1), Is.Null);
-				});
+				}
 			}
 		}
 
@@ -561,27 +563,27 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(query(db, 1), Is.EqualTo(1));
 					Assert.That(query(db, -1), Is.Null);
-				});
+				}
 			}
 		}
 
 		[Test]
-		public void MaxTestAsync2([DataSources] string context)
+		public async Task MaxTestAsync2([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile((ITestDataContext db, int n) =>
 				db.Child.Where(c => c.ParentID == n).Select(p => (int?)p.ParentID).MaxAsync(default));
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.Multiple(async () =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(await query(db, 1), Is.EqualTo(1));
 					Assert.That(await query(db, -1), Is.Null);
-				});
+				}
 			}
 		}
 

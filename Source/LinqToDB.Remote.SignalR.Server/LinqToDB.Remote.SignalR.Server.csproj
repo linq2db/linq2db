@@ -22,4 +22,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Core" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+	</ItemGroup>
 </Project>

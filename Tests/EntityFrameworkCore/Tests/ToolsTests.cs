@@ -2,8 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-
 using LinqToDB.EntityFrameworkCore.Tests.Models.Northwind;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
@@ -12,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests;
 
@@ -104,6 +104,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var connectionString = GetConnectionString(provider);
 
 			var optionsBuilder = new DbContextOptionsBuilder<NorthwindContextBase>();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
+
 			optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
 
 			var options = base.ProviderSetup(provider, connectionString, optionsBuilder).Options;
@@ -240,11 +242,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				MemberHelper.MemberOf<Customer>(c => c.CustomerId));
 
 			Assert.That(customerPk, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(customerPk!.IsPrimaryKey, Is.True);
-				Assert.That(customerPk.PrimaryKeyOrder, Is.EqualTo(0));
-			});
+				Assert.That(customerPk.PrimaryKeyOrder, Is.Zero);
+			}
 		}
 
 		[Test]
@@ -258,11 +260,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				MemberHelper.MemberOf<Customer>(c => c.Orders));
 
 			Assert.That(associationOrder, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(associationOrder!.ThisKey, Is.EqualTo("CustomerId"));
 				Assert.That(associationOrder.OtherKey, Is.EqualTo("CustomerId"));
-			});
+			}
 		}
 
 #if NET8_0_OR_GREATER
@@ -394,6 +396,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			ctx.IsSoftDeleteFilterEnabled = true;
 
 			var expected = await query.ToArrayAsync();
+
 			var filtered = await query.ToLinqToDB().ToArrayAsync();
 
 			Assert.That(filtered, Has.Length.EqualTo(expected.Length));
@@ -413,9 +416,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		public void TestInMemory()
 		{
 			var optionsBuilder = new DbContextOptionsBuilder<SQLServerNorthwindContext>();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
 
 			optionsBuilder.UseInMemoryDatabase("sample");
-			optionsBuilder.UseLoggerFactory(LoggerFactory);
 			optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
 
 			using var ctx = new SQLServerNorthwindContext(optionsBuilder.Options);
@@ -535,7 +538,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var result = temp.Take(2).ToList();
 
-			ctx.Orders.Local.Should().BeEmpty();
+			ctx.Orders.Local.ShouldBeEmpty();
 		}
 
 		[Test]
@@ -765,7 +768,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			AreEqual(resultEF, result);
 
-			str.Should().Contain("Tagged query");
+			str.ShouldContain("Tagged query");
 		}
 
 #if !NETFRAMEWORK

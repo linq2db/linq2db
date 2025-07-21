@@ -2,9 +2,8 @@
 using System.Data.Common;
 using System.Linq.Expressions;
 
-using LinqToDB.DataProvider;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Data
 {
@@ -39,7 +38,7 @@ namespace LinqToDB.Data
 
 		string IDataContext.ContextName => DataProvider.Name;
 
-		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema, Options);
+		Func<ISqlBuilder> IDataContext.CreateSqlBuilder => () => DataProvider.CreateSqlBuilder(MappingSchema, Options);
 
 		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer => DataProvider.GetSqlOptimizer;
 

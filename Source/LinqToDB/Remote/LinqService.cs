@@ -7,15 +7,17 @@ using System.Threading.Tasks;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.Infrastructure;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Interceptors;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Remote;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
-using LinqToDB.Tools;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Remote
 {
@@ -34,15 +36,15 @@ namespace LinqToDB.Remote
 			{
 				_mappingSchema = value;
 				_serializationMappingSchema = value != null
-					? MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, value)
-					: Remote.SerializationMappingSchema.Instance;
+					? MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, value)
+					: Internal.Remote.SerializationMappingSchema.Instance;
 			}
 		}
 
 		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??=
 			_mappingSchema != null
-				? MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, _mappingSchema)
-				: Remote.SerializationMappingSchema.Instance;
+				? MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, _mappingSchema)
+				: Internal.Remote.SerializationMappingSchema.Instance;
 
 		public static Func<string, Type?> TypeResolver = _ => null;
 

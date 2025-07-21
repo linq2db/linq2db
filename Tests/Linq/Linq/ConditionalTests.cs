@@ -2,12 +2,13 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
-
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -141,7 +142,8 @@ namespace Tests.Linq
 
 				query = query.Where(m => m.child.StringProp!.Contains("2") && m.child.IntProp == 1);
 
-				query.Enumerating(x => x).Should().ThrowExactly<LinqToDBException>().Where(e => e.Message.Contains("m.child.IntProp"));
+				var act = () => query.ToArray();
+				act.ShouldThrow<LinqToDBException>().Message.ShouldContain("m.child.IntProp");
 			}
 		}
 
@@ -213,7 +215,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(DivideExpr))]
 		static double Divide(double value, double divisor) => divisor == 0 ? value : value / divisor;
 
-		static Expression<Func<double, double, double>> DivideExpr() => (double value, double divisor) => divisor == 0 ? value : value / divisor;
+		static Expression<Func<double, double, double>> DivideExpr() => (value, divisor) => divisor == 0 ? value : value / divisor;
 
 		[Test]
 		public void Conditional_DoNotEvalueBothBranches([DataSources] string context)

@@ -5,14 +5,16 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-
 using JetBrains.Annotations;
 
 using LinqToDB;
+using LinqToDB.Async;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -379,12 +381,11 @@ namespace Tests.Linq
 					select t.Middle == null ? null : t.Middle.Bottom;
 
 				var list = q.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list[0], Is.Not.Null);
 					Assert.That(list[1], Is.Null);
-				});
+				}
 			}
 		}
 
@@ -402,12 +403,11 @@ namespace Tests.Linq
 					select t.Middle!.Bottom;
 
 				var list = q.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list[0], Is.Not.Null);
 					Assert.That(list[1], Is.Null);
-				});
+				}
 			}
 		}
 
@@ -425,12 +425,11 @@ namespace Tests.Linq
 					select t.Middle!.Bottom1;
 
 				var list = q.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list[0], Is.Not.Null);
 					Assert.That(list[1], Is.Null);
-				});
+				}
 			}
 		}
 
@@ -695,7 +694,7 @@ namespace Tests.Linq
 
 			public static Expression<Action<ParentContainer, Parent>> SetParentValue()
 			{
-				return static (ParentContainer container, Parent value) => container.SetValue(value);
+				return static (container, value) => container.SetValue(value);
 			}
 		}
 
@@ -748,7 +747,7 @@ namespace Tests.Linq
 
 			public static Expression<Action<ChildrenContainer<Child>, IEnumerable<Child>>> SetChildrenValue()
 			{
-				return static (ChildrenContainer<Child> container, IEnumerable<Child> value) => container.SetValue(value);
+				return static (container, value) => container.SetValue(value);
 			}
 		}
 
@@ -784,12 +783,11 @@ namespace Tests.Linq
 					select t.MiddleGeneric == null ? null : t.MiddleGeneric.Bottom;
 
 				var list = q.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list[0], Is.Not.Null);
 					Assert.That(list[1], Is.Null);
-				});
+				}
 			}
 		}
 
@@ -814,12 +812,11 @@ namespace Tests.Linq
 					select t.MiddleRuntime == null ? null : t.MiddleRuntime.Bottom;
 
 				var list = q.ToList();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(list[0], Is.Not.Null);
 					Assert.That(list[1], Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1095,11 +1092,11 @@ namespace Tests.Linq
 			var result = query.ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(2));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].ParentID, Is.EqualTo(1));
 				Assert.That(result[1].ParentID, Is.Null);
-			});
+			}
 		}
 
 		[Test]
@@ -1144,12 +1141,11 @@ namespace Tests.Linq
 			using var child  = db.CreateLocalTable(childData);
 
 			var query = parent.Select(p => p.ChildOuter!.ParentID);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(query.Count(), Is.EqualTo(2));
 				Assert.That(query.GetTableSource().Joins, Has.Count.EqualTo(1));
-			});
+			}
 		}
 
 		[Test]
@@ -1403,14 +1399,14 @@ namespace Tests.Linq
 				var res = query.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(1));
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].t.Id, Is.EqualTo(1));
 					Assert.That(res[0].t.TargetName, Is.EqualTo("bda.Requests"));
 					Assert.That(res[0].ActualStage.Id, Is.EqualTo(1));
 					Assert.That(res[0].ActualStage.TaskId, Is.EqualTo(1));
 					Assert.That(res[0].ActualStage.Actual, Is.True);
-				});
+				}
 			}
 		}
 
@@ -1429,7 +1425,7 @@ namespace Tests.Linq
 			[Association(ExpressionPredicate = nameof(OwnerPredicate), CanBeNull = true)]
 			public Issue2981OwnerEntity? Owner { get; set; }
 
-			public static Expression<Func<T, Issue2981OwnerEntity, bool>> OwnerPredicate { get; set; } = (T entity, Issue2981OwnerEntity owner) => entity.OwnerId == owner.Id;
+			public static Expression<Func<T, Issue2981OwnerEntity, bool>> OwnerPredicate { get; set; } = (entity, owner) => entity.OwnerId == owner.Id;
 		}
 
 		[Table]
@@ -1460,11 +1456,11 @@ namespace Tests.Linq
 				.OrderBy(_ => _.OwnerId)
 				.ToArray();
 
-			res.Length.Should().Be(2);
-			res[0].Id.Should().Be(1);
-			res[0].OwnerId.Should().Be(1);
-			res[1].OwnerId.Should().Be(2);
-			res[1].Id.Should().BeNull();
+			res.Length.ShouldBe(2);
+			res[0].Id.ShouldBe(1);
+			res[0].OwnerId.ShouldBe(1);
+			res[1].OwnerId.ShouldBe(2);
+			res[1].Id.ShouldBeNull();
 		}
 
 		#endregion
@@ -1590,7 +1586,7 @@ namespace Tests.Linq
 				.ToList();
 
 			Assert.That(result, Has.Count.EqualTo(3));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[1].Id, Is.EqualTo(2));
@@ -1598,7 +1594,7 @@ namespace Tests.Linq
 				Assert.That(result[0].Reason, Is.Null);
 				Assert.That(result[1].Reason, Is.Null);
 				Assert.That(result[2].Reason == "прст1" || result[2].Reason == "прст2", Is.True);
-			});
+			}
 		}
 
 		[Test]
@@ -1624,7 +1620,7 @@ namespace Tests.Linq
 				.ToList();
 
 			Assert.That(result, Has.Count.EqualTo(3));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[1].Id, Is.EqualTo(2));
@@ -1632,7 +1628,7 @@ namespace Tests.Linq
 				Assert.That(result[0].Reason, Is.EqualTo(string.Empty));
 				Assert.That(result[1].Reason, Is.EqualTo(string.Empty));
 				Assert.That(result[2].Reason == "прст1" || result[2].Reason == "прст2", Is.True);
-			});
+			}
 		}
 
 		[Test]
@@ -1658,7 +1654,7 @@ namespace Tests.Linq
 				.ToList();
 
 			Assert.That(result, Has.Count.EqualTo(3));
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[1].Id, Is.EqualTo(2));
@@ -1666,7 +1662,7 @@ namespace Tests.Linq
 				Assert.That(result[0].Reason, Is.Null);
 				Assert.That(result[1].Reason, Is.Null);
 				Assert.That(result[2].Reason == "прст1" || result[2].Reason == "прст2", Is.True);
-			});
+			}
 		}
 		#endregion
 
@@ -1885,7 +1881,6 @@ namespace Tests.Linq
 			var result = query.ToArray();
 		}
 
-		[ActiveIssue("Not supported yet. Needs analysis.")]
 		[Test]
 		public void ViaInterfaceLoadWith([DataSources(TestProvName.AllClickHouse)] string context)
 		{

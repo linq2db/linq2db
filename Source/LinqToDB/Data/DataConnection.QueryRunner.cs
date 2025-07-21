@@ -8,14 +8,14 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common.Internal;
-using LinqToDB.DataProvider;
-using LinqToDB.Extensions;
-using LinqToDB.Infrastructure;
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
-using LinqToDB.Tools;
+using LinqToDB.Internal;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {
@@ -206,6 +206,7 @@ namespace LinqToDB.Data
 
 					var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (options);
 					var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, options);
+					var factory      = sqlOptimizer.CreateSqlExpressionFactory(dataConnection.MappingSchema, options);
 
 					// custom query handling
 					var preprocessContext = new EvaluationContext(parameterValues);
@@ -244,10 +245,11 @@ namespace LinqToDB.Data
 						dataConnection.DataProvider.SqlProviderFlags,
 						dataConnection.MappingSchema,
 						optimizeVisitor,
-						convertVisitor,
+						convertVisitor, 
+						factory,
 						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
-						isAlreadyOptimizedAndConverted: optimizeAndConvertAll,
-						dataConnection.DataProvider.GetQueryParameterNormalizer);
+						isAlreadyOptimizedAndConverted : optimizeAndConvertAll,
+						parametersNormalizerFactory : dataConnection.DataProvider.GetQueryParameterNormalizer);
 
 					if (optimizeAndConvertAll)
 					{
@@ -266,7 +268,7 @@ namespace LinqToDB.Data
 						sb.Value.Length = 0;
 
 						using (ActivityService.Start(ActivityID.BuildSql))
-							sqlBuilder.BuildSql(i, statement, sb.Value, optimizationContext, aliases, startIndent);
+							sqlBuilder.BuildSql(i, statement, sb.Value, optimizationContext, aliases, null, startIndent);
 
 						commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
 						optimizationContext.ClearParameters();

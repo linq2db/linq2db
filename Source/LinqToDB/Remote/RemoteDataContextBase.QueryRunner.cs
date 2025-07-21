@@ -5,19 +5,18 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Async;
-
 #if !NET8_0_OR_GREATER
 using System.Text;
 #endif
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal;
+using LinqToDB.Internal.Remote;
 
 namespace LinqToDB.Remote
 {
@@ -60,15 +59,17 @@ namespace LinqToDB.Remote
 
 			private IReadOnlyList<QuerySql> GetSqlTextImpl()
 			{
-				var query                  = Query.Queries[QueryNumber];
-				var sqlBuilder             = DataContext.CreateSqlProvider();
-				var sqlOptimizer           = DataContext.GetSqlOptimizer(DataContext.Options);
+				var query        = Query.Queries[QueryNumber];
+				var sqlBuilder   = DataContext.CreateSqlBuilder();
+				var sqlOptimizer = DataContext.GetSqlOptimizer(DataContext.Options);
+				var factory      = sqlOptimizer.CreateSqlExpressionFactory(DataContext.MappingSchema, DataContext.Options);
+				var commandCount = sqlBuilder.CommandCount(query.Statement);
+
 				using var sqlStringBuilder = Pools.StringBuilder.Allocate();
-				var cc                     = sqlBuilder.CommandCount(query.Statement);
 
-				var queries = new QuerySql[cc];
+				var queries = new QuerySql[commandCount];
 
-				for (var i = 0; i < cc; i++)
+				for (var i = 0; i < commandCount; i++)
 				{
 					AliasesHelper.PrepareQueryAndAliases(new IdentifierServiceSimple(128), query.Statement, query.Aliases, out var aliases);
 
@@ -79,13 +80,14 @@ namespace LinqToDB.Remote
 						DataContext.MappingSchema,
 						sqlOptimizer.CreateOptimizerVisitor(false),
 						sqlOptimizer.CreateConvertVisitor(false),
+						factory,
 						isParameterOrderDepended : DataContext.SqlProviderFlags.IsParameterOrderDependent,
 						isAlreadyOptimizedAndConverted : true,
-						static () => NoopQueryParametersNormalizer.Instance);
+						parametersNormalizerFactory : static () => NoopQueryParametersNormalizer.Instance);
 
 					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, DataContext.Options, optimizationContext);
 
-					sqlBuilder.BuildSql(i, statement, sqlStringBuilder.Value, optimizationContext, aliases);
+					sqlBuilder.BuildSql(i, statement, sqlStringBuilder.Value, optimizationContext, aliases, null);
 
 					if (i == 0)
 					{

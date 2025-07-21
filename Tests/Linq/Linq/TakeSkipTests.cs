@@ -4,13 +4,14 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -91,14 +92,14 @@ namespace Tests.Linq
 
 		static void TakeParam(ITestDataContext dc, int n)
 		{
-			dc.Child.Take(() => n).ToList().Should().HaveCount(n);
+			dc.Child.Take(() => n).ToList().Count.ShouldBe(n);
 
 			CheckTakeSkipParameterized(dc);
 		}
 
 		static async Task TakeParamAsync(ITestDataContext dc, int n)
 		{
-			(await dc.Child.Take(() => n).ToListAsync()).Should().HaveCount(n);
+			(await dc.Child.Take(() => n).ToListAsync()).Count.ShouldBe(n);
 
 			CheckTakeSkipParameterized(dc);
 		}
@@ -125,7 +126,7 @@ namespace Tests.Linq
 				(from ch in db.Child where ch.ChildID > 3 || ch.ChildID < 4 select ch)
 					.Take(3)
 					.ToList()
-					.Should().HaveCount(3);
+					.Count.ShouldBe(3);
 
 				CheckTakeGlobalParams(db);
 			}
@@ -139,7 +140,7 @@ namespace Tests.Linq
 				(await (from ch in db.Child where ch.ChildID > 3 || ch.ChildID < 4 select ch)
 					.Take(3)
 					.ToListAsync())
-					.Should().HaveCount(3);
+					.Count.ShouldBe(3);
 
 				CheckTakeGlobalParams(db);
 			}
@@ -153,7 +154,7 @@ namespace Tests.Linq
 					(from ch in db.Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch)
 						.Take(3)
 						.ToList()
-						.Should().HaveCount(3);
+						.Count.ShouldBe(3);
 
 				CheckTakeGlobalParams(db);
 			}
@@ -167,7 +168,7 @@ namespace Tests.Linq
 				(await (from ch in db.Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch)
 					.Take(3)
 					.ToListAsync())
-					.Should().HaveCount(3);
+					.Count.ShouldBe(3);
 
 				CheckTakeGlobalParams(db);
 			}
@@ -181,7 +182,7 @@ namespace Tests.Linq
 				db.Child
 					.Take(3)
 					.ToList()
-					.Should().HaveCount(3);
+					.Count.ShouldBe(3);
 
 				CheckTakeGlobalParams(db);
 			}
@@ -195,7 +196,7 @@ namespace Tests.Linq
 				(await db.Child
 					.Take(3)
 					.ToListAsync())
-					.Should().HaveCount(3);
+					.Count.ShouldBe(3);
 
 				CheckTakeGlobalParams(db);
 			}
@@ -906,7 +907,7 @@ namespace Tests.Linq
 					var res = query.ToList();
 
 					Assert.That(res, Has.Count.EqualTo(2));
-					Assert.Multiple(() =>
+					using (Assert.EnterMultipleScope())
 					{
 						Assert.That(res[0].BatchId, Is.EqualTo(2));
 						Assert.That(res[0].Value, Is.EqualTo("V2"));
@@ -914,7 +915,7 @@ namespace Tests.Linq
 						Assert.That(res[1].Value, Is.EqualTo("V3"));
 						Assert.That(res[0].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:20 GMT", DateTimeFormatInfo.InvariantInfo)));
 						Assert.That(res[1].CreationDate, Is.EqualTo(DateTime.Parse("09 Apr 2019 14:30:35 GMT", DateTimeFormatInfo.InvariantInfo)));
-					});
+					}
 
 					CheckTakeGlobalParams(db);
 				}
@@ -1625,7 +1626,7 @@ namespace Tests.Linq
 				.ToArray();
 
 			if (skip > 1 || take > 1)
-				db.Parent.GetCacheMissCount().Should().Be(cacheMissCount);
+				db.Parent.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 	}
 }

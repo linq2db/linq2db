@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -190,11 +190,11 @@ namespace Tests.Linq
 						.Select(p2 => new        { ID = p2.ID / "22".Length, p2.FirstName })
 
 				).ToList().First(p => p.ID == 1);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(person.ID, Is.EqualTo(1));
 					Assert.That(person.FirstName, Is.EqualTo("John"));
-				});
+				}
 			}
 		}
 
@@ -344,13 +344,12 @@ namespace Tests.Linq
 					}
 
 				).ToList().First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(q.ID, Is.EqualTo(1));
 					Assert.That(q.FirstName, Is.EqualTo("John"));
 					Assert.That(q.MiddleName, Is.EqualTo("None"));
-				});
+				}
 			}
 		}
 
@@ -372,14 +371,13 @@ namespace Tests.Linq
 					}
 
 				).ToList().First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(q.ID, Is.EqualTo(1));
 					Assert.That(q.FirstName, Is.EqualTo("John"));
 					Assert.That(q.LastName, Is.EqualTo("Pupkin"));
 					Assert.That(q.MiddleName, Is.EqualTo("None"));
-				});
+				}
 			}
 		}
 
@@ -413,14 +411,13 @@ namespace Tests.Linq
 					}
 
 				).ToList().First();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(q.ID, Is.EqualTo(1));
 					Assert.That(q.FirstName, Is.EqualTo("John"));
 					Assert.That(q.LastName, Is.EqualTo("Pupkin"));
 					Assert.That(q.MiddleName, Is.EqualTo("None"));
-				});
+				}
 			}
 		}
 
@@ -566,13 +563,12 @@ namespace Tests.Linq
 					q.Select(
 						(m, i) =>
 							ConvertString(m.Parent!.ParentID.ToString(), m.ChildID, i % 2 == 0, i)).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(lines[0], Is.EqualTo("7.77.True.0"));
 					Assert.That(lines[1], Is.EqualTo("6.66.False.1"));
 					Assert.That(lines[2], Is.EqualTo("6.65.True.2"));
-				});
+				}
 
 				q =
 					db.Child
@@ -700,12 +696,11 @@ namespace Tests.Linq
 				q.ToArray();
 
 				var sql = q.ToSqlQuery().Sql;
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(sql, Does.Not.Contain("First"));
 					Assert.That(sql, Does.Contain("LastName"));
-				});
+				}
 			}
 		}
 
@@ -715,13 +710,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var r = db.GetTable<ComplexPerson>().First(_ => _.ID == 1);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r.Name.FirstName, Is.EqualTo("John"));
 					Assert.That(r.Name.MiddleName, Is.Null);
 					Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
-				});
+				}
 			}
 		}
 
@@ -731,13 +725,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var r = db.GetTable<ComplexPerson2>().First(_ => _.ID == 1);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r.Name.FirstName, Is.EqualTo("John"));
 					Assert.That(r.Name.MiddleName, Is.Null);
 					Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
-				});
+				}
 			}
 		}
 
@@ -758,13 +751,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, ms))
 			{
 				var r = db.GetTable<ComplexPerson3>().First(_ => _.ID == 1);
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(r.Name.FirstName, Is.EqualTo("John"));
 					Assert.That(r.Name.MiddleName, Is.Null);
 					Assert.That(r.Name.LastName, Is.EqualTo("Pupkin"));
-				});
+				}
 			}
 		}
 
@@ -1052,18 +1044,15 @@ namespace Tests.Linq
 				var person = db.Query<ComplexPerson>(sql).FirstOrDefault()!;
 
 				Assert.That(person, Is.Not.Null);
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(person.ID, Is.EqualTo(3));
 					Assert.That(person.Gender, Is.EqualTo(Gender.Female));
 					Assert.That(person.Name, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(person.Name.FirstName, Is.EqualTo("Jane"));
 					Assert.That(person.Name.MiddleName, Is.Null);
 					Assert.That(person.Name.LastName, Is.EqualTo("Doe"));
-				});
+				}
 			}
 		}
 
@@ -1141,12 +1130,11 @@ namespace Tests.Linq
 
 				query = query.OrderByDescending(c => c.Child!.Id);
 				var result = query.ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Child, Is.Not.Null);
 					Assert.That(result[1].Child, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1176,13 +1164,13 @@ namespace Tests.Linq
 			{
 			if (includeChild)
 			{
-				result.Child.Should().NotBeNull();
+				result.Child.ShouldNotBeNull();
 			}
 			else
 			{
-				result.Child.Should().BeNull();
+				result.Child.ShouldBeNull();
 
-				((DataConnection)db).LastQuery.Should().NotContain("ChildID");
+				((DataConnection)db).LastQuery!.ShouldNotContain("ChildID");
 			}
 			}
 
@@ -1196,7 +1184,7 @@ namespace Tests.Linq
 
 			if (iteration > 1)
 			{
-				query.GetCacheMissCount().Should().Be(cacheMissCount);
+				query.GetCacheMissCount().ShouldBe(cacheMissCount);
 			}
 		}
 
@@ -1232,31 +1220,24 @@ namespace Tests.Linq
 					};
 
 				var result = query.OrderBy(_ => _.Id).ToArray();
-
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result[0].Child1, Is.Not.Null);
 					Assert.That(result[1].Child1, Is.Null);
 
 					Assert.That(result[0].Child2, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[0].Child2.Id, Is.EqualTo(1));
 					Assert.That(result[0].Child2.Value, Is.EqualTo("Value 1"));
 					Assert.That(result[1].Child2, Is.Null);
 
 					Assert.That(result[0].Child3, Is.Not.Null);
 					Assert.That(result[1].Child3, Is.Not.Null);
-				});
-				Assert.Multiple(() =>
-				{
 					Assert.That(result[1].Child3.Id, Is.EqualTo(4));
 					Assert.That(result[1].Child3.Value, Is.EqualTo("Generated"));
 
 					Assert.That(result[0].Child4, Is.Null);
 					Assert.That(result[1].Child4, Is.Null);
-				});
+				}
 			}
 		}
 
@@ -1732,12 +1713,12 @@ namespace Tests.Linq
 					var item = actual[i];
 					if (item.Child1 != null)
 					{
-						Assert.Multiple(() =>
+						using (Assert.EnterMultipleScope())
 						{
 							Assert.That(item.ChildDictionary1[item.Child1.ChildID], Is.EqualTo(item.Child1.ParentID));
 							Assert.That(item.ChildDictionary2["ChildID"], Is.EqualTo(item.Child1.ChildID));
 							Assert.That(item.ChildDictionary2["ParentID"], Is.EqualTo(item.Child1.ParentID));
-						});
+						}
 					}
 				}
 			}
@@ -1948,16 +1929,16 @@ namespace Tests.Linq
 
 			var p1 = query.ToList();
 
-			p1.All(p => ReferenceEquals(p.Reference, reference)).Should().BeTrue();
+			p1.All(p => ReferenceEquals(p.Reference, reference)).ShouldBeTrue();
 
 			reference = new Parent() { ParentID = 1002 };
 			var cacheMissCount = db.Person.GetCacheMissCount();
 
 			var p2 = query.ToList();
 
-			p2.All(p => ReferenceEquals(p.Reference, reference)).Should().BeTrue();
+			p2.All(p => ReferenceEquals(p.Reference, reference)).ShouldBeTrue();
 
-			db.Person.GetCacheMissCount().Should().Be(cacheMissCount);
+			db.Person.GetCacheMissCount().ShouldBe(cacheMissCount);
 
 		}
 
@@ -2000,12 +1981,12 @@ namespace Tests.Linq
 			// suppressSequentialAccess: true to avoid interceptor added twice
 			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(InheritanceParent[0].GetType(), Is.EqualTo(typeof(InheritanceParentBase)));
 					Assert.That(InheritanceParent[1].GetType(), Is.EqualTo(typeof(InheritanceParent1)));
 					Assert.That(InheritanceParent[2].GetType(), Is.EqualTo(typeof(InheritanceParent2)));
-				});
+				}
 
 				AreEqual(InheritanceParent, db.InheritanceParent);
 				AreEqual(InheritanceChild, db.InheritanceChild);
@@ -2212,11 +2193,11 @@ namespace Tests.Linq
 					};
 
 			var res = q.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res.All(r => r.LastName == null), Is.True);
 				Assert.That(res.All(r => r.Gender == default), Is.True);
-			});
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]
@@ -2238,11 +2219,11 @@ namespace Tests.Linq
 					};
 
 			var res = q.ToList();
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(res.All(r => r.LastName == null), Is.True);
 				Assert.That(res.All(r => r.Gender == default), Is.True);
-			});
+			}
 		}
 	}
 }
