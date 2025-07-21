@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		private static readonly CompositeFormat TIMESTAMP6_FORMAT = CompositeFormat.Parse("{0:yyyy-MM-dd-HH.mm.ss.ffffff}");
 		private static readonly CompositeFormat TIMESTAMP7_FORMAT = CompositeFormat.Parse("{0:yyyy-MM-dd-HH.mm.ss.fffffff}");
 #else
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		private const string DATE_FORMAT       = "{0:yyyy-MM-dd}";
 #endif
 		private const string DATETIME_FORMAT   = "{0:yyyy-MM-dd-HH.mm.ss}";
@@ -75,7 +75,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			// set reader conversions from literals
 			SetConverter<string, DateTime>(ParseDateTime);
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
 			SetConverter<string, DateOnly>(ParseDateOnly);
 #endif
@@ -132,7 +132,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			};
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
 		{
 			stringBuilder.Append('\'');

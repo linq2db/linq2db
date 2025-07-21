@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.ServiceModel;
 using System.ServiceModel.Description;
+using System.Threading;
 
 using LinqToDB;
 using LinqToDB.Data;

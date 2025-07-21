@@ -38,7 +38,7 @@ namespace ModelInterfaceDataContext
 		public ITestDataDB Model { get; }
 	}
 
-#if !NET462
+#if !NETFRAMEWORK
 
 	class Test
 	{

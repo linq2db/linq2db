@@ -352,7 +352,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 							null,
 							BuildVectorLiteralMethod,
 							sb,
-#if NETFRAMEWORK || NETSTANDARD2_0
+#if !SUPPORTS_SPAN
 							Expression.Call(ExpressionHelper.Property(Expression.Convert(v, sqlVectorType), "Memory"), "ToArray", Array.Empty<Type>())
 #else
 							ExpressionHelper.Property(ExpressionHelper.Property(Expression.Convert(v, sqlVectorType), "Memory"), "Span")
@@ -427,7 +427,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		public static readonly MethodInfo BuildVectorLiteralMethod = typeof(SqlServerProviderAdapter).GetMethod(nameof(BuildVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;
 
-#if NETFRAMEWORK || NETSTANDARD2_0
+#if !SUPPORTS_SPAN
 		// we need System.Memory dep otherwise
 		static void BuildVectorLiteral(StringBuilder sb, float[] data)
 		{

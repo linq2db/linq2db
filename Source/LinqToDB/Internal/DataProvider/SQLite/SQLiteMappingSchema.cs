@@ -31,7 +31,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 #endif
 
@@ -80,7 +80,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
 		{
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);

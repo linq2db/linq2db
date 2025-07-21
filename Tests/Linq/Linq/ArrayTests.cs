@@ -1,4 +1,4 @@
-﻿#if NET8_0_OR_GREATER
+﻿#if SUPPORTS_DATEONLY
 using System;
 #endif
 using System.Linq;
@@ -161,7 +161,7 @@ namespace Tests.Linq
 			Assert.That(result, Is.Null);
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3929")]
 		public void TestDateOnly([DataSources] string context)

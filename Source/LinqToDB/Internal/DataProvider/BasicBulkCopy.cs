@@ -7,10 +7,6 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if NETFRAMEWORK || NETSTANDARD2_0
-using System.Text;
-#endif
-
 using LinqToDB.Data;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlProvider;

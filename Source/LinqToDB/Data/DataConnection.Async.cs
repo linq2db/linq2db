@@ -17,10 +17,12 @@ namespace LinqToDB.Data
 {
 	public partial class DataConnection
 	{
-#if NET8_0_OR_GREATER
+#if ADO_ASYNC
 		// TODO: Mark private in v7 and remove warning suppressions from callers
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public async ValueTask DisposeCommandAsync()
+		public
+#endif
+		async ValueTask DisposeCommandAsync()
 		{
 			if (_command != null)
 			{
@@ -41,7 +43,6 @@ namespace LinqToDB.Data
 			return DisposeCommandAsync();
 #pragma warning restore CS0618 // Type or member is obsolete
 		}
-#endif
 
 		/// <summary>
 		/// Starts new transaction asynchronously for current connection with default isolation level.
@@ -336,11 +337,7 @@ namespace LinqToDB.Data
 			}
 
 #pragma warning disable CS0618 // Type or member is obsolete
-#if NET8_0_OR_GREATER
 			await DisposeCommandAsync().ConfigureAwait(false);
-#else
-			DisposeCommand();
-#endif
 #pragma warning restore CS0618 // Type or member is obsolete
 
 			if (TransactionAsync != null && _closeTransaction)
