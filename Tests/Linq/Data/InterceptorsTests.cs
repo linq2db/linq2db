@@ -684,13 +684,8 @@ namespace Tests.Data
 			await db.Person.ToListAsync();
 			using (Assert.EnterMultipleScope())
 			{
-#if NETFRAMEWORK
-				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.True);
-				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.False);
-#else
 				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.False);
 				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.True);
-#endif
 			}
 		}
 
@@ -714,13 +709,8 @@ namespace Tests.Data
 			await db.GetTable<Person>().ToListAsync();
 			using (Assert.EnterMultipleScope())
 			{
-#if NETFRAMEWORK
-				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.True);
-				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.False);
-#else
 				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.False);
 				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.True);
-#endif
 			}
 		}
 
