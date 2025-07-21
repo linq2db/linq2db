@@ -8,7 +8,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall(nameof(LinqExtensions.TagQuery))]
 	sealed class TagQueryBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable();
 
 		private static readonly char[] NewLine = ['\r', '\n'];

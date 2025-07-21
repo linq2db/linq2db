@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsExpression(ExpressionType.Constant, ExpressionType.Call, ExpressionType.MemberAccess, ExpressionType.NewArrayInit)]
 	sealed class EnumerableBuilder : ISequenceBuilder
 	{
-		public static bool CanBuild(Expression expr, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuild(Expression expr, ExpressionBuilder builder)
 		{
 			if (expr.NodeType == ExpressionType.NewArrayInit)
 				return true;

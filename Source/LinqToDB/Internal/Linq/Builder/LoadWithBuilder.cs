@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall("LoadWith", "ThenLoad", "LoadWithAsTable", "LoadWithInternal")]
 	sealed class LoadWithBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable();
 
 		static void CheckFilterFunc(Type expectedType, Type filterType, MappingSchema mappingSchema)

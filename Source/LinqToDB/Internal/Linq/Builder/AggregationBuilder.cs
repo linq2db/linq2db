@@ -27,10 +27,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			Custom
 		}
 
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable();
 
-		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildAsyncMethod(MethodCallExpression call)
 			=> call.IsAsyncExtension();
 
 		static Type ExtractTaskType(Type taskType)
