@@ -49,7 +49,7 @@ internal static class CharExtensions
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsAsciiLetter(this char chr) => chr is >= 'a' and <= 'z' || chr is >= 'A' and <= 'Z';
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsAsciiLetterOrDigit(this char chr) => IsAsciiLetterOrDigit(chr) || IsAsciiDigit(chr);
+	public static bool IsAsciiLetterOrDigit(this char chr) => IsAsciiLetter(chr) || IsAsciiDigit(chr);
 }
 
 internal static class DictionaryExtensions
