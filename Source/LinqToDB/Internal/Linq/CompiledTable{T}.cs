@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -70,9 +71,8 @@ namespace LinqToDB.Internal.Linq
 			return result;
 		}
 
-#pragma warning disable IDE0060 // Remove unused parameter
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Method used by two-parameter call in generated expression")]
 		public IQueryable<T> Create(object[] parameters, object[] preambles)
-#pragma warning restore IDE0060 // Remove unused parameter
 		{
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);

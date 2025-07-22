@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -1165,9 +1166,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			internal sealed class OracleLoader : TypeWrapper, IDisposable
 			{
-#pragma warning disable IDE0051 // Remove unused private members
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 					= new LambdaExpression[]
 				{
 					// [0]: Dispose
@@ -1186,9 +1186,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					(Expression<Func<OracleLoader, OracleLoaderColumnCollection>>)(this_ => this_.Columns),
 				};
 
-#pragma warning disable IDE0051 // Remove unused private members
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static string[] Events { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 					= new[]
 				{
 					nameof(RowsCopied)
@@ -1230,9 +1229,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleLoaderRowsCopiedEventArgs : TypeWrapper
 			{
-#pragma warning disable IDE0051 // Remove unused private members
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 					= new LambdaExpression[]
 				{
 				// [0]: get RowsCopied
@@ -1262,9 +1260,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleLoaderColumnCollection : TypeWrapper
 			{
-#pragma warning disable IDE0051 // Remove unused private members
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 					= new LambdaExpression[]
 				{
 					// [0]: Add
@@ -1456,9 +1453,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleConnection : TypeWrapper
 			{
-#pragma warning disable IDE0051 // Remove unused private members
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 					= new LambdaExpression[]
 				{
 					// [0]: Open
@@ -1533,9 +1529,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleBulkCopy : TypeWrapper, IDisposable
 			{
-#pragma warning disable IDE0051 // Remove unused private members
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 					= new LambdaExpression[]
 				{
 					// [0]: Dispose
@@ -1566,9 +1561,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					PropertySetter((OracleBulkCopy this_) => this_.DestinationSchemaName),
 				};
 
-#pragma warning disable IDE0051 // Remove unused private members
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static string[] Events { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 					= new[]
 				{
 					nameof(OracleRowsCopied)
@@ -1628,9 +1622,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleRowsCopiedEventArgs : TypeWrapper
 			{
-#pragma warning disable IDE0051 // Remove unused private members
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 					= new LambdaExpression[]
 				{
 					// [0]: get RowsCopied
@@ -1660,9 +1653,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleBulkCopyColumnMappingCollection : TypeWrapper
 			{
-#pragma warning disable IDE0051 // Remove unused private members
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 					= new LambdaExpression[]
 				{
 					// [0]: Add

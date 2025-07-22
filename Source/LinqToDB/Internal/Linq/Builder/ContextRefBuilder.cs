@@ -5,9 +5,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsAny]
 	sealed class ContextRefBuilder : ISequenceBuilder
 	{
-#pragma warning disable IDE0060 // Remove unused parameter
-		public static bool CanBuild(BuildInfo buildInfo, ExpressionBuilder builder)
-#pragma warning restore IDE0060 // Remove unused parameter
+		public static bool CanBuild(BuildInfo buildInfo)
 			=> buildInfo.Expression is ContextRefExpression contextRef;
 
 		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)

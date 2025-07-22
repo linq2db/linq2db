@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -473,9 +474,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		internal sealed class SqlException : TypeWrapper
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: get Errors
@@ -492,9 +492,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		internal sealed class SqlErrorCollection : TypeWrapper
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: GetEnumerator
@@ -525,9 +524,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		internal sealed class SqlError : TypeWrapper
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: get Number
@@ -556,9 +554,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		public class SqlConnectionStringBuilder : TypeWrapper
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: get MultipleActiveResultSets
@@ -595,9 +592,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		internal sealed class SqlBulkCopy : TypeWrapper, IDisposable
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: Dispose
@@ -627,9 +623,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					=> this_.WriteToServerAsync(reader, token)),
 			};
 
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static string[] Events { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 				= new[]
 			{
 				nameof(SqlRowsCopied)
@@ -685,9 +680,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		public class SqlRowsCopiedEventArgs : TypeWrapper
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: get RowsCopied
@@ -717,9 +711,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		public class SqlBulkCopyColumnMappingCollection : TypeWrapper
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: Add

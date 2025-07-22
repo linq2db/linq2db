@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
 
@@ -134,9 +135,8 @@ namespace LinqToDB.Internal.DataProvider
 		[Wrapper]
 		internal sealed class OleDbConnection : TypeWrapper
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; } =
-#pragma warning restore IDE0051 // Remove unused private members
 			{
 				// [0]: get Provider
 				(Expression<Func<OleDbConnection, string>>)(this_ => this_.Provider),

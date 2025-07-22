@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -160,11 +161,8 @@ namespace LinqToDB
 		/// <param name="obj"></param>
 		/// <param name="alias"></param>
 		/// <returns></returns>
-		internal static T Alias<T>(T obj,
-#pragma warning disable IDE0060 // Remove unused parameter
-			[SqlQueryDependent] string alias
-#pragma warning restore IDE0060 // Remove unused parameter
-			)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used by builder")]
+		internal static T Alias<T>(T obj, [SqlQueryDependent] string alias)
 		{
 			return obj;
 		}
@@ -285,26 +283,16 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Extension("", BuilderType = typeof(ConvertBuilder))]
-		public static TTo Convert<TTo,TFrom>(
-#pragma warning disable IDE0060 // Remove unused parameter
-			TTo to,
-#pragma warning restore IDE0060 // Remove unused parameter
-			TFrom from)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used to specify generic parameter")]
+		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
 		}
 
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.CONVERT_FORMAT, 0, 3, 1, 2, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
-		public static TTo Convert<TTo, TFrom>(
-#pragma warning disable IDE0060 // Remove unused parameter
-			TTo to,
-#pragma warning restore IDE0060 // Remove unused parameter
-			TFrom from,
-#pragma warning disable IDE0060 // Remove unused parameter
-			int format
-#pragma warning restore IDE0060 // Remove unused parameter
-			)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used by builder or to specify generic parameter")]
+		public static TTo Convert<TTo, TFrom>(TTo to, TFrom from, int format)
 		{
 			return Common.ConvertTo<TTo>.From(from);
 		}

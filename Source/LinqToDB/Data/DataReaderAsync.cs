@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -214,20 +215,14 @@ namespace LinqToDB.Data
 			return QueryForEachAsync(template, action, CancellationToken.None);
 		}
 
-		public Task QueryForEachAsync<T>(
-#pragma warning disable IDE0060 // Remove unused parameter
-			T template,
-#pragma warning restore IDE0060 // Remove unused parameter
-			Action<T> action, CancellationToken cancellationToken)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
+		public Task QueryForEachAsync<T>(T template, Action<T> action, CancellationToken cancellationToken)
 		{
 			return QueryForEachAsync(action, cancellationToken);
 		}
 
-		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(
-#pragma warning disable IDE0060 // Remove unused parameter
-			T template
-#pragma warning restore IDE0060 // Remove unused parameter
-			)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(T template)
 		{
 			return QueryToAsyncEnumerable<T>();
 		}

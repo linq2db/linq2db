@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
 
@@ -229,9 +230,8 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		[Wrapper]
 		internal sealed class AseBulkCopy : TypeWrapper, IDisposable
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: Dispose
@@ -258,9 +258,8 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				PropertySetter((AseBulkCopy this_) => this_.DestinationTableName),
 			};
 
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static string[] Events { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 				= new[]
 			{
 				nameof(AseRowsCopied)
@@ -315,9 +314,8 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		[Wrapper]
 		public class AseRowsCopiedEventArgs : TypeWrapper
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: get RowCopied
@@ -354,9 +352,8 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		[Wrapper]
 		public class AseBulkCopyColumnMappingCollection : TypeWrapper
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: Add

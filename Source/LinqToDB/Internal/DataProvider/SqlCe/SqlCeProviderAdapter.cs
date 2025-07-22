@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlTypes;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
 
@@ -147,9 +148,8 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		[Wrapper]
 		public class SqlCeEngine : TypeWrapper, IDisposable
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 				= new LambdaExpression[]
 			{
 				// [0]: CreateDatabase

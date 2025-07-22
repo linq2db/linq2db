@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -11,11 +12,8 @@ namespace LinqToDB.DataProvider.SQLite
 {
 	public static class SQLiteExtensions
 	{
-		public static ISQLiteExtensions? SQLite(
-#pragma warning disable IDE0060 // Remove unused parameter
-			this Sql.ISqlExtension? ext
-#pragma warning restore IDE0060 // Remove unused parameter
-			) => null;
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "ext is an extension point")]
+		public static ISQLiteExtensions? SQLite(this Sql.ISqlExtension? ext) => null;
 
 		#region FTS
 		/// <summary>

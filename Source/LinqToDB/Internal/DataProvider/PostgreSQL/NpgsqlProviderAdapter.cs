@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
@@ -620,9 +621,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		[Wrapper]
 		public class NpgsqlConnection : TypeWrapper
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; } =
-#pragma warning restore IDE0051 // Remove unused private members
 			{
 				// [0]: get PostgreSqlVersion
 				(Expression<Func<NpgsqlConnection, Version>>)(this_ => this_.PostgreSqlVersion),
@@ -645,9 +645,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		[Wrapper]
 		public sealed class NpgsqlBinaryImporter : TypeWrapper
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static object[] Wrappers {get;}
-#pragma warning restore IDE0051 // Remove unused private members
 				= new object[]
 			{
 				// depending on npgsql version, [0] or [1] will fail to compile and CompiledWrappers will contain null

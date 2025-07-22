@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
 
@@ -114,9 +115,8 @@ namespace LinqToDB.Internal.DataProvider
 		[Wrapper]
 		internal sealed class OdbcConnection : TypeWrapper
 		{
-#pragma warning disable IDE0051 // Remove unused private members
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; } =
-#pragma warning restore IDE0051 // Remove unused private members
 			{
 				// [0]: get Driver
 				(Expression<Func<OdbcConnection, string>>)(this_ => this_.Driver),

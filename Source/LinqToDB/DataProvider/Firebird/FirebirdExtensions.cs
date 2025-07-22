@@ -1,20 +1,15 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.DataProvider.Firebird
 {
 	public static class FirebirdExtensions
 	{
-		public static IFirebirdExtensions? Firebird(
-#pragma warning disable IDE0060 // Remove unused parameter
-			this IFirebirdExtensions? ext
-#pragma warning restore IDE0060 // Remove unused parameter
-			) => null;
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "ext is an extension point")]
+		public static IFirebirdExtensions? Firebird(this IFirebirdExtensions? ext) => null;
 
 		[Sql.Extension("UUID_TO_CHAR({guid})", PreferServerSide = true, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		public static string? UuidToChar(
-#pragma warning disable IDE0060 // Remove unused parameter
-			this IFirebirdExtensions? ext,
-#pragma warning restore IDE0060 // Remove unused parameter
-			[ExprParameter] Guid? guid) => guid?.ToString("D").ToUpperInvariant();
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "ext is an extension point")]
+		public static string? UuidToChar(this IFirebirdExtensions? ext, [ExprParameter] Guid? guid) => guid?.ToString("D").ToUpperInvariant();
 	}
 }

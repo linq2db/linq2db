@@ -1,4 +1,5 @@
-﻿#pragma warning disable MA0048 // File name must match type name
+﻿#pragma warning disable IDE0060 // Remove unused parameter
+#pragma warning disable MA0048 // File name must match type name
 using System;
 using System.Linq.Expressions;
 
@@ -24,12 +25,10 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		public string? CanBuildName { get; set; }
 
-#pragma warning disable IDE0060 // Remove unused parameter
 		public BuildsExpressionAttribute(ExpressionType type) { }
 		public BuildsExpressionAttribute(ExpressionType type1, ExpressionType type2) { }
 		public BuildsExpressionAttribute(ExpressionType type1, ExpressionType type2, ExpressionType type3) { }
 		public BuildsExpressionAttribute(ExpressionType type1, ExpressionType type2, ExpressionType type3, ExpressionType type4) { }
-#pragma warning restore IDE0060 // Remove unused parameter
 	}
 
 		[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
@@ -37,7 +36,6 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		public string? CanBuildName { get; set; }
 
-#pragma warning disable IDE0060 // Remove unused parameter
 		public BuildsMethodCallAttribute(string method) { }
 		public BuildsMethodCallAttribute(string method1, string method2) { }
 		public BuildsMethodCallAttribute(string method1, string method2, string method3) { }
@@ -46,6 +44,5 @@ namespace LinqToDB.Internal.Linq.Builder
 		public BuildsMethodCallAttribute(string method1, string method2, string method3, string method4, string method5, string method6) { }
 		public BuildsMethodCallAttribute(string method1, string method2, string method3, string method4, string method5, string method6, string method7) { }
 		public BuildsMethodCallAttribute(string method1, string method2, string method3, string method4, string method5, string method6, string method7, string method8) { }
-#pragma warning restore IDE0060 // Remove unused parameter
 	}
 }

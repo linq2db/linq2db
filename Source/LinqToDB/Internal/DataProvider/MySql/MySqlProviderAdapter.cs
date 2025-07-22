@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
@@ -498,9 +499,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			[Wrapper]
 			internal sealed class MySqlBulkCopy : TypeWrapper
 			{
-#pragma warning disable IDE0051 // Remove unused private members
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static object[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 					= new object[]
 				{
 					// [0]: get NotifyAfter
@@ -536,9 +536,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask<MySqlBulkCopyResult>>>)((this_, dataReader, cancellationToken) => this_.WriteToServerAsync3(dataReader, cancellationToken)), true),
 				};
 
-#pragma warning disable IDE0051 // Remove unused private members
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static string[] Events { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 					= new[]
 				{
 					nameof(MySqlRowsCopied)
@@ -631,9 +630,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			[Wrapper]
 			public sealed class MySqlRowsCopiedEventArgs : TypeWrapper
 			{
-#pragma warning disable IDE0051 // Remove unused private members
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
-#pragma warning restore IDE0051 // Remove unused private members
 					= new LambdaExpression[]
 				{
 					// [0]: get RowsCopied

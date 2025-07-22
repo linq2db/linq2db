@@ -1524,11 +1524,8 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection,
-#pragma warning disable IDE0060 // Remove unused parameter
-			T template,
-#pragma warning restore IDE0060 // Remove unused parameter
-			string sql, params DataParameter[] parameters)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, T template, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync<T>();
 		}
@@ -1543,11 +1540,8 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection,
-#pragma warning disable IDE0060 // Remove unused parameter
-			T template,
-#pragma warning restore IDE0060 // Remove unused parameter
-			string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, T template, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync<T>(cancellationToken);
 		}
@@ -1561,11 +1555,8 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection,
-#pragma warning disable IDE0060 // Remove unused parameter
-			T template,
-#pragma warning restore IDE0060 // Remove unused parameter
-			string sql, params DataParameter[] parameters)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, T template, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>();
 		}
@@ -1580,11 +1571,8 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection,
-#pragma warning disable IDE0060 // Remove unused parameter
-			T template,
-#pragma warning restore IDE0060 // Remove unused parameter
-			string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, T template, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
@@ -1598,11 +1586,8 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Async sequence of records returned by the query.</returns>
-		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection,
-#pragma warning disable IDE0060 // Remove unused parameter
-			T template,
-#pragma warning restore IDE0060 // Remove unused parameter
-			string sql, params DataParameter[] parameters)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
+		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection, T template, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable<T>();
 		}
@@ -1625,11 +1610,8 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection,
-#pragma warning disable IDE0060 // Remove unused parameter
-			T template,
-#pragma warning restore IDE0060 // Remove unused parameter
-			string sql, object? parameters)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, T template, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync<T>();
 		}
@@ -1653,11 +1635,8 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection,
-#pragma warning disable IDE0060 // Remove unused parameter
-			T template,
-#pragma warning restore IDE0060 // Remove unused parameter
-			string sql, CancellationToken cancellationToken, object? parameters)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, T template, string sql, CancellationToken cancellationToken, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync<T>(cancellationToken);
 		}
@@ -1680,11 +1659,8 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection,
-#pragma warning disable IDE0060 // Remove unused parameter
-			T template,
-#pragma warning restore IDE0060 // Remove unused parameter
-			string sql, object? parameters)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, T template, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>();
 		}
@@ -1708,11 +1684,8 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection,
-#pragma warning disable IDE0060 // Remove unused parameter
-			T template,
-#pragma warning restore IDE0060 // Remove unused parameter
-			string sql, CancellationToken cancellationToken, object? parameters)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, T template, string sql, CancellationToken cancellationToken, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
@@ -1735,11 +1708,8 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Async sequence of records returned by the query.</returns>
-		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection,
-#pragma warning disable IDE0060 // Remove unused parameter
-			T template,
-#pragma warning restore IDE0060 // Remove unused parameter
-			string sql, object? parameters)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
+		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection, T template, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable<T>();
 		}

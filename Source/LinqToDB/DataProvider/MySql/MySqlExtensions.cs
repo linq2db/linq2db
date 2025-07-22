@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Mapping;
 
@@ -6,11 +7,8 @@ namespace LinqToDB.DataProvider.MySql
 {
 	public static class MySqlExtensions
 	{
-		public static IMySqlExtensions? MySql(
-#pragma warning disable IDE0060 // Remove unused parameter
-			this Sql.ISqlExtension? ext
-#pragma warning restore IDE0060 // Remove unused parameter
-			) => null;
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "ext is an extension point")]
+		public static IMySqlExtensions? MySql(this Sql.ISqlExtension? ext) => null;
 
 		#region FTS
 		sealed class ModifierBuilder : Sql.IExtensionCallBuilder

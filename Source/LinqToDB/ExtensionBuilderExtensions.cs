@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
@@ -17,11 +18,8 @@ namespace LinqToDB
 			return builder.AddParameter(name, new SqlFragment(expr));
 		}
 
-		public static ISqlExpression Add(
-#pragma warning disable IDE0060 // Remove unused parameter
-			this Sql.ISqExtensionBuilder builder,
-#pragma warning restore IDE0060 // Remove unused parameter
-			ISqlExpression left, ISqlExpression right, Type type)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
+		public static ISqlExpression Add(this Sql.ISqExtensionBuilder builder, ISqlExpression left, ISqlExpression right, Type type)
 		{
 			return new SqlBinaryExpression(type, left, "+", right, Precedence.Additive);
 		}
@@ -41,11 +39,8 @@ namespace LinqToDB
 			return builder.Add(expr, 1);
 		}
 
-		public static ISqlExpression Sub(
-#pragma warning disable IDE0060 // Remove unused parameter
-			this Sql.ISqExtensionBuilder builder,
-#pragma warning restore IDE0060 // Remove unused parameter
-			ISqlExpression left, ISqlExpression right, Type type)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
+		public static ISqlExpression Sub(this Sql.ISqExtensionBuilder builder, ISqlExpression left, ISqlExpression right, Type type)
 		{
 			return new SqlBinaryExpression(type, left, "-", right, Precedence.Subtraction);
 		}
@@ -65,11 +60,8 @@ namespace LinqToDB
 			return builder.Sub(expr, 1);
 		}
 
-		public static ISqlExpression Mul(
-#pragma warning disable IDE0060 // Remove unused parameter
-			this Sql.ISqExtensionBuilder builder,
-#pragma warning restore IDE0060 // Remove unused parameter
-			ISqlExpression left, ISqlExpression right, Type type)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
+		public static ISqlExpression Mul(this Sql.ISqExtensionBuilder builder, ISqlExpression left, ISqlExpression right, Type type)
 		{
 			return new SqlBinaryExpression(type, left, "*", right, Precedence.Multiplicative);
 		}
@@ -84,11 +76,8 @@ namespace LinqToDB
 			return builder.Mul<int>(expr1, new SqlValue(value));
 		}
 
-		public static ISqlExpression Div(
-#pragma warning disable IDE0060 // Remove unused parameter
-			this Sql.ISqExtensionBuilder builder,
-#pragma warning restore IDE0060 // Remove unused parameter
-			ISqlExpression expr1, ISqlExpression expr2, Type type)
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
+		public static ISqlExpression Div(this Sql.ISqExtensionBuilder builder, ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
 			return new SqlBinaryExpression(type, expr1, "/", expr2, Precedence.Multiplicative);
 		}
