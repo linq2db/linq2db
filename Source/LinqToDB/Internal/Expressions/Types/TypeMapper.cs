@@ -754,7 +754,7 @@ namespace LinqToDB.Internal.Expressions.Types
 											throw new LinqToDBException($"Cannot map return type: {newMethodCall.Type} using {customReturnMapper.GetType()} mapper");
 										}
 
-										return customReturnMapper.Map(newMethodCall);
+										return customReturnMapper.Map(context.Mapper, newMethodCall);
 									}
 
 									return newMethodCall;
@@ -793,7 +793,7 @@ namespace LinqToDB.Internal.Expressions.Types
 											throw new LinqToDBException($"Cannot map return type: {newMethodCall.Type} using {customReturnMapper.GetType()} mapper");
 										}
 
-										return customReturnMapper.Map(newMethodCall);
+										return customReturnMapper.Map(context.Mapper, newMethodCall);
 									}
 
 									return newMethodCall;

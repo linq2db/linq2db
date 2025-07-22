@@ -183,7 +183,7 @@ namespace Tests.TypeMapping
 				return expression.Type == typeof(string);
 			}
 
-			Expression ICustomMapper.Map(Expression expression)
+			Expression ICustomMapper.Map(TypeMapper mapper, Expression expression)
 			{
 				return Expression.Property(expression, "Length");
 			}
@@ -789,7 +789,7 @@ namespace Tests.TypeMapping
 			{
 				var taskExpression = Expression.Constant(new ValueTask<long>());
 				var mapper         = new ValueTaskToTaskMapper();
-				var result         = ((ICustomMapper)mapper).Map(taskExpression);
+				var result         = ((ICustomMapper)mapper).Map(null!, taskExpression);
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Type, Is.EqualTo(typeof(Task<long>)));
@@ -802,7 +802,7 @@ namespace Tests.TypeMapping
 			{
 				var taskExpression = Expression.Constant(new ValueTask());
 				var mapper         = new ValueTaskToTaskMapper();
-				var result         = ((ICustomMapper)mapper).Map(taskExpression);
+				var result         = ((ICustomMapper)mapper).Map(null!, taskExpression);
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Type, Is.EqualTo(typeof(Task)));

@@ -566,8 +566,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				private Task WriteToServerAsync1(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[9])(this, dataReader, cancellationToken);
 				[TypeWrapperName("WriteToServerAsync")]
 				private ValueTask WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[10])(this, dataReader, cancellationToken);
+
 				[TypeWrapperName("WriteToServerAsync")]
-				[return: CustomMapper(typeof(GenericTaskToTaskMapper))]
+				[return: CustomMapper(typeof(GenericValueTaskMapper<MySqlBulkCopyResult>))]
 				private ValueTask<MySqlBulkCopyResult> WriteToServerAsync3(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask<MySqlBulkCopyResult>>)CompiledWrappers[11])(this, dataReader, cancellationToken);
 #pragma warning restore RS0030 //  API mapping must preserve type (IDataReader)
 
@@ -624,7 +625,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 				// because underlying object use List<T> for column mappings, easiest approch will be to add
 				// non-existing Add method
-				public void AddColumnMapping(MySqlBulkCopyColumnMapping column) => ((Action<MySqlBulkCopy, MySqlBulkCopyColumnMapping>) CompiledWrappers[4])(this, column);
+				public void AddColumnMapping(MySqlBulkCopyColumnMapping column) => ((Action<MySqlBulkCopy, MySqlBulkCopyColumnMapping>) CompiledWrappers[3])(this, column);
 			}
 
 			[Wrapper]
