@@ -1714,6 +1714,48 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void StringInterpolationTestsNullable([DataSources(false)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Person
+					select new 					
+					{
+						FirstName = $"{p.FirstName}",
+						LastName  = $"{p.LastName }, {p.FirstName}",
+						FullName  = $"{p.LastName }, {p.FirstName} ({p.MiddleName})",
+					} into s
+					where s.FirstName != "" || s.LastName != "" || s.FullName != ""
+					orderby s.FirstName, s.LastName
+					select s;
+
+				AssertQuery(query);
+			}
+		}
+
+		[Test]
+		public void StringInterpolationTestsCoalesce([DataSources(false)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Person
+					select new
+					{
+						FirstName = $"{p.FirstName ?? ""}",
+						LastName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""}",
+						FullName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""})",
+					} into s
+					where s.FirstName != "" || s.LastName != "" || s.FullName != ""
+					orderby s.FirstName, s.LastName
+					select s;
+
+				AssertQuery(query);
+			}
+		}
+
+		[Test]
 		public void NullableBooleanConditionEvaluationTrueTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool? value1)
 		{
 			using (var db = GetDataContext(context))

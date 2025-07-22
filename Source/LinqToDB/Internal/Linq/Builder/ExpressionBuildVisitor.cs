@@ -867,7 +867,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translated);
 				}
 
-				if (HandleFormat(node, out var translatedFormat))
+				if (HandleStringFormat(node, out var translatedFormat))
 					return Visit(translatedFormat);
 
 				if (HandleConstructorMethods(node, out var translatedConstructor))
@@ -2297,7 +2297,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return false;
 		}
 
-		public bool HandleFormat(MethodCallExpression node, [NotNullWhen(true)] out Expression? translated)
+		public bool HandleStringFormat(MethodCallExpression node, [NotNullWhen(true)] out Expression? translated)
 		{
 			translated = null;
 
@@ -2310,6 +2310,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return false;
 
 					var arguments = new ISqlExpression[node.Arguments.Count - 1];
+					var stringType = MappingSchema.GetDbDataType(typeof(string));
 
 					for (var i = 1; i < node.Arguments.Count; i++)
 					{
@@ -2317,7 +2318,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (expr is not SqlPlaceholderExpression sqlPlaceholder)
 							return false;
 
-						arguments[i - 1] = sqlPlaceholder.Sql;
+						arguments[i - 1] = new SqlCoalesceExpression(sqlPlaceholder.Sql, new SqlValue(stringType, ""));
 					}
 
 					ISqlExpression result;
