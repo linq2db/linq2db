@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -2310,23 +2309,22 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (format == null)
 						return false;
 
-					ReadOnlyCollection<Expression> inputArguments;
-					int                            startIndex;
-
-					if (node.Arguments is [_, NewArrayExpression arrayExpr])
+					var (inputArguments, startIndex) = node.Arguments switch
 					{
-						inputArguments = arrayExpr.Expressions;
-						startIndex     = 0;
-					}
-					else
-					{
-						inputArguments = node.Arguments;
-						startIndex     = 1;
-					}
+						[_, NewArrayExpression arrayExpr] => (arrayExpr.Expressions, 0),
+						_                                 => (node.Arguments, 1),
+					};
 
 					var arguments = new ISqlExpression[inputArguments.Count - startIndex];
 
-					var stringType = MappingSchema.GetDbDataType(typeof(string));
+					DbDataType stringType;
+
+					if (CurrentDescriptor?.MemberType == typeof(string))
+						stringType = CurrentDescriptor.GetDbDataType(true);
+					else
+						stringType = MappingSchema.GetDbDataType(typeof(string));
+
+					var formatAsExpression = _buildFlags.HasFlag(BuildFlags.FormatAsExpression);
 
 					for (var i = startIndex; i < inputArguments.Count; i++)
 					{
@@ -2334,11 +2332,19 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (expr is not SqlPlaceholderExpression sqlPlaceholder)
 							return false;
 
-						arguments[i - startIndex] = new SqlCoalesceExpression(sqlPlaceholder.Sql, new SqlValue(stringType, ""));
+						var sql = sqlPlaceholder.Sql;
+
+						if (!formatAsExpression)
+						{
+							sql = new SqlCastExpression(sql, stringType, null);
+							sql = new SqlCoalesceExpression(sql, new SqlValue(stringType, ""));
+						}
+
+						arguments[i - startIndex] = sql;
 					}
 
 					ISqlExpression result;
-					if (_buildFlags.HasFlag(BuildFlags.FormatAsExpression))
+					if (formatAsExpression)
 					{
 						result = new SqlExpression(MappingSchema.GetDbDataType(node.Type), format, Precedence.Primary, arguments);
 					}
