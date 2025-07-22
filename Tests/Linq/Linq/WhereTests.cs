@@ -1720,11 +1720,11 @@ namespace Tests.Linq
 			{
 				var query =
 					from p in db.Person
-					select new 					
+					select new
 					{
 						FirstName = $"{p.FirstName}",
 						LastName  = $"{p.LastName }, {p.FirstName}",
-						FullName  = $"{p.LastName }, {p.FirstName} ({p.MiddleName})",
+						FullName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""} + {p.MiddleName ?? ""})", // it should be more tan three expressions to avoid optimization
 					} into s
 					where s.FirstName != "" || s.LastName != "" || s.FullName != ""
 					orderby s.FirstName, s.LastName
@@ -1735,7 +1735,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StringInterpolationTestsCoalesce([DataSources(false)] string context)
+		public void StringInterpolationCoalesce([DataSources(false)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1745,7 +1745,7 @@ namespace Tests.Linq
 					{
 						FirstName = $"{p.FirstName ?? ""}",
 						LastName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""}",
-						FullName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""})",
+						FullName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""} + {p.MiddleName ?? ""})", // it should be more tan three expressions to avoid optimization
 					} into s
 					where s.FirstName != "" || s.LastName != "" || s.FullName != ""
 					orderby s.FirstName, s.LastName

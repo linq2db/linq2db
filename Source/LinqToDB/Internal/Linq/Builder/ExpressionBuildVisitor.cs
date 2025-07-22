@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -2309,16 +2310,31 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (format == null)
 						return false;
 
-					var arguments = new ISqlExpression[node.Arguments.Count - 1];
+					ReadOnlyCollection<Expression> inputArguments;
+					int                            startIndex;
+
+					if (node.Arguments is [_, NewArrayExpression arrayExpr])
+					{
+						inputArguments = arrayExpr.Expressions;
+						startIndex     = 0;
+					}
+					else
+					{
+						inputArguments = node.Arguments;
+						startIndex     = 1;
+					}
+
+					var arguments = new ISqlExpression[inputArguments.Count - startIndex];
+
 					var stringType = MappingSchema.GetDbDataType(typeof(string));
 
-					for (var i = 1; i < node.Arguments.Count; i++)
+					for (var i = startIndex; i < inputArguments.Count; i++)
 					{
-						var expr = BuildSqlExpression(node.Arguments[i]);
+						var expr = BuildSqlExpression(inputArguments[i]);
 						if (expr is not SqlPlaceholderExpression sqlPlaceholder)
 							return false;
 
-						arguments[i - 1] = new SqlCoalesceExpression(sqlPlaceholder.Sql, new SqlValue(stringType, ""));
+						arguments[i - startIndex] = new SqlCoalesceExpression(sqlPlaceholder.Sql, new SqlValue(stringType, ""));
 					}
 
 					ISqlExpression result;
