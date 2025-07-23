@@ -327,6 +327,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				else
 				{
+					// Only first member's filter expression and function are used.
+					if (found.FilterExpression == null && found.FilterFunc == null)
+					{
+						found.FilterExpression = member.FilterExpression;
+						found.FilterFunc       = member.FilterFunc;
+					}
 					member = found;
 				}
 
