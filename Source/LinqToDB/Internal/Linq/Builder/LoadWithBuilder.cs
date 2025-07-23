@@ -333,6 +333,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						found.FilterExpression = member.FilterExpression;
 						found.FilterFunc       = member.FilterFunc;
 					}
+
 					member = found;
 				}
 
