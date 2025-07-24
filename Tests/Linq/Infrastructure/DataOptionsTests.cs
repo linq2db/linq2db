@@ -467,6 +467,123 @@ namespace Tests.Infrastructure
 				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
 				Assert.That(((IConfigurationID)db).ConfigurationID,         Is.EqualTo(dbID));
 			}
+
+			db.CommandTimeout = 15;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.CommandTimeout, Is.EqualTo(15));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID, Is.EqualTo(dbID));
+			}
+
+			using (db.UseOptions<DataContextOptions>(o => o with { CommandTimeout = 25 }))
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.CommandTimeout, Is.EqualTo(25));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.Not.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID, Is.Not.EqualTo(dbID));
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.CommandTimeout, Is.EqualTo(15));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID, Is.EqualTo(dbID));
+			}
+
+			db.ResetCommandTimeout();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.CommandTimeout, Is.EqualTo(-1));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID, Is.EqualTo(dbID));
+			}
+
+			using (db.UseOptions<DataContextOptions>(o => o with { CommandTimeout = 35 }))
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.CommandTimeout, Is.EqualTo(35));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.Not.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID, Is.Not.EqualTo(dbID));
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.CommandTimeout, Is.EqualTo(-1));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID, Is.EqualTo(dbID));
+			}
+		}
+
+		[Test]
+		public void UseCommandTimeoutOnContextTest()
+		{
+			using var db = new DataContext(new DataOptions().UseCommandTimeout(30));
+
+			var commandTimeout = db.CommandTimeout;
+			var optionsID      = ((IConfigurationID)db.Options).ConfigurationID;
+			var dbID           = ((IConfigurationID)db).        ConfigurationID;
+
+			using (db.UseOptions<DataContextOptions>(o => o with { CommandTimeout = 45 }))
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.CommandTimeout, Is.EqualTo(45));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.Not.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID, Is.Not.EqualTo(dbID));
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.CommandTimeout, Is.EqualTo(commandTimeout));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID, Is.EqualTo(dbID));
+			}
+
+			db.CommandTimeout = 15;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.CommandTimeout, Is.EqualTo(15));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID, Is.EqualTo(dbID));
+			}
+
+			using (db.UseOptions<DataContextOptions>(o => o with { CommandTimeout = 25 }))
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.CommandTimeout, Is.EqualTo(25));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.Not.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID, Is.Not.EqualTo(dbID));
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.CommandTimeout, Is.EqualTo(15));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID, Is.EqualTo(dbID));
+			}
+
+			db.ResetCommandTimeout();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.CommandTimeout, Is.EqualTo(-1));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID, Is.EqualTo(dbID));
+			}
+
+			using (db.UseOptions<DataContextOptions>(o => o with { CommandTimeout = 35 }))
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.CommandTimeout, Is.EqualTo(35));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.Not.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID, Is.Not.EqualTo(dbID));
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.CommandTimeout, Is.EqualTo(-1));
+				Assert.That(((IConfigurationID)db.Options).ConfigurationID, Is.EqualTo(optionsID));
+				Assert.That(((IConfigurationID)db).ConfigurationID, Is.EqualTo(dbID));
+			}
 		}
 
 		[Test]

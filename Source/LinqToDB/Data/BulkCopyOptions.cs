@@ -12,6 +12,16 @@ namespace LinqToDB.Data
 	/// </param>
 	/// <param name="BulkCopyTimeout">
 	/// Number of seconds for the operation to complete before it times out.
+	/// For native bulk copy this option works only for providers that support it:
+	/// <list type="bullet">
+	/// <item>DB2</item>
+	/// <item>Informix</item>
+	/// <item>MySql/MariaDB using MySqlConnector provider</item>
+	/// <item>Oracle</item>
+	/// <item>SAP HANA</item>
+	/// <item>SQL Server</item>
+	/// <item>SAP/Sybase ASE</item>
+	/// </list>
 	/// </param>
 	/// <param name="BulkCopyType">
 	/// Default bulk copy mode, used by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>

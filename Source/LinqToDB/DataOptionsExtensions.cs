@@ -895,7 +895,7 @@ namespace LinqToDB
 		#region DataContextOptions
 
 		/// <summary>
-		/// Command timeout or <c>null</c> for default timeout.
+		/// Command timeout in seconds or <c>null</c> for default timeout.
 		/// Default value: <c>null</c>.
 		/// </summary>
 		[Pure]
@@ -905,7 +905,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Command timeout or <c>null</c> for default timeout.
+		/// Command timeout in seconds or <c>null</c> for default timeout.
 		/// Default value: <c>null</c>.
 		/// </summary>
 		[Pure]
@@ -1386,6 +1386,16 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Number of seconds for the operation to complete before it times out.
+		/// For native bulk copy this option works only for providers that support it:
+		/// <list type="bullet">
+		/// <item>DB2</item>
+		/// <item>Informix</item>
+		/// <item>MySql/MariaDB using MySqlConnector provider</item>
+		/// <item>Oracle</item>
+		/// <item>SAP HANA</item>
+		/// <item>SQL Server</item>
+		/// <item>SAP/Sybase ASE</item>
+		/// </list>
 		/// </summary>
 		[Pure]
 		public static BulkCopyOptions WithBulkCopyTimeout(this BulkCopyOptions options, int? bulkCopyTimeout)
@@ -1585,6 +1595,16 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Number of seconds for the operation to complete before it times out.
+		/// For native bulk copy this option works only for providers that support it:
+		/// <list type="bullet">
+		/// <item>DB2</item>
+		/// <item>Informix</item>
+		/// <item>MySql/MariaDB using MySqlConnector provider</item>
+		/// <item>Oracle</item>
+		/// <item>SAP HANA</item>
+		/// <item>SQL Server</item>
+		/// <item>SAP/Sybase ASE</item>
+		/// </list>
 		/// </summary>
 		[Pure]
 		public static DataOptions UseBulkCopyTimeout(this DataOptions options, int? bulkCopyTimeout)
