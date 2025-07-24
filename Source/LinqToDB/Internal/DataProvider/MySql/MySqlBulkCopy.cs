@@ -161,10 +161,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				};
 			}
 
-			if (options.BulkCopyTimeout.HasValue)
-				bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-			else if (LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
-				bc.BulkCopyTimeout = connection.ConnectionTimeout;
+			if (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+				bc.BulkCopyTimeout = options.BulkCopyTimeout ?? dataConnection.CommandTimeout;
 
 			var tableName = GetTableName(sb, options, table);
 
@@ -236,10 +234,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				};
 			}
 
-			if (options.BulkCopyTimeout.HasValue)
-				bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-			else if (LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
-				bc.BulkCopyTimeout = connection.ConnectionTimeout;
+			if (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+				bc.BulkCopyTimeout = options.BulkCopyTimeout ?? dataConnection.CommandTimeout;
 
 			var tableName = GetTableName(sb, options, table);
 
@@ -305,7 +301,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				};
 			}
 
-			if (options.BulkCopyTimeout.HasValue) bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
+			if (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+				bc.BulkCopyTimeout = options.BulkCopyTimeout ?? dataConnection.CommandTimeout;
 
 			var tableName = GetTableName(sb, options, table);
 
