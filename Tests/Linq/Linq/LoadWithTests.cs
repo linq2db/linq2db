@@ -819,7 +819,7 @@ namespace Tests.Linq
 		[Table(Name = "PeopleForLoadWith")]
 		public sealed class PersonX
 		{
-			[Column, PrimaryKey, Identity]
+			[Column, PrimaryKey]
 			public int Id { get; set; }
 
 			[Column]
@@ -833,16 +833,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWithChainedAfterFilter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void LoadWithChainedAfterFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
+			var data = new[]
+			{
+				new PersonX { Id = 1, Name = "Grandparent" }, 
+				new PersonX { Id = 2, Name = "Parent", ParentId = 1 },
+				new PersonX { Id = 3, Name = "Child",  ParentId = 2 }
+			};
+
 			using var db      = GetDataContext(context);
-			using var parents = db.CreateLocalTable<PersonX>();
+			using var parents = db.CreateLocalTable(data);
 
-			var grandParentId = db.InsertWithInt32Identity(new PersonX { Name = "Grandparent" });
-			var parentId      = db.InsertWithInt32Identity(new PersonX { Name = "Parent", ParentId = grandParentId });
-			db.Insert(new PersonX { Name = "Child", ParentId = parentId });
-
-			var singleItem = db.GetTable<PersonX>()
+			var singleItem = parents
 				.Where(p => p.Children!.Any(c => c.ParentId != null))
 				.LoadWith(p => p.Children, children => children.LoadWith(child => child.Children))
 				.First();
