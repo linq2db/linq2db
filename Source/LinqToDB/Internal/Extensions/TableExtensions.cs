@@ -11,7 +11,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.Extensions
 {
-	public static class TableExtensions
+	static class TableExtensions
 	{
 		public static IDataProvider GetDataProvider<T>(this ITable<T> table)
 			where T : notnull

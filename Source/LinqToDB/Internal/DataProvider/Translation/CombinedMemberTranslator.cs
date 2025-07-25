@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 using LinqToDB.Linq.Translation;
 
-namespace LinqToDB.Internal.Linq.Translation
+namespace LinqToDB.Internal.DataProvider.Translation
 {
 	public sealed class CombinedMemberTranslator : IMemberTranslator
 	{

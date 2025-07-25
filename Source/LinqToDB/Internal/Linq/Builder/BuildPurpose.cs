@@ -3,7 +3,7 @@
 namespace LinqToDB.Internal.Linq.Builder
 {
 	[Flags]
-	public enum BuildPurpose
+	enum BuildPurpose
 	{
 		None,
 		Sql,

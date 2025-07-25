@@ -2,13 +2,13 @@
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.DB2.Translation
 {
-	public class DB2MemberTranslator : ProviderMemberTranslatorDefault
+	sealed class DB2MemberTranslator : ProviderMemberTranslatorDefault
 	{
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -81,7 +81,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.DateTime));
 		}
 
-		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		sealed class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
@@ -267,7 +267,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 			}
 		}
 
-		protected class DB2MathMemberTranslator : MathMemberTranslatorBase
+		sealed class DB2MathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
 			{
@@ -288,7 +288,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 			}
 		}
 
-		public class StringMemberTranslator : StringMemberTranslatorBase
+		sealed class StringMemberTranslator : StringMemberTranslatorBase
 		{
 		}
 

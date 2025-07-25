@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public class SimpleServiceProvider : IServiceProvider
+	public sealed class SimpleServiceProvider : IServiceProvider
 	{
 		readonly Dictionary<Type, object> _services = new();
 

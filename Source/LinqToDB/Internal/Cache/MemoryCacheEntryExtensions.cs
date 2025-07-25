@@ -5,7 +5,7 @@ using System;
 
 namespace LinqToDB.Internal.Cache
 {
-	public static class MemoryCacheEntryExtensions
+	static class MemoryCacheEntryExtensions
 	{
 		/// <summary>
 		/// Sets the priority for keeping the cache entry in the cache during a memory pressure tokened cleanup.

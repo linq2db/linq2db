@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Internal.Expressions
 {
-	public class SqlDefaultIfEmptyExpression : Expression
+	public sealed class SqlDefaultIfEmptyExpression : Expression
 	{
 		public Expression                     InnerExpression    { get; }
 		public ReadOnlyCollection<Expression> NotNullExpressions { get; }

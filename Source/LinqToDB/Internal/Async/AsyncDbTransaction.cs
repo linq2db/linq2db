@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Async
 	/// Basic <see cref="IAsyncDbTransaction"/> implementation with fallback to synchronous operations if corresponding functionality
 	/// missing from <see cref="DbTransaction"/>.
 	/// </summary>
-	public class AsyncDbTransaction : IAsyncDbTransaction
+	class AsyncDbTransaction : IAsyncDbTransaction
 	{
 		protected internal AsyncDbTransaction(DbTransaction transaction)
 		{

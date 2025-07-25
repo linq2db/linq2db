@@ -2,13 +2,13 @@
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 {
-	public class PostgreSQLMemberTranslator : ProviderMemberTranslatorDefault
+	sealed class PostgreSQLMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -65,7 +65,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.VarChar));
 		}
 
-		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		sealed class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{

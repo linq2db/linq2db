@@ -3,19 +3,19 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.Access.Translation
 {
-	public class AccessMemberTranslator : ProviderMemberTranslatorDefault
+	class AccessMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 		}
 
-		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		sealed class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
@@ -246,7 +246,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		}
 
-		public class StringMemberTranslator : StringMemberTranslatorBase
+		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{

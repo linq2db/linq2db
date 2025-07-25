@@ -4,13 +4,13 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 {
-	public class SQLiteMemberTranslator : ProviderMemberTranslatorDefault
+	sealed class SQLiteMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 			return new GuidMemberTranslator();
 		}
 
-		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		sealed class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			const string StrFTimeFuncName = "strftime";
 			const string DateFormat = "%Y-%m-%d %H:%M:%f";
@@ -209,7 +209,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 			}
 		}
 
-		public class StringMemberTranslator : StringMemberTranslatorBase
+		sealed class StringMemberTranslator : StringMemberTranslatorBase
 		{
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{

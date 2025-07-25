@@ -8,7 +8,7 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.Expressions
 {
-	public class SqlErrorExpression : Expression
+	public sealed class SqlErrorExpression : Expression
 	{
 		public SqlErrorExpression(Expression? expression, string? message, Type resultType, bool isCritical)
 		{

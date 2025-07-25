@@ -2,9 +2,8 @@
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlProvider;
-using LinqToDB.Internal.SqlQuery.Visitors;
 
-namespace LinqToDB.Internal.SqlQuery
+namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	public sealed class SqlQueryOrderByOptimizer : SqlQueryVisitor
 	{

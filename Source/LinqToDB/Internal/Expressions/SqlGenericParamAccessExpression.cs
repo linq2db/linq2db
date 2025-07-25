@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace LinqToDB.Internal.Expressions
 {
-	public class SqlGenericParamAccessExpression : Expression, IEquatable<SqlGenericParamAccessExpression>
+	sealed class SqlGenericParamAccessExpression : Expression, IEquatable<SqlGenericParamAccessExpression>
 	{
 		public Expression    Constructor   { get; }
 		public ParameterInfo ParameterInfo { get; }

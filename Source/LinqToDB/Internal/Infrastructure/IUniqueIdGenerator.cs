@@ -1,12 +1,11 @@
 ﻿namespace LinqToDB.Internal.Infrastructure
 {
-	public interface IUniqueIdGenerator
+	interface IUniqueIdGenerator
 	{
 		public int GetNext();
 	}
 
-	public interface IUniqueIdGenerator<T> : IUniqueIdGenerator
+	interface IUniqueIdGenerator<T> : IUniqueIdGenerator
 	{
 	}
-
 }

@@ -9,7 +9,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
-	public class ClickHouseSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	sealed class ClickHouseSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		readonly ClickHouseOptions _providerOptions;
 
@@ -328,7 +328,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return base.ConvertSqlFunction(func);
 		}
 
-		protected ISqlExpression MakeConversion(ISqlExpression expression, DbDataType toType, bool isTry, ISqlExpression? defaultValue)
+		ISqlExpression MakeConversion(ISqlExpression expression, DbDataType toType, bool isTry, ISqlExpression? defaultValue)
 		{
 			if (ShouldSkipCast(expression, toType))
 				return expression;
@@ -355,7 +355,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 								new SqlExpression(
 										toType,
 										"TRAILING '\x00' FROM {0}",
-										LinqToDB.SqlQuery.Precedence.Primary,
+										Precedence.Primary,
 										SqlFlags.None,
 										ParametersNullabilityType.IfAnyParameterNullable,
 										value

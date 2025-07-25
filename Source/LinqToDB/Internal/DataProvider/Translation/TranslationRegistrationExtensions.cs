@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace LinqToDB.Internal.Linq.Translation
+namespace LinqToDB.Internal.DataProvider.Translation
 {
 	public static class TranslationRegistrationExtensions
 	{

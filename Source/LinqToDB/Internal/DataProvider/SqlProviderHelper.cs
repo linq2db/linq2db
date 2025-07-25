@@ -5,7 +5,7 @@ using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public static class SqlProviderHelper
+	static class SqlProviderHelper
 	{
 		internal static readonly ObjectPool<SqlQueryValidatorVisitor> ValidationVisitorPool = new(() => new SqlQueryValidatorVisitor(), v => v.Cleanup(), 100);
 

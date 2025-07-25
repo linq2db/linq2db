@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.Internal.SchemaProvider
 {
-	public class ForeignKeyInfo
+	public sealed class ForeignKeyInfo
 	{
 		public string Name         = null!;
 		public string ThisTableID  = null!;

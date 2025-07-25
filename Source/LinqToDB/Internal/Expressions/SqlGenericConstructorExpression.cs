@@ -12,7 +12,7 @@ using LinqToDB.Reflection;
 
 namespace LinqToDB.Internal.Expressions
 {
-	public class SqlGenericConstructorExpression : Expression, IEquatable<SqlGenericConstructorExpression>
+	public sealed class SqlGenericConstructorExpression : Expression, IEquatable<SqlGenericConstructorExpression>
 	{
 		public Expression?      NewExpression     { get; private set; }
 		public ConstructorInfo? Constructor       { get; private set; }

@@ -1,14 +1,14 @@
 ﻿using System.Linq.Expressions;
 
-using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 {
-	public class SqlServer2022MemberTranslator : SqlServer2012MemberTranslator
+	sealed class SqlServer2022MemberTranslator : SqlServer2012MemberTranslator
 	{
-		protected class SqlServer2022MathMemberTranslator : SqlServerMathMemberTranslator
+		sealed class SqlServer2022MathMemberTranslator : SqlServerMathMemberTranslator
 		{
 			protected override ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
 			{

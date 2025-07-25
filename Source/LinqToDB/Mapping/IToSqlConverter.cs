@@ -1,6 +1,6 @@
 ﻿using LinqToDB.Internal.SqlQuery;
 
-namespace LinqToDB.Internal.Linq.Builder
+namespace LinqToDB.Mapping
 {
 	public interface IToSqlConverter
 	{

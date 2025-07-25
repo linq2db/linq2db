@@ -8,7 +8,7 @@ namespace LinqToDB.Internal.Cache
 	/// <summary>
 	/// Abstracts the system clock to facilitate testing.
 	/// </summary>
-	public interface ISystemClock
+	interface ISystemClock
 	{
 		/// <summary>
 		/// Retrieves the current system time in UTC.

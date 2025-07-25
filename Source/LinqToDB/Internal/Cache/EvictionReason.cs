@@ -3,7 +3,7 @@
 
 namespace LinqToDB.Internal.Cache
 {
-	public enum EvictionReason
+	enum EvictionReason
 	{
 		None,
 

@@ -6,7 +6,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL
 {
-	public partial class PostgreSQLSqlBuilder
+	partial class PostgreSQLSqlBuilder
 	{
 		// we enable MERGE in base pgsql builder class intentionally
 		// this will allow users to use older dialects with merge at the same time

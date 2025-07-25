@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.Linq
 {
-	public interface IQueryContext
+	interface IQueryContext
 	{
 		SqlStatement    Statement       { get; }
 		object?         Context         { get; set; }

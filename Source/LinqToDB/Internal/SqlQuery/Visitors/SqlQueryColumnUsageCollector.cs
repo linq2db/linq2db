@@ -2,9 +2,8 @@
 using System.Linq;
 
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.SqlQuery.Visitors;
 
-namespace LinqToDB.Internal.SqlQuery
+namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	public sealed class SqlQueryColumnUsageCollector : SqlQueryVisitor
 	{

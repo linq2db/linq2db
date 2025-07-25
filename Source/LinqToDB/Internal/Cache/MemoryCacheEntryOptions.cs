@@ -9,7 +9,7 @@ namespace LinqToDB.Internal.Cache
 	/// <summary>
 	/// Represents the cache options applied to an entry of the <see cref="IMemoryCache{TKey,TItem}"/> instance.
 	/// </summary>
-	public class MemoryCacheEntryOptions<TKey>
+	sealed class MemoryCacheEntryOptions<TKey>
 		where TKey: notnull
 	{
 		private DateTimeOffset? _absoluteExpiration;

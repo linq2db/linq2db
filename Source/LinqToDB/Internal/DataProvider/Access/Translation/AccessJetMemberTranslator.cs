@@ -5,7 +5,7 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.Access.Translation
 {
-	public class AccessJetMemberTranslator : AccessMemberTranslator
+	sealed class AccessJetMemberTranslator : AccessMemberTranslator
 	{
 		protected override IMemberTranslator CreateStringMemberTranslator()
 		{

@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.Linq
 {
-	public interface IResultEnumerable<out T> : IEnumerable<T>, IAsyncEnumerable<T>
+	interface IResultEnumerable<out T> : IEnumerable<T>, IAsyncEnumerable<T>
 	{
 	}
 }

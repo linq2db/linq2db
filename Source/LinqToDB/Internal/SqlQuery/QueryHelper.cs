@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

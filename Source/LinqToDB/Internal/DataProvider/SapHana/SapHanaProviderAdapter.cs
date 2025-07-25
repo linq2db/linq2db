@@ -18,7 +18,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 {
 	// TODO: add HanaDecimal support
 	// TODO: add ReadVector support
-	public class SapHanaProviderAdapter : IDynamicProviderAdapter
+	public sealed class SapHanaProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _unmanagedSyncRoot = new ();
 		private static readonly Lock _odbcSyncRoot      = new ();

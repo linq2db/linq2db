@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Internal.Cache
 {
-	public static class CacheExtensions
+	static class CacheExtensions
 	{
 		public static TItem? Get<TKey,TItem>(this IMemoryCache<TKey,TItem> cache, TKey key)
 			where TKey : notnull

@@ -10,7 +10,7 @@ using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	abstract class DatabaseSpecificTable<TSource> : ITable<TSource>
+	public abstract class DatabaseSpecificTable<TSource> : ITable<TSource>
 		where TSource : notnull
 	{
 		protected DatabaseSpecificTable(ITable<TSource> table)

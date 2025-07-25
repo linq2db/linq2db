@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	public class Firebird3SqlExpressionConvertVisitor : FirebirdSqlExpressionConvertVisitor
+	sealed class Firebird3SqlExpressionConvertVisitor : FirebirdSqlExpressionConvertVisitor
 	{
 		public Firebird3SqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{

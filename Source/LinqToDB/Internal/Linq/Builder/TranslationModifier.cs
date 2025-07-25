@@ -5,7 +5,7 @@ using System.Linq;
 namespace LinqToDB.Internal.Linq.Builder
 {
 	[DebuggerDisplay("InlineParameters = {InlineParameters}, IgnoreQueryFilters = {IgnoreQueryFilters}")]
-	public class TranslationModifier : IEquatable<TranslationModifier>
+	sealed class TranslationModifier : IEquatable<TranslationModifier>
 	{
 		public static readonly TranslationModifier Default = new();
 

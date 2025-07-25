@@ -6,9 +6,9 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
-namespace LinqToDB.Internal.Linq.Translation
+namespace LinqToDB.Internal.DataProvider.Translation
 {
-	public class DateFunctionsTranslatorBase : MemberTranslatorBase
+	public abstract class DateFunctionsTranslatorBase : MemberTranslatorBase
 	{
 		public DateFunctionsTranslatorBase()
 		{

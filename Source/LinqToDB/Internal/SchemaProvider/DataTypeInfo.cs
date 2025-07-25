@@ -8,7 +8,7 @@ namespace LinqToDB.Internal.SchemaProvider
 	/// https://docs.microsoft.com/en-us/dotnet/framework/data/adonet/common-schema-collections.
 	/// </summary>
 	[DebuggerDisplay("TypeName = {TypeName}, DataType = {DataType}, CreateFormat = {CreateFormat}, CreateParameters = {CreateParameters}")]
-	public class DataTypeInfo
+	public sealed class DataTypeInfo
 	{
 		/// <summary>
 		/// Marks provider-specific types.

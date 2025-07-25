@@ -17,7 +17,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
-	public class ClickHouseProviderAdapter : IDynamicProviderAdapter
+	public sealed class ClickHouseProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _octonicaSyncRoot = new ();
 		private static readonly Lock _clientSyncRoot   = new ();
@@ -266,7 +266,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateOctonicaAdapter()
 		{
-			var assembly = Internal.Common.Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
+			var assembly = Common.Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {OctonicaAssemblyName}");
 

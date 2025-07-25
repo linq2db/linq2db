@@ -3,7 +3,7 @@
 namespace LinqToDB.Internal.Infrastructure
 {
 	[DebuggerDisplay("Generator({_current})")]
-	public class UniqueIdGenerator<T> : IUniqueIdGenerator<T>
+	sealed class UniqueIdGenerator<T> : IUniqueIdGenerator<T>
 	{
 		int _current;
 

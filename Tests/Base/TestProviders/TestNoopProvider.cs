@@ -9,7 +9,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Internal.DataProvider;
-using LinqToDB.Internal.DataProvider.SQLite.Translation;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
@@ -303,7 +303,7 @@ namespace Tests
 
 		public override    ISqlBuilder       CreateSqlBuilder (MappingSchema mappingSchema, DataOptions dataOptions) => new TestNoopSqlBuilder(this, MappingSchema, dataOptions);
 		public override    ISchemaProvider   GetSchemaProvider()      => throw new NotImplementedException();
-		protected override IMemberTranslator CreateMemberTranslator() => new SQLiteMemberTranslator();
+		protected override IMemberTranslator CreateMemberTranslator() => new MemberTranslatorBase();
 
 		public override    ISqlOptimizer     GetSqlOptimizer  (DataOptions dataOptions) => TestNoopSqlOptimizer.Instance;
 		public override    TableOptions      SupportedTableOptions                      => TableOptions.None;

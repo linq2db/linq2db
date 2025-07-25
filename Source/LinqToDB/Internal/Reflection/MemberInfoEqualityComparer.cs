@@ -6,7 +6,7 @@ using LinqToDB.Internal.Mapping;
 
 namespace LinqToDB.Internal.Reflection
 {
-	public class MemberInfoEqualityComparer : IEqualityComparer<MemberInfo>
+	public sealed class MemberInfoEqualityComparer : IEqualityComparer<MemberInfo>
 	{
 		public static readonly MemberInfoEqualityComparer Default = new();
 

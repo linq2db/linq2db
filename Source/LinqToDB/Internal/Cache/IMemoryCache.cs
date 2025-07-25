@@ -9,7 +9,7 @@ namespace LinqToDB.Internal.Cache
 	/// <summary>
 	/// Represents a local in-memory cache whose values are not serialized.
 	/// </summary>
-	public interface IMemoryCache<TKey,TEntry> : IDisposable
+	interface IMemoryCache<TKey,TEntry> : IDisposable
 		where TKey: notnull
 	{
 		/// <summary>

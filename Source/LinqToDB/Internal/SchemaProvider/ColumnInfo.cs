@@ -3,7 +3,7 @@
 namespace LinqToDB.Internal.SchemaProvider
 {
 	[DebuggerDisplay("TableID = {TableID}, Name = {Name}, DataType = {DataType}, Length = {Length}, Precision = {Precision}, Scale = {Scale}")]
-	public class ColumnInfo
+	public sealed class ColumnInfo
 	{
 		public string    TableID = null!;
 		public string    Name = null!;

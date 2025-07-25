@@ -6,7 +6,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Expressions
 {
-	public class SqlQueryRootExpression : Expression, IEquatable<SqlQueryRootExpression>
+	public sealed class SqlQueryRootExpression : Expression, IEquatable<SqlQueryRootExpression>
 	{
 		public MappingSchema MappingSchema { get; }
 		public Type          ContextType   { get; }

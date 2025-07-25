@@ -8,7 +8,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Expressions
 {
-	public static class SqlQueryDependentAttributeHelper
+	static class SqlQueryDependentAttributeHelper
 	{
 		static readonly ConcurrentDictionary<MethodInfo,IList<SqlQueryDependentAttribute?>?> _queryDependentMethods = new ();
 

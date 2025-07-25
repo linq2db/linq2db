@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Internal.Common
 {
-	public class SnapshotDictionary<TKey, TValue> : IDictionary<TKey, TValue>
+	sealed class SnapshotDictionary<TKey, TValue> : IDictionary<TKey, TValue>
 		where TKey : notnull
 	{
 		readonly Dictionary<TKey, TValue> _dictionary;

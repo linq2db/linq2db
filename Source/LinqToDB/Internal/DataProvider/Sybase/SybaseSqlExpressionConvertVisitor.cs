@@ -3,7 +3,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Sybase
 {
-	public class SybaseSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	sealed class SybaseSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public SybaseSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{

@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.Common
 
 	}
 
-	internal class MTuple<T1>
+	internal sealed class MTuple<T1>
 	{
 		public T1 Item1 { get; set; }
 		static IEqualityComparer<T1> _item1ValueComparer = ValueComparer.GetDefaultValueComparer<T1>(true);
@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.Common
 		public override int GetHashCode()
 			=> _item1ValueComparer.GetHashCode(Item1);
 	}
-	internal class MTuple<T1, T2>
+	internal sealed class MTuple<T1, T2>
 	{
 		public T1 Item1 { get; set; }
 		public T2 Item2 { get; set; }
@@ -65,7 +65,7 @@ namespace LinqToDB.Internal.Common
 			=> HashCode.Combine(_item1ValueComparer.GetHashCode(Item1),
 				_item2ValueComparer.GetHashCode(Item2));
 	}
-	internal class MTuple<T1, T2, T3>
+	internal sealed class MTuple<T1, T2, T3>
 	{
 		public T1 Item1 { get; set; }
 		public T2 Item2 { get; set; }
@@ -92,7 +92,7 @@ namespace LinqToDB.Internal.Common
 				_item2ValueComparer.GetHashCode(Item2),
 				_item3ValueComparer.GetHashCode(Item3));
 	}
-	internal class MTuple<T1, T2, T3, T4>
+	internal sealed class MTuple<T1, T2, T3, T4>
 	{
 		public T1 Item1 { get; set; }
 		public T2 Item2 { get; set; }
@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.Common
 				_item3ValueComparer.GetHashCode(Item3),
 				_item4ValueComparer.GetHashCode(Item4));
 	}
-	internal class MTuple<T1, T2, T3, T4, T5>
+	internal sealed class MTuple<T1, T2, T3, T4, T5>
 	{
 		public T1 Item1 { get; set; }
 		public T2 Item2 { get; set; }
@@ -158,7 +158,7 @@ namespace LinqToDB.Internal.Common
 				_item4ValueComparer.GetHashCode(Item4),
 				_item5ValueComparer.GetHashCode(Item5));
 	}
-	internal class MTuple<T1, T2, T3, T4, T5, T6>
+	internal sealed class MTuple<T1, T2, T3, T4, T5, T6>
 	{
 		public T1 Item1 { get; set; }
 		public T2 Item2 { get; set; }
@@ -197,7 +197,7 @@ namespace LinqToDB.Internal.Common
 				_item5ValueComparer.GetHashCode(Item5),
 				_item6ValueComparer.GetHashCode(Item6));
 	}
-	internal class MTuple<T1, T2, T3, T4, T5, T6, T7>
+	internal sealed class MTuple<T1, T2, T3, T4, T5, T6, T7>
 	{
 		public T1 Item1 { get; set; }
 		public T2 Item2 { get; set; }
@@ -240,7 +240,7 @@ namespace LinqToDB.Internal.Common
 				_item6ValueComparer.GetHashCode(Item6),
 				_item7ValueComparer.GetHashCode(Item7));
 	}
-	internal class MTuple<T1, T2, T3, T4, T5, T6, T7, T8>
+	internal sealed class MTuple<T1, T2, T3, T4, T5, T6, T7, T8>
 	{
 		public T1 Item1 { get; set; }
 		public T2 Item2 { get; set; }

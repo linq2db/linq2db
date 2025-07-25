@@ -16,7 +16,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public class BulkCopyReader<T> : BulkCopyReader, IAsyncDisposable
+	public sealed class BulkCopyReader<T> : BulkCopyReader, IAsyncDisposable
 	{
 		readonly IEnumerator<T>?      _enumerator;
 		readonly IAsyncEnumerator<T>? _asyncEnumerator;

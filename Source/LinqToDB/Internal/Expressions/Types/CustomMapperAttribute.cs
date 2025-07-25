@@ -3,7 +3,7 @@
 namespace LinqToDB.Internal.Expressions.Types
 {
 	[AttributeUsage(AttributeTargets.ReturnValue)]
-	public class CustomMapperAttribute : Attribute
+	public sealed class CustomMapperAttribute : Attribute
 	{
 		public CustomMapperAttribute(Type mapper)
 		{

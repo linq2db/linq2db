@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.Internal.Common
 {
-	public static class StringBuilderExtensions
+	static class StringBuilderExtensions
 	{
 		private static readonly uint[] _lookup32 = CreateLookup32();
 

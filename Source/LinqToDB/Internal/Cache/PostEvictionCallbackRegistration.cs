@@ -3,7 +3,7 @@
 
 namespace LinqToDB.Internal.Cache
 {
-	public class PostEvictionCallbackRegistration<TKey>
+	sealed class PostEvictionCallbackRegistration<TKey>
 		where TKey: notnull
 	{
 		public PostEvictionDelegate<TKey> EvictionCallback { get; set; } = null!;

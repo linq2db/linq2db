@@ -1,14 +1,14 @@
 ﻿using System;
 
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL
 {
-	public class PostgreSQLSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	sealed class PostgreSQLSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public PostgreSQLSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{

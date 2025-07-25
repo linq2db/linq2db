@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.Expressions.Types
 {
-	public class ValueTaskToTaskMapper : ICustomMapper
+	public sealed class ValueTaskToTaskMapper : ICustomMapper
 	{
 		bool ICustomMapper.CanMap(Expression expression)
 		{

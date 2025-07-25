@@ -5,7 +5,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
-	public class Oracle11SqlOptimizer : BasicSqlOptimizer
+	class Oracle11SqlOptimizer : BasicSqlOptimizer
 	{
 		public Oracle11SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

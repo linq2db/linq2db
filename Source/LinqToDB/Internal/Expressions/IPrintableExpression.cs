@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.Internal.Expressions
 {
-	public interface IPrintableExpression
+	interface IPrintableExpression
 	{
 		/// <summary>
 		///     Creates a printable string representation of the given expression using <see cref="ExpressionPrinter" />.

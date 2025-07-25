@@ -3,13 +3,13 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 {
-	public class SqlServerMemberTranslator : ProviderMemberTranslatorDefault
+	class SqlServerMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.DateTime));
 		}
 
-		public class SqlServerDateFunctionsTranslator : DateFunctionsTranslatorBase
+		protected class SqlServerDateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			public static string? DatePartToStr(Sql.DateParts part)
 			{
@@ -183,7 +183,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			}
 		}
 
-		public class SqlServerMathMemberTranslator : MathMemberTranslatorBase
+		protected class SqlServerMathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
@@ -196,7 +196,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			}
 		}
 
-		public class StringMemberTranslator : StringMemberTranslatorBase
+		sealed class StringMemberTranslator : StringMemberTranslatorBase
 		{
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{

@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.Infrastructure
 	///         not used in application code.
 	///     </para>
 	/// </summary>
-	public static class TypeExtensions
+	static class TypeExtensions
 	{
 		/// <summary>
 		///     <para>

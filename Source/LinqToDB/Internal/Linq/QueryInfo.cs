@@ -8,7 +8,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq
 {
-	public class QueryInfo : IQueryContext
+	public sealed class QueryInfo : IQueryContext
 	{
 		#if DEBUG
 

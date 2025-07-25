@@ -3,7 +3,7 @@
 	/// <summary>
 	/// Database procedure or function description.
 	/// </summary>
-	public class ProcedureInfo
+	public sealed class ProcedureInfo
 	{
 		/// <summary>
 		/// Gets or sets unique procedure identifier.

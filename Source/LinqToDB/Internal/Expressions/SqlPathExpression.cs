@@ -6,7 +6,7 @@ using LinqToDB;
 
 namespace LinqToDB.Internal.Expressions
 {
-	public class SqlPathExpression : Expression, IEquatable<SqlPathExpression>
+	sealed class SqlPathExpression : Expression, IEquatable<SqlPathExpression>
 	{
 		public SqlPathExpression(Expression[] path, Type type)
 		{

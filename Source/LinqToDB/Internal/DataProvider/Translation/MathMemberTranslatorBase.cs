@@ -6,7 +6,7 @@ using LinqToDB;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
-namespace LinqToDB.Internal.Linq.Translation
+namespace LinqToDB.Internal.DataProvider.Translation
 {
 	public class MathMemberTranslatorBase : MemberTranslatorBase
 	{

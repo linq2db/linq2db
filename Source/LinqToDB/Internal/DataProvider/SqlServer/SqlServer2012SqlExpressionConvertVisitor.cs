@@ -3,7 +3,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	public class SqlServer2012SqlExpressionConvertVisitor : SqlServer2008SqlExpressionConvertVisitor
+	sealed class SqlServer2012SqlExpressionConvertVisitor : SqlServer2008SqlExpressionConvertVisitor
 	{
 		public SqlServer2012SqlExpressionConvertVisitor(bool allowModify, SqlServerVersion sqlServerVersion) : base(allowModify, sqlServerVersion)
 		{
