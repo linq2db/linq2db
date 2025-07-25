@@ -85,6 +85,44 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			t.ToList().OrderByDescending(r => r.Name).ToList().ShouldBeEquivalentTo(items);
 		}
 
+		[Test(Description = "Needed to test we still have compatibility with old provider versions")]
+		public virtual void TestNativeBulkCopyNoIdentity([EFDataSources] string provider)
+		{
+			using var context = CreateContext(provider);
+			using var connection = context.CreateLinqToDBConnection();
+
+			using var t = connection.CreateTempTable<NoIdentity>();
+
+			var items = new List<NoIdentity>()
+			{
+				new() {Id = TestData.Guid1, Name = "John Doe"},
+				new() {Id = TestData.Guid2, Name = "Jane Doe"}
+			};
+
+			t.BulkCopy(new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific }, items);
+
+			t.ToList().OrderByDescending(r => r.Name).ToList().ShouldBeEquivalentTo(items);
+		}
+
+		[Test(Description = "Needed to test we still have compatibility with old provider versions")]
+		public virtual async Task TestNativeBulkCopyAsyncNoIdentity([EFDataSources] string provider)
+		{
+			using var context = CreateContext(provider);
+			using var connection = context.CreateLinqToDBConnection();
+
+			using var t = connection.CreateTempTable<NoIdentity>();
+
+			var items = new List<NoIdentity>()
+			{
+				new() {Id = TestData.Guid1, Name = "John Doe"},
+				new() {Id = TestData.Guid2, Name = "Jane Doe"}
+			};
+
+			await t.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific }, items);
+
+			t.ToList().OrderByDescending(r => r.Name).ToList().ShouldBeEquivalentTo(items);
+		}
+
 		// postgres: cannot create such identity table
 		[Test]
 		public virtual void TestBulkCopyWithIdentity([EFDataSources(TestProvName.AllPostgreSQL)] string provider)

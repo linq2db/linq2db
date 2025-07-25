@@ -50,7 +50,7 @@ namespace Tests.Linq
 				Assert.That(query2.GetCacheMissCount(), Is.EqualTo(cacheMissCount));
 
 				var parameters = new List<SqlParameter>();
-				QueryHelper.CollectParameters(query.GetSelectQuery(),  parameters);
+				query.GetSelectQuery().CollectParameters(parameters);
 
 				Assert.That(parameters, Has.Count.EqualTo(1));
 				Assert.That(parameters[0].IsQueryParameter, Is.True);
@@ -77,7 +77,7 @@ namespace Tests.Linq
 				}
 
 				var parameters = new List<SqlParameter>();
-				QueryHelper.CollectParameters(query.GetSelectQuery(), parameters);
+				query.GetSelectQuery().CollectParameters(parameters);
 
 				Assert.That(parameters, Has.Count.EqualTo(1));
 				Assert.That(parameters[0].IsQueryParameter, Is.False);

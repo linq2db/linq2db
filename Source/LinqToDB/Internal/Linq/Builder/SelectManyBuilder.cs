@@ -70,7 +70,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					sequence,
 					collection,
 					defaultValue: null,
-					allowNullField: false,
 					isNullValidationDisabled: false);
 			}
 
@@ -108,7 +107,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					collectionSelectContext,
 					collection,
 					defaultValue: collectionDefaultIfEmptyContext.DefaultValue,
-					allowNullField: joinType is not (JoinType.Right or JoinType.RightApply or JoinType.Full or JoinType.FullApply),
 					isNullValidationDisabled: false);
 			}
 

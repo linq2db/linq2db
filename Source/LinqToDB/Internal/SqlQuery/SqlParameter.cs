@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.SqlQuery
 		public   string?    Name             { get; set; }
 		public   DbDataType Type             { get; set; }
 		public   bool       IsQueryParameter { get; set; }
-		internal int?       AccessorId       { get; set; }
+		public   int?       AccessorId       { get; internal set; }
 
 		public object? Value     { get; }
 		/// <summary>

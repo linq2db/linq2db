@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -160,6 +161,7 @@ namespace LinqToDB
 		/// <param name="obj"></param>
 		/// <param name="alias"></param>
 		/// <returns></returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used by builder")]
 		internal static T Alias<T>(T obj, [SqlQueryDependent] string alias)
 		{
 			return obj;
@@ -281,6 +283,7 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Extension("", BuilderType = typeof(ConvertBuilder))]
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used to specify generic parameter")]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
@@ -288,6 +291,7 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.CONVERT_FORMAT, 0, 3, 1, 2, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used by builder or to specify generic parameter")]
 		public static TTo Convert<TTo, TFrom>(TTo to, TFrom from, int format)
 		{
 			return Common.ConvertTo<TTo>.From(from);

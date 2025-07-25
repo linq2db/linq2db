@@ -61,22 +61,6 @@ namespace LinqToDB.Mapping
 				attrs.Where(a => Configuration ==     a.Configuration) ;
 		}
 
-		/// <summary>
-		/// Returns attributes of specified type, applied to specified entity member and active for current configuration.
-		/// </summary>
-		/// <typeparam name="TA">Mapping attribute type.</typeparam>
-		/// <param name="memberInfo">Member info object.</param>
-		/// <returns>Returns list of attributes.</returns>
-		private IEnumerable<TA> GetAttributes<TA>(MemberInfo memberInfo)
-			where TA : MappingAttribute
-		{
-			var attrs = _builder.GetAttributes<TA>(typeof(TEntity), memberInfo);
-
-			return string.IsNullOrEmpty(Configuration) ?
-				attrs.Where(a => string.IsNullOrEmpty(a.Configuration)):
-				attrs.Where(a => Configuration ==     a.Configuration) ;
-		}
-
 		#endregion
 
 		#region HasAttribute
@@ -726,7 +710,7 @@ namespace LinqToDB.Mapping
 
 				if (memberInfo == null) throw new ArgumentException($"'{e}' cant be converted to a class member.");
 
-				var attr = existingGetter!(_builder.GetAttributes<TA>(typeof(TEntity), memberInfo));
+				var attr = existingGetter!(_builder.GetAttributes<TA>(memberInfo));
 
 				if (attr == null)
 				{

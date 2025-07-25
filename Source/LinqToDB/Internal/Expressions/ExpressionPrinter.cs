@@ -101,11 +101,9 @@ namespace LinqToDB.Internal.Expressions
 		///     Appends all the lines to current output being built.
 		/// </summary>
 		/// <param name="value">The string to append.</param>
-		/// <param name="skipFinalNewline">If true, then a terminating new line is not added.</param>
 		/// <returns>This printer so additional calls can be chained.</returns>
-		public ExpressionPrinter AppendLines(string value, bool skipFinalNewline = false)
+		public ExpressionPrinter AppendLines(string value)
 		{
-			//TODO: skipFinalNewline
 			_stringBuilder.AppendIdentCheck(value);
 			return this;
 		}

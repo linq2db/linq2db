@@ -163,7 +163,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					// Handling dumb case With column aliases
 					//
 
-					if (Builder.HandleAlias(this, path, flags, out var newResult))
+					if (Builder.HandleAlias(this, path, out var newResult))
 						return newResult;
 
 					if (flags.IsExpression())
@@ -179,7 +179,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						if (flags.IsSubquery())
 						{
-							result = Builder.RemoveNullPropagation(this, result, false);
+							result = Builder.RemoveNullPropagation(result);
 						}
 
 						if ((flags.IsRoot() || flags.IsTraverse() || flags.IsSubquery() || flags.IsMemberRoot() || flags.IsAssociationRoot()) &&

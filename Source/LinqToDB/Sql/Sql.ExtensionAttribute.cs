@@ -748,12 +748,6 @@ namespace LinqToDB
 				return result;
 			}
 
-			static IEnumerable<Expression> ExtractArray(Expression expression)
-			{
-				var array = (NewArrayExpression) expression;
-				return array.Expressions;
-			}
-
 			public static Expression BuildSqlExpression(
 				MappingSchema mappingSchema,
 				SelectQuery query, SqlExtension root, Type systemType, int precedence,

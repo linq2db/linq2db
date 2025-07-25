@@ -169,7 +169,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		Expression FinalizeProjection<T>(
-			Query<T>            query,
 			IBuildContext       context,
 			Expression          expression,
 			ParameterExpression queryParameter,
@@ -182,7 +181,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// convert all missed references
 			
-			var postProcessed = FinalizeConstructors(context, expression, true);
+			var postProcessed = FinalizeConstructors(context, expression);
 
 			// process eager loading queries
 			var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys);
@@ -193,7 +192,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!ExpressionEqualityComparer.Instance.Equals(correctedEager, postProcessed))
 			{
 				// convert all missed references
-				postProcessed = FinalizeConstructors(context, correctedEager, false);
+				postProcessed = FinalizeConstructors(context, correctedEager);
 			}
 
 			var withColumns = ToColumns(context, postProcessed);
@@ -396,7 +395,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		public Expression FinalizeConstructors(IBuildContext context, Expression inputExpression, bool deduplicate)
+		public Expression FinalizeConstructors(IBuildContext context, Expression inputExpression)
 		{
 			var optimizerVisitor = new ExpressionTreeOptimizerVisitor();
 			var optimized        = optimizerVisitor.Visit(inputExpression);

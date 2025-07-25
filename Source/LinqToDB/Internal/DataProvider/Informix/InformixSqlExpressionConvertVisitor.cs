@@ -234,7 +234,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override IQueryElement ConvertIsDistinctPredicateAsIntersect(SqlPredicate.IsDistinct predicate)
 		{
-			return InformixSqlOptimizer.WrapParameters(base.ConvertIsDistinctPredicateAsIntersect(predicate), EvaluationContext);
+			return InformixSqlOptimizer.WrapParameters(base.ConvertIsDistinctPredicateAsIntersect(predicate));
 		}
 
 		protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)

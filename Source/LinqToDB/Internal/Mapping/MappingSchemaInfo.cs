@@ -88,7 +88,7 @@ namespace LinqToDB.Internal.Mapping
 
 		volatile Dictionary<Type,List<Type[]>>? _genericConvertProviders;
 
-		public bool InitGenericConvertProvider(Type[] types, MappingSchema mappingSchema)
+		public bool InitGenericConvertProvider(Type[] types)
 		{
 			var changed = false;
 

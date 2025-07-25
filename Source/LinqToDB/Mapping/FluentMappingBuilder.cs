@@ -79,10 +79,9 @@ namespace LinqToDB.Mapping
 		/// type or it's parents.
 		/// </summary>
 		/// <typeparam name="T">Mapping attribute type.</typeparam>
-		/// <param name="type">Member owner type.</param>
 		/// <param name="memberInfo">Member descriptor.</param>
 		/// <returns>Returns attributes of specified type, applied to <paramref name="memberInfo"/>.</returns>
-		internal IEnumerable<T> GetAttributes<T>(Type type, MemberInfo memberInfo)
+		internal IEnumerable<T> GetAttributes<T>(MemberInfo memberInfo)
 			where T : MappingAttribute
 		{
 			return _memberAttributes.TryGetValue(memberInfo, out var attributes) ? attributes.OfType<T>() : [];

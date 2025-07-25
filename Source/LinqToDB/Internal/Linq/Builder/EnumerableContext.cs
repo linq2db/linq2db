@@ -63,8 +63,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			return fieldName;
 		}
 
-		SqlPlaceholderExpression? BuildFieldPlaceholder(MemberExpression memberExpression, ProjectFlags flags)
-			{
+		SqlPlaceholderExpression? BuildFieldPlaceholder(MemberExpression memberExpression)
+		{
 			if (memberExpression.Expression == null)
 				return null;
 
@@ -77,9 +77,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			SqlPlaceholderExpression? foundPlaceholder = null;
 
 			foreach (var (path, descriptor, placeholder) in _fieldsMap)
-		{
-				if ((!checkDescriptor || descriptor == currentDescriptor) && (ExpressionEqualityComparer.Instance.Equals(path, memberExpression)))
 			{
+				if ((!checkDescriptor || descriptor == currentDescriptor) && (ExpressionEqualityComparer.Instance.Equals(path, memberExpression)))
+				{
 					foundPlaceholder = placeholder;
 					break;
 				}
@@ -101,9 +101,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(memberExpression.Expression.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			var entityColumnDescriptor = entityDescriptor.FindColumnDescriptor(memberExpression.Member);
 
-			var dbDataType = currentDescriptor?.GetDbDataType(true) 
-			                 ?? entityColumnDescriptor?.GetDbDataType(true) 
-			                 ?? ColumnDescriptor.CalculateDbDataType(MappingSchema, memberExpression.Type);
+			var dbDataType = currentDescriptor?.GetDbDataType(true)
+							 ?? entityColumnDescriptor?.GetDbDataType(true)
+							 ?? ColumnDescriptor.CalculateDbDataType(MappingSchema, memberExpression.Type);
 
 			var valueGetter = BuildValueGetter(entityColumnDescriptor, memberExpression, currentDescriptor, dbDataType, out var possibleNull);
 			if (valueGetter == null)
@@ -288,7 +288,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (path is not MemberExpression member)
 				return ExpressionBuilder.CreateSqlError(path);
 
-			var placeholder = BuildFieldPlaceholder(member, flags);
+			var placeholder = BuildFieldPlaceholder(member);
 			if (placeholder == null)
 				return ExpressionBuilder.CreateSqlError(path);
 

@@ -584,6 +584,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <returns>Returns collection of query result records.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used to provide T generic argument")]
 		public IEnumerable<T> Query<T>(T template)
 		{
 			return Query<T>();
@@ -595,6 +596,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <returns>Returns collection of query result records.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used to provide T generic argument")]
 		public IEnumerable<T> QueryProc<T>(T template)
 		{
 			return QueryProc<T>();
@@ -607,6 +609,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns collection of query result records.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used to provide T generic argument")]
 		public Task<IEnumerable<T>> QueryProcAsync<T>(T template, CancellationToken cancellationToken = default)
 		{
 			return QueryProcAsync<T>(cancellationToken);

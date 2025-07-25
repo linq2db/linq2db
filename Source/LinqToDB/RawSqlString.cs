@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB
 {
@@ -18,6 +19,7 @@ namespace LinqToDB
 		///     Implicitly converts a <see cref="FormattableString" /> to a <see cref="RawSqlString" />
 		/// </summary>
 		/// <param name="fs"> The string format. </param>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "No idea what this method does")]
 		public static implicit operator RawSqlString(FormattableString fs) => default;
 
 		/// <summary>

@@ -66,15 +66,6 @@ namespace LinqToDB.Internal.SqlQuery
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		public static SqlField? GetIdentityField(this SqlStatement statement)
-		{
-			return statement.GetInsertClause()?.Into!.GetIdentityField();
-		}
-
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
 		public static SqlInsertClause? GetInsertClause(this SqlStatement statement)
 		{
 			return statement switch
@@ -92,44 +83,6 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlStatementWithQueryBase query => query.With,
 				_                               => null,
 			};
-		}
-
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
-		public static SqlInsertClause RequireInsertClause(this SqlStatement statement)
-		{
-			var result = statement.GetInsertClause();
-			if (result == null)
-				throw new LinqToDBException($"Insert clause not found in {statement.GetType().Name}");
-			return result;
-		}
-
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
-		public static SqlUpdateClause? GetUpdateClause(this SqlStatement statement)
-		{
-			return statement switch
-			{
-				SqlUpdateStatement update                 => update.Update,
-				SqlInsertOrUpdateStatement insertOrUpdate => insertOrUpdate.Update,
-				_                                         => null,
-			};
-		}
-
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
-		public static SqlUpdateClause RequireUpdateClause(this SqlStatement statement)
-		{
-			var result = statement.GetUpdateClause();
-			if (result == null)
-				throw new LinqToDBException($"Update clause not found in {statement.GetType().Name}");
-			return result;
 		}
 
 		/// <summary>

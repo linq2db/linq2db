@@ -47,8 +47,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (methodCall.Method.Name.StartsWith("All"))
 					condition = Expression.Lambda(Expression.Not(condition.Body), condition.Name, condition.Parameters);
 
-				sequence = builder.BuildWhere(buildInfo.Parent, sequence,
-					condition : condition, checkForSubQuery : true, enforceHaving : false, out var error);
+				sequence = builder.BuildWhere(sequence, condition: condition, enforceHaving: false, out var error);
 
 				if (sequence == null)
 					return BuildSequenceResult.Error(error ?? methodCall);

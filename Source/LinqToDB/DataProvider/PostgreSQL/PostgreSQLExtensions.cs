@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -12,6 +13,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 {
 	public static class PostgreSQLExtensions
 	{
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "ext is an extension point")]
 		public static IPostgreSQLExtensions? PostgreSQL(this Sql.ISqlExtension? ext) => null;
 
 		#region Analytic Functions

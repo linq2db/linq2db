@@ -104,7 +104,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (argumentCount > 1)
 			{
 				var filterLambda = methodCall.Arguments[1].UnwrapLambda();
-				sequence = builder.BuildWhere(buildInfo.Parent, sequence, filterLambda, checkForSubQuery : false, enforceHaving : false, out var error);
+				sequence = builder.BuildWhere(sequence, filterLambda, enforceHaving: false, out var error);
 
 				if (sequence == null)
 					return BuildSequenceResult.Error(error ?? methodCall);
@@ -156,7 +156,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					sequence,
 					sequence,
 					defaultValue: null,
-					allowNullField: true,
 					isNullValidationDisabled: false);
 
 				canBeWeak = true;

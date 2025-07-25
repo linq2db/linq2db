@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.Extensions
 {
 	static class MappingExtensions
 	{
-		public static SqlValue GetSqlValueFromObject(this MappingSchema mappingSchema, ColumnDescriptor columnDescriptor, object obj)
+		public static SqlValue GetSqlValueFromObject(this ColumnDescriptor columnDescriptor, object obj)
 		{
 			var providerValue = columnDescriptor.GetProviderValue(obj);
 

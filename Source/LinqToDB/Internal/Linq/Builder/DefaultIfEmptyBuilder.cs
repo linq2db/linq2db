@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable();
 
-		static ReadOnlyCollection<Expression>? PrepareNoNullConditions(ExpressionBuilder builder, IBuildContext notNullHandlerSequence, IBuildContext sequence, IBuildContext nullabilitySequence, bool allowNullField)
+		static ReadOnlyCollection<Expression>? PrepareNoNullConditions(ExpressionBuilder builder, IBuildContext notNullHandlerSequence, IBuildContext sequence, IBuildContext nullabilitySequence)
 		{
 			var sequenceRef  = new ContextRefExpression(sequence.ElementType, sequence);
 			var translated   = builder.BuildSqlExpression(sequence, sequenceRef);
@@ -101,7 +101,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					sequence,
 					sequence,
 					defaultValue: null,
-					allowNullField: true,
 					isNullValidationDisabled: false);
 
 				var notNullConditions = defaultIfEmptyContext.GetNotNullConditions();
@@ -134,22 +133,20 @@ namespace LinqToDB.Internal.Linq.Builder
 					return buildResult;
 				var sequence = buildResult.BuildContext;
 
-				return BuildSequenceResult.FromContext(new DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, defaultValue, true, false));
+				return BuildSequenceResult.FromContext(new DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, defaultValue, false));
 			}
 		}
 
 		public sealed class DefaultIfEmptyContext : SequenceContextBase
 		{
 			readonly IBuildContext _nullabilitySequence;
-			readonly bool          _allowNullField;
 
 			ReadOnlyCollection<Expression>? _notNullConditions;
 
-			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, IBuildContext nullabilitySequence, Expression? defaultValue, bool allowNullField, bool isNullValidationDisabled)
+			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, IBuildContext nullabilitySequence, Expression? defaultValue, bool isNullValidationDisabled)
 				: base(parent, sequence, null)
 			{
 				_nullabilitySequence     = nullabilitySequence;
-				_allowNullField          = allowNullField;
 				DefaultValue             = defaultValue;
 				IsNullValidationDisabled = isNullValidationDisabled;
 			}
@@ -162,7 +159,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public ReadOnlyCollection<Expression> GetNotNullConditions()
 			{
 				if (_notNullConditions == null)
-					_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence, true) ?? throw new InvalidOperationException();
+					_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence) ?? throw new InvalidOperationException();
 				return _notNullConditions;
 			}
 
@@ -240,7 +237,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (_notNullConditions == null)
 					{
-						_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence, _allowNullField);
+						_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence);
 					}
 
 					if (_notNullConditions != null)
@@ -259,7 +256,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					context.CloneContext(Sequence), 
 					context.CloneContext(_nullabilitySequence), 
 					context.CloneExpression(DefaultValue), 
-					_allowNullField, 
 					IsNullValidationDisabled);
 			}
 

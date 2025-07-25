@@ -109,16 +109,6 @@ namespace LinqToDB.Concurrency
 			return updatable;
 		}
 
-		private static IQueryable<T> MakeDeleteConcurrent<T>(IQueryable<T> source, IDataContext dc, T obj)
-			where T : class
-		{
-			var objType = typeof(T);
-			var ed      = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var query   = MakeConcurrentFilter(source, obj, objType, ed);
-
-			return query;
-		}
-
 		/// <summary>
 		/// Performs record update using optimistic lock strategy.
 		/// Entity should have column annotated with <see cref="OptimisticLockPropertyBaseAttribute" />, otherwise regular update operation will be performed.

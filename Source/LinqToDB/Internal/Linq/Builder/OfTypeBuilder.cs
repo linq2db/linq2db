@@ -72,7 +72,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var table          = new SqlTable(mapper);
 			var discriminators = mapper.InheritanceMapping;
 
-			return builder.MakeIsPredicate((context, table), context, discriminators, toType,
+			return builder.MakeIsPredicate((context, table), discriminators, toType,
 				static (context, name) =>
 				{
 					var field  = context.table.FindFieldByMemberName(name) ?? throw new LinqToDBException($"Field {name} not found in table {context.table}");

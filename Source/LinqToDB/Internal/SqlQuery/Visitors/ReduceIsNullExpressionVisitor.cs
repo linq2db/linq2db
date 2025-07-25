@@ -113,7 +113,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (element is { IsAggregate: false, IsPure: true })
 			{
-				ReduceSqlExpressionBase(element, element.Parameters, element.NullabilityType);
+				ReduceSqlExpressionBase(element.Parameters, element.NullabilityType);
 			}
 
 			return element;
@@ -123,13 +123,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (element is { IsAggregate: false, IsPure: true })
 			{
-				ReduceSqlExpressionBase(element, element.Parameters, element.NullabilityType);
+				ReduceSqlExpressionBase(element.Parameters, element.NullabilityType);
 			}
 
 			return element;
 		}
 
-		void ReduceSqlExpressionBase(SqlExpressionBase element, ISqlExpression[] parameters, ParametersNullabilityType nullabilityType)
+		void ReduceSqlExpressionBase(ISqlExpression[] parameters, ParametersNullabilityType nullabilityType)
 		{
 			if (nullabilityType == ParametersNullabilityType.IfAnyParameterNullable)
 			{

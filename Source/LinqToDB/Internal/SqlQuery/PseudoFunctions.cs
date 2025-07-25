@@ -23,10 +23,6 @@ namespace LinqToDB.Internal.SqlQuery
 		/// Function to convert text parameter to uppercased form: <c>TO_UPPER(string)</c>
 		/// </summary>
 		public const string TO_UPPER = "$ToUpper$";
-		public static SqlFunction MakeToUpper(ISqlExpression value, MappingSchema mappingSchema)
-		{
-			return new SqlFunction(mappingSchema.GetDbDataType(typeof(string)), TO_UPPER, value);
-		}
 
 		/// <summary>
 		/// Creates cast expression: <c>CAST(value AS to_type)</c>
@@ -54,20 +50,12 @@ namespace LinqToDB.Internal.SqlQuery
 		/// Returns NULL on conversion failure.
 		/// </summary>
 		public const string TRY_CONVERT = "$TryConvert$";
-		public static SqlFunction MakeTryConvert(SqlDataType toType, SqlDataType fromType, ISqlExpression value)
-		{
-			return new SqlFunction(toType.Type, TRY_CONVERT, canBeNull: true, toType, fromType, value);
-		}
 
 		/// <summary>
 		/// Function to convert value from one type to another: <c>TRY_CONVERT_OR_DEFAULT(to_type, from_type, value, defaultValue) { CanBeNull = value.CanBeNull || defaultValue.CanBeNull }</c>.
 		/// Returns provided default value on conversion failure.
 		/// </summary>
 		public const string TRY_CONVERT_OR_DEFAULT = "$TryConvertOrDefault$";
-		public static SqlFunction MakeTryConvertOrDefault(SqlDataType toType, SqlDataType fromType, ISqlExpression value, ISqlExpression defaultValue)
-		{
-			return new SqlFunction(toType.Type, TRY_CONVERT_OR_DEFAULT, toType, fromType, value, defaultValue);
-		}
 
 		/// <summary>
 		/// Function to replace one text fragment with another in string: <c>REPLACE(value, oldSubstring, newSubstring)</c>
@@ -75,26 +63,17 @@ namespace LinqToDB.Internal.SqlQuery
 		public const string REPLACE = "$Replace$";
 		public static SqlFunction MakeReplace(ISqlExpression value, ISqlExpression oldSubstring, ISqlExpression newSubstring, MappingSchema mappingSchema)
 		{
-			return new SqlFunction(mappingSchema.GetDbDataType(typeof(string)), REPLACE, value, oldSubstring, newSubstring);
+			return new SqlFunction(QueryHelper.GetDbDataType(value, mappingSchema), REPLACE, value, oldSubstring, newSubstring);
 		}
 
 		/// <summary>
 		/// Function to suppress conversion SQL generation for provided value: <c>REMOVE_CONVERT(value, resultType)</c>
 		/// </summary>
 		public const string REMOVE_CONVERT = "$Convert_Remover$";
-		public static SqlFunction MakeRemoveConvert(ISqlExpression value, SqlDataType resultType)
-		{
-			return new SqlFunction(resultType.Type, REMOVE_CONVERT, value, resultType);
-		}
 
 		/// <summary>
 		/// Function for calculating length of string: <c>LENGTH(value)</c>
 		/// </summary>
 		public const string LENGTH = "$Length$";
-		public static SqlFunction MakeLength(ISqlExpression value, MappingSchema mappingSchema)
-		{
-			return new SqlFunction(mappingSchema.GetDbDataType(typeof(int)), LENGTH, value);
-		}
-
 	}
 }

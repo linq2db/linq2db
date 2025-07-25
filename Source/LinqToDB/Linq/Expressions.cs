@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Linq;
 using System.Data.SqlTypes;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -1599,6 +1600,7 @@ namespace LinqToDB.Linq
 		// TODO: Made private or remove in v7
 		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Sql.Function(IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used by mapping")]
 		public static string? VarChar(object? obj, int? size)
 		{
 			return obj == null ? null : string.Format(CultureInfo.InvariantCulture, "{0}", obj);
@@ -1659,11 +1661,13 @@ namespace LinqToDB.Linq
 		// TODO: Made private or remove in v7
 		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Sql.Function(IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used by mapping")]
 		public static decimal? Round(decimal? value, int precision, int mode) => 0;
 
 		// TODO: Made private or remove in v7
 		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Sql.Function(IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used by mapping")]
 		public static double?  Round(double?  value, int precision, int mode) => 0;
 
 		// Access

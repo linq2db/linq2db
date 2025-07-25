@@ -81,7 +81,7 @@ namespace LinqToDB.Remote
 						isAlreadyOptimizedAndConverted : true,
 						parametersNormalizerFactory : static () => NoopQueryParametersNormalizer.Instance);
 
-					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, DataContext.Options, optimizationContext);
+					var statement = query.Statement.PrepareStatementForSql(optimizationContext);
 
 					sqlBuilder.BuildSql(i, statement, sqlStringBuilder.Value, optimizationContext, aliases, null);
 

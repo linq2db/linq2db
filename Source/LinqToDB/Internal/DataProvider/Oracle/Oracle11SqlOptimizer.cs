@@ -22,11 +22,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions); break;
+				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
 				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions, mappingSchema); break;
 			}
 
-			statement = ReplaceTakeSkipWithRowNum(statement, mappingSchema, false);
+			statement = ReplaceTakeSkipWithRowNum(statement, mappingSchema);
 
 			return statement;
 		}
@@ -82,9 +82,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		/// See <a href="https://blogs.oracle.com/oraclemagazine/on-rownum-and-limiting-results">'Pagination with ROWNUM'</a> for more information.
 		/// </summary>
 		/// <param name="statement">Statement which may contain take/skip modifiers.</param>
-		/// <param name="onlySubqueries">Indicates when transformation needed only for subqueries.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when optimization has been performed.</returns>
-		protected SqlStatement ReplaceTakeSkipWithRowNum(SqlStatement statement, MappingSchema mappingSchema, bool onlySubqueries)
+		protected SqlStatement ReplaceTakeSkipWithRowNum(SqlStatement statement, MappingSchema mappingSchema)
 		{
 			return QueryHelper.WrapQuery(
 				(statement, mappingSchema),
@@ -162,8 +161,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					query.Select.Take(null, null);
 
 				},
-				allowMutation: true,
-				withStack: false);
+				allowMutation: true);
 		}
 	}
 }

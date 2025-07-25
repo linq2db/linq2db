@@ -26,7 +26,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		public Expression TargetPropAccess { get; }
 
 		Expression ProjectionBody       { get; }
-		Expression SelfTargetPropAccess { get; }
 
 		public override bool AutomaticAssociations => true;
 		public override bool IsSingleElement       => true;
@@ -55,7 +54,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			TargetPropAccess = Expression.Property(thisContextRef, nameof(ProjectionHelper<object, object>.target));
 			SourcePropAccess = Expression.Property(thisContextRef, nameof(ProjectionHelper<object, object>.source));
-			SelfTargetPropAccess = Expression.Property(thisContextRef, nameof(ProjectionHelper<object, object>.selft_target));
 
 			Source = sourceContextRef.BuildContext is EnumerableContext enumerableSource
 				? new SqlTableLikeSource { SourceEnumerable = enumerableSource.Table, SourceQuery = enumerableSource.SelectQuery }

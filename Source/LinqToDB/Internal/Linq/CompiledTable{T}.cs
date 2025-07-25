@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -70,6 +71,7 @@ namespace LinqToDB.Internal.Linq
 			return result;
 		}
 
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Method used by two-parameter call in generated expression")]
 		public IQueryable<T> Create(object[] parameters, object[] preambles)
 		{
 			var db    = (IDataContext)parameters[0];

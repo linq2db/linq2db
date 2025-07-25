@@ -58,7 +58,7 @@ namespace LinqToDB.Internal.Linq
 		{
 			var parameterValues = new SqlParameterValues();
 
-			QueryRunner.SetParameters(Query, Expressions, ParametersContext, Parameters, QueryNumber, parameterValues);
+			QueryRunner.SetParameters(Query, Expressions, ParametersContext, Parameters, parameterValues);
 
 			SetQuery(parameterValues, forGetSqlText);
 		}

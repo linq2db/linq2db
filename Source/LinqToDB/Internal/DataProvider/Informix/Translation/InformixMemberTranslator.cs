@@ -55,12 +55,6 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				var intDataType    = factory.GetDbDataType(typeof(int));
 				var stringDataType = factory.GetDbDataType(typeof(string));
 
-				ISqlExpression CastToLength(ISqlExpression expression, int stringLength)
-				{
-					return expression;
-					//return factory.Cast(expression, stringDataType.WithLength(stringLength));
-				}
-
 				ISqlExpression PartExpression(ISqlExpression expression, int padSize)
 				{
 					if (translationContext.TryEvaluate(expression, out var expressionValue) && expressionValue is int intValue)
@@ -71,7 +65,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 
 					return factory.Function(stringDataType, "LPad",
 						ParametersNullabilityType.SameAsFirstParameter,
-						CastToLength(expression, padSize),
+						expression,
 						factory.Value(intDataType, padSize),
 						factory.Value(stringDataType, "0"));
 				}

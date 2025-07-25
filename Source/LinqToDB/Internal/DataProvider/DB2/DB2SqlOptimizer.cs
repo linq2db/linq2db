@@ -23,14 +23,14 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			// This is mutable part
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
 				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema),
 				_                => statement,
 			};
 		}
 
 		#region Wrap Parameters
-		private static SqlStatement WrapParameters(SqlStatement statement, EvaluationContext context)
+		private static SqlStatement WrapParameters(SqlStatement statement)
 		{
 			// for some reason DB2 doesn't use parameter type information (not supported?) is some places, so
 			// we need to wrap parameter into CAST() to add type information explicitly
@@ -55,7 +55,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			statement = WrapParameters(statement, context);
+			statement = WrapParameters(statement);
 			return base.FinalizeStatement(statement, context, dataOptions, mappingSchema);
 		}
 

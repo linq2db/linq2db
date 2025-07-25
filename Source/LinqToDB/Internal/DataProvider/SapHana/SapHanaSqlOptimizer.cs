@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions); break;
+				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
 				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions, mappingSchema); break;
 			}
 

@@ -70,6 +70,7 @@ namespace LinqToDB.Data
 
 		#region Query with template
 
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public IEnumerable<T> Query<T>(T template)
 		{
 			return Query<T>();

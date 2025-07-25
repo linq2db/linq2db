@@ -8,16 +8,14 @@ namespace LinqToDB.Internal.Cache
 	internal sealed class CacheEntryStack<TKey,TEntry>
 		where TKey: notnull
 	{
-		private readonly CacheEntryStack<TKey,TEntry>? _previous;
-		private readonly CacheEntry<TKey,TEntry>?      _entry;
+		private readonly CacheEntry<TKey,TEntry>? _entry;
 
 		private CacheEntryStack()
 		{
 		}
 
-		private CacheEntryStack(CacheEntryStack<TKey,TEntry> previous, CacheEntry<TKey,TEntry> entry)
+		private CacheEntryStack(CacheEntry<TKey,TEntry> entry)
 		{
-			_previous = previous ?? throw new ArgumentNullException(nameof(previous));
 			_entry    = entry;
 		}
 
@@ -25,7 +23,7 @@ namespace LinqToDB.Internal.Cache
 
 		public CacheEntryStack<TKey,TEntry> Push(CacheEntry<TKey,TEntry> c)
 		{
-			return new(this, c);
+			return new(c);
 		}
 
 		public CacheEntry<TKey,TEntry>? Peek()

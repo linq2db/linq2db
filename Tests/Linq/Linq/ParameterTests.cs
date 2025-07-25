@@ -592,7 +592,7 @@ namespace Tests.Linq
 					query.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				var parameters = new List<SqlParameter>();
-				QueryHelper.CollectParameters(query.GetSelectQuery(), parameters);
+				query.GetSelectQuery().CollectParameters(parameters);
 				parameters.Distinct().Count().ShouldBe(2);
 			}
 
@@ -615,7 +615,7 @@ namespace Tests.Linq
 					query.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				var parameters = new List<SqlParameter>();
-				QueryHelper.CollectParameters(query.GetSelectQuery(), parameters);
+				query.GetSelectQuery().CollectParameters(parameters);
 				parameters.Distinct().Count().ShouldBe(2);
 			}
 		}

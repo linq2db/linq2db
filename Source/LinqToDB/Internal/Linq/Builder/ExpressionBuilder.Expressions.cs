@@ -93,7 +93,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		bool _handlingAlias;
 
-		Expression CheckForAlias(IBuildContext context, MemberExpression memberExpression, EntityDescriptor entityDescriptor, string alias, ProjectFlags flags)
+		Expression CheckForAlias(IBuildContext context, MemberExpression memberExpression, EntityDescriptor entityDescriptor, string alias)
 		{
 			if (_handlingAlias)
 				return memberExpression;
@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return memberExpression;
 		}
 
-		public bool HandleAlias(IBuildContext context, Expression expression, ProjectFlags flags, [NotNullWhen(true)] out Expression? result)
+		public bool HandleAlias(IBuildContext context, Expression expression, [NotNullWhen(true)] out Expression? result)
 		{
 			result = null;
 
@@ -139,7 +139,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				foreach (var other in otherColumns)
 				{
-					var newResult = CheckForAlias(context, memberExpression, ed, other.Key, flags);
+					var newResult = CheckForAlias(context, memberExpression, ed, other.Key);
 					if (!ReferenceEquals(newResult, memberExpression))
 					{
 						result = newResult;
@@ -151,7 +151,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (ed.Aliases.TryGetValue(memberExpression.Member.Name, out var alias))
 				{
-					var newResult = CheckForAlias(context, memberExpression, ed, alias, flags);
+					var newResult = CheckForAlias(context, memberExpression, ed, alias);
 					if (!ReferenceEquals(newResult, memberExpression))
 					{
 						result = newResult;

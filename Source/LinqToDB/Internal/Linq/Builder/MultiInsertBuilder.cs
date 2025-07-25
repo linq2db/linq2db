@@ -75,7 +75,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		static IBuildContext BuildTargetTable(
 			ExpressionBuilder builder,
 			BuildInfo         buildInfo,
-			bool              isConditional,
 			Expression        query,
 			LambdaExpression? condition,
 			Expression        table,
@@ -122,7 +121,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			return BuildTargetTable(
 				builder,
 				buildInfo,
-				false,
 				methodCall.Arguments[0],
 				null,
 				methodCall.Arguments[1],
@@ -135,7 +133,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			return BuildTargetTable(
 				builder,
 				buildInfo,
-				true,
 				methodCall.Arguments[0],
 				methodCall.Arguments[1].UnwrapLambda(),
 				methodCall.Arguments[2],
@@ -148,7 +145,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			return BuildTargetTable(
 				builder,
 				buildInfo,
-				true,
 				methodCall.Arguments[0],
 				null,
 				methodCall.Arguments[1],

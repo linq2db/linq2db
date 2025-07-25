@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		{
 			// for identity column insert - disable explicit insert support
 			if (merge.HasIdentityInsert)
-				BuildIdentityInsert(nullability, merge.Target, false);
+				BuildIdentityInsert(merge.Target, false);
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
@@ -19,8 +19,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			// for identity column insert - enable explicit insert support
 			if (merge.HasIdentityInsert)
 			{
-				var nullability = new NullabilityContext(merge.SelectQuery);
-				BuildIdentityInsert(nullability, merge.Target, true);
+				BuildIdentityInsert(merge.Target, true);
 			}
 
 			base.BuildMergeStatement(merge);
