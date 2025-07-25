@@ -1930,8 +1930,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var binary = (BinaryExpression)expr;
 
-				var left  = RemoveNullPropagation(binary.Left, true);
-				var right = RemoveNullPropagation(binary.Right, true);
+				var left  = RemoveNullPropagation(binary.Left, toSql: true);
+				var right = RemoveNullPropagation(binary.Right, toSql: true);
 
 				if (toSql)
 				{
@@ -1948,9 +1948,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var cond = (ConditionalExpression)expr;
 
-				var test    = RemoveNullPropagation(cond.Test, true);
-				var ifTrue  = RemoveNullPropagation(cond.IfTrue, true);
-				var ifFalse = RemoveNullPropagation(cond.IfFalse, true);
+				var test    = RemoveNullPropagation(cond.Test, toSql: true);
+				var ifTrue  = RemoveNullPropagation(cond.IfTrue, toSql: true);
+				var ifFalse = RemoveNullPropagation(cond.IfFalse, toSql: true);
 
 				if (test.NodeType == ExpressionType.Equal || test.NodeType == ExpressionType.NotEqual)
 				{
@@ -3825,8 +3825,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					leftExpr = Visit(singleCall);
 				}
 
-				leftExpr = RemoveNullPropagation(leftExpr, true);
-				rightExpr = RemoveNullPropagation(rightExpr, true);
+				leftExpr = RemoveNullPropagation(leftExpr, toSql: true);
+				rightExpr = RemoveNullPropagation(rightExpr, toSql: true);
 
 				if (leftExpr is SqlErrorExpression leftError)
 					return leftError.WithType(typeof(bool));

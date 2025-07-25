@@ -49,7 +49,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			// for identity column insert - disable explicit insert support
 			if (merge.HasIdentityInsert)
-				BuildIdentityInsert(merge.Target, false);
+				BuildIdentityInsert(merge.Target, enable: false);
 		}
 
 		protected override void BuildMergeOperationUpdateBySource(NullabilityContext nullability, SqlMergeOperationClause operation)
@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			// for identity column insert - enable explicit insert support
 			if (merge.HasIdentityInsert)
 			{
-				BuildIdentityInsert(merge.Target, true);
+				BuildIdentityInsert(merge.Target, enable: true);
 			}
 
 			base.BuildMergeStatement(merge);

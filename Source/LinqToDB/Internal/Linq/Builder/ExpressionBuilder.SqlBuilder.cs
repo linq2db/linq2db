@@ -818,7 +818,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public Expression RemoveNullPropagation(Expression expr)
 		{
-			return _buildVisitor.RemoveNullPropagation(expr, false);
+			return _buildVisitor.RemoveNullPropagation(expr, toSql: false);
 		}
 
 		public Expression RemoveNullPropagation(Expression expr, bool forSearch)
