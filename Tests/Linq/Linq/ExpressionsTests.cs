@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -1204,6 +1207,189 @@ namespace Tests.Linq
 				});
 
 			query.ToList();
+		}
+
+		#endregion
+
+		#region Issue 5040
+
+		static class Issue5040
+		{
+			public interface IEntityWithPermissions: IBaseEntity
+			{
+				int PermissionObjectId { get; }
+			}
+
+			[ProtectedEntity]
+			public sealed class Account : IEntityWithPermissions
+			{
+				public int Id { get; set; }
+
+				[ExpressionMethod(nameof(PermissionObjectIdExpression))]
+				public int PermissionObjectId => PermissionObjectIdExpression().Compile()(this);
+
+				public static Expression<Func<Account, int>> PermissionObjectIdExpression()
+					=> x => x.Id;
+			}
+
+			static ContextAttributes Attributes { get; } = new ContextAttributes()
+			{
+				UserId = 1,
+				RoleId = 2,
+			};
+
+			class ContextAttributes
+			{
+				public int? UserId { get; set; }
+				public int? RoleId { get; set; }
+			}
+
+			public sealed class ProtectedEntityAttribute()
+				: EntityFilterAttribute(typeof(ProtectedEntityAttribute), nameof(Filter))
+			{
+				private static IQueryable<T> Filter<T>(IQueryable<T> q, IDataContext dbCtx)
+					where T : IEntityWithPermissions
+					=> Attributes.UserId is null && Attributes.RoleId is null
+						? q
+						: q.Where(x => dbCtx
+							.GetTable<Permission>()
+							.Where(y => new[] { Attributes.UserId, Attributes.RoleId }.Contains(y.SubjectId))
+							.Select(y => y.ObjectId)
+							// <-- this is what makes it fail
+							.Contains(x.PermissionObjectId));
+			}
+
+			[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true)]
+			public abstract class EntityFilterAttribute(Type providerType, string propertyName) : Attribute
+			{
+				public Type ProviderType { get; } = providerType;
+
+				public string PropertyName { get; } = propertyName;
+			}
+
+			public interface IIdentifiable<T>
+			{
+			}
+
+			public sealed class Permission : IBaseEntity, IIdentifiable<int>
+			{
+				[Column(SkipOnUpdate = true)] public int Id { get; set; }
+				[Column] public int SubjectId { get; set; }
+				[Column] public int ObjectId { get; set; }
+			}
+
+			public static class EntityFilterHelper
+			{
+				private const BindingFlags BINDING_FLAGS = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+
+				public static Func<IQueryable<TEntity>, TContext, IQueryable<TEntity>>? GetEntityFilter<TEntity, TContext>()
+				{
+					var filters = FindAllFilterAttributes(typeof(TEntity))
+						.Select(GetLambda<TEntity, TContext>)
+						.ToArray();
+
+					return filters.Any()
+						? (q, dbCtx) => filters.Aggregate(q, (currQ, nextFunc) => nextFunc(currQ, dbCtx))
+						: null;
+				}
+
+				private static List<EntityFilterAttribute> FindAllFilterAttributes(Type entityType)
+				{
+					var relevantTypes = new HashSet<Type>();
+					var processQueue = new Queue<Type>();
+					processQueue.Enqueue(entityType);
+
+					while (processQueue.TryDequeue(out var processType))
+					{
+						if (processType.BaseType != null)
+						{
+							processQueue.Enqueue(processType.BaseType);
+						}
+
+						foreach (var iFace in processType.GetInterfaces())
+						{
+							processQueue.Enqueue(iFace);
+						}
+
+						relevantTypes.Add(processType);
+					}
+
+					return relevantTypes
+						.SelectMany(x => x.GetAttributes<EntityFilterAttribute>(true))
+						.ToList();
+				}
+
+				private static Func<IQueryable<TEntity>, TContext, IQueryable<TEntity>> GetLambda<TEntity, TContext>(EntityFilterAttribute entityFilter)
+				{
+					var methodInfo = entityFilter.ProviderType
+						.GetMethods(BINDING_FLAGS)
+						.FirstOrDefault(m => m.Name == entityFilter.PropertyName && m.IsGenericMethodDefinition)
+						?? throw new ArgumentException($"Method '{entityFilter.PropertyName}' not found in type '{entityFilter.ProviderType.FullName}' or is not a generic method definition.");
+
+					// Make the generic method concrete with TEntity
+					if (methodInfo.IsGenericMethod)
+					{
+						methodInfo = methodInfo.MakeGenericMethod(typeof(TEntity));
+					}
+
+					var qParam = Expression.Parameter(typeof(IQueryable<TEntity>), "q");
+					var dbCtxParam = Expression.Parameter(typeof(TContext), "dbCtx");
+
+					var methodCall = Expression.Call(
+						null, // Static method, no instance
+						methodInfo,
+						qParam,
+						dbCtxParam);
+
+					var lambda = Expression.Lambda<Func<IQueryable<TEntity>, TContext, IQueryable<TEntity>>>(
+						methodCall,
+						qParam,
+						dbCtxParam);
+
+					return lambda.Compile();
+				}
+			}
+
+			public interface IBaseEntity
+			{
+				int Id { get; set; }
+			}
+
+			public static class ModelBuilderExtensions
+			{
+				public static void ApplyEntityFilters<TEntity>(MappingSchema mappings)
+					where TEntity : IBaseEntity
+				{
+					var builder = new FluentMappingBuilder(mappings);
+
+					ProcessEntity<TEntity>(builder);
+
+					builder.Build();
+				}
+
+				private static void ProcessEntity<TEntity>(FluentMappingBuilder builder)
+				{
+					var filter = EntityFilterHelper.GetEntityFilter<TEntity, IDataContext>();
+					if (filter != null)
+					{
+						builder.Entity<TEntity>().HasQueryFilter(filter);
+					}
+				}
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5040")]
+		public void Issue5040Test([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			Issue5040.ModelBuilderExtensions.ApplyEntityFilters<Issue5040.Permission>(ms);
+			Issue5040.ModelBuilderExtensions.ApplyEntityFilters<Issue5040.Account>(ms);
+
+			using var db = GetDataContext(context, o => o.UseMappingSchema(ms));
+			using var t1 = db.CreateLocalTable<Issue5040.Account>();
+			using var t2 = db.CreateLocalTable<Issue5040.Permission>();
+
+			t1.ToList();
 		}
 
 		#endregion
