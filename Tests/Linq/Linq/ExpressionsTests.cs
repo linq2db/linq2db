@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -1215,33 +1218,79 @@ namespace Tests.Linq
 
 		static class Issue5040
 		{
+			sealed class CustomIntConverter : TypeConverter
+			{
+				private static readonly Type[] _convertibleTypes = [typeof(string), typeof(int)];
+
+				public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
+					=> _convertibleTypes.Contains(sourceType)
+						|| base.CanConvertFrom(context, sourceType);
+
+				public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
+					=> value switch
+					{
+						string s => CustomInt.Parse(s),
+						int i => new CustomInt(i),
+						_ => base.ConvertFrom(context, culture, value),
+					};
+
+				public override bool CanConvertTo(ITypeDescriptorContext? context, [NotNullWhen(true)] Type? destinationType)
+					=> _convertibleTypes.Contains(destinationType)
+						|| base.CanConvertTo(context, destinationType);
+
+				public override object? ConvertTo(ITypeDescriptorContext? context, CultureInfo? culture, object? value, Type destinationType)
+					=> value is CustomInt ulid
+						? destinationType == typeof(string) ? ulid.ToString()
+						: destinationType == typeof(int) ? ulid.Id
+						: base.ConvertTo(context, culture, value, destinationType)
+					: base.ConvertTo(context, culture, value, destinationType);
+			}
+
+			[TypeConverter(typeof(CustomIntConverter))]
+			public readonly struct CustomInt(int value) : IFormattable
+			{
+				public readonly int Id = value;
+
+				public static implicit operator Int32(CustomInt value) => value.Id;
+				public static implicit operator CustomInt(int value) => new(value);
+
+				public readonly string ToString(string? format = null, IFormatProvider? formatProvider = null)
+				{
+					return Id.ToString();
+				}
+
+				public static CustomInt Parse(string s, IFormatProvider? provider = null)
+					=> new CustomInt(int.Parse(s));
+			}
+
 			public interface IEntityWithPermissions: IBaseEntity
 			{
-				int PermissionObjectId { get; }
+				CustomInt PermissionObjectId { get; }
 			}
 
 			[ProtectedEntity]
 			public sealed class Account : IEntityWithPermissions
 			{
-				public int Id { get; set; }
+				[Column(DataType = DataType.Int32)] public CustomInt Id { get; set; }
 
+				[NotColumn]
 				[ExpressionMethod(nameof(PermissionObjectIdExpression))]
-				public int PermissionObjectId => PermissionObjectIdExpression().Compile()(this);
+				public CustomInt PermissionObjectId => PermissionObjectIdExpression().Compile()(this);
 
-				public static Expression<Func<Account, int>> PermissionObjectIdExpression()
+				public static Expression<Func<Account, CustomInt>> PermissionObjectIdExpression()
 					=> x => x.Id;
 			}
 
 			static ContextAttributes Attributes { get; } = new ContextAttributes()
 			{
-				UserId = 1,
-				RoleId = 2,
+				UserId = new(1),
+				RoleId = new(2),
 			};
 
 			class ContextAttributes
 			{
-				public int? UserId { get; set; }
-				public int? RoleId { get; set; }
+				public CustomInt? UserId { get; set; }
+				public CustomInt? RoleId { get; set; }
 			}
 
 			public sealed class ProtectedEntityAttribute()
@@ -1267,15 +1316,11 @@ namespace Tests.Linq
 				public string PropertyName { get; } = propertyName;
 			}
 
-			public interface IIdentifiable<T>
+			public sealed class Permission : IBaseEntity
 			{
-			}
-
-			public sealed class Permission : IBaseEntity, IIdentifiable<int>
-			{
-				[Column(SkipOnUpdate = true)] public int Id { get; set; }
-				[Column] public int SubjectId { get; set; }
-				[Column] public int ObjectId { get; set; }
+				[Column(DataType = DataType.Int32, SkipOnUpdate = true)] public CustomInt Id { get; set; }
+				[Column(DataType = DataType.Int32)] public CustomInt SubjectId { get; set; }
+				[Column(DataType = DataType.Int32)] public CustomInt ObjectId { get; set; }
 			}
 
 			public static class EntityFilterHelper
@@ -1352,7 +1397,7 @@ namespace Tests.Linq
 
 			public interface IBaseEntity
 			{
-				int Id { get; set; }
+				CustomInt Id { get; set; }
 			}
 
 			public static class ModelBuilderExtensions
@@ -1379,7 +1424,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5040")]
-		public void Issue5040Test([DataSources] string context)
+		public void Issue5040Test([DataSources] string context, [Values] bool inline)
 		{
 			var ms = new MappingSchema();
 			Issue5040.ModelBuilderExtensions.ApplyEntityFilters<Issue5040.Permission>(ms);
@@ -1388,6 +1433,8 @@ namespace Tests.Linq
 			using var db = GetDataContext(context, o => o.UseMappingSchema(ms));
 			using var t1 = db.CreateLocalTable<Issue5040.Account>();
 			using var t2 = db.CreateLocalTable<Issue5040.Permission>();
+
+			db.InlineParameters = inline;
 
 			t1.ToList();
 		}
