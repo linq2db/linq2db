@@ -867,7 +867,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translated);
 				}
 
-				if (HandleFormat(node, out var translatedFormat))
+				if (HandleStringFormat(node, out var translatedFormat))
 					return Visit(translatedFormat);
 
 				if (HandleConstructorMethods(node, out var translatedConstructor))
@@ -2297,7 +2297,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return false;
 		}
 
-		public bool HandleFormat(MethodCallExpression node, [NotNullWhen(true)] out Expression? translated)
+		public bool HandleStringFormat(MethodCallExpression node, [NotNullWhen(true)] out Expression? translated)
 		{
 			translated = null;
 
@@ -2309,19 +2309,42 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (format == null)
 						return false;
 
-					var arguments = new ISqlExpression[node.Arguments.Count - 1];
-
-					for (var i = 1; i < node.Arguments.Count; i++)
+					var (inputArguments, startIndex) = node.Arguments switch
 					{
-						var expr = BuildSqlExpression(node.Arguments[i]);
+						[_, NewArrayExpression arrayExpr] => (arrayExpr.Expressions, 0),
+						_                                 => (node.Arguments, 1),
+					};
+
+					var arguments = new ISqlExpression[inputArguments.Count - startIndex];
+
+					DbDataType stringType;
+
+					if (CurrentDescriptor?.MemberType == typeof(string))
+						stringType = CurrentDescriptor.GetDbDataType(true);
+					else
+						stringType = MappingSchema.GetDbDataType(typeof(string));
+
+					var formatAsExpression = _buildFlags.HasFlag(BuildFlags.FormatAsExpression);
+
+					for (var i = startIndex; i < inputArguments.Count; i++)
+					{
+						var expr = BuildSqlExpression(inputArguments[i]);
 						if (expr is not SqlPlaceholderExpression sqlPlaceholder)
 							return false;
 
-						arguments[i - 1] = sqlPlaceholder.Sql;
+						var sql = sqlPlaceholder.Sql;
+
+						if (!formatAsExpression)
+						{
+							sql = new SqlCastExpression(sql, stringType, null);
+							sql = new SqlCoalesceExpression(sql, new SqlValue(stringType, ""));
+						}
+
+						arguments[i - startIndex] = sql;
 					}
 
 					ISqlExpression result;
-					if (_buildFlags.HasFlag(BuildFlags.FormatAsExpression))
+					if (formatAsExpression)
 					{
 						result = new SqlExpression(MappingSchema.GetDbDataType(node.Type), format, Precedence.Primary, arguments);
 					}
