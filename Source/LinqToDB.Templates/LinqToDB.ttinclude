@@ -1,13 +1,13 @@
-<#@ assembly name="System.Data"                    #>
-<#@ import namespace="System.Collections.Generic"  #>
-<#@ import namespace="System.Data"                 #>
-<#@ import namespace="System.Globalization"        #>
-<#@ import namespace="System.Text"                 #>
-<#@ import namespace="LinqToDB"                    #>
-<#@ import namespace="LinqToDB.Data"               #>
-<#@ import namespace="LinqToDB.SqlProvider"        #>
-<#@ import namespace="LinqToDB.SqlQuery"           #>
-<#@ include file="DataModel.ttinclude" once="true" #>
+<#@ assembly name="System.Data"                      #>
+<#@ import namespace="System.Collections.Generic"    #>
+<#@ import namespace="System.Data"                   #>
+<#@ import namespace="System.Globalization"          #>
+<#@ import namespace="System.Text"                   #>
+<#@ import namespace="LinqToDB"                      #>
+<#@ import namespace="LinqToDB.Data"                 #>
+<#@ import namespace="LinqToDB.Internal.SqlProvider" #>
+<#@ import namespace="LinqToDB.Internal.SqlQuery"    #>
+<#@ include file="DataModel.ttinclude" once="true"   #>
 <#
 	if (BaseDataContextClass == null)
 		BaseDataContextClass = "LinqToDB.Data.DataConnection";

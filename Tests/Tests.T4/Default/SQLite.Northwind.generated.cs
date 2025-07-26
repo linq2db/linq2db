@@ -156,24 +156,24 @@ namespace Default.SQLiteNorthwind
 	[Table("Employees")]
 	public partial class Employee
 	{
-		[PrimaryKey,                                   NotNull    ] public int       EmployeeID      { get; set; } // int
-		[Column,                                       NotNull    ] public string    LastName        { get; set; } = null!; // varchar(20)
-		[Column,                                       NotNull    ] public string    FirstName       { get; set; } = null!; // varchar(10)
-		[Column,                                          Nullable] public string?   Title           { get; set; } // varchar(30)
-		[Column,                                          Nullable] public string?   TitleOfCourtesy { get; set; } // varchar(25)
-		[Column(SkipOnInsert=true, SkipOnUpdate=true),    Nullable] public DateTime? BirthDate       { get; set; } // timestamp
-		[Column(SkipOnInsert=true, SkipOnUpdate=true),    Nullable] public DateTime? HireDate        { get; set; } // timestamp
-		[Column,                                          Nullable] public string?   Address         { get; set; } // varchar(60)
-		[Column,                                          Nullable] public string?   City            { get; set; } // varchar(15)
-		[Column,                                          Nullable] public string?   Region          { get; set; } // varchar(15)
-		[Column,                                          Nullable] public string?   PostalCode      { get; set; } // varchar(10)
-		[Column,                                          Nullable] public string?   Country         { get; set; } // varchar(15)
-		[Column,                                          Nullable] public string?   HomePhone       { get; set; } // varchar(24)
-		[Column,                                          Nullable] public string?   Extension       { get; set; } // varchar(4)
-		[Column,                                          Nullable] public byte[]?   Photo           { get; set; } // blob
-		[Column,                                          Nullable] public string?   Notes           { get; set; } // text(max)
-		[Column,                                          Nullable] public int?      ReportsTo       { get; set; } // int
-		[Column,                                          Nullable] public string?   PhotoPath       { get; set; } // varchar(255)
+		[PrimaryKey, NotNull    ] public int       EmployeeID      { get; set; } // int
+		[Column,     NotNull    ] public string    LastName        { get; set; } = null!; // varchar(20)
+		[Column,     NotNull    ] public string    FirstName       { get; set; } = null!; // varchar(10)
+		[Column,        Nullable] public string?   Title           { get; set; } // varchar(30)
+		[Column,        Nullable] public string?   TitleOfCourtesy { get; set; } // varchar(25)
+		[Column,        Nullable] public DateTime? BirthDate       { get; set; } // timestamp
+		[Column,        Nullable] public DateTime? HireDate        { get; set; } // timestamp
+		[Column,        Nullable] public string?   Address         { get; set; } // varchar(60)
+		[Column,        Nullable] public string?   City            { get; set; } // varchar(15)
+		[Column,        Nullable] public string?   Region          { get; set; } // varchar(15)
+		[Column,        Nullable] public string?   PostalCode      { get; set; } // varchar(10)
+		[Column,        Nullable] public string?   Country         { get; set; } // varchar(15)
+		[Column,        Nullable] public string?   HomePhone       { get; set; } // varchar(24)
+		[Column,        Nullable] public string?   Extension       { get; set; } // varchar(4)
+		[Column,        Nullable] public byte[]?   Photo           { get; set; } // blob
+		[Column,        Nullable] public string?   Notes           { get; set; } // text(max)
+		[Column,        Nullable] public int?      ReportsTo       { get; set; } // int
+		[Column,        Nullable] public string?   PhotoPath       { get; set; } // varchar(255)
 	}
 
 	[Table("EmployeeTerritories")]
@@ -186,20 +186,20 @@ namespace Default.SQLiteNorthwind
 	[Table("Orders")]
 	public partial class Order
 	{
-		[PrimaryKey,                                   NotNull    ] public int       OrderID        { get; set; } // int
-		[Column,                                          Nullable] public string?   CustomerID     { get; set; } // varchar(5)
-		[Column,                                          Nullable] public int?      EmployeeID     { get; set; } // int
-		[Column(SkipOnInsert=true, SkipOnUpdate=true),    Nullable] public DateTime? OrderDate      { get; set; } // timestamp
-		[Column(SkipOnInsert=true, SkipOnUpdate=true),    Nullable] public DateTime? RequiredDate   { get; set; } // timestamp
-		[Column(SkipOnInsert=true, SkipOnUpdate=true),    Nullable] public DateTime? ShippedDate    { get; set; } // timestamp
-		[Column,                                          Nullable] public int?      ShipVia        { get; set; } // int
-		[Column,                                          Nullable] public double?   Freight        { get; set; } // float
-		[Column,                                          Nullable] public string?   ShipName       { get; set; } // varchar(40)
-		[Column,                                          Nullable] public string?   ShipAddress    { get; set; } // varchar(60)
-		[Column,                                          Nullable] public string?   ShipCity       { get; set; } // varchar(15)
-		[Column,                                          Nullable] public string?   ShipRegion     { get; set; } // varchar(15)
-		[Column,                                          Nullable] public string?   ShipPostalCode { get; set; } // varchar(10)
-		[Column,                                          Nullable] public string?   ShipCountry    { get; set; } // varchar(15)
+		[PrimaryKey, NotNull    ] public int       OrderID        { get; set; } // int
+		[Column,        Nullable] public string?   CustomerID     { get; set; } // varchar(5)
+		[Column,        Nullable] public int?      EmployeeID     { get; set; } // int
+		[Column,        Nullable] public DateTime? OrderDate      { get; set; } // timestamp
+		[Column,        Nullable] public DateTime? RequiredDate   { get; set; } // timestamp
+		[Column,        Nullable] public DateTime? ShippedDate    { get; set; } // timestamp
+		[Column,        Nullable] public int?      ShipVia        { get; set; } // int
+		[Column,        Nullable] public double?   Freight        { get; set; } // float
+		[Column,        Nullable] public string?   ShipName       { get; set; } // varchar(40)
+		[Column,        Nullable] public string?   ShipAddress    { get; set; } // varchar(60)
+		[Column,        Nullable] public string?   ShipCity       { get; set; } // varchar(15)
+		[Column,        Nullable] public string?   ShipRegion     { get; set; } // varchar(15)
+		[Column,        Nullable] public string?   ShipPostalCode { get; set; } // varchar(10)
+		[Column,        Nullable] public string?   ShipCountry    { get; set; } // varchar(15)
 	}
 
 	[Table("Order Details")]
@@ -227,26 +227,26 @@ namespace Default.SQLiteNorthwind
 	[Table("Orders Qry", IsView=true)]
 	public partial class OrdersQry
 	{
-		[Column,                                       NotNull    ] public int       OrderID        { get; set; } // int
-		[Column,                                          Nullable] public string?   CustomerID     { get; set; } // varchar(5)
-		[Column,                                          Nullable] public int?      EmployeeID     { get; set; } // int
-		[Column(SkipOnInsert=true, SkipOnUpdate=true),    Nullable] public DateTime? OrderDate      { get; set; } // timestamp
-		[Column(SkipOnInsert=true, SkipOnUpdate=true),    Nullable] public DateTime? RequiredDate   { get; set; } // timestamp
-		[Column(SkipOnInsert=true, SkipOnUpdate=true),    Nullable] public DateTime? ShippedDate    { get; set; } // timestamp
-		[Column,                                          Nullable] public int?      ShipVia        { get; set; } // int
-		[Column,                                          Nullable] public double?   Freight        { get; set; } // float
-		[Column,                                          Nullable] public string?   ShipName       { get; set; } // varchar(40)
-		[Column,                                          Nullable] public string?   ShipAddress    { get; set; } // varchar(60)
-		[Column,                                          Nullable] public string?   ShipCity       { get; set; } // varchar(15)
-		[Column,                                          Nullable] public string?   ShipRegion     { get; set; } // varchar(15)
-		[Column,                                          Nullable] public string?   ShipPostalCode { get; set; } // varchar(10)
-		[Column,                                          Nullable] public string?   ShipCountry    { get; set; } // varchar(15)
-		[Column,                                       NotNull    ] public string    CompanyName    { get; set; } = null!; // varchar(40)
-		[Column,                                          Nullable] public string?   Address        { get; set; } // varchar(60)
-		[Column,                                          Nullable] public string?   City           { get; set; } // varchar(15)
-		[Column,                                          Nullable] public string?   Region         { get; set; } // varchar(15)
-		[Column,                                          Nullable] public string?   PostalCode     { get; set; } // varchar(10)
-		[Column,                                          Nullable] public string?   Country        { get; set; } // varchar(15)
+		[Column, NotNull    ] public int       OrderID        { get; set; } // int
+		[Column,    Nullable] public string?   CustomerID     { get; set; } // varchar(5)
+		[Column,    Nullable] public int?      EmployeeID     { get; set; } // int
+		[Column,    Nullable] public DateTime? OrderDate      { get; set; } // timestamp
+		[Column,    Nullable] public DateTime? RequiredDate   { get; set; } // timestamp
+		[Column,    Nullable] public DateTime? ShippedDate    { get; set; } // timestamp
+		[Column,    Nullable] public int?      ShipVia        { get; set; } // int
+		[Column,    Nullable] public double?   Freight        { get; set; } // float
+		[Column,    Nullable] public string?   ShipName       { get; set; } // varchar(40)
+		[Column,    Nullable] public string?   ShipAddress    { get; set; } // varchar(60)
+		[Column,    Nullable] public string?   ShipCity       { get; set; } // varchar(15)
+		[Column,    Nullable] public string?   ShipRegion     { get; set; } // varchar(15)
+		[Column,    Nullable] public string?   ShipPostalCode { get; set; } // varchar(10)
+		[Column,    Nullable] public string?   ShipCountry    { get; set; } // varchar(15)
+		[Column, NotNull    ] public string    CompanyName    { get; set; } = null!; // varchar(40)
+		[Column,    Nullable] public string?   Address        { get; set; } // varchar(60)
+		[Column,    Nullable] public string?   City           { get; set; } // varchar(15)
+		[Column,    Nullable] public string?   Region         { get; set; } // varchar(15)
+		[Column,    Nullable] public string?   PostalCode     { get; set; } // varchar(10)
+		[Column,    Nullable] public string?   Country        { get; set; } // varchar(15)
 	}
 
 	[Table("Order Subtotals", IsView=true)]
@@ -306,17 +306,17 @@ namespace Default.SQLiteNorthwind
 	[Table("Summary of Sales by Quarter", IsView=true)]
 	public partial class SummaryOfSalesByQuarter
 	{
-		[Column(SkipOnInsert=true, SkipOnUpdate=true),    Nullable] public DateTime? ShippedDate { get; set; } // timestamp
-		[Column,                                       NotNull    ] public int       OrderID     { get; set; } // int
-		[Column,                                          Nullable] public object?   Subtotal    { get; set; }
+		[Column,    Nullable] public DateTime? ShippedDate { get; set; } // timestamp
+		[Column, NotNull    ] public int       OrderID     { get; set; } // int
+		[Column,    Nullable] public object?   Subtotal    { get; set; }
 	}
 
 	[Table("Summary of Sales by Year", IsView=true)]
 	public partial class SummaryOfSalesByYear
 	{
-		[Column(SkipOnInsert=true, SkipOnUpdate=true),    Nullable] public DateTime? ShippedDate { get; set; } // timestamp
-		[Column,                                       NotNull    ] public int       OrderID     { get; set; } // int
-		[Column,                                          Nullable] public object?   Subtotal    { get; set; }
+		[Column,    Nullable] public DateTime? ShippedDate { get; set; } // timestamp
+		[Column, NotNull    ] public int       OrderID     { get; set; } // int
+		[Column,    Nullable] public object?   Subtotal    { get; set; }
 	}
 
 	[Table("Suppliers")]

@@ -16,8 +16,8 @@ namespace Cli.Default.SQLiteNorthwind
 	[Table("Summary of Sales by Quarter", IsView = true)]
 	public class SummaryOfSalesByQuarter
 	{
-		[Column("ShippedDate", SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate { get; set; } // timestamp
-		[Column("OrderID"                                              )] public int       OrderId     { get; set; } // int
-		[Column("Subtotal"                                             )] public object?   Subtotal    { get; set; } // NUMERIC
+		[Column("ShippedDate")] public DateTime? ShippedDate { get; set; } // timestamp
+		[Column("OrderID"    )] public int       OrderId     { get; set; } // int
+		[Column("Subtotal"   )] public object?   Subtotal    { get; set; } // NUMERIC
 	}
 }

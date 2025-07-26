@@ -81,6 +81,7 @@ namespace ModelDataContext
 		public TestDataDB(IDataContext dataContext)
 		{
 			_dataContext = dataContext;
+			InitSchemas();
 		}
 
 		private readonly IDataContext _dataContext;

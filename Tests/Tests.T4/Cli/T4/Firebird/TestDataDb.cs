@@ -687,7 +687,7 @@ namespace Cli.T4.Firebird
 
 		#region Associations
 		/// <summary>
-		/// INTEG_18
+		/// INTEG_52
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Person.PersonID))]
 		public Person Integ { get; set; } = null!;
@@ -711,7 +711,7 @@ namespace Cli.T4.Firebird
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_18 backreference
+		/// INTEG_52 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Firebird.Patient.PersonID))]
 		public Patient? Patient { get; set; }
