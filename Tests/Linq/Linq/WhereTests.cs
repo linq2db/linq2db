@@ -1714,6 +1714,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ActiveIssue("Sybase converts empty string to space and we don't plan to do anything about it for now", Configuration = TestProvName.AllSybase)]
 		public void StringInterpolationTestsNullable([DataSources(false)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1735,6 +1736,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ActiveIssue("Sybase converts empty string to space and we don't plan to do anything about it for now", Configuration = TestProvName.AllSybase)]
 		public void StringInterpolationCoalesce([DataSources(false)] string context)
 		{
 			using (var db = GetDataContext(context))
