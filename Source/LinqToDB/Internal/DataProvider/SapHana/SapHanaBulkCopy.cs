@@ -156,10 +156,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				if (options.MaxBatchSize.HasValue)
 					bc.BatchSize = options.MaxBatchSize.Value;
 
-				if (options.BulkCopyTimeout.HasValue)
-					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-				else if (LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
-					bc.BulkCopyTimeout = connection.ConnectionTimeout;
+				if (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+					bc.BulkCopyTimeout = options.BulkCopyTimeout ?? dataConnection.CommandTimeout;
 
 				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 				var tableName  = GetTableName(sqlBuilder, options, table);
@@ -233,10 +231,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				if (options.MaxBatchSize.HasValue)
 					bc.BatchSize = options.MaxBatchSize.Value;
 
-				if (options.BulkCopyTimeout.HasValue)
-					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-				else if (LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
-					bc.BulkCopyTimeout = connection.ConnectionTimeout;
+				if (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+					bc.BulkCopyTimeout = options.BulkCopyTimeout ?? dataConnection.CommandTimeout;
 
 				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 				var tableName  = GetTableName(sqlBuilder, options, table);

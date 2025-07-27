@@ -95,6 +95,7 @@ namespace Tests.UserTests
 			TestProvName.AllAccessOleDb,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
+			TestProvName.AllSapHana,
 			TestProvName.AllSqlServer)]
 			string context)
 		{

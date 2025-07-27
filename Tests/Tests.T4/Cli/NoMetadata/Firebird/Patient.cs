@@ -18,7 +18,7 @@ namespace Cli.NoMetadata.Firebird
 
 		#region Associations
 		/// <summary>
-		/// INTEG_18
+		/// INTEG_52
 		/// </summary>
 		public Person Integ { get; set; } = null!;
 		#endregion
