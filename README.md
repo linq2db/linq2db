@@ -85,10 +85,9 @@ var dc = new DataContext(options);
 
 > [!TIP]
 > There are a lot of configuration methods on `DataOptions` you can use.
->
+
 > [!TIP]
 > It is recommended to create configured `DataOptions` instance once and use it everywhere. E.g. you can register it in your DI container.
->
 
 ### Using Config File (.NET Framework)
 
