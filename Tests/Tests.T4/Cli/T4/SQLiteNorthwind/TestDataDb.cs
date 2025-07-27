@@ -187,24 +187,24 @@ namespace Cli.T4.SQLiteNorthwind
 	[Table("Employees")]
 	public partial class Employee
 	{
-		[Column("EmployeeID"     , IsPrimaryKey = true                      )] public int       EmployeeID      { get; set; } // int
-		[Column("LastName"       , CanBeNull    = false                     )] public string    LastName        { get; set; } = null!; // varchar(20)
-		[Column("FirstName"      , CanBeNull    = false                     )] public string    FirstName       { get; set; } = null!; // varchar(10)
-		[Column("Title"                                                     )] public string?   Title           { get; set; } // varchar(30)
-		[Column("TitleOfCourtesy"                                           )] public string?   TitleOfCourtesy { get; set; } // varchar(25)
-		[Column("BirthDate"      , SkipOnInsert = true , SkipOnUpdate = true)] public DateTime? BirthDate       { get; set; } // timestamp
-		[Column("HireDate"       , SkipOnInsert = true , SkipOnUpdate = true)] public DateTime? HireDate        { get; set; } // timestamp
-		[Column("Address"                                                   )] public string?   Address         { get; set; } // varchar(60)
-		[Column("City"                                                      )] public string?   City            { get; set; } // varchar(15)
-		[Column("Region"                                                    )] public string?   Region          { get; set; } // varchar(15)
-		[Column("PostalCode"                                                )] public string?   PostalCode      { get; set; } // varchar(10)
-		[Column("Country"                                                   )] public string?   Country         { get; set; } // varchar(15)
-		[Column("HomePhone"                                                 )] public string?   HomePhone       { get; set; } // varchar(24)
-		[Column("Extension"                                                 )] public string?   Extension       { get; set; } // varchar(4)
-		[Column("Photo"                                                     )] public byte[]?   Photo           { get; set; } // blob
-		[Column("Notes"                                                     )] public string?   Notes           { get; set; } // text(max)
-		[Column("ReportsTo"                                                 )] public int?      ReportsTo       { get; set; } // int
-		[Column("PhotoPath"                                                 )] public string?   PhotoPath       { get; set; } // varchar(255)
+		[Column("EmployeeID"     , IsPrimaryKey = true )] public int       EmployeeID      { get; set; } // int
+		[Column("LastName"       , CanBeNull    = false)] public string    LastName        { get; set; } = null!; // varchar(20)
+		[Column("FirstName"      , CanBeNull    = false)] public string    FirstName       { get; set; } = null!; // varchar(10)
+		[Column("Title"                                )] public string?   Title           { get; set; } // varchar(30)
+		[Column("TitleOfCourtesy"                      )] public string?   TitleOfCourtesy { get; set; } // varchar(25)
+		[Column("BirthDate"                            )] public DateTime? BirthDate       { get; set; } // timestamp
+		[Column("HireDate"                             )] public DateTime? HireDate        { get; set; } // timestamp
+		[Column("Address"                              )] public string?   Address         { get; set; } // varchar(60)
+		[Column("City"                                 )] public string?   City            { get; set; } // varchar(15)
+		[Column("Region"                               )] public string?   Region          { get; set; } // varchar(15)
+		[Column("PostalCode"                           )] public string?   PostalCode      { get; set; } // varchar(10)
+		[Column("Country"                              )] public string?   Country         { get; set; } // varchar(15)
+		[Column("HomePhone"                            )] public string?   HomePhone       { get; set; } // varchar(24)
+		[Column("Extension"                            )] public string?   Extension       { get; set; } // varchar(4)
+		[Column("Photo"                                )] public byte[]?   Photo           { get; set; } // blob
+		[Column("Notes"                                )] public string?   Notes           { get; set; } // text(max)
+		[Column("ReportsTo"                            )] public int?      ReportsTo       { get; set; } // int
+		[Column("PhotoPath"                            )] public string?   PhotoPath       { get; set; } // varchar(255)
 	}
 
 	[Table("Order Details")]
@@ -220,20 +220,20 @@ namespace Cli.T4.SQLiteNorthwind
 	[Table("Orders")]
 	public partial class Order
 	{
-		[Column("OrderID"       , IsPrimaryKey = true                     )] public int       OrderID        { get; set; } // int
-		[Column("CustomerID"                                              )] public string?   CustomerID     { get; set; } // varchar(5)
-		[Column("EmployeeID"                                              )] public int?      EmployeeID     { get; set; } // int
-		[Column("OrderDate"     , SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? OrderDate      { get; set; } // timestamp
-		[Column("RequiredDate"  , SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? RequiredDate   { get; set; } // timestamp
-		[Column("ShippedDate"   , SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate    { get; set; } // timestamp
-		[Column("ShipVia"                                                 )] public int?      ShipVia        { get; set; } // int
-		[Column("Freight"                                                 )] public double?   Freight        { get; set; } // float
-		[Column("ShipName"                                                )] public string?   ShipName       { get; set; } // varchar(40)
-		[Column("ShipAddress"                                             )] public string?   ShipAddress    { get; set; } // varchar(60)
-		[Column("ShipCity"                                                )] public string?   ShipCity       { get; set; } // varchar(15)
-		[Column("ShipRegion"                                              )] public string?   ShipRegion     { get; set; } // varchar(15)
-		[Column("ShipPostalCode"                                          )] public string?   ShipPostalCode { get; set; } // varchar(10)
-		[Column("ShipCountry"                                             )] public string?   ShipCountry    { get; set; } // varchar(15)
+		[Column("OrderID"       , IsPrimaryKey = true)] public int       OrderID        { get; set; } // int
+		[Column("CustomerID"                         )] public string?   CustomerID     { get; set; } // varchar(5)
+		[Column("EmployeeID"                         )] public int?      EmployeeID     { get; set; } // int
+		[Column("OrderDate"                          )] public DateTime? OrderDate      { get; set; } // timestamp
+		[Column("RequiredDate"                       )] public DateTime? RequiredDate   { get; set; } // timestamp
+		[Column("ShippedDate"                        )] public DateTime? ShippedDate    { get; set; } // timestamp
+		[Column("ShipVia"                            )] public int?      ShipVia        { get; set; } // int
+		[Column("Freight"                            )] public double?   Freight        { get; set; } // float
+		[Column("ShipName"                           )] public string?   ShipName       { get; set; } // varchar(40)
+		[Column("ShipAddress"                        )] public string?   ShipAddress    { get; set; } // varchar(60)
+		[Column("ShipCity"                           )] public string?   ShipCity       { get; set; } // varchar(15)
+		[Column("ShipRegion"                         )] public string?   ShipRegion     { get; set; } // varchar(15)
+		[Column("ShipPostalCode"                     )] public string?   ShipPostalCode { get; set; } // varchar(10)
+		[Column("ShipCountry"                        )] public string?   ShipCountry    { get; set; } // varchar(15)
 	}
 
 	[Table("Products")]
@@ -345,26 +345,26 @@ namespace Cli.T4.SQLiteNorthwind
 	[Table("Orders Qry", IsView = true)]
 	public partial class OrdersQry
 	{
-		[Column("OrderID"                                                  )] public int       OrderID        { get; set; } // int
-		[Column("CustomerID"                                               )] public string?   CustomerID     { get; set; } // varchar(5)
-		[Column("EmployeeID"                                               )] public int?      EmployeeID     { get; set; } // int
-		[Column("OrderDate"     , SkipOnInsert = true , SkipOnUpdate = true)] public DateTime? OrderDate      { get; set; } // timestamp
-		[Column("RequiredDate"  , SkipOnInsert = true , SkipOnUpdate = true)] public DateTime? RequiredDate   { get; set; } // timestamp
-		[Column("ShippedDate"   , SkipOnInsert = true , SkipOnUpdate = true)] public DateTime? ShippedDate    { get; set; } // timestamp
-		[Column("ShipVia"                                                  )] public int?      ShipVia        { get; set; } // int
-		[Column("Freight"                                                  )] public double?   Freight        { get; set; } // float
-		[Column("ShipName"                                                 )] public string?   ShipName       { get; set; } // varchar(40)
-		[Column("ShipAddress"                                              )] public string?   ShipAddress    { get; set; } // varchar(60)
-		[Column("ShipCity"                                                 )] public string?   ShipCity       { get; set; } // varchar(15)
-		[Column("ShipRegion"                                               )] public string?   ShipRegion     { get; set; } // varchar(15)
-		[Column("ShipPostalCode"                                           )] public string?   ShipPostalCode { get; set; } // varchar(10)
-		[Column("ShipCountry"                                              )] public string?   ShipCountry    { get; set; } // varchar(15)
-		[Column("CompanyName"   , CanBeNull    = false                     )] public string    CompanyName    { get; set; } = null!; // varchar(40)
-		[Column("Address"                                                  )] public string?   Address        { get; set; } // varchar(60)
-		[Column("City"                                                     )] public string?   City           { get; set; } // varchar(15)
-		[Column("Region"                                                   )] public string?   Region         { get; set; } // varchar(15)
-		[Column("PostalCode"                                               )] public string?   PostalCode     { get; set; } // varchar(10)
-		[Column("Country"                                                  )] public string?   Country        { get; set; } // varchar(15)
+		[Column("OrderID"                          )] public int       OrderID        { get; set; } // int
+		[Column("CustomerID"                       )] public string?   CustomerID     { get; set; } // varchar(5)
+		[Column("EmployeeID"                       )] public int?      EmployeeID     { get; set; } // int
+		[Column("OrderDate"                        )] public DateTime? OrderDate      { get; set; } // timestamp
+		[Column("RequiredDate"                     )] public DateTime? RequiredDate   { get; set; } // timestamp
+		[Column("ShippedDate"                      )] public DateTime? ShippedDate    { get; set; } // timestamp
+		[Column("ShipVia"                          )] public int?      ShipVia        { get; set; } // int
+		[Column("Freight"                          )] public double?   Freight        { get; set; } // float
+		[Column("ShipName"                         )] public string?   ShipName       { get; set; } // varchar(40)
+		[Column("ShipAddress"                      )] public string?   ShipAddress    { get; set; } // varchar(60)
+		[Column("ShipCity"                         )] public string?   ShipCity       { get; set; } // varchar(15)
+		[Column("ShipRegion"                       )] public string?   ShipRegion     { get; set; } // varchar(15)
+		[Column("ShipPostalCode"                   )] public string?   ShipPostalCode { get; set; } // varchar(10)
+		[Column("ShipCountry"                      )] public string?   ShipCountry    { get; set; } // varchar(15)
+		[Column("CompanyName"   , CanBeNull = false)] public string    CompanyName    { get; set; } = null!; // varchar(40)
+		[Column("Address"                          )] public string?   Address        { get; set; } // varchar(60)
+		[Column("City"                             )] public string?   City           { get; set; } // varchar(15)
+		[Column("Region"                           )] public string?   Region         { get; set; } // varchar(15)
+		[Column("PostalCode"                       )] public string?   PostalCode     { get; set; } // varchar(10)
+		[Column("Country"                          )] public string?   Country        { get; set; } // varchar(15)
 	}
 
 	[Table("Products Above Average Price", IsView = true)]
@@ -387,16 +387,16 @@ namespace Cli.T4.SQLiteNorthwind
 	[Table("Summary of Sales by Quarter", IsView = true)]
 	public partial class SummaryOfSalesByQuarter
 	{
-		[Column("ShippedDate", SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate { get; set; } // timestamp
-		[Column("OrderID"                                              )] public int       OrderID     { get; set; } // int
-		[Column("Subtotal"                                             )] public object?   Subtotal    { get; set; } // NUMERIC
+		[Column("ShippedDate")] public DateTime? ShippedDate { get; set; } // timestamp
+		[Column("OrderID"    )] public int       OrderID     { get; set; } // int
+		[Column("Subtotal"   )] public object?   Subtotal    { get; set; } // NUMERIC
 	}
 
 	[Table("Summary of Sales by Year", IsView = true)]
 	public partial class SummaryOfSalesByYear
 	{
-		[Column("ShippedDate", SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate { get; set; } // timestamp
-		[Column("OrderID"                                              )] public int       OrderID     { get; set; } // int
-		[Column("Subtotal"                                             )] public object?   Subtotal    { get; set; } // NUMERIC
+		[Column("ShippedDate")] public DateTime? ShippedDate { get; set; } // timestamp
+		[Column("OrderID"    )] public int       OrderID     { get; set; } // int
+		[Column("Subtotal"   )] public object?   Subtotal    { get; set; } // NUMERIC
 	}
 }
