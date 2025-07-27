@@ -21,6 +21,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		protected bool                  HasAccessForCalculationViews { get; private set; }
 		protected string?               SchemasFilter                { get; private set; }
 
+		protected override bool GetProcedureSchemaExecutesProcedure => true;
+
 		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
 			HanaSchemaOptions            = options as GetHanaSchemaOptions;
@@ -591,16 +593,6 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 								: ParameterDirection.Input
 							: ParameterDirection.Output
 				}).ToArray();
-		}
-
-		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
-		{
-			//bug in drivers, SchemaOnly executes statement
-			using (dataConnection.BeginTransaction())
-			using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.SchemaOnly, parameters))
-			{
-				return rd.Reader!.GetSchemaTable();
-			}
 		}
 
 		private IEnumerable<TableInfo> GetViewsWithParameters(DataConnection dataConnection)
