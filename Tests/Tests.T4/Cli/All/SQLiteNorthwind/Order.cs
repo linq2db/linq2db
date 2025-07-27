@@ -19,20 +19,20 @@ namespace Cli.All.SQLiteNorthwind
 	[Table("Orders")]
 	public class Order : IEquatable<Order>
 	{
-		[Column("OrderID"       , DataType = DataType.Int32    , DbType = "int"        , Length = 4 , Precision = 10, Scale = 0, IsPrimaryKey = true                     )] public int       OrderId        { get; set; } // int
-		[Column("CustomerID"    , DataType = DataType.VarChar  , DbType = "varchar(5)" , Length = 5 , Precision = 0 , Scale = 0                                          )] public string?   CustomerId     { get; set; } // varchar(5)
-		[Column("EmployeeID"    , DataType = DataType.Int32    , DbType = "int"        , Length = 4 , Precision = 10, Scale = 0                                          )] public int?      EmployeeId     { get; set; } // int
-		[Column("OrderDate"     , DataType = DataType.Timestamp, DbType = "timestamp"  , Length = 8 , Precision = 0 , Scale = 0, SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? OrderDate      { get; set; } // timestamp
-		[Column("RequiredDate"  , DataType = DataType.Timestamp, DbType = "timestamp"  , Length = 8 , Precision = 0 , Scale = 0, SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? RequiredDate   { get; set; } // timestamp
-		[Column("ShippedDate"   , DataType = DataType.Timestamp, DbType = "timestamp"  , Length = 8 , Precision = 0 , Scale = 0, SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate    { get; set; } // timestamp
-		[Column("ShipVia"       , DataType = DataType.Int32    , DbType = "int"        , Length = 4 , Precision = 10, Scale = 0                                          )] public int?      ShipVia        { get; set; } // int
-		[Column("Freight"       , DataType = DataType.Double   , DbType = "float"      , Length = 8 , Precision = 26, Scale = 0                                          )] public double?   Freight        { get; set; } // float
-		[Column("ShipName"      , DataType = DataType.VarChar  , DbType = "varchar(40)", Length = 40, Precision = 0 , Scale = 0                                          )] public string?   ShipName       { get; set; } // varchar(40)
-		[Column("ShipAddress"   , DataType = DataType.VarChar  , DbType = "varchar(60)", Length = 60, Precision = 0 , Scale = 0                                          )] public string?   ShipAddress    { get; set; } // varchar(60)
-		[Column("ShipCity"      , DataType = DataType.VarChar  , DbType = "varchar(15)", Length = 15, Precision = 0 , Scale = 0                                          )] public string?   ShipCity       { get; set; } // varchar(15)
-		[Column("ShipRegion"    , DataType = DataType.VarChar  , DbType = "varchar(15)", Length = 15, Precision = 0 , Scale = 0                                          )] public string?   ShipRegion     { get; set; } // varchar(15)
-		[Column("ShipPostalCode", DataType = DataType.VarChar  , DbType = "varchar(10)", Length = 10, Precision = 0 , Scale = 0                                          )] public string?   ShipPostalCode { get; set; } // varchar(10)
-		[Column("ShipCountry"   , DataType = DataType.VarChar  , DbType = "varchar(15)", Length = 15, Precision = 0 , Scale = 0                                          )] public string?   ShipCountry    { get; set; } // varchar(15)
+		[Column("OrderID"       , DataType = DataType.Int32    , DbType = "int"        , Length = 4 , Precision = 10, Scale = 0, IsPrimaryKey = true)] public int       OrderId        { get; set; } // int
+		[Column("CustomerID"    , DataType = DataType.VarChar  , DbType = "varchar(5)" , Length = 5 , Precision = 0 , Scale = 0                     )] public string?   CustomerId     { get; set; } // varchar(5)
+		[Column("EmployeeID"    , DataType = DataType.Int32    , DbType = "int"        , Length = 4 , Precision = 10, Scale = 0                     )] public int?      EmployeeId     { get; set; } // int
+		[Column("OrderDate"     , DataType = DataType.Timestamp, DbType = "timestamp"  , Length = 8 , Precision = 0 , Scale = 0                     )] public DateTime? OrderDate      { get; set; } // timestamp
+		[Column("RequiredDate"  , DataType = DataType.Timestamp, DbType = "timestamp"  , Length = 8 , Precision = 0 , Scale = 0                     )] public DateTime? RequiredDate   { get; set; } // timestamp
+		[Column("ShippedDate"   , DataType = DataType.Timestamp, DbType = "timestamp"  , Length = 8 , Precision = 0 , Scale = 0                     )] public DateTime? ShippedDate    { get; set; } // timestamp
+		[Column("ShipVia"       , DataType = DataType.Int32    , DbType = "int"        , Length = 4 , Precision = 10, Scale = 0                     )] public int?      ShipVia        { get; set; } // int
+		[Column("Freight"       , DataType = DataType.Double   , DbType = "float"      , Length = 8 , Precision = 26, Scale = 0                     )] public double?   Freight        { get; set; } // float
+		[Column("ShipName"      , DataType = DataType.VarChar  , DbType = "varchar(40)", Length = 40, Precision = 0 , Scale = 0                     )] public string?   ShipName       { get; set; } // varchar(40)
+		[Column("ShipAddress"   , DataType = DataType.VarChar  , DbType = "varchar(60)", Length = 60, Precision = 0 , Scale = 0                     )] public string?   ShipAddress    { get; set; } // varchar(60)
+		[Column("ShipCity"      , DataType = DataType.VarChar  , DbType = "varchar(15)", Length = 15, Precision = 0 , Scale = 0                     )] public string?   ShipCity       { get; set; } // varchar(15)
+		[Column("ShipRegion"    , DataType = DataType.VarChar  , DbType = "varchar(15)", Length = 15, Precision = 0 , Scale = 0                     )] public string?   ShipRegion     { get; set; } // varchar(15)
+		[Column("ShipPostalCode", DataType = DataType.VarChar  , DbType = "varchar(10)", Length = 10, Precision = 0 , Scale = 0                     )] public string?   ShipPostalCode { get; set; } // varchar(10)
+		[Column("ShipCountry"   , DataType = DataType.VarChar  , DbType = "varchar(15)", Length = 15, Precision = 0 , Scale = 0                     )] public string?   ShipCountry    { get; set; } // varchar(15)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<Order> _equalityComparer = ComparerBuilder.GetEqualityComparer<Order>(c => c.OrderId);

@@ -26,7 +26,7 @@ namespace Cli.NoMetadata.Firebird
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_18 backreference
+		/// INTEG_52 backreference
 		/// </summary>
 		public Patient? Patient { get; set; }
 		#endregion
