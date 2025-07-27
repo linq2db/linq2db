@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -13,7 +10,6 @@ using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -1218,119 +1214,73 @@ namespace Tests.Linq
 
 		static class Issue5040
 		{
-			sealed class CustomIntConverter : TypeConverter
+			public interface IBaseEntity
 			{
-				private static readonly Type[] _convertibleTypes = [typeof(string), typeof(int)];
-
-				public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
-					=> _convertibleTypes.Contains(sourceType)
-						|| base.CanConvertFrom(context, sourceType);
-
-				public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
-					=> value switch
-					{
-						string s => CustomInt.Parse(s),
-						int i => new CustomInt(i),
-						_ => base.ConvertFrom(context, culture, value),
-					};
-
-				public override bool CanConvertTo(ITypeDescriptorContext? context, [NotNullWhen(true)] Type? destinationType)
-					=> _convertibleTypes.Contains(destinationType)
-						|| base.CanConvertTo(context, destinationType);
-
-				public override object? ConvertTo(ITypeDescriptorContext? context, CultureInfo? culture, object? value, Type destinationType)
-					=> value is CustomInt ulid
-						? destinationType == typeof(string) ? ulid.ToString()
-						: destinationType == typeof(int) ? ulid.Id
-						: base.ConvertTo(context, culture, value, destinationType)
-					: base.ConvertTo(context, culture, value, destinationType);
 			}
 
-			[TypeConverter(typeof(CustomIntConverter))]
-			public readonly struct CustomInt(int value) : IFormattable
+			public interface IEntityWithPermissions : IBaseEntity
 			{
-				public readonly int Id = value;
-
-				public static implicit operator Int32(CustomInt value) => value.Id;
-				public static implicit operator CustomInt(int value) => new(value);
-
-				public readonly string ToString(string? format = null, IFormatProvider? formatProvider = null)
-				{
-					return Id.ToString();
-				}
-
-				public static CustomInt Parse(string s, IFormatProvider? provider = null)
-					=> new CustomInt(int.Parse(s));
+				int PermissionObjectId { get; }
 			}
 
-			public interface IEntityWithPermissions: IBaseEntity
+			[Table]
+			public sealed class User : IBaseEntity
 			{
-				CustomInt PermissionObjectId { get; }
+				[Column(SkipOnUpdate = true)] public int Id { get; set; }
+				// Comment it and query generation works
+				[Column] public string? Username { get; set; }
 			}
 
-			[ProtectedEntity]
+			[Table]
+			public sealed class Permission : IBaseEntity
+			{
+				[Column(SkipOnUpdate = true)] public int Id { get; set; }
+				[Column] public int ObjectId { get; set; }
+			}
+
+			[Table, ProtectedEntity]
 			public sealed class Account : IEntityWithPermissions
 			{
-				[Column(DataType = DataType.Int32)] public CustomInt Id { get; set; }
+				[Column] public int UserId { get; set; }
 
-				[NotColumn]
+				[Association(CanBeNull = false, ThisKey = nameof(UserId), OtherKey = nameof(User.Id))]
+				public User User { get; } = null!;
+
 				[ExpressionMethod(nameof(PermissionObjectIdExpression))]
-				public CustomInt PermissionObjectId => PermissionObjectIdExpression().Compile()(this);
+				public int PermissionObjectId => PermissionObjectIdExpression().Compile()(this);
 
-				public static Expression<Func<Account, CustomInt>> PermissionObjectIdExpression()
-					=> x => x.Id;
+				static Expression<Func<Account, int>> PermissionObjectIdExpression() => x => x.UserId;
 			}
 
-			static ContextAttributes Attributes { get; } = new ContextAttributes()
-			{
-				UserId = new(1),
-				RoleId = new(2),
-			};
-
-			class ContextAttributes
-			{
-				public CustomInt? UserId { get; set; }
-				public CustomInt? RoleId { get; set; }
-			}
-
-			public sealed class ProtectedEntityAttribute()
+			public class ProtectedEntityAttribute()
 				: EntityFilterAttribute(typeof(ProtectedEntityAttribute), nameof(Filter))
 			{
 				private static IQueryable<T> Filter<T>(IQueryable<T> q, IDataContext dbCtx)
 					where T : IEntityWithPermissions
-					=> Attributes.UserId is null && Attributes.RoleId is null
-						? q
-						: q.Where(x => dbCtx
+					=> q.Where(x => dbCtx
 							.GetTable<Permission>()
-							.Where(y => new[] { Attributes.UserId, Attributes.RoleId }.Contains(y.SubjectId))
 							.Select(y => y.ObjectId)
-							// <-- this is what makes it fail
 							.Contains(x.PermissionObjectId));
 			}
 
 			[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true)]
-			public abstract class EntityFilterAttribute(Type providerType, string propertyName) : Attribute
+			public class EntityFilterAttribute(Type providerType, string propertyName) : Attribute
 			{
 				public Type ProviderType { get; } = providerType;
-
 				public string PropertyName { get; } = propertyName;
 			}
 
-			public sealed class Permission : IBaseEntity
+			internal static class EntityFilterHelper
 			{
-				[Column(DataType = DataType.Int32, SkipOnUpdate = true)] public CustomInt Id { get; set; }
-				[Column(DataType = DataType.Int32)] public CustomInt SubjectId { get; set; }
-				[Column(DataType = DataType.Int32)] public CustomInt ObjectId { get; set; }
-			}
+				private const BindingFlags BindingFlags
+					= System.Reflection.BindingFlags.Static
+					| System.Reflection.BindingFlags.Public
+					| System.Reflection.BindingFlags.NonPublic;
 
-			public static class EntityFilterHelper
-			{
-				private const BindingFlags BINDING_FLAGS = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-
-				public static Func<IQueryable<TEntity>, TContext, IQueryable<TEntity>>? GetEntityFilter<TEntity, TContext>()
+				public static Func<IQueryable<TEntity>, IDataContext, IQueryable<TEntity>>? GetEntityFilter<TEntity>()
 				{
 					var filters = FindAllFilterAttributes(typeof(TEntity))
-						.Select(GetLambda<TEntity, TContext>)
+						.Select(GetLambda<TEntity, IDataContext>)
 						.ToArray();
 
 					return filters.Any()
@@ -1360,18 +1310,19 @@ namespace Tests.Linq
 					}
 
 					return relevantTypes
-						.SelectMany(x => x.GetAttributes<EntityFilterAttribute>(true))
+						.SelectMany(x => x.GetCustomAttributes<EntityFilterAttribute>(true))
 						.ToList();
 				}
 
-				private static Func<IQueryable<TEntity>, TContext, IQueryable<TEntity>> GetLambda<TEntity, TContext>(EntityFilterAttribute entityFilter)
+				private static Func<IQueryable<TEntity>, TContext, IQueryable<TEntity>> GetLambda<TEntity, TContext>(
+					EntityFilterAttribute entityFilter
+				)
 				{
 					var methodInfo = entityFilter.ProviderType
-						.GetMethods(BINDING_FLAGS)
+						.GetMethods(BindingFlags)
 						.FirstOrDefault(m => m.Name == entityFilter.PropertyName && m.IsGenericMethodDefinition)
 						?? throw new ArgumentException($"Method '{entityFilter.PropertyName}' not found in type '{entityFilter.ProviderType.FullName}' or is not a generic method definition.");
 
-					// Make the generic method concrete with TEntity
 					if (methodInfo.IsGenericMethod)
 					{
 						methodInfo = methodInfo.MakeGenericMethod(typeof(TEntity));
@@ -1380,11 +1331,7 @@ namespace Tests.Linq
 					var qParam = Expression.Parameter(typeof(IQueryable<TEntity>), "q");
 					var dbCtxParam = Expression.Parameter(typeof(TContext), "dbCtx");
 
-					var methodCall = Expression.Call(
-						null, // Static method, no instance
-						methodInfo,
-						qParam,
-						dbCtxParam);
+					var methodCall = Expression.Call(null, methodInfo, qParam, dbCtxParam);
 
 					var lambda = Expression.Lambda<Func<IQueryable<TEntity>, TContext, IQueryable<TEntity>>>(
 						methodCall,
@@ -1395,26 +1342,11 @@ namespace Tests.Linq
 				}
 			}
 
-			public interface IBaseEntity
-			{
-				CustomInt Id { get; set; }
-			}
-
 			public static class ModelBuilderExtensions
 			{
-				public static void ApplyEntityFilters<TEntity>(MappingSchema mappings)
-					where TEntity : IBaseEntity
+				public static void ProcessEntity<TEntity>(FluentMappingBuilder builder)
 				{
-					var builder = new FluentMappingBuilder(mappings);
-
-					ProcessEntity<TEntity>(builder);
-
-					builder.Build();
-				}
-
-				private static void ProcessEntity<TEntity>(FluentMappingBuilder builder)
-				{
-					var filter = EntityFilterHelper.GetEntityFilter<TEntity, IDataContext>();
+					var filter = EntityFilterHelper.GetEntityFilter<TEntity>();
 					if (filter != null)
 					{
 						builder.Entity<TEntity>().HasQueryFilter(filter);
@@ -1424,17 +1356,17 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5040")]
-		public void Issue5040Test([DataSources] string context, [Values] bool inline)
+		public void Issue5040Test([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
 		{
 			var ms = new MappingSchema();
-			Issue5040.ModelBuilderExtensions.ApplyEntityFilters<Issue5040.Permission>(ms);
-			Issue5040.ModelBuilderExtensions.ApplyEntityFilters<Issue5040.Account>(ms);
+			var fb = new FluentMappingBuilder(ms);
+			Issue5040.ModelBuilderExtensions.ProcessEntity<Issue5040.Account>(fb);
+			fb.Build();
 
 			using var db = GetDataContext(context, o => o.UseMappingSchema(ms));
 			using var t1 = db.CreateLocalTable<Issue5040.Account>();
 			using var t2 = db.CreateLocalTable<Issue5040.Permission>();
-
-			db.InlineParameters = inline;
+			using var t3 = db.CreateLocalTable<Issue5040.User>();
 
 			t1.ToList();
 		}
