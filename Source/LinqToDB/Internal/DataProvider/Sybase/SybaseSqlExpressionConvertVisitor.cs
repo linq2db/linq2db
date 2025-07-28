@@ -93,15 +93,25 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);
 			}
 
-			if (expr is SqlParameter { IsQueryParameter: false } param)
+			if (expr is SqlParameter param)
 			{
 				var paramType = param.Type.SystemType.UnwrapNullableType();
-				if (paramType == typeof(uint)
-					|| paramType == typeof(long)
-					|| paramType == typeof(ulong)
-					|| paramType == typeof(float)
-					|| paramType == typeof(double)
-					|| paramType == typeof(decimal))
+
+				var wrap = paramType == typeof(uint)
+						|| paramType == typeof(long)
+						|| paramType == typeof(ulong)
+						|| paramType == typeof(float)
+						|| paramType == typeof(double)
+						|| paramType == typeof(decimal);
+
+				if (wrap && param.IsQueryParameter)
+				{
+					var paramValue = param.GetParameterValue(EvaluationContext.ParameterValues);
+
+					wrap = paramValue.ProviderValue == null;
+				}
+
+				if (wrap)
 					expr = new SqlCastExpression(expr, param.Type, null, isMandatory: true);
 			}
 
