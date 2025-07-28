@@ -147,14 +147,20 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 			if (expr is SqlValue
 				{
-					Value: decimal
+					Value: decimal or uint or ulong or long or double
 				} value)
 			{
 				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);
 			}
-			else if (expr is SqlParameter param && param.Type.SystemType.UnwrapNullableType() == typeof(decimal))
+			else if (expr is SqlParameter param)
 			{
-				expr = new SqlCastExpression(expr, param.Type, null, isMandatory: true);
+				var paramType = param.Type.SystemType.UnwrapNullableType();
+				if (paramType == typeof(uint)
+					|| paramType == typeof(ulong)
+					|| paramType == typeof(long)
+					|| paramType == typeof(double)
+					|| paramType == typeof(decimal))
+					expr = new SqlCastExpression(expr, param.Type, null, isMandatory: true);
 			}
 
 			return base.WrapColumnExpression(expr);

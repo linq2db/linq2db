@@ -1404,6 +1404,7 @@ namespace Tests.Linq
 
 		record MappingTypingByConstant<T>(int Id, T Value);
 
+		[ActiveIssue("CAST to BIGINT doesn't work in MariaDB and MySQL 5.7", Configurations = [TestProvName.AllMariaDB, TestProvName.AllMySql57], SkipForLinqService = true)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
 		public void MappingTypingByConstant_FromEnumerable_Int64([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1L)] long? first)
 		{
@@ -1427,6 +1428,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("CAST to BIGINT doesn't work in MariaDB", Configuration = TestProvName.AllMariaDB, SkipForLinqService = true)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
 		public void MappingTypingByConstant_FromQuery_Int64([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values(null, 1L)] long? first)
 		{
