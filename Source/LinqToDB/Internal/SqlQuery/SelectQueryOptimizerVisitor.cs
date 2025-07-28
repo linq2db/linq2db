@@ -940,7 +940,16 @@ namespace LinqToDB.Internal.SqlQuery
 					return optimized;
 
 				if (isAgg)
-					return optimized;
+				{
+					var shouldCheckForAggregate = true;
+					if (!sql.Where.IsEmpty && !QueryHelper.IsDependsOnOuterSources(sql, [sql.Where]))
+					{
+						shouldCheckForAggregate = false;
+					}
+
+					if (shouldCheckForAggregate)
+						return optimized;
+				}
 
 				var skipValue = sql.Select.SkipValue;
 				var takeValue = sql.Select.TakeValue;
