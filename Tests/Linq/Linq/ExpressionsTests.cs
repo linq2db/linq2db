@@ -10,6 +10,7 @@ using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -1272,11 +1273,6 @@ namespace Tests.Linq
 
 			internal static class EntityFilterHelper
 			{
-				private const BindingFlags BindingFlags
-					= System.Reflection.BindingFlags.Static
-					| System.Reflection.BindingFlags.Public
-					| System.Reflection.BindingFlags.NonPublic;
-
 				public static Func<IQueryable<TEntity>, IDataContext, IQueryable<TEntity>>? GetEntityFilter<TEntity>()
 				{
 					var filters = FindAllFilterAttributes(typeof(TEntity))
@@ -1312,7 +1308,7 @@ namespace Tests.Linq
 					}
 
 					return relevantTypes
-						.SelectMany(x => x.GetCustomAttributes<EntityFilterAttribute>(true))
+						.SelectMany(x => x.GetAttributes<EntityFilterAttribute>(true))
 						.ToList();
 				}
 
@@ -1321,7 +1317,7 @@ namespace Tests.Linq
 				)
 				{
 					var methodInfo = entityFilter.ProviderType
-						.GetMethods(BindingFlags)
+						.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
 						.FirstOrDefault(m => m.Name == entityFilter.PropertyName && m.IsGenericMethodDefinition)
 						?? throw new ArgumentException($"Method '{entityFilter.PropertyName}' not found in type '{entityFilter.ProviderType.FullName}' or is not a generic method definition.");
 
