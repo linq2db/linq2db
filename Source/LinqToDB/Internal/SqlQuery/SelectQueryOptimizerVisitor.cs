@@ -939,18 +939,6 @@ namespace LinqToDB.Internal.SqlQuery
 				if (isApplySupported && isAgg)
 					return optimized;
 
-				if (isAgg)
-				{
-					var shouldCheckForAggregate = true;
-					if (!sql.Where.IsEmpty && !QueryHelper.IsDependsOnOuterSources(sql, [sql.Where]))
-					{
-						shouldCheckForAggregate = false;
-					}
-
-					if (shouldCheckForAggregate)
-						return optimized;
-				}
-
 				var skipValue = sql.Select.SkipValue;
 				var takeValue = sql.Select.TakeValue;
 
@@ -1116,6 +1104,10 @@ namespace LinqToDB.Internal.SqlQuery
 								{
 									return optimized;
 								}
+							}
+							else if (isAgg)
+							{
+								return optimized;
 							}
 
 							toRemove ??= new List<ISqlPredicate>();
