@@ -108,7 +108,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					(DataType.Json,           _,                   _,                  _                   ) => "JSON",
 					(DataType.Guid,           _,                   _,                  _                   ) => "CHAR(36)",
 					(DataType.Double,         _,                   _,                  _                   ) => "DOUBLE",
-					(DataType.Single,         _,                   _,                  _                   ) => "FLOAT",
+					// https://bugs.mysql.com/bug.php?id=87794
+					// FLOAT type is garbage and we shouldn't use it for type CASTs
+					(DataType.Single,         _,                   _,                  _                   ) => "DOUBLE",
 					(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision ?? 10}, {type.Scale})"),
 					(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision})"),
 					(DataType.Decimal,        _,                   _,                  _                   ) => "DECIMAL",
@@ -651,6 +653,22 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		protected override void BuildSql()
 		{
 			BuildSqlForUnion();
+		}
+
+		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows, int row, int column)
+		{
+			if (row == 0)
+			{
+				if (rows[0][column] is SqlValue
+					{
+						Value: uint or long or ulong or float or double or decimal or null
+					})
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 	}
 }
