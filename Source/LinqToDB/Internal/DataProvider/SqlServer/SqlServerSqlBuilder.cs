@@ -521,6 +521,19 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					precision = 1;
 				dataType = dataType.WithPrecision(precision).WithScale(scale);
 			}
+			else if (value is SqlParameter param)
+			{
+				var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+
+				if (paramValue.ProviderValue is decimal decValue)
+				{
+					var precision = DecimalHelper.GetPrecision(decValue);
+					var scale = DecimalHelper.GetScale(decValue);
+					if (precision == 0 && scale == 0)
+						precision = 1;
+					dataType = dataType.WithPrecision(precision).WithScale(scale);
+				}
+			}
 
 			base.BuildTypedExpression(dataType, value);
 		}

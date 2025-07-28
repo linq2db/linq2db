@@ -1,4 +1,5 @@
-﻿using LinqToDB.Internal.SqlProvider;
+﻿using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Sybase
@@ -19,26 +20,6 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
 
 		#endregion
-
-		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
-		{
-			/*var ftype = cast.SystemType.ToUnderlying();
-			if (ftype == typeof(string))
-			{
-				var stype = cast.Expression.SystemType!.ToUnderlying();
-
-				if (stype == typeof(DateTime)
-#if SUPPORTS_DATEONLY
-							|| stype == typeof(DateOnly)
-#endif
-				   )
-				{
-					return new SqlFunction(cast.SystemType, "Convert", false, true, Precedence.Primary, ParametersNullabilityType.IfAllParametersNullable, null, new SqlDataType(cast.ToType), cast.Expression, new SqlValue(23));
-				}
-			}*/
-
-			return base.ConvertConversion(cast);
-		}
 
 		protected override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
@@ -100,6 +81,31 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				default:
 					return base.ConvertSqlFunction(func);
 			};
+		}
+
+		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
+		{
+			if (expr is SqlValue
+				{
+					Value: uint or long or ulong or float or double or decimal
+				} value)
+			{
+				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);
+			}
+
+			if (expr is SqlParameter { IsQueryParameter: false } param)
+			{
+				var paramType = param.Type.SystemType.UnwrapNullableType();
+				if (paramType == typeof(uint)
+					|| paramType == typeof(long)
+					|| paramType == typeof(ulong)
+					|| paramType == typeof(float)
+					|| paramType == typeof(double)
+					|| paramType == typeof(decimal))
+					expr = new SqlCastExpression(expr, param.Type, null, isMandatory: true);
+			}
+
+			return base.WrapColumnExpression(expr);
 		}
 	}
 }
