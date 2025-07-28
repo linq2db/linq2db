@@ -1294,8 +1294,10 @@ namespace Tests.Linq
 					var processQueue = new Queue<Type>();
 					processQueue.Enqueue(entityType);
 
-					while (processQueue.TryDequeue(out var processType))
+					while (processQueue.Count > 0)
 					{
+						var processType = processQueue.Dequeue();
+
 						if (processType.BaseType != null)
 						{
 							processQueue.Enqueue(processType.BaseType);
