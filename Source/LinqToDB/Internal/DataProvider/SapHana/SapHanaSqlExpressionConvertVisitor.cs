@@ -45,10 +45,5 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 			return base.ConvertSqlBinaryExpression(element);
 		}
-
-		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
-		{
-			return base.ConvertConversion(cast);
-		}
 	}
 }

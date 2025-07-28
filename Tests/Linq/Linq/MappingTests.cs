@@ -1543,7 +1543,7 @@ namespace Tests.Linq
 
 			Query.ClearCaches();
 			Test(isNull ? (decimal?)null : 1m);
-			Test(2147483648m);
+			Test(2147483648.123m);
 
 			void Test(decimal? value)
 			{
@@ -1573,7 +1573,7 @@ namespace Tests.Linq
 			Assert.That(res, Has.Length.EqualTo(4));
 			Assert.That(res[0].Value, Is.EqualTo(value));
 
-			value = 2147483648m;
+			value = 2147483648.123m;
 
 			res = query.ToArray();
 			Assert.That(res, Has.Length.EqualTo(4));
