@@ -306,7 +306,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			{
 				if (rows[0][column] is SqlValue
 					{
-						Value: uint or long or ulong or float or double or decimal// or null
+						Value: uint or long or ulong or float or double or decimal
 					})
 				{
 					return true;
