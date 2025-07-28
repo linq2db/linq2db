@@ -92,8 +92,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			{
 				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);
 			}
-
-			if (expr is SqlParameter param)
+			else if (expr is SqlParameter param)
 			{
 				var paramType = param.Type.SystemType.UnwrapNullableType();
 

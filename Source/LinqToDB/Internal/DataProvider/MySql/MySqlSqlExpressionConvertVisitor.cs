@@ -142,5 +142,22 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					return base.ConvertSqlFunction(func);
 			}
 		}
+
+		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
+		{
+			if (expr is SqlValue
+				{
+					Value: decimal
+				} value)
+			{
+				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);
+			}
+			else if (expr is SqlParameter param && param.Type.SystemType.UnwrapNullableType() == typeof(decimal))
+			{
+				expr = new SqlCastExpression(expr, param.Type, null, isMandatory: true);
+			}
+
+			return base.WrapColumnExpression(expr);
+		}
 	}
 }
