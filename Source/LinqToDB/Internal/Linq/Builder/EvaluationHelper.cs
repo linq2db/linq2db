@@ -6,7 +6,7 @@ using LinqToDB.Internal.Expressions;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	static class EvaluationHelper
+	public static class EvaluationHelper
 	{
 		public static object? EvaluateExpression(Expression? expression, IDataContext dataContext, object?[]? parameterValues)
 		{

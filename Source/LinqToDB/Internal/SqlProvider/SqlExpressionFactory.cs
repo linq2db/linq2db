@@ -6,7 +6,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlProvider
 {
-	public sealed class SqlExpressionFactory : ISqlExpressionFactory
+	public class SqlExpressionFactory : ISqlExpressionFactory
 	{
 		public SqlExpressionFactory(MappingSchema mappingSchema, DataOptions dataOptions)
 		{

@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace LinqToDB.Internal.Linq
 {
-	sealed class QueryDebugView
+	public sealed class QueryDebugView
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private readonly Func<string> _toExpressionString;
