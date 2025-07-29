@@ -1265,7 +1265,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
-		protected IQueryElement OptimizeFunction(SqlFunction function)
+		protected virtual IQueryElement OptimizeFunction(SqlFunction function)
 		{
 			if (function.Parameters.Length == 1 && function.Name is PseudoFunctions.TO_LOWER or PseudoFunctions.TO_UPPER)
 			{
