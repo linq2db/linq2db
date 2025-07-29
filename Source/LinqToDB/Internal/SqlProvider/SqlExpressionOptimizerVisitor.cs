@@ -14,7 +14,7 @@ using static LinqToDB.Internal.Common.Utils;
 
 namespace LinqToDB.Internal.SqlProvider
 {
-	public sealed class SqlExpressionOptimizerVisitor : SqlQueryVisitor
+	public class SqlExpressionOptimizerVisitor : SqlQueryVisitor
 	{
 		ISimilarityMerger           _similarityMerger   = SimilarityMerger.Instance;
 		NullabilityContext          _nullabilityContext = default!;
@@ -24,15 +24,15 @@ namespace LinqToDB.Internal.SqlProvider
 		bool                        _isInsidePredicate;
 		bool                        _reducePredicates;
 
-		DataOptions       DataOptions       { get; set; } = default!;
-		EvaluationContext EvaluationContext { get; set; } = default!;
-		MappingSchema     MappingSchema     { get; set; } = default!;
+		protected DataOptions       DataOptions       { get; private set; } = default!;
+		protected EvaluationContext EvaluationContext { get; private set; } = default!;
+		protected MappingSchema     MappingSchema     { get; private set; } = default!;
 
 		public SqlExpressionOptimizerVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
 		{
 		}
 
-		public IQueryElement Optimize(
+		public virtual IQueryElement Optimize(
 			EvaluationContext           evaluationContext,
 			NullabilityContext          nullabilityContext,
 			IVisitorTransformationInfo? transformationInfo,
@@ -92,7 +92,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#region Helper functions
 
-		bool CanBeEvaluateNoParameters(IQueryElement expr)
+		protected bool CanBeEvaluateNoParameters(IQueryElement expr)
 		{
 			if (expr.HasQueryParameter())
 			{
@@ -102,7 +102,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return expr.CanBeEvaluated(EvaluationContext);
 		}
 
-		bool TryEvaluateNoParameters(IQueryElement expr, out object? result)
+		protected bool TryEvaluateNoParameters(IQueryElement expr, out object? result)
 		{
 			if (expr.HasQueryParameter())
 			{
@@ -113,7 +113,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return TryEvaluate(expr, out result);
 		}
 
-		bool TryEvaluate(IQueryElement expr, out object? result)
+		protected bool TryEvaluate(IQueryElement expr, out object? result)
 		{
 			if (expr.TryEvaluateExpression(EvaluationContext, out result))
 				return true;
@@ -1265,7 +1265,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
-		IQueryElement OptimizeFunction(SqlFunction function)
+		protected IQueryElement OptimizeFunction(SqlFunction function)
 		{
 			if (function.Parameters.Length == 1 && function.Name is PseudoFunctions.TO_LOWER or PseudoFunctions.TO_UPPER)
 			{
