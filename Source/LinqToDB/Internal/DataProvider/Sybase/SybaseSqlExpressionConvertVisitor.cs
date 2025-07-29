@@ -4,7 +4,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Sybase
 {
-	sealed class SybaseSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	public class SybaseSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public SybaseSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{

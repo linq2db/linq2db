@@ -13,7 +13,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SqlCe
 {
-	sealed class SqlCeMappingSchema : LockedMappingSchema
+	public sealed class SqlCeMappingSchema : LockedMappingSchema
 	{
 		public SqlCeMappingSchema() : base(ProviderName.SqlCe)
 		{

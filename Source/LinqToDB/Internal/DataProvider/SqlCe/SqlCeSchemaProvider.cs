@@ -39,7 +39,7 @@ FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
 */
 namespace LinqToDB.Internal.DataProvider.SqlCe
 {
-	sealed class SqlCeSchemaProvider : SchemaProviderBase
+	public class SqlCeSchemaProvider : SchemaProviderBase
 	{
 		private static readonly IReadOnlyList<string> _tableTypes = new[] { "TABLE", "VIEW" };
 

@@ -15,7 +15,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
-	sealed class ClickHouseSqlBuilder : BasicSqlBuilder
+	public class ClickHouseSqlBuilder : BasicSqlBuilder
 	{
 		public ClickHouseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)

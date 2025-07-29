@@ -15,7 +15,7 @@ using LinqToDB.Metrics;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
-	sealed class ClickHouseBulkCopy : BasicBulkCopy
+	public class ClickHouseBulkCopy : BasicBulkCopy
 	{
 		private readonly ClickHouseDataProvider _provider;
 

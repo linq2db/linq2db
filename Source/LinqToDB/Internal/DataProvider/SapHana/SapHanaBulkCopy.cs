@@ -10,7 +10,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
-	sealed class SapHanaBulkCopy : BasicBulkCopy
+	public class SapHanaBulkCopy : BasicBulkCopy
 	{
 		private readonly SapHanaDataProvider _provider;
 

@@ -4,7 +4,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL
 {
-	sealed class PostgreSQLSqlOptimizer : BasicSqlOptimizer
+	public class PostgreSQLSqlOptimizer : BasicSqlOptimizer
 	{
 		public PostgreSQLSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.DataProvider.Sybase
 {
-	partial class SybaseSqlBuilder
+	public partial class SybaseSqlBuilder
 	{
 		// VALUES(...) syntax not supported
 		protected override bool IsValuesSyntaxSupported => false;

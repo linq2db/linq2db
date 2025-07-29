@@ -4,7 +4,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
-	sealed class SapHanaSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	public class SapHanaSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public SapHanaSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{

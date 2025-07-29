@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
-	sealed class SapHanaSqlOptimizer : BasicSqlOptimizer
+	public class SapHanaSqlOptimizer : BasicSqlOptimizer
 	{
 		public SapHanaSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

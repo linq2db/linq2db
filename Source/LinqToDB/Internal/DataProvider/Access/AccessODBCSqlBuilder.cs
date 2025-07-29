@@ -10,7 +10,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	sealed class AccessODBCSqlBuilder : AccessSqlBuilderBase
+	public class AccessODBCSqlBuilder : AccessSqlBuilderBase
 	{
 		public AccessODBCSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)

@@ -11,7 +11,7 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {
-	sealed class MySqlSchemaProvider : SchemaProviderBase
+	public class MySqlSchemaProvider : SchemaProviderBase
 	{
 		private readonly MySqlDataProvider _provider;
 

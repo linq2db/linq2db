@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
-	sealed class DB2SqlOptimizer : BasicSqlOptimizer
+	public class DB2SqlOptimizer : BasicSqlOptimizer
 	{
 		public DB2SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

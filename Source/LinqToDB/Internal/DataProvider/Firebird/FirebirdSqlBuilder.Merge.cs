@@ -8,7 +8,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	partial class FirebirdSqlBuilder
+	public partial class FirebirdSqlBuilder
 	{
 		// source subquery select list shouldn't contain parameters otherwise following error will be
 		// generated:

@@ -13,7 +13,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Sybase
 {
-	sealed partial class SybaseSqlBuilder : BasicSqlBuilder
+	public partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
 		public SybaseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)

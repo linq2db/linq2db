@@ -7,7 +7,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	class FirebirdSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	public class FirebirdSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public FirebirdSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{

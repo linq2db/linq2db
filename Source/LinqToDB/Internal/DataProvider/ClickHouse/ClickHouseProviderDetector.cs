@@ -10,10 +10,8 @@ using LinqToDB.Internal.DataProvider.MySql;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
-	sealed class ClickHouseProviderDetector : ProviderDetectorBase<ClickHouseProvider, ClickHouseProviderDetector.Dialect>
+	public class ClickHouseProviderDetector : ProviderDetectorBase<ClickHouseProvider>
 	{
-		internal enum Dialect { }
-
 		public ClickHouseProviderDetector() : base()
 		{
 		}
@@ -38,7 +36,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return null;
 		}
 
-		public override IDataProvider GetDataProvider(ConnectionOptions options, ClickHouseProvider provider, Dialect version)
+		public override IDataProvider GetDataProvider(ConnectionOptions options, ClickHouseProvider provider, NoDialect version)
 		{
 			if (provider == ClickHouseProvider.AutoDetect)
 				provider = DetectProvider();
@@ -63,11 +61,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					: File.Exists(Path.Combine(dirName ?? ".", MySqlProviderAdapter.MySqlConnectorAssemblyName + ".dll"))
 						? ClickHouseProvider.MySqlConnector
 						: ClickHouseProvider.Octonica;
-		}
-
-		public override Dialect? DetectServerVersion(DbConnection connection)
-		{
-			return default(Dialect);
 		}
 
 		protected override DbConnection CreateConnection(ClickHouseProvider provider, string connectionString)

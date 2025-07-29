@@ -9,6 +9,14 @@ using LinqToDB.Metrics;
 
 namespace LinqToDB.Internal.DataProvider
 {
+	public abstract class ProviderDetectorBase<TProvider> : ProviderDetectorBase<TProvider, ProviderDetectorBase<TProvider>.NoDialect>
+		where TProvider : struct, Enum
+	{
+		public enum NoDialect { }
+
+		public override NoDialect? DetectServerVersion(DbConnection connection) => default(NoDialect);
+	}
+
 	public abstract class ProviderDetectorBase<TProvider,TVersion>
 		where TProvider   : struct, Enum
 		where TVersion    : struct, Enum

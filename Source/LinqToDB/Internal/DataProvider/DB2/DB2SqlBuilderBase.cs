@@ -17,7 +17,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
-	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
+	public abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
 	{
 		public override bool CteFirst => false;
 

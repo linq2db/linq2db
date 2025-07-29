@@ -7,7 +7,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {
-	sealed class InformixSqlOptimizer : BasicSqlOptimizer
+	public class InformixSqlOptimizer : BasicSqlOptimizer
 	{
 		public InformixSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

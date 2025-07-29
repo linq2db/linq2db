@@ -7,7 +7,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	class SqlServerSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	public class SqlServerSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		readonly SqlServerVersion _sqlServerVersion;
 

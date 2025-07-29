@@ -13,7 +13,7 @@ using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {
-	sealed class InformixBulkCopy : BasicBulkCopy
+	public class InformixBulkCopy : BasicBulkCopy
 	{
 		protected override int                  MaxSqlLength  => 32767;
 		private readonly   InformixDataProvider _provider;

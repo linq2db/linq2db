@@ -5,7 +5,7 @@ using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public sealed class WrapParametersVisitor : SqlQueryVisitor
+	public class WrapParametersVisitor : SqlQueryVisitor
 	{
 		bool      _needCast;
 		bool      _inModifier;

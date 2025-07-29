@@ -19,7 +19,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	partial class FirebirdSqlBuilder : BasicSqlBuilder<FirebirdOptions>
+	public partial class FirebirdSqlBuilder : BasicSqlBuilder<FirebirdOptions>
 	{
 		public override bool CteFirst => false;
 

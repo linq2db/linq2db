@@ -12,7 +12,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
-	sealed class SapHanaMappingSchema : LockedMappingSchema
+	public sealed class SapHanaMappingSchema : LockedMappingSchema
 	{
 		SapHanaMappingSchema() : base(ProviderName.SapHana)
 		{

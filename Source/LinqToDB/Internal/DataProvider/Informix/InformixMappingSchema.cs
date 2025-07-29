@@ -8,7 +8,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {
-	sealed class InformixMappingSchema : LockedMappingSchema
+	public sealed class InformixMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat DATE_FORMAT               = CompositeFormat.Parse("TO_DATE('{0:yyyy-MM-dd}', '%Y-%m-%d')");

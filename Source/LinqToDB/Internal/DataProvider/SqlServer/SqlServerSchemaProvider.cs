@@ -12,7 +12,7 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	sealed class SqlServerSchemaProvider : SchemaProviderBase
+	public class SqlServerSchemaProvider : SchemaProviderBase
 	{
 		private bool IsAzure;
 		private int  CompatibilityLevel;

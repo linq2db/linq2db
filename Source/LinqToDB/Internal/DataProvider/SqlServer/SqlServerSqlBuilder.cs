@@ -15,7 +15,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	abstract class SqlServerSqlBuilder : BasicSqlBuilder<SqlServerOptions>
+	public abstract class SqlServerSqlBuilder : BasicSqlBuilder<SqlServerOptions>
 	{
 		protected SqlServerSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)

@@ -7,7 +7,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	sealed class AccessSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	public class AccessSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public AccessSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{
