@@ -16,11 +16,11 @@
 			</group>
 			<group targetFramework="net8.0">
 				<dependency id="linq2db"                             version="6.0.0"  />
-				<dependency id="Microsoft.AspNetCore.SignalR.Client" version="8.0.17" />
+				<dependency id="Microsoft.AspNetCore.SignalR.Client" version="8.0.18" />
 			</group>
 			<group targetFramework="net9.0">
 				<dependency id="linq2db"                             version="6.0.0"  />
-				<dependency id="Microsoft.AspNetCore.SignalR.Client" version="9.0.6"  />
+				<dependency id="Microsoft.AspNetCore.SignalR.Client" version="9.0.7"  />
 			</group>
 		</dependencies>
 	</metadata>
