@@ -3,7 +3,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
-	sealed class Oracle12SqlExpressionConvertVisitor : OracleSqlExpressionConvertVisitor
+	public class Oracle12SqlExpressionConvertVisitor : OracleSqlExpressionConvertVisitor
 	{
 		public Oracle12SqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{

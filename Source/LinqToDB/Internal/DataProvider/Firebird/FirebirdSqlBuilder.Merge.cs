@@ -8,7 +8,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	partial class FirebirdSqlBuilder
+	public partial class FirebirdSqlBuilder
 	{
 		// source subquery select list shouldn't contain parameters otherwise following error will be
 		// generated:
@@ -39,6 +39,14 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				{
 					_typedColumns.Add(Tuple.Create(source, column));
 					return rows[0][column] is SqlValue val && val.Value != null;
+				}
+
+				if (rows[0][column] is SqlValue
+					{
+						Value: uint or long or ulong or float or double or decimal or null
+					})
+				{
+					return true;
 				}
 
 				return false;

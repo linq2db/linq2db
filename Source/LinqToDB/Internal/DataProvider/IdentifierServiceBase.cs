@@ -4,7 +4,7 @@ namespace LinqToDB.Internal.DataProvider
 {
 	public abstract class IdentifierServiceBase :  IIdentifierService
 	{
-		public abstract bool   IsFit(IdentifierKind             identifierKind, string identifier, [NotNullWhen(false)] out int? sizeDecrement);
+		public abstract bool   IsFit(IdentifierKind identifierKind, string identifier, [NotNullWhen(false)] out int? sizeDecrement);
 
 		public virtual string CorrectAlias(string alias)
 		{

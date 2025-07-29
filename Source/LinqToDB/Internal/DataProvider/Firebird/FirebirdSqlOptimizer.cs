@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	class FirebirdSqlOptimizer : BasicSqlOptimizer
+	public class FirebirdSqlOptimizer : BasicSqlOptimizer
 	{
 		public FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -96,11 +96,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			var visitor = new WrapParametersVisitor(VisitMode.Modify);
 
 			statement = (SqlStatement)visitor.WrapParameters(statement,
-				WrapParametersVisitor.WrapFlags.InSelect         |
-				WrapParametersVisitor.WrapFlags.InUpdateSet      |
-				WrapParametersVisitor.WrapFlags.InInsertOrUpdate |
-				WrapParametersVisitor.WrapFlags.InOutput         |
-				WrapParametersVisitor.WrapFlags.InMerge          |
+				WrapParametersVisitor.WrapFlags.InSelect             |
+				WrapParametersVisitor.WrapFlags.InUpdateSet          |
+				WrapParametersVisitor.WrapFlags.InInsertOrUpdate     |
+				WrapParametersVisitor.WrapFlags.InOutput             |
+				WrapParametersVisitor.WrapFlags.InMerge              |
+				WrapParametersVisitor.WrapFlags.InFunctionParameters |
 				WrapParametersVisitor.WrapFlags.InBinary);
 
 			return statement;

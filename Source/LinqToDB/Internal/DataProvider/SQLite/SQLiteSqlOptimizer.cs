@@ -4,7 +4,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SQLite
 {
-	sealed class SQLiteSqlOptimizer : BasicSqlOptimizer
+	public class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{
 		public SQLiteSqlOptimizer(SqlProviderFlags sqlProviderFlags)
 			: base(sqlProviderFlags)

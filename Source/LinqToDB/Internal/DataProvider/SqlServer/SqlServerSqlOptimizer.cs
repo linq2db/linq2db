@@ -10,7 +10,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	abstract class SqlServerSqlOptimizer : BasicSqlOptimizer
+	public class SqlServerSqlOptimizer : BasicSqlOptimizer
 	{
 		protected readonly SqlServerVersion SQLVersion;
 

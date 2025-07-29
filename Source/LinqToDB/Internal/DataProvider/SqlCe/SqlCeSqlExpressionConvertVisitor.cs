@@ -8,7 +8,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlCe
 {
-	sealed class SqlCeSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	public class SqlCeSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public SqlCeSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{

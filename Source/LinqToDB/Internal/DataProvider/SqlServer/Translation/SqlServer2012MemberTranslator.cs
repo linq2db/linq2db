@@ -5,9 +5,9 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 {
-	class SqlServer2012MemberTranslator : SqlServerMemberTranslator
+	public class SqlServer2012MemberTranslator : SqlServerMemberTranslator
 	{
-		sealed class SqlServer2012DateFunctionsTranslator : SqlServerDateFunctionsTranslator
+		protected class SqlServer2012DateFunctionsTranslator : SqlServerDateFunctionsTranslator
 		{
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,

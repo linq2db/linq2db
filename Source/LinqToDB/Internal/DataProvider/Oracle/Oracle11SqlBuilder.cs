@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
-	sealed class Oracle11SqlBuilder : OracleSqlBuilderBase
+	public class Oracle11SqlBuilder : OracleSqlBuilderBase
 	{
 		public Oracle11SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)

@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
-	sealed class ClickHouseSqlOptimizer : BasicSqlOptimizer
+	public class ClickHouseSqlOptimizer : BasicSqlOptimizer
 	{
 		public ClickHouseSqlOptimizer(SqlProviderFlags sqlProviderFlags, DataOptions dataOptions) : base(sqlProviderFlags)
 		{

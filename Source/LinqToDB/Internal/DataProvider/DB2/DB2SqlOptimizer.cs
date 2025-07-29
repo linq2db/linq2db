@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
-	sealed class DB2SqlOptimizer : BasicSqlOptimizer
+	public class DB2SqlOptimizer : BasicSqlOptimizer
 	{
 		public DB2SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -46,7 +46,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 			var visitor = new WrapParametersVisitor(VisitMode.Modify);
 
-			statement = (SqlStatement)visitor.WrapParameters(statement, WrapParametersVisitor.WrapFlags.InSelect | WrapParametersVisitor.WrapFlags.InInsertOrUpdate);
+			statement = (SqlStatement)visitor.WrapParameters(statement, WrapParametersVisitor.WrapFlags.InSelect | WrapParametersVisitor.WrapFlags.InInsertOrUpdate | WrapParametersVisitor.WrapFlags.InFunctionParameters);
 
 			return statement;
 		}

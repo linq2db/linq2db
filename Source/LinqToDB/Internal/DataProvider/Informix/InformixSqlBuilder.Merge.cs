@@ -4,7 +4,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {
-	partial class InformixSqlBuilder
+	public partial class InformixSqlBuilder
 	{
 		// VALUES(...) syntax not supported
 		protected override bool IsValuesSyntaxSupported => false;

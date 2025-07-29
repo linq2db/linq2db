@@ -507,7 +507,7 @@ namespace LinqToDB.Common
 			}
 
 			/// <summary>
-			/// The default base for the exponential function used to compute the delay between retries, must be positive.
+			/// The default base for the exponential function used to compute the delay between retries, must not be lesser than 1.
 			/// Default value: <c>2</c>.
 			/// </summary>
 			public static double DefaultExponentialBase

@@ -8,7 +8,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SQLite
 {
-	sealed class SQLiteSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	public class SQLiteSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public SQLiteSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{

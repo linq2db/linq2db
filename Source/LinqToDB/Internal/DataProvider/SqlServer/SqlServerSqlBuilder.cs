@@ -15,7 +15,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	abstract class SqlServerSqlBuilder : BasicSqlBuilder<SqlServerOptions>
+	public abstract class SqlServerSqlBuilder : BasicSqlBuilder<SqlServerOptions>
 	{
 		protected SqlServerSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
@@ -509,6 +509,49 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			if (statement.SqlQueryExtensions is not null)
 				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")", Sql.QueryExtensionScope.QueryHint);
+		}
+
+		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
+		{
+			if (value is SqlValue { Value: decimal val })
+			{
+				var precision = DecimalHelper.GetPrecision(val);
+				var scale = DecimalHelper.GetScale(val);
+				if (precision == 0 && scale == 0)
+					precision = 1;
+				dataType = dataType.WithPrecision(precision).WithScale(scale);
+			}
+			else if (value is SqlParameter param)
+			{
+				var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+
+				if (paramValue.ProviderValue is decimal decValue)
+				{
+					var precision = DecimalHelper.GetPrecision(decValue);
+					var scale = DecimalHelper.GetScale(decValue);
+					if (precision == 0 && scale == 0)
+						precision = 1;
+					dataType = dataType.WithPrecision(precision).WithScale(scale);
+				}
+			}
+
+			base.BuildTypedExpression(dataType, value);
+		}
+
+		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows, int row, int column)
+		{
+			if (row == 0)
+			{
+				if (rows[0][column] is SqlValue
+					{
+						Value: uint or long or ulong or float or double or decimal or null
+					})
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 	}
 }

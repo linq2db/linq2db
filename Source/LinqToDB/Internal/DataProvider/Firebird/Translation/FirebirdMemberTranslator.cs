@@ -9,7 +9,7 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 {
-	class FirebirdMemberTranslator : ProviderMemberTranslatorDefault
+	public class FirebirdMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -31,7 +31,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			return new GuidMemberTranslator();
 		}
 
-		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Decimal).WithPrecisionScale(18, 10));
@@ -245,7 +245,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			}
 		}
 
-		sealed class StringMemberTranslator : StringMemberTranslatorBase
+		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
 		}
 
@@ -257,7 +257,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			return timePart;
 		}
 
-		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
+		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 		{

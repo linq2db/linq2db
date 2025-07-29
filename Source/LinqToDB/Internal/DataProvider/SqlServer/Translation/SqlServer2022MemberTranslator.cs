@@ -6,9 +6,9 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 {
-	sealed class SqlServer2022MemberTranslator : SqlServer2012MemberTranslator
+	public class SqlServer2022MemberTranslator : SqlServer2012MemberTranslator
 	{
-		sealed class SqlServer2022MathMemberTranslator : SqlServerMathMemberTranslator
+		protected class SqlServer2022MathMemberTranslator : SqlServerMathMemberTranslator
 		{
 			protected override ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
 			{

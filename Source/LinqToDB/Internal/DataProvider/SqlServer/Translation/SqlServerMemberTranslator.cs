@@ -9,7 +9,7 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 {
-	class SqlServerMemberTranslator : ProviderMemberTranslatorDefault
+	public class SqlServerMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -196,7 +196,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			}
 		}
 
-		sealed class StringMemberTranslator : StringMemberTranslatorBase
+		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
@@ -226,7 +226,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			return timePart;
 		}
 
-		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
+		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 		{

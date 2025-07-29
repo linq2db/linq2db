@@ -9,7 +9,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SQLite
 {
-	sealed class SQLiteMappingSchema : LockedMappingSchema
+	public sealed class SQLiteMappingSchema : LockedMappingSchema
 	{
 		internal const string DATE_FORMAT_RAW  = "yyyy-MM-dd";
 #if SUPPORTS_COMPOSITE_FORMAT

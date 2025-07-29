@@ -12,7 +12,7 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Sybase
 {
-	sealed class SybaseSchemaProvider : SchemaProviderBase
+	public class SybaseSchemaProvider : SchemaProviderBase
 	{
 		private int _uniCharSize = 2;
 		private int _nCharSize   = 3;

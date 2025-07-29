@@ -10,9 +10,9 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 {
-	sealed class SQLiteMemberTranslator : ProviderMemberTranslatorDefault
+	public class SQLiteMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 		}
 
@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 			return new GuidMemberTranslator();
 		}
 
-		sealed class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			const string StrFTimeFuncName = "strftime";
 			const string DateFormat = "%Y-%m-%d %H:%M:%f";
@@ -209,7 +209,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 			}
 		}
 
-		sealed class StringMemberTranslator : StringMemberTranslatorBase
+		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
@@ -240,7 +240,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 			}
 		}
 
-		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
+		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{

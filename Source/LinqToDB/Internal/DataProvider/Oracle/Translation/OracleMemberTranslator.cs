@@ -9,7 +9,7 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 {
-	sealed class OracleMemberTranslator : ProviderMemberTranslatorDefault
+	public class OracleMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -31,7 +31,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			return new GuidMemberTranslator();
 		}
 
-		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Decimal).WithPrecisionScale(19, 4));
@@ -48,7 +48,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			}
 		}
 
-		sealed class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
@@ -221,7 +221,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			}
 		}
 
-		sealed class OracleMathMemberTranslator : MathMemberTranslatorBase
+		protected class OracleMathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
 			{
@@ -251,7 +251,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 		}
 
 		// Similar to SQLite
-		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
+		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{

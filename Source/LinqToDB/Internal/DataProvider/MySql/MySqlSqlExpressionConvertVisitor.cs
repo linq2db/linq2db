@@ -7,7 +7,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {
-	sealed class MySqlSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	public class MySqlSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public MySqlSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{
@@ -141,6 +141,29 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				default:
 					return base.ConvertSqlFunction(func);
 			}
+		}
+
+		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
+		{
+			if (expr is SqlValue
+				{
+					Value: decimal or uint or ulong or long or double
+				} value)
+			{
+				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);
+			}
+			else if (expr is SqlParameter param)
+			{
+				var paramType = param.Type.SystemType.UnwrapNullableType();
+				if (paramType == typeof(uint)
+					|| paramType == typeof(ulong)
+					|| paramType == typeof(long)
+					|| paramType == typeof(double)
+					|| paramType == typeof(decimal))
+					expr = new SqlCastExpression(expr, param.Type, null, isMandatory: true);
+			}
+
+			return base.WrapColumnExpression(expr);
 		}
 	}
 }

@@ -5,7 +5,7 @@ using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public sealed class WrapParametersVisitor : SqlQueryVisitor
+	public class WrapParametersVisitor : SqlQueryVisitor
 	{
 		bool      _needCast;
 		bool      _inModifier;
@@ -16,14 +16,15 @@ namespace LinqToDB.Internal.DataProvider
 		[Flags]
 		public enum WrapFlags
 		{
-			None             = 0,
-			InSelect         = 1 << 0,
-			InUpdateSet      = 1 << 1,
-			InInsertValue    = 1 << 2,
-			InInsertOrUpdate = 1 << 4,
-			InOutput         = 1 << 5,
-			InMerge          = 1 << 6,
-			InBinary         = 1 << 7,
+			None                 = 0,
+			InSelect             = 1 << 0,
+			InUpdateSet          = 1 << 1,
+			InInsertValue        = 1 << 2,
+			InInsertOrUpdate     = 1 << 4,
+			InOutput             = 1 << 5,
+			InMerge              = 1 << 6,
+			InBinary             = 1 << 7,
+			InFunctionParameters = 1 << 8,
 		}
 	
 		public WrapParametersVisitor(VisitMode visitMode) : base(visitMode, null)
@@ -134,6 +135,18 @@ namespace LinqToDB.Internal.DataProvider
 		{
 			using var scope = NeedCast(!_inModifier && _wrapFlags.HasFlag(WrapFlags.InBinary));
 			return base.VisitSqlBinaryExpression(element);
+		}
+
+		protected override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
+		{
+			using var scope = NeedCast(!_inModifier && _wrapFlags.HasFlag(WrapFlags.InFunctionParameters));
+			return base.VisitSqlCoalesceExpression(element);
+		}
+
+		protected override IQueryElement VisitSqlFunction(SqlFunction element)
+		{
+			using var scope = NeedCast(!_inModifier && _wrapFlags.HasFlag(WrapFlags.InFunctionParameters));
+			return base.VisitSqlFunction(element);
 		}
 
 		protected override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)

@@ -16,7 +16,7 @@ using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
-	sealed class OracleBulkCopy : BasicBulkCopy
+	public class OracleBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
 		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/

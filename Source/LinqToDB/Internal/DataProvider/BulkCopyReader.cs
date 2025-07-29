@@ -102,7 +102,7 @@ namespace LinqToDB.Internal.DataProvider
 			_ordinals       = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
 		}
 
-		public class Parameter : DbParameter
+		public sealed class Parameter : DbParameter
 		{
 			public override DbType             DbType                  { get; set; }
 			public override ParameterDirection Direction               { get; set; }

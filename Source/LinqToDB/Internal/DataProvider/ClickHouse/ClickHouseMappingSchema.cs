@@ -16,7 +16,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
-	sealed class ClickHouseMappingSchema : LockedMappingSchema
+	public sealed class ClickHouseMappingSchema : LockedMappingSchema
 	{
 		// we need defaults for length/precision/scale for some types if used didn't specified them
 		// Don't like those defaults? Specify missing values in ur mapping...

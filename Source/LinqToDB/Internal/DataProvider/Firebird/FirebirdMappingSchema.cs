@@ -13,7 +13,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	sealed class FirebirdMappingSchema : LockedMappingSchema
+	public sealed class FirebirdMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat DATE_FORMAT      = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd}' AS {1})");
@@ -31,6 +31,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 			SetDataType(typeof(string),  new SqlDataType(DataType.NVarChar, typeof(string), 255));
 			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 18, 10));
+			SetDataType(typeof(ulong), new SqlDataType(DataType.Decimal, typeof(ulong), precision: 20, scale: 0));
 
 			// firebird string literals can contain only limited set of characters, so we should encode them
 			SetValueToSqlConverter(typeof(string)  , (sb, _,o,v) => ConvertStringToSql (sb, o, (string)v));

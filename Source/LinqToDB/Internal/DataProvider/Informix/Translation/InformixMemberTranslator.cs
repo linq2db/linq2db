@@ -9,7 +9,7 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.Informix.Translation
 {
-	sealed class InformixMemberTranslator : ProviderMemberTranslatorDefault
+	public class InformixMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -31,7 +31,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 			return new GuidMemberTranslator();
 		}
 
-		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Boolean));
@@ -46,7 +46,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Decimal).WithPrecisionScale(10, 4));
 		}
 
-		sealed class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateMakeDateTime(ITranslationContext translationContext, DbDataType      resulType, ISqlExpression  year, ISqlExpression month, ISqlExpression day, ISqlExpression? hour,
 				ISqlExpression?                                                          minute,             ISqlExpression? second,    ISqlExpression? millisecond)
@@ -325,11 +325,11 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 			}
 		}
 
-		sealed class StringMemberTranslator : StringMemberTranslatorBase
+		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
 		}
 
-		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
+		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 		{

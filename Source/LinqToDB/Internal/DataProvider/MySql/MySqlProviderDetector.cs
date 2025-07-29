@@ -9,7 +9,7 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {
-	sealed class MySqlProviderDetector : ProviderDetectorBase<MySqlProvider, MySqlVersion>
+	public class MySqlProviderDetector : ProviderDetectorBase<MySqlProvider, MySqlVersion>
 	{
 		public MySqlProviderDetector() : base(MySqlVersion.AutoDetect, MySqlVersion.MySql57)
 		{

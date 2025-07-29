@@ -7,7 +7,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {
-	sealed class InformixSqlOptimizer : BasicSqlOptimizer
+	public class InformixSqlOptimizer : BasicSqlOptimizer
 	{
 		public InformixSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -159,7 +159,11 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 			var visitor = new WrapParametersVisitor(VisitMode.Modify);
 
-			statement = (TElement)visitor.WrapParameters(statement, WrapParametersVisitor.WrapFlags.InSelect | WrapParametersVisitor.WrapFlags.InBinary);
+			statement = (TElement)visitor.WrapParameters(
+				statement,
+				WrapParametersVisitor.WrapFlags.InSelect |
+				WrapParametersVisitor.WrapFlags.InBinary |
+				WrapParametersVisitor.WrapFlags.InFunctionParameters);
 
 			return statement;
 		}

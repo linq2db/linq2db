@@ -3,7 +3,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	partial class SqlServer2008SqlBuilder
+	public partial class SqlServer2008SqlBuilder
 	{
 		protected override void BuildMergeInto(NullabilityContext nullability, SqlMergeStatement merge)
 		{

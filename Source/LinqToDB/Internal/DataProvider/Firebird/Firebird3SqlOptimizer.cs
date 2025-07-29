@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	sealed class Firebird3SqlOptimizer : FirebirdSqlOptimizer
+	public class Firebird3SqlOptimizer : FirebirdSqlOptimizer
 	{
 		public Firebird3SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

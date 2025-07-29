@@ -6,7 +6,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
-	class OracleSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	public class OracleSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public OracleSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{

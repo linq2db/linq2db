@@ -7,9 +7,9 @@ using LinqToDB.DataProvider.PostgreSQL;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL
 {
-	sealed class PostgreSQLProviderDetector : ProviderDetectorBase<PostgreSQLProviderDetector.Provider,PostgreSQLVersion>
+	public class PostgreSQLProviderDetector : ProviderDetectorBase<PostgreSQLProviderDetector.Provider,PostgreSQLVersion>
 	{
-		internal enum Provider {}
+		public enum Provider {}
 
 		public PostgreSQLProviderDetector() : base(PostgreSQLVersion.AutoDetect, PostgreSQLVersion.v92)
 		{

@@ -9,7 +9,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {
-	sealed class InformixSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	public class InformixSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public InformixSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{

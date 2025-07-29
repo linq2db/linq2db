@@ -4,7 +4,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
-	sealed class Oracle12SqlOptimizer : Oracle11SqlOptimizer
+	public class Oracle12SqlOptimizer : Oracle11SqlOptimizer
 	{
 		public Oracle12SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

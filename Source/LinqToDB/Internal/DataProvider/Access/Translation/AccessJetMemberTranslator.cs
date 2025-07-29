@@ -5,14 +5,14 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.Access.Translation
 {
-	sealed class AccessJetMemberTranslator : AccessMemberTranslator
+	public class AccessJetMemberTranslator : AccessMemberTranslator
 	{
 		protected override IMemberTranslator CreateStringMemberTranslator()
 		{
 			return new AccessJetStringMemberTranslator();
 		}
 
-		sealed class AccessJetStringMemberTranslator : StringMemberTranslator
+		protected class AccessJetStringMemberTranslator : StringMemberTranslator
 		{
 			public override ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue,
 				ISqlExpression                                   newValue)

@@ -9,7 +9,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
-	sealed class ClickHouseSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	public class ClickHouseSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		readonly ClickHouseOptions _providerOptions;
 

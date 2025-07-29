@@ -187,6 +187,12 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				return;
 			}
 
+			if (dataType.DataType == DataType.UInt64)
+			{
+				parameter.DbType = DbType.Decimal;
+				return;
+			}
+
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 

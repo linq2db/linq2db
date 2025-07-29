@@ -4,7 +4,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
-	sealed class DB2SqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	public class DB2SqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public DB2SqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{
@@ -79,16 +79,20 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			var toType       = cast.ToType;
 			var argumentType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
 
-			if (toType.SystemType == typeof(string) && argumentType.SystemType != typeof(string))
+			// type_func(null) is not allowed
+			if (argument is not SqlParameter p || !NullabilityContext.CanBeNull(p))
 			{
-				return new SqlFunction(cast.Type, "RTrim", new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Char", argument));
+				if (toType.SystemType == typeof(string) && argumentType.SystemType != typeof(string))
+				{
+					return new SqlFunction(cast.Type, "RTrim", new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Char", argument));
+				}
+
+				if (toType.Length > 0)
+					return new SqlFunction(cast.Type, toType.DataType.ToString(), argument, new SqlValue(toType.Length));
+
+				if (toType.Precision > 0)
+					return new SqlFunction(cast.Type, toType.DataType.ToString(), argument, new SqlValue(toType.Precision), new SqlValue(toType.Scale ?? 0));
 			}
-
-			if (toType.Length > 0)
-				return new SqlFunction(cast.Type, toType.DataType.ToString(), argument, new SqlValue(toType.Length));
-
-			if (toType.Precision > 0)
-				return new SqlFunction(cast.Type, toType.DataType.ToString(), argument, new SqlValue(toType.Precision), new SqlValue(toType.Scale ?? 0));
 
 			if (!cast.IsMandatory && QueryHelper.UnwrapNullablity(argument) is SqlParameter param)
 			{

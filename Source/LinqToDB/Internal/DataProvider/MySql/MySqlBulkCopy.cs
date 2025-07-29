@@ -11,7 +11,7 @@ using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {
-	sealed class MySqlBulkCopy : BasicBulkCopy
+	public class MySqlBulkCopy : BasicBulkCopy
 	{
 		/// <summary>
 		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/

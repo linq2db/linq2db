@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL
 {
-	sealed class PostgreSQLSql15Builder : PostgreSQLSqlBuilder
+	public class PostgreSQLSql15Builder : PostgreSQLSqlBuilder
 	{
 		public PostgreSQLSql15Builder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)

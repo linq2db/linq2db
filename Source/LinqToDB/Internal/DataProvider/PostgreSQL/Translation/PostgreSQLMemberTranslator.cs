@@ -8,7 +8,7 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 {
-	sealed class PostgreSQLMemberTranslator : ProviderMemberTranslatorDefault
+	public class PostgreSQLMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -30,7 +30,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 			return new GuidMemberTranslator();
 		}
 
-		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertTinyInt(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Int16));
@@ -65,7 +65,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.VarChar));
 		}
 
-		sealed class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
@@ -226,7 +226,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 			}
 		}
 
-		sealed class MathMemberTranslator : MathMemberTranslatorBase
+		protected class MathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
@@ -253,7 +253,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 			}
 		}
 
-		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
+		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{

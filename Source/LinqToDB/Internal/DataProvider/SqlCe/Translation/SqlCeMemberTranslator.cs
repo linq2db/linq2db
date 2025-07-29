@@ -9,7 +9,7 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 {
-	sealed class SqlCeMemberTranslator : ProviderMemberTranslatorDefault
+	public class SqlCeMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 			return new GuidMemberTranslator();
 		}
 
-		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertSmallMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Decimal).WithPrecisionScale(10, 4));
@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 			}
 		}
 
-		sealed class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
@@ -221,7 +221,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 			}
 		}
 
-		sealed class SqlCeMathMemberTranslator : MathMemberTranslatorBase
+		protected class SqlCeMathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
@@ -234,7 +234,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 			}
 		}
 
-		sealed class StringMemberTranslator : StringMemberTranslatorBase
+		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
@@ -264,7 +264,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 			return timePart;
 		}
 
-		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
+		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 		{

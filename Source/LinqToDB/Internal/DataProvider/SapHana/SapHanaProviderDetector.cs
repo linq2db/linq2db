@@ -9,10 +9,8 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
-	sealed class SapHanaProviderDetector : ProviderDetectorBase<SapHanaProvider, SapHanaProviderDetector.Dialect>
+	public sealed class SapHanaProviderDetector : ProviderDetectorBase<SapHanaProvider>
 	{
-		internal enum Dialect { }
-
 		public SapHanaProviderDetector() : base()
 		{
 		}
@@ -58,7 +56,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			return null;
 		}
 
-		public override IDataProvider GetDataProvider(ConnectionOptions options, SapHanaProvider provider, Dialect version)
+		public override IDataProvider GetDataProvider(ConnectionOptions options, SapHanaProvider provider, NoDialect version)
 		{
 			if (provider == SapHanaProvider.AutoDetect)
 				provider = DetectProvider();
@@ -82,11 +80,6 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			}
 
 			return SapHanaProvider.ODBC;
-		}
-
-		public override Dialect? DetectServerVersion(DbConnection connection)
-		{
-			return default(Dialect);
 		}
 
 		protected override DbConnection CreateConnection(SapHanaProvider provider, string connectionString)
