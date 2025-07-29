@@ -159,7 +159,11 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 			var visitor = new WrapParametersVisitor(VisitMode.Modify);
 
-			statement = (TElement)visitor.WrapParameters(statement, WrapParametersVisitor.WrapFlags.InSelect | WrapParametersVisitor.WrapFlags.InBinary);
+			statement = (TElement)visitor.WrapParameters(
+				statement,
+				WrapParametersVisitor.WrapFlags.InSelect |
+				WrapParametersVisitor.WrapFlags.InBinary |
+				WrapParametersVisitor.WrapFlags.InFunctionParameters);
 
 			return statement;
 		}

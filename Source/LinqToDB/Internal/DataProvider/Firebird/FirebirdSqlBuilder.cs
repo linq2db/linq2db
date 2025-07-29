@@ -285,10 +285,11 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				}
 				else if (paramValue.ProviderValue is decimal d)
 				{
-					if (dbDataType.Precision == null)
-						dbDataType = dbDataType.WithPrecision(DecimalHelper.GetPrecision(d));
-					if (dbDataType.Scale == null)
-						dbDataType = dbDataType.WithScale(DecimalHelper.GetScale(d));
+					var precision = DecimalHelper.GetPrecision(d);
+					var scale = DecimalHelper.GetScale(d);
+					if (precision == 0 && scale == 0)
+						precision = 1;
+					dbDataType = dbDataType.WithPrecision(precision).WithScale(scale);
 				}
 
 				// TODO: temporary guard against cast to unknown type (Variant)
@@ -714,14 +715,38 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 				if (typeRequired)
 				{
-					if (dataType.DataType  == DataType.NChar)
+					if (dataType.DataType == DataType.NChar)
 						StringBuilder.Append(CultureInfo.InvariantCulture, $" AS CHAR({length}))");
 					else
 						StringBuilder.Append(CultureInfo.InvariantCulture, $" AS VARCHAR({length}))");
 				}
 			}
 			else
+			{
+				if (value is SqlValue { Value: decimal val })
+				{
+					var precision = DecimalHelper.GetPrecision(val);
+					var scale = DecimalHelper.GetScale(val);
+					if (precision == 0 && scale == 0)
+						precision = 1;
+					dataType = dataType.WithPrecision(precision).WithScale(scale);
+				}
+				else if (value is SqlParameter param)
+				{
+					var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+
+					if (paramValue.ProviderValue is decimal decValue)
+					{
+						var precision = DecimalHelper.GetPrecision(decValue);
+						var scale = DecimalHelper.GetScale(decValue);
+						if (precision == 0 && scale == 0)
+							precision = 1;
+						dataType = dataType.WithPrecision(precision).WithScale(scale);
+					}
+				}
+
 				base.BuildTypedExpression(dataType, value);
+			}
 		}
 	}
 }

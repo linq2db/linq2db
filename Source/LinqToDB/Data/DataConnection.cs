@@ -1052,8 +1052,6 @@ namespace LinqToDB.Data
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public void DisposeCommand()
 		{
-			CheckAndThrowOnDisposed();
-
 			if (_command != null)
 			{
 				DataProvider.DisposeCommand(_command);

@@ -252,10 +252,18 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
 			{
+				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+
 				var saveStep = BuildStep;
 				BuildStep = Step.TypedExpression;
 
-				StringBuilder.Append("CVar(");
+				// 1. Single parameter loose precision when used with CVar
+				// 2. Only CVar accepts NULL
+				if (paramValue.ProviderValue != null && parameter.Type.DataType is DataType.Single)
+					StringBuilder.Append("CSng(");
+				else
+					StringBuilder.Append("CVar(");
+
 				base.BuildParameter(parameter);
 				StringBuilder.Append(')');
 				BuildStep = saveStep;

@@ -150,5 +150,29 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			return base.ConvertSqlFunction(func);
 		}
 
+		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
+		{
+			if (expr is SqlValue
+				{
+					Value: uint or long or ulong or float or double or decimal
+				} value)
+			{
+				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);
+			}
+
+			if (expr is SqlParameter { IsQueryParameter: false } param)
+			{
+				var paramType = param.Type.SystemType.UnwrapNullableType();
+				if (paramType == typeof(uint)
+					|| paramType == typeof(long)
+					|| paramType == typeof(ulong)
+					|| paramType == typeof(float)
+					|| paramType == typeof(double)
+					|| paramType == typeof(decimal))
+					expr = new SqlCastExpression(expr, param.Type, null, isMandatory: true);
+			}
+
+			return base.WrapColumnExpression(expr);
+		}
 	}
 }
