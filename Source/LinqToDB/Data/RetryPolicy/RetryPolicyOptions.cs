@@ -22,7 +22,7 @@ namespace LinqToDB.Data.RetryPolicy
 	/// The maximum random factor, must not be lesser than 1.
 	/// </param>
 	/// <param name="ExponentialBase">
-	/// The base for the exponential function used to compute the delay between retries, must be positive.
+	/// The base for the exponential function used to compute the delay between retries, must not be lesser than 1.
 	/// </param>
 	/// <param name="Coefficient">
 	/// The coefficient for the exponential function used to compute the delay between retries, must be nonnegative.
