@@ -5,6 +5,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.DataProvider;
 using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Linq;
 
 using NUnit.Framework;
 
@@ -81,6 +82,7 @@ namespace Tests.Mapping
 			dataProvider.SetFieldReaderExpression<Microsoft.Data.SqlClient.SqlDataReader, decimal>(true, (r, i) => r.GetDecimal(i));
 		}
 
+		[ColumnReader(1)]
 		static decimal GetDecimal(System.Data.SqlClient.SqlDataReader rd, int index)
 		{
 			var value = rd.GetSqlDecimal(index);
@@ -95,6 +97,7 @@ namespace Tests.Mapping
 			return value.Value;
 		}
 
+		[ColumnReader(1)]
 		static decimal GetDecimal(Microsoft.Data.SqlClient.SqlDataReader rd, int index)
 		{
 			var value = rd.GetSqlDecimal(index);
