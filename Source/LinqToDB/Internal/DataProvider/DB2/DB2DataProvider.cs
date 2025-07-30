@@ -130,7 +130,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				value    = (short)b;
 				dataType = dataType.WithDataType(DataType.Int16);
 			}
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			else if (value is DateOnly d)
 			{
 				value    = d.ToDateTime(TimeOnly.MinValue);

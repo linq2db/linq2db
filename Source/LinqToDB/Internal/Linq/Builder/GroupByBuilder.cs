@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region Builder Methods
 
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 		{
 			if (!call.IsQueryable())
 				return false;

@@ -41,6 +41,14 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					return rows[0][column] is SqlValue val && val.Value != null;
 				}
 
+				if (rows[0][column] is SqlValue
+					{
+						Value: uint or long or ulong or float or double or decimal or null
+					})
+				{
+					return true;
+				}
+
 				return false;
 			}
 

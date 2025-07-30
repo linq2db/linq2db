@@ -29,7 +29,7 @@ namespace LinqToDB.Data.RetryPolicy
 				throw new ArgumentOutOfRangeException(nameof(maxRetryDelay));
 			if (randomFactor < 1.0)
 				throw new ArgumentOutOfRangeException(nameof(randomFactor));
-			if (exponentialBase <= 0.0)
+			if (exponentialBase < 1.0)
 				throw new ArgumentOutOfRangeException(nameof(exponentialBase));
 			if (coefficient.TotalMilliseconds < 0.0)
 				throw new ArgumentOutOfRangeException(nameof(coefficient));
@@ -50,7 +50,7 @@ namespace LinqToDB.Data.RetryPolicy
 		public double   RandomFactor    { get; }
 
 		/// <summary>
-		/// The base for the exponential function used to compute the delay between retries, must be positive.
+		/// The base for the exponential function used to compute the delay between retries, must not be lesser than 1.
 		/// </summary>
 		public double   ExponentialBase { get; }
 

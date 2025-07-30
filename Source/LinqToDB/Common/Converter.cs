@@ -52,7 +52,7 @@ namespace LinqToDB.Common
 			SetConverter<char,           bool>          (v => ToBoolean(v));
 			SetConverter<string,         bool>          (v => v.Length == 1 ? ToBoolean(v[0]) : bool.Parse(v));
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			SetConverter<DateTime,       DateOnly>      (v => DateOnly.FromDateTime(v));
 			SetConverter<DateOnly,       DateTime>      (v => v.ToDateTime(TimeOnly.MinValue));
 

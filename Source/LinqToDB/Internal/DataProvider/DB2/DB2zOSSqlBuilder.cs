@@ -1,9 +1,5 @@
 ﻿using System.Globalization;
 
-#if NETFRAMEWORK || NETSTANDARD2_0
-using System.Text;
-#endif
-
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.Internal.SqlProvider;

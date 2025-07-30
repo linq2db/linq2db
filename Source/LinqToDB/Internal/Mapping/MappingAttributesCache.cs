@@ -51,21 +51,13 @@ namespace LinqToDB.Internal.Mapping
 
 		MappingAttribute[] GetNoInheritMappingAttributes(Key key)
 		{
-#if NET462 || NETSTANDARD2_0
-			var attrs = _noInheritMappingAttributes.GetOrAdd(key, key =>
-			{
-				var res = _attributesGetter(key.SourceOwner, key.Source);
-
-				return res.Length == 0 ? [] : res;
-			});
-#else
 			var attrs = _noInheritMappingAttributes.GetOrAdd(key, static (key, attributesGetter) =>
 			{
 				var res = attributesGetter(key.SourceOwner, key.Source);
 
 				return res.Length == 0 ? [] : res;
 			}, _attributesGetter);
-#endif
+
 			return attrs;
 		}
 

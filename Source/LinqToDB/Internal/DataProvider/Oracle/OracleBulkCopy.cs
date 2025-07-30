@@ -7,10 +7,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if NETFRAMEWORK || NETSTANDARD2_0
-using System.Text;
-#endif
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Oracle;
@@ -107,7 +103,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 							opts.RowsCopiedCallback,
 							rc,
 							opts.MaxBatchSize,
-							opts.BulkCopyTimeout ?? (LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout ? connection.ConnectionTimeout : null)))
+							opts.BulkCopyTimeout ?? (LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout ? dataConnection.CommandTimeout : null)))
 						{
 							for (var i = 0; i < columns.Count; i++)
 								bc.AddColumn(i, columns[i]);

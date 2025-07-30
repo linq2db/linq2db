@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		nameof(LinqExtensions.DeleteWithOutputInto))]
 	sealed class DeleteBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

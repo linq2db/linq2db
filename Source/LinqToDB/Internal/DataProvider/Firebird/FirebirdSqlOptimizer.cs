@@ -95,11 +95,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			var visitor = new WrapParametersVisitor(VisitMode.Modify);
 
 			statement = (SqlStatement)visitor.WrapParameters(statement,
-				WrapParametersVisitor.WrapFlags.InSelect         |
-				WrapParametersVisitor.WrapFlags.InUpdateSet      |
-				WrapParametersVisitor.WrapFlags.InInsertOrUpdate |
-				WrapParametersVisitor.WrapFlags.InOutput         |
-				WrapParametersVisitor.WrapFlags.InMerge          |
+				WrapParametersVisitor.WrapFlags.InSelect             |
+				WrapParametersVisitor.WrapFlags.InUpdateSet          |
+				WrapParametersVisitor.WrapFlags.InInsertOrUpdate     |
+				WrapParametersVisitor.WrapFlags.InOutput             |
+				WrapParametersVisitor.WrapFlags.InMerge              |
+				WrapParametersVisitor.WrapFlags.InFunctionParameters |
 				WrapParametersVisitor.WrapFlags.InBinary);
 
 			return statement;

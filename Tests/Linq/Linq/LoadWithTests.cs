@@ -12,6 +12,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -812,6 +814,45 @@ namespace Tests.Linq
 					Assert.That(result[0].ActiveChildren, Has.Count.EqualTo(2));
 				}
 			}
+		}
+
+		[Table(Name = "PeopleForLoadWith")]
+		public sealed class PersonX
+		{
+			[Column, PrimaryKey]
+			public int Id { get; set; }
+
+			[Column]
+			public string? Name { get; set; }
+
+			[Column]
+			public int? ParentId { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ParentId))]
+			public PersonX[]? Children { get; set; }
+		}
+
+		[Test]
+		public void LoadWithChainedAfterFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var data = new[]
+			{
+				new PersonX { Id = 1, Name = "Grandparent" }, 
+				new PersonX { Id = 2, Name = "Parent", ParentId = 1 },
+				new PersonX { Id = 3, Name = "Child",  ParentId = 2 }
+			};
+
+			using var db      = GetDataContext(context);
+			using var parents = db.CreateLocalTable(data);
+
+			var singleItem = parents
+				.Where(p => p.Children!.Any(c => c.ParentId != null))
+				.LoadWith(p => p.Children, children => children.LoadWith(child => child.Children))
+				.First();
+
+			singleItem.Children.ShouldHaveSingleItem();
+			singleItem.Children[0].Children.ShouldHaveSingleItem();
+			singleItem.Children![0].Children![0].Children.ShouldBeNull();
 		}
 
 		sealed class TestEntity

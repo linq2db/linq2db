@@ -880,7 +880,7 @@ namespace Tests.DataProvider
 			// time/date/intertval
 			[Column]                                   public DateTime?       timestampDataType         { get; set; }
 			[Column]                                   public DateTimeOffset? timestampTZDataType       { get; set; }
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			[Column]                                   public DateOnly?       dateDataType              { get; set; }
 #else
 			[Column(DataType = DataType.Date)]         public DateTime?       dateDataType              { get; set; }

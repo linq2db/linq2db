@@ -5,8 +5,8 @@ docker stop pgsql18
 docker rm -f pgsql18
 
 REM use pull to get latest layers (run will use cached layers)
-docker pull postgres:18beta1
-docker run -d --name pgsql18 -e POSTGRES_PASSWORD=Password12! -p 5418:5432 -v /var/run/postgresql:/var/run/postgresql postgres:18beta1
+docker pull postgres:18beta2
+docker run -d --name pgsql18 -e POSTGRES_PASSWORD=Password12! -p 5418:5432 -v /var/run/postgresql:/var/run/postgresql postgres:18beta2
 
 call wait pgsql18 "server started"
 
