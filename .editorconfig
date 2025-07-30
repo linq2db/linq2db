@@ -265,6 +265,7 @@ dotnet_diagnostic.CA1721.severity = none # CA1721: Property names should not mat
 dotnet_diagnostic.CA1724.severity = none # CA1724: Type names should not match namespaces
 dotnet_diagnostic.CA1806.severity = none # CA1806: Do not ignore method results
 dotnet_diagnostic.CA1810.severity = none # CA1810: Initialize reference type static fields inline
+dotnet_diagnostic.CA1812.severity = none # CA1812: Avoid uninstantiated internal classes
 dotnet_diagnostic.CA1813.severity = none # CA1813: Avoid unsealed attributes
 dotnet_diagnostic.CA1815.severity = none # CA1815: Override equals and operator equals on value types
 dotnet_diagnostic.CA1819.severity = none # CA1819: Properties should not return arrays

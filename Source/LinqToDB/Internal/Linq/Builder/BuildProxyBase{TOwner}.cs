@@ -20,7 +20,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public Expression?          CurrentPath     { get; }
 		public Expression           InnerExpression { get; }
 
-		public BuildProxyBase(TOwner ownerContext, IBuildContext buildContext, Expression? currentPath, Expression innerExpression) 
+		protected BuildProxyBase(TOwner ownerContext, IBuildContext buildContext, Expression? currentPath, Expression innerExpression) 
 			: base(ownerContext.TranslationModifier, ownerContext.Builder, innerExpression.Type, buildContext.SelectQuery)
 		{
 			OwnerContext    = ownerContext;
