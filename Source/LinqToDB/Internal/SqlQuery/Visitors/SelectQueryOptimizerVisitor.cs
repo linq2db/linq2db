@@ -938,9 +938,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (isApplySupported && isAgg)
 					return optimized;
 
-				if (isAgg)
-					return optimized;
-
 				var skipValue = sql.Select.SkipValue;
 				var takeValue = sql.Select.TakeValue;
 
@@ -1106,6 +1103,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								{
 									return optimized;
 								}
+							}
+							else if (isAgg)
+							{
+								return optimized;
 							}
 
 							toRemove ??= new List<ISqlPredicate>();

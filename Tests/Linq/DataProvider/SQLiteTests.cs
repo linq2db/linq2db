@@ -1004,5 +1004,32 @@ namespace Tests.DataProvider
 
 			_ = query.ToArray();
 		}
+
+		sealed record Issue4904Table
+		{
+			public DateTime RecordDate { get; init; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4904")]
+		public void Issue4904Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4904Table>();
+
+			db.Insert(new Issue4904Table { RecordDate = TestData.DateTime.AddDays(-1) });
+			db.Insert(new Issue4904Table { RecordDate = TestData.DateTime });
+			db.Insert(new Issue4904Table { RecordDate = TestData.DateTime.AddDays(1) });
+
+			db.InlineParameters = true;
+
+			var records1 = tb.Where(r => r.RecordDate <= DateTime.MaxValue).ToList();
+			var records2 = tb.Where(r => r.RecordDate <= DateTime.MaxValue.AddMilliseconds(-1)).ToList();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(records1, Has.Count.EqualTo(3));
+				Assert.That(records2, Has.Count.EqualTo(3));
+			}
+		}
 	}
 }
