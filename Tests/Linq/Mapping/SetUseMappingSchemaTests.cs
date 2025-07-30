@@ -47,7 +47,15 @@ namespace Tests.Mapping
 			dataProvider.SetFieldReaderExpression<System.Data.SqlClient.SqlDataReader,    decimal>(true, (r, i) => r.GetDecimal(i));
 			dataProvider.SetFieldReaderExpression<Microsoft.Data.SqlClient.SqlDataReader, decimal>(true, (r, i) => r.GetDecimal(i));
 
-			Assert.That(() => _ = tmp.ToList(), Throws.TypeOf<OverflowException>());
+			if (context.IsAnyOf(TestProvName.AllSqlServerMS))
+			{
+				// fixed by https://github.com/dotnet/SqlClient/pull/1179 probably
+				_ = tmp.ToList();
+			}
+			else
+			{
+				Assert.That(() => _ = tmp.ToList(), Throws.TypeOf<OverflowException>());
+			}
 		}
 
 		[Test]

@@ -4,10 +4,10 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.DataProvider;
 using LinqToDB.Interceptors;
-using LinqToDB.Internal.DataProvider;
 
-namespace LinqToDB.DataProvider
+namespace LinqToDB.Internal.DataProvider
 {
 	[PublicAPI]
 	public static class DataProviderExtensions
@@ -59,7 +59,7 @@ namespace LinqToDB.DataProvider
 				DataTypeName      = dataTypeName
 			}] = expr;
 
-			Linq.Tools.ClearAllCaches();
+			LinqToDB.Linq.Tools.ClearAllCaches();
 		}
 
 		/// <summary>
