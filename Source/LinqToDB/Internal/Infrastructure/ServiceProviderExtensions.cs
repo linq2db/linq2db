@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.Infrastructure
 {
-	public static class ServiceProviderExtensions
+	static class ServiceProviderExtensions
 	{
 		public static T? GetService<T>(this IServiceProvider provider)
 			where T : class

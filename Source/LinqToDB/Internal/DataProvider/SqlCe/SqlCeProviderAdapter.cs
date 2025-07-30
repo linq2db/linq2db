@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlTypes;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
 
@@ -9,7 +10,7 @@ using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Internal.DataProvider.SqlCe
 {
-	public class SqlCeProviderAdapter : IDynamicProviderAdapter
+	public sealed class SqlCeProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _syncRoot = new();
 		private static SqlCeProviderAdapter? _instance;
@@ -75,7 +76,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 					if (_instance == null)
 #pragma warning restore CA1508 // Avoid dead conditional code
 					{
-						var assembly = Internal.Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
+						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
@@ -147,6 +148,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		[Wrapper]
 		public class SqlCeEngine : TypeWrapper, IDisposable
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{

@@ -40,7 +40,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return selectQuery;
 		}
 
-		protected Exception CreateErrorMessage(bool sourceInQuery, IQueryElement element)
+		Exception CreateErrorMessage(bool sourceInQuery, IQueryElement element)
 		{
 			var messageString = $"Element: '{element.ToDebugString()}' ";
 

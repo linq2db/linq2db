@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
-	public class QueryElementReplacingVisitor : QueryElementVisitor
+	public sealed class QueryElementReplacingVisitor : QueryElementVisitor
 	{
 		IDictionary<IQueryElement, IQueryElement> _replacements = default!;
 		IQueryElement[]                           _toIgnore     = default!;

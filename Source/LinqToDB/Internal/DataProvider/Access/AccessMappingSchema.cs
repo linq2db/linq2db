@@ -9,7 +9,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	sealed class AccessMappingSchema : LockedMappingSchema
+	public sealed class AccessMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat DATE_FORMAT     = CompositeFormat.Parse("#{0:yyyy-MM-dd}#");

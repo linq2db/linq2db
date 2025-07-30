@@ -2,11 +2,12 @@
 
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	sealed class AccessSqlOptimizer : BasicSqlOptimizer
+	public class AccessSqlOptimizer : BasicSqlOptimizer
 	{
 		public AccessSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -26,7 +27,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
 				QueryType.Update => CorrectAccessUpdate ((SqlUpdateStatement)statement, dataOptions, mappingSchema),
 				_                => statement,
 			};

@@ -1,10 +1,11 @@
 ﻿using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
-	sealed class SapHanaSqlOptimizer : BasicSqlOptimizer
+	public class SapHanaSqlOptimizer : BasicSqlOptimizer
 	{
 		public SapHanaSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -22,7 +23,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions); break;
+				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
 				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions, mappingSchema); break;
 			}
 

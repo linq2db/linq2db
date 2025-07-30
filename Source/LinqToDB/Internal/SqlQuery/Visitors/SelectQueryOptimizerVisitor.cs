@@ -10,11 +10,10 @@ using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlProvider;
-using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.Internal.SqlQuery
+namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	public sealed class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
@@ -626,7 +625,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			_correcting = selectQuery;
 
-			base.Visit(selectQuery);
+			Visit(selectQuery);
 
 			_correcting = null;
 		}
@@ -1204,11 +1203,6 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 
 			var allowed = _movingComplexityVisitor.IsAllowedToMove(column, parent : parentQuery,
-				nullability,
-				_expressionOptimizerVisitor,
-				_dataOptions,
-				_mappingSchema,
-				_evaluationContext,
 				// Elements which should be ignored while searching for usage
 				column.Parent,
 				_applySelect == parentQuery ? parentQuery.Where : null,
@@ -2895,11 +2889,6 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			ISqlExpression                _expressionToCheck = default!;
 			IQueryElement?[]              _ignore            = default!;
-			NullabilityContext            _nullability       = default!;
-			EvaluationContext             _evaluationContext = default!;
-			SqlExpressionOptimizerVisitor _optimizerVisitor  = default!;
-			DataOptions                   _dataOptions       = default!;
-			MappingSchema                 _mappingSchema     = default!;
 			int                           _foundCount;
 			bool                          _notAllowedScope;
 			bool                          _doNotAllow;
@@ -2919,25 +2908,14 @@ namespace LinqToDB.Internal.SqlQuery
 				_ignore            = default!;
 				_expressionToCheck = default!;
 				_doNotAllow        = default;
-				_nullability       = default!;
-				_evaluationContext = default!;
-				_optimizerVisitor  = default!;
-				_dataOptions       = default!;
-				_mappingSchema     = default!;
 
 				_foundCount = 0;
 			}
 
-			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, NullabilityContext nullability, SqlExpressionOptimizerVisitor optimizerVisitor, DataOptions dataOptions, MappingSchema mappingSchema,
-				EvaluationContext evaluationContext, params IQueryElement?[] ignore)
+			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, params IQueryElement?[] ignore)
 			{
 				_ignore            = ignore;
 				_expressionToCheck = testExpression;
-				_nullability       = nullability;
-				_evaluationContext = evaluationContext;
-				_optimizerVisitor  = optimizerVisitor;
-				_dataOptions       = dataOptions;
-				_mappingSchema     = mappingSchema;
 				_doNotAllow        = default;
 				_foundCount        = 0;
 

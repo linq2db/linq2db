@@ -3,7 +3,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
-	abstract partial class OracleSqlBuilderBase
+	public abstract partial class OracleSqlBuilderBase
 	{
 		// Oracle doesn't support TABLE_ALIAS(COLUMN_ALIAS, ...) syntax
 		protected override bool SupportsColumnAliasesInSource => false;

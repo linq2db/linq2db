@@ -270,10 +270,10 @@ namespace LinqToDB.Internal.Linq
 			query.IsFinalized = true;
 		}
 
-		static int EvaluateTakeSkipValue(Query query, IQueryExpressions expressions, IDataContext? db, object?[]? ps, int qn, ISqlExpression sqlExpr)
+		static int EvaluateTakeSkipValue(Query query, IQueryExpressions expressions, IDataContext? db, object?[]? ps, ISqlExpression sqlExpr)
 		{
 			var parameterValues = new SqlParameterValues();
-			SetParameters(query, expressions, db, ps, qn, parameterValues);
+			SetParameters(query, expressions, db, ps, parameterValues);
 
 			var evaluated = sqlExpr.EvaluateExpression(new EvaluationContext(parameterValues)) as int?;
 			if (evaluated == null)
@@ -282,7 +282,7 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		internal static void SetParameters(
-			Query query, IQueryExpressions expressions, IDataContext? parametersContext, object?[]? parameters, int queryNumber, SqlParameterValues parameterValues)
+			Query query, IQueryExpressions expressions, IDataContext? parametersContext, object?[]? parameters, SqlParameterValues parameterValues)
 		{
 			if (query.ParameterAccessors == null)
 				return;
@@ -423,7 +423,7 @@ namespace LinqToDB.Internal.Linq
 			var selectQuery = query.Queries[0].Statement.SelectQuery!;
 			var select      = selectQuery.Select;
 
-			if (select.SkipValue != null && !query.SqlProviderFlags.GetIsSkipSupportedFlag(select.TakeValue, select.SkipValue))
+			if (select.SkipValue != null && !query.SqlProviderFlags.GetIsSkipSupportedFlag(select.TakeValue))
 			{
 				var newTakeValue = select.SkipValue;
 				if (select.TakeValue != null)
@@ -444,7 +444,7 @@ namespace LinqToDB.Internal.Linq
 
 				queryFunc = (qq, db, mapper, expr, ps, preambles, qn) =>
 					new LimitResultEnumerable<T>(q(qq, db, mapper, expr, ps, preambles, qn),
-						EvaluateTakeSkipValue(qq, expr, db, ps, qn, skipValue), null);
+						EvaluateTakeSkipValue(qq, expr, db, ps, skipValue), null);
 			}
 
 			return queryFunc;

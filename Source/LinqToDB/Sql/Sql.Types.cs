@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable IDE0060 // Remove unused parameter
+using System;
 
 using LinqToDB.Mapping;
 

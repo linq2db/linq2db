@@ -6,7 +6,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
-	sealed class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
+	public class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
 	{
 		public SapHanaOdbcSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)

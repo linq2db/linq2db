@@ -9,7 +9,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
-	sealed class DB2MappingSchema : LockedMappingSchema
+	public sealed class DB2MappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat DATE_FORMAT       = CompositeFormat.Parse("{0:yyyy-MM-dd}");
@@ -77,7 +77,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			SetConverter<string, DateTime>(ParseDateTime);
 
 #if SUPPORTS_DATEONLY
-			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 			SetConverter<string, DateOnly>(ParseDateOnly);
 #endif
 		}
@@ -134,7 +134,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		}
 
 #if SUPPORTS_DATEONLY
-		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
 		{
 			stringBuilder.Append('\'');
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);

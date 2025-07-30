@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
@@ -9,13 +9,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 {
 	public class SqlServer2005MemberTranslator : SqlServerMemberTranslator
 	{
-		sealed class SqlTypes2005Translation : SqlTypesTranslation
+		protected class SqlTypes2005Translation : SqlTypesTranslation
 		{
 			protected override Expression? ConvertDate(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.DateTime));
 		}
 
-		sealed class DateFunctionsTranslator2005 : SqlServerDateFunctionsTranslator
+		protected class DateFunctionsTranslator2005 : SqlServerDateFunctionsTranslator
 		{
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{

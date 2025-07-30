@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
@@ -17,10 +18,12 @@ namespace LinqToDB
 			return builder.AddParameter(name, new SqlFragment(expr));
 		}
 
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
 		public static ISqlExpression Add(this Sql.ISqExtensionBuilder builder, ISqlExpression left, ISqlExpression right, Type type)
 		{
 			return new SqlBinaryExpression(type, left, "+", right, Precedence.Additive);
 		}
+
 		public static ISqlExpression Add<T>(this Sql.ISqExtensionBuilder builder, ISqlExpression left, ISqlExpression right)
 		{
 			return builder.Add(left, right, typeof(T));
@@ -36,6 +39,7 @@ namespace LinqToDB
 			return builder.Add(expr, 1);
 		}
 
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
 		public static ISqlExpression Sub(this Sql.ISqExtensionBuilder builder, ISqlExpression left, ISqlExpression right, Type type)
 		{
 			return new SqlBinaryExpression(type, left, "-", right, Precedence.Subtraction);
@@ -56,6 +60,7 @@ namespace LinqToDB
 			return builder.Sub(expr, 1);
 		}
 
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
 		public static ISqlExpression Mul(this Sql.ISqExtensionBuilder builder, ISqlExpression left, ISqlExpression right, Type type)
 		{
 			return new SqlBinaryExpression(type, left, "*", right, Precedence.Multiplicative);
@@ -71,6 +76,7 @@ namespace LinqToDB
 			return builder.Mul<int>(expr1, new SqlValue(value));
 		}
 
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
 		public static ISqlExpression Div(this Sql.ISqExtensionBuilder builder, ISqlExpression expr1, ISqlExpression expr2, Type type)
 		{
 			return new SqlBinaryExpression(type, expr1, "/", expr2, Precedence.Multiplicative);

@@ -20,7 +20,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var methodParams = methodCall.Method.GetParameters();
-			var list         = new List<SqlQueryExtensionData>
+			var list         = new List<Sql.SqlQueryExtensionData>
 			{
 				new(".MethodName", methodCall, methodParams[0])
 				{

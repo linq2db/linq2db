@@ -9,7 +9,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Sybase
 {
-	sealed class SybaseMappingSchema : LockedMappingSchema
+	public sealed class SybaseMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat TIME3_FORMAT = CompositeFormat.Parse("'{0:hh\\:mm\\:ss\\.fff}'");

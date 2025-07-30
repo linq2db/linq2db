@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LinqToDB.Internal.Common
 {
-	public class SqlTextWriter
+	public sealed class SqlTextWriter
 	{
 		public readonly struct IndentScope : IDisposable
 		{

@@ -7,9 +7,9 @@ using LinqToDB.DataProvider.DB2;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
-	sealed class DB2ProviderDetector : ProviderDetectorBase<DB2ProviderDetector.Provider, DB2Version>
+	public class DB2ProviderDetector : ProviderDetectorBase<DB2ProviderDetector.Provider, DB2Version>
 	{
-		internal enum Provider { }
+		public enum Provider { }
 
 		public DB2ProviderDetector() : base(DB2Version.AutoDetect, DB2Version.LUW)
 		{

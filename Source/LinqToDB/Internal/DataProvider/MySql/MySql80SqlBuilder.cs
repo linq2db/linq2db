@@ -7,7 +7,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {
-	sealed class MySql80SqlBuilder : MySqlSqlBuilder
+	public class MySql80SqlBuilder : MySqlSqlBuilder
 	{
 		public MySql80SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)

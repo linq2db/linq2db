@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.Cache
 	/// An implementation of <see cref="IMemoryCache{TKey,TEntry}"/> using a dictionary to
 	/// store its entries.
 	/// </summary>
-	public class MemoryCache<TKey,TEntry> : IMemoryCache<TKey,TEntry>
+	sealed class MemoryCache<TKey,TEntry> : IMemoryCache<TKey,TEntry>
 		where TKey : notnull
 	{
 		private readonly ConcurrentDictionary<TKey, CacheEntry<TKey,TEntry>> _entries;
@@ -461,7 +461,7 @@ namespace LinqToDB.Internal.Cache
 			Dispose(true);
 		}
 
-		protected virtual void Dispose(bool disposing)
+		void Dispose(bool disposing)
 		{
 			if (!_disposed)
 			{

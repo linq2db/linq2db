@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
 
@@ -9,7 +10,7 @@ using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Internal.DataProvider.Sybase
 {
-	public class SybaseProviderAdapter : IDynamicProviderAdapter
+	public sealed class SybaseProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _nativeSyncRoot = new ();
 		private static readonly Lock _managedSyncRoot = new ();
@@ -111,7 +112,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		private static SybaseProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string? dbFactoryName, bool supportsBulkCopy)
 		{
-			var assembly = Internal.Common.Tools.TryLoadAssembly(assemblyName, dbFactoryName);
+			var assembly = Common.Tools.TryLoadAssembly(assemblyName, dbFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
@@ -229,6 +230,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		[Wrapper]
 		internal sealed class AseBulkCopy : TypeWrapper, IDisposable
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
@@ -256,6 +258,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				PropertySetter((AseBulkCopy this_) => this_.DestinationTableName),
 			};
 
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static string[] Events { get; }
 				= new[]
 			{
@@ -311,6 +314,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		[Wrapper]
 		public class AseRowsCopiedEventArgs : TypeWrapper
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
@@ -348,6 +352,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		[Wrapper]
 		public class AseBulkCopyColumnMappingCollection : TypeWrapper
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{

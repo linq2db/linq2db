@@ -14,7 +14,7 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	sealed class FirebirdSchemaProvider : SchemaProviderBase
+	public class FirebirdSchemaProvider : SchemaProviderBase
 	{
 		private readonly FirebirdDataProvider _provider;
 

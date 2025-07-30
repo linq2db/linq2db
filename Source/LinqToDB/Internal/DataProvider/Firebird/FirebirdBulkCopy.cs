@@ -8,7 +8,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	sealed class FirebirdBulkCopy : BasicBulkCopy
+	public class FirebirdBulkCopy : BasicBulkCopy
 	{
 		readonly FirebirdDataProvider _provider;
 
