@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 {
 	public abstract class DateFunctionsTranslatorBase : MemberTranslatorBase
 	{
-		public DateFunctionsTranslatorBase()
+		protected DateFunctionsTranslatorBase()
 		{
 			RegisterDateTime();
 			RegisterDateTimeOffset();

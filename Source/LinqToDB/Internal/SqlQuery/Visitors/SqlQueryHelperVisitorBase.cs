@@ -2,7 +2,7 @@
 {
 	public abstract class SqlQueryHelperVisitorBase : QueryElementVisitor
 	{
-		public SqlQueryHelperVisitorBase() : base(VisitMode.ReadOnly)
+		protected SqlQueryHelperVisitorBase() : base(VisitMode.ReadOnly)
 		{
 		}
 
