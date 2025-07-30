@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
@@ -9,8 +10,8 @@ using System.Threading.Tasks;
 
 using LinqToDB.DataProvider.SapHana;
 using LinqToDB.Internal.Expressions.Types;
-using LinqToDB.SqlQuery;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using static LinqToDB.Internal.DataProvider.OdbcProviderAdapter;
 
@@ -320,6 +321,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		[Wrapper]
 		internal sealed class HanaBulkCopy : TypeWrapper, IDisposable
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static object[] Wrappers { get; }
 				= new object[]
 			{
@@ -350,6 +352,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				((Expression<Func<HanaBulkCopy, IDataReader, CancellationToken, Task>>)((this_, reader, cancellationToken) => this_.WriteToServerAsync(reader, cancellationToken)), true),
 			};
 
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static string[] Events { get; }
 				= new[]
 			{
@@ -410,6 +413,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		[Wrapper]
 		public class HanaRowsCopiedEventArgs : TypeWrapper
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
@@ -440,6 +444,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		[Wrapper]
 		public class HanaBulkCopyColumnMappingCollection : TypeWrapper
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{

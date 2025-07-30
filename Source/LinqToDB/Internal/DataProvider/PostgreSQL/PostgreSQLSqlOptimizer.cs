@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			{
 				case QueryType.Delete:
 				{
-					statement = CorrectPostgreSqlDelete((SqlDeleteStatement)statement, dataOptions);
+					statement = CorrectPostgreSqlDelete((SqlDeleteStatement)statement);
 					break;
 				}
 				case QueryType.Update:
@@ -38,9 +38,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			return statement;
 		}
 
-		SqlStatement CorrectPostgreSqlDelete(SqlDeleteStatement statement, DataOptions dataOptions)
+		SqlStatement CorrectPostgreSqlDelete(SqlDeleteStatement statement)
 		{
-			statement = GetAlternativeDelete(statement, dataOptions);
+			statement = GetAlternativeDelete(statement);
 
 			return statement;
 		}

@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					dataConnection,
 					() =>
 					(bc.HasWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ")
-					+ tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+					+ tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
 					async () => {
 						if (bc.HasWriteToServerAsync)
 							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(false);
@@ -253,7 +253,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				TraceAction(
 					dataConnection,
 					() =>
-					"INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+					"INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
 					() => {
 						bc.WriteToServer(rd);
 						return rd.Count;
@@ -323,7 +323,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 				await TraceActionAsync(
 					dataConnection,
-					() => (bc.HasWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+					() => (bc.HasWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
 					async () => {
 						if (bc.HasWriteToServerAsync)
 							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(false);

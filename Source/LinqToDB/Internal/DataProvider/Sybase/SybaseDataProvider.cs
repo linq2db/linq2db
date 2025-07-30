@@ -129,7 +129,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return new SybaseSchemaProvider(this);
+			return new SybaseSchemaProvider();
 		}
 
 		public override IQueryParametersNormalizer GetQueryParameterNormalizer() => new SybaseParametersNormalizer();

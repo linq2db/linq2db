@@ -129,21 +129,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			return projected;
 		}
 
-		bool CanBeCompiledQueryableArguments(MethodCallExpression mc)
-		{
-			//TODO: revise CanBeEvaluatedOnClient
-
-			/*
-			for(var i = 1; i < mc.Arguments.Count; i++)
-			{
-				if (!CanBeEvaluatedOnClient(mc.Arguments[i], false))
-					return false;
-			}
-
-			*/
-			return true;
-		}
-
 		List<(LambdaExpression, bool)>? CollectOrderBy(Expression sequenceExpression)
 		{
 			sequenceExpression = sequenceExpression.UnwrapConvert();
@@ -155,30 +140,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (mc.IsQueryable(nameof(Enumerable.ThenBy)))
 				{
-					if (!CanBeCompiledQueryableArguments(mc))
-						break;
 					result ??= new ();
 					result.Add((mc.Arguments[1].UnwrapLambda(), false));
 				}
 				else if (mc.IsQueryable(nameof(Enumerable.ThenByDescending)))
 				{
-					if (!CanBeCompiledQueryableArguments(mc))
-						break;
 					result ??= new ();
 					result.Add((mc.Arguments[1].UnwrapLambda(), true));
 				}
 				else if (mc.IsQueryable(nameof(Enumerable.OrderBy)))
 				{
-					if (!CanBeCompiledQueryableArguments(mc))
-						break;
 					result ??= new ();
 					result.Add((mc.Arguments[1].UnwrapLambda(), false));
 					break;
 				}
 				else if (mc.IsQueryable(nameof(Enumerable.OrderByDescending)))
 				{
-					if (!CanBeCompiledQueryableArguments(mc))
-						break;
 					result ??= new ();
 					result.Add((mc.Arguments[1].UnwrapLambda(), true));
 					break;

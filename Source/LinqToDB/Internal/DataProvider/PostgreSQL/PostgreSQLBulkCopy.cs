@@ -93,7 +93,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var tableName  = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
 			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
 
-			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(_provider.Adapter, sqlBuilder, columns);
+			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(sqlBuilder, columns);
 
 			var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
 			var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
@@ -106,10 +106,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			return ProviderSpecificCopySyncImpl(table.DataContext, dataConnection, options.BulkCopyOptions, source, connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
 		}
 
-		private (NpgsqlProviderAdapter.NpgsqlDbType?[] npgsqlTypes, string?[] dbTypes, DbDataType[] columnTypes) BuildTypes(
-			NpgsqlProviderAdapter adapter,
-			PostgreSQLSqlBuilder  sqlBuilder,
-			ColumnDescriptor[]    columns)
+		private (NpgsqlProviderAdapter.NpgsqlDbType?[] npgsqlTypes, string?[] dbTypes, DbDataType[] columnTypes) BuildTypes(PostgreSQLSqlBuilder  sqlBuilder, ColumnDescriptor[]    columns)
 		{
 			var npgsqlTypes = new NpgsqlProviderAdapter.NpgsqlDbType?[columns.Length];
 			var dbTypes     = new string?[columns.Length];
@@ -265,7 +262,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			// batch size numbers not based on any strong grounds as I didn't found any recommendations for it
 			var batchSize    = Math.Max(10, options.BulkCopyOptions.MaxBatchSize ?? 10000);
 
-			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(_provider.Adapter, sqlBuilder, columns);
+			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(sqlBuilder, columns);
 
 			var writer = _provider.Adapter.BeginBinaryImportAsync != null
 				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(false)
@@ -385,7 +382,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			// batch size numbers not based on any strong grounds as I didn't found any recommendations for it
 			var batchSize    = Math.Max(10, options.BulkCopyOptions.MaxBatchSize ?? 10000);
 
-			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(_provider.Adapter, sqlBuilder, columns);
+			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(sqlBuilder, columns);
 
 			var writer = _provider.Adapter.BeginBinaryImportAsync != null
 				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(false)

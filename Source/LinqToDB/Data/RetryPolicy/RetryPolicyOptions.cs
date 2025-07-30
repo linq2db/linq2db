@@ -88,7 +88,7 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 			return ((IConfigurationID)this).ConfigurationID == previousObject?.ConfigurationID
 				? null
-				: DataConnection.ConfigurationApplier.Reapply(obj, this, (RetryPolicyOptions?)previousObject);
+				: DataConnection.ConfigurationApplier.Reapply(obj, this);
 		}
 
 		#region Default Options

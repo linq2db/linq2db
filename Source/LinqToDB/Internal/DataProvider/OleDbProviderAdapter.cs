@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
 
@@ -134,6 +135,7 @@ namespace LinqToDB.Internal.DataProvider
 		[Wrapper]
 		internal sealed class OleDbConnection : TypeWrapper
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; } =
 			{
 				// [0]: get Provider

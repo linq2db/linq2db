@@ -338,6 +338,13 @@ namespace CodeGenerators
 
 
 			""",
+				CallParams.Info =>
+			$$"""
+					if ({{n.Builder}}.{{n.Check}}(info))
+						return Builder<{{n.Builder}}>.Instance;
+
+
+			""",
 				_ => throw new InvalidOperationException($"{nameof(RenderAnyNode)} doesn't implement call with {n.Params} parameters")
 			};
 	}

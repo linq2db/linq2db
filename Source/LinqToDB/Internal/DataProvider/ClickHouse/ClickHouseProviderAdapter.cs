@@ -14,6 +14,7 @@ using LinqToDB.Internal.DataProvider.MySql;
 using LinqToDB.Internal.Expressions.Types;
 using LinqToDB.SqlQuery;
 using LinqToDB.Mapping;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
@@ -295,7 +296,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				.CompileExpression();
 
 			var createColumnWriterAsync = Expression.Lambda<Func<DbConnection, string, CancellationToken, Task<OctonicaWrappers.ClickHouseColumnWriter>>>(
-					typeMapper.MapExpression((DbConnection conn, string insertFormatCommand, CancellationToken cancellationToken) => typeMapper.WrapTask<OctonicaWrappers.ClickHouseColumnWriter>(((OctonicaWrappers.ClickHouseConnection)(object)conn).CreateColumnWriterAsync(insertFormatCommand, cancellationToken), bulkCopyType, cancellationToken), pConnection, pCommand, pToken),
+					typeMapper.MapExpression((DbConnection conn, string insertFormatCommand, CancellationToken cancellationToken) => typeMapper.WrapTask<OctonicaWrappers.ClickHouseColumnWriter>(((OctonicaWrappers.ClickHouseConnection)(object)conn).CreateColumnWriterAsync(insertFormatCommand, cancellationToken)), pConnection, pCommand, pToken),
 					pConnection, pCommand, pToken)
 				.CompileExpression();
 
@@ -348,6 +349,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			public sealed class ClickHouseConnectionStringBuilder : TypeWrapper
 			{
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
 				{
@@ -383,6 +385,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseBulkCopy : TypeWrapper, IDisposable
 			{
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static object[] Wrappers { get; }
 					= new []
 				{
@@ -482,6 +485,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			public class ClickHouseColumnWriter : TypeWrapper, IDisposable, IAsyncDisposable
 			{
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static object[] Wrappers { get; }
 					= new object[]
 				{
@@ -520,6 +524,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseException : TypeWrapper
 			{
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; } =
 				[
 						// [0]: get ErrorCode

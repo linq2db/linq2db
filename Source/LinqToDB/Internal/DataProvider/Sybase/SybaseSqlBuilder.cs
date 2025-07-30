@@ -245,7 +245,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			}
 		}
 
-		private void BuildIdentityInsert(NullabilityContext nullability, SqlTableSource table, bool enable)
+		private void BuildIdentityInsert(SqlTableSource table, bool enable)
 		{
 			StringBuilder.Append("SET IDENTITY_INSERT ");
 			BuildTableName(table, true, false);
