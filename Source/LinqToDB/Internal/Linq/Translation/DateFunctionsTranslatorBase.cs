@@ -14,7 +14,9 @@ namespace LinqToDB.Internal.Linq.Translation
 		{
 			RegisterDateTime();
 			RegisterDateTimeOffset();
+#if SUPPORTS_DATEONLY
 			RegisterDateOnly();
+#endif
 
 			Registration.RegisterMethod((int? year, int? month, int? day) => Sql.MakeDateTime(year, month, day), TranslateMakeDateTime);
 			Registration.RegisterMethod((int year, int month, int day, int hour, int minute, int second) => Sql.MakeDateTime(year, month, day, hour, minute, second), TranslateMakeDateTime);
@@ -98,9 +100,9 @@ namespace LinqToDB.Internal.Linq.Translation
 			Registration.RegisterMethod((DateTimeOffset dt) => Sql.DatePart(Sql.DateParts.Year, dt), TranslateDateTimeOffsetSqlDatepart);
 		}
 
+#if SUPPORTS_DATEONLY
 		void RegisterDateOnly()
 		{
-#if NET8_0_OR_GREATER
 			Registration.RegisterMethod((int year, int month, int day) => Sql.MakeDateOnly(year, month, day), TranslateMakeDateOnlyMethod);
 
 			Registration.RegisterConstructor((int year, int month, int day) => new DateOnly(year, month, day), TranslateDateOnlyConstructor);
@@ -117,8 +119,8 @@ namespace LinqToDB.Internal.Linq.Translation
 			Registration.RegisterMethod((DateOnly dt) => dt.AddDays(0), (tc,   mc, tf) => TranslateDateOnlyAddMember(tc, mc, tf, Sql.DateParts.Day));
 
 			Registration.RegisterMethod((DateOnly dt) => Sql.DatePart(Sql.DateParts.Year, dt), TranslateDateOnlySqlDatepart);
-#endif
 		}
+#endif
 
 		Expression? TranslateDateTimeConstructor(ITranslationContext translationContext, Expression expression, TranslationFlags translationFlags)
 		{
@@ -536,7 +538,7 @@ namespace LinqToDB.Internal.Linq.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		Expression? TranslateDateOnlyConstructor(ITranslationContext translationContext, Expression expression, TranslationFlags translationFlags)
 		{
 			if (expression is not NewExpression newExpression)

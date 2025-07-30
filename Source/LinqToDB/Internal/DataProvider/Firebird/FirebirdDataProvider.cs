@@ -124,7 +124,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
 			{
 				value = d.ToDateTime(TimeOnly.MinValue);

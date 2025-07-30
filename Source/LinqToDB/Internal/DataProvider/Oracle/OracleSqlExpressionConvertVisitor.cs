@@ -163,7 +163,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			var argument = cast.Expression;
 
 			if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 				|| ftype == typeof(DateOnly)
 #endif
 			   )
@@ -208,7 +208,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 				}
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 				else if (stype == typeof(DateOnly))
 				{
 					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD"));

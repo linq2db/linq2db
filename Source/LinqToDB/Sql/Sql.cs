@@ -1219,7 +1219,7 @@ namespace LinqToDB
 		[Property(PN.ClickHouse, "1", CanBeNull = false)]
 		public static int DateFirst => 7;
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		public static DateOnly? MakeDateOnly(int? year, int? month, int? day)
 		{
 			return year == null || month == null || day == null ?

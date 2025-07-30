@@ -15,6 +15,7 @@ dotnet_diagnostic.CA1055.severity = none # CA1045: Url in name - url in type...
 dotnet_diagnostic.CA1058.severity = none # CA1058: Types should not extend certain base types
 dotnet_diagnostic.CA1307.severity = none # CA1307: Specify StringComparison for clarity
 dotnet_diagnostic.CA1515.severity = none # CA1515: Mark type internal
+dotnet_diagnostic.CA1802.severity = none # CA1802: Use Literals Where Appropriate
 dotnet_diagnostic.CA1812.severity = none # CA1812: Avoid uninstantiated internal classes
 dotnet_diagnostic.CA1814.severity = none # CA1814: Prefer jagged arrays over multidimensional
 dotnet_diagnostic.CA1849.severity = none # CA1849: Call async methods when in an async method

@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		[BuildsMethodCall(nameof(LinqExtensions.UsingTarget))]
 		internal sealed class UsingTarget : MethodCallBuilder
 		{
-			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			public static bool CanBuildMethod(MethodCallExpression call)
 				=> call.IsSameGenericMethod(UsingTargetMethodInfo);
 
 			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

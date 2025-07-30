@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.SqlServer;
@@ -318,5 +319,35 @@ namespace Tests.Data
 		}
 
 		#endregion
+
+		sealed class TestDelayRetryPolicy(double expBase) : RetryPolicyBase(
+			10,
+			Configuration.RetryPolicy.DefaultMaxDelay,
+			Configuration.RetryPolicy.DefaultRandomFactor,
+			expBase,
+			Configuration.RetryPolicy.DefaultCoefficient)
+		{
+			protected override bool ShouldRetryOn(Exception exception) => exception is InvalidOperationException;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4913")]
+		public void GetNextDelay_Invalid_ExpBase()
+		{
+			Assert.That(() =>
+			{
+				IRetryPolicy policy = new TestDelayRetryPolicy(0.999);
+				policy.Execute(() => throw new InvalidOperationException());
+			}, Throws.InstanceOf<ArgumentOutOfRangeException>().With.Property(nameof(ArgumentOutOfRangeException.ParamName)).EqualTo("exponentialBase"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4913")]
+		public void GetNextDelay_MinAllowed_ExpBase()
+		{
+			Assert.That(() =>
+			{
+				IRetryPolicy policy = new TestDelayRetryPolicy(1.0);
+				policy.Execute(() => throw new InvalidOperationException());
+			}, Throws.InstanceOf<InvalidOperationException>());
+		}
 	}
 }

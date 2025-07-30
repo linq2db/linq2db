@@ -305,7 +305,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					value = dto.LocalDateTime.Date;
 					break;
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 				case DataType.Date when value is DateOnly d:
 					value = d.ToDateTime(TimeOnly.MinValue);
 					break;

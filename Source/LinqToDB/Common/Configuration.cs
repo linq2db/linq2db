@@ -121,7 +121,7 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Controls behavior of bulk copy timeout if <see cref="BulkCopyOptions.BulkCopyTimeout"/> is not provided.
-			/// - if <c>true</c> - the current timeout on the <see cref="DataConnection"/> is used
+			/// - if <c>true</c> - the currently set command timeout on the <see cref="DataConnection"/> is used
 			/// - if <c>false</c> - command timeout is infinite.
 			/// Default value: <c>false</c>.
 			/// </summary>
@@ -507,7 +507,7 @@ namespace LinqToDB.Common
 			}
 
 			/// <summary>
-			/// The default base for the exponential function used to compute the delay between retries, must be positive.
+			/// The default base for the exponential function used to compute the delay between retries, must not be lesser than 1.
 			/// Default value: <c>2</c>.
 			/// </summary>
 			public static double DefaultExponentialBase

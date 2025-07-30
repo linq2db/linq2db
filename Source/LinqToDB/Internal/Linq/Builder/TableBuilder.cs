@@ -18,13 +18,13 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsExpression(ExpressionType.Call, CanBuildName = nameof(CanBuildAttributedMethods))]
 	sealed partial class TableBuilder : ISequenceBuilder
 	{
-		public static bool CanBuildKnownMethods(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildKnownMethods()
 			=> true;
 
-		public static bool CanBuildTableMethods(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildTableMethods(MethodCallExpression call)
 			=> typeof(ITable<>).IsSameOrParentOf(call.Type);
 
-		public static bool CanBuildAttributedMethods(Expression expr, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildAttributedMethods(Expression expr, ExpressionBuilder builder)
 			=> ((MethodCallExpression)expr).Method.GetTableFunctionAttribute(builder.MappingSchema) != null;
 
 		enum BuildContextType

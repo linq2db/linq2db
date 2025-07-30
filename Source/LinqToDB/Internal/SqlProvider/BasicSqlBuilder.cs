@@ -1574,11 +1574,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				else
 				{
-#if NET8_0_OR_GREATER
-					StringBuilder.Append(field.StringBuilder);
-#else
-					StringBuilder.Append(field.StringBuilder.ToString());
-#endif
+					StringBuilder.AppendBuilder(field.StringBuilder);
 				}
 			}
 

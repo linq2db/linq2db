@@ -62,7 +62,7 @@ namespace LinqToDB
 
 		abstract class LoadWithQueryableBase<TEntity> : IExpressionQuery
 		{
-			public LoadWithQueryableBase(IQueryable<TEntity> query)
+			protected LoadWithQueryableBase(IQueryable<TEntity> query)
 			{
 				Query = query;
 			}

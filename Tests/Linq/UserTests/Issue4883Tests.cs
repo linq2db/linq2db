@@ -15,9 +15,8 @@ namespace Tests.UserTests
 		[Test]
 		public async Task TestDataConnection()
 		{
-			var dbConn = new TestDbConnection();
-			var db     = new DataConnection(new DataOptions().UseConnection(
-				new TestNoopProvider(), dbConn));
+			using var dbConn = new TestDbConnection();
+			using var db     = new DataConnection(new DataOptions().UseConnection(new TestNoopProvider(), dbConn));
 
 			_ = await db.GetTable<TestEntity>().SingleOrDefaultAsync();
 		
@@ -27,9 +26,8 @@ namespace Tests.UserTests
 		[Test]
 		public async Task TestDataContext()
 		{
-			var dbConn = new TestDbConnection();
-			var db     = new DataContext(new DataOptions().UseConnection(
-				new TestNoopProvider(), dbConn));
+			using var dbConn = new TestDbConnection();
+			using var db     = new DataContext(new DataOptions().UseConnection(new TestNoopProvider(), dbConn));
 
 			_ = await db.GetTable<TestEntity>().SingleOrDefaultAsync();
 		

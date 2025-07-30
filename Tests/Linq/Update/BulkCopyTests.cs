@@ -320,13 +320,13 @@ namespace Tests.xUpdate
 			[Column] public int Id { get; set; }
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		[Table]
 		public class DateOnlyTable
 		{
 			[Column] public DateOnly Date { get; set; }
 		}
-#endif		
+#endif
 
 		[Table]
 		public class IdentitySimpleBulkCopyTable
@@ -410,7 +410,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		[Test]
 		public void BulkCopyDateOnly(
 			[DataSources(false)] string context,

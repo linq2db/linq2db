@@ -544,14 +544,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (predicate is SqlPredicate.IsNull isNull && isNull.IsNot != element.IsOr)
 					{
 						var isDuplicate = false;
-#if NET8_0_OR_GREATER
 						isDuplicate = !(notNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).TryAdd(isNull.Expr1, false);
-#else
-						if (notNullOverrides?.ContainsKey(isNull.Expr1) != true)
-							(notNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).Add(isNull.Expr1, false);
-						else
-							isDuplicate = true;
-#endif
 
 						// limited duplicates detection for some IsNull predicates only
 						// TODO: for full implementation we need ISqlPredicate comparer
