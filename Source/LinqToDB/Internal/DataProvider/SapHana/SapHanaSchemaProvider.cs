@@ -14,7 +14,7 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
-	class SapHanaSchemaProvider : SchemaProviderBase
+	public class SapHanaSchemaProvider : SchemaProviderBase
 	{
 		protected string                DefaultSchema                { get; private set; } = null!;
 		protected GetHanaSchemaOptions? HanaSchemaOptions            { get; private set; }

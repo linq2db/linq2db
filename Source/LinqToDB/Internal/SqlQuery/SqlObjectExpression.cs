@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			if (p.ColumnDescriptor != null)
 			{
-				return MappingSchema.GetSqlValueFromObject(p.ColumnDescriptor, obj);
+				return p.ColumnDescriptor.GetSqlValueFromObject(obj);
 			}
 
 			if (p.GetValueFunc != null)

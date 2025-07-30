@@ -18,7 +18,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	public class ExpressionTreeOptimizationContext
+	public sealed class ExpressionTreeOptimizationContext
 	{
 		public IDataContext  DataContext   { get; }
 		public MappingSchema MappingSchema { get; }
@@ -406,7 +406,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		}
 
-		public bool IsImmutable(Expression expr, MappingSchema mappingSchem)
+		public bool IsImmutable(Expression expr)
 		{
 			if (_lastExpr1 == expr)
 				return _lastResult1;

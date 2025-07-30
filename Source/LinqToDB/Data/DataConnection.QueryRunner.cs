@@ -40,13 +40,11 @@ namespace LinqToDB.Data
 				: base(query, queryNumber, dataConnection, parametersContext, expressions, parameters, preambles)
 			{
 				_dataConnection    = dataConnection;
-				_parametersContext = parametersContext;
 				_executionScope    = _dataConnection.DataProvider.ExecuteScope(_dataConnection);
 			}
 
 			readonly IExecutionScope? _executionScope;
 			readonly DataConnection   _dataConnection;
-			readonly IDataContext     _parametersContext;
 			readonly DateTime         _startedOn = DateTime.UtcNow;
 			readonly Stopwatch        _stopwatch = Stopwatch.StartNew();
 

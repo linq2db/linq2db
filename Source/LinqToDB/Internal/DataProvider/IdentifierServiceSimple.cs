@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public class IdentifierServiceSimple : IdentifierServiceBase
+	public sealed class IdentifierServiceSimple : IdentifierServiceBase
 	{
 		public int MaxLength { get; }
 

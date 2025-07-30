@@ -4,7 +4,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	class SqlServer2014SqlBuilder : SqlServer2012SqlBuilder
+	public class SqlServer2014SqlBuilder : SqlServer2012SqlBuilder
 	{
 		public SqlServer2014SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)

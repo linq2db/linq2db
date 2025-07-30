@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		#region LIKE
 
 		// https://help.sap.com/viewer/4fe29514fd584807ac9f2a04f6754767/2.0.01/en-US/20fa17f375191014a4d8d8cbfddfe340.html
-		protected static   string[] HanaLikeCharactersToEscape = { "%", "_" };
+		          static   string[] HanaLikeCharactersToEscape = { "%", "_" };
 		public    override string[] LikeCharactersToEscape => HanaLikeCharactersToEscape;
 
 		#endregion

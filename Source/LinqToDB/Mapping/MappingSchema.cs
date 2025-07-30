@@ -370,7 +370,7 @@ namespace LinqToDB.Mapping
 		public bool InitGenericConvertProvider(params Type[] types)
 		{
 			foreach (var schema in Schemas)
-				if (schema.InitGenericConvertProvider(types, this))
+				if (schema.InitGenericConvertProvider(types))
 					return true;
 
 			return false;

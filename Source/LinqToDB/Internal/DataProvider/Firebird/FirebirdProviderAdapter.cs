@@ -9,7 +9,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	public class FirebirdProviderAdapter : IDynamicProviderAdapter
+	public sealed class FirebirdProviderAdapter : IDynamicProviderAdapter
 	{
 		public const string AssemblyName    = "FirebirdSql.Data.FirebirdClient";
 		public const string ClientNamespace = "FirebirdSql.Data.FirebirdClient";
@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		FirebirdProviderAdapter()
 		{
-			var assembly = Internal.Common.Tools.TryLoadAssembly(AssemblyName, null);
+			var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
 
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");

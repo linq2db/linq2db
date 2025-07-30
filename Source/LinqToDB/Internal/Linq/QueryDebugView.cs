@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace LinqToDB.Internal.Linq
 {
-	public class QueryDebugView
+	public sealed class QueryDebugView
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private readonly Func<string> _toExpressionString;
@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.Linq
 			_toQueryStringNoParams = toQueryStringNoParams;
 		}
 
-		public virtual string Expression
+		public string Expression
 		{
 			get
 			{
@@ -40,7 +40,7 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		public virtual string Query
+		public string Query
 		{
 			get
 			{
@@ -55,7 +55,7 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		public virtual string QueryNoParams
+		public string QueryNoParams
 		{
 			get
 			{

@@ -1,9 +1,10 @@
 ﻿using System;
 
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Informix
@@ -233,7 +234,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override IQueryElement ConvertIsDistinctPredicateAsIntersect(SqlPredicate.IsDistinct predicate)
 		{
-			return InformixSqlOptimizer.WrapParameters(base.ConvertIsDistinctPredicateAsIntersect(predicate), EvaluationContext);
+			return InformixSqlOptimizer.WrapParameters(base.ConvertIsDistinctPredicateAsIntersect(predicate));
 		}
 
 		protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)

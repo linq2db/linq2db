@@ -10,7 +10,7 @@ using LinqToDB.Internal.Async;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	abstract class DatabaseSpecificQueryable<TSource> : IQueryable<TSource>, IQueryProviderAsync
+	public abstract class DatabaseSpecificQueryable<TSource> : IQueryable<TSource>, IQueryProviderAsync
 	{
 		protected DatabaseSpecificQueryable(IQueryable<TSource> queryable)
 		{

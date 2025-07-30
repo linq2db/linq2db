@@ -199,10 +199,10 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			BuildPhysicalTable(mergeSource.Source, null);
 
-			BuildMergeAsSourceClause(nullability, mergeSource);
+			BuildMergeAsSourceClause(mergeSource);
 		}
 
-		private void BuildMergeAsSourceClause(NullabilityContext nullability, SqlTableLikeSource mergeSource)
+		private void BuildMergeAsSourceClause(SqlTableLikeSource mergeSource)
 		{
 			StringBuilder.Append(' ');
 
@@ -234,7 +234,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		private void BuildMergeSourceEnumerable(NullabilityContext nullability, SqlMergeStatement merge)
+		private void BuildMergeSourceEnumerable(SqlMergeStatement merge)
 		{
 			var sourceEnumerable = ConvertElement(merge.Source.SourceEnumerable);
 			var rows             = sourceEnumerable!.BuildRows(OptimizationContext.EvaluationContext);
@@ -254,7 +254,7 @@ namespace LinqToDB.Internal.SqlProvider
 			else
 				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
 
-			BuildMergeAsSourceClause(nullability, merge.Source);
+			BuildMergeAsSourceClause(merge.Source);
 		}
 
 		/// <summary>
@@ -458,7 +458,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			if (buildAsEnumerable)
-				BuildMergeSourceEnumerable(nullability, merge);
+				BuildMergeSourceEnumerable(merge);
 			else
 				BuildMergeSourceQuery(nullability, merge.Source);
 

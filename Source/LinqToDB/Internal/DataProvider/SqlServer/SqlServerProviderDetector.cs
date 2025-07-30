@@ -14,7 +14,7 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	sealed class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion>
+	public class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion>
 	{
 		public SqlServerProviderDetector() : base(SqlServerVersion.AutoDetect, SqlServerVersion.v2012)
 		{

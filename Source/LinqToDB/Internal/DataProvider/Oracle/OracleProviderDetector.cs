@@ -10,7 +10,7 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
-	sealed class OracleProviderDetector : ProviderDetectorBase<OracleProvider,OracleVersion>
+	public class OracleProviderDetector : ProviderDetectorBase<OracleProvider,OracleVersion>
 	{
 		public OracleProviderDetector() : base(OracleVersion.AutoDetect, OracleVersion.v12)
 		{

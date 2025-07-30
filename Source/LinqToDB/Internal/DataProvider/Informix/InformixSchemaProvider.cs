@@ -11,7 +11,7 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {
-	sealed class InformixSchemaProvider : SchemaProviderBase
+	public class InformixSchemaProvider : SchemaProviderBase
 	{
 		private readonly InformixDataProvider _provider;
 

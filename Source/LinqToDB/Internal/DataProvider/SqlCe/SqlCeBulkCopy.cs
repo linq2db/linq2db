@@ -6,7 +6,7 @@ using LinqToDB.Data;
 
 namespace LinqToDB.Internal.DataProvider.SqlCe
 {
-	sealed class SqlCeBulkCopy : BasicBulkCopy
+	public class SqlCeBulkCopy : BasicBulkCopy
 	{
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)

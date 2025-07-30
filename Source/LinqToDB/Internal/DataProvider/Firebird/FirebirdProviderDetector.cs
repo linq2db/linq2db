@@ -7,9 +7,9 @@ using LinqToDB.DataProvider.Firebird;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	sealed class FirebirdProviderDetector : ProviderDetectorBase<FirebirdProviderDetector.Provider, FirebirdVersion>
+	public class FirebirdProviderDetector : ProviderDetectorBase<FirebirdProviderDetector.Provider, FirebirdVersion>
 	{
-		internal enum Provider {}
+		public enum Provider {}
 
 		public FirebirdProviderDetector() : base(FirebirdVersion.AutoDetect, FirebirdVersion.v25)
 		{

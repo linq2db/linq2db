@@ -9,7 +9,7 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	sealed class AccessProviderDetector : ProviderDetectorBase<AccessProvider, AccessVersion>
+	public class AccessProviderDetector : ProviderDetectorBase<AccessProvider, AccessVersion>
 	{
 		public AccessProviderDetector() : base(AccessVersion.AutoDetect, AccessVersion.Jet)
 		{

@@ -11,11 +11,11 @@ using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Linq.Builder.Visitors;
-using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
@@ -168,7 +168,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var expr = _buildVisitor.BuildExpression(sequence, new ContextRefExpression(typeof(T), sequence), buildPurpose: BuildPurpose.Expression);
 
-			var finalized = FinalizeProjection(query, sequence, expr, queryParameter, ref preambles, previousKeys);
+			var finalized = FinalizeProjection<T>(sequence, expr, queryParameter, ref preambles, previousKeys);
 
 			var error = SequenceHelper.FindError(finalized);
 			if (error != null)
@@ -305,7 +305,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (result.NodeType is ExpressionType.Conditional)
 			{
-				var newResult = RemoveNullPropagation(result, true);
+				var newResult = RemoveNullPropagation(result, forSearch: true);
 
 				if (!ReferenceEquals(newResult, result))
 					return UnwrapSequenceExpression(newResult);

@@ -13,7 +13,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	sealed class FirebirdMappingSchema : LockedMappingSchema
+	public sealed class FirebirdMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat DATE_FORMAT      = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd}' AS {1})");
@@ -236,10 +236,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				// TODO: we should add support for single converter to parameter for structs
 				SetConvertExpression<bool , DataParameter>(value => new DataParameter(null, value ? '1' : '0', booleanType.Type));
 				SetConvertExpression<bool?, DataParameter>(value => new DataParameter(null, value == null ? null : value.Value ? '1' : '0', booleanType.Type.WithSystemType(typeof(bool?))), addNullCheck: false);
-				SetValueToSqlConverter(typeof(bool), (sb, dt, _, v) => ConvertBooleanToSql(sb, dt, (bool)v));
+				SetValueToSqlConverter(typeof(bool), (sb, dt, _, v) => ConvertBooleanToSql(sb, (bool)v));
 			}
 
-			static void ConvertBooleanToSql(StringBuilder sb, SqlDataType dataType, bool value)
+			static void ConvertBooleanToSql(StringBuilder sb, bool value)
 			{
 				sb
 					.Append('\'')

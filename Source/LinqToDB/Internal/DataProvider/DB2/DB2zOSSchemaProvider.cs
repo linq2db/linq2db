@@ -9,7 +9,7 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
-	sealed class DB2zOSSchemaProvider : DB2LUWSchemaProvider
+	public class DB2zOSSchemaProvider : DB2LUWSchemaProvider
 	{
 		public DB2zOSSchemaProvider(DB2DataProvider provider) : base(provider)
 		{

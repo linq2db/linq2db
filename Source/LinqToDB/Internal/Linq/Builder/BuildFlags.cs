@@ -3,7 +3,7 @@
 namespace LinqToDB.Internal.Linq.Builder
 {
 	[Flags]
-	public enum BuildFlags
+	enum BuildFlags
 	{
 		None                = 0,
 		ForceParameter      = 1 << 0,

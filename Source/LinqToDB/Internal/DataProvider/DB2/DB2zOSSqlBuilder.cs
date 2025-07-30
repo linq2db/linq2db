@@ -7,7 +7,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
-	sealed class DB2zOSSqlBuilder : DB2SqlBuilderBase
+	public class DB2zOSSqlBuilder : DB2SqlBuilderBase
 	{
 		public DB2zOSSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)

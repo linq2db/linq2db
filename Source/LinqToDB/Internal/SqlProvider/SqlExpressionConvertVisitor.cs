@@ -571,7 +571,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 							foreach (var item in items)
 							{
-								values.Add(MappingSchema.GetSqlValueFromObject(cd, item!));
+								values.Add(cd.GetSqlValueFromObject(item!));
 							}
 
 							if (values.Count == 0)
@@ -591,7 +591,7 @@ namespace LinqToDB.Internal.SqlProvider
 								{
 									var field    = ExpectsUnderlyingField(key);
 									var cd       = field.ColumnDescriptor;
-									var sqlValue = MappingSchema.GetSqlValueFromObject(cd, item!);
+									var sqlValue = cd.GetSqlValueFromObject(item!);
 									//TODO: review
 									ISqlPredicate p = sqlValue.Value == null ?
 										new SqlPredicate.IsNull  (field, false) :

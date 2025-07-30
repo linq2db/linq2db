@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 						((ConditionalExpression)expr1).IfFalse.EqualsTo(((ConditionalExpression)expr2).IfFalse, info);
 
 				case ExpressionType.Call          : return EqualsToX((MethodCallExpression)expr1, (MethodCallExpression        )expr2, info);
-				case ExpressionType.Constant      : return EqualsToX((ConstantExpression  )expr1, (ConstantExpression          )expr2, info);
+				case ExpressionType.Constant      : return EqualsToX((ConstantExpression  )expr1, (ConstantExpression          )expr2);
 				case ExpressionType.Invoke        : return EqualsToX((InvocationExpression)expr1, (InvocationExpression        )expr2, info);
 				case ExpressionType.Lambda        : return EqualsToX((LambdaExpression    )expr1, (LambdaExpression            )expr2, info);
 				case ExpressionType.ListInit      : return EqualsToX((ListInitExpression  )expr1, (ListInitExpression          )expr2, info);
@@ -338,7 +338,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 			return true;
 		}
 
-		static bool EqualsToX(ConstantExpression expr1, ConstantExpression expr2, EqualsToInfo info)
+		static bool EqualsToX(ConstantExpression expr1, ConstantExpression expr2)
 		{
 			if (expr1.Value == null && expr2.Value == null)
 				return true;

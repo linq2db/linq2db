@@ -11,7 +11,7 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
-	sealed class SapHanaOdbcSchemaProvider : SapHanaSchemaProvider
+	public class SapHanaOdbcSchemaProvider : SapHanaSchemaProvider
 	{
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{

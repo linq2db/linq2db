@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.Expressions.Types
 {
-	public class ValueTaskToTaskMapper : ICustomMapper
+	public sealed class ValueTaskToTaskMapper : ICustomMapper
 	{
 		bool ICustomMapper.CanMap(Expression expression)
 		{
@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.Expressions.Types
 				|| (expression.Type.IsGenericType && expression.Type.GetGenericTypeDefinition().FullName == "System.Threading.Tasks.ValueTask`1");
 		}
 
-		Expression ICustomMapper.Map(Expression expression)
+		Expression ICustomMapper.Map(TypeMapper mapper, Expression expression)
 		{
 			return Expression.Call(expression, "AsTask", []);
 		}

@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.Internal.DataProvider.SapHana
 {
-	partial class SapHanaSqlBuilder
+	public partial class SapHanaSqlBuilder
 	{
 		// TABLE_ALIAS(COLUMN_ALIAS, ...) syntax not supported
 		protected override bool SupportsColumnAliasesInSource => false;

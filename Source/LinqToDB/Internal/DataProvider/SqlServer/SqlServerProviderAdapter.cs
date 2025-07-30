@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -27,7 +28,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 	// old System.Data.SqlClient versions for .net core (< 4.5.0)
 	// miss UDT and BulkCopy support
 	// We don't take it into account, as there is no reason to use such old provider versions
-	public class SqlServerProviderAdapter : IDynamicProviderAdapter
+	public sealed class SqlServerProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _sysSyncRoot = new ();
 		private static readonly Lock _msSyncRoot  = new ();
@@ -214,7 +215,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			else
 #endif
 			{
-				assembly = Internal.Common.Tools.TryLoadAssembly(assemblyName, factoryName);
+				assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
 			}
 
 			if (assembly == null)
@@ -473,6 +474,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		internal sealed class SqlException : TypeWrapper
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
@@ -490,6 +492,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		internal sealed class SqlErrorCollection : TypeWrapper
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
@@ -521,6 +524,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		internal sealed class SqlError : TypeWrapper
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
@@ -550,6 +554,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		public class SqlConnectionStringBuilder : TypeWrapper
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
@@ -587,6 +592,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		internal sealed class SqlBulkCopy : TypeWrapper, IDisposable
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
@@ -617,6 +623,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					=> this_.WriteToServerAsync(reader, token)),
 			};
 
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static string[] Events { get; }
 				= new[]
 			{
@@ -673,6 +680,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		public class SqlRowsCopiedEventArgs : TypeWrapper
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
@@ -703,6 +711,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		public class SqlBulkCopyColumnMappingCollection : TypeWrapper
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
@@ -731,7 +740,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		}
 
 		[Wrapper]
-		public class SqlBulkCopyColumnMapping : TypeWrapper
+		public sealed class SqlBulkCopyColumnMapping : TypeWrapper
 		{
 			public SqlBulkCopyColumnMapping(object instance) : base(instance, null)
 			{

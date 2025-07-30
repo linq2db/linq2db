@@ -2,11 +2,11 @@
 
 namespace LinqToDB.Internal.Interceptors
 {
-	public interface IInterceptable
+	interface IInterceptable
 	{
 	}
 
-	public interface IInterceptable<T> : IInterceptable
+	interface IInterceptable<T> : IInterceptable
 		where T : IInterceptor
 	{
 		T? Interceptor { get; set; }

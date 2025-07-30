@@ -1,4 +1,5 @@
-﻿#pragma warning disable MA0048 // File name must match type name
+﻿#pragma warning disable IDE0060 // Remove unused parameter
+#pragma warning disable MA0048 // File name must match type name
 using System;
 using System.Linq.Expressions;
 
@@ -30,7 +31,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public BuildsExpressionAttribute(ExpressionType type1, ExpressionType type2, ExpressionType type3, ExpressionType type4) { }
 	}
 
-	[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
+		[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
 	sealed class BuildsMethodCallAttribute : Attribute
 	{
 		public string? CanBuildName { get; set; }
