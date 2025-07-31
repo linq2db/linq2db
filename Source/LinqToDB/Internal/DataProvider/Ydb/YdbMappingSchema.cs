@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Globalization;
-using System.Numerics;
 using System.Text;
 
-using LinqToDB.Common;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.Ydb
+namespace LinqToDB.Internal.DataProvider.Ydb
 {
 	/// <summary>
 	/// Provides a read-only <see cref="MappingSchema"/> implementation for YDB (Yandex Database),
@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.Ydb
 	///   <c>DataTools.ConvertStringToSql</c>, since escaping is handled internally.
 	/// - Only supports primitive .NET types. Complex types (UDTs) are currently not supported.
 	/// </summary>
-	sealed class YdbMappingSchema : LockedMappingSchema
+	public sealed class YdbMappingSchema : LockedMappingSchema
 	{
 		// --------------------------------------------------------------------
 		// Default settings for SQL Decimal(p, s) types in YDB
@@ -207,7 +207,7 @@ namespace LinqToDB.DataProvider.Ydb
 		/// <summary>
 		/// Globally shared instance of <see cref="YdbMappingSchema"/>.
 		/// </summary>
-		internal static MappingSchema Instance { get; } = new YdbMappingSchema();
+		public static MappingSchema Instance { get; } = new YdbMappingSchema();
 
 		/// <summary>
 		/// An extended variant of the mapping schema that includes reflection-based type support

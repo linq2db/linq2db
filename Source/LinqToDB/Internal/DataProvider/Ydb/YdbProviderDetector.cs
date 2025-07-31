@@ -2,8 +2,9 @@
 using System.Data.Common;
 
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 
-namespace LinqToDB.DataProvider.Ydb
+namespace LinqToDB.Internal.DataProvider.Ydb
 {
 	/// <summary>
 	/// Determines which DataProvider to use for YDB.

@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.SqlProvider;
 
-namespace LinqToDB.DataProvider.Ydb
+namespace LinqToDB.Internal.DataProvider.Ydb
 {
 	/// <summary>
 	/// Provider-specific implementation of BulkCopy for YDB.

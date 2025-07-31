@@ -1,16 +1,16 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
-using System.Threading.Tasks;
-using System.Threading;
-
-using LinqToDB.Common;     // ⇒ ActivatorExt, Tools
-using LinqToDB.Common.Internal;
-using LinqToDB.Mapping;
-using LinqToDB.Expressions.Types;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace LinqToDB.DataProvider.Ydb
+using LinqToDB.Common;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions.Types;
+using LinqToDB.Mapping;
+// ⇒ ActivatorExt, Tools
+
+namespace LinqToDB.Internal.DataProvider.Ydb
 {
 	public sealed class YdbProviderAdapter : IDynamicProviderAdapter
 	{
@@ -88,8 +88,8 @@ namespace LinqToDB.DataProvider.Ydb
 
 		static YdbProviderAdapter CreateAdapter()
 		{
-            var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null)
-                ?? throw new InvalidOperationException($"Cannot load assembly {AssemblyName}.");
+            var assembly = Internal.Common.Tools.TryLoadAssembly(AssemblyName, null)
+                           ?? throw new InvalidOperationException($"Cannot load assembly {AssemblyName}.");
 
 			var connectionType = assembly.GetType($"{ClientNamespace}.YdbConnection", true)!;
 			var commandType    = assembly.GetType($"{ClientNamespace}.YdbCommand",    true)!;

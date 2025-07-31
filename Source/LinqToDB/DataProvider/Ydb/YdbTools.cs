@@ -4,6 +4,8 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.Ydb;
 
 namespace LinqToDB.DataProvider.Ydb
 {

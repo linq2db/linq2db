@@ -1,22 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Async;
-using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
-using LinqToDB.SchemaProvider;
-using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.Linq.Translation;
-using LinqToDB.DataProvider.Ydb.Translation;
 
-namespace LinqToDB.DataProvider.Ydb
+using LinqToDB.Data;
+using LinqToDB.DataProvider.Ydb;
+using LinqToDB.Internal.DataProvider.Ydb.Translation;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+
+namespace LinqToDB.Internal.DataProvider.Ydb
 {
 	/// <summary>
 	/// YDB database provider for Linq to DB.
@@ -26,8 +22,8 @@ namespace LinqToDB.DataProvider.Ydb
 	public class YdbDataProvider : DynamicDataProviderBase<YdbProviderAdapter>
 	{
 		// Provider name (used in MappingSchema configuration).
-		private const string NameString = "YDB";
-		internal const string ProviderName = "YDB";
+		private const string NameString   = "YDB";
+		public const  string ProviderName = "YDB";
 
 		// YDB provider options (e.g., connection string or connection parameters).
 		private readonly YdbOptions _options;

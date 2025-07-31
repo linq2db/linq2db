@@ -1,20 +1,22 @@
 ﻿using System;
 
-using LinqToDB.Common;
-using LinqToDB.Extensions;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.Ydb
+namespace LinqToDB.Internal.DataProvider.Ydb
 {
 	public sealed class YdbSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public YdbSqlExpressionConvertVisitor(bool allowModify) : base(allowModify) { }
 
+		/// <inheritdoc/>
 		protected override bool SupportsNullInColumn => false;
 
-		#region SearchString → LIKE
-
+		// ------------------------------------------------------------------
+		// SearchString → LIKE  (+ регистронезависимый поиск)
+		// ------------------------------------------------------------------
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var like = ConvertSearchStringPredicateViaLike(predicate);
@@ -23,27 +25,28 @@ namespace LinqToDB.DataProvider.Ydb
 			if (!caseSensitive && like is SqlPredicate.Like lp)
 			{
 				like = new SqlPredicate.Like(
-					PseudoFunctions.MakeToLower(lp.Expr1),
+					PseudoFunctions.MakeToLower(lp.Expr1, MappingSchema),
 					lp.IsNot,
-					PseudoFunctions.MakeToLower(lp.Expr2),
+					PseudoFunctions.MakeToLower(lp.Expr2, MappingSchema),
 					lp.Escape);
 			}
 
 			return like;
 		}
 
-		#endregion
-
-		#region Binary operations
-
+		// ------------------------------------------------------------------
+		// Бинарные операции
+		// ------------------------------------------------------------------
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			switch (element.Operation)
 			{
+				// Сцепление строк YDB — оператор ||
 				case "+" when element.SystemType == typeof(string):
 					return new SqlBinaryExpression(
 						element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 
+				// Остаток от деления: приводим к decimal, если требуется
 				case "%":
 				{
 					var dbType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
@@ -71,82 +74,70 @@ namespace LinqToDB.DataProvider.Ydb
 			return base.ConvertSqlBinaryExpression(element);
 		}
 
-		#endregion
-
-		#region Functions
-
-		/// <summary>
-		/// Converts pseudo-SQL functions into YDB-compatible expressions.
-		/// Handles case-insensitive string operations, safe type conversions, and character indexing.
-		/// </summary>
+		// ------------------------------------------------------------------
+		// Функции и псевдо-функции
+		// ------------------------------------------------------------------
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			switch (func.Name)
 			{
-				// ---------- Case-insensitive string functions ----------
+				//----------------------------------------------------------------
+				// Регистронезависимые функции
 				case PseudoFunctions.TO_LOWER:
-					// Unicode::ToLower(<string>)
 					return func.WithName("Unicode::ToLower");
 
 				case PseudoFunctions.TO_UPPER:
-					// Unicode::ToUpper(<string>)
 					return func.WithName("Unicode::ToUpper");
 
-				// ---------- Safe type conversions ----------
+				//----------------------------------------------------------------
+				// Безопасные преобразования типов
 				case PseudoFunctions.TRY_CONVERT:
-					// CAST(<value> AS <type>?) → returns null on conversion error
+					// CAST(x AS <type>?) → null при ошибке
 					return new SqlExpression(
-							func.SystemType,
-							"CAST({0} AS {1}?)",
-							Precedence.Primary,
-							func.Parameters[2],        // value
-							func.Parameters[0]         // target type
-						)
-					{ CanBeNull = true };
+						func.Type,
+						"CAST({0} AS {1}?)",
+						Precedence.Primary,
+						func.Parameters[2],      // значение
+						func.Parameters[0]);     // целевой тип
 
 				case PseudoFunctions.TRY_CONVERT_OR_DEFAULT:
-					// COALESCE(CAST(<value> AS <type>?), <defaultValue>)
+					// COALESCE(CAST(x AS <type>?), default)
 					return new SqlExpression(
-							func.SystemType,
+							func.Type,
 							"COALESCE(CAST({0} AS {1}?), {2})",
 							Precedence.Primary,
-							func.Parameters[2],        // value
-							func.Parameters[0],        // target type
-							func.Parameters[3]         // default value
-						)
+							func.Parameters[2],    // значение
+							func.Parameters[0],    // целевой тип
+							func.Parameters[3])    // default
 					{
 						CanBeNull =
 								func.Parameters[2].CanBeNullable(NullabilityContext) ||
 								func.Parameters[3].CanBeNullable(NullabilityContext)
 					};
 
-				// ---------- Substring search ----------
-				// CharIndex(substring, source [, startLocation])
+				//----------------------------------------------------------------
+				// CharIndex (аналога POSITION в YDB нет; используем FIND)
 				case "CharIndex":
 					switch (func.Parameters.Length)
 					{
-						// Two-argument form: search from beginning
+						// CharIndex(substr, str)
 						case 2:
-							// COALESCE(FIND(source, substring) + 1, 0)
 							return new SqlExpression(
-								func.SystemType,
+								func.Type,
 								"COALESCE(FIND({1}, {0}) + 1, 0)",
 								Precedence.Primary,
 								func.Parameters[0],    // substring
-								func.Parameters[1]     // source
-							);
+								func.Parameters[1]);   // source
 
-						// Three-argument form: search from specified offset (T-SQL is 1-based)
+						// CharIndex(substr, str, start)
 						case 3:
-							// COALESCE(FIND(SUBSTRING(source, start-1), substring) + start, 0)
 							return new SqlExpression(
-								func.SystemType,
+								func.Type,
 								"COALESCE(FIND(SUBSTRING({1}, {2} - 1), {0}) + {2}, 0)",
 								Precedence.Primary,
 								func.Parameters[0],    // substring
 								func.Parameters[1],    // source
-								func.Parameters[2]     // startLocation
-							);
+								func.Parameters[2]);   // start
 					}
 
 					break;
@@ -155,23 +146,22 @@ namespace LinqToDB.DataProvider.Ydb
 			return base.ConvertSqlFunction(func);
 		}
 
-		#endregion
-
-		#region CAST / BOOL → CASE
-
+		// ------------------------------------------------------------------
+		// CAST / преобразование bool → CASE
+		// ------------------------------------------------------------------
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
 			if (cast.SystemType.ToUnderlying() == typeof(bool) &&
-				!(cast.IsMandatory && cast.Expression.SystemType?.ToNullableUnderlying() == typeof(bool)) &&
-				cast.Expression is not SqlSearchCondition and not SqlCaseExpression)
+			    !(cast.IsMandatory && cast.Expression.SystemType?.ToNullableUnderlying() == typeof(bool)) &&
+			    cast.Expression is not SqlSearchCondition and not SqlCaseExpression)
 			{
+				// YDB не поддерживает CAST(condition AS bool),
+				// поэтому превращаем в CASE WHEN ... THEN TRUE ELSE FALSE END
 				return ConvertBooleanToCase(cast.Expression, cast.ToType);
 			}
 
 			cast = FloorBeforeConvert(cast);
 			return base.ConvertConversion(cast);
 		}
-
-		#endregion
 	}
 }

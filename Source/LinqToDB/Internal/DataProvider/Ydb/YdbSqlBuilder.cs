@@ -4,22 +4,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
-using LinqToDB.Data;
-using LinqToDB.Extensions;
+using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.Ydb;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.Ydb
+namespace LinqToDB.Internal.DataProvider.Ydb
 {
 	/// <summary>
 	///  SQL code builder (YQL) for the YDB provider.

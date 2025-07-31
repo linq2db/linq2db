@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.SchemaProvider;
 using LinqToDB.SchemaProvider;
 
-namespace LinqToDB.DataProvider.Ydb
+namespace LinqToDB.Internal.DataProvider.Ydb
 {
 	/// <summary> Schema-provider YDB </summary>
 	sealed class YdbSchemaProvider : SchemaProviderBase

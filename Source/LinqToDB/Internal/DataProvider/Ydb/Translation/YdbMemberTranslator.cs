@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Common;
+using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
-using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.Ydb.Translation
+namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 {
 	public class YdbMemberTranslator : ProviderMemberTranslatorDefault
 	{

@@ -1,10 +1,8 @@
-﻿using LinqToDB.Common;
-using LinqToDB.Data;
+﻿using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
-namespace LinqToDB.DataProvider.Ydb
+namespace LinqToDB.Internal.DataProvider.Ydb
 {
 	/// <summary>
 	/// Specialized SQL-tree optimizer for YDB.
@@ -34,8 +32,8 @@ namespace LinqToDB.DataProvider.Ydb
 			return statement.QueryType switch
 			{
 				QueryType.Delete => CleanDeleteAlias(
-						(SqlDeleteStatement)GetAlternativeDelete(
-							(SqlDeleteStatement)statement, dataOptions)),
+						GetAlternativeDelete(
+							(SqlDeleteStatement)statement)),
 
 				QueryType.Update => CleanUpdateAlias((SqlUpdateStatement)statement),
 

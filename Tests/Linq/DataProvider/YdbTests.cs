@@ -4,16 +4,16 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
-using LinqToDB.SchemaProvider;
 using LinqToDB.DataProvider.Ydb;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
-
 using NUnit.Framework;
-using System.Data;
+
+using LinqToDB.Internal.DataProvider.Ydb;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlQuery;
 
 namespace Tests.DataProvider
 {
@@ -43,12 +43,12 @@ namespace Tests.DataProvider
 			var connection = GetConnectionString(Ctx);
 
 			using var db = YdbTools.CreateDataConnection(connection);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(db.DataProvider.Name, Is.EqualTo(YdbDataProvider.ProviderName));
+				Assert.That(db.DataProvider.Name, Is.EqualTo(YdbDataProvider.ProviderName));
 				Assert.That(db.ConnectionString, Is.EqualTo(connection));
-			});
+			}
 		}
 
 		//------------------------------------------------------------------
@@ -94,14 +94,14 @@ namespace Tests.DataProvider
 
 			// Assert
 			Assert.That(adapter, Is.Not.Null);
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(adapter.ConnectionType, Is.Not.Null);
 				Assert.That(adapter.DataReaderType, Is.Not.Null);
 				Assert.That(adapter.ParameterType, Is.Not.Null);
 				Assert.That(adapter.CommandType, Is.Not.Null);
 				Assert.That(adapter.MappingSchema, Is.Not.Null);
-			});
+			}
 		}
 		#endregion
 
@@ -114,16 +114,16 @@ namespace Tests.DataProvider
 		public void MappingSchema_ShouldMapBasicDotNetTypes()
 		{
 			var schema = YdbMappingSchema.Instance;
+			
 			Assert.That(schema, Is.Not.Null);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(schema.GetDataType(typeof(string)).Type.DataType, Is.EqualTo(DataType.VarChar));
 				Assert.That(schema.GetDataType(typeof(bool)).Type.DataType, Is.EqualTo(DataType.Boolean));
 				Assert.That(schema.GetDataType(typeof(Guid)).Type.DataType, Is.EqualTo(DataType.Guid));
 				Assert.That(schema.GetDataType(typeof(byte[])).Type.DataType, Is.EqualTo(DataType.VarBinary));
 				Assert.That(schema.GetDataType(typeof(TimeSpan)).Type.DataType, Is.EqualTo(DataType.Interval));
-			});
+			}
 		}
 
 		//------------------------------------------------------------------
@@ -186,14 +186,14 @@ namespace Tests.DataProvider
 
 			for (var i = 0; i < read.Length; i++)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(read[i].IntVal, Is.EqualTo(data[i].IntVal));
 					Assert.That(read[i].DecVal, Is.EqualTo(data[i].DecVal));
 					Assert.That(read[i].StrVal, Is.EqualTo(data[i].StrVal));
 					Assert.That(read[i].BoolVal, Is.EqualTo(data[i].BoolVal));
 					Assert.That(read[i].DtVal, Is.EqualTo(data[i].DtVal));
-				});
+				}
 			}
 		}
 
@@ -218,14 +218,14 @@ namespace Tests.DataProvider
 
 			for (var i = 0; i < read.Length; i++)
 			{
-				Assert.Multiple(() =>
+				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(read[i].IntVal, Is.EqualTo(data[i].IntVal));
 					Assert.That(read[i].DecVal, Is.EqualTo(data[i].DecVal));
 					Assert.That(read[i].StrVal, Is.EqualTo(data[i].StrVal));
 					Assert.That(read[i].BoolVal, Is.EqualTo(data[i].BoolVal));
 					Assert.That(read[i].DtVal, Is.EqualTo(data[i].DtVal));
-				});
+				}
 			}
 		}
 		#endregion
@@ -338,12 +338,11 @@ namespace Tests.DataProvider
 
 			Assert.That(schema.Tables, Has.Count.EqualTo(1));
 			var tbl = schema.Tables.Single();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(tbl.TableName, Is.EqualTo(nameof(SimpleEntity)));
 				Assert.That(tbl.Columns, Has.Count.EqualTo(6)); // Id, IntVal, DecVal, StrVal, BoolVal, DtVal
-			});
+			}
 		}
 
 		//------------------------------------------------------------------
@@ -369,8 +368,7 @@ namespace Tests.DataProvider
 			var decCol  = cols.Single(c => c.ColumnName == nameof(SimpleEntity.DecVal));
 			var boolCol = cols.Single(c => c.ColumnName == nameof(SimpleEntity.BoolVal));
 			var dtCol   = cols.Single(c => c.ColumnName == nameof(SimpleEntity.DtVal));
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(intCol.DataType, Is.EqualTo(DataType.Int32));
 				Assert.That(decCol.DataType, Is.EqualTo(DataType.Decimal));
@@ -381,7 +379,7 @@ namespace Tests.DataProvider
 				Assert.That(decCol.IsNullable, Is.False);
 				Assert.That(boolCol.IsNullable, Is.False);
 				Assert.That(dtCol.IsNullable, Is.False);
-			});
+			}
 		}
 
 		//------------------------------------------------------------------
@@ -452,14 +450,13 @@ namespace Tests.DataProvider
 			// Verify the record was inserted
 			var result = table.SingleOrDefault(e => e.IntVal == 42);
 			Assert.That(result, Is.Not.Null, "A record with IntVal = 42 should exist in the table.");
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result!.DecVal, Is.EqualTo(3.14m), "Decimal value should be 3.14.");
 				Assert.That(result.StrVal, Is.EqualTo("hello"), "String value should be 'hello'.");
 				Assert.That(result.BoolVal, Is.True, "Boolean value should be true.");
 				Assert.That(result.DtVal, Is.EqualTo(now).Within(TimeSpan.FromSeconds(1)), "DateTime value should match the inserted time (with 1s tolerance).");
-			});
+			}
 		}
 
 		[Test]
@@ -486,12 +483,11 @@ namespace Tests.DataProvider
 			_ = db.Delete(new SimpleEntity { Id = newId });
 
 			var afterRows = table.Count();
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(table.Any(e => e.Id == newId), Is.False, "The record should not exist after deletion.");
 				Assert.That(afterRows, Is.EqualTo(beforeRows - 1), "Row count should decrease by 1 after deletion.");
-			});
+			}
 		}
 
 		[Test]
@@ -527,8 +523,7 @@ namespace Tests.DataProvider
 
 			// 4. Read it back and verify
 			var result = table.Single(e => e.Id == newId);
-
-			Assert.Multiple(() =>
+			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(result.IntVal, Is.EqualTo(42), "IntVal was not updated");
 				Assert.That(result.DecVal, Is.EqualTo(3.14m), "DecVal was not updated");
@@ -538,7 +533,7 @@ namespace Tests.DataProvider
 							Is.EqualTo(now.AddDays(1))
 							  .Within(TimeSpan.FromSeconds(1)),
 							"DtVal was not updated or is outside the 1-second tolerance");
-			});
+			}
 		}
 
 		#endregion
