@@ -13,7 +13,7 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	sealed class AccessOleDbSchemaProvider : AccessSchemaProviderBase
+	public class AccessOleDbSchemaProvider : AccessSchemaProviderBase
 	{
 		private readonly AccessDataProvider _provider;
 

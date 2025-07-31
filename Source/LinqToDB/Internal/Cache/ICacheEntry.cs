@@ -9,7 +9,7 @@ namespace LinqToDB.Internal.Cache
 	/// <summary>
 	/// Represents an entry in the <see cref="IMemoryCache{TKey,TEntity}"/> implementation.
 	/// </summary>
-	public interface ICacheEntry<TKey,TEntity> : IDisposable
+	interface ICacheEntry<TKey,TEntity> : IDisposable
 		where TKey : notnull
 	{
 		/// <summary>

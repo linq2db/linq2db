@@ -71,7 +71,7 @@ namespace LinqToDB.Data
 		{
 			return ((IConfigurationID)this).ConfigurationID == previousObject?.ConfigurationID
 				? null
-				: DataConnection.ConfigurationApplier.Reapply(obj, this, (QueryTraceOptions?)previousObject);
+				: DataConnection.ConfigurationApplier.Reapply(obj, this);
 		}
 
 		#region Default Options

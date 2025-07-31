@@ -7,10 +7,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if NETFRAMEWORK || NETSTANDARD2_0
-using System.Text;
-#endif
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Oracle;
@@ -20,7 +16,7 @@ using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
-	sealed class OracleBulkCopy : BasicBulkCopy
+	public class OracleBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
 		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
@@ -107,7 +103,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 							opts.RowsCopiedCallback,
 							rc,
 							opts.MaxBatchSize,
-							opts.BulkCopyTimeout ?? (LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout ? connection.ConnectionTimeout : null)))
+							opts.BulkCopyTimeout ?? (LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout ? dataConnection.CommandTimeout : null)))
 						{
 							for (var i = 0; i < columns.Count; i++)
 								bc.AddColumn(i, columns[i]);

@@ -12,7 +12,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 	{
 		SelectQuery?     _parentQuery;
 		SqlJoinedTable?  _fakeJoin;
-		//SelectQuery?     _joinQuery;
 		SqlProviderFlags _providerFlags = default!;
 		int?             _columnSubqueryLevel;
 
@@ -36,7 +35,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		public void Cleanup()
 		{
 			_parentQuery         = null;
-			//_joinQuery           = null;
 			_providerFlags       = default!;
 			_isValid             = true;
 			_columnSubqueryLevel = default;
@@ -359,11 +357,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return element;
 			}
 
-			//_joinQuery = element.Table.Source as SelectQuery;
-
 			var result = base.VisitSqlJoinedTable(element);
-
-			//_joinQuery = null;
 
 			return result;
 		}

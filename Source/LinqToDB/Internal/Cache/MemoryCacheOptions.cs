@@ -5,7 +5,7 @@ using System;
 
 namespace LinqToDB.Internal.Cache
 {
-	public class MemoryCacheOptions
+	sealed class MemoryCacheOptions
 	{
 		private long? _sizeLimit;
 		private double _compactionPercentage = 0.05;

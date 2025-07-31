@@ -9,6 +9,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -181,7 +182,7 @@ namespace LinqToDB.Mapping
 			(_cache, _firstOnlyCache) = CreateAttributeCaches();
 		}
 
-		Lock _syncRoot = new();
+		readonly Lock _syncRoot = new();
 		internal readonly MappingSchemaInfo[] Schemas;
 		readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
 
@@ -369,7 +370,7 @@ namespace LinqToDB.Mapping
 		public bool InitGenericConvertProvider(params Type[] types)
 		{
 			foreach (var schema in Schemas)
-				if (schema.InitGenericConvertProvider(types, this))
+				if (schema.InitGenericConvertProvider(types))
 					return true;
 
 			return false;
@@ -1412,7 +1413,7 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(DateTime),        DataType.DateTime2);
 				AddScalarType(typeof(DateTimeOffset),  DataType.DateTimeOffset);
 				AddScalarType(typeof(TimeSpan),        DataType.Time);
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 				AddScalarType(typeof(DateOnly),        DataType.Date);
 #endif
 				AddScalarType(typeof(byte[]),          DataType.VarBinary);
@@ -1439,7 +1440,7 @@ namespace LinqToDB.Mapping
 
 				// explicitly specify old ToString client-side conversions for some types after we added support for ToString(InvariantCulture) to conversion generators
 				SetConverter<DateTime, string>(static v => v.ToString("yyyy-MM-dd hh:mm:ss", DateTimeFormatInfo.InvariantInfo));
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 				SetConverter<DateOnly, string>(static v => v.ToString("yyyy-MM-dd", DateTimeFormatInfo.InvariantInfo));
 #endif
 

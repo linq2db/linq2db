@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Xml;
 
 using LinqToDB.Common;
@@ -19,7 +21,7 @@ using LinqToDB.Mapping;
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
 	// add OracleSparseVector type? (23.9+)
-	public class OracleProviderAdapter : IDynamicProviderAdapter
+	public sealed class OracleProviderAdapter : IDynamicProviderAdapter
 	{
 		const int NanosecondsPerTick = 100;
 		private static readonly Type[] IndexParams = new[] {typeof(int) };
@@ -73,9 +75,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			Type? oracleTimeStampLTZType,
 			Type? oracleTimeStampTZType,
 			Type oracleXmlTypeType,
-			Type? oracleXmlStreamType,
 			Type oracleRefCursorType,
-			Type? oracleRefType,
 
 			string typesNamespace,
 
@@ -126,9 +126,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			OracleTimeStampLTZType = oracleTimeStampLTZType;
 			OracleTimeStampTZType  = oracleTimeStampTZType;
 			OracleXmlTypeType      = oracleXmlTypeType;
-			OracleXmlStreamType    = oracleXmlStreamType;
 			OracleRefCursorType    = oracleRefCursorType;
-			OracleRefType          = oracleRefType;
 
 			ProviderTypesNamespace = typesNamespace;
 
@@ -187,9 +185,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		public Type? OracleTimeStampTZType  { get; }
 		public Type  OracleXmlTypeType      { get; }
 		public Type  OracleRefCursorType    { get; }
-
-		private Type? OracleXmlStreamType   { get; }
-		private Type? OracleRefType         { get; }
 
 		public string ProviderTypesNamespace { get; }
 
@@ -486,13 +481,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			var oracleDecimalType      = LoadType(assembly, mappingSchema, typesNamespace, customReaders, "OracleDecimal"     , "GetOracleDecimal"     , DataType.Decimal)!;
 			var oracleIntervalDSType   = LoadType(assembly, mappingSchema, typesNamespace, customReaders, "OracleIntervalDS"  , "GetOracleIntervalDS"  , DataType.Time)!;
 			var oracleIntervalYMType   = LoadType(assembly, mappingSchema, typesNamespace, customReaders, "OracleIntervalYM"  , "GetOracleIntervalYM"  , DataType.Date)!;
-			var oracleRefType          = LoadType(assembly, mappingSchema, typesNamespace, customReaders, "OracleRef"         , "GetOracleRef"         , DataType.Binary, optional: true);
 			var oracleStringType       = LoadType(assembly, mappingSchema, typesNamespace, customReaders, "OracleString"      , "GetOracleString"      , DataType.NVarChar)!;
 			var oracleTimeStampType    = LoadType(assembly, mappingSchema, typesNamespace, customReaders, "OracleTimeStamp"   , "GetOracleTimeStamp"   , DataType.DateTime2)!;
 			var oracleTimeStampLTZType = LoadType(assembly, mappingSchema, typesNamespace, customReaders, "OracleTimeStampLTZ", "GetOracleTimeStampLTZ", DataType.DateTimeOffset)!;
 			var oracleTimeStampTZType  = LoadType(assembly, mappingSchema, typesNamespace, customReaders, "OracleTimeStampTZ" , "GetOracleTimeStampTZ" , DataType.DateTimeOffset)!;
 			var oracleXmlTypeType      = LoadType(assembly, mappingSchema, typesNamespace, customReaders, "OracleXmlType"     , "GetOracleXmlType"     , DataType.Xml)!;
-			var oracleXmlStreamType    = LoadType(assembly, mappingSchema, typesNamespace, customReaders, "OracleXmlStream"   , null                   , DataType.Xml, optional: true, hasNull: false, hasIsNull: false)!;
 			var oracleRefCursorType    = LoadType(assembly, mappingSchema, typesNamespace, customReaders, "OracleRefCursor"   , null                   , DataType.Cursor, hasValue: false)!;
 
 			IBulkCopyAdapter? bulkCopy = null;
@@ -630,9 +623,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				oracleTimeStampLTZType,
 				oracleTimeStampTZType,
 				oracleXmlTypeType,
-				oracleXmlStreamType,
 				oracleRefCursorType,
-				oracleRefType,
 
 				typesNamespace,
 
@@ -696,7 +687,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			var oracleIntervalYMType   = LoadType(assembly, mappingSchema, DevartTypesNamespace, customReaders, "OracleIntervalYM"   , "GetOracleIntervalYM"  , DataType.Date)!;
 			var oracleStringType       = LoadType(assembly, mappingSchema, DevartTypesNamespace, customReaders, "OracleString"       , "GetOracleString"      , DataType.NVarChar)!;
 			var oracleTimeStampType    = LoadType(assembly, mappingSchema, DevartTypesNamespace, customReaders, "OracleTimeStamp"    , "GetOracleTimeStamp"   , DataType.DateTime2)!;
-			var oracleRefType          = LoadType(assembly, mappingSchema, DevartTypesNamespace, customReaders, "OracleRef"          , "GetOracleRef"         , DataType.Binary)!;
 			var nativeOracleArrayType  = LoadType(assembly, mappingSchema, DevartTypesNamespace, customReaders, "NativeOracleArray"  , "GetNativeOracleArray" , DataType.Undefined, hasNull: false)!;
 			var nativeOracleObjectType = LoadType(assembly, mappingSchema, DevartTypesNamespace, customReaders, "NativeOracleObject" , "GetNativeOracleObject", DataType.Undefined, hasNull: false, hasValue: false)!;
 			var nativeOracleTableType  = LoadType(assembly, mappingSchema, DevartTypesNamespace, customReaders, "NativeOracleTable"  , "GetNativeOracleTable" , DataType.Undefined, hasNull: false)!;
@@ -821,9 +811,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				null,
 				null,
 				oracleXmlType,
-				null,
 				oracleCursorType,
-				oracleRefType,
 
 				DevartTypesNamespace,
 
@@ -1178,6 +1166,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			internal sealed class OracleLoader : TypeWrapper, IDisposable
 			{
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
 				{
@@ -1197,6 +1186,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					(Expression<Func<OracleLoader, OracleLoaderColumnCollection>>)(this_ => this_.Columns),
 				};
 
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static string[] Events { get; }
 					= new[]
 				{
@@ -1239,6 +1229,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleLoaderRowsCopiedEventArgs : TypeWrapper
 			{
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
 				{
@@ -1269,6 +1260,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleLoaderColumnCollection : TypeWrapper
 			{
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
 				{
@@ -1461,6 +1453,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleConnection : TypeWrapper
 			{
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
 				{
@@ -1536,6 +1529,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleBulkCopy : TypeWrapper, IDisposable
 			{
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
 				{
@@ -1567,6 +1561,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					PropertySetter((OracleBulkCopy this_) => this_.DestinationSchemaName),
 				};
 
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static string[] Events { get; }
 					= new[]
 				{
@@ -1627,6 +1622,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleRowsCopiedEventArgs : TypeWrapper
 			{
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
 				{
@@ -1657,6 +1653,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleBulkCopyColumnMappingCollection : TypeWrapper
 			{
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
 				{

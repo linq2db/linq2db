@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.Internal.DataProvider.Sybase
 {
-	public sealed class SybaseParametersNormalizer : UniqueParametersNormalizer
+	public class SybaseParametersNormalizer : UniqueParametersNormalizer
 	{
 		protected override int MaxLength => 26;
 	}

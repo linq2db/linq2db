@@ -23,10 +23,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		nameof(AsyncEnumerableExtensions.SingleOrDefaultAsync), CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable() && call.Arguments.Count <= 2;
 
-		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildAsyncMethod(MethodCallExpression call)
 			=> call.IsAsyncExtension() && call.Arguments.Count <= 3;
 
 		public enum MethodKind
@@ -104,7 +104,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (argumentCount > 1)
 			{
 				var filterLambda = methodCall.Arguments[1].UnwrapLambda();
-				sequence = builder.BuildWhere(buildInfo.Parent, sequence, filterLambda, checkForSubQuery : false, enforceHaving : false, out var error);
+				sequence = builder.BuildWhere(sequence, filterLambda, enforceHaving: false, out var error);
 
 				if (sequence == null)
 					return BuildSequenceResult.Error(error ?? methodCall);
@@ -156,7 +156,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					sequence,
 					sequence,
 					defaultValue: null,
-					allowNullField: true,
 					isNullValidationDisabled: false);
 
 				canBeWeak = true;

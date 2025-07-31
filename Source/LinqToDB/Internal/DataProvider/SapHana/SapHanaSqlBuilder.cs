@@ -13,7 +13,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
-	partial class SapHanaSqlBuilder : BasicSqlBuilder
+	public partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
 		public SapHanaSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
@@ -298,6 +298,22 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			}
 
 			return base.GetProviderTypeName(dataContext, parameter);
+		}
+
+		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows, int row, int column)
+		{
+			if (row == 0)
+			{
+				if (rows[0][column] is SqlValue
+					{
+						Value: uint or long or ulong or float or double or decimal
+					})
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 	}
 }

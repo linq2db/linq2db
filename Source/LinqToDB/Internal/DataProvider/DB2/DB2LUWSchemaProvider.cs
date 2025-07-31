@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 {
 	// Known Issues:
 	// - CommandBehavior.SchemaOnly doesn't return schema for stored procedures
-	class DB2LUWSchemaProvider : SchemaProviderBase
+	public class DB2LUWSchemaProvider : SchemaProviderBase
 	{
 		private static readonly IReadOnlyList<string> _tableTypes = new[] { "TABLE", "VIEW" };
 

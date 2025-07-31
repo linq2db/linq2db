@@ -13,7 +13,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	sealed class FirebirdMappingSchema : LockedMappingSchema
+	public sealed class FirebirdMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat DATE_FORMAT      = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd}' AS {1})");
@@ -31,6 +31,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 			SetDataType(typeof(string),  new SqlDataType(DataType.NVarChar, typeof(string), 255));
 			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 18, 10));
+			SetDataType(typeof(ulong), new SqlDataType(DataType.Decimal, typeof(ulong), precision: 20, scale: 0));
 
 			// firebird string literals can contain only limited set of characters, so we should encode them
 			SetValueToSqlConverter(typeof(string)  , (sb, _,o,v) => ConvertStringToSql (sb, o, (string)v));
@@ -39,7 +40,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SetValueToSqlConverter(typeof(Binary)  , (sb, _,_,v) => ConvertBinaryToSql (sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => BuildDateTime      (sb, dt, (DateTime)v));
 			SetValueToSqlConverter(typeof(Guid)    , (sb,dt,_,v) => ConvertGuidToSql   (sb, dt, (Guid)v));
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDateOnly(sb, dt, (DateOnly)v));
 #endif
 
@@ -96,7 +97,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		static void BuildDateOnly(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
 		{
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value, dt.Type.DbType ?? "date");
@@ -235,10 +236,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				// TODO: we should add support for single converter to parameter for structs
 				SetConvertExpression<bool , DataParameter>(value => new DataParameter(null, value ? '1' : '0', booleanType.Type));
 				SetConvertExpression<bool?, DataParameter>(value => new DataParameter(null, value == null ? null : value.Value ? '1' : '0', booleanType.Type.WithSystemType(typeof(bool?))), addNullCheck: false);
-				SetValueToSqlConverter(typeof(bool), (sb, dt, _, v) => ConvertBooleanToSql(sb, dt, (bool)v));
+				SetValueToSqlConverter(typeof(bool), (sb, dt, _, v) => ConvertBooleanToSql(sb, (bool)v));
 			}
 
-			static void ConvertBooleanToSql(StringBuilder sb, SqlDataType dataType, bool value)
+			static void ConvertBooleanToSql(StringBuilder sb, bool value)
 			{
 				sb
 					.Append('\'')

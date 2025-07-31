@@ -7,9 +7,9 @@ using LinqToDB.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Linq.Translation;
 
-namespace LinqToDB.Internal.Linq.Translation
+namespace LinqToDB.Internal.DataProvider.Translation
 {
-	public class TranslationRegistration
+	public sealed class TranslationRegistration
 	{
 		public delegate Expression? TranslateFunc(ITranslationContext             translationContext, Expression           member,           TranslationFlags translationFlags);
 		public delegate Expression? TranslateMethodFunc(ITranslationContext       translationContext, MethodCallExpression methodCall,       TranslationFlags translationFlags);

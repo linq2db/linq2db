@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall("ContainsAsync", CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class ContainsBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call, ExpressionBuilder builder)
 		{
 			return call.IsQueryable()
 				&& call.Arguments.Count == 2
@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				&& !builder.CanBeEvaluatedOnClient(call.Arguments[0]);
 		}
 
-		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildAsyncMethod(MethodCallExpression call, ExpressionBuilder builder)
 		{
 			return call.IsAsyncExtension()
 				&& call.Arguments.Count == 3
@@ -186,8 +186,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 
 					var condition = Expression.Lambda(ExpressionBuilder.Equal(MappingSchema, param, expr), param);
-					var sequence = Builder.BuildWhere(Parent, InnerSequence,
-						condition : condition, checkForSubQuery : true, enforceHaving : false, out var error);
+					var sequence = Builder.BuildWhere(InnerSequence, condition: condition, enforceHaving: false, out var error);
 
 					if (sequence == null)
 						return null;

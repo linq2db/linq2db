@@ -22,7 +22,7 @@ namespace LinqToDB.Data.RetryPolicy
 	/// The maximum random factor, must not be lesser than 1.
 	/// </param>
 	/// <param name="ExponentialBase">
-	/// The base for the exponential function used to compute the delay between retries, must be positive.
+	/// The base for the exponential function used to compute the delay between retries, must not be lesser than 1.
 	/// </param>
 	/// <param name="Coefficient">
 	/// The coefficient for the exponential function used to compute the delay between retries, must be nonnegative.
@@ -88,7 +88,7 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 			return ((IConfigurationID)this).ConfigurationID == previousObject?.ConfigurationID
 				? null
-				: DataConnection.ConfigurationApplier.Reapply(obj, this, (RetryPolicyOptions?)previousObject);
+				: DataConnection.ConfigurationApplier.Reapply(obj, this);
 		}
 
 		#region Default Options

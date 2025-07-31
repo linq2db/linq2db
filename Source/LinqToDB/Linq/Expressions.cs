@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.Linq;
 using System.Data.SqlTypes;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 using JetBrains.Annotations;
 
@@ -508,6 +511,7 @@ namespace LinqToDB.Linq
 
 		#region Common
 
+#pragma warning disable CS0618 // Type or member is obsolete
 		static readonly Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> _commonMembers = new()
 		{
 			#region string
@@ -619,7 +623,7 @@ namespace LinqToDB.Linq
 			{ M(() => ulong.   Parse("")), N(() => L<string,ulong>   (p0 => Sql.ConvertTo<ulong>.   From(p0))) },
 #pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 #pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
 			{ M(() => DateOnly.Parse("")), N(() => L<string,DateOnly>(p0 => Sql.ConvertTo<DateOnly>.From(p0))) },
 #pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
@@ -1030,9 +1034,11 @@ namespace LinqToDB.Linq
 
 			#endregion
 		};
+#pragma warning restore CS0618 // Type or member is obsolete
 
 		#endregion
 
+#pragma warning disable CS0618 // Type or member is obsolete
 		static Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>> LoadMembers()
 		{
 			var members = new Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>>
@@ -1363,6 +1369,7 @@ namespace LinqToDB.Linq
 
 			return members;
 		}
+#pragma warning restore CS0618 // Type or member is obsolete
 
 		#endregion
 
@@ -1405,6 +1412,8 @@ namespace LinqToDB.Linq
 
 		#region Sql specific
 
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		// Missing support for trimChars: Access, SqlCe, SybaseASE
 		// Firebird/MySQL - chars parameter treated as string, not as set of characters
 		[CLSCompliant(false)]
@@ -1428,6 +1437,8 @@ namespace LinqToDB.Linq
 			return str?.TrimEnd(trimChars);
 		}
 
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		// Missing support for trimChars: Access, SqlCe, SybaseASE
 		// Firebird/MySQL - chars parameter treated as string, not as set of characters
 		[CLSCompliant(false)]
@@ -1566,6 +1577,8 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Sql.Extension(builderType: typeof(ConvertToCaseCompareToBuilder))]
 		public static int? ConvertToCaseCompareTo(string? str, string? value)
 		{
@@ -1574,6 +1587,8 @@ namespace LinqToDB.Linq
 
 		// Access, DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite
 		//
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Sql.Function(IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		public static string? AltStuff(string? str, int? startLocation, int? length, string? value)
 		{
@@ -1582,7 +1597,10 @@ namespace LinqToDB.Linq
 
 		// DB2
 		//
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Sql.Function(IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used by mapping")]
 		public static string? VarChar(object? obj, int? size)
 		{
 			return obj == null ? null : string.Format(CultureInfo.InvariantCulture, "{0}", obj);
@@ -1590,6 +1608,8 @@ namespace LinqToDB.Linq
 
 		// DB2
 		//
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Sql.Function(IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		public static string? Hex(Guid? guid)
 		{
@@ -1598,6 +1618,8 @@ namespace LinqToDB.Linq
 
 		// DB2, PostgreSQL, Access, MS SQL, SqlCe
 		//
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[CLSCompliant(false)]
 		[Sql.Function(                                         IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		[Sql.Function(ProviderName.DB2,        "Repeat",       IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
@@ -1616,6 +1638,8 @@ namespace LinqToDB.Linq
 			return sb.Value.ToString();
 		}
 
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[CLSCompliant(false)]
 		[Sql.Function(                                         IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		[Sql.Function(ProviderName.DB2,        "Repeat",       IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
@@ -1634,10 +1658,16 @@ namespace LinqToDB.Linq
 
 		// MSSQL
 		//
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Sql.Function(IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used by mapping")]
 		public static decimal? Round(decimal? value, int precision, int mode) => 0;
 
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Sql.Function(IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used by mapping")]
 		public static double?  Round(double?  value, int precision, int mode) => 0;
 
 		// Access
@@ -1645,6 +1675,8 @@ namespace LinqToDB.Linq
 
 		// Access
 		//
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[CLSCompliant(false)]
 		[Sql.Function("Int", 0)]
 		public static T AccessInt<T>(T value)
@@ -1654,6 +1686,8 @@ namespace LinqToDB.Linq
 
 		// Access
 		//
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[CLSCompliant(false)]
 		[Sql.Function("Round", 0, 1)]
 		public static double? AccessRound(double? value, int? precision)
@@ -1666,6 +1700,8 @@ namespace LinqToDB.Linq
 			return (double?)Math.Round((decimal)value.Value, precision.Value);
 		}
 
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[CLSCompliant(false)]
 		[Sql.Function("Round", 0, 1)]
 		public static decimal? AccessRound(decimal? value, int? precision)
@@ -1680,13 +1716,19 @@ namespace LinqToDB.Linq
 
 		// Firebird
 		//
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Sql.Function("PI", ServerSideOnly = true, CanBeNull = false)]
 		public static decimal DecimalPI() { return (decimal)Math.PI; }
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Sql.Function("PI", ServerSideOnly = true, CanBeNull = false)]
 		public static double  DoublePI () { return          Math.PI; }
 
 		// Informix
 		//
+		// TODO: Made private or remove in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		[Sql.Function(IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		public static DateTime? Mdy(int? month, int? day, int? year)
 		{

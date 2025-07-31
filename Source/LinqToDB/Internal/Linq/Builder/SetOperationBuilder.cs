@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall("Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll")]
 	internal sealed class SetOperationBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.Arguments.Count == 2 && call.IsQueryable();
 
 		#region Builder
@@ -151,7 +151,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (projection1 is SqlErrorExpression)
 					{
-						if (Builder.HandleAlias(this, path, flags, out var newResult))
+						if (Builder.HandleAlias(this, path, out var newResult))
 							return newResult;
 
 						if (flags.IsKeys() && projection2 is not SqlErrorExpression)
@@ -164,7 +164,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (projection2 is SqlErrorExpression)
 					{
-						if (Builder.HandleAlias(this, path, flags, out var newResult))
+						if (Builder.HandleAlias(this, path, out var newResult))
 							return newResult;
 
 						if (flags.IsKeys() && projection1 is not SqlErrorExpression)
@@ -306,17 +306,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				);
 
 				return resultExpr;
-			}
-
-			bool IsNullValueOrSqlNull(Expression expression)
-			{
-				if (expression.IsNullValue())
-					return true;
-
-				if (expression is SqlPlaceholderExpression placeholder)
-					return QueryHelper.IsNullValue(placeholder.Sql);
-
-				return false;
 			}
 
 			Expression? GetDifferencePredicateConstants(bool isLeft)

@@ -27,10 +27,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			Custom
 		}
 
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable();
 
-		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildAsyncMethod(MethodCallExpression call)
 			=> call.IsAsyncExtension();
 
 		static Type ExtractTaskType(Type taskType)
@@ -359,7 +359,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (argumentsCount == 2)
 					{
 						var lambda = methodCall.Arguments[1].UnwrapLambda();
-						sequence = builder.BuildWhere(null, sequence, lambda, checkForSubQuery : false, enforceHaving : false, out var error);
+						sequence = builder.BuildWhere(sequence, lambda, enforceHaving : false, out var error);
 
 						if (sequence == null)
 							return BuildSequenceResult.Error(error ?? methodCall);
@@ -463,7 +463,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (inputFilterLambda != null)
 					{
-						sequence = builder.BuildWhere(buildInfo.Parent, sequence, inputFilterLambda, checkForSubQuery : false, enforceHaving : false, out var error);
+						sequence = builder.BuildWhere(sequence, inputFilterLambda, enforceHaving: false, out var error);
 						if (sequence == null)
 							return BuildSequenceResult.Error(error ?? methodCall);
 					}

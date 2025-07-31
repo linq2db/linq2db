@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Methods.LinqToDB.SqlExt.Alias
 		];
 
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsSameGenericMethod(_supportedMethods);
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

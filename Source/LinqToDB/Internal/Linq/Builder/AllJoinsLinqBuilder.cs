@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall("Join", "InnerJoin", "LeftJoin", "RightJoin", "FullJoin", "CrossJoin")]
 	sealed class AllJoinsLinqBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 		{
 			if (call.Method.DeclaringType != typeof(LinqExtensions))
 				return false;
@@ -71,7 +71,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					outerContext,
 					outerContext,
 					defaultValue: null,
-					allowNullField: false,
 					isNullValidationDisabled: false);
 			}
 
@@ -84,7 +83,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					innerContext,
 					innerContext,
 					defaultValue: null,
-					allowNullField: false,
 					isNullValidationDisabled: false);
 			}
 

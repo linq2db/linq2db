@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -141,6 +142,7 @@ namespace LinqToDB.Tools.Comparers
 		/// <returns>Instance of <see cref="IEqualityComparer{T}" />.</returns>
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used to provide T generic argument")]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(IEnumerable<T> ignored) =>
 			GetEqualityComparer<T>();
 

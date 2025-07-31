@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	sealed class SqlServer2005SqlOptimizer : SqlServerSqlOptimizer
+	public class SqlServer2005SqlOptimizer : SqlServerSqlOptimizer
 	{
 		public SqlServer2005SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags, SqlServerVersion.v2005)
 		{

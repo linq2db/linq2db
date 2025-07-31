@@ -9,7 +9,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SqlCe
 {
-	sealed class SqlCeSqlOptimizer : BasicSqlOptimizer
+	public class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
 		public SqlCeSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
-					statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions);
+					statement = GetAlternativeDelete((SqlDeleteStatement) statement);
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
 			}

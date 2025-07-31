@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Text;
 
 using LinqToDB.DataProvider;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -12,7 +13,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Sybase
 {
-	sealed partial class SybaseSqlBuilder : BasicSqlBuilder
+	public partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
 		public SybaseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
@@ -244,7 +245,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			}
 		}
 
-		private void BuildIdentityInsert(NullabilityContext nullability, SqlTableSource table, bool enable)
+		private void BuildIdentityInsert(SqlTableSource table, bool enable)
 		{
 			StringBuilder.Append("SET IDENTITY_INSERT ");
 			BuildTableName(table, true, false);
@@ -359,5 +360,48 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		}
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
+
+		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows, int row, int column)
+		{
+			if (row == 0)
+			{
+				if (rows[0][column] is SqlValue
+					{
+						Value: uint or long or ulong or float or double or decimal or null
+					})
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
+		{
+			if (value is SqlValue { Value: decimal val })
+			{
+				var precision = DecimalHelper.GetPrecision(val);
+				var scale = DecimalHelper.GetScale(val);
+				if (precision == 0 && scale == 0)
+					precision = 1;
+				dataType = dataType.WithPrecision(precision).WithScale(scale);
+			}
+			else if (value is SqlParameter param)
+			{
+				var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+
+				if (paramValue.ProviderValue is decimal decValue)
+				{
+					var precision = DecimalHelper.GetPrecision(decValue);
+					var scale = DecimalHelper.GetScale(decValue);
+					if (precision == 0 && scale == 0)
+						precision = 1;
+					dataType = dataType.WithPrecision(precision).WithScale(scale);
+				}
+			}
+
+			base.BuildTypedExpression(dataType, value);
+		}
 	}
 }

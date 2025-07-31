@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		nameof(LinqExtensions.DeleteWithOutputInto))]
 	sealed class DeleteBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -32,8 +32,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (methodCall.Arguments.Count == 2 && deleteType == DeleteContext.DeleteTypeEnum.Delete)
 			{
-				sequence = builder.BuildWhere(buildInfo.Parent, sequence,
-					condition : (LambdaExpression)methodCall.Arguments[1].Unwrap(), checkForSubQuery : false,
+				sequence = builder.BuildWhere(sequence,
+					condition : (LambdaExpression)methodCall.Arguments[1].Unwrap(),
 					enforceHaving : false, out var error);
 
 				if (sequence == null)

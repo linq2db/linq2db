@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -1204,6 +1207,166 @@ namespace Tests.Linq
 				});
 
 			query.ToList();
+		}
+
+		#endregion
+
+		#region Issue 5040
+
+		static class Issue5040
+		{
+			public interface IBaseEntity
+			{
+			}
+
+			public interface IEntityWithPermissions : IBaseEntity
+			{
+				int PermissionObjectId { get; }
+			}
+
+			[Table]
+			public sealed class User : IBaseEntity
+			{
+				[Column(SkipOnUpdate = true)] public int Id { get; set; }
+				// Comment it and query generation works
+				[Column] public string? Username { get; set; }
+			}
+
+			[Table]
+			public sealed class Permission : IBaseEntity
+			{
+				[Column(SkipOnUpdate = true)] public int Id { get; set; }
+				[Column] public int ObjectId { get; set; }
+			}
+
+			[Table, ProtectedEntity]
+			public sealed class Account : IEntityWithPermissions
+			{
+				[Column] public int UserId { get; set; }
+
+				[Association(CanBeNull = false, ThisKey = nameof(UserId), OtherKey = nameof(User.Id))]
+				public User User { get; } = null!;
+
+				[ExpressionMethod(nameof(PermissionObjectIdExpression))]
+				public int PermissionObjectId => PermissionObjectIdExpression().Compile()(this);
+
+				static Expression<Func<Account, int>> PermissionObjectIdExpression() => x => x.UserId;
+			}
+
+			public class ProtectedEntityAttribute()
+				: EntityFilterAttribute(typeof(ProtectedEntityAttribute), nameof(Filter))
+			{
+				private static IQueryable<T> Filter<T>(IQueryable<T> q, IDataContext dbCtx)
+					where T : IEntityWithPermissions
+					=> q.Where(x => dbCtx
+							.GetTable<Permission>()
+							.Select(y => y.ObjectId)
+							.Contains(x.PermissionObjectId));
+			}
+
+			[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true)]
+			public class EntityFilterAttribute(Type providerType, string propertyName) : Attribute
+			{
+				public Type ProviderType { get; } = providerType;
+				public string PropertyName { get; } = propertyName;
+			}
+
+			internal static class EntityFilterHelper
+			{
+				public static Func<IQueryable<TEntity>, IDataContext, IQueryable<TEntity>>? GetEntityFilter<TEntity>()
+				{
+					var filters = FindAllFilterAttributes(typeof(TEntity))
+						.Select(GetLambda<TEntity, IDataContext>)
+						.ToArray();
+
+					return filters.Any()
+						? (q, dbCtx) => filters.Aggregate(q, (currQ, nextFunc) => nextFunc(currQ, dbCtx))
+						: null;
+				}
+
+				private static List<EntityFilterAttribute> FindAllFilterAttributes(Type entityType)
+				{
+					var relevantTypes = new HashSet<Type>();
+					var processQueue = new Queue<Type>();
+					processQueue.Enqueue(entityType);
+
+					while (processQueue.Count > 0)
+					{
+						var processType = processQueue.Dequeue();
+
+						if (processType.BaseType != null)
+						{
+							processQueue.Enqueue(processType.BaseType);
+						}
+
+						foreach (var iFace in processType.GetInterfaces())
+						{
+							processQueue.Enqueue(iFace);
+						}
+
+						relevantTypes.Add(processType);
+					}
+
+					return relevantTypes
+						.SelectMany(x => x.GetAttributes<EntityFilterAttribute>(true))
+						.ToList();
+				}
+
+				private static Func<IQueryable<TEntity>, TContext, IQueryable<TEntity>> GetLambda<TEntity, TContext>(
+					EntityFilterAttribute entityFilter
+				)
+				{
+					var methodInfo = entityFilter.ProviderType
+						.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+						.FirstOrDefault(m => m.Name == entityFilter.PropertyName && m.IsGenericMethodDefinition)
+						?? throw new ArgumentException($"Method '{entityFilter.PropertyName}' not found in type '{entityFilter.ProviderType.FullName}' or is not a generic method definition.");
+
+					if (methodInfo.IsGenericMethod)
+					{
+						methodInfo = methodInfo.MakeGenericMethod(typeof(TEntity));
+					}
+
+					var qParam = Expression.Parameter(typeof(IQueryable<TEntity>), "q");
+					var dbCtxParam = Expression.Parameter(typeof(TContext), "dbCtx");
+
+					var methodCall = Expression.Call(null, methodInfo, qParam, dbCtxParam);
+
+					var lambda = Expression.Lambda<Func<IQueryable<TEntity>, TContext, IQueryable<TEntity>>>(
+						methodCall,
+						qParam,
+						dbCtxParam);
+
+					return lambda.Compile();
+				}
+			}
+
+			public static class ModelBuilderExtensions
+			{
+				public static void ProcessEntity<TEntity>(FluentMappingBuilder builder)
+				{
+					var filter = EntityFilterHelper.GetEntityFilter<TEntity>();
+					if (filter != null)
+					{
+						builder.Entity<TEntity>().HasQueryFilter(filter);
+					}
+				}
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5040")]
+		public void Issue5040Test([IncludeDataSources(true, ProviderName.SQLiteClassic)] string context)
+		{
+			var ms = new MappingSchema();
+			var fb = new FluentMappingBuilder(ms);
+			Issue5040.ModelBuilderExtensions.ProcessEntity<Issue5040.Account>(fb);
+			fb.Build();
+
+			using var db = GetDataContext(context, o => o.UseMappingSchema(ms));
+			using var t1 = db.CreateLocalTable<Issue5040.Account>();
+			using var t2 = db.CreateLocalTable<Issue5040.Permission>();
+			using var t3 = db.CreateLocalTable<Issue5040.User>();
+
+			t1.ToList();
 		}
 
 		#endregion

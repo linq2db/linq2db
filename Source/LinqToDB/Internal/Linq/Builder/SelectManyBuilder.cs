@@ -9,7 +9,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall("SelectMany")]
 	sealed class SelectManyBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -70,7 +70,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					sequence,
 					collection,
 					defaultValue: null,
-					allowNullField: false,
 					isNullValidationDisabled: false);
 			}
 
@@ -108,7 +107,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					collectionSelectContext,
 					collection,
 					defaultValue: collectionDefaultIfEmptyContext.DefaultValue,
-					allowNullField: joinType is not (JoinType.Right or JoinType.RightApply or JoinType.Full or JoinType.FullApply),
 					isNullValidationDisabled: false);
 			}
 

@@ -42,7 +42,9 @@ namespace LinqToDB.Remote.HttpClient.Client
 		/// <param name="requestUri"></param>
 		/// <param name="optionBuilder"></param>
 		public HttpClientDataContext(Uri baseAddress, string requestUri, Func<DataOptions,DataOptions>? optionBuilder = null)
-			: this(new System.Net.Http.HttpClient { BaseAddress = baseAddress}, requestUri, optionBuilder)
+#pragma warning disable CA2000 // Dispose objects before losing scope
+			: this(new System.Net.Http.HttpClient() { BaseAddress = baseAddress }, requestUri, optionBuilder)
+#pragma warning restore CA2000 // Dispose objects before losing scope
 		{
 		}
 

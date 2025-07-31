@@ -6,7 +6,7 @@ using LinqToDB.SqlQuery;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
-namespace LinqToDB.Internal.Linq.Translation
+namespace LinqToDB.Internal.DataProvider.Translation
 {
 	public class SqlTypesTranslationDefault : IMemberTranslator
 	{
@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.Linq.Translation
 			_registration.RegisterMember(() => Sql.Types.SmallDateTime, ConvertSmallDateTime);
 			_registration.RegisterMember(() => Sql.Types.Date, ConvertDate);
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			_registration.RegisterMember(() => Sql.Types.DateOnly, ConvertDateOnly);
 #endif
 			_registration.RegisterMember(() => Sql.Types.Time, ConvertTime);
@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.Linq.Translation
 			return MakeSqlTypeExpression(translationContext, methodCall, typeof(char), t => t.WithDataType(DataType.Char).WithSystemType(typeof(string)).WithLength(length));
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		protected virtual Expression? ConvertDateOnly(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 			=> MakeSqlTypeExpression(translationContext, memberExpression);
 #endif

@@ -136,7 +136,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestSearchStoredProdecure([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestSearchStoredProcedure([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -161,7 +161,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestSearchStoredProdecureWithAnonymParameter([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestSearchStoredProcedureWithAnonymParameter([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -186,7 +186,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestSearchStoredProdecureAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task TestSearchStoredProcedureAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -211,7 +211,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestSearchStoredProdecureWithTokenAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task TestSearchStoredProcedureWithTokenAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -237,7 +237,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestSearchStoredProdecure2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestSearchStoredProcedure2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -262,7 +262,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestSearchStoredProdecure2Async([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task TestSearchStoredProcedure2Async([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -299,7 +299,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestSearchStoredProdecureWithoutAttributes([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestSearchStoredProcedureWithoutAttributes([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -324,7 +324,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestSearchStoredProdecureWithoutAttributesAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task TestSearchStoredProcedureWithoutAttributesAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{

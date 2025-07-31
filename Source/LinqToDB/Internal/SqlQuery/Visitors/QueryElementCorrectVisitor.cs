@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace LinqToDB.Internal.SqlQuery
+namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	public sealed class QueryElementCorrectVisitor : QueryElementVisitor
 	{

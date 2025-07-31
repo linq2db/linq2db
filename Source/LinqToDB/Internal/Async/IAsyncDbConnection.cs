@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Async
 	/// <item>asynchronous operations, missing from <see cref="DbConnection"/> but provided by data provider implementation.</item>.
 	/// </list>
 	/// </summary>
-	public interface IAsyncDbConnection : IDisposable, IAsyncDisposable
+	interface IAsyncDbConnection : IDisposable, IAsyncDisposable
 	{
 		/// <summary>
 		/// Gets underlying connection instance.

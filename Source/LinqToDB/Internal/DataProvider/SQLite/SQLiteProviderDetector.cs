@@ -9,10 +9,8 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.SQLite
 {
-	sealed class SQLiteProviderDetector : ProviderDetectorBase<SQLiteProvider, SQLiteProviderDetector.Dialect>
+	public class SQLiteProviderDetector : ProviderDetectorBase<SQLiteProvider>
 	{
-		internal enum Dialect { }
-
 		public SQLiteProviderDetector() : base()
 		{
 		}
@@ -62,7 +60,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return null;
 		}
 
-		public override IDataProvider GetDataProvider(ConnectionOptions options, SQLiteProvider provider, Dialect version)
+		public override IDataProvider GetDataProvider(ConnectionOptions options, SQLiteProvider provider, NoDialect version)
 		{
 			if (provider == SQLiteProvider.AutoDetect)
 				provider = DetectProvider();
@@ -82,11 +80,6 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return File.Exists(Path.Combine(dirName ?? ".", SQLiteProviderAdapter.SystemDataSQLiteAssemblyName + ".dll"))
 				? SQLiteProvider.System
 				: SQLiteProvider.Microsoft;
-		}
-
-		public override Dialect? DetectServerVersion(DbConnection connection)
-		{
-			return default(Dialect);
 		}
 
 		protected override DbConnection CreateConnection(SQLiteProvider provider, string connectionString)

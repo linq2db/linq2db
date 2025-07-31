@@ -661,12 +661,7 @@ namespace LinqToDB
 										foreach (var pair
 										         in TypeHelper.EnumTypeRemapping(elementType, argElementType, templateGenericArguments))
 										{
-#if NET8_0_OR_GREATER
 											descriptorMapping.TryAdd(pair.Item1, descriptor);
-#else
-											if (!descriptorMapping.ContainsKey(pair.Item1))
-												descriptorMapping.Add(pair.Item1, descriptor);
-#endif
 										}
 									}
 								}
@@ -751,12 +746,6 @@ namespace LinqToDB
 				result ??= new SqlExtensionParam(TokenName, extension);
 
 				return result;
-			}
-
-			static IEnumerable<Expression> ExtractArray(Expression expression)
-			{
-				var array = (NewArrayExpression) expression;
-				return array.Expressions;
 			}
 
 			public static Expression BuildSqlExpression(

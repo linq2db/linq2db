@@ -16,7 +16,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public class BulkCopyReader<T> : BulkCopyReader, IAsyncDisposable
+	public sealed class BulkCopyReader<T> : BulkCopyReader, IAsyncDisposable
 	{
 		readonly IEnumerator<T>?      _enumerator;
 		readonly IAsyncEnumerator<T>? _asyncEnumerator;
@@ -63,7 +63,7 @@ namespace LinqToDB.Internal.DataProvider
 			}
 		}
 
-#if NET8_0_OR_GREATER
+#if ADO_ASYNC
 #pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		public override ValueTask DisposeAsync()
 #pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
@@ -102,7 +102,7 @@ namespace LinqToDB.Internal.DataProvider
 			_ordinals       = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
 		}
 
-		public class Parameter : DbParameter
+		public sealed class Parameter : DbParameter
 		{
 			public override DbType             DbType                  { get; set; }
 			public override ParameterDirection Direction               { get; set; }

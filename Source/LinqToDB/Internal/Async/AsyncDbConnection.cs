@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.Async
 	/// synchronous implementation of asynchronous methods.
 	/// Providers with async operations support could override its methods with asynchronous implementations.
 	/// </summary>
-	public class AsyncDbConnection : IAsyncDbConnection
+	class AsyncDbConnection : IAsyncDbConnection
 	{
 		protected internal AsyncDbConnection(DbConnection connection)
 		{
@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.Async
 
 		public virtual Task CloseAsync()
 		{
-#if NET8_0_OR_GREATER
+#if ADO_ASYNC
 			var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionCloseAsync)?.AddQueryInfo(DataConnection, Connection, null);
 
 			if (a is null)
@@ -106,8 +106,7 @@ namespace LinqToDB.Internal.Async
 			return AsyncFactory.CreateAndSetDataContext(DataConnection, Connection.BeginTransaction(isolationLevel));
 		}
 
-#if !NET8_0_OR_GREATER
-
+#if !ADO_ASYNC
 		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
 		{
 			return new(BeginTransaction());
@@ -117,7 +116,6 @@ namespace LinqToDB.Internal.Async
 		{
 			return new(BeginTransaction(isolationLevel));
 		}
-
 #else
 		public virtual async ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
 		{
@@ -148,7 +146,9 @@ namespace LinqToDB.Internal.Async
 		public virtual void Dispose()
 		{
 			using var _ = ActivityService.Start(ActivityID.ConnectionDispose)?.AddQueryInfo(DataConnection, Connection, null);
+#pragma warning disable RS0030 // Do not use banned APIs
 			Connection.Dispose();
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
 
 		#endregion
@@ -156,26 +156,18 @@ namespace LinqToDB.Internal.Async
 		#region IAsyncDisposable
 		public virtual ValueTask DisposeAsync()
 		{
-			if (Connection is IAsyncDisposable asyncDisposable)
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionDisposeAsync)?.AddQueryInfo(DataConnection, Connection, null);
+
+			if (a is null)
+				return Connection.DisposeAsync();
+
+			return CallAwaitUsing(a, Connection);
+
+			static async ValueTask CallAwaitUsing(AsyncDisposableWrapper activity, DbConnection connection)
 			{
-				var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionDisposeAsync)?.AddQueryInfo(DataConnection, Connection, null);
-
-				if (a is null)
-					return asyncDisposable.DisposeAsync();
-
-				return CallAwaitUsing(a, asyncDisposable);
-
-				static async ValueTask CallAwaitUsing(AsyncDisposableWrapper activity, IAsyncDisposable disposable)
-				{
-					await using (activity)
-						await disposable.DisposeAsync().ConfigureAwait(false);
-				}
+				await using (activity)
+					await connection.DisposeAsync().ConfigureAwait(false);
 			}
-
-			using var _ = ActivityService.Start(ActivityID.ConnectionDisposeAsync);
-
-			Connection.Dispose();
-			return default;
 		}
 		#endregion
 	}

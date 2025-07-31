@@ -1,5 +1,6 @@
 ﻿using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
@@ -59,7 +60,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
 				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema),
 				_                => statement,
 			};
@@ -68,12 +69,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			statement = base.FinalizeStatement(statement, context, dataOptions, mappingSchema);
-			statement = WrapParameters(statement, context);
+			statement = WrapParameters(statement);
 			return statement;
 		}
 
 		#region Wrap Parameters
-		static SqlStatement WrapParameters(SqlStatement statement, EvaluationContext context)
+		static SqlStatement WrapParameters(SqlStatement statement)
 		{
 			// for some reason Firebird doesn't use parameter type information (not supported?) is some places, so
 			// we need to wrap parameter into CAST() to add type information explicitly
@@ -95,11 +96,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			var visitor = new WrapParametersVisitor(VisitMode.Modify);
 
 			statement = (SqlStatement)visitor.WrapParameters(statement,
-				WrapParametersVisitor.WrapFlags.InSelect         |
-				WrapParametersVisitor.WrapFlags.InUpdateSet      |
-				WrapParametersVisitor.WrapFlags.InInsertOrUpdate |
-				WrapParametersVisitor.WrapFlags.InOutput         |
-				WrapParametersVisitor.WrapFlags.InMerge          |
+				WrapParametersVisitor.WrapFlags.InSelect             |
+				WrapParametersVisitor.WrapFlags.InUpdateSet          |
+				WrapParametersVisitor.WrapFlags.InInsertOrUpdate     |
+				WrapParametersVisitor.WrapFlags.InOutput             |
+				WrapParametersVisitor.WrapFlags.InMerge              |
+				WrapParametersVisitor.WrapFlags.InFunctionParameters |
 				WrapParametersVisitor.WrapFlags.InBinary);
 
 			return statement;

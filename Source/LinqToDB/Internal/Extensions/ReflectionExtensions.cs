@@ -372,7 +372,7 @@ namespace LinqToDB.Internal.Extensions
 				foreach (var prop in concreteType.GetProperties(
 							 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
 				{
-					if (prop.GetMethod == targetGet || prop.SetMethod == targetSet)
+					if ((prop.GetMethod == targetGet && targetGet != null) || (prop.SetMethod == targetSet && targetSet != null))
 						return prop;
 				}
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Threading;
 
 using LinqToDB.DataProvider.Access;
 
@@ -9,7 +10,7 @@ using OleDbType = LinqToDB.Internal.DataProvider.OleDbProviderAdapter.OleDbType;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	public class AccessProviderAdapter : IDynamicProviderAdapter
+	public sealed class AccessProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _oledbSyncRoot = new ();
 		private static readonly Lock _odbcSyncRoot  = new ();

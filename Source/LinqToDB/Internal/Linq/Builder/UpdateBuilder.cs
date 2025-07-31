@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		#region Update
 
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable();
 
 		static void ExtractSequence(BuildInfo buildInfo, ref IBuildContext sequence, out UpdateContext updateContext)
@@ -116,10 +116,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (setterExpr is LambdaExpression && methodCall.Arguments.Count == 3 && updateType == UpdateTypeEnum.Update)
 					{
 						sequence = builder.BuildWhere(
-							buildInfo.Parent,
 							sequence,
 							condition: methodCall.Arguments[1].UnwrapLambda(),
-							checkForSubQuery: false,
 							enforceHaving: false,
 							out var error
 						);
@@ -544,7 +542,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		internal static void ParseSet(
 			ContextRefExpression        targetRef,
-			ContextRefExpression        sourceRef,
 			Expression                  fieldExpression,
 			Expression                  valueExpression,
 			List<SetExpressionEnvelope> envelopes,
@@ -718,7 +715,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			static Expression BuildDefaultOutputExpression(ExpressionBuilder builder, Type outputType, IBuildContext querySequence, IBuildContext insertedContext, IBuildContext deletedContext)
+			static Expression BuildDefaultOutputExpression(Type outputType, IBuildContext insertedContext, IBuildContext deletedContext)
 			{
 				var returnType   = typeof(UpdateOutput<>).MakeGenericType(outputType);
 
@@ -759,7 +756,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						var deletedContext  = new AnchorContext(Parent, insertedDeletedRoot, SqlAnchor.AnchorKindEnum.Deleted);
 
 						var outputBody = OutputExpression == null
-							? BuildDefaultOutputExpression(Builder, TargetTable.ObjectType, QuerySequence, insertedContext, deletedContext)
+							? BuildDefaultOutputExpression(TargetTable.ObjectType, insertedContext, deletedContext)
 							: SequenceHelper.PrepareBody(OutputExpression, QuerySequence, deletedContext, insertedContext);
 
 						var selectContext     = new SelectContext(Parent, outputBody, insertedContext, false);
@@ -806,7 +803,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		[BuildsMethodCall(nameof(LinqExtensions.Set))]
 		internal sealed class Set : MethodCallBuilder
 		{
-			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			public static bool CanBuildMethod(MethodCallExpression call)
 				=> call.IsQueryable();
 
 			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder,

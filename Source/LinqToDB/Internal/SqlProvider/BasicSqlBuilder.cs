@@ -259,7 +259,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
 
-			if (!SqlProviderFlags.GetIsSkipSupportedFlag(takeExpr, skipExpr)
+			if (!SqlProviderFlags.GetIsSkipSupportedFlag(takeExpr)
 				&& skipExpr != null)
 				throw new LinqToDBException(ErrorHelper.Error_Skip_in_Subquery);
 
@@ -1574,11 +1574,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				else
 				{
-#if NET8_0_OR_GREATER
-					StringBuilder.Append(field.StringBuilder);
-#else
-					StringBuilder.Append(field.StringBuilder.ToString());
-#endif
+					StringBuilder.AppendBuilder(field.StringBuilder);
 				}
 			}
 
@@ -2340,7 +2336,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual string TakeTies     => "WITH TIES";
 
 		protected bool NeedSkip(ISqlExpression? takeExpression, ISqlExpression? skipExpression)
-			=> skipExpression != null && SqlProviderFlags.GetIsSkipSupportedFlag(takeExpression, skipExpression);
+			=> skipExpression != null && SqlProviderFlags.GetIsSkipSupportedFlag(takeExpression);
 
 		protected bool NeedTake(ISqlExpression? takeExpression)
 			=> takeExpression != null;

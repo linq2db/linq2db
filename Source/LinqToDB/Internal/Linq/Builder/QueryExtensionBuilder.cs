@@ -14,13 +14,13 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsExpression(ExpressionType.Call)]
 	sealed class QueryExtensionBuilder : MethodCallBuilder
 	{
-		public static bool CanBuild(Expression expr, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuild(Expression expr, ExpressionBuilder builder)
 			=> Sql.QueryExtensionAttribute.GetExtensionAttributes(expr, builder.MappingSchema).Length > 0;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var methodParams = methodCall.Method.GetParameters();
-			var list         = new List<SqlQueryExtensionData>
+			var list         = new List<Sql.SqlQueryExtensionData>
 			{
 				new(".MethodName", methodCall, methodParams[0])
 				{

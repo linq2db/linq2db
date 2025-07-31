@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 using LinqToDB.SqlQuery;
 
-namespace LinqToDB.Internal.SqlQuery
+namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	// TODO: REFACTORING: it probably makes sense to move Visit calls from element visit switch to upper level to:
 	// - reduce function/code size
@@ -2955,12 +2955,7 @@ namespace LinqToDB.Internal.SqlQuery
 					{
 						foreach(var m in current)
 						{
-#if NET8_0_OR_GREATER
 							modified.TryAdd(m.Key, m.Value);
-#else
-							if (!modified.ContainsKey(m.Key))
-								modified.Add(m.Key, m.Value);
-#endif
 						}
 
 						current = modified;

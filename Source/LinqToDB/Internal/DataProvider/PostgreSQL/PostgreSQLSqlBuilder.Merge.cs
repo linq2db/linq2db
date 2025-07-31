@@ -15,6 +15,17 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,
 			IReadOnlyList<List<ISqlExpression>>                                      rows, int row, int column)
 		{
+			if (row == 0)
+			{
+				if (rows[0][column] is SqlValue
+					{
+						Value: long or float or double or decimal
+					})
+				{
+					return true;
+				}
+			}
+
 			return row < 0
 				|| (row == 0
 					&& (

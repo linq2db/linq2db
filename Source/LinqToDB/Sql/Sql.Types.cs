@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable IDE0060 // Remove unused parameter
+using System;
 
 using LinqToDB.Mapping;
 
@@ -24,7 +25,7 @@ namespace LinqToDB
 			public static DateTime DateTime2 => DateTime.Now;
 			public static DateTime SmallDateTime => DateTime.Now;
 			public static DateTime Date => DateTime.Now;
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			public static DateOnly DateOnly => DateOnly.FromDateTime(DateTime.Now);
 #endif
 			public static DateTime Time => DateTime.Now;

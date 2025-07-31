@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall("OfType")]
 	sealed class OfTypeBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -72,7 +72,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var table          = new SqlTable(mapper);
 			var discriminators = mapper.InheritanceMapping;
 
-			return builder.MakeIsPredicate((context, table), context, discriminators, toType,
+			return builder.MakeIsPredicate((context, table), discriminators, toType,
 				static (context, name) =>
 				{
 					var field  = context.table.FindFieldByMemberName(name) ?? throw new LinqToDBException($"Field {name} not found in table {context.table}");

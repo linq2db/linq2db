@@ -10,7 +10,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlProvider
 {
-	public class OptimizationContext
+	public sealed class OptimizationContext
 	{
 		private IQueryParametersNormalizer?                      _parametersNormalizer;
 		private Dictionary<SqlParameter, SqlParameter>?          _parametersMap;

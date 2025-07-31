@@ -10,10 +10,10 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall("Join", CanBuildName = nameof(CanBuildJoin))]
 	sealed class AllJoinsBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildJoin(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildJoin(MethodCallExpression call)
 			=> call.IsQueryable() && call.Arguments.Count == 3;
 
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable() && call.Arguments.Count == 2;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -62,8 +62,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var condition = (LambdaExpression)methodCall.Arguments[conditionIndex].Unwrap();
 
-				result = builder.BuildWhere(result, result,
-					condition : condition, checkForSubQuery : false, enforceHaving : false, out var error);
+				result = builder.BuildWhere(result, condition: condition, enforceHaving: false, out var error);
 
 				if (result == null)
 					return BuildSequenceResult.Error(error ?? methodCall);
@@ -83,7 +82,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					sequence: result,
 					nullabilitySequence: result,
 					defaultValue: null,
-					allowNullField: false,
 					isNullValidationDisabled: false);
 			}
 

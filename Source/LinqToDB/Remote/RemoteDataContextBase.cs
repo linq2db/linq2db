@@ -408,20 +408,10 @@ namespace LinqToDB.Remote
 				{
 					var key = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options);
 
-#if NET462 || NETSTANDARD2_0
-					_createSqlBuilder = _sqlBuilders.GetOrAdd(
-						key,
-						key =>
-					{
-						var mappingSchema = MappingSchema;
-						var sqlOptimizer  = GetSqlOptimizer(Options);
-#else
 					_createSqlBuilder = _sqlBuilders.GetOrAdd(
 						key,
 						static (key, args) =>
 					{
-						var (mappingSchema, sqlOptimizer) = args;
-#endif
 						return Expression.Lambda<Func<ISqlBuilder>>(
 							Expression.New(
 								key.Item1.GetConstructor(new[]
@@ -435,18 +425,14 @@ namespace LinqToDB.Remote
 								new Expression[]
 								{
 									Expression.Constant(null, typeof(IDataProvider)),
-									Expression.Constant(mappingSchema, typeof(MappingSchema)),
+									Expression.Constant(args.mappingSchema, typeof(MappingSchema)),
 									Expression.Constant(key.Item5),
-									Expression.Constant(sqlOptimizer),
+									Expression.Constant(args.sqlOptimizer),
 									Expression.Constant(key.Item4)
 								}))
 							.CompileExpression();
 					}
-#if NET462 || NETSTANDARD2_0
-					);
-#else
-					, (MappingSchema, GetSqlOptimizer(Options)));
-#endif
+					, (mappingSchema: MappingSchema, sqlOptimizer: GetSqlOptimizer(Options)));
 				}
 
 				return _createSqlBuilder;

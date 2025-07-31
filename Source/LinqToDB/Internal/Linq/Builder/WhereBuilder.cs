@@ -7,7 +7,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall("Where", "Having")]
 	sealed class WhereBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -29,9 +29,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				sequence = new SubQueryContext(sequence);
 			}
 
-			var result = builder.BuildWhere(
-				buildInfo.Parent, sequence, condition: condition,
-				checkForSubQuery: !isHaving, enforceHaving: isHaving, out var error);
+			var result = builder.BuildWhere(sequence, condition: condition, enforceHaving: isHaving, out var error);
 
 			if (result == null)
 				return BuildSequenceResult.Error(error ?? methodCall);

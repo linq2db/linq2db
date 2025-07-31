@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -504,7 +505,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return false;
 		}
 
-		public static bool IsTransitivePredicate(SqlExpression sqlExpression)
+		static bool IsTransitivePredicate(SqlExpression sqlExpression)
 		{
 			if (sqlExpression is { Parameters: [var p] } && sqlExpression.Expr.Trim() == "{0}")
 			{
@@ -683,7 +684,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// Function makes all needed manipulations for that
 		/// </summary>
 		/// <param name="whereClause"></param>
-		public static SqlSearchCondition EnsureConjunction(this SqlHavingClause whereClause)
+		static SqlSearchCondition EnsureConjunction(this SqlHavingClause whereClause)
 		{
 			if (whereClause.SearchCondition.IsOr)
 			{
@@ -692,22 +693,6 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 
 			return whereClause.SearchCondition;
-		}
-
-		/// <summary>
-		/// Ensures that expression is not A OR B but (A OR B)
-		/// Function makes all needed manipulations for that
-		/// </summary>
-		/// <param name="joinedTable"></param>
-		public static SqlSearchCondition EnsureConjunction(this SqlJoinedTable joinedTable)
-		{
-			if (joinedTable.Condition.IsOr)
-			{
-				var old = joinedTable.Condition;
-				joinedTable.Condition = new SqlSearchCondition(false, canBeUnknown: null, old);
-			}
-
-			return joinedTable.Condition;
 		}
 
 		public static bool IsEqualTables([NotNullWhen(true)] SqlTable? table1, [NotNullWhen(true)] SqlTable? table2, bool withExtensions = true)
@@ -859,100 +844,6 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
-		/// Detects when we can remove order
-		/// </summary>
-		/// <param name="selectQuery"></param>
-		/// <param name="flags"></param>
-		/// <param name="information"></param>
-		/// <returns></returns>
-		public static bool CanRemoveOrderBy(SelectQuery selectQuery, SqlProviderFlags flags, QueryInformation information)
-		{
-			if (selectQuery == null) throw new ArgumentNullException(nameof(selectQuery));
-
-			if (selectQuery.OrderBy.IsEmpty)
-				return false;
-
-			var current = selectQuery;
-			do
-			{
-				if (current.Select.SkipValue != null || current.Select.TakeValue != null)
-				{
-					return false;
-				}
-
-				if (current != selectQuery)
-				{
-					if (!current.OrderBy.IsEmpty || current.Select.IsDistinct)
-						return true;
-				}
-
-				var info = information.GetHierarchyInfo(current);
-				if (info == null)
-					break;
-
-				switch (info.HierarchyType)
-				{
-					case QueryInformation.HierarchyType.From:
-						if (!flags.IsSubQueryOrderBySupported)
-							return true;
-						current = info.MasterQuery;
-						break;
-					case QueryInformation.HierarchyType.Join:
-						return true;
-					case QueryInformation.HierarchyType.SetOperator:
-						// currently removing ordering for all UNION
-						return true;
-					case QueryInformation.HierarchyType.InnerQuery:
-						return true;
-					default:
-						throw new InvalidOperationException($"Unexpected hierarchy type: {info.HierarchyType}");
-				}
-
-			} while (current != null);
-
-			return false;
-		}
-
-		/// <summary>
-		/// Detects when we can remove order
-		/// </summary>
-		/// <param name="selectQuery"></param>
-		/// <param name="information"></param>
-		/// <returns></returns>
-		public static bool TryRemoveDistinct(SelectQuery selectQuery, QueryInformation information)
-		{
-			if (selectQuery == null) throw new ArgumentNullException(nameof(selectQuery));
-
-			if (!selectQuery.Select.IsDistinct)
-				return false;
-
-			var info = information.GetHierarchyInfo(selectQuery);
-			switch (info?.HierarchyType)
-			{
-				case QueryInformation.HierarchyType.InnerQuery:
-				{
-					if (info.ParentElement is SqlPredicate.Exists)
-					{
-						// ORDER BY not needed for EXISTS function, even when Take and Skip specified
-						selectQuery.Select.OrderBy.Items.Clear();
-
-						if (selectQuery.Select.SkipValue == null && selectQuery.Select.TakeValue == null)
-						{
-							// we can safely remove DISTINCT
-							selectQuery.Select.IsDistinct = false;
-							selectQuery.Select.Columns.Clear();
-							return true;
-						}
-					}
-				}
-
-				break;
-			}
-
-			return false;
-		}
-
-		/// <summary>
 		/// Unwraps SqlColumn and returns underlying expression.
 		/// </summary>
 		/// <param name="expression"></param>
@@ -1078,65 +969,6 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
-		/// Returns correct column or field according to nesting.
-		/// </summary>
-		/// <param name="selectQuery">Analyzed query.</param>
-		/// <param name="forExpression">Expression that has to be enveloped by column.</param>
-		/// <param name="inProjection">If 'true', function ensures that column is created. If 'false' it may return Field if it fits to nesting level.</param>
-		/// <returns>Returns Column of Field according to its nesting level. May return null if expression is not valid for <paramref name="selectQuery"/></returns>
-		public static ISqlExpression? NeedColumnForExpression(SelectQuery selectQuery, ISqlExpression forExpression, bool inProjection)
-		{
-			var field = GetUnderlyingField(forExpression);
-
-			SqlColumn? column = null;
-
-			if (inProjection)
-			{
-				foreach (var c in selectQuery.Select.Columns)
-				{
-					if (c.Expression.Equals(forExpression) || (field != null && field.Equals(GetUnderlyingField(c.Expression))))
-					{
-						column = c;
-						break;
-					}
-				}
-			}
-
-			if (column != null)
-				return column;
-
-			var tableToCompare = field?.Table;
-
-			var tableSources = EnumerateLevelSources(selectQuery).OfType<SqlTableSource>().Select(static s => s.Source).ToArray();
-
-			// enumerate tables first
-
-			foreach (var table in tableSources.OfType<SqlTable>())
-			{
-				if (tableToCompare != null && tableToCompare == table)
-				{
-					if (inProjection)
-						return selectQuery.Select.AddNewColumn(field!);
-					return field;
-				}
-			}
-
-			foreach (var subQuery in tableSources.OfType<SelectQuery>())
-			{
-				column = NeedColumnForExpression(subQuery, forExpression, true) as SqlColumn;
-				if (column != null && inProjection)
-				{
-					column = selectQuery.Select.AddNewColumn(column);
-				}
-
-				if (column != null)
-					break;
-			}
-
-			return column;
-		}
-
-		/// <summary>
 		/// Helper function for moving Ordering up in select tree.
 		/// </summary>
 		/// <param name="queries">Array of queries</param>
@@ -1167,7 +999,7 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_REGEX_GENERATORS
 		[GeneratedRegex(@"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)")]
 		private static partial Regex ParamsRegex();
 #else
@@ -1397,7 +1229,7 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			var found = false;
 
-			expr.VisitParentFirst((e) =>
+			expr.VisitParentFirst(e =>
 			{
 				if (found)
 					return false;
@@ -1521,32 +1353,6 @@ namespace LinqToDB.Internal.SqlQuery
 				return false;
 
 			return true;
-		}
-
-		public static SelectQuery GetInnerQuery(this SelectQuery selectQuery)
-		{
-			if (selectQuery is 
-				{
-					IsSimple: true,
-					From.Tables: [{ Source: SelectQuery sub }]
-				})
-			{
-				var inner = sub.GetInnerQuery();
-				if (inner.From.Tables.Count == 0)
-				{
-					return inner;
-				}
-			}
-
-			return selectQuery;
-		}
-
-		public static void OptimizeSelectQuery(this SelectQuery selectQuery, IQueryElement root, SqlProviderFlags providerFlags, DataOptions dataOptions, MappingSchema mappingSchema)
-		{
-			var visitor = SelectOptimizer.Allocate();
-
-			var evaluationContext = new EvaluationContext(null);
-			visitor.Value.Optimize(root, selectQuery, providerFlags, true, dataOptions, mappingSchema, evaluationContext);
 		}
 
 		[return: NotNullIfNotNull(nameof(sqlExpression))]
@@ -1697,25 +1503,6 @@ namespace LinqToDB.Internal.SqlQuery
 			return expr is ISqlPredicate or SqlParameterizedExpressionBase { IsPredicate: true };
 		}
 
-		public static ISqlExpression UnwrapCastAndNullability(ISqlExpression expr)
-		{
-			do
-			{
-				if (expr is SqlNullabilityExpression nullability)
-				{
-					expr = nullability.SqlExpression;
-				}
-				else if (expr is SqlCastExpression sqlCast)
-				{
-					expr = sqlCast.Expression;
-				}
-				else
-					break;
-			} while (true);
-
-			return expr;
-		}
-
 		public static ISqlExpression UnwrapCast(ISqlExpression expr)
 		{
 			while (expr is SqlCastExpression { Expression: var sqlCast })
@@ -1733,11 +1520,6 @@ namespace LinqToDB.Internal.SqlQuery
 				return true;
 
 			return false;
-		}
-
-		public static bool HasTable(IQueryElement element, int sourceId)
-		{
-			return null != element.Find(e => e is SqlTableSource ts && ts.SourceID == sourceId);
 		}
 
 		public static bool HasElement(this IQueryElement root, IQueryElement element)
@@ -1807,14 +1589,7 @@ namespace LinqToDB.Internal.SqlQuery
 			});
 		}
 
-		public static void CollectParameters(IQueryElement root, ICollection<SqlParameter> parameters)
-		{
-			root.VisitAll(x =>
-			{
-				if (x is SqlParameter { AccessorId: not null } p)
-					parameters.Add(p);
-			});
-		}
+		
 
 		public static void CollectParametersAndValues(IQueryElement root, ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 		{

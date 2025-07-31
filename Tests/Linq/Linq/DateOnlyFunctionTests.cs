@@ -1,4 +1,4 @@
-﻿#if NET8_0_OR_GREATER
+﻿#if SUPPORTS_DATEONLY
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;

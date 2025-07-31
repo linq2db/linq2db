@@ -13,7 +13,7 @@ using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {
-	sealed class InformixBulkCopy : BasicBulkCopy
+	public class InformixBulkCopy : BasicBulkCopy
 	{
 		protected override int                  MaxSqlLength  => 32767;
 		private readonly   InformixDataProvider _provider;
@@ -164,10 +164,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 					};
 				}
 
-				if (options.BulkCopyTimeout.HasValue)
-					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-				else if (LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
-					bc.BulkCopyTimeout = connection.ConnectionTimeout;
+				if (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+					bc.BulkCopyTimeout = options.BulkCopyTimeout ?? dataConnection.CommandTimeout;
 
 				var tableName = GetTableName(sb, options, table);
 

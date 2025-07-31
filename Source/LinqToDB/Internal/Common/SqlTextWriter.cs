@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LinqToDB.Internal.Common
 {
-	public class SqlTextWriter
+	public sealed class SqlTextWriter
 	{
 		public readonly struct IndentScope : IDisposable
 		{
@@ -198,11 +198,7 @@ namespace LinqToDB.Internal.Common
 		public SqlTextWriter Append(StringBuilder? value)
 		{
 			if (value != null)
-#if NET8_0_OR_GREATER
-				StringBuilder.Append(value);
-#else
-				Append(value.ToString());
-#endif
+				StringBuilder.AppendBuilder(value);
 			return this;
 		}
 

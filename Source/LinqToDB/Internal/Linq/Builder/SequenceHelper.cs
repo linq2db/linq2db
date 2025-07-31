@@ -92,11 +92,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			return null != expression.Find(1, static (_, e) => e is ContextRefExpression);
 		}
 
-		public static Expression CorrectTrackingPath(ExpressionBuilder builder, Expression expression, Expression toPath)
-		{
-			return CorrectTrackingPath(builder, expression, null, toPath);
-		}
-
 		public static Expression CorrectTrackingPath(Expression expression, IBuildContext from, IBuildContext to)
 		{
 			var result = expression.Transform((from, to), (ctx, e) =>
@@ -131,7 +126,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		[return: NotNullIfNotNull(nameof(expression))]
-		public static Expression? CorrectTrackingPath(ExpressionBuilder builder, Expression? expression, Expression? except, Expression toPath)
+		public static Expression? CorrectTrackingPath(ExpressionBuilder builder, Expression? expression, Expression toPath)
 		{
 			if (expression == null)
 				return null;

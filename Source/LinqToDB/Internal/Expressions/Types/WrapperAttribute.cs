@@ -3,7 +3,7 @@
 namespace LinqToDB.Internal.Expressions.Types
 {
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Enum | AttributeTargets.Delegate)]
-	public class WrapperAttribute : Attribute
+	public sealed class WrapperAttribute : Attribute
 	{
 		public WrapperAttribute() { }
 

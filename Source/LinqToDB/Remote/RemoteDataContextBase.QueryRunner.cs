@@ -5,10 +5,6 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if !NET8_0_OR_GREATER
-using System.Text;
-#endif
-
 using LinqToDB.Data;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.Common;
@@ -85,7 +81,7 @@ namespace LinqToDB.Remote
 						isAlreadyOptimizedAndConverted : true,
 						parametersNormalizerFactory : static () => NoopQueryParametersNormalizer.Instance);
 
-					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, DataContext.Options, optimizationContext);
+					var statement = query.Statement.PrepareStatementForSql(optimizationContext);
 
 					sqlBuilder.BuildSql(i, statement, sqlStringBuilder.Value, optimizationContext, aliases, null);
 
@@ -259,12 +255,7 @@ namespace LinqToDB.Remote
 
 				public ValueTask DisposeAsync()
 				{
-#if NET8_0_OR_GREATER
 					return DataReader.DisposeAsync();
-#else
-					DataReader.Dispose();
-					return default;
-#endif
 				}
 			}
 

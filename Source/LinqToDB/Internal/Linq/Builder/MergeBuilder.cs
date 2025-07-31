@@ -26,7 +26,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			MergeWithOutputIntoSource
 		};
 
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsSameGenericMethod(_supportedMethods);
 
 		enum MergeKind
@@ -53,7 +53,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (kind != MergeKind.Merge)
 			{
-				var actionField   = SqlField.FakeField(new DbDataType(typeof(string)), PseudoFunctions.MERGE_ACTION, false);
+				var actionField   = SqlField.FakeField(new DbDataType(typeof(string)), PseudoFunctions.MERGE_ACTION);
 
 				var (deletedContext, insertedContext) = UpdateBuilder.CreateDeletedInsertedContexts(builder, mergeContext.TargetContext, out var outputContext);
 
