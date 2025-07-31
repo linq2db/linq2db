@@ -21,7 +21,7 @@ using Microsoft.SqlServer.Types;
 
 namespace ModelInterfaceDataContext
 {
-#if !NET462
+#if !NETFRAMEWORK
 
 	public partial interface ITestDataDB : LinqToDB.IDataContext
 	{

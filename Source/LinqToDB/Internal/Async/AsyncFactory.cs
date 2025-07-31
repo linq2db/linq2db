@@ -19,7 +19,7 @@ namespace LinqToDB.Internal.Async
 	/// <summary>
 	/// Provides factory methods to create async wrappers for <see cref="DbConnection"/> and <see cref="DbTransaction"/> instances.
 	/// </summary>
-	public static class AsyncFactory
+	static class AsyncFactory
 	{
 		private static readonly Type?[] _noTokenParams         = [null];
 

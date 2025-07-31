@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Async
 	/// Basic <see cref="IAsyncDbTransaction"/> implementation with fallback to synchronous operations if corresponding functionality
 	/// missing from <see cref="DbTransaction"/>.
 	/// </summary>
-	public class AsyncDbTransaction : IAsyncDbTransaction
+	class AsyncDbTransaction : IAsyncDbTransaction
 	{
 		protected internal AsyncDbTransaction(DbTransaction transaction)
 		{
@@ -39,7 +39,7 @@ namespace LinqToDB.Internal.Async
 
 		public virtual Task CommitAsync(CancellationToken cancellationToken)
 		{
-#if NET8_0_OR_GREATER
+#if ADO_ASYNC
 			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionCommitAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 
 			if (a is null)
@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.Async
 
 		public virtual Task RollbackAsync(CancellationToken cancellationToken)
 		{
-#if NET8_0_OR_GREATER
+#if ADO_ASYNC
 			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionRollbackAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 
 			if (a is null)
@@ -96,26 +96,18 @@ namespace LinqToDB.Internal.Async
 		#region IAsyncDisposable
 		public virtual ValueTask DisposeAsync()
 		{
-			if (Transaction is IAsyncDisposable asyncDisposable)
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionDisposeAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
+
+			if (a is null)
+				return Transaction.DisposeAsync();
+
+			return CallAwaitUsing(a, Transaction);
+
+			static async ValueTask CallAwaitUsing(AsyncDisposableWrapper activity, DbTransaction transaction)
 			{
-				var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionDisposeAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
-
-				if (a is null)
-					return asyncDisposable.DisposeAsync();
-
-				return CallAwaitUsing(a, asyncDisposable);
-
-				static async ValueTask CallAwaitUsing(AsyncDisposableWrapper activity, IAsyncDisposable disposable)
-				{
-					await using (activity)
-						await disposable.DisposeAsync().ConfigureAwait(false);
-				}
+				await using (activity)
+					await transaction.DisposeAsync().ConfigureAwait(false);
 			}
-
-			using var _ = ActivityService.Start(ActivityID.TransactionDisposeAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
-
-			Transaction.Dispose();
-			return default;
 		}
 		#endregion
 	}

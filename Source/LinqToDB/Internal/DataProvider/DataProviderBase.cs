@@ -156,16 +156,18 @@ namespace LinqToDB.Internal.DataProvider
 		public virtual void DisposeCommand(DbCommand command)
 		{
 			ClearCommandParameters(command);
+#pragma warning disable RS0030 // Do not use banned APIs
 			command.Dispose();
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
 
-#if NET8_0_OR_GREATER
 		public virtual ValueTask DisposeCommandAsync(DbCommand command)
 		{
 			ClearCommandParameters(command);
+#pragma warning disable RS0030 // Do not use banned APIs
 			return command.DisposeAsync();
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
-#endif
 
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -267,27 +269,6 @@ namespace LinqToDB.Internal.DataProvider
 
 			typeName = NormalizeTypeName(typeName);
 
-#if DEBUG1
-			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName          Expression");
-			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
-			Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}",
-				toType       == null ? "(null)" : toType.Name,
-				providerType == null ? "(null)" : providerType.Name,
-				fieldType.Name,
-				typeName ?? "(null)");
-			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
-
-			foreach (var ex in ReaderExpressions)
-			{
-				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21} {4}",
-					ex.Key.ToType?.Name,
-					ex.Key.ProviderFieldType?.Name,
-					ex.Key.FieldType?.Name,
-					ex.Key.DataTypeName,
-					ex.Value);
-			}
-#endif
-
 			var dataReaderType = readerExpression.Type;
 
 			if (FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out var expr) ||
@@ -326,20 +307,8 @@ namespace LinqToDB.Internal.DataProvider
 
 		protected bool FindExpression(ReaderInfo info, [NotNullWhen(true)] out Expression? expr)
 		{
-#if DEBUG1
-				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}"
-					.Args(
-						info.ToType            == null ? null : info.ToType.Name,
-						info.ProviderFieldType == null ? null : info.ProviderFieldType.Name,
-						info.FieldType         == null ? null : info.FieldType.Name,
-						info.DataTypeName));
-#endif
-
 			if (ReaderExpressions.TryGetValue(info, out expr))
 			{
-#if DEBUG1
-				Debug.WriteLine("ReaderExpression found: {0}".Args(expr));
-#endif
 				return true;
 			}
 

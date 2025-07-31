@@ -14,7 +14,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
-	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder<OracleOptions>
+	public abstract partial class OracleSqlBuilderBase : BasicSqlBuilder<OracleOptions>
 	{
 		public override bool CteFirst => false;
 

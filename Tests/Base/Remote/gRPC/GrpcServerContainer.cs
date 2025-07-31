@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Security.Authentication;
+using System.Threading;
 
 using LinqToDB;
 using LinqToDB.Data;

@@ -5,7 +5,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
-	abstract partial class DB2SqlBuilderBase
+	public abstract partial class DB2SqlBuilderBase
 	{
 		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,
 			IReadOnlyList<List<ISqlExpression>>                                      rows, int row, int column)

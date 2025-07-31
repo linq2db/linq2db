@@ -17,7 +17,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
-	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
+	public abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
 	{
 		public override bool CteFirst => false;
 
@@ -434,10 +434,11 @@ END");
 				}
 				else if (paramValue.ProviderValue is decimal d)
 				{
-					if (dbDataType.Precision == null)
-						dbDataType = dbDataType.WithPrecision(DecimalHelper.GetPrecision(d));
-					if (dbDataType.Scale == null)
-						dbDataType = dbDataType.WithScale(DecimalHelper.GetScale(d));
+					var precision = DecimalHelper.GetPrecision(d);
+					var scale = DecimalHelper.GetScale(d);
+					if (precision == 0 && scale == 0)
+						precision = 1;
+					dbDataType = dbDataType.WithPrecision(precision).WithScale(scale);
 				}
 
 				if (dbDataType.Length > 32672)

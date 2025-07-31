@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Threading;
 
 using LinqToDB.Common;
 using LinqToDB.DataProvider.Informix;
@@ -20,7 +22,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 	// - IDS Provider (IBM.Data.DB2): netfx and core (including linux and macos)
 	// More details here: https://www.ibm.com/support/knowledgecenter/en/SSGU8G_14.1.0/com.ibm.cliapinode.doc/netdif.htm
 	// actulally IDS provider creates issue for us by deprecating IFxTimeSpan type
-	public class InformixProviderAdapter : IDynamicProviderAdapter
+	public sealed class InformixProviderAdapter : IDynamicProviderAdapter
 	{
 		public const string IfxAssemblyName        = "IBM.Data.Informix";
 		public const string IfxClientNamespace     = "IBM.Data.Informix";
@@ -208,7 +210,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		private static InformixProviderAdapter CreateIfxAdapter()
 		{
-			var assembly = Internal.Common.Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
+			var assembly = Common.Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {IfxAssemblyName}");
 
@@ -399,6 +401,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		[Wrapper]
 		internal sealed class IfxBulkCopy : TypeWrapper, IDisposable
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
@@ -424,6 +427,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				PropertySetter((IfxBulkCopy this_) => this_.ColumnMappings),
 			};
 
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static string[] Events { get; }
 				= new[]
 			{
@@ -476,6 +480,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		[Wrapper]
 		public class IfxRowsCopiedEventArgs : TypeWrapper
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{
@@ -506,6 +511,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		[Wrapper]
 		public class IfxBulkCopyColumnMappingCollection : TypeWrapper
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
 			{

@@ -45,10 +45,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				table = SequenceHelper.GetTableOrCteContext(sequence);
 
-				if (table == null)
-					return BuildSequenceResult.Error(methodCall);
+				var loadWith = methodCall.Arguments[1].EvaluateExpression<LoadWithEntity>();
 
-				var loadWith     = methodCall.Arguments[1].EvaluateExpression<LoadWithEntity>();
+				if (table == null)
+				{
+					if (loadWith?.MembersToLoad?.Count > 0)
+						return BuildSequenceResult.Error(methodCall);
+
+					return buildResult;
+				}
 
 				table.LoadWithRoot = loadWith!;
 				lastLoadWith       = loadWith!;
@@ -327,6 +332,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				else
 				{
+					// Only first member's filter expression and function are used.
+					if (found.FilterExpression == null && found.FilterFunc == null)
+					{
+						found.FilterExpression = member.FilterExpression;
+						found.FilterFunc       = member.FilterFunc;
+					}
+
 					member = found;
 				}
 

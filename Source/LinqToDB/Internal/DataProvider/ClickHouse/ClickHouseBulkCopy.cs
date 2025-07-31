@@ -15,7 +15,7 @@ using LinqToDB.Metrics;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
-	sealed class ClickHouseBulkCopy : BasicBulkCopy
+	public class ClickHouseBulkCopy : BasicBulkCopy
 	{
 		private readonly ClickHouseDataProvider _provider;
 
@@ -579,11 +579,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				// actually currently DisposeAsync is not implemented in Client provider and we can call Dispose with same effect
 				if (disposeConnection)
 				{
-#if NET8_0_OR_GREATER
 					await connection.DisposeAsync().ConfigureAwait(false);
-#else
-					connection.Dispose();
-#endif
 				}
 			}
 

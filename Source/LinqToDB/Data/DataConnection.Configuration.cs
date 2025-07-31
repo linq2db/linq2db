@@ -755,7 +755,7 @@ namespace LinqToDB.Data
 #pragma warning restore CS0618 // Type or member is obsolete
 			}
 
-			public static Action? Reapply(DataConnection dataConnection, RetryPolicyOptions options, RetryPolicyOptions? previousOptions)
+			public static Action? Reapply(DataConnection dataConnection, RetryPolicyOptions options)
 			{
 				var retryPolicy = dataConnection.RetryPolicy;
 
@@ -836,7 +836,7 @@ namespace LinqToDB.Data
 #pragma warning restore CS0618 // Type or member is obsolete
 			}
 
-			public static Action Reapply(DataConnection dataConnection, QueryTraceOptions options, QueryTraceOptions? previousOptions)
+			public static Action Reapply(DataConnection dataConnection, QueryTraceOptions options)
 			{
 				var onTraceConnection        = dataConnection.OnTraceConnection;
 				var writeTraceLineConnection = dataConnection.WriteTraceLineConnection;

@@ -12,7 +12,7 @@
 
 	LoadSqlServerMetadata(GetConnectionString("SqlServer.2019"));
 
-	DataContextObject.Conditional = "!NET462";
+	DataContextObject.Conditional = "!NETFRAMEWORK";
 
 	GenerateModel();
 #>

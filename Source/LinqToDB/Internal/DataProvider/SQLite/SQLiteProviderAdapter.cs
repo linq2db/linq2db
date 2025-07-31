@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Data.Common;
+using System.Threading;
 
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Internal.DataProvider.SQLite
 {
-	public class SQLiteProviderAdapter : IDynamicProviderAdapter
+	public sealed class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _systemSyncRoot = new ();
 		private static readonly Lock _msSyncRoot     = new ();
@@ -62,7 +63,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		private static SQLiteProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string prefix)
 		{
-			var assembly = Internal.Common.Tools.TryLoadAssembly(assemblyName, null);
+			var assembly = Common.Tools.TryLoadAssembly(assemblyName, null);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 

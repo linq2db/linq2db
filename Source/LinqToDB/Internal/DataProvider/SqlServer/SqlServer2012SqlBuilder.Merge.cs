@@ -3,7 +3,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	partial class SqlServer2012SqlBuilder
+	public partial class SqlServer2012SqlBuilder
 	{
 		// TODO: both 2008 and 2012 builders inherit from same base class which leads to duplicate builder logic
 		// I think we should have single builder with versioning support as inheritance definitely suck for this case
@@ -49,7 +49,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			// for identity column insert - disable explicit insert support
 			if (merge.HasIdentityInsert)
-				BuildIdentityInsert(nullability, merge.Target, false);
+				BuildIdentityInsert(merge.Target, enable: false);
 		}
 
 		protected override void BuildMergeOperationUpdateBySource(NullabilityContext nullability, SqlMergeOperationClause operation)
@@ -76,8 +76,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			// for identity column insert - enable explicit insert support
 			if (merge.HasIdentityInsert)
 			{
-				var nullability = new NullabilityContext(merge.SelectQuery);
-				BuildIdentityInsert(nullability, merge.Target, true);
+				BuildIdentityInsert(merge.Target, enable: true);
 			}
 
 			base.BuildMergeStatement(merge);

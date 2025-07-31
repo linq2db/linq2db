@@ -92,7 +92,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			if (type.IsNullable())
 				type = type.ToUnderlying();
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			if (Provider == SapHanaProvider.Unmanaged && type == typeof(DateOnly))
 				type = typeof(DateTime);
 #endif
@@ -113,7 +113,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			if (value is DateOnly d)
 				value = d.ToDateTime(TimeOnly.MinValue);
 #endif
@@ -184,6 +184,12 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			if (dataType.DataType == DataType.UInt32)
 			{
 				parameter.DbType = DbType.Int64;
+				return;
+			}
+
+			if (dataType.DataType == DataType.UInt64)
+			{
+				parameter.DbType = DbType.Decimal;
 				return;
 			}
 

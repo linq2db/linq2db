@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Internal.Expressions
 {
-	public class ExpressionVisitorBase : ExpressionVisitor
+	public abstract class ExpressionVisitorBase : ExpressionVisitor
 	{
 		[DebuggerStepThrough]
 		[return: NotNullIfNotNull(nameof(node))]

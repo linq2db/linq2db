@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			return
-#if NET8_0_OR_GREATER
+#if ADO_IS_TRANSIENT
 				DbExceptionTransientExceptionDetector.ShouldRetryOn(exception) ||
 #endif
 				ClickHouseTransientExceptionDetector.ShouldRetryOn(exception);

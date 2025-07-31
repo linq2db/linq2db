@@ -31,8 +31,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return newStatement;
 		}
 
-		public static SqlStatement PrepareStatementForSql(this ISqlOptimizer optimizer, SqlStatement statement,
-			MappingSchema mappingSchema, DataOptions dataOptions, OptimizationContext optimizationContext)
+		public static SqlStatement PrepareStatementForSql(this SqlStatement statement, OptimizationContext optimizationContext)
 		{
 			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 

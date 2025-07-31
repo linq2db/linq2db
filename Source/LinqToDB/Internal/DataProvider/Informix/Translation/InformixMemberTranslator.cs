@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
@@ -31,7 +31,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 			return new GuidMemberTranslator();
 		}
 
-		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Boolean));
@@ -46,7 +46,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Decimal).WithPrecisionScale(10, 4));
 		}
 
-		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateMakeDateTime(ITranslationContext translationContext, DbDataType      resulType, ISqlExpression  year, ISqlExpression month, ISqlExpression day, ISqlExpression? hour,
 				ISqlExpression?                                                          minute,             ISqlExpression? second,    ISqlExpression? millisecond)
@@ -54,12 +54,6 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				var factory        = translationContext.ExpressionFactory;
 				var intDataType    = factory.GetDbDataType(typeof(int));
 				var stringDataType = factory.GetDbDataType(typeof(string));
-
-				ISqlExpression CastToLength(ISqlExpression expression, int stringLength)
-				{
-					return expression;
-					//return factory.Cast(expression, stringDataType.WithLength(stringLength));
-				}
 
 				ISqlExpression PartExpression(ISqlExpression expression, int padSize)
 				{
@@ -71,7 +65,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 
 					return factory.Function(stringDataType, "LPad",
 						ParametersNullabilityType.SameAsFirstParameter,
-						CastToLength(expression, padSize),
+						expression,
 						factory.Value(intDataType, padSize),
 						factory.Value(stringDataType, "0"));
 				}
@@ -331,11 +325,11 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 			}
 		}
 
-		public class StringMemberTranslator : StringMemberTranslatorBase
+		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
 		}
 
-		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
+		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 		{

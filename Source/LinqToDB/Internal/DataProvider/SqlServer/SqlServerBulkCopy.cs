@@ -13,7 +13,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	sealed class SqlServerBulkCopy : BasicBulkCopy
+	public class SqlServerBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
 		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
@@ -175,10 +175,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				if (options.MaxBatchSize.HasValue)
 					bc.BatchSize = options.MaxBatchSize.Value;
 
-				if (options.BulkCopyTimeout.HasValue)
-					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-				else if (LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
-					bc.BulkCopyTimeout = connection.ConnectionTimeout;
+				if (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+					bc.BulkCopyTimeout = options.BulkCopyTimeout ?? dataConnection.CommandTimeout;
 
 				var tableName = GetTableName(sb, options, table);
 
@@ -253,10 +251,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				if (options.MaxBatchSize.HasValue)
 					bc.BatchSize = options.MaxBatchSize.Value;
 
-				if (options.BulkCopyTimeout.HasValue)
-					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-				else if (LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
-					bc.BulkCopyTimeout = connection.ConnectionTimeout;
+				if (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+					bc.BulkCopyTimeout = options.BulkCopyTimeout ?? dataConnection.CommandTimeout;
 
 				var tableName = GetTableName(sb, options, table);
 

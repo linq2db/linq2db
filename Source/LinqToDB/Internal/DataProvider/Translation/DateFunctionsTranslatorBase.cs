@@ -6,15 +6,17 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
-namespace LinqToDB.Internal.Linq.Translation
+namespace LinqToDB.Internal.DataProvider.Translation
 {
-	public class DateFunctionsTranslatorBase : MemberTranslatorBase
+	public abstract class DateFunctionsTranslatorBase : MemberTranslatorBase
 	{
-		public DateFunctionsTranslatorBase()
+		protected DateFunctionsTranslatorBase()
 		{
 			RegisterDateTime();
 			RegisterDateTimeOffset();
+#if SUPPORTS_DATEONLY
 			RegisterDateOnly();
+#endif
 
 			Registration.RegisterMethod((int? year, int? month, int? day) => Sql.MakeDateTime(year, month, day), TranslateMakeDateTime);
 			Registration.RegisterMethod((int year, int month, int day, int hour, int minute, int second) => Sql.MakeDateTime(year, month, day, hour, minute, second), TranslateMakeDateTime);
@@ -98,9 +100,9 @@ namespace LinqToDB.Internal.Linq.Translation
 			Registration.RegisterMethod((DateTimeOffset dt) => Sql.DatePart(Sql.DateParts.Year, dt), TranslateDateTimeOffsetSqlDatepart);
 		}
 
+#if SUPPORTS_DATEONLY
 		void RegisterDateOnly()
 		{
-#if NET8_0_OR_GREATER
 			Registration.RegisterMethod((int year, int month, int day) => Sql.MakeDateOnly(year, month, day), TranslateMakeDateOnlyMethod);
 
 			Registration.RegisterConstructor((int year, int month, int day) => new DateOnly(year, month, day), TranslateDateOnlyConstructor);
@@ -117,8 +119,8 @@ namespace LinqToDB.Internal.Linq.Translation
 			Registration.RegisterMethod((DateOnly dt) => dt.AddDays(0), (tc,   mc, tf) => TranslateDateOnlyAddMember(tc, mc, tf, Sql.DateParts.Day));
 
 			Registration.RegisterMethod((DateOnly dt) => Sql.DatePart(Sql.DateParts.Year, dt), TranslateDateOnlySqlDatepart);
-#endif
 		}
+#endif
 
 		Expression? TranslateDateTimeConstructor(ITranslationContext translationContext, Expression expression, TranslationFlags translationFlags)
 		{
@@ -189,52 +191,6 @@ namespace LinqToDB.Internal.Linq.Translation
 				return null;
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, makeExpression, methodCall);
-		}
-
-		Expression? TranslateDateTimeOffsetConstructor(ITranslationContext translationContext, Expression expression, TranslationFlags translationFlags)
-		{
-			if (expression is not NewExpression newExpression)
-				return null;
-
-			if (newExpression.Arguments.Count < 3)
-				return null;
-
-			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
-
-			if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[0], out var year)  ||
-			    !translationContext.TranslateToSqlExpression(newExpression.Arguments[1], out var month) ||
-			    !translationContext.TranslateToSqlExpression(newExpression.Arguments[2], out var day))
-			{
-				return null;
-			}
-
-			ISqlExpression? hour        = null;
-			ISqlExpression? minute      = null;
-			ISqlExpression? second      = null;
-			ISqlExpression? millisecond = null;
-
-			if (newExpression.Arguments.Count > 3)
-			{
-				if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[3], out hour)   ||
-				    !translationContext.TranslateToSqlExpression(newExpression.Arguments[4], out minute) ||
-				    !translationContext.TranslateToSqlExpression(newExpression.Arguments[5], out second))
-				{
-					return null;
-				}
-			}
-
-			if (newExpression.Arguments.Count > 6)
-			{
-				if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[6], out millisecond))
-					return null;
-			}
-
-			var makeExpression = TranslateMakeDateTime(translationContext, translationContext.ExpressionFactory.GetDbDataType(expression.Type), year, month, day, hour, minute, second, millisecond);
-
-			if (makeExpression == null)
-				return null;
-
-			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, makeExpression, newExpression);
 		}
 
 		Expression? TranslateMakeDateTime(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -461,6 +417,7 @@ namespace LinqToDB.Internal.Linq.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
 		}
 
+#if NET8_0_OR_GREATER
 		Expression? TranslateDateOnlyAddMember(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, Sql.DateParts datepart)
 		{
 			var datePlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Object, translationFlags, false);
@@ -483,6 +440,7 @@ namespace LinqToDB.Internal.Linq.Translation
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
 		}
+#endif
 
 		Expression? TranslateDateTimeDateAdd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
@@ -536,7 +494,7 @@ namespace LinqToDB.Internal.Linq.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		Expression? TranslateDateOnlyConstructor(ITranslationContext translationContext, Expression expression, TranslationFlags translationFlags)
 		{
 			if (expression is not NewExpression newExpression)

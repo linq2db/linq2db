@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -8,6 +9,7 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	public static class SqlServerExtensions
 	{
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "ext is an extension point")]
 		public static ISqlServerExtensions? SqlServer(this Sql.ISqlExtension? ext) => null;
 
 		#region FTS

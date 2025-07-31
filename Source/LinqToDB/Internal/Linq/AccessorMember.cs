@@ -7,7 +7,7 @@ using System.Reflection;
 namespace LinqToDB.Internal.Linq
 {
 	[DebuggerDisplay("Member: {MemberInfo.Name}")]
-	public class AccessorMember
+	sealed class AccessorMember
 	{
 		public AccessorMember(Expression expression)
 		{
@@ -29,7 +29,7 @@ namespace LinqToDB.Internal.Linq
 		public MemberInfo MemberInfo { get; }
 		public ReadOnlyCollection<Expression>? Arguments { get; }
 
-		protected bool Equals(AccessorMember other)
+		bool Equals(AccessorMember other)
 		{
 			if (!MemberInfo.Equals(other.MemberInfo))
 				return false;

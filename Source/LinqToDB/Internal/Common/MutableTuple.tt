@@ -54,7 +54,7 @@ namespace LinqToDB.Internal.Common
 		    hashCodesStr = $"HashCode.Combine({hashCodes})";
 
 #>
-	internal class <#= prefix #>Tuple<<#= types #>>
+	internal sealed class <#= prefix #>Tuple<<#= types #>>
 	{
 <#
 	foreach (var idx in indexes)

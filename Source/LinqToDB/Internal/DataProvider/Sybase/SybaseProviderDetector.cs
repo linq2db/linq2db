@@ -9,10 +9,8 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.Sybase
 {
-	sealed class SybaseProviderDetector : ProviderDetectorBase<SybaseProvider, SybaseProviderDetector.Dialect>
+	public class SybaseProviderDetector : ProviderDetectorBase<SybaseProvider>
 	{
-		internal enum Dialect { }
-
 		public SybaseProviderDetector() : base()
 		{
 		}
@@ -52,7 +50,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			return null;
 		}
 
-		public override IDataProvider GetDataProvider(ConnectionOptions options, SybaseProvider provider, Dialect version)
+		public override IDataProvider GetDataProvider(ConnectionOptions options, SybaseProvider provider, NoDialect version)
 		{
 			if (provider == SybaseProvider.AutoDetect)
 				provider = DetectProvider();
@@ -72,11 +70,6 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			return File.Exists(Path.Combine(dirName ?? ".", SybaseProviderAdapter.NativeAssemblyName + ".dll"))
 				? SybaseProvider.Unmanaged
 				: SybaseProvider.DataAction;
-		}
-
-		public override Dialect? DetectServerVersion(DbConnection connection)
-		{
-			return default(Dialect);
 		}
 
 		protected override DbConnection CreateConnection(SybaseProvider provider, string connectionString)

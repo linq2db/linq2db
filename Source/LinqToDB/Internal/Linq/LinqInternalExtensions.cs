@@ -103,6 +103,7 @@ namespace LinqToDB.Internal.Linq
 
 		[LinqTunnel]
 		[Pure]
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used by expression builder")]
 		public static TSource LoadWithInternal<TSource>(
 			this TSource             source,
 			LoadWithEntity           loadWith)

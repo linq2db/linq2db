@@ -129,7 +129,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
-			return new SybaseSchemaProvider(this);
+			return new SybaseSchemaProvider();
 		}
 
 		public override IQueryParametersNormalizer GetQueryParameterNormalizer() => new SybaseParametersNormalizer();
@@ -174,7 +174,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 							value = chr.ToString();
 					break;
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 				case DataType.Date       :
 					if (value is DateOnly d)
 						value = d.ToDateTime(TimeOnly.MinValue);

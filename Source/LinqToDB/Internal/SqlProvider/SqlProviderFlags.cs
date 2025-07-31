@@ -530,7 +530,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
 		}
 
-		public bool GetIsSkipSupportedFlag(ISqlExpression? takeExpression, ISqlExpression? skipExpression)
+		public bool GetIsSkipSupportedFlag(ISqlExpression? takeExpression)
 		{
 			return IsSkipSupported || IsSkipSupportedIfTake && takeExpression != null;
 		}

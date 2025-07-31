@@ -2088,7 +2088,7 @@ namespace Tests.xUpdate
 			builder.Build();
 
 			using var db = GetDataContext(context, ms);
-			var table = db.CreateLocalTable<InsertEntity>();
+			using var table = db.CreateLocalTable<InsertEntity>();
 
 			var affected = table.Insert(() => new InsertEntity()
 			{
@@ -2119,7 +2119,7 @@ namespace Tests.xUpdate
 
 			using var db = GetDataContext(context, ms);
 
-			var table = db.CreateLocalTable<InsertEntity>([
+			using var table = db.CreateLocalTable<InsertEntity>([
 				new InsertEntity() { Id = 1, Name = "test1", IsDeleted = false },
 				new InsertEntity() { Id = 2, Name = "test2", IsDeleted = true },
 			]);
@@ -2153,7 +2153,7 @@ namespace Tests.xUpdate
 
 			using var db = GetDataContext(context, ms);
 
-			var table = db.CreateLocalTable<InsertEntity>([
+			using var table = db.CreateLocalTable<InsertEntity>([
 				new InsertEntity() { Id = 1, Name = "test1", IsDeleted = false }
 			]);
 

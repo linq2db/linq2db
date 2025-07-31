@@ -9,7 +9,7 @@ using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
-	sealed class DB2BulkCopy : BasicBulkCopy
+	public class DB2BulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
 		/// Settings based on https://www.ibm.com/docs/en/i/7.3?topic=reference-sql-limits

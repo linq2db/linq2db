@@ -1,7 +1,7 @@
 ﻿using System;
 
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
@@ -173,7 +173,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			var underlying = cast.SystemType.ToUnderlying();
 
 			if (underlying == typeof(DateTime) || underlying == typeof(DateTimeOffset)
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			                                   || underlying == typeof(DateOnly)
 #endif
 			   )
@@ -187,7 +187,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return base.ConvertConversion(cast);
 		}
 
-		protected ISqlExpression WrapDateTime(ISqlExpression expression, DbDataType dbDataType)
+		ISqlExpression WrapDateTime(ISqlExpression expression, DbDataType dbDataType)
 		{
 			if (IsDateTime(dbDataType))
 			{

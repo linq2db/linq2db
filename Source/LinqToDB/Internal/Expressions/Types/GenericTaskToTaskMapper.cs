@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Internal.Expressions.Types
@@ -15,7 +16,7 @@ namespace LinqToDB.Internal.Expressions.Types
 					|| expression.Type.GetGenericTypeDefinition() == typeof(Task<>));
 		}
 
-		Expression ICustomMapper.Map(Expression expression)
+		Expression ICustomMapper.Map(TypeMapper mapper, Expression expression)
 		{
 			if (expression.Type.GetGenericTypeDefinition() == typeof(Task<>))
 			{

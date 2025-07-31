@@ -15,7 +15,7 @@ using LinqToDB.Metrics;
 
 namespace LinqToDB.Internal.Linq
 {
-	public class Query<T> : Query
+	public sealed class Query<T> : Query
 	{
 		#region Init
 
@@ -115,7 +115,7 @@ namespace LinqToDB.Internal.Linq
 			/// <summary>
 			/// Adds query to cache if it is not cached already.
 			/// </summary>
-			public void TryAdd(IDataContext dataContext, Query<T> query, IQueryExpressions queryExpression, QueryFlags queryFlags, DataOptions dataOptions)
+			public void TryAdd(IDataContext dataContext, Query<T> query, IQueryExpressions queryExpression, QueryFlags queryFlags)
 			{
 				// because Add is less frequent operation than Find, it is fine to have put bigger locks here
 				QueryCacheEntry[] cache;
@@ -387,7 +387,7 @@ namespace LinqToDB.Internal.Linq
 
 			if (useCache && !query.DoNotCache)
 			{
-				_queryCache.TryAdd(dataContext, query, expressions, queryFlags, dataOptions);
+				_queryCache.TryAdd(dataContext, query, expressions, queryFlags);
 			}
 
 			return query;

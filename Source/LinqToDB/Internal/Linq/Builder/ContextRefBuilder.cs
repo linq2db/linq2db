@@ -5,7 +5,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsAny]
 	sealed class ContextRefBuilder : ISequenceBuilder
 	{
-		public static bool CanBuild(BuildInfo buildInfo, ExpressionBuilder builder)
+		public static bool CanBuild(BuildInfo buildInfo)
 			=> buildInfo.Expression is ContextRefExpression contextRef;
 
 		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)

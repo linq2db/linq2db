@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 	// !table.TableOptions.HasIsTemporary() check:
 	// native bulk copy produce following error for insert into temp table:
 	// AseException : Incorrect syntax near ','.
-	sealed class SybaseBulkCopy : BasicBulkCopy
+	public class SybaseBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
 		/// Setting is conservative based on https://maxdb.sap.com/doc/7_6/f6/069940ccd42a54e10000000a1550b0/content.htm
@@ -184,10 +184,8 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				if (options.MaxBatchSize.HasValue)
 					bc.BatchSize = options.MaxBatchSize.Value;
 
-				if (options.BulkCopyTimeout.HasValue)
-					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-				else if (LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
-					bc.BulkCopyTimeout = connection.ConnectionTimeout;
+				if (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+					bc.BulkCopyTimeout = options.BulkCopyTimeout ?? dataConnection.CommandTimeout;
 
 				var tableName = GetTableName(sb, options, table);
 

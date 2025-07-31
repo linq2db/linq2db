@@ -4,7 +4,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SQLite
 {
-	sealed class SQLiteSqlOptimizer : BasicSqlOptimizer
+	public class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{
 		public SQLiteSqlOptimizer(SqlProviderFlags sqlProviderFlags)
 			: base(sqlProviderFlags)
@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			{
 				case QueryType.Delete :
 				{
-					statement = GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions);
+					statement = GetAlternativeDelete((SqlDeleteStatement)statement);
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
 				}

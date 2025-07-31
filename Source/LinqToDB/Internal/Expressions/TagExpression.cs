@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Internal.Expressions
 {
-	public class TagExpression : Expression
+	public sealed class TagExpression : Expression
 	{
 		public Expression InnerExpression { get; }
 		public object     Tag             { get; }
