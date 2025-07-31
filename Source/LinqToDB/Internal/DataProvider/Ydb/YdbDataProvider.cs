@@ -25,9 +25,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		private const string NameString   = "YDB";
 		public const  string ProviderName = "YDB";
 
-		// YDB provider options (e.g., connection string or connection parameters).
-		private readonly YdbOptions _options;
-
 		// Static mapping schema for YDB type definitions.
 		private static readonly MappingSchema YdbMappingSchema;
 
@@ -66,7 +63,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		protected YdbDataProvider(string name)
 			: base(name, GetMappingSchema(), YdbProviderAdapter.GetInstance())
 		{
-			_options = new YdbOptions();
 
 			// YDB (YQL) does not support UPDATE … FROM JOIN.
 			// It uses UPDATE … ON (subquery) instead → disable the flag.
@@ -159,7 +155,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		}
 
 		// Note: All BulkCopy methods here simply delegate to LinqToDB’s row-by-row logic,
-		// because YDB SDK lacks optimized bulk insert APIs or they are not used in this minimalist provider.
+		// because YDB SDK lacks optimized bulk insert APIs, or they are not used in this minimalist provider.
 
 		private static MappingSchema GetMappingSchema()
 		{

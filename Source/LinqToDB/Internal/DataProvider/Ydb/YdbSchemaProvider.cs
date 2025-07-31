@@ -152,7 +152,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			finally
 			{
 				if (created)
-					conn.Dispose();
+					conn.Close();
 			}
 		}
 
@@ -256,7 +256,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 				return result;
 			}
-			finally { if (created) conn.Dispose(); }
+			finally { if (created) conn.Close(); }
 		}
 
 		#endregion
