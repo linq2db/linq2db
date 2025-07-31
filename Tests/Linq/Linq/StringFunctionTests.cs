@@ -319,6 +319,34 @@ namespace Tests.Linq
 				Assert.That(result.Str, Is.EqualTo(stringValue));
 				Assert.That(result.Len, Is.EqualTo(stringValue.Length));
 			}
+		}		
+		
+
+		static string CorrectValue(string value)
+		{
+			return value.Trim();
+		}
+
+		[Test]
+		public void LengthFromNonTranslatable([DataSources(TestProvName.AllSybase)] string context, [Values("abc ", " ", " abc ")] string stringValue)
+		{
+			var data = new[] { new TestLengthModel { Str = stringValue } };
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				let str = CorrectValue(t.Str)
+				select new
+				{
+					OldStr = t.Str,
+					Str = str,
+					IsChanged = str.Length != t.Str.Length,
+					Condition = str.Length < t.Str.Length ? "corrected-" + str : "original-" + t.Str
+				};
+
+			AssertQuery(query);
 		}
 
 		[Test]
