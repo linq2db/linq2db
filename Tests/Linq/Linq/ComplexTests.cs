@@ -789,5 +789,53 @@ namespace Tests.Linq
 			public Issue4139Table? Parent { get; set; }
 		}
 		#endregion
+
+		#region Issue 5056
+		[Table]
+		sealed class Issue5056Table
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(MemberName = ".Value")]
+			public Issue5056ComplexProperty Complex { get; set; }
+		}
+
+		struct Issue5056ComplexProperty
+		{
+			public int Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5056")]
+		public void Issue5056Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue5056Table>();
+
+			tb.Insert(() => new Issue5056Table()
+			{
+				Id = 1,
+				Complex = new Issue5056ComplexProperty()
+				{
+					Value = 2
+				}
+			});
+
+			var record = tb.Single();
+			Assert.That(record.Complex.Value, Is.EqualTo(2));
+
+			tb.Update(r => new Issue5056Table()
+			{
+				Id = 1,
+				Complex = new Issue5056ComplexProperty()
+				{
+					Value = r.Complex!.Value + 5
+				}
+			});
+
+			record = tb.Single();
+			Assert.That(record.Complex.Value, Is.EqualTo(7));
+		}
+		#endregion
 	}
 }

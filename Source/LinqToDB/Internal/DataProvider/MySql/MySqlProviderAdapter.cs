@@ -185,14 +185,14 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 					var mappingSchema = new MySqlDataAdapterMappingSchema();
 
-					mappingSchema.SetDataType(mySqlDecimalType, DataType.Decimal);
+					mappingSchema.AddScalarType(mySqlDecimalType, DataType.Decimal);
 					mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(decimal), toDecimalConverter);
 					mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(double), toDoubleConverter);
 					mappingSchema.SetValueToSqlConverter(mySqlDecimalType,
 						typeMapper.BuildAction<StringBuilder,SqlDataType,DataOptions,object>(
 							typeMapper.MapActionLambda((StringBuilder sb, SqlDataType type, DataOptions options, object value) => AppendAction(sb, ((MySqlDecimal)value).ToString()))));
 
-					mappingSchema.SetDataType(mySqlDateTimeType, DataType.DateTime2);
+					mappingSchema.AddScalarType(mySqlDateTimeType, DataType.DateTime2);
 					mappingSchema.SetConvertExpression(mySqlDateTimeType, typeof(DateTime), dateTimeConverter);
 
 					ProviderType                = MySqlProvider.MySqlData;
@@ -370,7 +370,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 					var mappingSchema = new MySqlConnectorAdapterMappingSchema();
 
-					mappingSchema.SetDataType(mySqlDateTimeType, DataType.DateTime2);
+					mappingSchema.AddScalarType(mySqlDateTimeType, DataType.DateTime2);
 					mappingSchema.SetConvertExpression(mySqlDateTimeType, typeof(DateTime), dateTimeConverter);
 
 					if (mySqlDecimalType != null)
@@ -378,7 +378,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 						var toDecimalConverter = typeMapper.MapLambda((MySqlDecimal d) => d.Value);
 						var toDoubleConverter  = typeMapper.MapLambda((MySqlDecimal d) => d.ToDouble());
 
-						mappingSchema.SetDataType(mySqlDecimalType, DataType.Decimal);
+						mappingSchema.AddScalarType(mySqlDecimalType, DataType.Decimal);
 						mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(decimal), toDecimalConverter);
 						mappingSchema.SetValueToSqlConverter(mySqlDecimalType,
 							typeMapper.BuildAction<StringBuilder,SqlDataType,DataOptions,object>(

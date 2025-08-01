@@ -275,13 +275,13 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 							AddUdtType(npgsqlDateTimeType);
 						if (npgsqlTimeSpanType != null)
 						{
-							mappingSchema.SetDataType(npgsqlTimeSpanType, DataType.Interval);
+							mappingSchema.AddScalarType(npgsqlTimeSpanType, DataType.Interval);
 						}
 
 						Expression? npgsqlIntervalReader = null;
 						if (npgsqlIntervalType != null)
 						{
-							mappingSchema.SetDataType(npgsqlIntervalType, DataType.Interval);
+							mappingSchema.AddScalarType(npgsqlIntervalType, DataType.Interval);
 
 							var reader  = Expression.Parameter(typeof(DbDataReader));
 							var ordinal = Expression.Parameter(typeof(int));

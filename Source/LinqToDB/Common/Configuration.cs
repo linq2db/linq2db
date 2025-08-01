@@ -24,11 +24,13 @@ namespace LinqToDB.Common
 	public static class Configuration
 	{
 		/// <summary>
-		/// If <c>true</c> - non-primitive and non-enum value types (structures) will be treated as scalar types (e.g. <see cref="DateTime"/>) during mapping;
+		/// If <c>true</c> - structures (except primitive values including enums) will be treated as scalar types during mapping;
 		/// otherwise they will be treated the same way as classes.
-		/// Default value: <c>true</c>.
+		/// Default value: <c>false</c>.
 		/// </summary>
-		public static bool IsStructIsScalarType = true;
+		// TODO: Remove in v7
+		[Obsolete("This API planned for removal in version 7. Use MappingSchema.SetScalarType or ScalarTypeAttribute to configure scalar structs"), EditorBrowsable(EditorBrowsableState.Never)]
+		public static bool IsStructIsScalarType = false;
 
 		/// <summary>
 		/// If <c>true</c> - Enum values are stored as by calling ToString().
