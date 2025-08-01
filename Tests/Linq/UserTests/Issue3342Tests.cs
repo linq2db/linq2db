@@ -23,7 +23,6 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 			ms.AddScalarType(typeof(DateTimeOffset), DataType.DateTimeOffset);
-			ms.AddScalarType(typeof(DateTimeOffset?), DataType.DateTimeOffset);
 
 			using (var db = GetDataContext(context, ms))
 			using (var tb = db.CreateLocalTable<PgTimestampTest>())
