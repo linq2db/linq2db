@@ -408,9 +408,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var cacheKey = new ExprCacheKey(expression, context, null, null, flags);
 			
-			if (_translationCache.TryGetValue(cacheKey, out var translated))
+			if (GetAlreadyTranslated(cacheKey, out var translated))
 			{
-				DebugCacheHit(cacheKey, translated);
 				return translated;
 			}
 
@@ -579,8 +578,23 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var cacheKey = GetSqlCacheKey(path, selectQuery);
 
+			return GetAlreadyTranslated(cacheKey, out translated);
+		}
+
+		bool GetAlreadyTranslated(ExprCacheKey cacheKey, [NotNullWhen(true)] out Expression? translated)
+		{
 			if (_translationCache.TryGetValue(cacheKey, out translated))
+			{
+				if (cacheKey.Flags == ProjectFlags.SQL && _buildPurpose is BuildPurpose.Expression && SequenceHelper.HasError(translated))
+				{
+					// If we have error in translated expression, we should not use it.
+					translated = null;
+					return false;
+				}
+
+				DebugCacheHit(cacheKey, translated);
 				return true;
+			}
 
 			return false;
 		}
@@ -1436,9 +1450,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (_buildPurpose is BuildPurpose.Expression or BuildPurpose.Sql)
 					{
 						var exprCacheKey = GetSqlCacheKey(node);
-						if (_translationCache.TryGetValue(exprCacheKey, out var alreadyTranslated))
+						if (GetAlreadyTranslated(exprCacheKey, out var alreadyTranslated))
 						{
-							DebugCacheHit(exprCacheKey, alreadyTranslated);
 							return Visit(alreadyTranslated);
 						}
 					}
@@ -1502,7 +1515,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var cacheKey = new ExprCacheKey(node, null, _columnDescriptor, rootContext.SelectQuery, ProjectFlags.SQL);
 
-						if (_translationCache.TryGetValue(cacheKey, out var translatedLocal))
+						if (GetAlreadyTranslated(cacheKey, out var translatedLocal))
 							return translatedLocal;
 
 						if (TranslateMember(BuildContext, memberExpression : node, translated : out translatedLocal))
@@ -2468,7 +2481,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var cacheKey = new ExprCacheKey(traversed, null, null, calculatedContext.SelectQuery, ProjectFlags.SQL | ProjectFlags.Subquery);
 
-			if (_translationCache.TryGetValue(cacheKey, out var alreadyTranslated))
+			if (GetAlreadyTranslated(cacheKey, out var alreadyTranslated))
 			{
 				subqueryExpression = alreadyTranslated;
 				return !IsSame(node, alreadyTranslated);
@@ -2851,7 +2864,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return true;
 					}
 				}
-
+			
 				translated = Visit(compareExpr);
 				return true;
 			}
