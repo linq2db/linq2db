@@ -1786,10 +1786,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (createExpression.Type.IsNullable())
 				return createExpression;
 
-			if (!force && createExpression.Type.IsValueType)
-				return createExpression;
-
-			if (!force && MappingSchema.IsScalarType(createExpression.Type))
+			if (MappingSchema.IsScalarType(createExpression.Type))
 				return createExpression;
 
 			if (typeof(FormattableString).IsSameOrParentOf(createExpression.Type))

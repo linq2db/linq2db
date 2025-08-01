@@ -1496,8 +1496,10 @@ namespace LinqToDB.Mapping
 			{
 				type = type.ToNullableUnderlying();
 
+#pragma warning disable CS0618 // Type or member is obsolete
 				if (type.IsEnum || type.IsPrimitive || (Common.Configuration.IsStructIsScalarType && type.IsValueType))
 					ret = true;
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			return ret;
