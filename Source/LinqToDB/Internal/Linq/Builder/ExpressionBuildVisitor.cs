@@ -3890,8 +3890,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (l != null && r != null)
 							break;
 
-						leftExpr  = Builder.ParseGenericConstructor(leftExpr, ProjectFlags.SQL  | ProjectFlags.Keys, columnDescriptor, true);
-						rightExpr = Builder.ParseGenericConstructor(rightExpr, ProjectFlags.SQL | ProjectFlags.Keys, columnDescriptor, true);
+						leftExpr  = Builder.ParseGenericConstructor(leftExpr, ProjectFlags.SQL  | ProjectFlags.Keys, columnDescriptor);
+						rightExpr = Builder.ParseGenericConstructor(rightExpr, ProjectFlags.SQL | ProjectFlags.Keys, columnDescriptor);
 
 						if (SequenceHelper.UnwrapDefaultIfEmpty(leftExpr) is SqlGenericConstructorExpression leftGenericConstructor &&
 						    SequenceHelper.UnwrapDefaultIfEmpty(rightExpr) is SqlGenericConstructorExpression rightGenericConstructor)
