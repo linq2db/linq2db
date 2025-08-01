@@ -265,10 +265,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (flags.IsTable() || flags.IsAssociationRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsExtractProjection())
 					return path;
 
-				if (MappingSchema.IsScalarType(ElementType) || Builder.CurrentDescriptor != null)
+				var isScalar = MappingSchema.IsScalarType(ElementType);
+				if (isScalar || Builder.CurrentDescriptor != null)
 				{
 					var dbType = Builder.CurrentDescriptor?.GetDbDataType(true) ?? MappingSchema.GetDbDataType(ElementType);
-					if (dbType.DataType != DataType.Undefined || ElementType.IsEnum)
+					if (isScalar || dbType.DataType != DataType.Undefined || ElementType.IsEnum)
 					{
 						if (path.Type != ElementType)
 						{
