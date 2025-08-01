@@ -33,6 +33,7 @@ namespace LinqToDB
 		/// Start new transaction with default isolation level.
 		/// If underlying connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
+		/// <exception cref="InvalidOperationException">Thrown when underlying connection already has a transaction.</exception>
 		public void BeginTransaction()
 		{
 			var db = DataContext.GetDataConnection();
@@ -50,6 +51,7 @@ namespace LinqToDB
 		/// If underlying connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="level">Transaction isolation level.</param>
+		/// <exception cref="InvalidOperationException">Thrown when underlying connection already has a transaction.</exception>
 		public void BeginTransaction(IsolationLevel level)
 		{
 			var db = DataContext.GetDataConnection();
@@ -67,6 +69,7 @@ namespace LinqToDB
 		/// If underlying connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <exception cref="InvalidOperationException">Thrown when underlying connection already has a transaction.</exception>
 		public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
 			var db = DataContext.GetDataConnection();
@@ -85,6 +88,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="level">Transaction isolation level.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <exception cref="InvalidOperationException">Thrown when underlying connection already has a transaction.</exception>
 		public async Task BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
 		{
 			var db = DataContext.GetDataConnection();
