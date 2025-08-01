@@ -560,7 +560,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction for current context with specified isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="level">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
@@ -577,7 +577,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction for current context with default isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
 		public virtual DataContextTransaction BeginTransaction()
@@ -593,7 +593,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction asynchronously for current context with specified isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="level">Transaction isolation level.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
@@ -611,7 +611,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction asynchronously for current context with default isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>

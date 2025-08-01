@@ -31,7 +31,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Start new transaction with default isolation level.
-		/// If underlying connection already has transaction, it will be rolled back.
+		/// If underlying connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		public void BeginTransaction()
 		{
@@ -47,7 +47,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Start new transaction with specified isolation level.
-		/// If underlying connection already has transaction, it will be rolled back.
+		/// If underlying connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="level">Transaction isolation level.</param>
 		public void BeginTransaction(IsolationLevel level)
@@ -64,7 +64,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Start new transaction asynchronously with default isolation level.
-		/// If underlying connection already has transaction, it will be rolled back.
+		/// If underlying connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
@@ -81,7 +81,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Start new transaction asynchronously with specified isolation level.
-		/// If underlying connection already has transaction, it will be rolled back.
+		/// If underlying connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="level">Transaction isolation level.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
