@@ -250,7 +250,6 @@ namespace Tests
 		public const string AllSapHana    = $"{ProviderName.SapHanaNative},{ProviderName.SapHanaOdbc}";
 		public const string AllInformix   = $"{ProviderName.Informix},{ProviderName.InformixDB2}";
 		public const string AllClickHouse = $"{ProviderName.ClickHouseClient},{ProviderName.ClickHouseOctonica},{ProviderName.ClickHouseMySql}";
-		public const string AllYdb = $"{ProviderName.Ydb}";
 
 		#region By Feature
 

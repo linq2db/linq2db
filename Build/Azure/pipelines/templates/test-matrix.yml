@@ -865,3 +865,21 @@ jobs:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]'))) }}:
             enabled: false
+
+        - name: YDB
+          title: YDB
+          config_linux: ydb
+          config_macos: ydb
+          script_linux_global: ydb.sh
+          script_macos_global: ydb.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[ydb.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[ydb.all]'))) }}:
+            enabled: false

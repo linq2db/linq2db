@@ -24,7 +24,7 @@ namespace Tests.DataProvider
 			}
 
 			public YdbDataSourcesAttribute(bool includeLinqService)
-				: base(includeLinqService, TestProvName.AllYdb)
+				: base(includeLinqService, ProviderName.Ydb)
 			{
 			}
 		}

@@ -88,7 +88,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		static YdbProviderAdapter CreateAdapter()
 		{
-            var assembly = Internal.Common.Tools.TryLoadAssembly(AssemblyName, null)
+            var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null)
                            ?? throw new InvalidOperationException($"Cannot load assembly {AssemblyName}.");
 
 			var connectionType = assembly.GetType($"{ClientNamespace}.YdbConnection", true)!;

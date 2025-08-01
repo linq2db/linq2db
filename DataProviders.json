@@ -141,7 +141,7 @@
 			"SqlServer.Azure.MI.MS"     : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=tcp:aiae6kk6yl.database.windows.net,1433;Database=TestData;User ID=TestUser@aiae6kk6yl;Password=;Trusted_Connection=False;Encrypt=True;"                      },
 			"Sybase"                    : { "Provider": "Sybase.Data.AseClient",            "ConnectionString": "Data Source=DBHost;Port=5000;Database=TestData;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;"      },
 			"Sybase.Managed"            : { "Provider": "AdoNetCore.AseClient",             "ConnectionString": "Data Source=localhost;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;AnsiNull=1;" },
-			"YDB"                       : {	"Provider": "YDB",             		   	    	"ConnectionString": "Host=localhost;Port=2136;Database=/local;UseTls=false"                                                                                                               }
+			"YDB"                       : { "Provider": "Ydb.Sdk",                          "ConnectionString": "Host=localhost;Port=2136;Database=/local;UseTls=false;DisableDiscovery=true"                                                                                         }
 		}
 	},
 
@@ -201,7 +201,8 @@
 			"SapHana.Odbc"              : { "Provider": "SapHana.Odbc",                    "ConnectionString": "<SET BY SCRIPT>"                                                                                                                                                     },
 			"ClickHouse.Octonica"       : { "Provider": "Octonica.ClickHouseClient",       "ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"                                                                                           },
 			"ClickHouse.Client"         : { "Provider": "ClickHouse.Client",               "ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true"                                                                       },
-			"ClickHouse.MySql"          : { "Provider": "MySqlConnector",                  "ConnectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;"                                                                        }
+			"ClickHouse.MySql"          : { "Provider": "MySqlConnector",                  "ConnectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;"                                                                        },
+			"YDB"                       : { "Provider": "Ydb.Sdk",                         "ConnectionString": "Host=localhost;Port=2136;Database=/local;UseTls=false;DisableDiscovery=true"                                                                                         }
 		}
 	},
 

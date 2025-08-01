@@ -81,7 +81,7 @@ namespace Tests.Model
 	public class LinqDataTypes2 : IEquatable<LinqDataTypes2>, IComparable
 	{
 		[PrimaryKey]                                    public int       ID;
-		[Column]                                        public decimal   MoneyValue;
+		[Column(Precision = 4, Scale = 2)]              public decimal   MoneyValue;
 		// type it explicitly for sql server, because SQL Server 2005+ provider maps DateTime .Net type to DataType.DateTime2 by default
 		[Column(DataType = DataType.DateTime,  Configuration = ProviderName.SqlServer)]
 		[Column(DataType = DataType.DateTime2, Configuration = ProviderName.Oracle)]

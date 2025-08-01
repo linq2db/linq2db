@@ -46,6 +46,7 @@
 		<PackageReference Include="Octonica.ClickHouseClient" />
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
+		<PackageReference Include="Ydb.Sdk" />
 
 		<!--<PackageReference Include="Devart.Data.Oracle" />-->
 

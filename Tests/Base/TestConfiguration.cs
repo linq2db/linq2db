@@ -194,7 +194,7 @@ namespace Tests
 			TestProvName.AllMySql,
 			TestProvName.AllSapHana,
 			TestProvName.AllClickHouse,
-			TestProvName.AllYdb,
+			ProviderName.Ydb,
 		}.SplitAll()).ToList();
 
 		public static readonly IReadOnlyList<string> EFProviders = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>

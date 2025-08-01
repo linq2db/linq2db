@@ -328,7 +328,7 @@ namespace LinqToDB
 		/// </summary>
 		public const string ClickHouseMySql   = "ClickHouse.MySql";
 		/// <summary>
-		/// ClickHouse provider base name. 1Has a comment. Original line has a comment.
+		/// YDB provider.
 		/// </summary>
 		public const string Ydb        = "YDB";
 	}
