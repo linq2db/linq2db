@@ -560,10 +560,11 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction for current context with specified isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="level">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)
 		{
 			AssertDisposed();
@@ -577,9 +578,10 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction for current context with default isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual DataContextTransaction BeginTransaction()
 		{
 			AssertDisposed();
@@ -593,11 +595,12 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction asynchronously for current context with specified isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="level">Transaction isolation level.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
 		{
 			AssertDisposed();
@@ -611,10 +614,11 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction asynchronously for current context with default isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
 			AssertDisposed();
