@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 	///  Adapts LINQ to DB expressions to YQL syntax,
 	///  supports UPSERT, special types, temporary tables, hints, etc.
 	/// </summary>
-	public sealed class YdbSqlBuilder : BasicSqlBuilder<YdbOptions>
+	public class YdbSqlBuilder : BasicSqlBuilder<YdbOptions>
 	{
 		//--------------------------------------------------------------------- ctor
 		public YdbSqlBuilder(
@@ -193,18 +193,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				   or ConvertType.NameToSchema
 				   or ConvertType.NameToProcedure:
 				{
-					if (ProviderOptions.IdentifierQuoteMode != YdbIdentifierQuoteMode.None)
-					{
-						var quote =
-							   ProviderOptions.IdentifierQuoteMode == YdbIdentifierQuoteMode.Quote
-							|| ProviderOptions.IdentifierQuoteMode == YdbIdentifierQuoteMode.Auto && value.Any(char.IsUpper)
+					var quote = value.Any(char.IsUpper)
 							|| IsReserved(value)
 							|| value.Length == 0 || value[0] is not '_' and not (>= 'a' and <= 'z')
 							|| value.Skip(1).Any(c => !(char.IsLetterOrDigit(c) || c is '_' or '$'));
 
-						if (quote)
-							return sb.Append('`').Append(value.Replace("`", "``")).Append('`');
-					}
+					if (quote)
+						return sb.Append('`').Append(value.Replace("`", "``")).Append('`');
 
 					return sb.Append(value);
 				}

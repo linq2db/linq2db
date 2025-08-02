@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 	{
 		#region --- SQL-type helpers -----------------------------------------
 
-		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			// YDB stores DateTime with microsecond precision in the Timestamp type
 			protected override Expression? ConvertDateTime(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -31,7 +31,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		#region --- Date/Time Functions --------------------------------------
 
-		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			// -----------------------------------------------------------------
 			// DATEPART translation
@@ -185,7 +185,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		#endregion
 
-		sealed class MathMemberTranslator : MathMemberTranslatorBase
+		protected class MathMemberTranslator : MathMemberTranslatorBase
 		{
 
 			/// <summary>

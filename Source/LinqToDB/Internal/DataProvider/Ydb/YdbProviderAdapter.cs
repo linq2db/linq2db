@@ -1,220 +1,85 @@
 ﻿using System;
 using System.Data.Common;
-using System.Linq.Expressions;
-using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
-using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions.Types;
-using LinqToDB.Mapping;
-// ⇒ ActivatorExt, Tools
 
 namespace LinqToDB.Internal.DataProvider.Ydb
 {
+	/*
+	 * Misc notes:
+	 * - supported default isolation levels: Unspecified/Serializable (same behavior) === TxMode.SerializableRw
+	 * 
+	 * Optional/future features:
+	 * - TODO: add provider-specific retry policy to support YdbException.IsTransientWhenIdempotent
+	 * - TODO: add support for BeginTransaction(TxMode mode)
+	 */
 	public sealed class YdbProviderAdapter : IDynamicProviderAdapter
 	{
-		static readonly object _syncRoot = new();
-		static YdbProviderAdapter? _instance;
-
 		public const string AssemblyName    = "Ydb.Sdk";
 		public const string ClientNamespace = "Ydb.Sdk.Ado";
-		internal Func<DbConnection, string, YdbBinaryImporter>? BeginBinaryImport { get; }
-		internal Func<DbConnection, string, CancellationToken, Task<YdbBinaryImporter>>? BeginBinaryImportAsync { get; }
 
-		// YDB Data types
-		public Type? YdbDateType { get; }
-		public Type? YdbDateTimeType { get; }
-		public Type? YdbIntervalType { get; }
-		//---------------------------------------------------------------------
+		// custom reader methods
+		internal const string GetBytes        = "GetBytes";
+		internal const string GetSByte        = "GetSByte";
+		internal const string GetUInt16       = "GetUInt16";
+		internal const string GetUInt32       = "GetUInt32";
+		internal const string GetUInt64       = "GetUInt64";
+		internal const string GetInterval     = "GetInterval";
+		internal const string GetJson         = "GetJson";
+		internal const string GetJsonDocument = "GetJsonDocument";
 
-		YdbProviderAdapter(
-			Type connectionType,
-			Type dataReaderType,
-			Type parameterType,
-			Type commandType,
-			Type? transactionType,
-			Func<string, DbConnection> connectionFactory,
-			MappingSchema mappingSchema,
-			Type? ydbDateType,
-			Type? ydbDateTimeType,
-			Type? ydbIntervalType,
-			Func<DbConnection, string, YdbBinaryImporter>? beginBinaryImport,
-			Func<DbConnection, string, CancellationToken, Task<YdbBinaryImporter>>? beginBinaryImportAsync
-			)
+		YdbProviderAdapter()
 		{
-			ConnectionType = connectionType;
-			DataReaderType = dataReaderType;
-			ParameterType = parameterType;
-			CommandType = commandType;
-			TransactionType = transactionType;
-			_connectionFactory = connectionFactory;
-			MappingSchema = mappingSchema;
-			YdbDateType = ydbDateType;
-			YdbDateTimeType = ydbDateTimeType;
-			YdbIntervalType = ydbIntervalType;
-			BeginBinaryImport = beginBinaryImport;
-			BeginBinaryImportAsync = beginBinaryImportAsync;
+			var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null)
+				?? throw new InvalidOperationException($"Cannot load assembly {AssemblyName}.");
+
+			ConnectionType  = assembly.GetType($"{ClientNamespace}.YdbConnection",  true)!;
+			CommandType     = assembly.GetType($"{ClientNamespace}.YdbCommand",     true)!;
+			ParameterType   = assembly.GetType($"{ClientNamespace}.YdbParameter",   true)!;
+			DataReaderType  = assembly.GetType($"{ClientNamespace}.YdbDataReader",  true)!;
+			TransactionType = assembly.GetType($"{ClientNamespace}.YdbTransaction", true)!;
+
+			var typeMapper = new TypeMapper();
+
+			typeMapper.RegisterTypeWrapper<YdbConnection>(ConnectionType);
+
+			typeMapper.FinalizeMappings();
+
+			_connectionFactory = typeMapper.BuildTypedFactory<string, YdbConnection, DbConnection>(connectionString => new YdbConnection(connectionString));
+			ClearAllPools      = typeMapper.BuildFunc<Task>(typeMapper.MapLambda(() => YdbConnection.ClearAllPools()));
+			ClearPool          = typeMapper.BuildFunc<DbConnection, Task>(typeMapper.MapLambda((YdbConnection connection) => YdbConnection.ClearPool(connection)));
 		}
+
+		static readonly Lazy<YdbProviderAdapter> _lazy    = new (() => new ());
+		internal static YdbProviderAdapter Instance => _lazy.Value;
 
 		#region IDynamicProviderAdapter
 
-		public Type ConnectionType { get; }
-		public Type DataReaderType { get; }
-		public Type ParameterType { get; }
-		public Type CommandType { get; }
-		public Type? TransactionType { get; }
+		public Type ConnectionType  { get; }
+		public Type DataReaderType  { get; }
+		public Type ParameterType   { get; }
+		public Type CommandType     { get; }
+		public Type TransactionType { get; }
 
 		readonly Func<string, DbConnection> _connectionFactory;
-		public DbConnection CreateConnection(string connectionString)
-			=> _connectionFactory(connectionString);
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
 
 		#endregion
 
-		public MappingSchema MappingSchema { get; }
+		public Func<Task>               ClearAllPools { get; }
+		public Func<DbConnection, Task> ClearPool     { get; }
 
-		//---------------------------------------------------------------------
-
-		public static YdbProviderAdapter GetInstance()
-		{
-			if (_instance != null)
-				return _instance;
-
-			lock (_syncRoot)
-				return _instance ??= CreateAdapter();
-		}
-
-		//---------------------------------------------------------------------
-
-		static YdbProviderAdapter CreateAdapter()
-		{
-            var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null)
-                           ?? throw new InvalidOperationException($"Cannot load assembly {AssemblyName}.");
-
-			var connectionType = assembly.GetType($"{ClientNamespace}.YdbConnection", true)!;
-			var commandType    = assembly.GetType($"{ClientNamespace}.YdbCommand",    true)!;
-			var parameterType  = assembly.GetType($"{ClientNamespace}.YdbParameter",  true)!;
-			var dataReaderType = assembly.GetType($"{ClientNamespace}.YdbDataReader", true)!;
-			Type? transactionType = assembly.GetType($"{ClientNamespace}.YdbTransaction", false);
-
-			var csBuilderType  = assembly.GetType($"{ClientNamespace}.YdbConnectionStringBuilder", true)!;
-
-			//------------------------------------------------------------------
-			// Fabric DbConnection
-			//------------------------------------------------------------------
-			Func<string, DbConnection> connectionFactory;
-
-			// 1) YdbConnection(string)
-			if (connectionType.GetConstructor(new[] { typeof(string) }) != null)
-			{
-				connectionFactory = connStr =>
-					(DbConnection)ActivatorExt.CreateInstance(connectionType, connStr);
-			}
-			// 2) YdbConnection(YdbConnectionStringBuilder)
-			else if (connectionType.GetConstructor(new[] { csBuilderType }) != null)
-			{
-				// a) YdbConnectionStringBuilder(string)
-				if (csBuilderType.GetConstructor(new[] { typeof(string) }) != null)
-				{
-					connectionFactory = connStr =>
-					{
-						var builder = ActivatorExt.CreateInstance(csBuilderType, connStr);
-						return (DbConnection)ActivatorExt.CreateInstance(connectionType, builder);
-					};
-				}
-				// b) Builder without constructor => set ConnectionString manually
-				else
-				{
-					connectionFactory = connStr =>
-					{
-						dynamic builder = ActivatorExt.CreateInstance(csBuilderType);
-						if (builder is DbConnectionStringBuilder b)
-							b.ConnectionString = connStr;
-						else
-							csBuilderType.GetProperty("ConnectionString")?
-										 .SetValue(builder, connStr);
-
-						return (DbConnection)ActivatorExt.CreateInstance(connectionType, builder);
-					};
-				}
-			}
-			else
-				throw new InvalidOperationException(
-					"No suitable constructor found YdbConnection.");
-
-			var ydbDateType = assembly.GetType($"{ClientNamespace}.YdbDate", false);
-			var ydbDateTimeType = assembly.GetType($"{ClientNamespace}.YdbDateTime", false);
-			var ydbIntervalType = assembly.GetType($"{ClientNamespace}.YdbInterval", false);
-
-			//------------------------------------------------------------------
-			// Base MappingSchema
-			//------------------------------------------------------------------
-			var ms = new MappingSchema();
-
-			// Scalar methods
-			ms.AddScalarType(typeof(string), DataType.NVarChar);
-			ms.AddScalarType(typeof(bool), DataType.Boolean);
-			ms.AddScalarType(typeof(DateTime), DataType.DateTime2);
-			ms.AddScalarType(typeof(TimeSpan), DataType.Time);
-
-			// YDB types
-			if (ydbDateType != null)
-				ms.AddScalarType(ydbDateType, DataType.Date);
-			if (ydbDateTimeType != null)
-				ms.AddScalarType(ydbDateTimeType, DataType.DateTime2);
-			if (ydbIntervalType != null)
-				ms.AddScalarType(ydbIntervalType, DataType.Interval);
-
-			// BulkCopy
-			Func<DbConnection, string, YdbBinaryImporter>? beginBinaryImport = null;
-			Func<DbConnection, string, CancellationToken, Task<YdbBinaryImporter>>? beginBinaryImportAsync = null;
-
-			var bulkCopyType = assembly.GetType($"{ClientNamespace}.YdbBulkCopy", false);
-			if (bulkCopyType != null)
-			{
-				var typeMapper = new TypeMapper();
-				typeMapper.RegisterTypeWrapper<YdbBinaryImporter>(bulkCopyType);
-
-				var pConnection = Expression.Parameter(typeof(DbConnection));
-				var pCommand = Expression.Parameter(typeof(string));
-
-				beginBinaryImport = Expression.Lambda<Func<DbConnection, string, YdbBinaryImporter>>(
-					typeMapper.MapExpression((DbConnection conn, string cmd) =>
-						typeMapper.Wrap<YdbBinaryImporter>(((YdbConnection)(object)conn).BeginBulkCopy(cmd)),
-					pConnection, pCommand),
-					pConnection, pCommand).CompileExpression();
-			}
-
-			return new YdbProviderAdapter(
-				connectionType,
-				dataReaderType,
-				parameterType,
-				commandType,
-				transactionType,
-				connectionFactory,
-				ms,
-				ydbDateType,
-				ydbDateTimeType,
-				ydbIntervalType,
-				beginBinaryImport,
-				beginBinaryImportAsync);
-		}
-
+		#region wrappers
 		[Wrapper]
-		public class YdbBinaryImporter : TypeWrapper, IDisposable
+		internal sealed class YdbConnection
 		{
-			public YdbBinaryImporter(object instance, Delegate[] wrappers) : base(instance, wrappers) { }
+			public YdbConnection(string connectionString) => throw new NotImplementedException();
 
-			public void Dispose() => ((Action<YdbBinaryImporter>)CompiledWrappers[0])(this);
-			public void WriteRow(params object[] values) => ((Action<YdbBinaryImporter, object[]>)CompiledWrappers[1])(this, values);
-		}
+			public static Task ClearAllPools() => throw new NotImplementedException();
 
-		// Connection wrapper
-		[Wrapper]
-		public class YdbConnection : TypeWrapper
-		{
-			public YdbConnection(object instance, Delegate[] wrappers) : base(instance, wrappers) { }
-			public YdbBinaryImporter BeginBulkCopy(string command) => throw new NotImplementedException();
+			public static Task ClearPool(YdbConnection connection) => throw new NotImplementedException();
 		}
+		#endregion
 	}
 }

@@ -927,6 +927,7 @@ namespace LinqToDB.Internal.Expressions.Types
 
 		#region MapLambda
 
+		public LambdaExpression MapLambda<TR>(Expression<Func<TR>> func) => MapLambdaInternal(func, true)!;
 		public LambdaExpression MapLambda<T, TR>(Expression<Func<T, TR>> func) => MapLambdaInternal(func, true)!;
 		public LambdaExpression MapLambda<T1, T2, TR>(Expression<Func<T1, T2, TR>> func) => MapLambdaInternal(func, true)!;
 		public LambdaExpression MapLambda<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> func) => MapLambdaInternal(func, true)!;

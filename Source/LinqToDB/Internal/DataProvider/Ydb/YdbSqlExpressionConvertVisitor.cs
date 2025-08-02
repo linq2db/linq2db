@@ -7,7 +7,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Ydb
 {
-	public sealed class YdbSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	public class YdbSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public YdbSqlExpressionConvertVisitor(bool allowModify) : base(allowModify) { }
 

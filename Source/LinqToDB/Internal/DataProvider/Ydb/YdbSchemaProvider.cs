@@ -13,7 +13,7 @@ using LinqToDB.SchemaProvider;
 namespace LinqToDB.Internal.DataProvider.Ydb
 {
 	/// <summary> Schema-provider YDB </summary>
-	sealed class YdbSchemaProvider : SchemaProviderBase
+	public class YdbSchemaProvider : SchemaProviderBase
 	{
 		readonly HashSet<string>              _collections = new(StringComparer.OrdinalIgnoreCase);
 		Dictionary<string,List<string>>?      _pkMap;

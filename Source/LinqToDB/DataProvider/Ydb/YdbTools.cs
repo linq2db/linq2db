@@ -1,5 +1,7 @@
-﻿using System.Data.Common;
+﻿using System;
+using System.Data.Common;
 using System.Reflection;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
@@ -14,111 +16,62 @@ namespace LinqToDB.DataProvider.Ydb
 	/// similar to <c>PostgreSQLTools</c> for PostgreSQL.
 	/// </summary>
 	[PublicAPI]
-	public static partial class YdbTools
+	public static class YdbTools
 	{
-		//--------------------------------------------------------------------
-		//  Provider detector
-		//--------------------------------------------------------------------
+		enum Fake { };
 
-		private static YdbProviderDetector? _providerDetector;
+		static readonly Lazy<IDataProvider> _ydbDataProvider = ProviderDetectorBase<Fake>.CreateDataProvider<YdbDataProvider>();
 
-		internal static YdbProviderDetector ProviderDetector
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			get => _providerDetector ??= new();   // Lazy initialization
-			set => _providerDetector = value;
+			if (options.ProviderName?.Contains("Ydb") == true || options.ConfigurationString?.Contains("Ydb") == true)
+				return _ydbDataProvider.Value;
+
+			return null;
 		}
 
-		/// <summary>
-		/// Enables or disables automatic provider detection.
-		/// Default is <c>true</c>. Typically there is no reason to disable this,
-		/// but the option is provided for consistency with other providers.
-		/// </summary>
-		public static bool AutoDetectProvider
+		public static IDataProvider GetDataProvider() => _ydbDataProvider.Value;
+
+		#region CreateDataConnection
+
+		public static DataConnection CreateDataConnection(string connectionString)
 		{
-			get => ProviderDetector.AutoDetectProvider;
-			set => ProviderDetector.AutoDetectProvider = value;
+			return new DataConnection(new DataOptions()
+				.UseConnectionString(_ydbDataProvider.Value, connectionString));
 		}
 
-		//--------------------------------------------------------------------
-		//  Data provider
-		//--------------------------------------------------------------------
-
-		/// <summary>
-		/// Returns an instance of <see cref="YdbDataProvider"/>.
-		/// The <paramref name="connectionString"/> is optional —
-		/// it's not required by the provider itself, but included for API compatibility
-		/// with other Linq To DB helper methods.
-		/// </summary>
-		/// <param name="connectionString">Optional connection string.</param>
-		/// <returns>YDB data provider instance.</returns>
-		public static IDataProvider GetDataProvider(string? connectionString = null)
+		public static DataConnection CreateDataConnection(DbConnection connection)
 		{
-			return ProviderDetector.GetDataProvider(
-				new ConnectionOptions(ConnectionString: connectionString),
-				default,                                 // Provider (not used)
-				YdbProviderDetector.Version.AutoDetect); // Version (only one currently exists)
+			return new DataConnection(new DataOptions()
+				.UseConnection(_ydbDataProvider.Value, connection));
 		}
 
-		//--------------------------------------------------------------------
-		//  Assembly resolver
-		//--------------------------------------------------------------------
+		public static DataConnection CreateDataConnection(DbTransaction transaction)
+		{
+			return new DataConnection(new DataOptions()
+				.UseTransaction(_ydbDataProvider.Value, transaction));
+		}
 
-		/// <summary>
-		/// Registers YDB assembly loading from the specified directory.
-		/// Required only if <c>Ydb.Sdk.dll</c> is placed next to the executable
-		/// and not added via NuGet.
-		/// </summary>
-		/// <param name="path">Path to the directory containing the YDB assemblies.</param>
+		#endregion
+
 		public static void ResolveYdb(string path)
 		{
 			_ = new AssemblyResolver(path, YdbProviderAdapter.AssemblyName);
 		}
 
-		/// <summary>
-		/// Registers a container assembly that already includes all
-		/// the provider dependencies. Rarely needed, but available for completeness.
-		/// </summary>
-		/// <param name="assembly">Container assembly.</param>
 		public static void ResolveYdb(Assembly assembly)
 		{
 			_ = new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
-		//--------------------------------------------------------------------
-		//  Quick DataConnection creation
-		//--------------------------------------------------------------------
+		/// <summary>
+		/// Clear all YDB client connection pools.
+		/// </summary>
+		public static Task ClearAllPools() => YdbProviderAdapter.Instance.ClearAllPools();
 
 		/// <summary>
-		/// Creates a <see cref="DataConnection"/> using a connection string.
+		/// Clear connection pool for connection's connection string.
 		/// </summary>
-		/// <param name="connectionString">YDB connection string.</param>
-		/// <returns>A configured <see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateDataConnection(string connectionString)
-		{
-			return new DataConnection(new DataOptions()
-				.UseConnectionString(GetDataProvider(connectionString), connectionString));
-		}
-
-		/// <summary>
-		/// Creates a <see cref="DataConnection"/> from an existing <see cref="DbConnection"/>.
-		/// </summary>
-		/// <param name="connection">An open <see cref="DbConnection"/> to YDB.</param>
-		/// <returns>A configured <see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateDataConnection(DbConnection connection)
-		{
-			return new DataConnection(new DataOptions()
-				.UseConnection(GetDataProvider(connection.ConnectionString), connection));
-		}
-
-		/// <summary>
-		/// Creates a <see cref="DataConnection"/> from an existing <see cref="DbTransaction"/>.
-		/// </summary>
-		/// <param name="transaction">An active <see cref="DbTransaction"/> for YDB.</param>
-		/// <returns>A configured <see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateDataConnection(DbTransaction transaction)
-		{
-			return new DataConnection(new DataOptions()
-				.UseTransaction(GetDataProvider(transaction.Connection!.ConnectionString), transaction));
-		}
+		public static Task ClearPool(DbConnection connection) => YdbProviderAdapter.Instance.ClearPool(connection);
 	}
 }

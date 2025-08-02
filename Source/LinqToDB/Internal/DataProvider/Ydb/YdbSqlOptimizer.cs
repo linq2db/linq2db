@@ -8,7 +8,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 	/// Specialized SQL-tree optimizer for YDB.
 	/// Removes unnecessary aliases and prevents the generation of unsupported constructs.
 	/// </summary>
-	sealed class YdbSqlOptimizer : BasicSqlOptimizer
+	public class YdbSqlOptimizer : BasicSqlOptimizer
 	{
 		public YdbSqlOptimizer(SqlProviderFlags sqlProviderFlags)
 			: base(sqlProviderFlags) { }

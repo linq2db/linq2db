@@ -10,7 +10,6 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Ydb
 {
-
 	public static class YdbSpecificExtensions
 	{
 		//--------------------------------------------------------------------

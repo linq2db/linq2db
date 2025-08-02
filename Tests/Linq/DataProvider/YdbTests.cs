@@ -84,30 +84,6 @@ namespace Tests.DataProvider
 		#region MappingSchemaTests
 
 		//------------------------------------------------------------------
-		// ADAPTER
-		//------------------------------------------------------------------
-		[Test]
-		public void GetInstance_ShouldCreateAdapterSuccessfully()
-		{
-			// Act
-			var adapter = YdbProviderAdapter.GetInstance();
-
-			// Assert
-			Assert.That(adapter, Is.Not.Null);
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(adapter.ConnectionType, Is.Not.Null);
-				Assert.That(adapter.DataReaderType, Is.Not.Null);
-				Assert.That(adapter.ParameterType, Is.Not.Null);
-				Assert.That(adapter.CommandType, Is.Not.Null);
-				Assert.That(adapter.MappingSchema, Is.Not.Null);
-			}
-		}
-		#endregion
-
-		#region MappingSchemaTests
-
-		//------------------------------------------------------------------
 		// SCALAR-TYPES
 		//------------------------------------------------------------------
 		[Test]

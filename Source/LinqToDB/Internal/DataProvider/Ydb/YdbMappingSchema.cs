@@ -219,7 +219,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			/// Constructs the extended mapping schema using the provider adapter and base instance.
 			/// </summary>
 			public YdbClientMappingSchema()
-				: base(ProviderName.Ydb, YdbProviderAdapter.GetInstance().MappingSchema, Instance)
+				: base(ProviderName.Ydb, Instance)
 			{
 			}
 		}

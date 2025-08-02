@@ -29,8 +29,7 @@ namespace LinqToDB.DataProvider.Ydb
 		BulkCopyType BulkCopyType = BulkCopyType.ProviderSpecific,
 		bool UseServerSideUpsert = true,
 		bool AutoConvertDateTimeToUtc = true,
-		bool UseLegacyPagination = false,
-		YdbIdentifierQuoteMode IdentifierQuoteMode = YdbIdentifierQuoteMode.Auto
+		bool UseLegacyPagination = false
 	) : DataProviderOptions<YdbOptions>(BulkCopyType)
 	{
 		public YdbOptions() : this(BulkCopyType.ProviderSpecific)

@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		public YdbDataProvider() : this(ProviderName) { }
 
 		protected YdbDataProvider(string name)
-			: base(name, GetMappingSchema(), YdbProviderAdapter.GetInstance())
+			: base(name, GetMappingSchema(), YdbProviderAdapter.Instance)
 		{
 
 			// YDB (YQL) does not support UPDATE … FROM JOIN.
@@ -109,7 +109,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			IEnumerable<T> source)
 		{
 			var bcType = options.BulkCopyOptions.BulkCopyType;
-			return new YdbBulkCopy(this)
+			return new YdbBulkCopy()
 				.BulkCopy(bcType, table, options, source);
 		}
 
@@ -124,7 +124,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			CancellationToken cancellationToken)
 		{
 			var bcType = options.BulkCopyOptions.BulkCopyType;
-			return new YdbBulkCopy(this)
+			return new YdbBulkCopy()
 				.BulkCopyAsync(bcType, table, options, source, cancellationToken);
 		}
 
@@ -138,7 +138,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			CancellationToken cancellationToken)
 		{
 			var bcType = options.BulkCopyOptions.BulkCopyType;
-			return new YdbBulkCopy(this)
+			return new YdbBulkCopy()
 				.BulkCopyAsync(bcType, table, options, source, cancellationToken);
 		}
 
