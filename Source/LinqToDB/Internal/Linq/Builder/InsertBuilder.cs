@@ -529,7 +529,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					forceParameters = false;
 				}
 
-				UpdateBuilder.ParseSet(contextRef, sourceRef, extractExp, updateExpr, insertContext.SetExpressions, forceParameters);
+				UpdateBuilder.ParseSet(contextRef, extractExp, updateExpr, insertContext.SetExpressions, forceParameters);
 				insertContext.LastBuildInfo = buildInfo;
 
 				return BuildSequenceResult.FromContext(insertContext);

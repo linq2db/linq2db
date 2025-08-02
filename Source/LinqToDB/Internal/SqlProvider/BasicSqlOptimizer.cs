@@ -17,7 +17,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlProvider
 {
-	public class BasicSqlOptimizer : ISqlOptimizer
+	public abstract class BasicSqlOptimizer : ISqlOptimizer
 	{
 		#region Init
 
@@ -174,7 +174,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return result;
 		}
 
-		protected static bool IsCompatibleForUpdate(SelectQuery query, SqlTable updateTable, int level = 0)
+		protected static bool IsCompatibleForUpdate(SelectQuery query, SqlTable updateTable)
 		{
 			if (!IsCompatibleForUpdate(query))
 				return false;
@@ -223,7 +223,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return current;
 		}
 
-		protected static void ApplyUpdateTableComparison(SqlSearchCondition searchCondition, SelectQuery updateQuery,
+		protected static void ApplyUpdateTableComparison(SqlSearchCondition searchCondition,
 			SqlUpdateClause updateClause, SqlTable inQueryTable, DataOptions dataOptions)
 		{
 			var compareKeys = inQueryTable.GetKeys(true);
@@ -248,7 +248,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected static void ApplyUpdateTableComparison(SelectQuery updateQuery, SqlUpdateClause updateClause, SqlTable inQueryTable, DataOptions dataOptions)
 		{
-			ApplyUpdateTableComparison(updateQuery.Where.EnsureConjunction(), updateQuery, updateClause, inQueryTable, dataOptions);
+			ApplyUpdateTableComparison(updateQuery.Where.EnsureConjunction(), updateClause, inQueryTable, dataOptions);
 		}
 
 		protected virtual SqlUpdateStatement BasicCorrectUpdate(SqlUpdateStatement statement, DataOptions dataOptions, bool wrapForOutput)
@@ -542,8 +542,7 @@ namespace LinqToDB.Internal.SqlProvider
 				statement,
 				static (wrap, q, parentElement) => wrap.Contains(q),
 				null,
-				allowMutation: true,
-				withStack: true);
+				allowMutation: true);
 		}
 
 		static void CorrelateValueTypes(bool castParameters, ref ISqlExpression toCorrect, ISqlExpression reference)
@@ -865,7 +864,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#region Alternative Builders
 
-		protected SqlDeleteStatement GetAlternativeDelete(SqlDeleteStatement deleteStatement, DataOptions dataOptions)
+		protected SqlDeleteStatement GetAlternativeDelete(SqlDeleteStatement deleteStatement)
 		{
 			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0))
 			{
@@ -917,64 +916,6 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return false;
-		}
-
-		bool MoveConditions(SqlTable table, 
-			IReadOnlyCollection<ISqlTableSource> currentSources,
-			SqlSearchCondition       source, 
-			SqlSearchCondition       destination,
-			SqlSearchCondition       common)
-		{
-			if (source.IsOr)
-				return false;
-
-			List<ISqlPredicate>? predicatesForDestination = null;
-			List<ISqlPredicate>? predicatesCommon         = null;
-
-			ISqlTableSource[] tableSources = { (ISqlTableSource)table };
-
-			foreach (var p in source.Predicates)
-			{
-				if (QueryHelper.IsDependsOnOuterSources(p, currentSources : currentSources) &&
-				    QueryHelper.IsDependsOnSources(p, tableSources))
-				{
-					predicatesForDestination ??= new();
-					predicatesForDestination.Add(p);
-				}
-				else
-				{
-					predicatesCommon ??= new();
-					predicatesCommon.Add(p);
-				}
-			}
-
-			if (predicatesForDestination != null)
-			{
-				if (destination.IsOr)
-					return false;
-			}
-
-			if (predicatesCommon != null)
-			{
-				if (common.IsOr)
-					return false;
-			}
-
-			if (predicatesForDestination != null)
-			{
-				destination.AddRange(predicatesForDestination);
-				foreach(var p in predicatesForDestination)
-					source.Predicates.Remove(p);
-			}
-
-			if (predicatesCommon != null)
-			{
-				common.AddRange(predicatesCommon);
-				foreach(var p in predicatesCommon)
-					source.Predicates.Remove(p);
-			}
-
-			return true;
 		}
 
 		protected bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, out SqlTableSource? source)
@@ -1481,8 +1422,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				newSource.Joins.Add(join);
 
-				ApplyUpdateTableComparison(join.Condition, updateStatement.SelectQuery, updateStatement.Update,
-					clonedTable, dataOptions);
+				ApplyUpdateTableComparison(updateStatement.SelectQuery, updateStatement.Update, clonedTable, dataOptions);
 			}
 			else
 			{
@@ -1630,7 +1570,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (skipValue != null)
 			{
 
-				var supportsParameter = SqlProviderFlags.GetIsSkipSupportedFlag(query.Select.TakeValue, query.Select.SkipValue)
+				var supportsParameter = SqlProviderFlags.GetIsSkipSupportedFlag(query.Select.TakeValue)
 										&& SqlProviderFlags.AcceptsTakeAsParameter;
 
 				if (!supportsParameter)
@@ -1839,7 +1779,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (skipExpr != null)
 			{
-				var supportsParameter = SqlProviderFlags.GetIsSkipSupportedFlag(selectQuery.Select.TakeValue, selectQuery.Select.SkipValue)
+				var supportsParameter = SqlProviderFlags.GetIsSkipSupportedFlag(selectQuery.Select.TakeValue)
 										&& SqlProviderFlags.AcceptsTakeAsParameter;
 
 				if (supportsParameter)
@@ -1895,8 +1835,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 					QueryHelper.MoveOrderByUp(p, q);
 				},
-				allowMutation: true,
-				withStack: false);
+				allowMutation: true);
 		}
 
 		/// <summary>
@@ -2002,8 +1941,7 @@ namespace LinqToDB.Internal.SqlProvider
 					query.Select.Take(null, null);
 
 				},
-				allowMutation: true,
-				withStack: false);
+				allowMutation: true);
 		}
 
 		protected IQueryElement OptimizeQueries(IQueryElement startFrom, IQueryElement root, DataOptions dataOptions, MappingSchema mappingSchema, EvaluationContext evaluationContext)

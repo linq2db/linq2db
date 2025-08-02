@@ -15,7 +15,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	abstract class SqlServerSqlBuilder : BasicSqlBuilder<SqlServerOptions>
+	public abstract class SqlServerSqlBuilder : BasicSqlBuilder<SqlServerOptions>
 	{
 		protected SqlServerSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
@@ -414,7 +414,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				StringBuilder.Append("DELETE FROM ");
 		}
 
-		protected void BuildIdentityInsert(NullabilityContext nullability, SqlTableSource table, bool enable)
+		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
 		{
 			StringBuilder.Append("SET IDENTITY_INSERT ");
 			BuildTableName(table, true, false);

@@ -68,8 +68,8 @@ namespace Tests.UserTests
 				new PersonGrade { Id = 3, PersonId = 1, Subject = "Geography", Grade = 9 }
 			};
 
-			var persons     = db.CreateLocalTable(personsData);
-			var personGrate = db.CreateLocalTable(personGrateData);
+			using var persons     = db.CreateLocalTable(personsData);
+			using var personGrate = db.CreateLocalTable(personGrateData);
 
 			var query = db.GetTable<PersonWithAssociation>().LoadWith(p => p.GradeStats)
 				.Where(p => p.GradeStats!.AverageGrade > 5)

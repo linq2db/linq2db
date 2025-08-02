@@ -10,10 +10,8 @@ using LinqToDB.Internal.DataProvider.DB2;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {
-	sealed class InformixProviderDetector : ProviderDetectorBase<InformixProvider, InformixProviderDetector.Dialect>
+	public class InformixProviderDetector : ProviderDetectorBase<InformixProvider>
 	{
-		internal enum Dialect { }
-
 		public InformixProviderDetector() : base()
 		{
 		}
@@ -62,7 +60,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return null;
 		}
 
-		public override IDataProvider GetDataProvider(ConnectionOptions options, InformixProvider provider, Dialect version)
+		public override IDataProvider GetDataProvider(ConnectionOptions options, InformixProvider provider, NoDialect version)
 		{
 			if (provider == InformixProvider.AutoDetect)
 				provider = DetectProvider();
@@ -82,11 +80,6 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return File.Exists(Path.Combine(dirName ?? ".", InformixProviderAdapter.IfxAssemblyName + ".dll"))
 				? InformixProvider.Informix
 				: InformixProvider.DB2;
-		}
-
-		public override Dialect? DetectServerVersion(DbConnection connection)
-		{
-			return default(Dialect);
 		}
 
 		protected override DbConnection CreateConnection(InformixProvider provider, string connectionString)

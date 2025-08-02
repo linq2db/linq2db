@@ -63,7 +63,10 @@ namespace LinqToDB.CodeModel
 		// types, defined in current ast as:
 		// key: name of type
 		// value: list of namespaces with such type
+		// TODO: forgot to use for something? or remove?
+#pragma warning disable IDE0052 // Remove unread private members
 		private readonly IReadOnlyDictionary<CodeIdentifier, ISet<IEnumerable<CodeIdentifier>>> _knownTypes;
+#pragma warning restore IDE0052 // Remove unread private members
 		private readonly ILanguageProvider                                                      _languageProvider;
 		// dictionary with name scopes and names, defined in those scopes:
 		// key: name scope (namespace or namespace + type(s) name)
@@ -75,9 +78,12 @@ namespace LinqToDB.CodeModel
 		private readonly IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> _scopedTypes;
 
 		// list of imports for current generation context (file)
+		// TODO: forgot to use for something? or remove?
+#pragma warning disable IDE0052 // Remove unread private members
 		private IEnumerable<CodeImport>? _currentImports;
-		// current type if current code-generation position is inside of class
-		// constains nearest class in case of nested classes
+#pragma warning restore IDE0052 // Remove unread private members
+							   // current type if current code-generation position is inside of class
+							   // constains nearest class in case of nested classes
 		private IType?                   _currentType;
 
 		public CSharpCodeGenerator(

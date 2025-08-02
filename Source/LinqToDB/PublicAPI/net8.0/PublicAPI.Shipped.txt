@@ -4,14 +4,11 @@ const LinqToDB.Internal.DataProvider.DB2.DB2ProviderAdapter.AssemblyNameOld = "I
 const LinqToDB.Internal.DataProvider.DB2.DB2ProviderAdapter.ClientNamespace = "IBM.Data.Db2" -> string!
 const LinqToDB.Internal.DataProvider.DB2.DB2ProviderAdapter.ClientNamespaceOld = "IBM.Data.DB2.Core" -> string!
 LinqToDB.Data.DataConnection.DisposeCommandAsync() -> System.Threading.Tasks.ValueTask
-LinqToDB.Data.DataConnection.ResetCommandTimeoutAsync() -> System.Threading.Tasks.ValueTask
 LinqToDB.Data.RetryPolicy.DbExceptionTransientExceptionDetector
 LinqToDB.Data.RetryPolicy.TransientRetryPolicy
 LinqToDB.Data.RetryPolicy.TransientRetryPolicy.TransientRetryPolicy() -> void
 LinqToDB.Data.RetryPolicy.TransientRetryPolicy.TransientRetryPolicy(int maxRetryCount) -> void
 LinqToDB.Data.RetryPolicy.TransientRetryPolicy.TransientRetryPolicy(int maxRetryCount, System.TimeSpan maxRetryDelay, double randomFactor, double exponentialBase, System.TimeSpan coefficient) -> void
-LinqToDB.DataContext.ResetCommandTimeoutAsync() -> System.Threading.Tasks.ValueTask
-LinqToDB.DataProvider.IDataProvider.DisposeCommandAsync(System.Data.Common.DbCommand! command) -> System.Threading.Tasks.ValueTask
 override LinqToDB.DataProvider.Access.AccessOptions.<Clone>$() -> LinqToDB.DataProvider.Access.AccessOptions!
 override LinqToDB.DataProvider.ClickHouse.ClickHouseOptions.<Clone>$() -> LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!
 override LinqToDB.DataProvider.DB2.DB2Options.<Clone>$() -> LinqToDB.DataProvider.DB2.DB2Options!
@@ -43,5 +40,4 @@ System.Data.Linq.Binary.Binary(byte[]? value) -> void
 System.Data.Linq.Binary.Equals(System.Data.Linq.Binary? other) -> bool
 System.Data.Linq.Binary.Length.get -> int
 System.Data.Linq.Binary.ToArray() -> byte[]!
-virtual LinqToDB.Internal.DataProvider.DataProviderBase.DisposeCommandAsync(System.Data.Common.DbCommand! command) -> System.Threading.Tasks.ValueTask
-virtual LinqToDB.Internal.Linq.Translation.SqlTypesTranslationDefault.ConvertDateOnly(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
+virtual LinqToDB.Internal.DataProvider.Translation.SqlTypesTranslationDefault.ConvertDateOnly(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?

@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Internal.Linq
 {
-	public class RuntimeExpressionsContainer(Expression mainExpression) : IQueryExpressions
+	public sealed class RuntimeExpressionsContainer(Expression mainExpression) : IQueryExpressions
 	{
 		public Expression MainExpression { get; } = mainExpression;
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
 
@@ -8,7 +9,7 @@ using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public class OleDbProviderAdapter : IDynamicProviderAdapter
+	public sealed class OleDbProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _syncRoot = new();
 		private static OleDbProviderAdapter? _instance;
@@ -76,7 +77,7 @@ namespace LinqToDB.Internal.DataProvider
 #if NETFRAMEWORK
 						var assembly = typeof(System.Data.OleDb.OleDbConnection).Assembly;
 #else
-						var assembly = Internal.Common.Tools.TryLoadAssembly(AssemblyName, null);
+						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 #endif
@@ -134,6 +135,7 @@ namespace LinqToDB.Internal.DataProvider
 		[Wrapper]
 		internal sealed class OleDbConnection : TypeWrapper
 		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
 			private static LambdaExpression[] Wrappers { get; } =
 			{
 				// [0]: get Provider

@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Diagnostics.CodeAnalysis;
+
+using Microsoft.EntityFrameworkCore;
 
 namespace LinqToDB.EntityFrameworkCore
 {
@@ -29,6 +31,7 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <param name="dbSet">EF.Core <see cref="DbSet{TEntity}"/> instance.</param>
 		/// <param name="dataContext">LINQ To DB data context instance.</param>
 		/// <returns>LINQ To DB <see cref="ITable{T}"/> instance.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "dbSet used as extension point")]
 		public static ITable<T> ToLinqToDBTable<T>(this DbSet<T> dbSet, IDataContext dataContext)
 			where T : class
 		{

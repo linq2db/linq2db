@@ -17,6 +17,7 @@ using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
@@ -34,10 +35,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		#region Build Where
 
 		public IBuildContext? BuildWhere(
-			IBuildContext? parent,
 			IBuildContext sequence,
 			LambdaExpression condition,
-			bool checkForSubQuery,
 			bool enforceHaving,
 			out Expression? error)
 		{
@@ -241,7 +240,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return result;
 		}
 
-		public Expression ConvertSingleExpression(Expression expression, bool inProjection)
+		public Expression ConvertSingleExpression(Expression expression)
 		{
 			// We can convert only these expressions, so it is shortcut to do not allocate visitor
 
@@ -329,7 +328,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return false;
 		}
 
-		public ISqlExpression PosProcessCustomExpression(Expression expression, ISqlExpression sqlExpression, NullabilityContext nullabilityContext)
+		public ISqlExpression PosProcessCustomExpression(ISqlExpression sqlExpression, NullabilityContext nullabilityContext)
 		{
 			if (sqlExpression is SqlExpression { Expr: "{0}", Parameters.Length: 1 } expr)
 			{
@@ -349,14 +348,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region CanBeConstant
 
-		public bool CanBeConstant(Expression expr, MappingSchema mappingSchema)
+		public bool CanBeConstant(Expression expr)
 		{
 			if (!ParametersContext.CanBeConstant(expr))
 			{
 				return false;
 			}
 
-			return _optimizationContext.IsImmutable(expr, mappingSchema);
+			return _optimizationContext.IsImmutable(expr);
 		}
 
 		#endregion
@@ -598,12 +597,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public ISqlPredicate? MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
 		{
-			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable.FindFieldByMemberName(name) ?? throw new LinqToDBException($"Field {name} not found in table {table.SqlTable}"));
+			return MakeIsPredicate(table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable.FindFieldByMemberName(name) ?? throw new LinqToDBException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
 		public ISqlPredicate? MakeIsPredicate<TContext>(
 			TContext getSqlContext,
-			IBuildContext context,
 			IReadOnlyList<InheritanceMapping> inheritanceMapping,
 			Type toType,
 			Func<TContext, string, ISqlExpression> getSql)
@@ -813,14 +811,14 @@ namespace LinqToDB.Internal.Linq.Builder
 		TransformVisitor<ExpressionBuilder> GetRemoveNullPropagationTransformer(bool forSearch)
 		{
 			if (forSearch)
-				return _removeNullPropagationTransformerForSearch ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, true));
+				return _removeNullPropagationTransformerForSearch ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, forSearch: true));
 			else
-				return _removeNullPropagationTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, false));
+				return _removeNullPropagationTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, forSearch: false));
 		}
 
-		public Expression RemoveNullPropagation(IBuildContext context, Expression expr, bool toSql)
+		public Expression RemoveNullPropagation(Expression expr)
 		{
-			return _buildVisitor.RemoveNullPropagation(expr, toSql);
+			return _buildVisitor.RemoveNullPropagation(expr, toSql: false);
 		}
 
 		public Expression RemoveNullPropagation(Expression expr, bool forSearch)
@@ -1266,7 +1264,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (flags.HasFlag(ProjectFlags.SQL))
 			{
-				body = RemoveNullPropagation(body, flags.HasFlag(ProjectFlags.Keys));
+				body = RemoveNullPropagation(body, forSearch: flags.HasFlag(ProjectFlags.Keys));
 			}
 
 			if (body is SqlDefaultIfEmptyExpression defaultIfEmpty && next != null)

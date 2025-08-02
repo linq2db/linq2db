@@ -15,9 +15,9 @@ using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Conversion;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
@@ -408,9 +408,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var cacheKey = new ExprCacheKey(expression, context, null, null, flags);
 			
-			if (_translationCache.TryGetValue(cacheKey, out var translated))
+			if (GetAlreadyTranslated(cacheKey, out var translated))
 			{
-				DebugCacheHit(cacheKey, translated);
 				return translated;
 			}
 
@@ -579,8 +578,23 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var cacheKey = GetSqlCacheKey(path, selectQuery);
 
+			return GetAlreadyTranslated(cacheKey, out translated);
+		}
+
+		bool GetAlreadyTranslated(ExprCacheKey cacheKey, [NotNullWhen(true)] out Expression? translated)
+		{
 			if (_translationCache.TryGetValue(cacheKey, out translated))
+			{
+				if (cacheKey.Flags == ProjectFlags.SQL && _buildPurpose is BuildPurpose.Expression && SequenceHelper.HasError(translated))
+				{
+					// If we have error in translated expression, we should not use it.
+					translated = null;
+					return false;
+				}
+
+				DebugCacheHit(cacheKey, translated);
 				return true;
+			}
 
 			return false;
 		}
@@ -834,7 +848,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (IsSqlOrExpression() && BuildContext != null)
 			{
-				var exposed = Builder.ConvertSingleExpression(node, false);
+				var exposed = Builder.ConvertSingleExpression(node);
 
 				if (!IsSame(exposed, node))
 				{
@@ -869,9 +883,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (HandleStringFormat(node, out var translatedFormat))
 					return Visit(translatedFormat);
-
-				if (HandleConstructorMethods(node, out var translatedConstructor))
-					return Visit(translatedConstructor);
 
 				if (node.Type == typeof(bool))
 				{
@@ -1110,7 +1121,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (attribute != null)
 				{
 					// prevent to handling it here
-					var converted = Builder.ConvertSingleExpression(expr, false);
+					var converted = Builder.ConvertSingleExpression(expr);
 					if (!IsSame(converted, expr))
 					{
 						translated = null;
@@ -1220,7 +1231,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				Builder.RegisterExtensionAccessors(expr);
 
-				placeholder = placeholder.WithSql(Builder.PosProcessCustomExpression(expr, placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery)));
+				placeholder = placeholder.WithSql(Builder.PosProcessCustomExpression(placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery)));
 				placeholder = placeholder.WithPath(expr);
 
 				placeholder = (SqlPlaceholderExpression)RegisterTranslatedSql(rootSelectQuery, placeholder, expr);
@@ -1439,9 +1450,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (_buildPurpose is BuildPurpose.Expression or BuildPurpose.Sql)
 					{
 						var exprCacheKey = GetSqlCacheKey(node);
-						if (_translationCache.TryGetValue(exprCacheKey, out var alreadyTranslated))
+						if (GetAlreadyTranslated(exprCacheKey, out var alreadyTranslated))
 						{
-							DebugCacheHit(exprCacheKey, alreadyTranslated);
 							return Visit(alreadyTranslated);
 						}
 					}
@@ -1505,7 +1515,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var cacheKey = new ExprCacheKey(node, null, _columnDescriptor, rootContext.SelectQuery, ProjectFlags.SQL);
 
-						if (_translationCache.TryGetValue(cacheKey, out var translatedLocal))
+						if (GetAlreadyTranslated(cacheKey, out var translatedLocal))
 							return translatedLocal;
 
 						if (TranslateMember(BuildContext, memberExpression : node, translated : out translatedLocal))
@@ -1536,7 +1546,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							return Visit(translated);
 						}
 
-						var exposed = Builder.ConvertSingleExpression(node, false);
+						var exposed = Builder.ConvertSingleExpression(node);
 
 						if (!IsSame(exposed, node))
 						{
@@ -1933,8 +1943,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var binary = (BinaryExpression)expr;
 
-				var left  = RemoveNullPropagation(binary.Left, true);
-				var right = RemoveNullPropagation(binary.Right, true);
+				var left  = RemoveNullPropagation(binary.Left, toSql: true);
+				var right = RemoveNullPropagation(binary.Right, toSql: true);
 
 				if (toSql)
 				{
@@ -1951,9 +1961,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var cond = (ConditionalExpression)expr;
 
-				var test    = RemoveNullPropagation(cond.Test, true);
-				var ifTrue  = RemoveNullPropagation(cond.IfTrue, true);
-				var ifFalse = RemoveNullPropagation(cond.IfFalse, true);
+				var test    = RemoveNullPropagation(cond.Test, toSql: true);
+				var ifTrue  = RemoveNullPropagation(cond.IfTrue, toSql: true);
+				var ifFalse = RemoveNullPropagation(cond.IfFalse, toSql: true);
 
 				if (test.NodeType == ExpressionType.Equal || test.NodeType == ExpressionType.NotEqual)
 				{
@@ -2361,23 +2371,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			return false;
 		}
 
-		public bool HandleConstructorMethods(MethodCallExpression node, [NotNullWhen(true)] out Expression? translated)
-		{
-			/*if (node.Method.IsStatic)
-			{
-				var shouldHandle = node.Method.DeclaringType == typeof(Tuple) && node.Method.Name == nameof(Tuple.Create);
-
-				if (shouldHandle)
-				{
-					translated = Builder.ParseGenericConstructor(node, ProjectFlags.SQL, _columnDescriptor, true);
-					return !ReferenceEquals(node, translated);
-				}
-			}*/
-
-			translated = null;
-			return false;
-		}
-
 		[MemberNotNullWhen(true, nameof(BuildContext))]
 		private bool CanTryHandleValue(Expression node)
 		{
@@ -2410,7 +2403,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				ISqlExpression? sql = null;
 
-				if (_columnDescriptor?.ValueConverter == null && Builder.CanBeConstant(node, MappingSchema) && Builder.CanBeEvaluatedOnClient(node) && !_buildFlags.HasFlag(BuildFlags.ForceParameter))
+				if (_columnDescriptor?.ValueConverter == null && Builder.CanBeConstant(node) && Builder.CanBeEvaluatedOnClient(node) && !_buildFlags.HasFlag(BuildFlags.ForceParameter))
 				{
 					sql = Builder.BuildConstant(MappingSchema, node, _columnDescriptor);
 				}
@@ -2488,7 +2481,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var cacheKey = new ExprCacheKey(traversed, null, null, calculatedContext.SelectQuery, ProjectFlags.SQL | ProjectFlags.Subquery);
 
-			if (_translationCache.TryGetValue(cacheKey, out var alreadyTranslated))
+			if (GetAlreadyTranslated(cacheKey, out var alreadyTranslated))
 			{
 				subqueryExpression = alreadyTranslated;
 				return !IsSame(node, alreadyTranslated);
@@ -2742,7 +2735,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (HandleBinary(node, out var translated))
 				return translated; // Do not Visit again
 
-			var exposed = Builder.ConvertSingleExpression(node, false);
+			var exposed = Builder.ConvertSingleExpression(node);
 
 			if (!IsSame(exposed, node))
 				return Visit(exposed);
@@ -2871,7 +2864,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return true;
 					}
 				}
-
+			
 				translated = Visit(compareExpr);
 				return true;
 			}
@@ -3868,8 +3861,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					leftExpr = Visit(singleCall);
 				}
 
-				leftExpr = RemoveNullPropagation(leftExpr, true);
-				rightExpr = RemoveNullPropagation(rightExpr, true);
+				leftExpr = RemoveNullPropagation(leftExpr, toSql: true);
+				rightExpr = RemoveNullPropagation(rightExpr, toSql: true);
 
 				if (leftExpr is SqlErrorExpression leftError)
 					return leftError.WithType(typeof(bool));
@@ -5091,7 +5084,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				public DbDataType GetDbDataType(Type type) => _translationContext.MappingSchema.GetDbDataType(type);
 			}
 
-			public void Init(ExpressionBuildVisitor visitor, IBuildContext? currentContext, ColumnDescriptor? currentColumnDescriptor, string? currentAlias)
+			public void Init(ExpressionBuildVisitor visitor, IBuildContext? currentContext, string? currentAlias)
 			{
 				Visitor        = visitor;
 				CurrentContext = currentContext;
@@ -5228,7 +5221,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				using var translationContext = _translationContexts.Allocate();
 
-				translationContext.Value.Init(this, context, _columnDescriptor, _alias);
+				translationContext.Value.Init(this, context, _alias);
 
 				translated = Builder._memberTranslator.Translate(translationContext.Value, memberExpression, GetTranslationFlags());
 

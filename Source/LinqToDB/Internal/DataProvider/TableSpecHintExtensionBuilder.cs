@@ -7,7 +7,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	sealed class TableSpecHintExtensionBuilder : ISqlTableExtensionBuilder
+	public class TableSpecHintExtensionBuilder : ISqlTableExtensionBuilder
 	{
 		void ISqlTableExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias)
 		{

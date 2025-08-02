@@ -3,10 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Internal.SqlQuery.Visitors;
 
-namespace LinqToDB.Internal.SqlProvider
+namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	sealed class ReduceIsNullExpressionVisitor : SqlQueryVisitor
 	{
@@ -115,7 +113,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			if (element is { IsAggregate: false, IsPure: true })
 			{
-				ReduceSqlExpressionBase(element, element.Parameters, element.NullabilityType);
+				ReduceSqlExpressionBase(element.Parameters, element.NullabilityType);
 			}
 
 			return element;
@@ -125,13 +123,13 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			if (element is { IsAggregate: false, IsPure: true })
 			{
-				ReduceSqlExpressionBase(element, element.Parameters, element.NullabilityType);
+				ReduceSqlExpressionBase(element.Parameters, element.NullabilityType);
 			}
 
 			return element;
 		}
 
-		void ReduceSqlExpressionBase(SqlExpressionBase element, ISqlExpression[] parameters, ParametersNullabilityType nullabilityType)
+		void ReduceSqlExpressionBase(ISqlExpression[] parameters, ParametersNullabilityType nullabilityType)
 		{
 			if (nullabilityType == ParametersNullabilityType.IfAnyParameterNullable)
 			{

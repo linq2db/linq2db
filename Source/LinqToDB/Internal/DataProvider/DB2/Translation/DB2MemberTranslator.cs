@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 			return new GuidMemberTranslator();
 		}
 
-		sealed class SqlTypesTranslation : SqlTypesTranslationDefault
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Decimal).WithPrecisionScale(19, 4));
@@ -81,7 +81,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.DateTime));
 		}
 
-		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
+		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
@@ -98,12 +98,6 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.NVarChar);
 				var intDataType    = factory.GetDbDataType(typeof(int));
 
-				ISqlExpression CastToLength(ISqlExpression expression, int stringLength)
-				{
-					return expression;
-					//return factory.Cast(expression, stringDataType.WithLength(stringLength));
-				}
-
 				ISqlExpression PartExpression(ISqlExpression expression, int padSize)
 				{
 					if (translationContext.TryEvaluate(expression, out var expressionValue) && expressionValue is int intValue)
@@ -114,7 +108,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 
 					return factory.Function(stringDataType, "LPad",
 						ParametersNullabilityType.SameAsFirstParameter,
-						CastToLength(expression, padSize),
+						expression,
 						factory.Value(intDataType, padSize),
 						factory.Value(stringDataType, "0"));
 				}
@@ -288,12 +282,12 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 			}
 		}
 
-		public class StringMemberTranslator : StringMemberTranslatorBase
+		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
 		}
 
 		// Same as SQLite
-		sealed class GuidMemberTranslator : GuidMemberTranslatorBase
+		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
 			{

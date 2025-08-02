@@ -9521,9 +9521,9 @@ static LinqToDB.Tools.Mapper.Map.GetMapper<TFrom, TTo>(System.Func<LinqToDB.Tool
 static LinqToDB.Tools.MappingSchemaExtensions.GetEntityEqualityComparer<T>(this LinqToDB.IDataContext! dataContext) -> System.Collections.Generic.IEqualityComparer<T>!
 static LinqToDB.Tools.MappingSchemaExtensions.GetEntityEqualityComparer<T>(this LinqToDB.ITable<T>! table) -> System.Collections.Generic.IEqualityComparer<T>!
 static LinqToDB.Tools.MappingSchemaExtensions.GetEntityEqualityComparer<T>(this LinqToDB.Mapping.MappingSchema! mappingSchema) -> System.Collections.Generic.IEqualityComparer<T>!
-static LinqToDB.Tools.MappingSchemaExtensions.GetEqualityComparer<T>(this LinqToDB.IDataContext! dataContext, System.Func<LinqToDB.Model.ColumnDescriptor!, bool>! columnPredicate) -> System.Collections.Generic.IEqualityComparer<T>!
-static LinqToDB.Tools.MappingSchemaExtensions.GetEqualityComparer<T>(this LinqToDB.ITable<T>! table, System.Func<LinqToDB.Model.ColumnDescriptor!, bool>! columnPredicate) -> System.Collections.Generic.IEqualityComparer<T>!
-static LinqToDB.Tools.MappingSchemaExtensions.GetEqualityComparer<T>(this LinqToDB.Mapping.MappingSchema! mappingSchema, System.Func<LinqToDB.Model.ColumnDescriptor!, bool>! columnPredicate) -> System.Collections.Generic.IEqualityComparer<T>!
+static LinqToDB.Tools.MappingSchemaExtensions.GetEqualityComparer<T>(this LinqToDB.IDataContext! dataContext, System.Func<LinqToDB.Mapping.ColumnDescriptor!, bool>! columnPredicate) -> System.Collections.Generic.IEqualityComparer<T>!
+static LinqToDB.Tools.MappingSchemaExtensions.GetEqualityComparer<T>(this LinqToDB.ITable<T>! table, System.Func<LinqToDB.Mapping.ColumnDescriptor!, bool>! columnPredicate) -> System.Collections.Generic.IEqualityComparer<T>!
+static LinqToDB.Tools.MappingSchemaExtensions.GetEqualityComparer<T>(this LinqToDB.Mapping.MappingSchema! mappingSchema, System.Func<LinqToDB.Mapping.ColumnDescriptor!, bool>! columnPredicate) -> System.Collections.Generic.IEqualityComparer<T>!
 static LinqToDB.Tools.MappingSchemaExtensions.GetKeyEqualityComparer<T>(this LinqToDB.IDataContext! dataContext) -> System.Collections.Generic.IEqualityComparer<T>!
 static LinqToDB.Tools.MappingSchemaExtensions.GetKeyEqualityComparer<T>(this LinqToDB.ITable<T>! table) -> System.Collections.Generic.IEqualityComparer<T>!
 static LinqToDB.Tools.MappingSchemaExtensions.GetKeyEqualityComparer<T>(this LinqToDB.Mapping.MappingSchema! mappingSchema) -> System.Collections.Generic.IEqualityComparer<T>!

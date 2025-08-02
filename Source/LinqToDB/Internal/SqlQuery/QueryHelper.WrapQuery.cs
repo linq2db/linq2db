@@ -9,8 +9,6 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		sealed class WrapQueryVisitor<TContext> : SqlQueryVisitor
 		{
-			IQueryElement       _root = default!;
-
 			public TContext                                         Context  { get; }
 			public Func<TContext, SelectQuery, IQueryElement?, int> WrapTest { get; }
 			public Action<TContext, IReadOnlyList<SelectQuery>>     OnWrap   { get; }
@@ -25,14 +23,6 @@ namespace LinqToDB.Internal.SqlQuery
 				Context  = context;
 				WrapTest = wrapTest;
 				OnWrap   = onWrap;
-			}
-
-			public override IQueryElement ProcessElement(IQueryElement element)
-			{
-				_root = element;
-				var result = base.ProcessElement(element);
-				_root = default!;
-				return result;
 			}
 
 			protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
@@ -122,15 +112,13 @@ namespace LinqToDB.Internal.SqlQuery
 		/// After wrapping query this function called for prcess needed optimizations. Array of queries contains [QC, QB, QA]
 		/// </param>
 		/// <param name="allowMutation">Wrapped query can be not recreated for performance considerations.</param>
-		/// <param name="withStack">Must be set to <c>true</c>, if <paramref name="wrapTest"/> function use 3rd parameter (containing parent element) otherwise it will be always null.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
 		public static TStatement WrapQuery<TStatement, TContext>(
 			TContext                                         context,
 			TStatement                                       statement,
 			Func<TContext, SelectQuery, IQueryElement?, int> wrapTest,
 			Action<TContext, IReadOnlyList<SelectQuery>>     onWrap,
-			bool                                             allowMutation,
-			bool                                             withStack)
+			bool                                             allowMutation)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -171,7 +159,7 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
 
-			return WrapQuery(queryToWrap, statement, static (queryToWrap, q, _) => q == queryToWrap, null, allowMutation, false);
+			return WrapQuery(queryToWrap, statement, static (queryToWrap, q, _) => q == queryToWrap, null, allowMutation);
 		}
 
 		/// <summary>
@@ -185,15 +173,13 @@ namespace LinqToDB.Internal.SqlQuery
 		/// <param name="wrapTest">Delegate for testing when query needs to be wrapped.</param>
 		/// <param name="onWrap">After enveloping query this function called for prcess needed optimizations.</param>
 		/// <param name="allowMutation">Wrapped query can be not recreated for performance considerations.</param>
-		/// <param name="withStack">Must be set to <c>true</c>, if <paramref name="wrapTest"/> function use 3rd parameter (containing parent element) otherwise it will be always null.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
 		public static TStatement WrapQuery<TStatement, TContext>(
 			TContext                                          context,
 			TStatement                                        statement,
 			Func<TContext, SelectQuery, IQueryElement?, bool> wrapTest,
 			Action<TContext, SelectQuery, SelectQuery>?       onWrap,
-			bool                                              allowMutation,
-			bool                                              withStack)
+			bool                                              allowMutation)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -204,8 +190,7 @@ namespace LinqToDB.Internal.SqlQuery
 				statement,
 				static (context, q, pe  ) => context.wrapTest(context.context, q, pe) ? 1 : 0,
 				static (context, queries) => context.onWrap?.Invoke(context.context, queries[0], queries[1]),
-				allowMutation,
-				withStack);
+				allowMutation);
 		}
 	}
 }

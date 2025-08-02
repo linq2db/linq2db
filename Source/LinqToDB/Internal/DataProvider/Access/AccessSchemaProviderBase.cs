@@ -7,7 +7,7 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	abstract class AccessSchemaProviderBase : SchemaProviderBase
+	public abstract class AccessSchemaProviderBase : SchemaProviderBase
 	{
 		protected AccessSchemaProviderBase()
 		{

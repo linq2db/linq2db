@@ -11,7 +11,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {
-	sealed class MySqlMappingSchema : LockedMappingSchema
+	public sealed class MySqlMappingSchema : LockedMappingSchema
 	{
 		MySqlMappingSchema() : base(ProviderName.MySql)
 		{

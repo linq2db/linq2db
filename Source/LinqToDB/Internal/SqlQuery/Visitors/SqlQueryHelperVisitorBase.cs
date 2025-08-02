@@ -1,8 +1,8 @@
 ﻿namespace LinqToDB.Internal.SqlQuery.Visitors
 {
-	public class SqlQueryHelperVisitorBase : QueryElementVisitor
+	public abstract class SqlQueryHelperVisitorBase : QueryElementVisitor
 	{
-		public SqlQueryHelperVisitorBase() : base(VisitMode.ReadOnly)
+		protected SqlQueryHelperVisitorBase() : base(VisitMode.ReadOnly)
 		{
 		}
 

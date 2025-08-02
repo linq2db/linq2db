@@ -311,7 +311,7 @@ namespace LinqToDB.Internal.Expressions
 
 		private static readonly string[] CteMethodNames = { "AsCte", "GetCte" };
 
-		public static bool IsCte(this MethodCallExpression method, MappingSchema mappingSchema)
+		public static bool IsCte(this MethodCallExpression method)
 		{
 			return method.IsQueryable(CteMethodNames);
 		}

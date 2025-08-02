@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
-namespace LinqToDB.Internal.Linq.Translation
+namespace LinqToDB.Internal.DataProvider.Translation
 {
 	public class StringMemberTranslatorBase : MemberTranslatorBase
 	{
@@ -143,12 +143,7 @@ namespace LinqToDB.Internal.Linq.Translation
 				return null;
 
 			if (!translationContext.TranslateToSqlExpression(memberExpression.Expression, out var value))
-			{
-				if (translationFlags.HasFlag(TranslationFlags.Expression))
-					return null;
-
-				return translationContext.CreateErrorExpression(memberExpression.Expression, type : memberExpression.Type);
-			}
+				return null;
 
 			var translated = TranslateLength(translationContext, translationFlags, value);
 			if (translated == null)

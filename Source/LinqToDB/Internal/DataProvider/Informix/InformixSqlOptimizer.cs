@@ -2,11 +2,12 @@
 
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {
-	sealed class InformixSqlOptimizer : BasicSqlOptimizer
+	public class InformixSqlOptimizer : BasicSqlOptimizer
 	{
 		public InformixSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -129,7 +130,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete:
-					var deleteStatement = GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions);
+					var deleteStatement = GetAlternativeDelete((SqlDeleteStatement)statement);
 					statement = deleteStatement;
 					if (deleteStatement.SelectQuery != null)
 						deleteStatement.SelectQuery.From.Tables[0].Alias = "$";
@@ -146,11 +147,11 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			statement = base.FinalizeStatement(statement, context, dataOptions, mappingSchema);
-			statement = WrapParameters(statement, context);
+			statement = WrapParameters(statement);
 			return statement;
 		}
 
-		internal static TElement WrapParameters<TElement>(TElement statement, EvaluationContext context)
+		internal static TElement WrapParameters<TElement>(TElement statement)
 			where TElement: IQueryElement
 		{
 			// Known cases:

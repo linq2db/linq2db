@@ -19,7 +19,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	sealed class SqlServerMappingSchema : LockedMappingSchema
+	public sealed class SqlServerMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
 		// TIME(p)
@@ -594,7 +594,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		static MappingSchema Instance2022 = new SqlServer2022MappingSchema();
 		static MappingSchema Instance2025 = new SqlServer2025MappingSchema();
 
-		sealed class SqlServer2005MappingSchema : LockedMappingSchema
+		public sealed class SqlServer2005MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2005MappingSchema() : base(ProviderName.SqlServer2005, Instance)
 			{
@@ -617,7 +617,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 		}
 
-		sealed class SqlServer2008MappingSchema : LockedMappingSchema
+		public sealed class SqlServer2008MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2008MappingSchema() : base(ProviderName.SqlServer2008, Instance)
 			{
@@ -639,7 +639,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 		}
 
-		sealed class SqlServer2012MappingSchema : LockedMappingSchema
+		public sealed class SqlServer2012MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2012MappingSchema() : base(ProviderName.SqlServer2012, Instance)
 			{
@@ -661,7 +661,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 		}
 
-		sealed class SqlServer2014MappingSchema : LockedMappingSchema
+		public sealed class SqlServer2014MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2014MappingSchema() : base(ProviderName.SqlServer2014, Instance)
 			{
@@ -683,7 +683,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 		}
 
-		sealed class SqlServer2016MappingSchema : LockedMappingSchema
+		public sealed class SqlServer2016MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2016MappingSchema() : base(ProviderName.SqlServer2016, Instance)
 			{
@@ -705,7 +705,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 		}
 
-		sealed class SqlServer2017MappingSchema : LockedMappingSchema
+		public sealed class SqlServer2017MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2017MappingSchema() : base(ProviderName.SqlServer2017, Instance)
 			{
@@ -727,7 +727,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 		}
 
-		sealed class SqlServer2019MappingSchema : LockedMappingSchema
+		public sealed class SqlServer2019MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2019MappingSchema() : base(ProviderName.SqlServer2019, Instance)
 			{
@@ -749,7 +749,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 		}
 
-		sealed class SqlServer2022MappingSchema : LockedMappingSchema
+		public sealed class SqlServer2022MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2022MappingSchema() : base(ProviderName.SqlServer2022, Instance)
 			{
@@ -771,7 +771,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 		}
 
-		sealed class SqlServer2025MappingSchema : LockedMappingSchema
+		public sealed class SqlServer2025MappingSchema : LockedMappingSchema
 		{
 			public SqlServer2025MappingSchema() : base(ProviderName.SqlServer2025, Instance)
 			{
