@@ -73,7 +73,7 @@ namespace LinqToDB.CommandLine
 				DatabaseType.Sybase          => ProviderName.Sybase,
 				DatabaseType.SapHana         => ProviderName.SapHana,
 				DatabaseType.ClickHouseMySql => ProviderName.ClickHouseMySql,
-				DatabaseType.ClickHouseHttp  => ProviderName.ClickHouseClient,
+				DatabaseType.ClickHouseHttp  => ProviderName.ClickHouseDriver,
 				DatabaseType.ClickHouseTcp   => ProviderName.ClickHouseOctonica,
 				_                            => throw new InvalidOperationException($"Unsupported provider: {providerName}")
 			};
@@ -194,7 +194,7 @@ namespace LinqToDB.CommandLine
 			switch (provider)
 			{
 				case ProviderName.ClickHouseMySql   :
-				case ProviderName.ClickHouseClient  :
+				case ProviderName.ClickHouseDriver:
 				case ProviderName.ClickHouseOctonica:
 				case ProviderName.SqlServer         :
 					break;

@@ -32,10 +32,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		public const string OctonicaClientNamespace     = "Octonica.ClickHouseClient";
 		public const string OctonicaProviderFactoryName = "Octonica.ClickHouseClient";
 
-		public const string ClientAssemblyName           = "ClickHouse.Client";
-		public const string ClientClientNamespace        = "ClickHouse.Client.ADO";
-		public const string ClientProviderFactoryName    = "ClickHouse.Client";
-		public const string ClientProviderTypesNamespace = "ClickHouse.Client.Numerics";
+		public const string DriverAssemblyName           = "ClickHouse.Driver";
+		public const string DriverClientNamespace        = "ClickHouse.Driver.ADO";
+		public const string DriverProviderFactoryName    = "ClickHouse.Driver";
+		public const string DriverProviderTypesNamespace = "ClickHouse.Driver.Numerics";
 
 		private ClickHouseProviderAdapter(
 			Type connectionType,
@@ -124,7 +124,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		#endregion
 
-		// https://github.com/DarkWanderer/ClickHouse.Client/issues/459
+		// https://github.com/DarkWanderer/ClickHouse.Driver/issues/459
 		public bool                  HasFaultyClientDecimalType     { get; }
 		public Type?                 ClientDecimalType              { get; }
 		public Func<object, string>? ClientDecimalToStringConverter { get; }
@@ -198,17 +198,17 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateClientAdapter()
 		{
-			var assembly = Common.Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
+			var assembly = Common.Tools.TryLoadAssembly(DriverAssemblyName, DriverProviderFactoryName);
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {ClientAssemblyName}");
+				throw new InvalidOperationException($"Cannot load assembly {DriverAssemblyName}");
 
-			var connectionType              = assembly.GetType($"{ClientClientNamespace}.ClickHouseConnection"             , true)!;
-			var commandType                 = assembly.GetType($"{ClientClientNamespace}.ClickHouseCommand"                , true)!;
-			var parameterType               = assembly.GetType($"{ClientClientNamespace}.Parameters.ClickHouseDbParameter" , true)!;
-			var dataReaderType              = assembly.GetType($"{ClientClientNamespace}.Readers.ClickHouseDataReader"     , true)!;
-			var connectionStringBuilderType = assembly.GetType($"{ClientClientNamespace}.ClickHouseConnectionStringBuilder", true)!;
-			var bulkCopyType                = assembly.GetType($"ClickHouse.Client.Copy.ClickHouseBulkCopy"                , true)!;
-			var decimalType                 = assembly.GetType($"{ClientProviderTypesNamespace}.ClickHouseDecimal"         , false);
+			var connectionType              = assembly.GetType($"{DriverClientNamespace}.ClickHouseConnection"             , true)!;
+			var commandType                 = assembly.GetType($"{DriverClientNamespace}.ClickHouseCommand"                , true)!;
+			var parameterType               = assembly.GetType($"{DriverClientNamespace}.Parameters.ClickHouseDbParameter" , true)!;
+			var dataReaderType              = assembly.GetType($"{DriverClientNamespace}.Readers.ClickHouseDataReader"     , true)!;
+			var connectionStringBuilderType = assembly.GetType($"{DriverClientNamespace}.ClickHouseConnectionStringBuilder", true)!;
+			var bulkCopyType                = assembly.GetType($"ClickHouse.Driver.Copy.ClickHouseBulkCopy"                , true)!;
+			var decimalType                 = assembly.GetType($"{DriverProviderTypesNamespace}.ClickHouseDecimal"         , false);
 
 			var typeMapper = new TypeMapper();
 			typeMapper.RegisterTypeWrapper<ClientWrappers.ClickHouseConnection             >(connectionType);
@@ -336,7 +336,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		}
 
 		/// <summary>
-		/// ClickHouse.Client wrappers.
+		/// ClickHouse.Driver wrappers.
 		/// </summary>
 		internal static class ClientWrappers
 		{

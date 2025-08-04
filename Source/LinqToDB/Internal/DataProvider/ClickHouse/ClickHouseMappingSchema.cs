@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			SetConvertExpression((byte[] v) => new IPAddress(v));
 			SetConvertExpression((IPAddress v) => v.GetAddressBytes());
 
-			// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
+			// https://github.com/DarkWanderer/ClickHouse.Driver/issues/138
 			// https://github.com/ClickHouse/ClickHouse/issues/38790
 			// byte[] <=> string
 			// Binary <=> string
@@ -866,9 +866,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		public sealed class ClientMappingSchema : LockedMappingSchema
 		{
-			public ClientMappingSchema() : base(ProviderName.ClickHouseClient, new MappingSchema?[] { ClickHouseProviderAdapter.GetInstance(ClickHouseProvider.ClickHouseClient).MappingSchema, Instance }.Where(_ => _ != null).ToArray()!)
+			public ClientMappingSchema() : base(ProviderName.ClickHouseDriver, new MappingSchema?[] { ClickHouseProviderAdapter.GetInstance(ClickHouseProvider.ClickHouseDriver).MappingSchema, Instance }.Where(_ => _ != null).ToArray()!)
 			{
-				var adapter = ClickHouseProviderAdapter.GetInstance(ClickHouseProvider.ClickHouseClient);
+				var adapter = ClickHouseProviderAdapter.GetInstance(ClickHouseProvider.ClickHouseDriver);
 
 				if (adapter.ClientDecimalType != null)
 				{

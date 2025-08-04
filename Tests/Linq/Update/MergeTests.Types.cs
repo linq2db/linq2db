@@ -461,7 +461,7 @@ namespace Tests.xUpdate
 
 				if (provider.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.ClickHouseClient))
 				{
-					// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
+					// https://github.com/DarkWanderer/ClickHouse.Driver/issues/138
 					// https://github.com/ClickHouse/ClickHouse/issues/38790
 					expected = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(expected));
 				}

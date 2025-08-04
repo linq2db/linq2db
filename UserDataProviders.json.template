@@ -124,7 +124,7 @@
 
 			// ClickHouse
 			//"ClickHouse.Octonica",
-			//"ClickHouse.Client",
+			//"ClickHouse.Driver",
 			//"ClickHouse.MySql",
 		]
 	},
@@ -247,7 +247,7 @@
 
 			// ClickHouse
 			//"ClickHouse.Octonica",
-			//"ClickHouse.Client",
+			//"ClickHouse.Driver",
 			//"ClickHouse.MySql",
 		]
 	},
@@ -370,7 +370,7 @@
 
 			// ClickHouse
 			//"ClickHouse.Octonica",
-			//"ClickHouse.Client",
+			//"ClickHouse.Driver",
 			//"ClickHouse.MySql",
 		]
 	},
@@ -709,8 +709,8 @@
 				"Provider": "Octonica.ClickHouseClient",
 				"ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"
 			},
-			"ClickHouse.Client": {
-				"Provider": "ClickHouse.Client",
+			"ClickHouse.Driver": {
+				"Provider": "ClickHouse.Driver",
 				"ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true"
 			},
 			"ClickHouse.MySql": {

@@ -1,4 +1,4 @@
-<#@ assembly name="$(LinqToDBT4ClickHouseClientPath)ClickHouse.Client.dll"        #>
+<#@ assembly name="$(LinqToDBT4ClickHouseClientPath)ClickHouse.Driver.dll"        #>
 <#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude" once="true"       #>
 <#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
 <#+
