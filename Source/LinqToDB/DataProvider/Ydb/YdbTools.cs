@@ -24,7 +24,10 @@ namespace LinqToDB.DataProvider.Ydb
 
 		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			if (options.ProviderName?.Contains("Ydb") == true || options.ConfigurationString?.Contains("Ydb") == true)
+			static bool HasYdb(string? s) =>
+				s?.IndexOf("Ydb", StringComparison.OrdinalIgnoreCase) >= 0;
+
+			if (HasYdb(options.ProviderName) || HasYdb(options.ConfigurationString))
 				return _ydbDataProvider.Value;
 
 			return null;
