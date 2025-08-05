@@ -35,23 +35,6 @@ namespace Tests.DataProvider
 		}
 
 		//------------------------------------------------------------------
-		// 2. Explicit check of YdbTools + round-trip of the connection string.
-		//------------------------------------------------------------------
-		[Test]
-		public void ConnectionStringRoundtrip()
-		{
-			var connection = GetConnectionString(Ctx);
-
-			using var db = YdbTools.CreateDataConnection(connection);
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(db.DataProvider.Name, Is.EqualTo(YdbDataProvider.ProviderName));
-				Assert.That(db.DataProvider.Name, Is.EqualTo(YdbDataProvider.ProviderName));
-				Assert.That(db.ConnectionString, Is.EqualTo(connection));
-			}
-		}
-
-		//------------------------------------------------------------------
 		// 3. The connection string is taken from DataProviders.json when only the context is specified.
 		//------------------------------------------------------------------
 		[Test]

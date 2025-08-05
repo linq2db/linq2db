@@ -12,9 +12,6 @@ namespace LinqToDB.DataProvider.Ydb
 {
 	public static class YdbSpecificExtensions
 	{
-		//--------------------------------------------------------------------
-		//  ITable  →  IYdbSpecificTable
-		//--------------------------------------------------------------------
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IYdbSpecificTable<TSource> AsYdb<TSource>(this ITable<TSource> table)
@@ -30,9 +27,6 @@ namespace LinqToDB.DataProvider.Ydb
 			return new YdbSpecificTable<TSource>(wrapped);
 		}
 
-		//--------------------------------------------------------------------
-		//  IQueryable  →  IYdbSpecificQueryable
-		//--------------------------------------------------------------------
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IYdbSpecificQueryable<TSource> AsYdb<TSource>(this IQueryable<TSource> source)

@@ -18,8 +18,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		readonly HashSet<string>              _collections = new(StringComparer.OrdinalIgnoreCase);
 		Dictionary<string,List<string>>?      _pkMap;
 
-		#region helpers ---------------------------------------------------------------
-
 		static DbConnection GetOpenConnection(DataConnection dc, out bool created)
 		{
 			var c = dc.TryGetDbConnection();
@@ -94,13 +92,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			return true;
 		}
 
-		#endregion --------------------------------------------------------------------
-
 		protected override string GetDataSourceName(DataConnection dbConnection) => dbConnection.DataProvider.Name;
 		protected override string GetDatabaseName(DataConnection dbConnection) => dbConnection.DataProvider.Name;
 		protected override string? GetProviderSpecificTypeNamespace() => null;
-
-		#region tables ----------------------------------------------------------------
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
@@ -155,10 +149,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					conn.Close();
 			}
 		}
-
-		#endregion
-
-		#region columns ---------------------------------------------------------------
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
@@ -259,10 +249,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			finally { if (created) conn.Close(); }
 		}
 
-		#endregion
-
-		#region primary keys ----------------------------------------------------------
-
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(
 			DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
@@ -288,10 +274,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			return res;
 		}
-
-		#endregion
-
-		#region foreign keys / datatypes ---------------------------------------------
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(
 			DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options) =>
@@ -390,7 +372,5 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			new() { TypeName = "Timestamp",     DataType = typeof(DateTime).AssemblyQualifiedName! },
 			new() { TypeName = "Interval",      DataType = typeof(TimeSpan).AssemblyQualifiedName! },
 		];
-
-		#endregion
 	}
 }

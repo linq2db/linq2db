@@ -1,28 +1,28 @@
-﻿DROP TABLE Parent;
+﻿DROP TABLE IF EXISTS Parent;
 GO
-DROP TABLE Child;
+DROP TABLE IF EXISTS Child;
 GO
-DROP TABLE GrandChild;
+DROP TABLE IF EXISTS GrandChild;
 GO
-DROP TABLE InheritanceParent;
+DROP TABLE IF EXISTS InheritanceParent;
 GO
-DROP TABLE InheritanceChild;
+DROP TABLE IF EXISTS InheritanceChild;
 GO
-DROP TABLE Doctor;
+DROP TABLE IF EXISTS Doctor;
 GO
-DROP TABLE Patient;
+DROP TABLE IF EXISTS Patient;
 GO
-DROP TABLE Person;
+DROP TABLE IF EXISTS Person;
 GO
-DROP TABLE LinqDataTypes;
+DROP TABLE IF EXISTS LinqDataTypes;
 GO
-DROP TABLE AllTypes;
+DROP TABLE IF EXISTS AllTypes;
 GO
-DROP TABLE CollatedTable;
+DROP TABLE IF EXISTS CollatedTable;
 GO
-DROP TABLE TestMerge1
+DROP TABLE IF EXISTS TestMerge1
 GO
-DROP TABLE TestMerge2;
+DROP TABLE IF EXISTS TestMerge2;
 GO
 CREATE TABLE Parent      (ParentID Int32 NOT NULL, Value1 Int32, PRIMARY KEY (ParentID));
 GO
@@ -75,10 +75,10 @@ CREATE TABLE Person
 GO
 INSERT INTO Person (PersonID, FirstName, LastName, MiddleName, Gender)
 	VALUES
-	(1, "John",   "Pupkin",    NULL, "M"),
-	(2, "Tester", "Testerson", NULL, "M"),
-	(3, "Jane",   "Doe",       NULL, "F"),
-	(4, "Jürgen", "König",     "Ko", "M");
+	(1, 'John',   'Pupkin',    NULL, 'M'),
+	(2, 'Tester', 'Testerson', NULL, 'M'),
+	(3, 'Jane',   'Doe',       NULL, 'F'),
+	(4, 'Jürgen', 'König',     'Ko', 'M');
 GO
 CREATE TABLE Doctor
 (
@@ -87,7 +87,7 @@ CREATE TABLE Doctor
 	PRIMARY KEY (PersonID)
 );
 GO
-INSERT INTO Doctor (PersonID, Taxonomy) VALUES (1, "Psychiatry");
+INSERT INTO Doctor (PersonID, Taxonomy) VALUES (1, 'Psychiatry');
 GO
 CREATE TABLE Patient
 (
@@ -96,7 +96,7 @@ CREATE TABLE Patient
 	PRIMARY KEY (PersonID)
 );
 GO
-INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, "Hallucination with Paranoid Bugs' Delirium of Persecution");
+INSERT INTO Patient (PersonID, Diagnosis) VALUES (2, 'Hallucination with Paranoid Bugs\' Delirium of Persecution');
 GO
 
 CREATE TABLE AllTypes
@@ -142,7 +142,7 @@ INSERT INTO AllTypes
 VALUES(2,
 		7777777, 25555,
 		20.31f, 16.2,
-		"23233", "тест", "234", "1");
+		'23233', 'тест', '234', '1');
 GO
 CREATE TABLE CollatedTable
 (

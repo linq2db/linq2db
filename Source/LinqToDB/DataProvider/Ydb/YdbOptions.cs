@@ -1,5 +1,4 @@
-﻿using LinqToDB.Common;
-using LinqToDB.Data;
+﻿using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Options;
@@ -13,23 +12,14 @@ namespace LinqToDB.DataProvider.Ydb
 	/// Default bulk copy mode for YDB.
 	/// Default value: <c><see cref="BulkCopyType.ProviderSpecific"/></c>.
 	/// </param>
-	/// <param name="UseServerSideUpsert">
-	/// Enables server-side UPSERT optimization for YDB.
+	/// <param name="UseParametrizedDecimal">
+	/// Use Decimal(p, s) type name instead of Decimal.
 	/// Default value: <c>true</c>.
-	/// </param>
-	/// <param name="AutoConvertDateTimeToUtc">
-	/// Automatically convert DateTime values to UTC when working with YDB timestamps.
-	/// Default value: <c>true</c>.
-	/// </param>
-	/// <param name="UseLegacyPagination">
-	/// Use legacy OFFSET/LIMIT pagination instead of newer syntax.
-	/// Default value: <c>false</c>.
 	/// </param>
 	public sealed record YdbOptions(
-		BulkCopyType BulkCopyType = BulkCopyType.ProviderSpecific,
-		bool UseServerSideUpsert = true,
-		bool AutoConvertDateTimeToUtc = true,
-		bool UseLegacyPagination = false
+		// TODO: provider-specific BC not implemented yet
+		BulkCopyType BulkCopyType     = BulkCopyType.ProviderSpecific,
+		bool UseParametrizedDecimal   = true
 	) : DataProviderOptions<YdbOptions>(BulkCopyType)
 	{
 		public YdbOptions() : this(BulkCopyType.ProviderSpecific)
@@ -38,15 +28,12 @@ namespace LinqToDB.DataProvider.Ydb
 
 		private YdbOptions(YdbOptions original) : base(original)
 		{
-			UseServerSideUpsert = original.UseServerSideUpsert;
-			AutoConvertDateTimeToUtc = original.AutoConvertDateTimeToUtc;
-			UseLegacyPagination = original.UseLegacyPagination;
+			UseParametrizedDecimal = original.UseParametrizedDecimal;
 		}
 
 		protected override IdentifierBuilder CreateID(IdentifierBuilder builder) => builder
-			.Add(UseServerSideUpsert)
-			.Add(AutoConvertDateTimeToUtc)
-			.Add(UseLegacyPagination);
+			.Add(UseParametrizedDecimal)
+			;
 
 		#region IEquatable implementation
 

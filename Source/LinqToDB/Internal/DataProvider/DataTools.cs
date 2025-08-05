@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -247,5 +248,77 @@ namespace LinqToDB.Internal.DataProvider
 			}
 		}
 		#endregion
+
+		public static void ConvertToIso8601Interval(StringBuilder stringBuilder, TimeSpan interval)
+		{
+			var addTicks = 0;
+
+			if (interval < TimeSpan.Zero)
+			{
+				_ = stringBuilder.Append('-');
+				if (interval == TimeSpan.MinValue)
+				{
+					interval = TimeSpan.MaxValue;
+					addTicks = 1;
+				}
+				else
+				{
+					interval = interval.Negate();
+				}
+			}
+
+			_ = stringBuilder.Append('P');
+
+			var iv = CultureInfo.InvariantCulture;
+
+			var ticks = interval.Ticks - new TimeSpan(interval.Days, interval.Hours, interval.Minutes, interval.Seconds, 0).Ticks + addTicks;
+
+			if (interval.Days != 0 || interval == TimeSpan.Zero)
+			{
+				_ = stringBuilder.AppendFormat(iv, "{0}D", interval.Days);
+			}
+
+			if (interval.Hours != 0 || interval.Minutes != 0 || interval.Seconds != 0 || ticks != 0)
+			{
+				_ = stringBuilder.Append('T');
+			}
+
+			if (interval.Hours != 0)
+			{
+				_ = stringBuilder.AppendFormat(iv, "{0}H", interval.Hours);
+			}
+
+			if (interval.Minutes != 0
+				|| (interval.Hours != 0 && (interval.Seconds != 0 || ticks != 0)))
+			{
+				_ = stringBuilder.AppendFormat(iv, "{0}M", interval.Minutes);
+			}
+
+			if (interval.Seconds != 0 || ticks != 0)
+			{
+				_ = stringBuilder.AppendFormat(iv, "{0}", interval.Seconds);
+				if (ticks > 0)
+				{
+					_ = stringBuilder.Append('.');
+					var ticksStr = ticks.ToString(iv);
+					if (ticksStr.Length < 7)
+					{
+						ticksStr = new string('0', 7 - ticksStr.Length) + ticksStr;
+					}
+
+					_ = stringBuilder.Append(ticksStr.TrimEnd('0'));
+				}
+
+				_ = stringBuilder.Append('S');
+			}
+		}
+
+		public static void BuildHexString(StringBuilder stringBuilder, byte[] value)
+		{
+			foreach (var @byte in value)
+				stringBuilder
+					.Append("\\x")
+					.AppendByteAsHexViaLookup32(@byte);
+		}
 	}
 }
