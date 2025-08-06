@@ -9,7 +9,7 @@
 	over dependencies like linq2db.cli
 	-->
 	<ItemGroup Label="Build: Analyzers and Tools">
-		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.208"                      />
+		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.210"                      />
 		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.49"                       />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.0.0-1.25277.114"            />
@@ -35,7 +35,7 @@
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="9.0.7"                        />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="3.0.0"                        />
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.2.2"                        />
-		<PackageVersion Include="protobuf-net"                                          Version="3.2.55"                       />
+		<PackageVersion Include="protobuf-net"                                          Version="3.2.56"                       />
 
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="3.1.0"                        Condition="'$(TargetFramework)'=='netstandard2.0'" />
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="8.0.0"                        Condition="'$(TargetFramework)'=='net8.0'"         />
@@ -50,7 +50,7 @@
 	<ItemGroup Label="Database Providers">
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.3-beta.1"                />
 		<PackageVersion Include="ClickHouse.Client"                                     Version="7.14.0"                       />
-		<PackageVersion Include="Devart.Data.Oracle"                                    Version="10.4.235"                     />
+		<PackageVersion Include="Devart.Data.Oracle"                                    Version="10.4.290"                     />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="1.5.0"                        />
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="10.3.3"                       />
@@ -141,7 +141,7 @@
 	</ItemGroup>
 
 	<ItemGroup Label="Examples">
-		<PackageVersion Include="linq2db.t4models"                                      Version="6.0.0-rc.1"                   />
+		<PackageVersion Include="linq2db.t4models"                                      Version="6.0.0-rc.2"                   />
 		<PackageVersion Include="Microsoft.Extensions.ObjectPool"                       Version="9.0.7"                        />
 		<PackageVersion Include="OpenTelemetry"                                         Version="1.12.0"                       />
 		<PackageVersion Include="OpenTelemetry.Exporter.Console"                        Version="1.12.0"                       />

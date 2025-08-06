@@ -606,7 +606,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				sql = new SqlFunction(builder.MappingSchema.GetDbDataType(returnType), functionName, isAggregate: true, nullabilityType, canBeNull, sql);
 
-				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/sql, buildInfo.Expression, convertType: returnType);
+				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, sql, buildInfo.Expression, convertType: returnType);
 
 				if (!isSimple)
 				{
