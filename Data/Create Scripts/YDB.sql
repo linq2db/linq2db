@@ -42,7 +42,7 @@ CREATE TABLE LinqDataTypes
 	SmallIntValue  Int16,
 	IntValue       Int32,
 	BigIntValue    Int64,
-	StringValue    String,
+	StringValue    Utf8,
 	PRIMARY KEY (ID)
 );
 GO
@@ -50,7 +50,7 @@ CREATE TABLE InheritanceParent
 (
 	InheritanceParentId Int32 NOT NULL,
 	TypeDiscriminator   Int32,
-	Name                String,
+	Name                Utf8,
 	PRIMARY KEY (InheritanceParentId)
 );
 GO
@@ -59,17 +59,17 @@ CREATE TABLE InheritanceChild
 	InheritanceChildId  Int32 NOT NULL,
 	InheritanceParentId Int32 NOT NULL,
 	TypeDiscriminator   Int32,
-	Name                String,
+	Name                Utf8,
 	PRIMARY KEY (InheritanceChildId)
 );
 GO
 CREATE TABLE Person
 (
 	PersonID   Int32 NOT NULL,
-	FirstName  String NOT NULL,
-	LastName   String NOT NULL,
-	MiddleName String,
-	Gender     String NOT NULL,
+	FirstName  Utf8 NOT NULL,
+	LastName   Utf8 NOT NULL,
+	MiddleName Utf8,
+	Gender     Utf8 NOT NULL,
 	PRIMARY KEY (PersonID)
 );
 GO
@@ -83,7 +83,7 @@ GO
 CREATE TABLE Doctor
 (
 	PersonID Int32 NOT NULL,
-	Taxonomy String NOT NULL,
+	Taxonomy Utf8 NOT NULL,
 	PRIMARY KEY (PersonID)
 );
 GO
@@ -92,7 +92,7 @@ GO
 CREATE TABLE Patient
 (
 	PersonID  Int32 NOT NULL,
-	Diagnosis String NOT NULL,
+	Diagnosis Utf8 NOT NULL,
 	PRIMARY KEY (PersonID)
 );
 GO
