@@ -17,7 +17,6 @@ namespace LinqToDB.DataProvider.Ydb
 	/// Default value: <c>true</c>.
 	/// </param>
 	public sealed record YdbOptions(
-		// TODO: provider-specific BC not implemented yet
 		BulkCopyType BulkCopyType     = BulkCopyType.ProviderSpecific,
 		bool UseParametrizedDecimal   = true
 	) : DataProviderOptions<YdbOptions>(BulkCopyType)

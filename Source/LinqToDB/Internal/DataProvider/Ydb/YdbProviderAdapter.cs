@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Numerics;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions.Types;
 
@@ -46,18 +51,20 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			var protobufAsembly = Common.Tools.TryLoadAssembly(ProtobufAssemblyName, null)
 				?? throw new InvalidOperationException($"Cannot load assembly {ProtobufAssemblyName}.");
 
-			ConnectionType = assembly.GetType($"{ClientNamespace}.YdbConnection",  true)!;
+			ConnectionType  = assembly.GetType($"{ClientNamespace}.YdbConnection",  true)!;
 			CommandType     = assembly.GetType($"{ClientNamespace}.YdbCommand",     true)!;
 			ParameterType   = assembly.GetType($"{ClientNamespace}.YdbParameter",   true)!;
 			DataReaderType  = assembly.GetType($"{ClientNamespace}.YdbDataReader",  true)!;
 			TransactionType = assembly.GetType($"{ClientNamespace}.YdbTransaction", true)!;
 
-			var ydbValue    = assembly.GetType("Ydb.Sdk.Value.YdbValue", true)!;
-			var protoValue  = protosAsembly.GetType("Ydb.Value", true)!;
-			var protoType   = protosAsembly.GetType("Ydb.Type", true)!;
-			var decimalType = protosAsembly.GetType("Ydb.DecimalType", true)!;
+			var bulkCopy     = assembly.GetType("Ydb.Sdk.Ado.BulkUpsert.IBulkUpsertImporter", true)!;
+
+			var ydbValue     = assembly.GetType("Ydb.Sdk.Value.YdbValue", true)!;
+			var protoValue   = protosAsembly.GetType("Ydb.Value", true)!;
+			var protoType    = protosAsembly.GetType("Ydb.Type", true)!;
+			var decimalType  = protosAsembly.GetType("Ydb.DecimalType", true)!;
 			var optionalType = protosAsembly.GetType("Ydb.OptionalType", true)!;
-			var nullValue   = protobufAsembly.GetType("Google.Protobuf.WellKnownTypes.NullValue", true)!;
+			var nullValue    = protobufAsembly.GetType("Google.Protobuf.WellKnownTypes.NullValue", true)!;
 
 			var typeMapper = new TypeMapper();
 
@@ -68,6 +75,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			typeMapper.RegisterTypeWrapper<DecimalType>(decimalType);
 			typeMapper.RegisterTypeWrapper<OptionalType>(optionalType);
 			typeMapper.RegisterTypeWrapper<NullValue>(nullValue);
+			typeMapper.RegisterTypeWrapper<IBulkUpsertImporter>(bulkCopy);
 
 			typeMapper.FinalizeMappings();
 
@@ -122,14 +130,66 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					new ProtoValue() { NullFlagValue = NullValue.NullValue })));
 
 			MakeDecimalFromString = (value, p, s) => makeDecimal(MakeDecimalValue(value, p, s));
+
+			var pConnection = Expression.Parameter(typeof(DbConnection));
+			var pName       = Expression.Parameter(typeof(string));
+			var pColumns    = Expression.Parameter(typeof(IReadOnlyList<string>));
+			var pToken      = Expression.Parameter(typeof(CancellationToken));
+
+			BeginBulkCopy = Expression.Lambda<Func<DbConnection, string, IReadOnlyList<string>, CancellationToken, IBulkUpsertImporter>>(
+				typeMapper.MapExpression((DbConnection conn, string name, IReadOnlyList<string> columns, CancellationToken cancellationToken) => typeMapper.Wrap<IBulkUpsertImporter>(((YdbConnection)(object)conn).BeginBulkUpsertImport(name, columns, cancellationToken)), pConnection, pName, pColumns, pToken),
+				pConnection, pName, pColumns, pToken)
+				.CompileExpression();
 		}
 
 		record struct DecimalValue(ulong Low, ulong High, uint Precision, uint Scale);
 
+		private static decimal[] _scalers =
+		[
+			1m,
+			1.0m,
+			1.00m,
+			1.000m,
+			1.0000m,
+			1.00000m,
+			1.000000m,
+			1.0000000m,
+			1.00000000m,
+			1.000000000m,
+			1.0000000000m,
+			1.00000000000m,
+			1.000000000000m,
+			1.0000000000000m,
+			1.00000000000000m,
+			1.000000000000000m,
+			1.0000000000000000m,
+			1.00000000000000000m,
+			1.000000000000000000m,
+			1.0000000000000000000m,
+			1.00000000000000000000m,
+			1.000000000000000000000m,
+			1.0000000000000000000000m,
+			1.00000000000000000000000m,
+			1.000000000000000000000000m,
+			1.0000000000000000000000000m,
+			1.00000000000000000000000000m,
+			1.000000000000000000000000000m,
+			1.0000000000000000000000000000m,
+		];
+
 		private static DecimalValue MakeDecimalValue(decimal value, int? precision, int? scale)
 		{
-			precision = precision ?? DecimalHelper.GetPrecision(value);
-			scale = scale ?? DecimalHelper.GetScale(value);
+			var valuePrecision = DecimalHelper.GetPrecision(value);
+			var valueScale = DecimalHelper.GetScale(value);
+
+			if (valueScale < scale)
+			{
+				value = value * _scalers[scale!.Value];
+			}
+
+			precision = precision ?? valuePrecision;
+			scale     = scale ?? valueScale;
+
 			if (precision == 0 && scale == 0)
 				precision = 1;
 
@@ -235,15 +295,40 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 #pragma warning restore CS3003 // Type is not CLS-compliant
 		internal Func<int, int, object>             MakeDecimalNull       { get; }
 
+		internal Func<DbConnection, string, IReadOnlyList<string>, CancellationToken, IBulkUpsertImporter> BeginBulkCopy { get; }
+
 		#region wrappers
 		[Wrapper]
 		internal sealed class YdbConnection
 		{
 			public YdbConnection(string connectionString) => throw new NotImplementedException();
 
+			public IBulkUpsertImporter BeginBulkUpsertImport(string name, IReadOnlyList<string> columns, CancellationToken cancellationToken) => throw new NotImplementedException();
+
 			public static Task ClearAllPools() => throw new NotImplementedException();
 
 			public static Task ClearPool(YdbConnection connection) => throw new NotImplementedException();
+		}
+
+		[Wrapper]
+		internal sealed class IBulkUpsertImporter : TypeWrapper
+		{
+			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
+			private static LambdaExpression[] Wrappers { get; } =
+{
+				// [0]: AddRowAsync
+				(Expression<Func<IBulkUpsertImporter, object?[], ValueTask>>)((this_, row) => this_.AddRowAsync(row)),
+				// [1]: FlushAsync
+				(Expression<Func<IBulkUpsertImporter, ValueTask>>)(this_ => this_.FlushAsync()),
+			};
+
+			public IBulkUpsertImporter(object instance, Delegate[] wrappers) : base(instance, wrappers)
+			{
+			}
+
+			public ValueTask AddRowAsync(object?[] row) => ((Func<IBulkUpsertImporter, object?[], ValueTask>)CompiledWrappers[0])(this, row);
+
+			public ValueTask FlushAsync() => ((Func<IBulkUpsertImporter, ValueTask>)CompiledWrappers[1])(this);
 		}
 
 		[Wrapper]

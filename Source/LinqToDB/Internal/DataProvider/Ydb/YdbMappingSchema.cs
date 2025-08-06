@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		private const           string          UINT32_FORMAT       = "{0}u";
 		private const           string          INT64_FORMAT        = "{0}l";
 		private const           string          UINT64_FORMAT       = "{0}ul";
-		private const           string          FLOAT_FORMAT        = Float('{0:G9}');
+		private const           string          FLOAT_FORMAT        = "Float('{0:G9}')";
 		private const           string          DOUBLE_FORMAT       = "Double('{0:G17}')";
 		private const           string          DY_NUMBER_FORMAT    = "DyNumber('{0}')";
 #endif

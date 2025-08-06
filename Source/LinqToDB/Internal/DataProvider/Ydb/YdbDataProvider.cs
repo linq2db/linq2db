@@ -406,6 +406,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 				case DataType.Decimal:
 				{
+					// this is needed for bulk-copy
+					if (dataType.Precision == null)
+						dataType = dataType.WithPrecision(YdbMappingSchema.DEFAULT_DECIMAL_PRECISION);
+					if (dataType.Scale == null)
+						dataType = dataType.WithScale(YdbMappingSchema.DEFAULT_DECIMAL_SCALE);
+
 					if (value is null)
 						value = Adapter.MakeDecimalNull(dataType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION, dataType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE);
 					else if (value is byte b)
@@ -444,7 +450,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
-			return new YdbBulkCopy().BulkCopy(
+			return new YdbBulkCopy(this).BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
 					options.FindOrDefault(YdbOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
@@ -456,7 +462,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			return new YdbBulkCopy().BulkCopyAsync(
+			return new YdbBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
 					options.FindOrDefault(YdbOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
@@ -469,7 +475,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			return new YdbBulkCopy().BulkCopyAsync(
+			return new YdbBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
 					options.FindOrDefault(YdbOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
