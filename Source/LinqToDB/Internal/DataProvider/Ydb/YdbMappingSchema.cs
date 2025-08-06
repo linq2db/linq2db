@@ -164,6 +164,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			switch (dt.Type.DataType)
 			{
+				case DataType.VarChar:
 				case DataType.NVarChar:
 					ConvertString(sb, dt, value.ToString("D"));
 					break;

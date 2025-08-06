@@ -1,9 +1,4 @@
-﻿// -----------------------------------------------------------------------------
-//  LinqToDB provider : YDB  ✧  SQL‑builder
-// -----------------------------------------------------------------------------
-
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
@@ -14,15 +9,9 @@ using LinqToDB.DataProvider.Ydb;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Ydb
 {
-	/// <summary>
-	///  SQL code builder (YQL) for the YDB provider.
-	///  Adapts LINQ to DB expressions to YQL syntax,
-	///  supports UPSERT, special types, temporary tables, hints, etc.
-	/// </summary>
 	public class YdbSqlBuilder : BasicSqlBuilder<YdbOptions>
 	{
 		readonly YdbOptions _providerOptions;
@@ -40,11 +29,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override ISqlBuilder CreateSqlBuilder() => new YdbSqlBuilder(this, _providerOptions);
 
-		////--------------------------------------------------------------------- basic syntax
+		protected override string LimitFormat(SelectQuery selectQuery) => "LIMIT {0}";
 
-		//protected override string LimitFormat(SelectQuery selectQuery) => "LIMIT {0}";
-		//protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
-		//protected override bool IsRecursiveCteKeywordRequired => false;
+		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
 
 		protected override void PrintParameterName(StringBuilder sb, DbParameter parameter)
 		{
@@ -143,8 +130,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case DataType.Binary
 					or DataType.VarBinary: StringBuilder.Append("String");       break;
 				case DataType.NChar
+					or DataType.Char
 					or DataType.NVarChar
-				                         : StringBuilder.Append("Utf8");         break;
+					or DataType.VarChar
+										 : StringBuilder.Append("Utf8");         break;
 				case DataType.Json       : StringBuilder.Append("Json");         break;
 				case DataType.BinaryJson : StringBuilder.Append("JsonDocument"); break;
 				case DataType.Yson       : StringBuilder.Append("Yson");         break;

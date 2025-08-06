@@ -36,6 +36,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			SqlProviderFlags.SupportsPredicatesComparison     = true;
 			SqlProviderFlags.IsDistinctFromSupported          = true;
 
+			// https://github.com/ydb-platform/ydb/issues/11258
+			// note that we cannot use LIMIT big_num, X workaround, as we do for CH, because server misbehaves
+			SqlProviderFlags.IsSkipSupported                  = false;
+			SqlProviderFlags.IsSkipSupportedIfTake            = true;
+
 			SetProviderField<byte[]>  (YdbProviderAdapter.GetBytes,        Adapter.DataReaderType);
 			SetProviderField<sbyte>   (YdbProviderAdapter.GetSByte,        Adapter.DataReaderType);
 			SetProviderField<ushort>  (YdbProviderAdapter.GetUInt16,       Adapter.DataReaderType);

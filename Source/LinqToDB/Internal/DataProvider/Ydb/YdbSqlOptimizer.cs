@@ -23,51 +23,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					statement = GetAlternativeDelete((SqlDeleteStatement)statement);
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
+				case QueryType.Update:
+					// disable table alias
+					statement.SelectQuery!.From.Tables[0].Alias = "$";
+					break;
 			}
 
 			return statement;
 		}
-
-		//public override SqlStatement TransformStatement(
-		//	SqlStatement statement,
-		//	DataOptions dataOptions,
-		//	MappingSchema mappingSchema)
-		//{
-		//	statement = base.TransformStatement(statement, dataOptions, mappingSchema);
-
-		//	return statement.QueryType switch
-		//	{
-		//		QueryType.Delete => CleanDeleteAlias(GetAlternativeDelete((SqlDeleteStatement)statement)),
-		//		QueryType.Update => CleanUpdateAlias((SqlUpdateStatement)statement),
-
-		//		_ => statement
-		//	};
-		//}
-
-		//private static SqlDeleteStatement CleanDeleteAlias(SqlDeleteStatement stmt)
-		//{
-		//	if (stmt.SelectQuery.From.Tables.Count == 1)
-		//	{
-		//		var ts = stmt.SelectQuery.From.Tables[0];
-		//		ts.Alias = null;
-		//		if (ts.Source is SqlTable tbl)
-		//			tbl.Alias = null;
-		//	}
-
-		//	return stmt;
-		//}
-
-		//private static SqlUpdateStatement CleanUpdateAlias(SqlUpdateStatement stmt)
-		//{
-		//	if (stmt.SelectQuery.From.Tables.Count == 1)
-		//	{
-		//		var ts = stmt.SelectQuery.From.Tables[0];
-		//		ts.Alias = null;
-		//		if (ts.Source is SqlTable tbl)
-		//			tbl.Alias = null;
-		//	}
-
-		//	return stmt;
-		//}
 	}
 }
