@@ -67,7 +67,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		private const           string          DY_NUMBER_FORMAT    = "DyNumber('{0}')";
 #endif
 
-		private YdbMappingSchema() : base(ProviderName.Ydb)
+		public YdbMappingSchema() : base(ProviderName.Ydb)
 		{
 			AddScalarType(typeof(DateTimeOffset), DataType.DateTime2);
 			AddScalarType(typeof(TimeSpan),       DataType.Interval);
