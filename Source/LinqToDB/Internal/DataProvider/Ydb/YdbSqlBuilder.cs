@@ -10,6 +10,7 @@ using LinqToDB.DataProvider.Ydb;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Ydb
 {
@@ -31,7 +32,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		protected override ISqlBuilder CreateSqlBuilder() => new YdbSqlBuilder(this, _providerOptions);
 
 		protected override string LimitFormat(SelectQuery selectQuery) => "LIMIT {0}";
-
 		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
 
 		protected override void PrintParameterName(StringBuilder sb, DbParameter parameter)
@@ -49,38 +49,27 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 #pragma warning restore RS0030 // Do not use banned APIs
 		}
 
-		////--------------------------------------------------------------------- DROP TABLE / TRUNCATE
-
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 			=> BuildDropTableStatementIfExists(dropTable);
 
-		//protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
-		//{
-		//	BuildTag(truncateTable);
-		//	AppendIndent().Append("TRUNCATE TABLE ");
-		//	BuildPhysicalTable(truncateTable.Table!, null);
-		//	StringBuilder.AppendLine();
-		//}
+		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
+		{
+			// columns are nullable by default
+			// primary key columns always non-nullable even with NULL specified
+			if (!field.CanBeNull && !field.IsPrimaryKey)
+				StringBuilder.Append("NOT NULL");
+		}
 
-		////--------------------------------------------------------------------- NULL / IDENTITY / RETURNING
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
+		{
+			var id = insertClause.Into?.GetIdentityField()
+				?? throw new LinqToDBException($"Identity field must be defined for '{insertClause.Into?.NameForLogging}'.");
 
-		//protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
-		//{
-		//	if (!field.CanBeNull)
-		//		StringBuilder.Append("NOT NULL");
-		//}
-
-		//protected override void BuildGetIdentity(SqlInsertClause insertClause)
-		//{
-		//	var id = insertClause.Into?.GetIdentityField()
-		//			 ?? throw new LinqToDBException(
-		//				 $"Identity field must be defined for '{insertClause.Into?.NameForLogging}'.");
-
-		//	AppendIndent().AppendLine("RETURNING");
-		//	AppendIndent().Append('\t');
-		//	BuildExpression(id, false, true);
-		//	StringBuilder.AppendLine();
-		//}
+			AppendIndent().AppendLine("RETURNING");
+			AppendIndent().Append('\t');
+			BuildExpression(id, false, true);
+			StringBuilder.AppendLine();
+		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
@@ -236,6 +225,44 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				default:
 					return sb.Append(value);
 			}
+		}
+
+		protected override void BuildOutputColumnExpressions(IReadOnlyList<ISqlExpression> expressions)
+		{
+			Indent++;
+
+			var first = true;
+
+			// RETURNING supports only column names without table reference
+			// expressions also not supported, but it is user's fault
+			var oldValue = _buildTableName;
+			_buildTableName = false;
+
+			foreach (var expr in expressions)
+			{
+				if (!first)
+					StringBuilder.AppendLine(Comma);
+
+				first = false;
+
+				var addAlias  = true;
+
+				AppendIndent();
+				BuildColumnExpression(null, expr, null, ref addAlias);
+			}
+
+			_buildTableName = oldValue;
+
+			Indent--;
+
+			StringBuilder.AppendLine();
+		}
+
+		private bool _buildTableName= true;
+
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		{
+			BuildExpression(expr, _buildTableName, true, alias, ref addAlias, true);
 		}
 
 		//protected override void BuildMergeStatement(SqlMergeStatement merge)
