@@ -301,7 +301,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test_SqlInsertOrUpdateStatement([DataSources(NOT_SUPPORTED, TestProvName.AllClickHouse)] string context)
+		public void Test_SqlInsertOrUpdateStatement([InsertOrUpdateDataSources(NOT_SUPPORTED)] string context)
 		{
 			var tag = "My Test";
 			var expected = $"/* {tag} */{Environment.NewLine}";

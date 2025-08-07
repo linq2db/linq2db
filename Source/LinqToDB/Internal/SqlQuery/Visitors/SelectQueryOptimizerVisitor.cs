@@ -2047,6 +2047,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					foreach (var join in tableSource.Joins)
 					{
+						if (_providerFlags.MoveNonEqualityJoinConditionsToWhere)
+							MoveJoinConditionsToWhere(join.Condition, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
+
 						if (JoinMoveSubQueryUp(selectQuery, join))
 							replaced = true;
 					}
@@ -2082,6 +2085,30 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			return replaced;
+		}
+
+		private void MoveJoinConditionsToWhere(SqlSearchCondition condition, SqlWhereClause where, NullabilityContext nullabilityContext)
+		{
+			if (condition.IsOr || condition.Predicates.Count == 0)
+				return;
+
+			SqlSearchCondition? whereCond = null;
+			for (var i = 0; i < condition.Predicates.Count; i++)
+			{
+				var predicate = condition.Predicates[i];
+
+				var move = predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
+					|| exprExpr != exprExpr.Reduce(nullabilityContext, _evaluationContext, false, _dataOptions.LinqOptions);
+
+				if (move)
+				{
+					(whereCond ??= where.EnsureConjunction()).Predicates.Add(predicate);
+					condition.Predicates.RemoveAt(i);
+					i--;
+				}
+			}
+
+			// this could result in empty condition, but it is fine - user created unsupported query
 		}
 
 		bool CorrectRecursiveCteJoins(SelectQuery selectQuery)
@@ -2391,7 +2418,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var join = table.Joins[joinIndex];
 					if (join.JoinType == JoinType.Inner && join.Condition.IsTrue())
 					{
-						if (_providerFlags.IsCrossJoinSupported && (table.Joins.Count > 1 || !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table.Source)))
+						if (_providerFlags.IsCrossJoinSupported && (table.Joins.Count > 0 || !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table.Source)))
 						{
 							join.JoinType = JoinType.Cross;
 							if (join.Table.Joins.Count > 0)

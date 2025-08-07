@@ -525,6 +525,19 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 60)]
 		public bool IsOrderByAggregateFunctionSupported { get; set; }
 
+		/// <summary>
+		/// When enabled, all conditions from JOIN ON moved to WHERE except conjunction of equality predicates.
+		/// <code>
+		/// FROM T1 JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2 AND t1.field3 > 10
+		/// -- with flag:
+		/// FROM T1 JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2
+		/// WHERE t1.field3 > 10
+		/// </code>
+		/// Default: <c>false</c>.
+		/// </summary>
+		[DataMember(Order = 61), DefaultValue(false)]
+		public bool MoveNonEqualityJoinConditionsToWhere { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -608,6 +621,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsDistinctFromSupported                              .GetHashCode()
 				^ DoesProviderTreatsEmptyStringAsNull                  .GetHashCode()
 				^ IsOrderByAggregateFunctionSupported                  .GetHashCode()
+				^ MoveNonEqualityJoinConditionsToWhere                 .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -673,6 +687,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsDistinctFromSupported                               == other.IsDistinctFromSupported
 				&& DoesProviderTreatsEmptyStringAsNull                   == other.DoesProviderTreatsEmptyStringAsNull
 				&& IsOrderByAggregateFunctionSupported                   == other.IsOrderByAggregateFunctionSupported
+				&& MoveNonEqualityJoinConditionsToWhere                  == other.MoveNonEqualityJoinConditionsToWhere
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0
