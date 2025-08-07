@@ -14,65 +14,71 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		///// <inheritdoc/>
 		//protected override bool SupportsNullInColumn => false;
 
-		//// ------------------------------------------------------------------
-		//// SearchString → LIKE  (+ регистронезависимый поиск)
-		//// ------------------------------------------------------------------
-		//public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
-		//{
-		//	var like = ConvertSearchStringPredicateViaLike(predicate);
+		#region (I)LIKE https://ydb.tech/docs/en/yql/reference/syntax/expressions#check-match
 
-		//	var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext) ?? true;
-		//	if (!caseSensitive && like is SqlPredicate.Like lp)
-		//	{
-		//		like = new SqlPredicate.Like(
-		//			PseudoFunctions.MakeToLower(lp.Expr1, MappingSchema),
-		//			lp.IsNot,
-		//			PseudoFunctions.MakeToLower(lp.Expr2, MappingSchema),
-		//			lp.Escape);
-		//	}
+		protected static string[] YdbLikeCharactersToEscape = {"%", "_"};
 
-		//	return like;
-		//}
+		public override string[] LikeCharactersToEscape => YdbLikeCharactersToEscape;
 
-		//// ------------------------------------------------------------------
-		//// Бинарные операции
-		//// ------------------------------------------------------------------
-		//public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
-		//{
-		//	switch (element.Operation)
-		//	{
-		//		// Сцепление строк YDB — оператор ||
-		//		case "+" when element.SystemType == typeof(string):
-		//			return new SqlBinaryExpression(
-		//				element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
+		// escape value literal should have String type
+		public override ISqlExpression CreateLikeEscapeCharacter() => new SqlValue(new DbDataType(typeof(string), DataType.VarBinary), LikeEscapeCharacter);
 
-		//		// Остаток от деления: приводим к decimal, если требуется
-		//		case "%":
-		//		{
-		//			var dbType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
+		{
+			var searchPredicate = ConvertSearchStringPredicateViaLike(predicate);
 
-		//			if (dbType.SystemType.ToNullableUnderlying() != typeof(decimal))
-		//			{
-		//				var toType   = MappingSchema.GetDbDataType(typeof(decimal));
-		//				var newLeft  = PseudoFunctions.MakeCast(element.Expr1, toType);
+			// use ILIKE for case-insensitive search
+			if (false == predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext) && searchPredicate is SqlPredicate.Like likePredicate)
+			{
+				searchPredicate = new SqlPredicate.Like(likePredicate.Expr1, likePredicate.IsNot, likePredicate.Expr2, likePredicate.Escape, "ILIKE");
+			}
 
-		//				var sysType  = dbType.SystemType?.IsNullable() == true
-		//					? typeof(decimal?)
-		//					: typeof(decimal);
+			return searchPredicate;
+		}
 
-		//				var newExpr  = PseudoFunctions.MakeMandatoryCast(
-		//					new SqlBinaryExpression(sysType, newLeft, "%", element.Expr2),
-		//					toType);
+		#endregion
 
-		//				return Visit(Optimize(newExpr));
-		//			}
+		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
+		{
+			switch (element.Operation)
+			{
+				case "+" when element.Type.DataType
+					is DataType.NVarChar
+					or DataType.NChar
+					or DataType.Char
+					or DataType.VarChar
+					or DataType.Binary
+					or DataType.VarBinary
+					or DataType.Blob:
+					return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 
-		//			break;
-		//		}
-		//	}
+				//// Остаток от деления: приводим к decimal, если требуется
+				//case "%":
+				//{
+				//	var dbType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
 
-		//	return base.ConvertSqlBinaryExpression(element);
-		//}
+				//	if (dbType.SystemType.ToNullableUnderlying() != typeof(decimal))
+				//	{
+				//		var toType   = MappingSchema.GetDbDataType(typeof(decimal));
+				//		var newLeft  = PseudoFunctions.MakeCast(element.Expr1, toType);
+
+				//		var sysType  = dbType.SystemType?.IsNullable() == true
+				//			? typeof(decimal?)
+				//			: typeof(decimal);
+
+				//		var newExpr  = PseudoFunctions.MakeMandatoryCast(
+				//			new SqlBinaryExpression(sysType, newLeft, "%", element.Expr2),
+				//			toType);
+
+				//		return Visit(Optimize(newExpr));
+				//	}
+
+				//	break;
+				//}
+			}
+
+			return base.ConvertSqlBinaryExpression(element);
+		}
 
 		//// ------------------------------------------------------------------
 		//// Функции и псевдо-функции
