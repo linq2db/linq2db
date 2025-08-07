@@ -379,7 +379,7 @@ namespace Tests.Linq
 					db.GetTable<MyParent1>().Select(p => new { p.ParentID, Value = p.GetValue() }));
 		}
 
-		public class     Entity    { public int Id { get; set; } }
+		public class     Entity    { [PrimaryKey] public int Id { get; set; } }
 		public interface IDocument { int Id { get; set; } }
 		public class     Document : Entity, IDocument { }
 

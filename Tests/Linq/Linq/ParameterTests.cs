@@ -403,7 +403,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Table404One
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			public static readonly Table404One[] Data = new[]
 			{
@@ -415,7 +415,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Table404Two
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[Column] public Issue404 Usage { get; set; }
 
@@ -524,7 +524,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class TestEqualsTable1
 		{
-			[Column]
+			[PrimaryKey]
 			public int Id { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(TestEqualsTable2.FK), CanBeNull = true)]
@@ -534,7 +534,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class TestEqualsTable2
 		{
-			[Column]
+			[PrimaryKey]
 			public int Id { get; set; }
 
 			[Column]
@@ -1856,7 +1856,7 @@ namespace Tests.Linq
 
 		sealed class TestBool
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column(Configuration = ProviderName.Sybase, CanBeNull = false)]
 			public bool? Value { get; set; }
 		}
@@ -1992,6 +1992,7 @@ namespace Tests.Linq
 
 		sealed class Issue4963Table
 		{
+			[PrimaryKey] public int Id { get; set; }
 			public byte Field { get; set; }
 		}
 
@@ -1999,7 +2000,7 @@ namespace Tests.Linq
 		public void Issue4963([DataSources] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(new[] { new Issue4963Table() { Field = 2 } });
+			using var tb = db.CreateLocalTable(new[] { new Issue4963Table() { Id = 1, Field = 2 } });
 
 			db.InlineParameters = inline;
 			var offset = -1;

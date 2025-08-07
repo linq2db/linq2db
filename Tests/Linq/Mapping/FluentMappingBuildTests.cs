@@ -43,6 +43,7 @@ namespace Tests.Mapping
 				"FluentTemp",
 				[new { ID = 1, Name = "John", LastName = "Doe" }],
 				mb => mb
+					.Property(t => t.ID).IsPrimaryKey()
 					.Property(t => t.Name)
 						.HasLength(20)
 						.HasColumnName("Value")
@@ -66,6 +67,7 @@ namespace Tests.Mapping
 				"FluentTemp",
 				[new { ID = 1, Name = "John", LastName = "Doe" }],
 				mb => mb
+					.Property(t => t.ID).IsPrimaryKey()
 					.Property(t => t.Name)
 						.HasLength(20)
 						.HasColumnName("Value")
@@ -127,6 +129,7 @@ namespace Tests.Mapping
 					"FluentTemp",
 					[new { ID = 1, Name = "John", LastName = "Doe" }],
 					mb => mb
+						.Property(t => t.ID).IsPrimaryKey()
 						.Property(t => t.Name)
 						.HasLength(20)
 						.HasColumnName(name)

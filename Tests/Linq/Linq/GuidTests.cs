@@ -14,7 +14,7 @@ namespace Tests.Linq
 		[Table]
 		public class TableWithGuid
 		{
-			[Column] public Guid Id { get; set; }
+			[PrimaryKey] public Guid Id { get; set; }
 			[Column] public Guid? NullableGuid { get; set; }
 		}
 

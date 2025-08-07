@@ -126,7 +126,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				// apply type for non-String types
 				var suffix = dt.Type.DataType switch
 				{
-					DataType.DecFloat or DataType.Decimal or DataType.VarBinary or DataType.Binary => 's',
+					DataType.DecFloat or DataType.Decimal or DataType.VarBinary or DataType.Binary or DataType.Blob => 's',
 					DataType.Json => 'j',
 					DataType.Yson => 'y',
 					_ => 'u'

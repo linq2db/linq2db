@@ -32,7 +32,7 @@ CREATE TABLE GrandChild  (ParentID Int32, ChildID Int32, GrandChildID Int32, PRI
 GO
 CREATE TABLE LinqDataTypes
 (
-	ID             Int32 NOT NULL,
+	ID             SERIAL NOT NULL,
 	MoneyValue     Decimal(4, 2),
 	DateTimeValue  Timestamp,
 	DateTimeValue2 Timestamp,
@@ -65,7 +65,7 @@ CREATE TABLE InheritanceChild
 GO
 CREATE TABLE Person
 (
-	PersonID   Int32 NOT NULL,
+	PersonID   SERIAL NOT NULL,
 	FirstName  Utf8 NOT NULL,
 	LastName   Utf8 NOT NULL,
 	MiddleName Utf8,
@@ -101,7 +101,7 @@ GO
 
 CREATE TABLE AllTypes
 (
-	ID                       Int32 NOT NULL,
+	ID                       SERIAL NOT NULL,
 
 	intDataType              Int32,
 	smallintDataType         Int16,

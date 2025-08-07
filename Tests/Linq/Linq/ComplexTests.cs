@@ -466,16 +466,16 @@ namespace Tests.Linq
 		[Table("T2")]
 		public class T2
 		{
-			[Column] public int InstrumentId { get; set; }
-			[Column] public int IndexId { get; set; }
+			[Column, PrimaryKey] public int InstrumentId { get; set; }
+			[Column, PrimaryKey] public int IndexId { get; set; }
 
 		}
 
 		[Table("T3")]
 		public class T3
 		{
-			[Column] public int InstrumentId { get; set; }
-			[Column] public int IndexId { get; set; }
+			[Column, PrimaryKey] public int InstrumentId { get; set; }
+			[Column, PrimaryKey] public int IndexId { get; set; }
 		}
 
 		[Test]
@@ -529,6 +529,8 @@ namespace Tests.Linq
 		[Column("user_name", "Name")]
 		public class User
 		{
+			[PrimaryKey] public int Id { get; set; }
+
 			public string? Name;
 
 			[Column("street", ".Street")]
@@ -646,6 +648,8 @@ namespace Tests.Linq
 		[Column("user_name", "Name")]
 		class UserStruct
 		{
+			[PrimaryKey] public int Id { get; set; }
+
 			public string? Name;
 
 			[Column("street", ".Street")]

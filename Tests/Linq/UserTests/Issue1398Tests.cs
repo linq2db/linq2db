@@ -52,7 +52,7 @@ namespace Tests.UserTests
 		[Table("InsertTable1398")]
 		internal sealed class InsertTable
 		{
-			[Column(CanBeNull = false)]
+			[Column(CanBeNull = false), PrimaryKey]
 			public int Value { get; set; }
 		}
 

@@ -1139,7 +1139,7 @@ WHERE
 		#region Issue 4596
 		sealed class Issue4596Form
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public char C1 { get; set; }
 
 			[Association(QueryExpressionMethod = nameof(ItemsImpl))]
@@ -1156,7 +1156,7 @@ WHERE
 
 		sealed class Issue4596Item
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public int FormId { get; set; }
 			public int OrderIndex { get; set; }
 			public string? Name1 { get; set; }
@@ -1178,7 +1178,7 @@ WHERE
 		#region Issue 4723
 		class Issue4723Table1
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[Association(QueryExpressionMethod = nameof(AssociationImpl), CanBeNull = true)]
 			public string? Association { get; set; }
@@ -1208,14 +1208,16 @@ WHERE
 
 		class Issue4723Table2
 		{
+			[PrimaryKey]
+			public int Pk { get; set; }
 			public int Id { get; set; }
 			public string? Value { get; set; }
 
 			public static Issue4723Table2[] TestData =
 			[
-				new Issue4723Table2() { Id = 1, Value = "Value 1" },
-				new Issue4723Table2() { Id = 1, Value = "Value 1" }, // same value to simplify assertion
-				new Issue4723Table2() { Id = 2, Value = "Value 2" },
+				new Issue4723Table2() { Pk = 1, Id = 1, Value = "Value 1" },
+				new Issue4723Table2() { Pk = 2, Id = 1, Value = "Value 1" }, // same value to simplify assertion
+				new Issue4723Table2() { Pk = 3, Id = 2, Value = "Value 2" },
 			];
 		}
 

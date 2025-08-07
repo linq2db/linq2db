@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
@@ -81,24 +82,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		//	StringBuilder.AppendLine();
 		//}
 
-		////--------------------------------------------------------------------- CREATE TABLE helpers
-
-		//protected override void BuildCreateTableFieldType(SqlField field)
-		//{
-		//	if (field.IsIdentity)
-		//	{
-		//		StringBuilder.Append(field.Type.DataType switch
-		//		{
-		//			DataType.Int64 => "BigSerial",
-		//			DataType.Int16 => "SmallSerial",
-		//			_ => "Serial"
-		//		});
-		//		return;
-		//	}
-
-		//	base.BuildCreateTableFieldType(field);
-		//}
-
 		//protected override void BuildCreateTableCommand(SqlTable table)
 		//{
 		//	var cmd = table.TableOptions.IsTemporaryOptionSet()
@@ -110,6 +93,27 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		//	if (table.TableOptions.HasCreateIfNotExists())
 		//		StringBuilder.Append("IF NOT EXISTS ");
 		//}
+
+		// duplicate aliases in final select are not supported
+		protected override bool CanSkipRootAliases(SqlStatement statement) => false;
+
+		protected override void BuildCreateTableFieldType(SqlField field)
+		{
+			if (field.IsIdentity)
+			{
+				StringBuilder.Append(field.Type.DataType switch
+				{
+					DataType.Int16 => "SMALLSERIAL",
+					DataType.Int32 => "SERIAL",
+					DataType.Int64 => "BIGSERIAL",
+					_ => throw new InvalidOperationException($"Unsupported identity field type {field.Type.DataType}")
+				});
+
+				return;
+			}
+
+			base.BuildCreateTableFieldType(field);
+		}
 
 		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
@@ -128,6 +132,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case DataType.Double     : StringBuilder.Append("Double");       break;
 				case DataType.DecFloat   : StringBuilder.Append("DyNumber");     break;
 				case DataType.Binary
+					or DataType.Blob
 					or DataType.VarBinary: StringBuilder.Append("String");       break;
 				case DataType.NChar
 					or DataType.Char
@@ -215,8 +220,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					return sb.Append(value);
 			}
 		}
-
-		////--------------------------------------------------------------------- MERGE → UPSERT
 
 		//protected override void BuildMergeStatement(SqlMergeStatement merge)
 		//{
