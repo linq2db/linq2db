@@ -82,17 +82,34 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		//	StringBuilder.AppendLine();
 		//}
 
-		//protected override void BuildCreateTableCommand(SqlTable table)
-		//{
-		//	var cmd = table.TableOptions.IsTemporaryOptionSet()
-		//		? "CREATE TEMPORARY TABLE "
-		//		: "CREATE TABLE ";
+		protected override void BuildCreateTableCommand(SqlTable table)
+		{
+			string command;
 
-		//	StringBuilder.Append(cmd);
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary:
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryData:
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure:
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData:
+					case TableOptions.IsLocalTemporaryData:
+					case TableOptions.IsLocalTemporaryStructure:
+					case TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData:
+						command = "CREATE TEMPORARY TABLE ";
+						break;
+					case var value:
+						throw new LinqToDBException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
 
-		//	if (table.TableOptions.HasCreateIfNotExists())
-		//		StringBuilder.Append("IF NOT EXISTS ");
-		//}
+			StringBuilder.Append(command);
+		}
 
 		// duplicate aliases in final select are not supported
 		protected override bool CanSkipRootAliases(SqlStatement statement) => false;
