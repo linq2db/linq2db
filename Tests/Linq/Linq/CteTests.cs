@@ -460,6 +460,7 @@ namespace Tests.Linq
 				return HashCode.Combine(ChildID, ParentID);
 			}
 
+			[PrimaryKey]
 			public int ChildID  { get; set; }
 			public int ParentID { get; set; }
 		}
@@ -502,7 +503,10 @@ namespace Tests.Linq
 
 				query.ToArray();
 
-				Assert.That(str, Does.Contain("WITH"));
+				if (context.IsAnyOf(ProviderName.Ydb))
+					Assert.That(str, Does.Contain("$CTE"));
+				else
+					Assert.That(str, Does.Contain("WITH"));
 			}
 		}
 
@@ -632,6 +636,7 @@ namespace Tests.Linq
 
 		public class HierarchyTree
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 			public int? ParentId { get; set; }
 		}
@@ -673,6 +678,7 @@ namespace Tests.Linq
 
 		sealed class HierarchyData
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 			public int Level { get; set; }
 		}
@@ -1045,6 +1051,7 @@ namespace Tests.Linq
 
 		class NestingA
 		{
+			[PrimaryKey] public int Id { get; set; }
 			public string? Property1 { get; set; }
 		}
 
@@ -1142,6 +1149,7 @@ namespace Tests.Linq
 		[Table(Name = "NC_CODE")]
 		public partial class NcCode
 		{
+			[PrimaryKey] public int Id { get; set; }
 			[Column("HANDLE"), NotNull             ] public string    Handle           { get; set; } = null!; // NVARCHAR2(1236)
 			[Column("CHANGE_STAMP"), Nullable      ] public decimal?  ChangeStamp      { get; set; } // NUMBER (38,0)
 			[Column("SITE", Length = 18),          ] public string?   Site             { get; set; } // NVARCHAR2(18)
@@ -1156,6 +1164,7 @@ namespace Tests.Linq
 		[Table(Name = "NC_GROUP_MEMBER")]
 		public partial class NcGroupMember
 		{
+			[PrimaryKey] public int Id { get; set; }
 			[Column("HANDLE"), NotNull               ] public string   Handle           { get; set; } = null!; // NVARCHAR2(1236)
 			[Column("NC_GROUP_BO"), Nullable         ] public string?  NcGroupBo        { get; set; } // NVARCHAR2(1236)
 			[Column("NC_CODE_OR_GROUP_GBO"), Nullable] public string?  NcCodeOrGroupGbo { get; set; } // NVARCHAR2(1236)
@@ -1351,7 +1360,7 @@ namespace Tests.Linq
 		[Table]
 		private class Issue3360WithEnum
 		{
-			[Column                                          ] public int     Id  { get; set; }
+			[PrimaryKey                                      ] public int     Id  { get; set; }
 			[Column(DataType = DataType.VarChar, Length = 50)] public StrEnum Str { get; set; }
 		}
 
@@ -1501,7 +1510,7 @@ namespace Tests.Linq
 		[Table]
 		private class Issue3360NullInAnchor
 		{
-			[Column                                          ] public int       Id    { get; set; }
+			[PrimaryKey                                      ] public int       Id    { get; set; }
 			[NotColumn(Configuration = ProviderName.Firebird)]
 			[NotColumn(Configuration = ProviderName.DB2)     ]
 			[Column                                          ] public Guid?     Guid  { get; set; }
@@ -1942,7 +1951,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class TestFolder
 		{
-			[Column] public Guid        Id       { get; set; }
+			[PrimaryKey] public Guid    Id       { get; set; }
 			[Column] public string?     Label    { get; set; }
 			[Column] public Guid?       ParentId { get; set; }
 
@@ -2164,7 +2173,7 @@ namespace Tests.Linq
 		#region Issue 4366
 		sealed class Dto
 		{
-			public int id { get; set; }
+			[PrimaryKey] public int id { get; set; }
 			public string name { get; set; } = null!;
 			public int? parent_id { get; set; }
 			public string? FullName;

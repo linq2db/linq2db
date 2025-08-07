@@ -3090,7 +3090,7 @@ FROM
 
 			fluentMappingBuilder
 				.Entity<Issue4585TableNested>()
-				.Property(x => x.Id)
+				.Property(x => x.Id).IsPrimaryKey()
 				.Property(x => x.Code);
 
 			fluentMappingBuilder
@@ -3265,6 +3265,7 @@ FROM
 
 		class CteTable
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 			public int Value1 { get; set; }
 			public int Value2 { get; set; }
@@ -3275,6 +3276,7 @@ FROM
 
 		class CteChildTable
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 			public int Value { get; set; }
 

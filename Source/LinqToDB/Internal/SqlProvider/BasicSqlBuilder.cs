@@ -604,7 +604,7 @@ namespace LinqToDB.Internal.SqlProvider
 					AppendIndent();
 				}
 
-				BuildObjectName(StringBuilder, new (cte.Name!), ConvertType.NameToQueryTable, true, TableOptions.NotSet);
+				BuildObjectName(StringBuilder, new (cte.Name!), ConvertType.NameToCteName, true, TableOptions.NotSet);
 
 				if (IsCteColumnListSupported)
 				{
@@ -3910,7 +3910,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				case QueryElementType.SqlCteTable   :
 				case QueryElementType.SqlRawSqlTable:
-					return BuildObjectName(new (), ((SqlTable)table).TableName, ConvertType.NameToQueryTable, true, TableOptions.NotSet, withoutSuffix: withoutSuffix).ToString();
+					return BuildObjectName(new (), ((SqlTable)table).TableName, ConvertType.NameToCteName, true, TableOptions.NotSet, withoutSuffix: withoutSuffix).ToString();
 
 				case QueryElementType.SqlTableLikeSource:
 					return ConvertInline(((SqlTableLikeSource)table).Name, ConvertType.NameToQueryTable);

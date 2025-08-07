@@ -773,7 +773,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue4139Table
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[Column("ParentId", ".ParentId")]
 			// TODO: missing ctor

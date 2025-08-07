@@ -194,6 +194,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
+				case ConvertType.NameToCteName:
 				{
 					var quote = (value.Length > 0 && char.IsDigit(value[0]))
 						|| value.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not '_');
@@ -263,6 +264,31 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
 			BuildExpression(expr, _buildTableName, true, alias, ref addAlias, true);
+		}
+
+		protected override bool IsCteColumnListSupported => false;
+
+		protected override void BuildWithClause(SqlWithClause? with)
+		{
+			if (with == null || with.Clauses.Count == 0)
+				return;
+
+			foreach (var cte in with.Clauses)
+			{
+				// TODO: we should ensure that cte name doesn't conflict with parameter name
+				// see BasicSqlOptimizer.FinalizeCte
+				BuildObjectName(StringBuilder, new(cte.Name!), ConvertType.NameToCteName, true, TableOptions.NotSet);
+				StringBuilder.Append(" = ");
+
+				Indent++;
+
+				BuildCteBody(cte.Body!);
+				StringBuilder.AppendLine(";");
+
+				Indent--;
+			}
+
+			StringBuilder.AppendLine();
 		}
 
 		//protected override void BuildMergeStatement(SqlMergeStatement merge)

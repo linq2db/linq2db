@@ -1826,6 +1826,7 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,

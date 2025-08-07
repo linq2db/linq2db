@@ -42,6 +42,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			switch (element.Operation)
 			{
+				case "+" when element.Type.DataType == DataType.Undefined && element.SystemType == typeof(string):
 				case "+" when element.Type.DataType
 					is DataType.NVarChar
 					or DataType.NChar

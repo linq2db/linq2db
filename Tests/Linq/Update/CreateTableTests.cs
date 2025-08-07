@@ -363,14 +363,14 @@ namespace Tests.xUpdate
 		[Table("Issue3223Table")]
 		sealed class Issue3223Raw
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column] public string? Value { get; set; }
 		}
 
 		[Table("Issue3223Table")]
 		sealed class Issue3223Table
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column] public Issue3223Enum? Value { get; set; }
 
 			public static readonly Issue3223Table[] Data =
