@@ -79,7 +79,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			var dateTime = reader.GetDateTime(index);
 			
-			if (dateTime == default)
+			if (dateTime == DateTime.MinValue)
 				return DateTimeOffset.MinValue;
 
 			if (dateTime == DateTime.MaxValue)
