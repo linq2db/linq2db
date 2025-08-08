@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
+using System.Linq;
 
 using LinqToDB.DataProvider;
 using LinqToDB.Interceptors;
@@ -64,7 +66,7 @@ namespace LinqToDB.Data
 		Func<ConnectionOptions, IDataProvider>?         DataProviderFactory       = default,
 		ConnectionOptionsConnectionInterceptor?         ConnectionInterceptor     = default,
 		Action<MappingSchema, IEntityChangeDescriptor>? OnEntityDescriptorCreated = default
-
+		
 		// If you add another parameter here, don't forget to update
 		// ConnectionOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -90,7 +92,13 @@ namespace LinqToDB.Data
 			DataProviderFactory       = original.DataProviderFactory;
 			ConnectionInterceptor     = original.ConnectionInterceptor;
 			OnEntityDescriptorCreated = original.OnEntityDescriptorCreated;
+			Custom                    = original.Custom.ToDictionary(x => x.Key, x => x.Value);
 		}
+
+		/// <summary>
+		/// Custom options that can be setup in UseXXX methods of <see cref="DataOptionsExtensions"/> for extending <see cref="Internal.DataProvider.ProviderDetectorBase{TProvider}"/> auto detecion.
+		/// </summary>
+		public Dictionary<string, object> Custom { get; } = new();
 
 		int? _configurationID;
 		int IConfigurationID.ConfigurationID
@@ -100,7 +108,7 @@ namespace LinqToDB.Data
 				if (_configurationID == null)
 				{
 					using var idBuilder = new IdentifierBuilder();
-					_configurationID = idBuilder
+					idBuilder
 						.Add(ConfigurationString)
 						.Add(ConnectionString)
 						.Add(DataProvider?.ID)
@@ -112,8 +120,21 @@ namespace LinqToDB.Data
 						.Add(ConnectionFactory)
 						.Add(DataProviderFactory)
 						.Add(ConnectionInterceptor)
-						.Add(OnEntityDescriptorCreated)
-						.CreateID();
+						.Add(OnEntityDescriptorCreated);
+
+					if (Custom.Count > 0)
+					{
+						using var customIdBuilder = new IdentifierBuilder();
+						foreach (var item in Custom)
+						{
+							customIdBuilder.Add(item.Key);
+							customIdBuilder.Add(item.Value);
+						}
+
+						idBuilder.Add(customIdBuilder.CreateID());
+					}
+
+					_configurationID = idBuilder.CreateID();
 				}
 
 				return _configurationID.Value;
