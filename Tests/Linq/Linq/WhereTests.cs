@@ -2549,5 +2549,30 @@ namespace Tests.Linq
 							&& ((p4 <= p.ID && p.ID <= p4) || (p4 <= p.ID && p.ID <= p4))))
 				.ToArray();
 		}
+
+		[Test]
+		public void PredicateOptimization_SimilarInSearch1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var noPersons = db.Person.Where(x => x.ID > 3 && (x.FirstName == "John" || x.FirstName == "Jane"));
+			var specificNoPersons = noPersons.Where(x => x.FirstName == "Jane");
+
+			AssertQuery(specificNoPersons);
+			AssertQuery(noPersons);
+		}
+
+		[Test]
+		public void PredicateOptimization_SimilarInSearch2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var noPersons         = db.Person.Where(x => (x.FirstName == "John" || x.FirstName == "Jane") && x.ID > 3);
+			var specificNoPersons = noPersons.Where(x => x.FirstName == "Jane");
+
+			AssertQuery(specificNoPersons);
+			AssertQuery(noPersons);
+		}
+
 	}
 }
