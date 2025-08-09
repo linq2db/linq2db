@@ -789,5 +789,128 @@ namespace Tests.Linq
 			public Issue4139Table? Parent { get; set; }
 		}
 		#endregion
+
+		#region Issue 5056
+		[Table]
+		sealed class Issue5056Table
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			public Issue5056Struct Struct { get; set; }
+
+			public Issue5056Class Class { get; set; } = null!;
+		}
+
+		struct Issue5056Struct
+		{
+			public int Value1 { get; set; }
+			public int Value2 { get; set; }
+		}
+
+		sealed class Issue5056Class
+		{
+			public int Value1 { get; set; }
+			public int Value2 { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5056")]
+		public void Issue5056Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool asScalars)
+		{
+			var ms = new MappingSchema();
+
+			if (asScalars)
+			{
+				ms.AddScalarType(typeof(Issue5056Struct), DataType.Int32);
+				ms.AddScalarType(typeof(Issue5056Class), DataType.Int32);
+
+				ms.SetConverter<Issue5056Struct, DataParameter>(p => new DataParameter(null, p.Value1 + p.Value2));
+				ms.SetConverter<Issue5056Class, DataParameter>(p => new DataParameter(null, p.Value1 - p.Value2));
+
+				ms.SetConverter<int, Issue5056Struct>(v => new Issue5056Struct() { Value1 = v + 4, Value2 = v - 5 });
+				ms.SetConverter<int, Issue5056Class>(v => new Issue5056Class() { Value1 = v - 3, Value2 = v + 2 });
+			}
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<Issue5056Table>();
+
+			tb.Insert(() => new Issue5056Table()
+			{
+				Id = 1,
+				Struct = new Issue5056Struct()
+				{
+					Value1 = 5,
+					Value2 = 8
+				},
+				Class = new Issue5056Class()
+				{
+					Value1 = -4,
+					Value2 = -12
+				}
+			});
+
+			var record = tb.Single();
+			Assert.That(record.Class, Is.Not.Null);
+
+			if (asScalars)
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(record.Struct.Value1, Is.EqualTo(17));
+					Assert.That(record.Struct.Value2, Is.EqualTo(8));
+					Assert.That(record.Class.Value1, Is.EqualTo(-19));
+					Assert.That(record.Class.Value2, Is.EqualTo(-14));
+				}
+			}
+			else
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(record.Struct.Value1, Is.EqualTo(5));
+					Assert.That(record.Struct.Value2, Is.EqualTo(8));
+					Assert.That(record.Class.Value1, Is.EqualTo(-4));
+					Assert.That(record.Class.Value2, Is.EqualTo(-12));
+				}
+			}
+
+			tb.Update(r => new Issue5056Table()
+			{
+				Id = 1,
+				Struct = new Issue5056Struct()
+				{
+					Value1 = 12,
+					Value2 = -11
+				},
+				Class = new Issue5056Class()
+				{
+					Value1 = -3,
+					Value2 = 5
+				}
+			});
+
+			record = tb.Single();
+
+			if (asScalars)
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(record.Struct.Value1, Is.EqualTo(5));
+					Assert.That(record.Struct.Value2, Is.EqualTo(-4));
+					Assert.That(record.Class.Value1, Is.EqualTo(-11));
+					Assert.That(record.Class.Value2, Is.EqualTo(-6));
+				}
+			}
+			else
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(record.Struct.Value1, Is.EqualTo(12));
+					Assert.That(record.Struct.Value2, Is.EqualTo(-11));
+					Assert.That(record.Class.Value1, Is.EqualTo(-3));
+					Assert.That(record.Class.Value2, Is.EqualTo(5));
+				}
+			}
+		}
+		#endregion
 	}
 }

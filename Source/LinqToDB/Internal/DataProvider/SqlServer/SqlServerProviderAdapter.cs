@@ -311,8 +311,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					if (jsonDocumentType != null)
 					{
-						mappingSchema.SetScalarType(jsonDocumentType);
-						mappingSchema.SetDataType(jsonDocumentType, new SqlDataType(new DbDataType(jsonDocumentType, DataType.Json)));
+						mappingSchema.AddScalarType(jsonDocumentType, new SqlDataType(new DbDataType(jsonDocumentType, DataType.Json)));
 
 						jsdocToStringConverter = Expression.Lambda<Func<object, string?>>(
 							Expression.Call(
@@ -416,10 +415,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					mappingSchema ??= new SqlServerAdapterMappingSchema(provider);
 
-					mappingSchema.SetScalarType(type);
 					mappingSchema.SetDefaultValue(type, getNullValue());
 					mappingSchema.SetCanBeNull(type, true);
-					mappingSchema.SetDataType(type, new SqlDataType(new DbDataType(type, dataType, dbType, length: length)));
+					mappingSchema.AddScalarType(type, new SqlDataType(new DbDataType(type, dataType, dbType, length: length)));
 				}
 
 				return type;
