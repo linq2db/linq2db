@@ -111,9 +111,11 @@ namespace Tests
 				GetRemoteContextOptionsBuilder(null, str, opt => dbOptionsBuilder(opt).UseFSharp()),
 				(conf, ms) =>
 				{
-					var dc = new DataConnection(conf);
+					var options = new DataOptions().UseConfiguration(conf);
 					if (ms != null)
-						dc.AddMappingSchema(ms);
+						options = options.UseAdditionalMappingSchema(ms);
+
+					var dc = new DataConnection(dbOptionsBuilder(options));
 					return dc;
 				});
 		}

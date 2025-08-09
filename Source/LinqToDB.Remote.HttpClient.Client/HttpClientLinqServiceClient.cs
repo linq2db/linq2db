@@ -17,7 +17,7 @@ namespace LinqToDB.Remote.HttpClient.Client
 
 		LinqServiceInfo ILinqService.GetInfo(string? configuration)
 		{
-			var response = HttpClient.PostAsJsonAsync($"{requestUri}/{nameof(ILinqService.GetInfo)}", configuration, default).Result
+			var response = HttpClient.PostAsync($"{requestUri}/{nameof(ILinqService.GetInfo)}/{configuration}", null, default).Result
 				?? throw new LinqToDBException("Return value is not allowed to be null");
 
 			response.EnsureSuccessStatusCode();
@@ -68,7 +68,7 @@ namespace LinqToDB.Remote.HttpClient.Client
 
 		async Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)
 		{
-			var response = await HttpClient.PostAsJsonAsync($"{requestUri}/{nameof(ILinqService.GetInfoAsync)}", configuration, cancellationToken).ConfigureAwait(false)
+			var response = await HttpClient.PostAsync($"{requestUri}/{nameof(ILinqService.GetInfoAsync)}/{configuration}", null, cancellationToken).ConfigureAwait(false)
 				?? throw new LinqToDBException("Return value is not allowed to be null");
 
 			response.EnsureSuccessStatusCode();
