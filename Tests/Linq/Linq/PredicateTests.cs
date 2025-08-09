@@ -16,6 +16,7 @@ namespace Tests.Linq
 
 		sealed class FeatureTable
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 			public int? One { get; set; }
 			public int? Zero { get; set; }
@@ -776,7 +777,7 @@ namespace Tests.Linq
 		#region Translation Tests
 		sealed class BooleanTable
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			public int Value1 { get; set; }
 			public int Value2 { get; set; }

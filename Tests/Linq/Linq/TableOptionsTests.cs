@@ -14,13 +14,19 @@ namespace Tests.Linq
 	[TestFixture]
 	public class TableOptionsTests : TestBase
 	{
+		sealed record TempRecord
+		{
+			[PrimaryKey]
+			public int ID;
+			public int Value;
+		}
 		[Test]
 		public void IsTemporaryOptionTest(
 			[DataSources(false)] string context,
 			[Values(TableOptions.CheckExistence, TableOptions.NotSet)] TableOptions tableOptions)
 		{
 			using var db = (DataConnection)GetDataContext(context);
-			using var t1 = new[] { new { ID = 1, Value = 2 } }.IntoTempTable(db, "temp_table1", tableOptions : TableOptions.IsTemporary   | tableOptions);
+			using var t1 = new[] { new TempRecord { ID = 1, Value = 2 } }.IntoTempTable(db, "temp_table1", tableOptions : TableOptions.IsTemporary   | tableOptions);
 			using var t2 = t1.IntoTempTable("temp_table2", tableOptions : TableOptions.IsTemporary                                      | tableOptions);
 
 			var l1 = t1.ToArray();
@@ -28,9 +34,9 @@ namespace Tests.Linq
 
 			Assert.That(l1, Is.EquivalentTo(l2));
 
-			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows     }, new[] { new { ID = 2, Value = 3 } });
-			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.RowByRow         }, new[] { new { ID = 3, Value = 3 } });
-			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific }, new[] { new { ID = 4, Value = 5 } });
+			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows     }, new[] { new TempRecord { ID = 2, Value = 3 } });
+			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.RowByRow         }, new[] { new TempRecord { ID = 3, Value = 3 } });
+			t1.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific }, new[] { new TempRecord { ID = 4, Value = 5 } });
 
 			t1.Truncate();
 			t2.Truncate();
@@ -42,7 +48,7 @@ namespace Tests.Linq
 			[Values(TableOptions.CheckExistence, TableOptions.NotSet)] TableOptions tableOptions)
 		{
 			using var db = (DataConnection)GetDataContext(context);
-			using var t1 = await new[] { new { ID = 1, Value = 2 } }.IntoTempTableAsync(db, "temp_table1", tableOptions : TableOptions.IsTemporary   | tableOptions);
+			using var t1 = await new[] { new TempRecord { ID = 1, Value = 2 } }.IntoTempTableAsync(db, "temp_table1", tableOptions : TableOptions.IsTemporary   | tableOptions);
 			using var t2 = await t1.IntoTempTableAsync("temp_table2", tableOptions : TableOptions.IsTemporary                                      | tableOptions);
 
 			var l1 = t1.ToArray();
@@ -50,9 +56,9 @@ namespace Tests.Linq
 
 			Assert.That(l1, Is.EquivalentTo(l2));
 
-			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows     }, new[] { new { ID = 2, Value = 3 } });
-			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.RowByRow         }, new[] { new { ID = 3, Value = 3 } });
-			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific }, new[] { new { ID = 4, Value = 5 } });
+			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows     }, new[] { new TempRecord { ID = 2, Value = 3 } });
+			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.RowByRow         }, new[] { new TempRecord { ID = 3, Value = 3 } });
+			await t1.BulkCopyAsync(new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific }, new[] { new TempRecord { ID = 4, Value = 5 } });
 
 			await t1.TruncateAsync();
 			await t2.TruncateAsync();
@@ -61,6 +67,7 @@ namespace Tests.Linq
 		[UsedImplicitly]
 		sealed class DisposableTable
 		{
+			[PrimaryKey]
 			public int ID;
 		}
 
@@ -86,7 +93,7 @@ namespace Tests.Linq
 		[UsedImplicitly]
 		sealed class IsTemporaryTable
 		{
-			[Column] public int Id    { get; set; }
+			[PrimaryKey] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
 		}
 
@@ -195,7 +202,7 @@ namespace Tests.Linq
 		[UsedImplicitly]
 		sealed class TestTable
 		{
-			[Column] public int Id    { get; set; }
+			[PrimaryKey] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
 		}
 

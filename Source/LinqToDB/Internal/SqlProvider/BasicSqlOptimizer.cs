@@ -727,7 +727,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		void FinalizeCte(SqlStatement statement)
+		protected void FinalizeCte(SqlStatement statement)
 		{
 			if (statement is SqlStatementWithQueryBase select)
 			{

@@ -2,6 +2,7 @@
 
 using LinqToDB;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -69,7 +70,7 @@ namespace Tests.UserTests
 
 		public class ValueItem
 		{
-			public int Value { get; set; }
+			[PrimaryKey] public int Value { get; set; }
 		}
 
 		[Test]

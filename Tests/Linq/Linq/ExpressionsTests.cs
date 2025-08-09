@@ -990,7 +990,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue2434Table
 		{
-			[Column] public int     Id;
+			[PrimaryKey] public int     Id;
 			[Column] public string? FirstName;
 			[Column] public string? LastName;
 
@@ -1015,7 +1015,7 @@ namespace Tests.Linq
 		[Table]
 		public class Issue3472TableDC
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[ExpressionMethod(nameof(PersonsCountExpr), IsColumn = true)]
 			public int PersonsCount { get; set; }
@@ -1026,7 +1026,7 @@ namespace Tests.Linq
 		[Table]
 		public class Issue3472TableDCTX
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[ExpressionMethod(nameof(PersonsCountExpr), IsColumn = true)]
 			public int PersonsCount { get; set; }
@@ -1164,13 +1164,13 @@ namespace Tests.Linq
 		[Table]
 		class Issue4613Service
 		{
-			[Column] public int IdContract { get; set; }
+			[PrimaryKey] public int IdContract { get; set; }
 		}
 
 		[Table]
 		class Issue4613Contract
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 		}
 
 		class Issue4613ServiceProjection

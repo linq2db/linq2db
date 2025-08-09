@@ -377,6 +377,7 @@ namespace Tests.Linq
 
 		class SomeTable : IHasDeleted
 		{
+			[PrimaryKey] public int Id { get; set; }
 			public bool ClassProp { get; set; }
 			public bool Interface { get; set; }
 		}
@@ -389,6 +390,9 @@ namespace Tests.Linq
 
 			var expr = Expression.MemberInit(
 				Expression.New(typeof(SomeTable)),
+				Expression.Bind(
+					typeof(SomeTable).GetProperty(nameof(SomeTable.Id))!,
+					Expression.Constant(1)),
 				Expression.Bind(
 					typeof(SomeTable).GetProperty(nameof(SomeTable.ClassProp))!,
 					Expression.Constant(true)),
@@ -422,7 +426,7 @@ namespace Tests.Linq
 
 		class Issue4715Table : IExplicitInterface<Issue4715Table>, IImplicitInterface<Issue4715Table>
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public int ImplicitPropertyRW { get; set; }
 			public int ImplicitPropertyRO => 11;
 			int IExplicitInterface<Issue4715Table>.ExplicitPropertyRW { get; set; }
@@ -487,7 +491,7 @@ namespace Tests.Linq
 		#region v6p2 regression
 		class ExtensionTable1 : IEntity
 		{
-			public int ID { get; set; }
+			[PrimaryKey] public int ID { get; set; }
 			public int? FK { get; set; }
 
 			[Association(ThisKey = nameof(FK), OtherKey = nameof(ExtensionTable2.ID))]
@@ -496,7 +500,7 @@ namespace Tests.Linq
 
 		class ExtensionTable2 : IEntity
 		{
-			public int ID { get; set; }
+			[PrimaryKey] public int ID { get; set; }
 		}
 
 		interface IEntity
@@ -547,7 +551,7 @@ namespace Tests.Linq
 		[Table]
 		class TransactionLine : IUserOwned
 		{
-			[Column]
+			[PrimaryKey]
 			public int Id { get; set; }
 
 			[ExpressionMethod(nameof(UserIdExpression))]

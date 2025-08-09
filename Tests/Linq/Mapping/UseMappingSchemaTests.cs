@@ -13,6 +13,7 @@ namespace Tests.Mapping
 		[UsedImplicitly]
 		class UseMappingSchemaTestTable
 		{
+			[PrimaryKey]
 			public int Field1 { get; set; }
 			public int Field2 { get; set; }
 			[Column(Name = "Column3")]

@@ -637,6 +637,7 @@ namespace Tests.Linq
 		[Table]
 		private sealed class InsertIssueTest
 		{
+			[PrimaryKey] public int Pk { get; set; }
 			[Column] public short ID;
 
 			[Column] public int? intDataType;
@@ -646,10 +647,10 @@ namespace Tests.Linq
 
 			public static InsertIssueTest[] TestData =
 			[
-				new InsertIssueTest() { ID = 0, intDataType = 0 },
-				new InsertIssueTest() { ID = 0, intDataType = 0 },
-				new InsertIssueTest() { ID = 1234, intDataType = 1234 },
-				new InsertIssueTest() { ID = 1234, intDataType = 1234 },
+				new InsertIssueTest() { Pk = 1, ID = 0, intDataType = 0 },
+				new InsertIssueTest() { Pk = 2, ID = 0, intDataType = 0 },
+				new InsertIssueTest() { Pk = 3, ID = 1234, intDataType = 1234 },
+				new InsertIssueTest() { Pk = 4, ID = 1234, intDataType = 1234 },
 			];
 		}
 

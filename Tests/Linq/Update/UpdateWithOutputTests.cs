@@ -17,9 +17,9 @@ namespace Tests.xUpdate
 		private const string FeatureUpdateOutputWithOldSingle                      = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL18Plus}";
 		private const string FeatureUpdateOutputWithOldSingleNoAlternateRewrite    = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL18Plus}";
 		private const string FeatureUpdateOutputWithOldMultiple                    = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllPostgreSQL18Plus}";
-		private const string FeatureUpdateOutputWithoutOldSingle                   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
-		private const string FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL}";
-		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureUpdateOutputWithoutOldSingle                   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{ProviderName.Ydb}";
+		private const string FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL},{ProviderName.Ydb}";
+		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{ProviderName.Ydb}";
 		private const string FeatureUpdateOutputInto                               = $"{TestProvName.AllSqlServer}";
 
 		sealed class UpdateOutputComparer<T> : IEqualityComparer<UpdateOutput<T>>
@@ -37,7 +37,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed record TableWithData
 		{
-			[Column]              public int     Id       { get; set; }
+			[PrimaryKey]          public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
 			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
@@ -45,7 +45,7 @@ namespace Tests.xUpdate
 		[Table(Schema = "TestSchema")]
 		sealed record TableWithDataAndSchema
 		{
-			[Column]              public int     Id       { get; set; }
+			[PrimaryKey]          public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
 			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
@@ -53,7 +53,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed record DestinationTable
 		{
-			[Column]              public int     Id       { get; set; }
+			[PrimaryKey]          public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
 			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
@@ -3039,6 +3039,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class Issue4193Person
 		{
+			[PrimaryKey] public int Id { get; set; }
 			[Column(CanBeNull = false)] public string Name { get; set; } = null!;
 			[Column] public int? EmployeeId { get; set; }
 
@@ -3073,7 +3074,7 @@ namespace Tests.xUpdate
 		public void Issue4193Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable([new Issue4193Person() { EmployeeId = 1, Name = "foo" }]);
+			using var t1 = db.CreateLocalTable([new Issue4193Person() { Id = 1, EmployeeId = 1, Name = "foo" }]);
 			using var t2 = db.CreateLocalTable([new Issue4193Employee() { Id = 1, SalaryId = 1 }]);
 			using var t3 = db.CreateLocalTable([new Issue4193Salary { Id = 1, Amount = 10 }]);
 

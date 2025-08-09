@@ -692,8 +692,8 @@ namespace Tests.Linq
 			}
 		}
 
-		public class TestEntity1 { public int Id; public string? Field1; }
-		public class TestEntity2 { public int Id; public string? Field1; }
+		public class TestEntity1 { [PrimaryKey] public int Id; public string? Field1; }
+		public class TestEntity2 { [PrimaryKey] public int Id; public string? Field1; }
 
 		[Test]
 		public void Concat90([DataSources] string context)
@@ -2334,7 +2334,7 @@ namespace Tests.Linq
 		#region Issue 4620
 		class Issue4620Client
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public string? Name { get; set; }
 
 			public static readonly Issue4620Client[] Data =
@@ -2346,7 +2346,7 @@ namespace Tests.Linq
 
 		class Issue4620Contract
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public int IdClient { get; set; }
 
 			public static readonly Issue4620Contract[] Data =
@@ -2359,7 +2359,7 @@ namespace Tests.Linq
 		[Table("Issue4620Table")]
 		class Issue4620Bill
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			// either IdContract or IdClient will be null
 			[Column] public int? IdContract { get; set; }
