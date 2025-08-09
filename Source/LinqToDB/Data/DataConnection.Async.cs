@@ -50,6 +50,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
 			CheckAndThrowOnDisposed();
@@ -93,6 +94,7 @@ namespace LinqToDB.Data
 		/// <param name="isolationLevel">Transaction isolation level.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
 		{
 			CheckAndThrowOnDisposed();

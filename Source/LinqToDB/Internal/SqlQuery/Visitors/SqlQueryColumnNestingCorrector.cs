@@ -112,35 +112,35 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			public ISqlExpression UpdateNestingInQuery(SelectQuery selectQuery, ISqlExpression element)
 			{
-					if (Parent is { TableSource: SelectQuery { HasSetOperators: true } parentSelectQuery })
+				if (Parent is { TableSource: SelectQuery { HasSetOperators: true } parentSelectQuery })
+				{
+					if (parentSelectQuery.SetOperators.Any(so => so.SelectQuery == selectQuery))
 					{
-						if (parentSelectQuery.SetOperators.Any(so => so.SelectQuery == selectQuery))
-						{
-							var saveCount      = selectQuery.Select.Columns.Count;
-							var setColumnIndex = selectQuery.Select.Add(element);
+						var saveCount      = selectQuery.Select.Columns.Count;
+						var setColumnIndex = selectQuery.Select.Add(element);
 
-							// Column found, just return column from parent query.
-							if (saveCount == selectQuery.Select.Columns.Count)
-								return parentSelectQuery.Select.Columns[setColumnIndex];
+						// Column found, just return column from parent query.
+						if (saveCount == selectQuery.Select.Columns.Count)
+							return parentSelectQuery.Select.Columns[setColumnIndex];
 
 						var dbDataType   = QueryHelper.GetDbDataTypeWithoutSchema(element);
-							var resultColumn = parentSelectQuery.Select.AddNewColumn(new SqlValue(dbDataType, null));
+						var resultColumn = parentSelectQuery.Select.AddNewColumn(new SqlValue(dbDataType, null));
 
-							foreach (var so in parentSelectQuery.SetOperators)
+						foreach (var so in parentSelectQuery.SetOperators)
+						{
+							if (so.SelectQuery != selectQuery)
 							{
-								if (so.SelectQuery != selectQuery)
-								{
-									so.SelectQuery.Select.AddNew(new SqlValue(dbDataType, null));
-								}
+								so.SelectQuery.Select.AddNew(new SqlValue(dbDataType, null));
 							}
-
-							return resultColumn.Expression;
 						}
-					}
 
-					return selectQuery.Select.AddColumn(element);
+						return resultColumn.Expression;
+					}
 				}
+
+				return selectQuery.Select.AddColumn(element);
 			}
+		}
 
 		QueryNesting? _parentQueryNesting;
 

@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.SqlQuery
 			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
 				writer.Append("NOT (");
-				writer.Append(Predicate);
+				writer.AppendElement(Predicate);
 				writer.Append(')');
 			}
 		}
