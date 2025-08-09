@@ -53,105 +53,100 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					or DataType.Blob:
 					return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 
-				//// Остаток от деления: приводим к decimal, если требуется
-				//case "%":
-				//{
-				//	var dbType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
+					//// Остаток от деления: приводим к decimal, если требуется
+					//case "%":
+					//{
+					//	var dbType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
 
-				//	if (dbType.SystemType.ToNullableUnderlying() != typeof(decimal))
-				//	{
-				//		var toType   = MappingSchema.GetDbDataType(typeof(decimal));
-				//		var newLeft  = PseudoFunctions.MakeCast(element.Expr1, toType);
+					//	if (dbType.SystemType.ToNullableUnderlying() != typeof(decimal))
+					//	{
+					//		var toType   = MappingSchema.GetDbDataType(typeof(decimal));
+					//		var newLeft  = PseudoFunctions.MakeCast(element.Expr1, toType);
 
-				//		var sysType  = dbType.SystemType?.IsNullable() == true
-				//			? typeof(decimal?)
-				//			: typeof(decimal);
+					//		var sysType  = dbType.SystemType?.IsNullable() == true
+					//			? typeof(decimal?)
+					//			: typeof(decimal);
 
-				//		var newExpr  = PseudoFunctions.MakeMandatoryCast(
-				//			new SqlBinaryExpression(sysType, newLeft, "%", element.Expr2),
-				//			toType);
+					//		var newExpr  = PseudoFunctions.MakeMandatoryCast(
+					//			new SqlBinaryExpression(sysType, newLeft, "%", element.Expr2),
+					//			toType);
 
-				//		return Visit(Optimize(newExpr));
-				//	}
+					//		return Visit(Optimize(newExpr));
+					//	}
 
-				//	break;
-				//}
+					//	break;
+					//}
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
 		}
 
-		//// ------------------------------------------------------------------
-		//// Функции и псевдо-функции
-		//// ------------------------------------------------------------------
-		//public override ISqlExpression ConvertSqlFunction(SqlFunction func)
-		//{
-		//	switch (func.Name)
-		//	{
-		//		//----------------------------------------------------------------
-		//		// Регистронезависимые функции
-		//		case PseudoFunctions.TO_LOWER:
-		//			return func.WithName("Unicode::ToLower");
+		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
+		{
+			switch (func.Name)
+			{
+				case PseudoFunctions.TO_LOWER:
+					return func.WithName("Unicode::ToLower");
 
-		//		case PseudoFunctions.TO_UPPER:
-		//			return func.WithName("Unicode::ToUpper");
+				case PseudoFunctions.TO_UPPER:
+					return func.WithName("Unicode::ToUpper");
 
-		//		//----------------------------------------------------------------
-		//		// Безопасные преобразования типов
-		//		case PseudoFunctions.TRY_CONVERT:
-		//			// CAST(x AS <type>?) → null при ошибке
-		//			return new SqlExpression(
-		//				func.Type,
-		//				"CAST({0} AS {1}?)",
-		//				Precedence.Primary,
-		//				func.Parameters[2],      // значение
-		//				func.Parameters[0]);     // целевой тип
+				////----------------------------------------------------------------
+				//// Безопасные преобразования типов
+				//case PseudoFunctions.TRY_CONVERT:
+				//	// CAST(x AS <type>?) → null при ошибке
+				//	return new SqlExpression(
+				//		func.Type,
+				//		"CAST({0} AS {1}?)",
+				//		Precedence.Primary,
+				//		func.Parameters[2],      // значение
+				//		func.Parameters[0]);     // целевой тип
 
-		//		case PseudoFunctions.TRY_CONVERT_OR_DEFAULT:
-		//			// COALESCE(CAST(x AS <type>?), default)
-		//			return new SqlExpression(
-		//					func.Type,
-		//					"COALESCE(CAST({0} AS {1}?), {2})",
-		//					Precedence.Primary,
-		//					func.Parameters[2],    // значение
-		//					func.Parameters[0],    // целевой тип
-		//					func.Parameters[3])    // default
-		//			{
-		//				CanBeNull =
-		//						func.Parameters[2].CanBeNullable(NullabilityContext) ||
-		//						func.Parameters[3].CanBeNullable(NullabilityContext)
-		//			};
+				//case PseudoFunctions.TRY_CONVERT_OR_DEFAULT:
+				//	// COALESCE(CAST(x AS <type>?), default)
+				//	return new SqlExpression(
+				//			func.Type,
+				//			"COALESCE(CAST({0} AS {1}?), {2})",
+				//			Precedence.Primary,
+				//			func.Parameters[2],    // значение
+				//			func.Parameters[0],    // целевой тип
+				//			func.Parameters[3])    // default
+				//	{
+				//		CanBeNull =
+				//				func.Parameters[2].CanBeNullable(NullabilityContext) ||
+				//				func.Parameters[3].CanBeNullable(NullabilityContext)
+				//	};
 
-		//		//----------------------------------------------------------------
-		//		// CharIndex (аналога POSITION в YDB нет; используем FIND)
-		//		case "CharIndex":
-		//			switch (func.Parameters.Length)
-		//			{
-		//				// CharIndex(substr, str)
-		//				case 2:
-		//					return new SqlExpression(
-		//						func.Type,
-		//						"COALESCE(FIND({1}, {0}) + 1, 0)",
-		//						Precedence.Primary,
-		//						func.Parameters[0],    // substring
-		//						func.Parameters[1]);   // source
+				////----------------------------------------------------------------
+				//// CharIndex (аналога POSITION в YDB нет; используем FIND)
+				//case "CharIndex":
+				//	switch (func.Parameters.Length)
+				//	{
+				//		// CharIndex(substr, str)
+				//		case 2:
+				//			return new SqlExpression(
+				//				func.Type,
+				//				"COALESCE(FIND({1}, {0}) + 1, 0)",
+				//				Precedence.Primary,
+				//				func.Parameters[0],    // substring
+				//				func.Parameters[1]);   // source
 
-		//				// CharIndex(substr, str, start)
-		//				case 3:
-		//					return new SqlExpression(
-		//						func.Type,
-		//						"COALESCE(FIND(SUBSTRING({1}, {2} - 1), {0}) + {2}, 0)",
-		//						Precedence.Primary,
-		//						func.Parameters[0],    // substring
-		//						func.Parameters[1],    // source
-		//						func.Parameters[2]);   // start
-		//			}
+				//		// CharIndex(substr, str, start)
+				//		case 3:
+				//			return new SqlExpression(
+				//				func.Type,
+				//				"COALESCE(FIND(SUBSTRING({1}, {2} - 1), {0}) + {2}, 0)",
+				//				Precedence.Primary,
+				//				func.Parameters[0],    // substring
+				//				func.Parameters[1],    // source
+				//				func.Parameters[2]);   // start
+				//	}
 
-		//			break;
-		//	}
+				//	break;
+			}
 
-		//	return base.ConvertSqlFunction(func);
-		//}
+			return base.ConvertSqlFunction(func);
+		}
 
 		//// ------------------------------------------------------------------
 		//// CAST / преобразование bool → CASE

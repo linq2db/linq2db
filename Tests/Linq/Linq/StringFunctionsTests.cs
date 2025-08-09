@@ -631,6 +631,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4597")]
 		public void Issue4597Test([DataSources(
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllAccess,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,

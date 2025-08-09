@@ -33,7 +33,7 @@ GO
 CREATE TABLE LinqDataTypes
 (
 	ID             SERIAL NOT NULL,
-	MoneyValue     Decimal(4, 2),
+	MoneyValue     Decimal(6, 2),
 	DateTimeValue  Timestamp,
 	DateTimeValue2 Timestamp,
 	BoolValue      Bool,

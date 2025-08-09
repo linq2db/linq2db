@@ -1519,7 +1519,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configurations = [TestProvName.AllSqlServer])]
 		[Test(Description = "Test CTE columns typing")]
-		public void Issue3360_NullGuidInAnchor([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllSapHana)] string context)
+		public void Issue3360_NullGuidInAnchor([RecursiveCteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();

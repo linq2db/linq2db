@@ -3151,6 +3151,7 @@ namespace LinqToDB.Internal.SqlProvider
 				case QueryElementType.SqlTable:
 				case QueryElementType.SqlRawSqlTable:
 				case QueryElementType.TableSource:
+				case QueryElementType.SqlCteTable:
 					{
 						var table = (ISqlTableSource) expr;
 						var tableAlias = GetTableAlias(table) ?? GetPhysicalTableName(table, null, ignoreTableExpression : true);

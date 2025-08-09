@@ -1,4 +1,6 @@
-﻿using LinqToDB.Internal.SqlProvider;
+﻿using System;
+
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -30,6 +32,45 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			}
 
 			return statement;
+		}
+
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
+		{
+			statement = base.Finalize(mappingSchema, statement, dataOptions);
+
+			if (MoveScalarSubQueriesToCte(statement))
+				FinalizeCte(statement);
+
+			return statement;
+		}
+
+		private bool MoveScalarSubQueriesToCte(SqlStatement statement)
+		{
+			if (statement is not SqlStatementWithQueryBase withStatement
+				|| statement.SelectQuery == null
+				|| statement.QueryType == QueryType.Merge)
+				return false;
+
+			var cteCount = withStatement.With?.Clauses.Count ?? 0;
+			statement.SelectQuery = statement.SelectQuery.Convert(withStatement, static (visitor, elem) =>
+			{
+				if (elem != visitor.Context.SelectQuery
+					&& elem is SelectQuery { IsParameterDependent: false, Select.Columns: [var column] } subQuery)
+				{
+					if (column.SystemType == null)
+					{
+						throw new NotImplementedException("TODO");
+					}
+
+					var cte = new CteClause(subQuery, column.SystemType, false, null);
+					(visitor.Context.With ??= new()).Clauses.Add(cte);
+					return new SqlCteTable(cte, column.SystemType);
+				}
+
+				return elem;
+			});
+
+			return withStatement.With?.Clauses.Count > cteCount;
 		}
 	}
 }

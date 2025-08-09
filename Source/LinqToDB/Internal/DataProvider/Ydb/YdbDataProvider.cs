@@ -44,9 +44,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			SqlProviderFlags.IsSkipSupported                  = false;
 			SqlProviderFlags.IsSkipSupportedIfTake            = true;
 
-			// cleanup join conditions
-			SqlProviderFlags.MoveNonEqualityJoinConditionsToWhere = true;
-			SqlProviderFlags.IsNestedJoinsSupported               = false;
+			SqlProviderFlags.IsComplexJoinConditionSupported  = false;
+			SqlProviderFlags.IsNestedJoinsSupported           = false;
 
 			SetProviderField<byte[]>  (YdbProviderAdapter.GetBytes,        Adapter.DataReaderType);
 			SetProviderField<sbyte>   (YdbProviderAdapter.GetSByte,        Adapter.DataReaderType);

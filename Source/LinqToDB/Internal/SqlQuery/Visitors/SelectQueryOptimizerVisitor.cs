@@ -2047,8 +2047,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					foreach (var join in tableSource.Joins)
 					{
-						if (_providerFlags.MoveNonEqualityJoinConditionsToWhere)
-							MoveJoinConditionsToWhere(join.Condition, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
+						if (!_providerFlags.IsComplexJoinConditionSupported)
+							MoveJoinConditionsToWhere(join, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
 
 						if (JoinMoveSubQueryUp(selectQuery, join))
 							replaced = true;
@@ -2087,23 +2087,24 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return replaced;
 		}
 
-		private void MoveJoinConditionsToWhere(SqlSearchCondition condition, SqlWhereClause where, NullabilityContext nullabilityContext)
+		private void MoveJoinConditionsToWhere(SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
 		{
-			if (condition.IsOr || condition.Predicates.Count == 0)
+			if (join.JoinType != JoinType.Inner || join.Condition.IsOr || join.Condition.Predicates.Count == 0)
 				return;
 
 			SqlSearchCondition? whereCond = null;
-			for (var i = 0; i < condition.Predicates.Count; i++)
+			for (var i = 0; i < join.Condition.Predicates.Count; i++)
 			{
-				var predicate = condition.Predicates[i];
+				var predicate = join.Condition.Predicates[i];
 
 				var move = predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
-					|| exprExpr != exprExpr.Reduce(nullabilityContext, _evaluationContext, false, _dataOptions.LinqOptions);
+					|| exprExpr != exprExpr.Reduce(nullabilityContext, _evaluationContext, false, _dataOptions.LinqOptions)
+					|| exprExpr.Expr1 is SqlValue || exprExpr.Expr2 is SqlValue;
 
 				if (move)
 				{
 					(whereCond ??= where.EnsureConjunction()).Predicates.Add(predicate);
-					condition.Predicates.RemoveAt(i);
+					join.Condition.Predicates.RemoveAt(i);
 					i--;
 				}
 			}
