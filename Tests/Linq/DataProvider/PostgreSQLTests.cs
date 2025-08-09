@@ -3200,6 +3200,42 @@ $function$
 				Assert.That(tb.Count(r => r.Jsonb == r.Json), Is.EqualTo(1));
 			}
 		}
+
+		static class Issue5075
+		{
+			public sealed class Table
+			{
+				public required int Id { get; init; }
+
+				[ValueConverter(ConverterType = typeof(EnumConverter))]
+				[Column(DataType = DataType.NVarChar)]
+				public required EnumValue EnumValue { get; init; }
+
+				sealed class EnumConverter() : ValueConverter<EnumValue, string>(
+					v => v.ToString(),
+					v => Enum.Parse<EnumValue>(v),
+					false)
+				{
+				}
+			}
+
+			public enum EnumValue
+			{
+				Admin,
+				User
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5075")]
+		public void Issue5075Test([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue5075.Table>();
+
+			Issue5075.EnumValue? value = Issue5075.EnumValue.User;
+
+			tb.Where(t => t.EnumValue == value.Value).ToArray();
+		}
 	}
 
 	#region Extensions
