@@ -210,15 +210,13 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseConnection             >(connectionType);
 			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseConnectionStringBuilder>(connectionStringBuilderType);
 			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseBulkCopy               >(bulkCopyType);
+			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseDecimal                >(decimalType);
+			typeMapper.FinalizeMappings();
 
 			var mappingSchema = new MappingSchema();
 			mappingSchema.AddScalarType(decimalType, new SqlDataType(new DbDataType(decimalType, DataType.Decimal256, null, null, 76, ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)));
 
-			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseDecimal>(decimalType);
-			typeMapper.FinalizeMappings();
-
 			var decimalConverter = typeMapper.BuildFunc<object, string>(typeMapper.MapLambda((object value) => ((DriverWrappers.ClickHouseDecimal)value).ToString(CultureInfo.InvariantCulture)));
-			typeMapper.FinalizeMappings();
 
 			var connectionFactory = typeMapper.BuildTypedFactory<string, DriverWrappers.ClickHouseConnection, DbConnection>(connectionString => new DriverWrappers.ClickHouseConnection(connectionString));
 
