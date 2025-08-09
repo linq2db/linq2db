@@ -65,12 +65,27 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SetCharField("bpchar"   , (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("character", (r,i) => r.GetString(i).TrimEnd(' '));
 
+			SetProviderField<DbDataReader, DateTimeOffset, DateTime>((rd, i) => ConvertDateTimeToDateTimeOffset(rd.GetDateTime(i)));
+
 			if (Adapter.SupportsBigInteger)
 				SetProviderField<DbDataReader, BigInteger, decimal>((rd, idx) => rd.GetFieldValue<BigInteger>(idx));
 
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 
 			ConfigureTypes();
+		}
+
+		static DateTimeOffset ConvertDateTimeToDateTimeOffset(DateTime dateTime)
+		{
+			// +/-infinity values returned as min/max DateTime
+			// and fail conversion to DateTimeOffset if local timezone offset is not +00:00 (for min or max value respectively)
+			if (dateTime == DateTime.MinValue)
+				return DateTimeOffset.MinValue;
+
+			if (dateTime == DateTime.MaxValue)
+				return DateTimeOffset.MaxValue;
+
+			return dateTime;
 		}
 
 		protected override IMemberTranslator CreateMemberTranslator()
