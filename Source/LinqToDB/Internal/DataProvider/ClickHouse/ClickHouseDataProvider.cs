@@ -114,14 +114,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					}]                    = Expression.Lambda(body, dataReaderParameter, indexParameter);
 				}
 			}
-
-			if (Provider == ClickHouseProvider.ClickHouseDriver && Adapter.ClientDecimalType != null && Adapter.HasFaultyClientDecimalType)
-			{
-				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (int  )rd.GetDecimal(idx));
-				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (uint )rd.GetDecimal(idx));
-				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (long )rd.GetDecimal(idx));
-				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (ulong)rd.GetDecimal(idx));
-			}
 		}
 
 		protected override IMemberTranslator CreateMemberTranslator()
@@ -159,7 +151,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			if (st == null || st.Rows[idx].IsNull("AllowDBNull"))
 				return true;
 
-			// https://github.com/DarkWanderer/ClickHouse.Driver/issues/128
+			// https://github.com/DarkWanderer/ClickHouse.Client/issues/128
 			var value = st.Rows[idx]["AllowDBNull"];
 			if (value is bool allowDbNull)
 				return allowDbNull;
@@ -202,12 +194,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					(ClickHouseProvider.ClickHouseDriver, DataType.Date or  DataType.Date32, DateOnly val)      => val.ToDateTime(default),
 #endif
 					(ClickHouseProvider.ClickHouseDriver, DataType.Date or DataType.Date32, DateTimeOffset val) => val.Date,
-					// https://github.com/DarkWanderer/ClickHouse.Driver/issues/138
+					// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 					(ClickHouseProvider.ClickHouseDriver, DataType.VarBinary or DataType.Binary, byte[] val)    => Encoding.UTF8.GetString(val),
 					(ClickHouseProvider.ClickHouseDriver, DataType.IPv4, uint val)                              => new IPAddress(new byte[] { (byte)((val >> 24) & 0xFF), (byte)((val >> 16) & 0xFF), (byte)((val >> 8) & 0xFF), (byte)(val & 0xFF) }).ToString(),
-					// https://github.com/DarkWanderer/ClickHouse.Driver/issues/145
+					// https://github.com/DarkWanderer/ClickHouse.Client/issues/145
 					(ClickHouseProvider.ClickHouseDriver, DataType.IPv6, IPAddress val)                         => val.AddressFamily == AddressFamily.InterNetworkV6 ? val : val.MapToIPv6(),
-					// https://github.com/DarkWanderer/ClickHouse.Driver/issues/145
+					// https://github.com/DarkWanderer/ClickHouse.Client/issues/145
 					(ClickHouseProvider.ClickHouseDriver, DataType.IPv6, string val)                            => IPAddress.Parse(val).MapToIPv6(),
 					(ClickHouseProvider.ClickHouseDriver, DataType.IPv6, byte[] val)                            => new IPAddress(val).MapToIPv6(),
 

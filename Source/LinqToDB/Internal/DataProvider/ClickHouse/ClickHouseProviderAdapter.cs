@@ -21,11 +21,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 	public sealed class ClickHouseProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Lock _octonicaSyncRoot = new ();
-		private static readonly Lock _clientSyncRoot   = new ();
+		private static readonly Lock _driverSyncRoot   = new ();
 		private static readonly Lock _mysqlSyncRoot    = new ();
 
 		private static ClickHouseProviderAdapter? _octonicaAdapter;
-		private static ClickHouseProviderAdapter? _clientAdapter;
+		private static ClickHouseProviderAdapter? _driverAdapter;
 		private static ClickHouseProviderAdapter? _mysqlAdapter;
 
 		public const string OctonicaAssemblyName        = "Octonica.ClickHouseClient";
@@ -44,9 +44,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			Type commandType,
 			Func<string, DbConnection> connectionFactory,
 
-			bool                  needsDecimalFix,
-			Type?                 clientDecimalType,
-			Func<object, string>? clientDecimalToStringConverter,
+			Type?                 driverDecimalType,
+			Func<object, string>? driverDecimalToStringConverter,
 
 			string? getDateTimeOffsetReaderMethod,
 			string? getIPAddressReaderMethod,
@@ -57,12 +56,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			string? getBigIntegerReaderMethod,
 			string? getDateOnlyReaderMethod,
 
-			Func<DbConnection, ClientWrappers.ClickHouseBulkCopy                                       >? clientBulkCopyCreator,
+			Func<DbConnection, DriverWrappers.ClickHouseBulkCopy                                       >? driverBulkCopyCreator,
 			Func<DbConnection, string, OctonicaWrappers.ClickHouseColumnWriter                         >? octonicaCreateWriter,
 			Func<DbConnection, string, CancellationToken, Task<OctonicaWrappers.ClickHouseColumnWriter>>? octonicaCreateWriterAsync,
 			Func<Type, OctonicaWrappers.ClickHouseColumnSettings                                       >? octonicaColumnSettings,
 
-			Func<string, ClientWrappers.ClickHouseConnectionStringBuilder>? clientConnectionStringBuilder,
+			Func<string, DriverWrappers.ClickHouseConnectionStringBuilder>? driverConnectionStringBuilder,
 
 			MappingSchema? mappingSchema)
 		{
@@ -72,9 +71,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			CommandType        = commandType;
 			_connectionFactory = connectionFactory;
 
-			HasFaultyClientDecimalType     = needsDecimalFix;
-			ClientDecimalType              = clientDecimalType;
-			ClientDecimalToStringConverter = clientDecimalToStringConverter;
+			DriverDecimalType              = driverDecimalType;
+			DriverDecimalToStringConverter = driverDecimalToStringConverter;
 
 			GetDateTimeOffsetReaderMethod = getDateTimeOffsetReaderMethod;
 			GetIPAddressReaderMethod      = getIPAddressReaderMethod;
@@ -85,12 +83,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			GetBigIntegerReaderMethod     = getBigIntegerReaderMethod;
 			GetDateOnlyReaderMethod       = getDateOnlyReaderMethod;
 
-			ClientBulkCopyCreator     = clientBulkCopyCreator;
+			DriverBulkCopyCreator     = driverBulkCopyCreator;
 			OctonicaCreateWriter      = octonicaCreateWriter;
 			OctonicaCreateWriterAsync = octonicaCreateWriterAsync;
 			OctonicaColumnSettings    = octonicaColumnSettings;
 
-			CreateClientConnectionStringBuilder = clientConnectionStringBuilder;
+			CreateDriverConnectionStringBuilder = driverConnectionStringBuilder;
 
 			MappingSchema = mappingSchema;
 		}
@@ -124,17 +122,15 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		#endregion
 
-		// https://github.com/DarkWanderer/ClickHouse.Driver/issues/459
-		public bool                  HasFaultyClientDecimalType     { get; }
-		public Type?                 ClientDecimalType              { get; }
-		public Func<object, string>? ClientDecimalToStringConverter { get; }
+		public Type?                 DriverDecimalType              { get; }
+		public Func<object, string>? DriverDecimalToStringConverter { get; }
 
 		public MappingSchema? MappingSchema { get; }
 
 		// BulkCopy
-		internal bool SupportsBulkCopy => ClientBulkCopyCreator != null || OctonicaCreateWriter != null || OctonicaCreateWriterAsync != null;
+		internal bool SupportsBulkCopy => DriverBulkCopyCreator != null || OctonicaCreateWriter != null || OctonicaCreateWriterAsync != null;
 
-		internal Func<DbConnection, ClientWrappers.ClickHouseBulkCopy                                       >? ClientBulkCopyCreator     { get; }
+		internal Func<DbConnection, DriverWrappers.ClickHouseBulkCopy                                       >? DriverBulkCopyCreator     { get; }
 		internal Func<DbConnection, string, OctonicaWrappers.ClickHouseColumnWriter                         >? OctonicaCreateWriter      { get; }
 		internal Func<DbConnection, string, CancellationToken, Task<OctonicaWrappers.ClickHouseColumnWriter>>? OctonicaCreateWriterAsync { get; }
 		internal Func<Type, OctonicaWrappers.ClickHouseColumnSettings                                       >? OctonicaColumnSettings    { get; }
@@ -150,8 +146,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		internal string? GetDateOnlyReaderMethod       { get; }
 		internal string? GetMySqlDecimalReaderMethod   { get; }
 
-		// Client connection management
-		internal Func<string, ClientWrappers.ClickHouseConnectionStringBuilder>? CreateClientConnectionStringBuilder { get; }
+		// Driver connection management
+		internal Func<string, DriverWrappers.ClickHouseConnectionStringBuilder>? CreateDriverConnectionStringBuilder { get; }
 
 		public static ClickHouseProviderAdapter GetInstance(ClickHouseProvider provider)
 		{
@@ -183,20 +179,20 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			}
 			else
 			{
-				if (_clientAdapter == null)
+				if (_driverAdapter == null)
 				{
-					lock (_clientSyncRoot)
+					lock (_driverSyncRoot)
 						// https://github.com/dotnet/roslyn-analyzers/issues/1649
 #pragma warning disable CA1508 // Avoid dead conditional code
-						_clientAdapter ??= CreateClientAdapter();
+						_driverAdapter ??= CreateDriverAdapter();
 #pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
-				return _clientAdapter;
+				return _driverAdapter;
 			}
 		}
 
-		private static ClickHouseProviderAdapter CreateClientAdapter()
+		private static ClickHouseProviderAdapter CreateDriverAdapter()
 		{
 			var assembly = Common.Tools.TryLoadAssembly(DriverAssemblyName, DriverProviderFactoryName);
 			if (assembly == null)
@@ -208,32 +204,23 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			var dataReaderType              = assembly.GetType($"{DriverClientNamespace}.Readers.ClickHouseDataReader"     , true)!;
 			var connectionStringBuilderType = assembly.GetType($"{DriverClientNamespace}.ClickHouseConnectionStringBuilder", true)!;
 			var bulkCopyType                = assembly.GetType($"ClickHouse.Driver.Copy.ClickHouseBulkCopy"                , true)!;
-			var decimalType                 = assembly.GetType($"{DriverProviderTypesNamespace}.ClickHouseDecimal"         , false);
+			var decimalType                 = assembly.GetType($"{DriverProviderTypesNamespace}.ClickHouseDecimal"         , true)!;
 
 			var typeMapper = new TypeMapper();
-			typeMapper.RegisterTypeWrapper<ClientWrappers.ClickHouseConnection             >(connectionType);
-			typeMapper.RegisterTypeWrapper<ClientWrappers.ClickHouseConnectionStringBuilder>(connectionStringBuilderType);
-			typeMapper.RegisterTypeWrapper<ClientWrappers.ClickHouseBulkCopy               >(bulkCopyType);
+			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseConnection             >(connectionType);
+			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseConnectionStringBuilder>(connectionStringBuilderType);
+			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseBulkCopy               >(bulkCopyType);
 
-			MappingSchema? mappingSchema           = null;
-			Func<object, string>? decimalConverter = null;
-			var decimalIsBroken                    = false;
-			if (decimalType != null)
-			{
-				mappingSchema = new ();
-				mappingSchema.AddScalarType(decimalType, new SqlDataType(new DbDataType(decimalType, DataType.Decimal256, null, null, 76, ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)));
+			var mappingSchema = new MappingSchema();
+			mappingSchema.AddScalarType(decimalType, new SqlDataType(new DbDataType(decimalType, DataType.Decimal256, null, null, 76, ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)));
 
-				typeMapper.RegisterTypeWrapper<ClientWrappers.ClickHouseDecimal>(decimalType);
-				typeMapper.FinalizeMappings();
+			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseDecimal>(decimalType);
+			typeMapper.FinalizeMappings();
 
-				decimalConverter = typeMapper.BuildFunc<object, string>(typeMapper.MapLambda((object value) => ((ClientWrappers.ClickHouseDecimal)value).ToString(CultureInfo.InvariantCulture)));
+			var decimalConverter = typeMapper.BuildFunc<object, string>(typeMapper.MapLambda((object value) => ((DriverWrappers.ClickHouseDecimal)value).ToString(CultureInfo.InvariantCulture)));
+			typeMapper.FinalizeMappings();
 
-				decimalIsBroken = assembly.GetName().Version < new Version(7, 2, 2);
-			}
-			else
-				typeMapper.FinalizeMappings();
-
-			var connectionFactory = typeMapper.BuildTypedFactory<string, ClientWrappers.ClickHouseConnection, DbConnection>(connectionString => new ClientWrappers.ClickHouseConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, DriverWrappers.ClickHouseConnection, DbConnection>(connectionString => new DriverWrappers.ClickHouseConnection(connectionString));
 
 			return new ClickHouseProviderAdapter(
 				connectionType,
@@ -242,7 +229,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				commandType,
 				connectionFactory,
 
-				decimalIsBroken,
 				decimalType,
 				decimalConverter,
 
@@ -255,12 +241,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				"GetBigInteger",
 				null,
 
-				typeMapper.BuildWrappedFactory((DbConnection connection) => new ClientWrappers.ClickHouseBulkCopy((ClientWrappers.ClickHouseConnection)(object)connection)),
+				typeMapper.BuildWrappedFactory((DbConnection connection) => new DriverWrappers.ClickHouseBulkCopy((DriverWrappers.ClickHouseConnection)(object)connection)),
 				null,
 				null,
 				null,
 
-				typeMapper.BuildWrappedFactory((string connectionString) => new ClientWrappers.ClickHouseConnectionStringBuilder(connectionString)),
+				typeMapper.BuildWrappedFactory((string connectionString) => new DriverWrappers.ClickHouseConnectionStringBuilder(connectionString)),
 
 				mappingSchema);
 		}
@@ -311,7 +297,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				commandType,
 				connectionFactory,
 
-				false,
 				null,
 				null,
 
@@ -338,7 +323,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// <summary>
 		/// ClickHouse.Driver wrappers.
 		/// </summary>
-		internal static class ClientWrappers
+		internal static class DriverWrappers
 		{
 			[Wrapper]
 			internal sealed class ClickHouseConnection

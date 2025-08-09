@@ -454,7 +454,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// https://github.com/DarkWanderer/ClickHouse.Driver/issues/138
+		// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 		// https://github.com/ClickHouse/ClickHouse/issues/38790
 		[ActiveIssue(Configurations = new[] { ProviderName.ClickHouseDriver, ProviderName.ClickHouseMySql })]
 		[Test]

@@ -217,5 +217,5 @@ Legend:
 |`ProviderName.SapHanaNative`|SAP HANA 2 using native provider||
 |`ProviderName.SapHanaOdbc`|SAP HANA 2 using ODBC provider||
 |`ProviderName.ClickHouseOctonica`|ClickHouse using `Octonica.ClickHouseClient` provider||
-|`ProviderName.ClickHouseClient`|ClickHouse using `ClickHouse.Driver` provider||
+|`ProviderName.ClickHouseDriver`|ClickHouse using `ClickHouse.Driver` provider||
 |`ProviderName.ClickHouseMySql`|ClickHouse using `MySqlConnector` provider||

@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			SetConvertExpression((byte[] v) => new IPAddress(v));
 			SetConvertExpression((IPAddress v) => v.GetAddressBytes());
 
-			// https://github.com/DarkWanderer/ClickHouse.Driver/issues/138
+			// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 			// https://github.com/ClickHouse/ClickHouse/issues/38790
 			// byte[] <=> string
 			// Binary <=> string
@@ -870,9 +870,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			{
 				var adapter = ClickHouseProviderAdapter.GetInstance(ClickHouseProvider.ClickHouseDriver);
 
-				if (adapter.ClientDecimalType != null)
+				if (adapter.DriverDecimalType != null)
 				{
-					SetValueToSqlConverter(adapter.ClientDecimalType, (sb,dt,_,v) => ConvertClientDecimal(sb, dt, adapter.ClientDecimalToStringConverter!(v)));
+					SetValueToSqlConverter(adapter.DriverDecimalType, (sb,dt,_,v) => ConvertClientDecimal(sb, dt, adapter.DriverDecimalToStringConverter!(v)));
 				}
 			}
 

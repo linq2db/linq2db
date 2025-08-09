@@ -4,7 +4,7 @@
 <#+
 LinqToDB.Data.DataConnection GetClickHouseConnection(string connectionString)
 {
-	return LinqToDB.DataProvider.ClickHouse.ClickHouseTools.CreateDataConnection(connectionString, LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.ClickHouseClient);
+	return LinqToDB.DataProvider.ClickHouse.ClickHouseTools.CreateDataConnection(connectionString, LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.ClickHouseDriver);
 }
 
 LinqToDB.Data.DataConnection GetClickHouseConnection(string host, string database, string user, string password, int port=8123)
