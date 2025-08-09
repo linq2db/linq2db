@@ -65,7 +65,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SetCharField("bpchar"   , (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("character", (r,i) => r.GetString(i).TrimEnd(' '));
 
-			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), DataReaderType = Adapter.DataReaderType }] = (DbDataReader r, int i) => ConvertDateTimeToDateTimeOffset(r.GetDateTime(i));
+			SetProviderField<DbDataReader, DateTimeOffset, DateTime>((rd, i) => ConvertDateTimeToDateTimeOffset(rd.GetDateTime(i)));
 
 			if (Adapter.SupportsBigInteger)
 				SetProviderField<DbDataReader, BigInteger, decimal>((rd, idx) => rd.GetFieldValue<BigInteger>(idx));
