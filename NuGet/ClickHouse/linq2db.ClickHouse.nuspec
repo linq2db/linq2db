@@ -13,7 +13,7 @@
 		<file src="t4bin\System.Threading.Tasks.Extensions.dll"         target="tools" />
 		<file src="t4bin\System.Diagnostics.DiagnosticSource.dll"       target="tools" />
 		<file src="t4bin\Microsoft.Extensions.Logging.Abstractions.dll" target="tools" />
-		<file src="t4bin\ClickHouse.Client.dll"                         target="tools" />
+		<file src="t4bin\ClickHouse.Driver.dll"                         target="tools" />
 		<file src="t4bin\Microsoft.Extensions.Http.dll"                 target="tools" />
 		<file src="t4bin\System.Text.Json.dll"                          target="tools" />
 		<file src="t4bin\NodaTime.dll"                                  target="tools" />

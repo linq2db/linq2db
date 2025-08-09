@@ -14,7 +14,7 @@ using LinqToDB;
 using LinqToDB.Configuration;
 using LinqToDB.Mapping;
 
-namespace Default.ClickHouse.Client
+namespace Default.ClickHouse.Driver
 {
 	public partial class ClickHouseClientDB : LinqToDB.Data.DataConnection
 	{

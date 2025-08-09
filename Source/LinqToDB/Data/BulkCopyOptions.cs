@@ -116,10 +116,10 @@ namespace LinqToDB.Data
 	/// If set, will set the maximum parameters per batch statement. Also see <see cref="UseParameters"/>.
 	/// </param>
 	/// <param name="MaxDegreeOfParallelism">
-	/// Implemented only by ClickHouse.Client provider. Defines number of connections, used for parallel insert in <see cref="BulkCopyType.ProviderSpecific"/> mode.
+	/// Implemented only by ClickHouse.Driver provider. Defines number of connections, used for parallel insert in <see cref="BulkCopyType.ProviderSpecific"/> mode.
 	/// </param>
 	/// <param name="WithoutSession">
-	/// Implemented only by ClickHouse.Client provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session.
+	/// Implemented only by ClickHouse.Driver provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session.
 	/// Note that session-less connections cannot be used with session-bound functionality like temporary tables.
 	/// </param>
 	/// <summary>

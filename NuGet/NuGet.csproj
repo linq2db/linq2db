@@ -10,7 +10,7 @@
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="MySqlConnector" />
-		<PackageReference Include="ClickHouse.Client" />
+		<PackageReference Include="ClickHouse.Driver" />
 		<PackageReference Include="AdoNetCore.AseClient" />
 		<PackageReference Include="Humanizer.Core" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />

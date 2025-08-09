@@ -12,7 +12,7 @@ namespace Tests.UserTests
 	public class Issue4389Tests : TestBase
 	{
 		[Test]
-		public async Task Test([IncludeDataSources(ProviderName.ClickHouseClient)] string context)
+		public async Task Test([IncludeDataSources(ProviderName.ClickHouseDriver)] string context)
 		{
 			await using var db  = GetDataContext(context);
 

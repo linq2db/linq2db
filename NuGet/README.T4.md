@@ -21,7 +21,7 @@ This package includes only scaffolding functionality. Additionally you will need
   - [System.Data.Odbc](https://www.nuget.org/packages/System.Data.Odbc) for ODBC Access provider
   - [System.Data.OleDb](https://www.nuget.org/packages/System.Data.OleDb) for OLE DB Access provider
 - ClickHouse
-  - [ClickHouse.Client](https://www.nuget.org/packages/ClickHouse.Client) for use with HTTP protocol (recommended provider)
+  - [ClickHouse.Driver](https://www.nuget.org/packages/ClickHouse.Driver) for use with HTTP protocol (recommended provider)
   - [MySqlConnector](https://www.nuget.org/packages/MySqlConnector) for use with MySql protocol
   - [Octonica.ClickHouseClient](https://www.nuget.org/packages/Octonica.ClickHouseClient) for use with binary protocol (we wouldn't recommend it as it displays several times worse performance in our tests)
 - DB2 LUW and Informix

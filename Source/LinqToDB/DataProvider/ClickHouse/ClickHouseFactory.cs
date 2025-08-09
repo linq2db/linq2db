@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var provider = GetAssemblyName(attributes) switch
 			{
 				MySqlProviderAdapter.MySqlConnectorAssemblyName => ClickHouseProvider.MySqlConnector,
-				ClickHouseProviderAdapter.ClientAssemblyName    => ClickHouseProvider.ClickHouseClient,
+				ClickHouseProviderAdapter.DriverAssemblyName    => ClickHouseProvider.ClickHouseDriver,
 				ClickHouseProviderAdapter.OctonicaAssemblyName  => ClickHouseProvider.Octonica,
 				_                                               => ClickHouseProvider.AutoDetect
 			};

@@ -38,6 +38,6 @@
 	RunCliTool("SQLServer"      , "SqlServer.2017"     , "Cli.NoMetadata.SqlServer"          , Path.Combine(targetDir, "SqlServer")          , mode, extraOptions: extraOptions);
 	RunCliTool("Sybase"         , "Sybase.Managed"     , "Cli.NoMetadata.Sybase"             , Path.Combine(targetDir, "Sybase")             , mode, extraOptions: extraOptions);
 	RunCliTool("ClickHouseMySql", "ClickHouse.MySql"   , "Cli.NoMetadata.ClickHouse.MySql"   , Path.Combine(targetDir, "ClickHouse.MySql")   , mode, extraOptions: extraOptions);
-	RunCliTool("ClickHouseHttp" , "ClickHouse.Client"  , "Cli.NoMetadata.ClickHouse.Client"  , Path.Combine(targetDir, "ClickHouse.Client")  , mode, extraOptions: extraOptions);
+	RunCliTool("ClickHouseHttp" , "ClickHouse.Driver"  , "Cli.NoMetadata.ClickHouse.Driver"  , Path.Combine(targetDir, "ClickHouse.Driver")  , mode, extraOptions: extraOptions);
 	RunCliTool("ClickHouseTcp"  , "ClickHouse.Octonica", "Cli.NoMetadata.ClickHouse.Octonica", Path.Combine(targetDir, "ClickHouse.Octonica"), mode, extraOptions: extraOptions);
 #>

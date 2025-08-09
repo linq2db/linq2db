@@ -56,7 +56,7 @@
 		<PackageReference Include="AdoNetCore.AseClient" />
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
-		<PackageReference Include="ClickHouse.Client" />
+		<PackageReference Include="ClickHouse.Driver" />
 		<PackageReference Include="Octonica.ClickHouseClient" />
 
 		<AdditionalFiles Include="PublicAPI.*.txt" />

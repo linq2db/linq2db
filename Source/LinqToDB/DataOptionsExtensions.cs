@@ -1561,7 +1561,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Implemented only by ClickHouse.Client provider. Defines number of connections, used for parallel insert in <see cref="BulkCopyType.ProviderSpecific"/> mode.
+		/// Implemented only by ClickHouse.Driver provider. Defines number of connections, used for parallel insert in <see cref="BulkCopyType.ProviderSpecific"/> mode.
 		/// </summary>
 		[Pure]
 		public static BulkCopyOptions WithMaxDegreeOfParallelism(this BulkCopyOptions options, int? maxDegreeOfParallelism)
@@ -1570,7 +1570,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Implemented only by ClickHouse.Client provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session.
+		/// Implemented only by ClickHouse.Driver provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session.
 		/// Note that session-less connections cannot be used with session-bound functionality like temporary tables.
 		/// </summary>
 		[Pure]
@@ -1800,7 +1800,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Implemented only by ClickHouse.Client provider. Defines number of connections, used for parallel insert in <see cref="BulkCopyType.ProviderSpecific"/> mode.
+		/// Implemented only by ClickHouse.Driver provider. Defines number of connections, used for parallel insert in <see cref="BulkCopyType.ProviderSpecific"/> mode.
 		/// </summary>
 		[Pure]
 		public static DataOptions UseBulkCopyMaxDegreeOfParallelism(this DataOptions options, int? maxDegreeOfParallelism)
@@ -1809,7 +1809,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Implemented only by ClickHouse.Client provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session.
+		/// Implemented only by ClickHouse.Driver provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session.
 		/// Note that session-less connections cannot be used with session-bound functionality like temporary tables.
 		/// </summary>
 		[Pure]

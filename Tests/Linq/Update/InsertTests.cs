@@ -1411,7 +1411,7 @@ namespace Tests.xUpdate
 
 					var options = new BulkCopyOptions { MaxBatchSize = 1 };
 
-					if (context.IsAnyOf(ProviderName.ClickHouseClient))
+					if (context.IsAnyOf(ProviderName.ClickHouseDriver))
 						options = options with { WithoutSession = true };
 
 					((DataConnection)db).BulkCopy(options, data);

@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		}
 
 		static readonly Lazy<IDataProvider> _octonicaDataProvider = CreateDataProvider<ClickHouseOctonicaDataProvider>();
-		static readonly Lazy<IDataProvider> _clientDataProvider   = CreateDataProvider<ClickHouseClientDataProvider>();
+		static readonly Lazy<IDataProvider> _clientDataProvider   = CreateDataProvider<ClickHouseDriverDataProvider>();
 		static readonly Lazy<IDataProvider> _mysqlDataProvider    = CreateDataProvider<ClickHouseMySqlDataProvider>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
@@ -30,7 +30,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				|| (options.ConfigurationString?.Contains("ClickHouse") == true && options.ConfigurationString?.Contains("MySql") == true))
 				return _mysqlDataProvider.Value;
 
-			if (options.ProviderName?.Contains("ClickHouse.Client") == true || options.ConfigurationString?.Contains("ClickHouse.Client") == true)
+			if (options.ProviderName?.Contains("ClickHouse.Driver") == true || options.ConfigurationString?.Contains("ClickHouse.Driver") == true)
 				return _clientDataProvider.Value;
 
 			return null;
@@ -44,7 +44,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return provider switch
 			{
 				ClickHouseProvider.MySqlConnector   => _mysqlDataProvider.Value,
-				ClickHouseProvider.ClickHouseClient => _clientDataProvider.Value,
+				ClickHouseProvider.ClickHouseDriver => _clientDataProvider.Value,
 				_                                   => _octonicaDataProvider.Value,
 			};
 		}
@@ -56,8 +56,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			return File.Exists(Path.Combine(dirName ?? ".", ClickHouseProviderAdapter.OctonicaAssemblyName + ".dll"))
 				? ClickHouseProvider.Octonica
-				: File.Exists(Path.Combine(dirName ?? ".", ClickHouseProviderAdapter.ClientAssemblyName + ".dll"))
-					? ClickHouseProvider.ClickHouseClient
+				: File.Exists(Path.Combine(dirName ?? ".", ClickHouseProviderAdapter.DriverAssemblyName + ".dll"))
+					? ClickHouseProvider.ClickHouseDriver
 					: File.Exists(Path.Combine(dirName ?? ".", MySqlProviderAdapter.MySqlConnectorAssemblyName + ".dll"))
 						? ClickHouseProvider.MySqlConnector
 						: ClickHouseProvider.Octonica;
