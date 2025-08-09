@@ -65,7 +65,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SetCharField("bpchar"   , (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("character", (r,i) => r.GetString(i).TrimEnd(' '));
 
-			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), DataReaderType = this.DataReaderType }] = (DbDataReader r, int i) => ReadDateTimeOffset(r, i);
+			ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), DataReaderType = Adapter.DataReaderType }] = (DbDataReader r, int i) => ConvertDateTimeToDateTimeOffset(r.GetDateTime(i));
 
 			if (Adapter.SupportsBigInteger)
 				SetProviderField<DbDataReader, BigInteger, decimal>((rd, idx) => rd.GetFieldValue<BigInteger>(idx));
@@ -75,10 +75,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			ConfigureTypes();
 		}
 
-		static DateTimeOffset ReadDateTimeOffset(DbDataReader reader, int index)
+		static DateTimeOffset ConvertDateTimeToDateTimeOffset(DateTime dateTime)
 		{
-			var dateTime = reader.GetDateTime(index);
-			
+			// +/-infinity values returned as min/max DateTime
+			// and fail conversion to DateTimeOffset if local timezone offset is not +00:00 (for min or max value respectively)
 			if (dateTime == DateTime.MinValue)
 				return DateTimeOffset.MinValue;
 
