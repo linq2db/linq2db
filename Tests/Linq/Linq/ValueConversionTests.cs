@@ -912,7 +912,9 @@ namespace Tests.Linq
 
 				sealed class EnumConverter() : ValueConverter<EnumValue, string>(
 					v => v.ToString(),
-					v => Enum.Parse<EnumValue>(v),
+#pragma warning disable CA2263 // Prefer generic overload when type is known
+					v => (EnumValue)Enum.Parse(typeof(EnumValue), v),
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 					false)
 				{
 				}
