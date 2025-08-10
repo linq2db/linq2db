@@ -2208,9 +2208,9 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 					}
 
-					if (HandleValue(node, out var translatedМфдгу))
+					if (HandleValue(node, out var translatedValue))
 					{
-						return Visit(translatedМфдгу);
+						return Visit(translatedValue);
 					}
 
 					break;
