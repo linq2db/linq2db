@@ -669,7 +669,8 @@ namespace LinqToDB.Mapping
 			if (valueConverter != null)
 			{
 				var toProvider = valueConverter.ToProviderExpression;
-				if (toProvider.Parameters[0].Type.IsAssignableFrom(getterExpr.Type))
+				if (toProvider.Parameters[0].Type.IsAssignableFrom(getterExpr.Type)
+					|| toProvider.Parameters[0].Type.IsAssignableFrom(getterExpr.Type.UnwrapNullableType()))
 				{
 					if (!valueConverter.HandlesNulls)
 						toProvider = mappingSchema.AddNullCheck(toProvider);
