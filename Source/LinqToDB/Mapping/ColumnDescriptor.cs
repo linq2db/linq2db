@@ -669,11 +669,20 @@ namespace LinqToDB.Mapping
 			if (valueConverter != null)
 			{
 				var toProvider = valueConverter.ToProviderExpression;
-				if (toProvider.Parameters[0].Type.IsAssignableFrom(getterExpr.Type)
+				var assignable = toProvider.Parameters[0].Type.IsAssignableFrom(getterExpr.Type);
+				if (assignable
 					|| toProvider.Parameters[0].Type.IsAssignableFrom(getterExpr.Type.UnwrapNullableType()))
 				{
 					if (!valueConverter.HandlesNulls)
+					{
 						toProvider = mappingSchema.AddNullCheck(toProvider);
+					}
+					if (!assignable)
+					{
+						var convertLambda = mappingSchema.GenerateSafeConvert(getterExpr.Type, getterExpr.Type.UnwrapNullableType());
+						getterExpr = InternalExtensions.ApplyLambdaToExpression(convertLambda, getterExpr);
+					}
+
 					getterExpr = InternalExtensions.ApplyLambdaToExpression(toProvider, getterExpr);
 				}
 			}
