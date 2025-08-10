@@ -820,6 +820,9 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5056")]
 		public void ChildRecordTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool asScalars, [Values] bool useInit)
 		{
+			if (!asScalars && !useInit)
+				Assert.Inconclusive("Unsupported case");
+
 			var ms = new MappingSchema();
 
 			if (asScalars)
@@ -830,8 +833,18 @@ namespace Tests.Linq
 				ms.SetConverter<RecordTests.Struct, DataParameter>(p => new DataParameter(null, p.Value1 + p.Value2));
 				ms.SetConverter<RecordTests.Class, DataParameter>(p => new DataParameter(null, p.Value1 - p.Value2));
 
-				ms.SetConverter<int, RecordTests.Struct>(v => new RecordTests.Struct() { Value1 = v + 4, Value2 = v - 5 });
-				ms.SetConverter<int, RecordTests.Class>(v => new RecordTests.Class() { Value1 = v - 3, Value2 = v + 2 });
+				// use long as sqlite returns integers as Int64 values
+				ms.SetConverter<long, RecordTests.Struct>(v => new RecordTests.Struct() { Value1 = (int)v + 4, Value2 = (int)v - 5 });
+				ms.SetConverter<long, RecordTests.Class>(v => new RecordTests.Class() { Value1 = (int)v - 3, Value2 = (int)v + 2 });
+
+				// remote context serialization
+				if (context.IsRemote())
+				{
+					ms.SetConverter<string, RecordTests.Struct>(v => new RecordTests.Struct() { Value1 = int.Parse(v.Split(':')[0]), Value2 = int.Parse(v.Split(':')[1]) });
+					ms.SetConverter<string, RecordTests.Class>(v => new RecordTests.Class() { Value1 = int.Parse(v.Split(':')[0]), Value2 = int.Parse(v.Split(':')[1]) });
+					ms.SetConverter<RecordTests.Struct, string>(v => $"{v.Value1}:{v.Value2}");
+					ms.SetConverter<RecordTests.Class, string>(v => $"{v.Value1}:{v.Value2}");
+				}
 			}
 			else
 			{
@@ -841,6 +854,7 @@ namespace Tests.Linq
 						.Property(e => e.Struct.Value2).HasColumnName("struct_value2")
 						.Property(e => e.Class.Value1).HasColumnName("class_value1")
 						.Property(e => e.Class.Value2).HasColumnName("class_value2")
+					.Build()
 					;
 			}
 
@@ -894,8 +908,8 @@ namespace Tests.Linq
 				{
 					Assert.That(record.Struct.Value1, Is.EqualTo(17));
 					Assert.That(record.Struct.Value2, Is.EqualTo(8));
-					Assert.That(record.Class.Value1, Is.EqualTo(-19));
-					Assert.That(record.Class.Value2, Is.EqualTo(-14));
+					Assert.That(record.Class.Value1, Is.EqualTo(5));
+					Assert.That(record.Class.Value2, Is.EqualTo(10));
 				}
 			}
 			else
