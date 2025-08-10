@@ -95,6 +95,27 @@ namespace Tests.Linq
 						: LocalTzDataInUtc;
 		}
 
+		class DateTimeOffsetTable
+		{
+			[PrimaryKey] public int            TransactionId   { get; set; }
+			[Column]     public DateTimeOffset TransactionDate { get; set; }
+		}
+
+		[Test]
+		public void TestMinMaxValues([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var data = new[]
+			{
+				new DateTimeOffsetTable { TransactionId = 1, TransactionDate = DateTimeOffset.MinValue },
+				new DateTimeOffsetTable { TransactionId = 2, TransactionDate = DateTimeOffset.MaxValue },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			
+			AreEqualWithComparer(table, data);
+		}
+
 		#region Group By Tests
 		// Group by tests are only done for Sql Server due to complexity of db variances in handling TZ
 		[Test]
