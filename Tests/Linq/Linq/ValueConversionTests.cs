@@ -907,6 +907,10 @@ namespace Tests.Linq
 				public required EnumValue EnumValue { get; init; }
 
 				[ValueConverter(ConverterType = typeof(EnumConverter))]
+				[Column(DataType = DataType.NVarChar, CanBeNull = true)]
+				public required EnumValue EnumValueNullable { get; init; }
+
+				[ValueConverter(ConverterType = typeof(EnumConverter))]
 				[Column(DataType = DataType.NVarChar)]
 				public required EnumValue? EnumValueNull { get; init; }
 
@@ -921,9 +925,9 @@ namespace Tests.Linq
 
 				public static readonly Table[] Data =
 				[
-					new (){ Id = 1, EnumValue = EnumValue.Admin, EnumValueNull = null },
-					new (){ Id = 2, EnumValue = EnumValue.User, EnumValueNull = EnumValue.Admin },
-					new (){ Id = 3, EnumValue = EnumValue.User, EnumValueNull = EnumValue.User },
+					new (){ Id = 1, EnumValue = EnumValue.Admin, EnumValueNullable = EnumValue.Admin, EnumValueNull = null },
+					new (){ Id = 2, EnumValue = EnumValue.User, EnumValueNullable = EnumValue.User, EnumValueNull = EnumValue.Admin },
+					new (){ Id = 3, EnumValue = EnumValue.User, EnumValueNullable = EnumValue.User, EnumValueNull = EnumValue.User },
 				];
 			}
 
@@ -946,6 +950,10 @@ namespace Tests.Linq
 			{
 				Assert.That(tb.Where(t => t.EnumValue == value.Value).Count(), Is.EqualTo(2));
 				Assert.That(tb.Where(t => t.EnumValue == value).Count(), Is.EqualTo(2));
+
+				Assert.That(tb.Where(t => t.EnumValueNullable == value.Value).Count(), Is.EqualTo(2));
+				Assert.That(tb.Where(t => t.EnumValueNullable == value).Count(), Is.EqualTo(2));
+
 				Assert.That(tb.Where(t => t.EnumValueNull == value.Value).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(t => t.EnumValueNull == value).Count(), Is.EqualTo(1));
 			}
@@ -955,6 +963,10 @@ namespace Tests.Linq
 			{
 				Assert.That(tb.Where(t => t.EnumValue == value).Count(), Is.Zero);
 				Assert.That(tb.Where(t => t.EnumValue == value!.Value).Count(), Is.Zero);
+
+				Assert.That(tb.Where(t => t.EnumValueNullable == value).Count(), Is.Zero);
+				Assert.That(tb.Where(t => t.EnumValueNullable == value!.Value).Count(), Is.Zero);
+
 				Assert.That(tb.Where(t => t.EnumValueNull == value!.Value).Count(), Is.EqualTo(1));
 				Assert.That(tb.Where(t => t.EnumValueNull == value).Count(), Is.EqualTo(1));
 			}

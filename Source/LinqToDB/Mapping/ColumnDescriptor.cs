@@ -677,13 +677,24 @@ namespace LinqToDB.Mapping
 					{
 						toProvider = mappingSchema.AddNullCheck(toProvider);
 					}
+
 					if (!assignable)
 					{
-						var convertLambda = mappingSchema.GenerateSafeConvert(getterExpr.Type, getterExpr.Type.UnwrapNullableType());
-						getterExpr = InternalExtensions.ApplyLambdaToExpression(convertLambda, getterExpr);
-					}
+						var variable = Expression.Variable(getterExpr.Type);
+						var assign   = Expression.Assign(variable, getterExpr);
 
-					getterExpr = InternalExtensions.ApplyLambdaToExpression(toProvider, getterExpr);
+						getterExpr = Expression.Block(
+							new[] { variable },
+							assign,
+							Expression.Condition(
+								ExpressionHelper.Property(variable, nameof(Nullable<int>.HasValue)),
+								InternalExtensions.ApplyLambdaToExpression(toProvider, ExpressionHelper.Property(variable, nameof(Nullable<int>.Value))),
+								new DefaultValueExpression(mappingSchema, toProvider.ReturnType)));
+					}
+					else
+					{
+						getterExpr = InternalExtensions.ApplyLambdaToExpression(toProvider, getterExpr);
+					}
 				}
 			}
 
