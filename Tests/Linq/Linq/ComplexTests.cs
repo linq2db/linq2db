@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text.Json;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -790,64 +791,99 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		#region Issue 5056
-		[Table]
-		sealed class Issue5056Table
+		#region Record Constructors
+		static class RecordTests
 		{
-			[PrimaryKey]
-			public int Id { get; set; }
+			public sealed class Table
+			{
+				[PrimaryKey]
+				public int Id { get; set; }
 
-			public Issue5056Struct Struct { get; set; }
+				public Struct Struct { get; set; }
 
-			public Issue5056Class Class { get; set; } = null!;
-		}
+				public Class Class { get; set; } = null!;
+			}
 
-		struct Issue5056Struct
-		{
-			public int Value1 { get; set; }
-			public int Value2 { get; set; }
-		}
+			public struct Struct
+			{
+				public int Value1 { get; set; }
+				public int Value2 { get; set; }
+			}
 
-		sealed class Issue5056Class
-		{
-			public int Value1 { get; set; }
-			public int Value2 { get; set; }
+			public sealed class Class
+			{
+				public int Value1 { get; set; }
+				public int Value2 { get; set; }
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5056")]
-		public void Issue5056Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool asScalars)
+		public void ChildRecordTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool asScalars, [Values] bool useInit)
 		{
 			var ms = new MappingSchema();
 
 			if (asScalars)
 			{
-				ms.AddScalarType(typeof(Issue5056Struct), DataType.Int32);
-				ms.AddScalarType(typeof(Issue5056Class), DataType.Int32);
+				ms.AddScalarType(typeof(RecordTests.Struct), DataType.Int32);
+				ms.AddScalarType(typeof(RecordTests.Class), DataType.Int32);
 
-				ms.SetConverter<Issue5056Struct, DataParameter>(p => new DataParameter(null, p.Value1 + p.Value2));
-				ms.SetConverter<Issue5056Class, DataParameter>(p => new DataParameter(null, p.Value1 - p.Value2));
+				ms.SetConverter<RecordTests.Struct, DataParameter>(p => new DataParameter(null, p.Value1 + p.Value2));
+				ms.SetConverter<RecordTests.Class, DataParameter>(p => new DataParameter(null, p.Value1 - p.Value2));
 
-				ms.SetConverter<int, Issue5056Struct>(v => new Issue5056Struct() { Value1 = v + 4, Value2 = v - 5 });
-				ms.SetConverter<int, Issue5056Class>(v => new Issue5056Class() { Value1 = v - 3, Value2 = v + 2 });
+				ms.SetConverter<int, RecordTests.Struct>(v => new RecordTests.Struct() { Value1 = v + 4, Value2 = v - 5 });
+				ms.SetConverter<int, RecordTests.Class>(v => new RecordTests.Class() { Value1 = v - 3, Value2 = v + 2 });
+			}
+			else
+			{
+				new FluentMappingBuilder(ms)
+					.Entity<RecordTests.Table>()
+						.Property(e => e.Struct.Value1).HasColumnName("struct_value1")
+						.Property(e => e.Struct.Value2).HasColumnName("struct_value2")
+						.Property(e => e.Class.Value1).HasColumnName("class_value1")
+						.Property(e => e.Class.Value2).HasColumnName("class_value2")
+					;
 			}
 
 			using var db = GetDataContext(context, ms);
-			using var tb = db.CreateLocalTable<Issue5056Table>();
+			using var tb = db.CreateLocalTable<RecordTests.Table>();
 
-			tb.Insert(() => new Issue5056Table()
+			if (useInit)
 			{
-				Id = 1,
-				Struct = new Issue5056Struct()
+				tb.Insert(() => new RecordTests.Table()
+				{
+					Id = 1,
+					Struct = new RecordTests.Struct()
+					{
+						Value1 = 5,
+						Value2 = 8
+					},
+					Class = new RecordTests.Class()
+					{
+						Value1 = -4,
+						Value2 = -12
+					}
+				});
+			}
+			else
+			{
+				var structValue = new RecordTests.Struct()
 				{
 					Value1 = 5,
 					Value2 = 8
-				},
-				Class = new Issue5056Class()
+				};
+				var classValue = new RecordTests.Class()
 				{
 					Value1 = -4,
 					Value2 = -12
-				}
-			});
+				};
+
+				tb.Insert(() => new RecordTests.Table()
+				{
+					Id = 1,
+					Struct = structValue,
+					Class = classValue
+				});
+			}
 
 			var record = tb.Single();
 			Assert.That(record.Class, Is.Not.Null);
@@ -873,20 +909,43 @@ namespace Tests.Linq
 				}
 			}
 
-			tb.Update(r => new Issue5056Table()
+			if (useInit)
 			{
-				Id = 1,
-				Struct = new Issue5056Struct()
+				tb.Update(r => new RecordTests.Table()
+				{
+					Id = 1,
+					Struct = new RecordTests.Struct()
+					{
+						Value1 = 12,
+						Value2 = -11
+					},
+					Class = new RecordTests.Class()
+					{
+						Value1 = -3,
+						Value2 = 5
+					}
+				});
+			}
+			else
+			{
+				var structValue = new RecordTests.Struct()
 				{
 					Value1 = 12,
 					Value2 = -11
-				},
-				Class = new Issue5056Class()
+				};
+				var classValue = new RecordTests.Class()
 				{
 					Value1 = -3,
 					Value2 = 5
-				}
-			});
+				};
+
+				tb.Update(r => new RecordTests.Table()
+				{
+					Id = 1,
+					Struct = structValue,
+					Class = classValue
+				});
+			}
 
 			record = tb.Single();
 
@@ -911,6 +970,55 @@ namespace Tests.Linq
 				}
 			}
 		}
+		#endregion
+
+		#region Issue 5056
+		static class Issue5056
+		{
+			public sealed class Table
+			{
+				[PrimaryKey]
+				public required int Id { get; init; }
+
+				[ValueConverter(ConverterType = typeof(ComplexTypeConverter))]
+				[Column(DataType = DataType.NVarChar)]
+				public required ComplexType ComplexType { get; init; }
+			}
+
+			[ScalarType]
+			public sealed class ComplexType
+			{
+				public required int Id { get; init; }
+			}
+
+			sealed class ComplexTypeConverter() : ValueConverter<ComplexType, string>(
+				obj => JsonSerializer.Serialize(obj, JsonSerializerOptions.Default),
+				json => JsonSerializer.Deserialize<ComplexType>(json, JsonSerializerOptions.Default)!,
+				false)
+			{
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5056")]
+		public void Issue5056Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue5056.Table>();
+
+			tb.Insert(() => new Issue5056.Table()
+			{
+				Id = 1,
+				ComplexType = new Issue5056.ComplexType()
+				{
+					Id = 2,
+				}
+			});
+
+			var inserted = tb.Single();
+
+			Assert.That(inserted.ComplexType.Id, Is.EqualTo(2));
+		}
+
 		#endregion
 	}
 }
