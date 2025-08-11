@@ -1945,7 +1945,7 @@ namespace Tests.Data
 							Enumerable.Range(0, 1000).Select(n => new ClickHouseBulkCopyTable() { ID = 2000 + n }));
 
 						// Client provider supports only async API
-						if (context.IsAnyOf(ProviderName.ClickHouseClient))
+						if (context.IsAnyOf(ProviderName.ClickHouseDriver))
 							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
 						else
 							Assert.That(trace, Does.Contain("INSERT INTO"));
@@ -1969,7 +1969,7 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new ClickHouseBulkCopyTable() { ID = 2000 + n }));
 
-						if (context.IsAnyOf(ProviderName.ClickHouseClient))
+						if (context.IsAnyOf(ProviderName.ClickHouseDriver))
 							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
 						else
 							Assert.That(trace, Does.Contain("INSERT INTO"));
