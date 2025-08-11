@@ -2299,5 +2299,69 @@ namespace Tests.Linq
 				Assert.That(count, Is.EqualTo(1));
 			}
 		}
+
+		#region Issue 5012
+
+		sealed class Issue5012
+		{
+			public enum TestStatus
+			{
+				Outstanding = 0,
+				Completed   = 1,
+			}
+
+			[Table]
+			public sealed class Test
+			{
+				[Column] public TestStatus Status { get; set; }
+
+				public static readonly Test[] Data =
+				[
+					new () { Status = TestStatus.Outstanding }
+				];
+			}
+
+			public static class Ext
+			{
+				public static string GetStrValue(Enum e)
+				{
+					return e.ToString();
+				}
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5012")]
+		public void Issue5012Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tb  = db.CreateLocalTable(Issue5012.Test.Data);
+
+			_ = tb
+				.Select(i => new
+				{
+					Status = Issue5012.Ext.GetStrValue(i.Status == Issue5012.TestStatus.Completed
+					? Issue5012.TestStatus.Completed
+					: Issue5012.TestStatus.Outstanding)
+				})
+				.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5012")]
+		public void Issue5012Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tb  = db.CreateLocalTable(Issue5012.Test.Data);
+
+			_ = tb
+				.Select(i => new
+				{
+					Status = Issue5012.Ext.GetStrValue((Issue5012.TestStatus)(i.Status == Issue5012.TestStatus.Completed
+					? Issue5012.TestStatus.Completed
+					: Issue5012.TestStatus.Outstanding))
+				})
+				.ToList();
+		}
+
+		#endregion
 	}
 }
