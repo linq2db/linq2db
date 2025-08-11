@@ -2585,7 +2585,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PredicateOptimization_Subquery([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void PredicateOptimization_Subquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
