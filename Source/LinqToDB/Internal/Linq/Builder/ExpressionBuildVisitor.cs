@@ -2186,7 +2186,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								return Visit(placeholder.WithType(node.Type));
 
 							if (node.Type == typeof(Enum) && node.Operand.Type.IsEnum)
-								return Visit(placeholder.WithType(node.Type));
+								return base.VisitUnary(node);
 
 							var t = node.Operand.Type;
 							var s = MappingSchema.GetDataType(t);
@@ -2208,9 +2208,9 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 					}
 
-					if (HandleValue(node, out var translatedМфдгу))
+					if (HandleValue(node, out var translatedValue))
 					{
-						return Visit(translatedМфдгу);
+						return Visit(translatedValue);
 					}
 
 					break;

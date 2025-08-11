@@ -25,6 +25,6 @@
 	RunCliTool("SQLServer"      , "SqlServer.2017"     , "Cli.Default.SqlServer"          , Path.Combine(targetDir, "SqlServer")          , mode);
 	RunCliTool("Sybase"         , "Sybase.Managed"     , "Cli.Default.Sybase"             , Path.Combine(targetDir, "Sybase")             , mode);
 	RunCliTool("ClickHouseMySql", "ClickHouse.MySql"   , "Cli.Default.ClickHouse.MySql"   , Path.Combine(targetDir, "ClickHouse.MySql")   , mode);
-	RunCliTool("ClickHouseHttp" , "ClickHouse.Client"  , "Cli.Default.ClickHouse.Client"  , Path.Combine(targetDir, "ClickHouse.Client")  , mode);
+	RunCliTool("ClickHouseHttp" , "ClickHouse.Driver"  , "Cli.Default.ClickHouse.Driver"  , Path.Combine(targetDir, "ClickHouse.Driver")  , mode);
 	RunCliTool("ClickHouseTcp"  , "ClickHouse.Octonica", "Cli.Default.ClickHouse.Octonica", Path.Combine(targetDir, "ClickHouse.Octonica"), mode);
 #>

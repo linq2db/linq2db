@@ -143,8 +143,8 @@
 		<None Update="Default\ClickHouse.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ClickHouse.generated.cs" />
 		<Compile Update="Default\ClickHouse.generated.cs" DependentUpon="ClickHouse.tt" DesignTime="True" AutoGen="True" />
 
-		<None Update="Default\ClickHouse.Client.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ClickHouse.Client.generated.cs" />
-		<Compile Update="Default\ClickHouse.Client.generated.cs" DependentUpon="ClickHouse.Client.tt" DesignTime="True" AutoGen="True" />
+		<None Update="Default\ClickHouse.Driver.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ClickHouse.Driver.generated.cs" />
+		<Compile Update="Default\ClickHouse.Driver.generated.cs" DependentUpon="ClickHouse.Driver.tt" DesignTime="True" AutoGen="True" />
 
 		<None Update="Default\DB2.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="DB2.generated.cs" />
 		<Compile Update="Default\DB2.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="DB2.tt" />
