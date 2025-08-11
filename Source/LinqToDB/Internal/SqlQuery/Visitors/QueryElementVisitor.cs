@@ -2525,7 +2525,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (ShouldReplace(predicate) || !ReferenceEquals(predicate.Expr1, e))
 					{
-						return NotifyReplaced(new SqlPredicate.Expr(e, predicate.Precedence), predicate);
+						return NotifyReplaced(new SqlPredicate.Expr(e), predicate);
 					}
 
 					break;
