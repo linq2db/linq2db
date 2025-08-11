@@ -263,9 +263,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			var placeholders = ExpressionBuildVisitor.CollectPlaceholdersStraightWithPath(groupByExpression, path, out var transformed);
 
 			// it is a case whe we do not group elements
-			if (placeholders.Count == 1 && QueryHelper.IsConstantFast(placeholders[0].Sql))
+			if (path is ContextRefExpression && placeholders.Count == 1 && QueryHelper.IsConstantFast(placeholders[0].Sql))
 			{
-				return groupByExpression;
+				var newPlaceholder = builder.UpdateNesting(query, placeholders[0])
+					.WithSelectQuery(query);
+
+				return newPlaceholder;
 			}
 
 			foreach (var p in placeholders)
