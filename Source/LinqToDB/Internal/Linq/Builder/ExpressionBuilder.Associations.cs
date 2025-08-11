@@ -145,17 +145,28 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			AssociationDescriptor? descriptor = null;
 
-			if (accessorMember.MemberInfo.MemberType == MemberTypes.Method)
+			if (accessorMember.MemberInfo is { MemberType: MemberTypes.Method, DeclaringType: not null })
 			{
-				var attribute = MappingSchema.GetAttribute<AssociationAttribute>(
-					accessorMember.MemberInfo.DeclaringType!, accessorMember.MemberInfo);
+				var memberInfo = accessorMember.MemberInfo;
+
+				var attribute = MappingSchema.GetAttribute<AssociationAttribute>(memberInfo.DeclaringType!, accessorMember.MemberInfo);
+
+				if (attribute == null && memberInfo.DeclaringType?.IsInterface == true && !entityDescriptor.ObjectType.IsInterface)
+				{
+					var newInfo = entityDescriptor.ObjectType.GetImplementation(accessorMember.MemberInfo);
+					if (newInfo != null)
+					{
+						attribute  = MappingSchema.GetAttribute<AssociationAttribute>(newInfo.DeclaringType!, newInfo);
+						memberInfo = newInfo;
+					}
+				}
 
 				if (attribute != null)
 					descriptor = new AssociationDescriptor
 					(
 						MappingSchema,
 						entityDescriptor.ObjectType,
-						accessorMember.MemberInfo,
+						memberInfo,
 						attribute.GetThisKeys(),
 						attribute.GetOtherKeys(),
 						attribute.ExpressionPredicate,
