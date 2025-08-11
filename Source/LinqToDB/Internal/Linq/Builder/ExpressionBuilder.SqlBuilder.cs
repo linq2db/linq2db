@@ -1792,6 +1792,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (typeof(FormattableString).IsSameOrParentOf(createExpression.Type))
 				return createExpression;
 
+			if (typeof(RawSqlString).IsSameOrParentOf(createExpression.Type))
+				return createExpression;
+
 			if (flags.IsSql() && IsForceParameter(createExpression, columnDescriptor))
 				return createExpression;
 
