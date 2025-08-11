@@ -1415,9 +1415,9 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(TimeSpan),        DataType.Time);
 #if SUPPORTS_DATEONLY
 				AddScalarType(typeof(DateOnly),        DataType.Date);
-				//AddScalarType(typeof(TimeOnly),        DataType.Time);
-				//AddScalarType(typeof(Int128),          DataType.Int128);
-				//AddScalarType(typeof(UInt128),         DataType.UInt128);
+				AddScalarType(typeof(TimeOnly),        DataType.Time);
+				AddScalarType(typeof(Int128),          DataType.Int128);
+				AddScalarType(typeof(UInt128),         DataType.UInt128);
 #endif
 				AddScalarType(typeof(byte[]),          DataType.VarBinary);
 				AddScalarType(typeof(Binary),          DataType.VarBinary);
@@ -1437,7 +1437,7 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(float),           DataType.Single);
 				AddScalarType(typeof(double),          DataType.Double);
 
-				//AddScalarType(typeof(BigInteger),      DataType.Decimal);
+				AddScalarType(typeof(BigInteger),      DataType.Decimal);
 				AddScalarType(typeof(BitArray),        DataType.BitArray);
 
 				SetConverter<DBNull, object?>(static _ => null);
