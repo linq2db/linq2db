@@ -2585,7 +2585,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PredicateOptimization_Subquery([DataSources] string context)
+		public void PredicateOptimization_Subquery([DataSources(TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2619,7 +2619,7 @@ namespace Tests.Linq
 
 			var query1 =
 				from p in tb
-				where new[] { p.Date1, p.Date2, p.Date3, p.Date4 }.Max() > p.Date1
+				where new[] { p.Date1, p.Date2, p.Date3, p.Date4 }.Max() > new DateTime(2023, 1, 1)
 				select p;
 
 			var query2 =

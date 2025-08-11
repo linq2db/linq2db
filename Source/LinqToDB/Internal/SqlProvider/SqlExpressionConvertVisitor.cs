@@ -466,7 +466,8 @@ namespace LinqToDB.Internal.SqlProvider
 					var exprExpr = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, predicate.Expr2, null);
 					var condition = !invert
 						? new SqlConditionExpression(exprExpr, trueValue, falseValue)
-						: new SqlConditionExpression(exprExpr.Invert(NullabilityContext), falseValue, trueValue);
+						// plain Invert will restore UnknownAsValue for comparison operators
+						: new SqlConditionExpression(exprExpr.InvertWithoutNull(), falseValue, trueValue);
 
 					if (!SqlProviderFlags.SupportsBooleanType)
 						return new SqlPredicate.IsTrue(condition, trueValue, falseValue, null, false);
