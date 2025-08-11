@@ -2516,7 +2516,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Modify:
 				{
-					predicate.Expr1 = (ISqlExpression)Visit(predicate.Expr1);
+					predicate.Expr1      = (ISqlExpression)Visit(predicate.Expr1);
+					predicate.Precedence = predicate.Expr1.Precedence;
 					break;
 				}
 				case VisitMode.Transform:
