@@ -2585,7 +2585,16 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PredicateOptimization_Subquery([DataSources(TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void PredicateOptimization_Subquery([DataSources(
+			TestProvName.AllOracle,
+			TestProvName.AllSybase,
+			TestProvName.AllAccess,
+			TestProvName.AllMariaDB,
+			TestProvName.AllMySql57,
+			TestProvName.AllDB2,
+			// yep, it works in older versions...
+			TestProvName.AllFirebird5Plus,
+			TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
