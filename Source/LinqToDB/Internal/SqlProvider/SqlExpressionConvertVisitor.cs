@@ -1118,14 +1118,14 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
-		private SqlCoalesceExpression? WrapBooleanCoalesceItems(SqlCoalesceExpression element, IQueryElement newElement)
+		protected virtual SqlCoalesceExpression? WrapBooleanCoalesceItems(SqlCoalesceExpression element, IQueryElement newElement, bool forceConvert = false)
 		{
 			var isWrapped = false;
 			ISqlExpression[]? wrappedExpressions = null;
 
 			for (var i = 0; i < element.Expressions.Length; i++)
 			{
-				var wrapped = WrapBooleanExpression(element.Expressions[i], includeFields : false);
+				var wrapped = WrapBooleanExpression(element.Expressions[i], includeFields : false, forceConvert: forceConvert);
 
 				if (!ReferenceEquals(wrapped, element.Expressions[i]))
 				{
