@@ -25,6 +25,7 @@ using LinqToDB.Internal.DataProvider.Oracle;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
+using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
@@ -2853,6 +2854,7 @@ namespace Tests.DataProvider
 				_ != null
 					? DataParameter.Char(null, _.HasValue && _.Value ? 'Y' : 'N')
 					: new DataParameter(null, DBNull.Value));
+			ms.AddScalarType(typeof(bool), new SqlDataType(new DbDataType(typeof(bool), DataType.Char).WithLength(1)));
 
 			var testData = new[]
 			{
@@ -2880,6 +2882,7 @@ namespace Tests.DataProvider
 				_ != null
 					? DataParameter.Char(null, _.HasValue && _.Value ? 'Y' : 'N')
 					: new DataParameter(null, DBNull.Value));
+			ms.AddScalarType(typeof(bool), new SqlDataType(new DbDataType(typeof(bool), DataType.Char).WithLength(1)));
 
 			var testData = new[]
 			{
