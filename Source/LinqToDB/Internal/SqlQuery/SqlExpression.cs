@@ -95,7 +95,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override bool Equals(object? obj)
 		{
-			return Equals(obj, SqlExtensions.DefaultComparer);
+			return obj is ISqlExpression other
+				&& SqlExtensions.DefaultComparer(this, other);
 		}
-				}
-			}
+	}
+}

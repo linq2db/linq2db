@@ -331,6 +331,8 @@ namespace LinqToDB.Internal.Extensions
 			}
 		}
 
+		readonly record struct InterfaceMappingsRecord(MethodInfo[] TargetMethods, MethodInfo[] InterfaceMethods);
+
 		public static MemberInfo? GetImplementation(this Type concreteType, MemberInfo interfaceMember)
 		{
 			if (interfaceMember.DeclaringType is null or { IsInterface: false })
@@ -338,16 +340,16 @@ namespace LinqToDB.Internal.Extensions
 
 			var interfaceType = interfaceMember.DeclaringType!;
 			var map           = concreteType.GetInterfaceMapEx(interfaceType);
+			var readonlyMap   = new InterfaceMappingsRecord(map.TargetMethods, map.InterfaceMethods);
 
 			return interfaceMember switch
 			{
-				MethodInfo method     => FindMethod(map, method),
-				PropertyInfo property => FindPropertyMethod(map, concreteType, property),
+				MethodInfo method     => FindMethod(in readonlyMap, method),
+				PropertyInfo property => FindPropertyMethod(in readonlyMap, concreteType, property),
 				_                     => null,
 			};
 
-			[SuppressMessage("Performance", "MA0168:Use readonly struct for in or ref readonly parameter")]
-			static MethodInfo? FindMethod(in InterfaceMapping map, MethodInfo? target)
+			static MethodInfo? FindMethod(in InterfaceMappingsRecord map, MethodInfo? target)
 			{
 				if (target is not null)
 				{
@@ -361,12 +363,11 @@ namespace LinqToDB.Internal.Extensions
 				return null;
 			}
 
-			[SuppressMessage("Performance", "MA0168:Use readonly struct for in or ref readonly parameter")]
-			static MemberInfo? FindPropertyMethod(in InterfaceMapping map, Type concreteType, PropertyInfo property)
+			static MemberInfo? FindPropertyMethod(in InterfaceMappingsRecord map, Type concreteType, PropertyInfo property)
 			{
 				// Check both get and set methods
-				var targetGet = FindMethod(map, property.GetMethod);
-				var targetSet = FindMethod(map, property.SetMethod);
+				var targetGet = FindMethod(in map, property.GetMethod);
+				var targetSet = FindMethod(in map, property.SetMethod);
 
 				// Find matching property in concrete type by methods
 				foreach (var prop in concreteType.GetProperties(
