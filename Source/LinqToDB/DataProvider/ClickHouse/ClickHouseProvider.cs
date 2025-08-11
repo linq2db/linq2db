@@ -14,12 +14,12 @@
 		/// </summary>
 		Octonica,
 		/// <summary>
-		///  DarkWanderer ClickHouse provider: https://github.com/DarkWanderer/ClickHouse.Client.
+		///  Official ClickHouse provider: https://github.com/ClickHouse/clickhouse-cs.
 		/// </summary>
-		ClickHouseClient,
+		ClickHouseDriver,
 		/// <summary>
 		/// MySqlConnector provider: https://mysqlconnector.net/.
 		/// </summary>
-		MySqlConnector
+		MySqlConnector,
 	}
 }

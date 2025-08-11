@@ -866,13 +866,13 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		public sealed class ClientMappingSchema : LockedMappingSchema
 		{
-			public ClientMappingSchema() : base(ProviderName.ClickHouseClient, new MappingSchema?[] { ClickHouseProviderAdapter.GetInstance(ClickHouseProvider.ClickHouseClient).MappingSchema, Instance }.Where(_ => _ != null).ToArray()!)
+			public ClientMappingSchema() : base(ProviderName.ClickHouseDriver, new MappingSchema?[] { ClickHouseProviderAdapter.GetInstance(ClickHouseProvider.ClickHouseDriver).MappingSchema, Instance }.Where(_ => _ != null).ToArray()!)
 			{
-				var adapter = ClickHouseProviderAdapter.GetInstance(ClickHouseProvider.ClickHouseClient);
+				var adapter = ClickHouseProviderAdapter.GetInstance(ClickHouseProvider.ClickHouseDriver);
 
-				if (adapter.ClientDecimalType != null)
+				if (adapter.DriverDecimalType != null)
 				{
-					SetValueToSqlConverter(adapter.ClientDecimalType, (sb,dt,_,v) => ConvertClientDecimal(sb, dt, adapter.ClientDecimalToStringConverter!(v)));
+					SetValueToSqlConverter(adapter.DriverDecimalType, (sb,dt,_,v) => ConvertClientDecimal(sb, dt, adapter.DriverDecimalToStringConverter!(v)));
 				}
 			}
 
