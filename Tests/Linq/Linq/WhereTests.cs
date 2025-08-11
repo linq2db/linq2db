@@ -2617,13 +2617,18 @@ namespace Tests.Linq
 				}
 			});
 
-			var query =
+			var query1 =
 				from p in tb
-				where new[] { p.Date1, p.Date2, p.Date3, p.Date4 }.Max() > new DateTime(2023, 1, 1)
+				where new[] { p.Date1, p.Date2, p.Date3, p.Date4 }.Max() > p.Date1
 				select p;
 
-			var result = query.ToArray();
+			var query2 =
+				from p in tb
+				where !(new[] { p.Date1, p.Date2, p.Date3, p.Date4 }.Max() > p.Date1)
+				select p;
 
+			var result1 = query1.ToArray();
+			var result2 = query2.ToArray();
 		}
 
 	}
