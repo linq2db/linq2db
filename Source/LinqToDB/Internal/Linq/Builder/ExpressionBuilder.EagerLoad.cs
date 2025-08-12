@@ -109,13 +109,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			return initExpression;
 		}
 
-		struct KeyDetailEnvelope<TKey, TDetail>
+		readonly struct KeyDetailEnvelope<TKey, TDetail>
 			where TKey: notnull
 		{
-#pragma warning disable CS0649 // Field is never assigned: used by expressions
-			public TKey    Key;
-			public TDetail Detail;
-#pragma warning restore CS0649 // Field is never assigned
+			public KeyDetailEnvelope(TKey key, TDetail detail)
+			{
+				Key    = key;
+				Detail = detail;
+			}
+
+			public readonly TKey    Key;
+			public readonly TDetail Detail;
 		}
 
 		Expression ExpandContexts(IBuildContext context, Expression expression)
@@ -285,9 +289,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var mainParameter   = Expression.Parameter(mainType, "m");
 				var detailParameter = Expression.Parameter(detailType, "d");
 
-				var keyDetailExpression = Expression.MemberInit(Expression.New(keyDetailType),
-					Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Key))!, detailKeyExpression),
-					Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail))!, detailParameter));
+				var keyDetailExpression = Expression.New(keyDetailType.GetConstructor([mainKeyExpression.Type, detailType])!, detailKeyExpression, detailParameter);
 
 				var clonedParentContextRef = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(clonedParentContext.ElementType), clonedParentContext);
 

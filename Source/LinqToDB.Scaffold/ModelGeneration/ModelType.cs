@@ -33,7 +33,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			if (type.IsConstructedGenericType)
 			{
 				if (typeArguments is { Length : > 0 })
-					throw new ArgumentException($"{type} must be open generic type or {typeArguments} should be empty");
+					throw new ArgumentException($"{type} must be open generic type or {nameof(typeArguments)} should be empty");
 
 				if (!_aliasedTypes.ContainsKey(type))
 					_arguments = [..type.GetGenericArguments().Select(a => new ModelType(a, /* we don't have type info here */false))];
