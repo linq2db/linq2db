@@ -92,11 +92,5 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		#endregion
-
-		public override bool Equals(object? obj)
-		{
-			return obj is ISqlExpression other
-				&& SqlExtensions.DefaultComparer(this, other);
-		}
 	}
 }
