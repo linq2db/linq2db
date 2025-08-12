@@ -231,7 +231,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return true;
 		}
 
-		public override int Precedence => LinqToDB.SqlQuery.Precedence.Unknown;
+		public override int Precedence => LinqToDB.SqlQuery.Precedence.Primary;
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
