@@ -1107,12 +1107,56 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
+			var wrappedElement = WrapBooleanCoalesceItems(element, newElement);
+			if (wrappedElement != null)
+				return Visit(wrappedElement);
+
 			var converted = ConvertCoalesce(element);
 
 			if (!ReferenceEquals(converted, element))
 				return Visit(Optimize(converted));
 
 			return element;
+		}
+
+		protected virtual SqlCoalesceExpression? WrapBooleanCoalesceItems(SqlCoalesceExpression element, IQueryElement newElement, bool forceConvert = false)
+		{
+			var isWrapped = false;
+			ISqlExpression[]? wrappedExpressions = null;
+
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				var wrapped = WrapBooleanExpression(element.Expressions[i], includeFields : false, forceConvert: forceConvert);
+
+				if (!ReferenceEquals(wrapped, element.Expressions[i]))
+				{
+					isWrapped = true;
+
+					if (GetVisitMode(newElement) == VisitMode.Modify)
+					{
+						element.Expressions[i] = wrapped;
+					}
+					else
+					{
+						if (wrappedExpressions == null)
+						{
+							wrappedExpressions = new ISqlExpression[element.Expressions.Length];
+							Array.Copy(element.Expressions, wrappedExpressions, wrappedExpressions.Length);
+						}
+
+						wrappedExpressions[i] = wrapped;
+					}
+				}
+			}
+
+			if (isWrapped)
+			{
+				return GetVisitMode(newElement) == VisitMode.Modify
+					? element
+					: new SqlCoalesceExpression(wrappedExpressions!);
+			}
+
+			return null;
 		}
 
 		#endregion Visitor overrides

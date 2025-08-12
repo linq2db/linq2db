@@ -130,7 +130,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					else
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar2({type.Length})");
 					break;
-				case DataType.Boolean        : StringBuilder.Append("Char(1)");                   break;
+				case DataType.Boolean        : StringBuilder.Append("NUMBER(1)");                 break;
 				case DataType.NText          : StringBuilder.Append("NClob");                     break;
 				case DataType.Text           : StringBuilder.Append("Clob");                      break;
 				case DataType.Guid           : StringBuilder.Append("Raw(16)");                   break;
