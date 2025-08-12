@@ -3057,7 +3057,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				case QueryElementType.SqlQuery:
 					{
-						var hasParentheses = checkParentheses && StringBuilder[^1] == '(';
+						var hasParentheses = checkParentheses && StringBuilder.Length > 0 && StringBuilder[^1] == '(';
 
 						if (!hasParentheses)
 							StringBuilder.AppendLine(OpenParens);
