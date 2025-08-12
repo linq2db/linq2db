@@ -958,8 +958,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitMemberInit(MemberInitExpression node)
 		{
-			using var saveDescriptor = UsingColumnDescriptor(null);
-
 			if (_buildPurpose is BuildPurpose.Sql)
 			{
 				if (HandleValue(node, out var translated))
@@ -968,10 +966,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (HandleSqlRelated(node, out translated))
 					return Visit(translated);
 
-				var generic = Builder.ParseGenericConstructor(node, ProjectFlags.SQL, _columnDescriptor);
-				if (!IsSame(generic, node))
-					return Visit(generic);
+				using (UsingColumnDescriptor(null))
+				{
+					var generic = Builder.ParseGenericConstructor(node, ProjectFlags.SQL, _columnDescriptor);
+					if (!IsSame(generic, node))
+						return Visit(generic);
+				}
 			}
+
+			using var saveDescriptor = UsingColumnDescriptor(null);
 
 			var saveDisableNew = _disableNew;
 			var saveAlias      = _alias;
@@ -3890,8 +3893,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (l != null && r != null)
 							break;
 
-						leftExpr  = Builder.ParseGenericConstructor(leftExpr, ProjectFlags.SQL  | ProjectFlags.Keys, columnDescriptor, true);
-						rightExpr = Builder.ParseGenericConstructor(rightExpr, ProjectFlags.SQL | ProjectFlags.Keys, columnDescriptor, true);
+						leftExpr  = Builder.ParseGenericConstructor(leftExpr, ProjectFlags.SQL  | ProjectFlags.Keys, columnDescriptor);
+						rightExpr = Builder.ParseGenericConstructor(rightExpr, ProjectFlags.SQL | ProjectFlags.Keys, columnDescriptor);
 
 						if (SequenceHelper.UnwrapDefaultIfEmpty(leftExpr) is SqlGenericConstructorExpression leftGenericConstructor &&
 						    SequenceHelper.UnwrapDefaultIfEmpty(rightExpr) is SqlGenericConstructorExpression rightGenericConstructor)

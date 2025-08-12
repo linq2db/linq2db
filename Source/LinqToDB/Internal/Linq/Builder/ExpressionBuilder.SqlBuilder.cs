@@ -1781,18 +1781,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			return member1.EqualsTo(member2);
 		}
 
-		public Expression ParseGenericConstructor(Expression createExpression, ProjectFlags flags, ColumnDescriptor? columnDescriptor, bool force = false)
+		public Expression ParseGenericConstructor(Expression createExpression, ProjectFlags flags, ColumnDescriptor? columnDescriptor)
 		{
 			if (createExpression.Type.IsNullable())
 				return createExpression;
 
-			if (!force && createExpression.Type.IsValueType)
-				return createExpression;
-
-			if (!force && MappingSchema.IsScalarType(createExpression.Type))
+			if (MappingSchema.IsScalarType(createExpression.Type))
 				return createExpression;
 
 			if (typeof(FormattableString).IsSameOrParentOf(createExpression.Type))
+				return createExpression;
+
+			if (typeof(RawSqlString).IsSameOrParentOf(createExpression.Type))
 				return createExpression;
 
 			if (flags.IsSql() && IsForceParameter(createExpression, columnDescriptor))
