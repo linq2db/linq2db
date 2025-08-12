@@ -2467,7 +2467,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var precedence = GetPrecedence(predicate);
 
-				BuildPredicate(parentPrecedence, condition.Predicates.Count > 1 ? parentPrecedence : precedence, predicate);
+				BuildPredicate(parentPrecedence, condition.Predicates.Count == 1 ? parentPrecedence : precedence, predicate);
 			}
 		}
 
