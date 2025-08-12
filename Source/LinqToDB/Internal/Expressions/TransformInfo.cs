@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Internal.Expressions
 {
-	public struct TransformInfo
+	public readonly struct TransformInfo
 	{
 		public TransformInfo(Expression expression, bool stop)
 		{
@@ -25,8 +25,8 @@ namespace LinqToDB.Internal.Expressions
 			Continue   = @continue;
 		}
 
-		public Expression Expression;
-		public bool       Stop;
-		public bool       Continue;
+		public readonly Expression Expression;
+		public readonly bool       Stop;
+		public readonly bool       Continue;
 	}
 }
