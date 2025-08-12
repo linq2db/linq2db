@@ -109,7 +109,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		#region Types
 
-		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(in DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			BuildTypeName(StringBuilder, type, canBeNull);
 		}
@@ -121,7 +121,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			// - be consistent with nullable JSON column type
 		}
 
-		private static void BuildTypeName(StringBuilder sb, DbDataType type, bool nullable)
+		private static void BuildTypeName(StringBuilder sb, in DbDataType type, bool nullable)
 		{
 			// nullable JSON type has "special" syntax
 			if (nullable && type.DataType != DataType.Json)
@@ -610,7 +610,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				(_finalHints ??= new()).AddRange(fh);
 		}
 
-		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
+		protected override void BuildTypedExpression(in DbDataType dataType, ISqlExpression value)
 		{
 			if (ClickHouseSqlExpressionConvertVisitor.ClickHouseConvertFunctions.TryGetValue(dataType.DataType, out var name))
 			{

@@ -119,12 +119,12 @@ namespace LinqToDB.Internal.Conversion
 			Set(GetForSetExpressions(conversionType), new DbDataType(from), new DbDataType(to), expr);
 		}
 
-		public void Set(DbDataType from, DbDataType to, ConversionType conversionType, LambdaInfo expr)
+		public void Set(in DbDataType from, in DbDataType to, ConversionType conversionType, LambdaInfo expr)
 		{
 			Set(GetForSetExpressions(conversionType), from, to, expr);
 		}
 
-		static void Set(ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> expressions, DbDataType from, DbDataType to, LambdaInfo expr)
+		static void Set(ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> expressions, in DbDataType from, in DbDataType to, LambdaInfo expr)
 		{
 			if (!expressions.TryGetValue(from, out var dic))
 				expressions[from] = dic = new ();
@@ -132,7 +132,7 @@ namespace LinqToDB.Internal.Conversion
 			dic[to] = expr;
 		}
 
-		public LambdaInfo? Get(DbDataType from, DbDataType to, ConversionType conversionType)
+		public LambdaInfo? Get(in DbDataType from, in DbDataType to, ConversionType conversionType)
 		{
 			switch (conversionType)
 			{
@@ -167,7 +167,7 @@ namespace LinqToDB.Internal.Conversion
 			return Create(mappingSchema, new DbDataType(from), new DbDataType(to), conversionType);
 		}
 
-		public LambdaInfo Create(MappingSchema? mappingSchema, DbDataType from, DbDataType to, ConversionType conversionType)
+		public LambdaInfo Create(MappingSchema? mappingSchema, in DbDataType from, in DbDataType to, ConversionType conversionType)
 		{
 			var ex  = ConvertBuilder.GetConverter(mappingSchema, from.SystemType, to.SystemType);
 			var lm  = ex.Item1.CompileExpression();

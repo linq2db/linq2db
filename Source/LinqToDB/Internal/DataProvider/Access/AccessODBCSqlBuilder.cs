@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return base.TryConvertParameterToSql(paramValue);
 		}
 
-		protected override void BuildValue(DbDataType? dataType, object? value)
+		protected override void BuildValue(in DbDataType dataType, object? value)
 		{
 			// We force GUID literal to parameter as it's use of {} brackets conflicts with ODBC runtime
 			// problem with this fix is that sometimes string-based syntax '{xxx}' works and sometimes - doesn't
@@ -72,11 +72,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 			// Al "works everywhere" solution we decided to use parameter here
 			if (value is Guid g)
 			{
-				BuildParameter(new SqlParameter(dataType ?? MappingSchema.GetDbDataType(typeof(Guid)), "value", value));
+				BuildParameter(new SqlParameter(dataType, "value", value));
 				return;
 			}
 
-			base.BuildValue(dataType, value);
+			base.BuildValue(in dataType, value);
 		}
 	}
 }

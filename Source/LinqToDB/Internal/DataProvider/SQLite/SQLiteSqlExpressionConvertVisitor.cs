@@ -116,7 +116,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return like;
 		}
 
-		private static bool IsDateTime(DbDataType dbDataType)
+		private static bool IsDateTime(in DbDataType dbDataType)
 		{
 			if (dbDataType.DataType == DataType.Date           ||
 			    dbDataType.DataType == DataType.Time           ||
@@ -201,7 +201,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return base.ConvertConversion(cast);
 		}
 
-		ISqlExpression WrapDateTime(ISqlExpression expression, DbDataType dbDataType)
+		ISqlExpression WrapDateTime(ISqlExpression expression, in DbDataType dbDataType)
 		{
 			if (IsDateTime(dbDataType))
 			{

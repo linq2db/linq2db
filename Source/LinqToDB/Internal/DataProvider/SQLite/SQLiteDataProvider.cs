@@ -233,7 +233,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return base.IsDBNullAllowed(options, reader, idx);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, in DbDataType dataType, object? value)
 		{
 			// handles situation, when char values were serialized as character hex value for some
 			// versions of Microsoft.Data.Sqlite
@@ -252,7 +252,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 						value = guid.ToString().ToUpperInvariant();
 
 						if (Name == ProviderName.SQLiteClassic)
-							dataType = dataType.WithDataType(DataType.Text);
+						{
+							base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Text), value);
+							return;
+						}
 
 						break;
 					default:
@@ -268,40 +271,44 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 						break;
 				}
 			}
-
-			if (value is DateTime dt)
+			else if (value is DateTime dt)
 			{
 				value = dt.ToString("yyyy-MM-dd HH:mm:ss.fff", DateTimeFormatInfo.InvariantInfo);
 				if (Name == ProviderName.SQLiteClassic)
-					dataType = dataType.WithDataType(DataType.VarChar);
+				{
+					base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.VarChar), value);
+					return;
+				}
 			}
-
 #if SUPPORTS_DATEONLY
-			if (!Adapter.SupportsDateOnly && value is DateOnly d)
+			else if (!Adapter.SupportsDateOnly && value is DateOnly d)
 			{
 				value     = d.ToDateTime(TimeOnly.MinValue);
 				if (dataType.DataType == DataType.Date)
 				{
 					value = ((DateTime)value).ToString(SQLiteMappingSchema.DATE_FORMAT_RAW, CultureInfo.InvariantCulture);
 					if (Name == ProviderName.SQLiteClassic)
-						dataType = dataType.WithDataType(DataType.VarChar);
+					{
+						base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.VarChar), value);
+						return;
+					}
 				}
 			}
 #endif
 
-			base.SetParameter(dataConnection, parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, in dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, in DbDataType dataType)
 		{
 			switch (dataType.DataType)
 			{
-				case DataType.UInt32    : dataType = dataType.WithDataType(DataType.Int64);    break;
-				case DataType.UInt64    : dataType = dataType.WithDataType(DataType.Decimal);  break;
-				case DataType.DateTime2 : dataType = dataType.WithDataType(DataType.DateTime); break;
+				case DataType.UInt32    : base.SetParameterType(dataConnection, parameter, dataType.WithDataType(DataType.Int64));    return;
+				case DataType.UInt64    : base.SetParameterType(dataConnection, parameter, dataType.WithDataType(DataType.Decimal));  return;
+				case DataType.DateTime2 : base.SetParameterType(dataConnection, parameter, dataType.WithDataType(DataType.DateTime)); return;
 			}
 
-			base.SetParameterType(dataConnection, parameter, dataType);
+			base.SetParameterType(dataConnection, parameter, in dataType);
 		}
 
 		#region BulkCopy

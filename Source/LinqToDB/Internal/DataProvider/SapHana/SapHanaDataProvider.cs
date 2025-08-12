@@ -87,7 +87,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => _sqlOptimizer;
 
-		public override Type ConvertParameterType(Type type, DbDataType dataType)
+		public override Type ConvertParameterType(Type type, in DbDataType dataType)
 		{
 			if (type.IsNullable())
 				type = type.ToUnderlying();
@@ -111,7 +111,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, in DbDataType dataType, object? value)
 		{
 #if SUPPORTS_DATEONLY
 			if (value is DateOnly d)
@@ -120,22 +120,29 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			switch (dataType.DataType)
 			{
 				case DataType.Boolean:
-					dataType = dataType.WithDataType(DataType.Byte);
+				{
 					if (value is bool b)
 						value = b ? (byte)1 : (byte)0;
-					break;
+
+					base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Byte), value);
+					return;
+				}
 				case DataType.Guid:
+				{
 					if (value != null)
 						value = string.Format(CultureInfo.InvariantCulture, "{0}", value);
-					dataType = dataType.WithDataType(DataType.Char);
+
 					parameter.Size = 36;
-					break;
+
+					base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Char), value);
+					return;
+				}
 			}
 
-			base.SetParameter(dataConnection, parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, in dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, in DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;

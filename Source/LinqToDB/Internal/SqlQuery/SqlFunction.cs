@@ -9,48 +9,48 @@ namespace LinqToDB.Internal.SqlQuery
 		private const SqlFlags                  DefaultFlags       = SqlFlags.IsPure;
 		private const ParametersNullabilityType DefaultNullability = ParametersNullabilityType.IfAnyParameterNullable;
 
-		public SqlFunction(DbDataType type, string name, params ISqlExpression[] parameters)
+		public SqlFunction(in DbDataType type, string name, params ISqlExpression[] parameters)
 			: this(type, name, DefaultFlags, DefaultNullability, null, parameters)
 		{
 		}
 
-		public SqlFunction(DbDataType type, string name, bool? canBeNull, params ISqlExpression[] parameters)
+		public SqlFunction(in DbDataType type, string name, bool? canBeNull, params ISqlExpression[] parameters)
 			: this(type, name, DefaultFlags, DefaultNullability, canBeNull, parameters)
 		{
 		}
 
-		public SqlFunction(DbDataType type, string name, SqlFlags flags, params ISqlExpression[] parameters)
+		public SqlFunction(in DbDataType type, string name, SqlFlags flags, params ISqlExpression[] parameters)
 			: this(type, name, flags, DefaultNullability, null, parameters)
 		{
 		}
 
-		public SqlFunction(DbDataType type, string name, bool isAggregate, bool? canBeNull, params ISqlExpression[] parameters)
+		public SqlFunction(in DbDataType type, string name, bool isAggregate, bool? canBeNull, params ISqlExpression[] parameters)
 			: this(type, name, isAggregate ? SqlFlags.IsAggregate | SqlFlags.IsPure : SqlFlags.IsPure, DefaultNullability, canBeNull, parameters)
 		{
 		}
 
-		public SqlFunction(DbDataType type, string name, bool isAggregate, ParametersNullabilityType parametersNullability, params ISqlExpression[] parameters)
+		public SqlFunction(in DbDataType type, string name, bool isAggregate, ParametersNullabilityType parametersNullability, params ISqlExpression[] parameters)
 			: this(type, name, isAggregate ? SqlFlags.IsAggregate | SqlFlags.IsPure : SqlFlags.IsPure, parametersNullability, null, parameters)
 		{
 		}
 
-		public SqlFunction(DbDataType type, string name, ParametersNullabilityType parametersNullability, params ISqlExpression[] parameters)
+		public SqlFunction(in DbDataType type, string name, ParametersNullabilityType parametersNullability, params ISqlExpression[] parameters)
 			: this(type, name, DefaultFlags, parametersNullability, null, parameters)
 		{
 		}
 
-		public SqlFunction(DbDataType type, string name, bool isAggregate, ParametersNullabilityType parametersNullability, bool? canBeNull, params ISqlExpression[] parameters)
+		public SqlFunction(in DbDataType type, string name, bool isAggregate, ParametersNullabilityType parametersNullability, bool? canBeNull, params ISqlExpression[] parameters)
 			: this(type, name, isAggregate ? SqlFlags.IsAggregate | SqlFlags.IsPure : SqlFlags.IsPure, parametersNullability, canBeNull, parameters)
 		{
 		}
 
-		public SqlFunction(DbDataType type, string name, ParametersNullabilityType parametersNullability, bool? canBeNull, params ISqlExpression[] parameters)
+		public SqlFunction(in DbDataType type, string name, ParametersNullabilityType parametersNullability, bool? canBeNull, params ISqlExpression[] parameters)
 			: this(type, name, DefaultFlags, parametersNullability, canBeNull, parameters)
 		{
 		}
 
 		public SqlFunction(
-			DbDataType                type,
+			in DbDataType             type,
 			string                    name,
 			SqlFlags                  flags,
 			ParametersNullabilityType nullabilityType,

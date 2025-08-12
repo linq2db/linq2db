@@ -41,7 +41,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			if (statement is SqlTruncateTableStatement trun)
 			{
 				StringBuilder.Append("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME=");
-				MappingSchema.ConvertToSqlValue(StringBuilder, null, DataOptions, trun.Table!.TableName.Name);
+				MappingSchema.ConvertToSqlValue(StringBuilder, MappingSchema.GetDbDataType(typeof(string)), DataOptions, trun.Table!.TableName.Name);
 			}
 			else
 			{
@@ -99,12 +99,12 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return sb.Append(value);
 		}
 
-		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(in DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.DataType)
 			{
-				case DataType.Int32 : StringBuilder.Append("INTEGER");                                 break;
-				default             : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
+				case DataType.Int32 : StringBuilder.Append("INTEGER");                                    break;
+				default             : base.BuildDataTypeFromDataType(in type, forCreateTable, canBeNull); break;
 			}
 		}
 

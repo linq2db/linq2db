@@ -935,7 +935,9 @@ namespace LinqToDB.Data
 					}
 
 					var genericMethod = valueMethodInfo.MakeGenericMethod(elementType);
+#pragma warning disable LindhartAnalyserMissingAwaitWarningVariable // Possible unwanted Task returned from method.
 					var task          = genericMethod.InvokeExt<Task>(this, new object[] { rd, cancellationToken });
+#pragma warning restore LindhartAnalyserMissingAwaitWarningVariable // Possible unwanted Task returned from method.
 
 					await task.ConfigureAwait(false);
 
@@ -1664,7 +1666,7 @@ namespace LinqToDB.Data
 
 		#region GetObjectReader
 
-		record struct QueryKey(Type TargetType, Type DbReaderType, int ConfigId, string Sql, string? ExtraKey, bool IsScalar, Type? ScalarSourceType);
+		readonly record struct QueryKey(Type TargetType, Type DbReaderType, int ConfigId, string Sql, string? ExtraKey, bool IsScalar, Type? ScalarSourceType);
 
 		static readonly MemoryCache<QueryKey,Delegate>                                            _objectReaders       = new (new ());
 		static readonly MemoryCache<(Type readerType, Type providerReaderType),LambdaExpression?> _dataReaderConverter = new (new ());

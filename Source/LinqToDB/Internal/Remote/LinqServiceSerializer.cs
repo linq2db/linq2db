@@ -162,7 +162,7 @@ namespace LinqToDB.Internal.Remote
 					Builder.Append(value.Value ? '1' : '0');
 			}
 
-			protected void Append(DbDataType type)
+			protected void Append(in DbDataType type)
 			{
 				Append(type.SystemType);
 				Append((int)type.DataType);

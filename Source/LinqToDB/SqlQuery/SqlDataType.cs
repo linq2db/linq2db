@@ -15,7 +15,7 @@ namespace LinqToDB.SqlQuery
 	{
 		#region Init
 
-		public SqlDataType(DbDataType dataType)
+		public SqlDataType(in DbDataType dataType)
 		{
 			Type = dataType;
 		}

@@ -75,9 +75,9 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		#region Overrides
 
-		public override Type ConvertParameterType(Type type, DbDataType dataType)
+		public override Type ConvertParameterType(Type type, in DbDataType dataType)
 		{
-			type = base.ConvertParameterType(type, dataType);
+			type = base.ConvertParameterType(type, in dataType);
 
 			// native client BulkCopy cannot stand nullable types
 			// AseBulkManager.IsWrongType
@@ -134,15 +134,18 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		public override IQueryParametersNormalizer GetQueryParameterNormalizer() => new SybaseParametersNormalizer();
 
-		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, in DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
 				case DataType.SByte      :
-					dataType = dataType.WithDataType(DataType.Int16);
+				{
 					if (value is sbyte sbyteValue)
 						value = (short)sbyteValue;
-					break;
+
+					base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Int16), value);
+					return;
+				}
 
 				case DataType.Time       :
 					if (value is TimeSpan ts)
@@ -150,22 +153,37 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					break;
 
 				case DataType.Xml        :
-					dataType = dataType.WithDataType(DataType.NVarChar);
-						 if (value is XDocument  xdoc) value = xdoc.ToString();
-					else if (value is XmlDocument xml) value = xml.InnerXml;
-					break;
+				{
+					if (value is XDocument xdoc)
+						value = xdoc.ToString();
+					else if (value is XmlDocument xml)
+						value = xml.InnerXml;
+
+					base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.NVarChar), value);
+					return;
+				}
 
 				case DataType.Guid       :
+				{
 					if (value != null)
 						value = string.Format(CultureInfo.InvariantCulture, "{0}", value);
-					dataType = dataType.WithDataType(DataType.Char);
+
 					parameter.Size = 36;
-					break;
+
+					base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Char), value);
+					return;
+				}
 
 				case DataType.Undefined  :
+				{
 					if (value == null)
-						dataType = dataType.WithDataType(DataType.Char);
+					{
+						base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Char), value);
+						return;
+					}
+
 					break;
+				}
 
 				case DataType.Char       :
 				case DataType.NChar      :
@@ -182,10 +200,10 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 #endif
 			}
 
-			base.SetParameter(dataConnection, parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, in dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, in DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -229,7 +247,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				case DataType.Money         : parameter.DbType = DbType.Currency;   break;
 				case DataType.DateTime2     : parameter.DbType = DbType.DateTime;   break;
 				default                     :
-					base.SetParameterType(dataConnection, parameter, dataType);     break;
+					base.SetParameterType(dataConnection, parameter, in dataType);     break;
 			}
 		}
 

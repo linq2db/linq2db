@@ -439,7 +439,7 @@ namespace LinqToDB.EntityFrameworkCore
 							modelType), toParam));
 
 				mappingSchema.SetValueToSqlConverter(modelType, (sb, dt, v)
-					=> sqlConverter.Convert(sb, mappingSchema, dt.Type, dataOptions, converter.ConvertToProvider(v)));
+					=> sqlConverter.Convert(sb, dt.Type, dataOptions, converter.ConvertToProvider(v)));
 			}
 		}
 

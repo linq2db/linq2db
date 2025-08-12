@@ -198,7 +198,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return new Oracle11ParametersNormalizer();
 		}
 
-		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, in DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
@@ -213,10 +213,13 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					break;
 
 				case DataType.Boolean  :
-					dataType = dataType.WithDataType(DataType.Byte);
+				{
 					if (value is bool boolValue)
 						value = boolValue ? (byte)1 : (byte)0;
-					break;
+
+					base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Byte), value);
+					return;
+				}
 
 				case DataType.Guid     :
 				case DataType.Binary   :
@@ -231,7 +234,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					// According to http://docs.oracle.com/cd/E16655_01/win.121/e17732/featOraCommand.htm#ODPNT258
 					// Inference of DbType and OracleDbType from Value: TimeSpan - Object - IntervalDS
 					if (value is TimeSpan)
-						dataType = dataType.WithDataType(DataType.Undefined);
+					{
+						base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Undefined), value);
+						return;
+					}
+
 					break;
 
 				case DataType.BFile    :
@@ -259,15 +266,22 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 						value = d.ToDateTime(TimeOnly.MinValue);
 					break;
 #endif
+				case DataType.Undefined:
+				{
+					if (value is string @string && @string.Length >= 4000)
+					{
+						base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.NText), value);
+						return;
+					}
+
+					break;
+				}
 			}
 
-			if (dataType.DataType == DataType.Undefined && value is string @string && @string.Length >= 4000)
-				dataType = dataType.WithDataType(DataType.NText);
-
-			base.SetParameter(dataConnection, parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, in dataType, value);
 		}
 
-		public override Type ConvertParameterType(Type type, DbDataType dataType)
+		public override Type ConvertParameterType(Type type, in DbDataType dataType)
 		{
 			if (type.IsNullable())
 				type = type.ToUnderlying();
@@ -283,7 +297,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, in DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;

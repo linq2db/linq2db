@@ -17,6 +17,7 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="8.0.0"                        />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="3.1.0-beta"                   />
+		<PackageVersion Include="ErrorProne.NET.CoreAnalyzers"                          Version="0.8.2-beta.1"                 />
 	</ItemGroup>
 
 	<ItemGroup Label="Polyfills">

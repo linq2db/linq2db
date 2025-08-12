@@ -77,6 +77,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public ExpressionBuildVisitor Clone(CloningContext cloningContext)
 		{
+#pragma warning disable EPC24 // A hash table "unfriendly" type is used as the key in a hash table (false positives)
 			var translationCache = _translationCache
 				.Where(p => HasClonedContext(p.Key.Expression, cloningContext))
 				.ToDictionary(
@@ -114,6 +115,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					p => cloningContext.CorrectExpression(p.Value),
 					ExprCacheKey.SqlCacheKeyComparer
 				);
+#pragma warning restore EPC24 // A hash table "unfriendly" type is used as the key in a hash table
 
 			var newVisitor = new ExpressionBuildVisitor(Builder);
 			newVisitor._associations     = associations == null ? null : new SnapshotDictionary<ExprCacheKey, Expression>(associations);
@@ -4572,7 +4574,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					else
 					{
 						// TODO: pass column type to type mapValue=null cases?
-						sqlvalue = MappingSchema.GetSqlValue(type, mapValue, null);
+						sqlvalue = MappingSchema.GetSqlValue(type, mapValue, mapValue == null ? DbDataType.Undefined : MappingSchema.GetDbDataType(mapValue.GetType()));
 					}
 
 					ISqlExpression? l, r;
@@ -4623,7 +4625,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		private sealed class GetDataTypeContext
 		{
-			public GetDataTypeContext(DbDataType baseType, MappingSchema mappingSchema)
+			public GetDataTypeContext(in DbDataType baseType, MappingSchema mappingSchema)
 			{
 				DataType = baseType.DataType;
 				DbType = baseType.DbType;
@@ -4643,7 +4645,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public MappingSchema MappingSchema { get; }
 		}
 
-		static DbDataType GetDataType(ISqlExpression expr, DbDataType baseType, MappingSchema mappingSchema)
+		static DbDataType GetDataType(ISqlExpression expr, in DbDataType baseType, MappingSchema mappingSchema)
 		{
 			var ctx = new GetDataTypeContext(baseType, mappingSchema);
 

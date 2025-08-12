@@ -113,7 +113,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(in DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.DataType)
 			{
@@ -276,7 +276,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
-		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
+		protected override void BuildTypedExpression(in DbDataType dataType, ISqlExpression value)
 		{
 			var saveStep = BuildStep;
 

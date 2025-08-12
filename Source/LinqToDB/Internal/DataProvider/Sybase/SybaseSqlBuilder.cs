@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			if (_skipAliases) addAlias = false;
 		}
 
-		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(in DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.DataType)
 			{
@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					return;
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
+			base.BuildDataTypeFromDataType(in type, forCreateTable, canBeNull);
 		}
 
 		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
@@ -377,7 +377,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			return false;
 		}
 
-		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
+		protected override void BuildTypedExpression(in DbDataType dataType, ISqlExpression value)
 		{
 			if (value is SqlValue { Value: decimal val })
 			{
@@ -385,7 +385,9 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				var scale = DecimalHelper.GetScale(val);
 				if (precision == 0 && scale == 0)
 					precision = 1;
-				dataType = dataType.WithPrecision(precision).WithScale(scale);
+
+				var newType = dataType.WithPrecision(precision).WithScale(scale);
+				base.BuildTypedExpression(in newType, value);
 			}
 			else if (value is SqlParameter param)
 			{
@@ -397,11 +399,13 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					var scale = DecimalHelper.GetScale(decValue);
 					if (precision == 0 && scale == 0)
 						precision = 1;
-					dataType = dataType.WithPrecision(precision).WithScale(scale);
+
+					var newType = dataType.WithPrecision(precision).WithScale(scale);
+					base.BuildTypedExpression(in newType, value);
 				}
 			}
-
-			base.BuildTypedExpression(dataType, value);
+			else
+				base.BuildTypedExpression(in dataType, value);
 		}
 	}
 }

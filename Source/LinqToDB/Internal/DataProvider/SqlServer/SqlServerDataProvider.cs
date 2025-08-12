@@ -264,7 +264,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			return null;
 		}
 
-		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, in DbDataType dataType, object? value)
 		{
 			// SqlClient supports less DbType's for SqlDateTime than for DateTime
 			// SqlDateTime is designer for DATETIME type only
@@ -411,21 +411,17 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					break;
 				}
-
-				case DataType.Undefined:
-					if (value != null
-						&& (value is DataTable
-						|| value is DbDataReader
-							|| value is IEnumerable<DbDataRecord>
-							|| value.GetType().IsEnumerableType(Adapter.SqlDataRecordType)))
-					{
-						dataType = dataType.WithDataType(DataType.Structured);
-					}
-
-					break;
 			}
 
-			base.SetParameter(dataConnection, parameter, name, dataType, value);
+			if (dataType.DataType == DataType.Undefined
+				&& value != null
+				&& (value is DataTable
+					|| value is DbDataReader
+					|| value is IEnumerable<DbDataRecord>
+					|| value.GetType().IsEnumerableType(Adapter.SqlDataRecordType)))
+				base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Structured), value);
+			else
+				base.SetParameter(dataConnection, parameter, name, in dataType, value);
 
 			if (param != null)
 			{
@@ -483,7 +479,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, in DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;

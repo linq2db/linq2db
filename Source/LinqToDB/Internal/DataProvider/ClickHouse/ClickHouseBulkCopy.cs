@@ -108,11 +108,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 				if (connection != null)
 				{
-					return new ProviderConnections()
-					{
-						DataConnection = dataConnection,
-						ProviderConnection = connection,
-					};
+					return new ProviderConnections(dataConnection, connection, null);
 				}
 			}
 
@@ -128,11 +124,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 				if (connection != null)
 				{
-					return new ProviderConnections()
-					{
-						DataConnection = dataConnection,
-						ProviderConnection = connection,
-					};
+					return new ProviderConnections(dataConnection, connection, null);
 				}
 			}
 

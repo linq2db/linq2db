@@ -135,12 +135,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 			BuildSqlConditionExpressionAsFunction("IIF", conditionExpression);
 		}
 
-		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(in DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.DataType)
 			{
-				case DataType.DateTime2 : StringBuilder.Append("timestamp");                               break;
-				default                 : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
+				case DataType.DateTime2 : StringBuilder.Append("timestamp");                                  break;
+				default                 : base.BuildDataTypeFromDataType(in type, forCreateTable, canBeNull); break;
 			}
 		}
 
@@ -285,16 +285,16 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return base.TryConvertParameterToSql(paramValue);
 		}
 
-		protected override void BuildValue(DbDataType? dataType, object? value)
+		protected override void BuildValue(in DbDataType dataType, object? value)
 		{
 			// Access literals doesn't support less than second precision
 			if (value is DateTime dt && dt.Millisecond != 0)
 			{
-				BuildParameter(new SqlParameter(dataType ?? MappingSchema.GetDbDataType(typeof(DateTime)), "value", value));
+				BuildParameter(new SqlParameter(dataType, "value", value));
 				return;
 			}
 
-			base.BuildValue(dataType, value);
+			base.BuildValue(in dataType, value);
 		}
 	}
 }

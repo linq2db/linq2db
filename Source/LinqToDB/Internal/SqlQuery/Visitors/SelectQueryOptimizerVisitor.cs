@@ -287,7 +287,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					// Do it again. Appended new SetOperators. For ensuring how it works check CteTests
 					//
+#pragma warning disable EPC30 // Method calls itself recursively
 					newQuery = (SelectQuery)VisitSqlQuery(selectQuery);
+#pragma warning restore EPC30 // Method calls itself recursively
 				}
 
 				_parentSelect = saveParent;

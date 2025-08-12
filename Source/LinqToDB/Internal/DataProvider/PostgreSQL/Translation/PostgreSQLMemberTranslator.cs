@@ -189,7 +189,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
-				DbDataType          resulType,
+				in DbDataType       resulType,
 				ISqlExpression      year,
 				ISqlExpression      month,
 				ISqlExpression      day,

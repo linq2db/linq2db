@@ -6,7 +6,7 @@ namespace LinqToDB.Internal.SqlQuery
 {
 	public sealed class SqlCastExpression : SqlExpressionBase
 	{
-		public SqlCastExpression(ISqlExpression expression, DbDataType toType, SqlDataType? fromType, bool isMandatory = false)
+		public SqlCastExpression(ISqlExpression expression, in DbDataType toType, SqlDataType? fromType, bool isMandatory = false)
 		{
 			Expression  = expression;
 			ToType      = toType;
@@ -78,14 +78,14 @@ namespace LinqToDB.Internal.SqlQuery
 			return new SqlCastExpression(expression, ToType, FromType, IsMandatory);
 		}
 
-		public SqlCastExpression WithToType(DbDataType toType)
+		public SqlCastExpression WithToType(in DbDataType toType)
 		{
 			if (toType == ToType)
 				return this;
 			return new SqlCastExpression(Expression, toType, FromType, IsMandatory);
 		}
 
-		public void Modify(DbDataType toType, ISqlExpression expression, SqlDataType? fromType)
+		public void Modify(in DbDataType toType, ISqlExpression expression, SqlDataType? fromType)
 		{
 			ToType     = toType;
 			Expression = expression;

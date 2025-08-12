@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.SqlQuery
 			else
 				throw new InvalidOperationException();
 
-			return MappingSchema.GetSqlValue(p.ValueType, value, null);
+			return MappingSchema.GetSqlValue(p.ValueType, value, value == null ? DbDataType.Undefined : MappingSchema.GetDbDataType(value.GetType()));
 		}
 
 		public override Type? SystemType => null;

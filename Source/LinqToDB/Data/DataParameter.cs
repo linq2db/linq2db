@@ -26,7 +26,7 @@ namespace LinqToDB.Data
 			Value = value;
 		}
 
-		public DataParameter(string? name, object? value, DbDataType dbDataType)
+		public DataParameter(string? name, object? value, in DbDataType dbDataType)
 		{
 			Name        = name;
 			Value       = value;
@@ -169,7 +169,7 @@ namespace LinqToDB.Data
 			set => _dbDataType = value;
 		}
 
-		internal DbDataType GetOrSetDbDataType(DbDataType? columnType) => _dbDataType ?? columnType ?? DbDataType;
+		internal DbDataType GetOrSetDbDataType(in DbDataType columnType) => _dbDataType ?? columnType;
 
 		public static DataParameter Char          (string? name, char           value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }
 		public static DataParameter Char          (string? name, string?        value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }

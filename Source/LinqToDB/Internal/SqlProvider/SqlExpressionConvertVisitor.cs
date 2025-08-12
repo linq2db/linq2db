@@ -1483,10 +1483,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#region DataTypes
 
-		protected virtual int? GetMaxLength(DbDataType      type) { return SqlDataType.GetMaxLength(type.DataType); }
-		protected virtual int? GetMaxPrecision(DbDataType   type) { return SqlDataType.GetMaxPrecision(type.DataType); }
-		protected virtual int? GetMaxScale(DbDataType       type) { return SqlDataType.GetMaxScale(type.DataType); }
-		protected virtual int? GetMaxDisplaySize(DbDataType type) { return SqlDataType.GetMaxDisplaySize(type.DataType); }
+		protected virtual int? GetMaxLength(in DbDataType type) { return SqlDataType.GetMaxLength(type.DataType); }
+		protected virtual int? GetMaxPrecision(in DbDataType type) { return SqlDataType.GetMaxPrecision(type.DataType); }
+		protected virtual int? GetMaxScale(in DbDataType type) { return SqlDataType.GetMaxScale(type.DataType); }
+		protected virtual int? GetMaxDisplaySize(in DbDataType type) { return SqlDataType.GetMaxDisplaySize(type.DataType); }
 
 		/// <summary>
 		/// Implements <see cref="SqlCastExpression"/> conversion.
@@ -1822,7 +1822,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return sc;
 		}
 
-		protected ISqlExpression ConvertBooleanToCase(ISqlExpression expr, DbDataType toType)
+		protected ISqlExpression ConvertBooleanToCase(ISqlExpression expr, in DbDataType toType)
 		{
 			var caseExpr = new SqlCaseExpression(toType,
 				new SqlCaseExpression.CaseItem[]
@@ -1863,32 +1863,32 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		protected static bool IsDateDataType(DbDataType dataType, string typeName)
+		protected static bool IsDateDataType(in DbDataType dataType, string typeName)
 		{
 			return dataType.DataType == DataType.Date || dataType.DbType == typeName;
 		}
 
-		protected static bool IsSmallDateTimeType(DbDataType dataType, string typeName)
+		protected static bool IsSmallDateTimeType(in DbDataType dataType, string typeName)
 		{
 			return dataType.DataType == DataType.SmallDateTime || dataType.DbType == typeName;
 		}
 
-		protected static bool IsDateTime2Type(DbDataType dataType, string typeName)
+		protected static bool IsDateTime2Type(in DbDataType dataType, string typeName)
 		{
 			return dataType.DataType == DataType.DateTime2 || dataType.DbType == typeName;
 		}
 
-		protected static bool IsDateTimeType(DbDataType dataType, string typeName)
+		protected static bool IsDateTimeType(in DbDataType dataType, string typeName)
 		{
 			return dataType.DataType == DataType.DateTime2 || dataType.DbType == typeName;
 		}
 
-		protected static bool IsDateDataOffsetType(DbDataType dataType)
+		protected static bool IsDateDataOffsetType(in DbDataType dataType)
 		{
 			return dataType.DataType == DataType.DateTimeOffset;
 		}
 
-		protected static bool IsTimeDataType(DbDataType dataType)
+		protected static bool IsTimeDataType(in DbDataType dataType)
 		{
 			return dataType.DataType == DataType.Time || dataType.DbType == "Time";
 		}

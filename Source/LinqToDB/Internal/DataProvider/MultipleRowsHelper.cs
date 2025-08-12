@@ -134,7 +134,7 @@ namespace LinqToDB.Internal.DataProvider
 			StringBuilder.Length--;
 		}
 
-		private void AddValueCasted(string sql, DbDataType type)
+		private void AddValueCasted(string sql, in DbDataType type)
 		{
 			StringBuilder.Append("CAST(");
 			StringBuilder.Append(sql);

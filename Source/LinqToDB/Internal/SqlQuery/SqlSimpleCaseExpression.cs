@@ -32,7 +32,7 @@ namespace LinqToDB.Internal.SqlQuery
 			public ISqlExpression ResultExpression { get; set; }
 		}
 
-		public SqlSimpleCaseExpression(DbDataType dataType, ISqlExpression primaryExpression, IReadOnlyCollection<CaseExpression> cases, ISqlExpression? elseExpression)
+		public SqlSimpleCaseExpression(in DbDataType dataType, ISqlExpression primaryExpression, IReadOnlyCollection<CaseExpression> cases, ISqlExpression? elseExpression)
 		{
 			_dataType         = dataType;
 			PrimaryExpression = primaryExpression;

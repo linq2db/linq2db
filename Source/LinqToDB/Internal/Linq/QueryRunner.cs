@@ -386,7 +386,7 @@ namespace LinqToDB.Internal.Linq
 				clientValueGetter,
 				providerValueFunc,
 				itemProviderConvertFunc: null,
-				dbDataType, 
+				in dbDataType,
 				dbDataTypeFunc,
 				providerValueGetter,
 				parametersExpression: null,

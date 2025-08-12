@@ -12,7 +12,7 @@ namespace LinqToDB
 	/// Stores database type attributes.
 	/// </summary>
 	[DebuggerDisplay("DbDataType: {ToString()}")]
-	public struct DbDataType : IEquatable<DbDataType>
+	public readonly struct DbDataType : IEquatable<DbDataType>
 	{
 		public static readonly DbDataType Undefined = new (typeof(object), DataType.Undefined);
 
@@ -67,12 +67,12 @@ namespace LinqToDB
 		public int?     Scale      { get; }
 
 		internal static MethodInfo WithSetValuesMethodInfo =
-			MemberHelper.MethodOf<DbDataType>(dt => dt.WithSetValues(dt));
+			MemberHelper.MethodOf<DbDataType>(dt => dt.WithSetValues(in dt));
 
 		internal static MethodInfo WithSystemTypeMethodInfo =
 			MemberHelper.MethodOf<DbDataType>(dt => dt.WithSystemType(typeof(object)));
 
-		public readonly DbDataType WithSetValues(DbDataType from)
+		public readonly DbDataType WithSetValues(in DbDataType from)
 		{
 			return new DbDataType(
 				from.SystemType != typeof(object)   ? from.SystemType : SystemType,
@@ -83,7 +83,7 @@ namespace LinqToDB
 				from.Scale     ?? Scale);
 		}
 
-		public readonly DbDataType WithoutSystemType(DbDataType       from) => new (SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
+		public readonly DbDataType WithoutSystemType(in DbDataType    from) => new (SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
 		public readonly DbDataType WithoutSystemType(ColumnDescriptor from) => new (SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
 
 		public readonly DbDataType WithSystemType    (Type     systemType           ) => new (systemType, DataType, DbType, Length, Precision, Scale);
@@ -116,7 +116,7 @@ namespace LinqToDB
 				&& string.Equals(DbType, other.DbType, StringComparison.Ordinal);
 		}
 
-		public readonly bool EqualsDbOnly(DbDataType other)
+		public readonly bool EqualsDbOnly(in DbDataType other)
 		{
 			return DataType   == other.DataType
 				&& Length     == other.Length
@@ -131,12 +131,10 @@ namespace LinqToDB
 			return obj is DbDataType type && Equals(type);
 		}
 
-		int? _hashCode;
-
 		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override int GetHashCode()
 		{
-			return _hashCode ??= HashCode.Combine(
+			return HashCode.Combine(
 				SystemType,
 				DataType,
 				DbType,
@@ -150,12 +148,12 @@ namespace LinqToDB
 
 		#region Operators
 
-		public static bool operator ==(DbDataType t1, DbDataType t2)
+		public static bool operator ==(in DbDataType t1, in DbDataType t2)
 		{
 			return t1.Equals(t2);
 		}
 
-		public static bool operator !=(DbDataType t1, DbDataType t2)
+		public static bool operator !=(in DbDataType t1, in DbDataType t2)
 		{
 			return !(t1 == t2);
 		}

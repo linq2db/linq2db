@@ -592,7 +592,7 @@ namespace LinqToDB.CodeModel
 				public static IType MappingSchema        { get; } = Parser.Parse<MappingSchema>();
 
 				/// <summary>
-				/// <see cref="MappingSchema.SetConvertExpression(DbDataType, DbDataType, LambdaExpression, bool, ConversionType)"/> method reference.
+				/// <see cref="MappingSchema.SetConvertExpression{TFrom, TTo}(Expression{Func{TFrom, TTo}}, bool, ConversionType)"/> method reference.
 				/// </summary>
 				public static CodeIdentifier MappingSchema_SetConvertExpression { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.MappingSchema.SetConvertExpression), true);
 

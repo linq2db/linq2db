@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable EPC30 // Method calls itself recursively
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -102,7 +103,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		static Expression<Func<IDataContext, T[], IQueryable<T>>> UnnestImpl<T>()
 		{
+#pragma warning disable EPC20 // Avoid using default ToString implementation
 			return (dc, array) => dc.FromSqlScalar<T>($"UNNEST({array})");
+#pragma warning restore EPC20 // Avoid using default ToString implementation
 		}
 
 		public class Ordinality<T>
@@ -118,7 +121,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		static Expression<Func<IDataContext, T[], IQueryable<Ordinality<T>>>> UnnestWithOrdinalityImpl<T>()
 		{
+#pragma warning disable EPC20 // Avoid using default ToString implementation
 			return (dc, array) => dc.FromSql<Ordinality<T>>($"UNNEST({array}) WITH ORDINALITY {Sql.AliasExpr()}(value, idx)");
+#pragma warning restore EPC20 // Avoid using default ToString implementation
 		}
 
 		#endregion
@@ -315,7 +320,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			static Expression<Func<IDataContext, T[], int, IQueryable<int>>> GenerateSubscriptsImpl<T>()
 		{
+#pragma warning disable EPC20 // Avoid using default ToString implementation
 			return (dc, array, dimension) => dc.FromSqlScalar<int>($"GENERATE_SUBSCRIPTS({array}, {dimension})");
+#pragma warning restore EPC20 // Avoid using default ToString implementation
 		}
 
 		[ExpressionMethod(nameof(GenerateSubscriptsReverseImpl))]
@@ -325,7 +332,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		static Expression<Func<IDataContext, T[], int, bool, IQueryable<int>>> GenerateSubscriptsReverseImpl<T>()
 		{
+#pragma warning disable EPC20 // Avoid using default ToString implementation
 			return (dc, array, dimension, reverse) => dc.FromSqlScalar<int>($"GENERATE_SUBSCRIPTS({array}, {dimension}, {reverse})");
+#pragma warning restore EPC20 // Avoid using default ToString implementation
 		}
 
 		#endregion

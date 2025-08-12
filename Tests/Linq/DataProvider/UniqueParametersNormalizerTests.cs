@@ -359,7 +359,7 @@ namespace Tests.DataProvider
 			public BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source) where T : notnull => _baseProvider.BulkCopy(options, table, source);
 			public Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table, IEnumerable<T> source, CancellationToken cancellationToken) where T : notnull => _baseProvider.BulkCopyAsync(options, table, source, cancellationToken);
 			public Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table, IAsyncEnumerable<T> source, CancellationToken cancellationToken) where T : notnull => _baseProvider.BulkCopyAsync(options, table, source, cancellationToken);
-			public Type ConvertParameterType(Type type, DbDataType dataType) => _baseProvider.ConvertParameterType(type, dataType);
+			public Type ConvertParameterType(Type type, in DbDataType dataType) => _baseProvider.ConvertParameterType(type, dataType);
 			public DbConnection CreateConnection(string connectionString) => _baseProvider.CreateConnection(connectionString);
 			public ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions) => _baseProvider.CreateSqlBuilder(mappingSchema, dataOptions);
 			public void DisposeCommand(DbCommand command) => _baseProvider.DisposeCommand(command);
@@ -376,7 +376,7 @@ namespace Tests.DataProvider
 			public DbCommand InitCommand(DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters) => _baseProvider.InitCommand(dataConnection, command, commandType, commandText, parameters, withParameters);
 			public void InitContext(IDataContext dataContext) => _baseProvider.InitContext(dataContext);
 			public bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx) => _baseProvider.IsDBNullAllowed(options, reader, idx);
-			public void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value) => _baseProvider.SetParameter(dataConnection, parameter, name, dataType, value);
+			public void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, in DbDataType dataType, object? value) => _baseProvider.SetParameter(dataConnection, parameter, name, dataType, value);
 
 			public IServiceProvider Instance => ((IInfrastructure<IServiceProvider>)_baseProvider).Instance;
 		}

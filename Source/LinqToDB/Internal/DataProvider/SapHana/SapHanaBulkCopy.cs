@@ -82,12 +82,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
-					return new ProviderConnections()
-					{
-						DataConnection      = dataConnection,
-						ProviderConnection  = connection,
-						ProviderTransaction = transaction
-					};
+					return new ProviderConnections(dataConnection, connection, transaction);
 				}
 			}
 
@@ -107,12 +102,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
-					return new ProviderConnections()
-					{
-						DataConnection = dataConnection,
-						ProviderConnection = connection,
-						ProviderTransaction = transaction
-					};
+					return new ProviderConnections(dataConnection, connection, transaction);
 				}
 			}
 

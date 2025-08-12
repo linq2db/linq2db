@@ -18,7 +18,7 @@ namespace LinqToDB.Internal.SqlQuery
 			CanBeNull = true;
 		}
 
-		public SqlField(DbDataType dbDataType, string? name, bool canBeNull)
+		public SqlField(in DbDataType dbDataType, string? name, bool canBeNull)
 		{
 			Type      = dbDataType;
 			Name      = name!;
@@ -157,7 +157,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#endregion
 
-		internal static SqlField FakeField(DbDataType dataType, string fieldName)
+		internal static SqlField FakeField(in DbDataType dataType, string fieldName)
 		{
 			var field = new SqlField(fieldName, fieldName);
 			field.Type = dataType;
