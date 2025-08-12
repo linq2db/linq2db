@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override bool AutomaticAssociations => false;
 
-		public EnumerableContextDynamic(TranslationModifier translationModifier, IBuildContext parent, ExpressionBuilder builder, Expression[] expressionRows, SelectQuery query, Type elementType)
+		public EnumerableContextDynamic(TranslationModifier translationModifier, IBuildContext? parent, ExpressionBuilder builder, Expression[] expressionRows, SelectQuery query, Type elementType)
 			: base(translationModifier, builder, elementType, query)
 		{
 			_expressionRows = expressionRows;
@@ -365,7 +365,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			var result = new EnumerableContextDynamic(TranslationModifier, context.CloneContext(Parent)!, Builder, _expressionRows.Select(e => context.CloneExpression(e)).ToArray(), 
+			var result = new EnumerableContextDynamic(TranslationModifier, Parent, Builder, _expressionRows.Select(e => context.CloneExpression(e)).ToArray(), 
 				context.CloneElement(SelectQuery),
 				ElementType);
 
