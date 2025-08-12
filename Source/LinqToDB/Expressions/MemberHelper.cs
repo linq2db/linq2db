@@ -22,8 +22,8 @@ namespace LinqToDB.Expressions
 				MemberInfo = memberInfo;
 			}
 
-			public Type?      Type;
-			public MemberInfo MemberInfo;
+			public readonly Type?      Type;
+			public          MemberInfo MemberInfo;
 
 			public readonly bool Equals(MemberInfoWithType other)
 			{
