@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		static Expression BuildNullPropagationGetter(ParameterExpression objectVariable, ParameterExpression resultVariable, List<MemberInfo> members, int memberIndex, Func<Expression, Expression> finalizer)
-			{
+		{
 			var member  = members[memberIndex];
 			var objType = member.DeclaringType!;
 
@@ -132,16 +132,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression thenValue;
 
 			if (memberIndex == members.Count - 1)
-				{
+			{
 				thenValue = Expression.Assign(resultVariable, finalizer(memberAccessExpr));
-					}
-					else
-					{
+			}
+			else
+			{
 				var local = new ExpressionGenerator();
 				local.Assign(objectVariable, memberAccessExpr);
 				local.AddExpression(BuildNullPropagationGetter(objectVariable, resultVariable, members, memberIndex + 1, finalizer));
 				thenValue = local.Build();
-					}
+			}
 
 			return Expression.IfThen(Expression.TypeIs(objectVariable, objType), thenValue);
 
@@ -160,7 +160,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			 }
 			 */
-			}
+		}
 
 		Func<object, ISqlExpression>? BuildValueGetter(ColumnDescriptor? column, MemberExpression me, ColumnDescriptor? typeDescriptor, DbDataType dbDataType, out bool canBeNull)
 		{
@@ -175,19 +175,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			var isSpecial  = SequenceHelper.IsSpecialProperty(me, me.Type, "item");
 
 			if (isSpecial)
-		{
+			{
 				var prepared = (Expression)Expression.Convert(objectVariable, me.Type);
-				if (descriptor != null)
-					prepared = descriptor.ApplyConversions(prepared, dbDataType, true);
-
-				prepared = prepared.EnsureType<object>();
-
-				var valueExpr = Expression.New(
-					_sqlValueconstructor,
-						Expression.Constant(dbDataType),
-						prepared);
-
-				generator.AddExpression(valueExpr);
+				generator.AddExpression(BuildGetter(prepared));
 			}
 			else
 			{
@@ -198,13 +188,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				while (contextExpression?.UnwrapConvert() is MemberExpression memberExpression)
 				{
 					if (memberExpression.Member.DeclaringType == null)
-			return null;
+						return null;
 					members.Add(memberExpression.Member);
 					contextExpression = memberExpression.Expression;
-		}
+				}
 
 				if (contextExpression?.UnwrapConvert() is not ContextRefExpression)
-		{
+				{
 					return null;
 				}
 
@@ -212,30 +202,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				canBeNull = members.Count > 1;
 
-				var ifThenExpression = BuildNullPropagationGetter(objectVariable, resultVariable, members, 0, accessor =>
-				{
-					if (descriptor != null)
-						accessor = descriptor.ApplyConversions(accessor, dbDataType, true);
-
-					if (accessor.Type == typeof(DataParameter))
-					{
-						var localGenerator = new ExpressionGenerator();
-						var variable = localGenerator.AssignToVariable(accessor);
-						localGenerator.AddExpression(
-						Expression.New(
-							_parameterConstructor,
-								Expression.Property(variable, Reflection.Methods.LinqToDB.DataParameter.DbDataType),
-								Expression.Constant(me.Member.Name),
-								Expression.Property(variable, Reflection.Methods.LinqToDB.DataParameter.Value)
-						));
-
-						return localGenerator.Build();
-				}
-
-					return Expression.New(_sqlValueconstructor,
-						Expression.Constant(dbDataType),
-						Expression.Convert(accessor, typeof(object)));
-				});
+				var ifThenExpression = BuildNullPropagationGetter(objectVariable, resultVariable, members, 0, BuildGetter);
 
 				generator.AddExpression(ifThenExpression);
 
@@ -247,13 +214,47 @@ namespace LinqToDB.Internal.Linq.Builder
 				generator.AddExpression(resultVariable);
 			}
 
-				var body = generator.Build();
+			var body = generator.Build();
 
 			var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, objParam);
-				var getterFunc   = getterLambda.CompileExpression();
+			var getterFunc   = getterLambda.CompileExpression();
 
 			return getterFunc;
+
+			Expression BuildGetter(Expression accessor)
+			{
+				if (descriptor != null)
+					accessor = descriptor.ApplyConversions(accessor, dbDataType, true);
+				else
+					accessor = ColumnDescriptor.ApplyConversions(MappingSchema, accessor, dbDataType, null, true);
+
+				if (accessor.Type == typeof(DataParameter))
+				{
+					var localGenerator = new ExpressionGenerator();
+					var variable = localGenerator.AssignToVariable(accessor);
+					localGenerator.AddExpression(
+					Expression.New(
+						_parameterConstructor,
+							Expression.Property(variable, Reflection.Methods.LinqToDB.DataParameter.DbDataType),
+							Expression.Constant(me.Member.Name),
+							Expression.Property(variable, Reflection.Methods.LinqToDB.DataParameter.Value)
+					));
+
+					return localGenerator.Build();
+				}
+				else
+				{
+					accessor = accessor.EnsureType<object>();
+
+					var valueExpr = Expression.New(
+						_sqlValueconstructor,
+						Expression.Constant(dbDataType),
+						accessor);
+
+					return valueExpr;
+				}
 			}
+		}
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
@@ -265,10 +266,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (flags.IsTable() || flags.IsAssociationRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsExtractProjection())
 					return path;
 
-				if (MappingSchema.IsScalarType(ElementType) || Builder.CurrentDescriptor != null)
+				var isScalar = MappingSchema.IsScalarType(ElementType);
+				if (isScalar || Builder.CurrentDescriptor != null)
 				{
 					var dbType = Builder.CurrentDescriptor?.GetDbDataType(true) ?? MappingSchema.GetDbDataType(ElementType);
-					if (dbType.DataType != DataType.Undefined || ElementType.IsEnum)
+					if (isScalar || dbType.DataType != DataType.Undefined || ElementType.IsEnum)
 					{
 						if (path.Type != ElementType)
 						{
