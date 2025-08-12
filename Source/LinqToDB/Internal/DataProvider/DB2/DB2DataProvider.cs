@@ -118,17 +118,19 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			return _sqlOptimizer;
 		}
 
-		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, in DbDataType dataType, object? value)
 		{
 			if (value is sbyte sb)
 			{
-				value    = (short)sb;
-				dataType = dataType.WithDataType(DataType.Int16);
+				value = (short)sb;
+				base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Int16), value);
+				return;
 			}
 			else if (value is byte b)
 			{
-				value    = (short)b;
-				dataType = dataType.WithDataType(DataType.Int16);
+				value = (short)b;
+				base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Int16), value);
+				return;
 			}
 #if SUPPORTS_DATEONLY
 			else if (value is DateOnly d)
@@ -139,59 +141,71 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 			switch (dataType.DataType)
 			{
-				case DataType.UInt16     : dataType = dataType.WithDataType(DataType.Int32);    break;
-				case DataType.UInt32     : dataType = dataType.WithDataType(DataType.Int64);    break;
-				case DataType.UInt64     : dataType = dataType.WithDataType(DataType.Decimal);  break;
-				case DataType.VarNumeric : dataType = dataType.WithDataType(DataType.Decimal);  break;
-				case DataType.DateTime2  : dataType = dataType.WithDataType(DataType.DateTime); break;
-				case DataType.Char       :
-				case DataType.VarChar    :
-				case DataType.NChar      :
-				case DataType.NVarChar   :
+				case DataType.UInt16:
+					base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Int32), value);
+					return;
+				case DataType.UInt32:
+					base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Int64), value);
+					return;
+				case DataType.UInt64:
+				case DataType.VarNumeric:
+					base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Decimal), value);
+					return;
+				case DataType.DateTime2:
+					base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.DateTime), value);
+					return;
+				case DataType.Char:
+				case DataType.VarChar:
+				case DataType.NChar:
+				case DataType.NVarChar:
+				{
+					if (value is Guid g) value = g.ToString();
+					else if (value is bool b) value = ConvertTo<char>.From(b);
+					break;
+				}
+				case DataType.Boolean:
+				case DataType.Int16:
+				{
+					if (value is bool b)
 					{
-							 if (value is Guid g) value = g.ToString();
-						else if (value is bool b) value = ConvertTo<char>.From(b);
-						break;
+						value = b ? 1 : 0;
 					}
-				case DataType.Boolean    :
-				case DataType.Int16      :
-					{
-						if (value is bool b)
-						{
-							value    = b ? 1 : 0;
-							dataType = dataType.WithDataType(DataType.Int16);
-						}
 
-						break;
-					}
-				case DataType.Guid       :
+					break;
+				}
+				case DataType.Guid:
+				{
+					if (value is Guid g)
 					{
-						if (value is Guid g)
-						{
-							value    = g.ToByteArray();
-							dataType = dataType.WithDataType(DataType.VarBinary);
-						}
+						value = g.ToByteArray();
+						base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.VarBinary), value);
+						return;
+					}
 
-						if (value == null)
-							dataType = dataType.WithDataType(DataType.VarBinary);
-						break;
-					}
-				case DataType.Binary     :
-				case DataType.VarBinary  :
+					if (value == null)
 					{
-						if (value is Guid g) value = g.ToByteArray();
-						else if (parameter.Size == 0 && value != null
-							&& value.GetType() == Adapter.DB2BinaryType
-							&& Adapter.IsDB2BinaryNull(value))
-							value = DBNull.Value;
-						break;
+						base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.VarBinary), value);
+						return;
 					}
+
+					break;
+				}
+				case DataType.Binary:
+				case DataType.VarBinary:
+				{
+					if (value is Guid g)
+						value = g.ToByteArray();
+					else if (parameter.Size == 0 && value != null && value.GetType() == Adapter.DB2BinaryType && Adapter.IsDB2BinaryNull(value))
+						value = DBNull.Value;
+
+					break;
+				}
 			}
 
-			base.SetParameter(dataConnection, parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, in dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, in DbDataType dataType)
 		{
 			DB2ProviderAdapter.DB2Type? type = null;
 			switch (dataType.DataType)
@@ -209,7 +223,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				}
 			}
 
-			base.SetParameterType(dataConnection, parameter, dataType);
+			base.SetParameterType(dataConnection, parameter, in dataType);
 		}
 
 #region BulkCopy

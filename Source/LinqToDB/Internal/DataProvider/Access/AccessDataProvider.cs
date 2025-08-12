@@ -118,7 +118,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				: NoopQueryParametersNormalizer.Instance;
 		}
 
-		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, in DbDataType dataType, object? value)
 		{
 #if SUPPORTS_DATEONLY
 			if (value is DateOnly d)
@@ -155,7 +155,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, in DbDataType dataType)
 		{
 			if (Provider == AccessProvider.OleDb)
 			{

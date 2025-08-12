@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.SqlQuery
 		private Dictionary<SqlParameter, SqlParameterValue>? _valuesByParameter;
 		private Dictionary<int, SqlParameterValue>?          _valuesByAccessor;
 
-		public void AddValue(SqlParameter parameter, object? providerValue, object? clientValue, DbDataType dbDataType)
+		public void AddValue(SqlParameter parameter, object? providerValue, object? clientValue, in DbDataType dbDataType)
 		{
 			_valuesByParameter ??= new ();
 

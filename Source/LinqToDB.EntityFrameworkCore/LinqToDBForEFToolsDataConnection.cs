@@ -193,9 +193,9 @@ namespace LinqToDB.EntityFrameworkCore
 
 			entry = retrieved ?? _stateManager.StartTrackingFromQuery(_lastEntityType, entity,
 #if !EF31 && !EF8
-				Snapshot.Empty);
+				in Snapshot.Empty);
 #else
-				ValueBuffer.Empty);
+				in ValueBuffer.Empty);
 #endif
 
 			return entry.Entity;

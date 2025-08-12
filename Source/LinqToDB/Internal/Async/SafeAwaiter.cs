@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable LindhartAnalyserMissingAwaitWarningVariable // Possible unwanted Task returned from method.
+using System;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Internal.Async

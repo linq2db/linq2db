@@ -59,7 +59,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			return "OFFSET {0} ";
 		}
 
-		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(in DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.DataType)
 			{
@@ -218,7 +218,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 					using var sb = Pools.StringBuilder.Allocate();
 					sb.Value.Append("nextval(");
-					MappingSchema.ConvertToSqlValue(sb.Value, null, DataOptions, BuildObjectName(new (), sequenceName, ConvertType.SequenceName, true, TableOptions.NotSet).ToString());
+					MappingSchema.ConvertToSqlValue(sb.Value, MappingSchema.GetDbDataType(typeof(string)), DataOptions, BuildObjectName(new (), sequenceName, ConvertType.SequenceName, true, TableOptions.NotSet).ToString());
 					sb.Value.Append(')');
 
 					// it could have type, but we don't care about it
@@ -436,7 +436,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			}
 		}
 
-		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
+		protected override void BuildTypedExpression(in DbDataType dataType, ISqlExpression value)
 		{
 			var saveStep = BuildStep;
 			BuildStep = Step.TypedExpression;

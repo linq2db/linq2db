@@ -5,13 +5,13 @@ namespace LinqToDB.Internal.Linq
 	sealed class ParameterCacheEntry
 	{
 		public ParameterCacheEntry(
-			int         parameterId,
-			string      parameterName,
-			DbDataType  dbDataType,
-			Expression  clientValueGetter,
-			Expression? clientToProviderConverter,
-			Expression? itemAccessor,
-			Expression? dbDataTypeAccessor)
+			int           parameterId,
+			string        parameterName,
+			in DbDataType dbDataType,
+			Expression    clientValueGetter,
+			Expression?   clientToProviderConverter,
+			Expression?   itemAccessor,
+			Expression?   dbDataTypeAccessor)
 		{
 			ParameterId               = parameterId;
 			DbDataTypeAccessor        = dbDataTypeAccessor;

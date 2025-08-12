@@ -99,7 +99,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return returnValue;
 		}
 
-		public SqlParameter SuggestDynamicParameter(DbDataType dbDataType, object? value)
+		public SqlParameter SuggestDynamicParameter(in DbDataType dbDataType, object? value)
 		{
 			var key = (dbDataType, value);
 

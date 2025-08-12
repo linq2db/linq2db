@@ -32,7 +32,7 @@ namespace LinqToDB.Internal.SqlQuery
 			public ISqlExpression ResultExpression { get; set; }
 		}
 
-		public SqlCaseExpression(DbDataType dataType, IReadOnlyCollection<CaseItem> cases, ISqlExpression? elseExpression)
+		public SqlCaseExpression(in DbDataType dataType, IReadOnlyCollection<CaseItem> cases, ISqlExpression? elseExpression)
 		{
 			_dataType      = dataType;
 			_cases         = cases.ToList();

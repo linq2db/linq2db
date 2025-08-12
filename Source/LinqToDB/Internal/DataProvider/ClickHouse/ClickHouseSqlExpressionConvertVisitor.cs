@@ -328,7 +328,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return base.ConvertSqlFunction(func);
 		}
 
-		ISqlExpression MakeConversion(ISqlExpression expression, DbDataType toType, bool isTry, ISqlExpression? defaultValue)
+		ISqlExpression MakeConversion(ISqlExpression expression, in DbDataType toType, bool isTry, ISqlExpression? defaultValue)
 		{
 			if (ShouldSkipCast(expression, toType))
 				return expression;
@@ -432,7 +432,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return base.WrapColumnExpression(expr);
 		}
 
-		static bool ShouldSkipCast(ISqlExpression expr, DbDataType toDataType)
+		static bool ShouldSkipCast(ISqlExpression expr, in DbDataType toDataType)
 		{
 			// TODO: change to single return
 			if (expr is SqlValue { Value: null } sqlValue

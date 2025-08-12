@@ -125,7 +125,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			return base.GetIdentityExpression(table);
 		}
 
-		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(in DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.DataType)
 			{
@@ -171,7 +171,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					if (type.SystemType == typeof(Guid) || type.SystemType == typeof(Guid?))
 						StringBuilder.Append("CHAR(38)");
 					else
-						base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
+						base.BuildDataTypeFromDataType(in type, forCreateTable, canBeNull);
 					break;
 
 				case DataType.Binary when type.Length == null || type.Length < 1:
@@ -191,7 +191,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					break;
 
 				case DataType.Boolean       : StringBuilder.Append("BOOLEAN");                            break;
-				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);                 break;
+				default: base.BuildDataTypeFromDataType(in type, forCreateTable, canBeNull);              break;
 			}
 		}
 
@@ -301,7 +301,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 				var saveStep = BuildStep;
 				BuildStep = Step.TypedExpression;
-				BuildTypedExpression(dbDataType, parameter);
+				BuildTypedExpression(in dbDataType, parameter);
 				BuildStep = saveStep;
 
 				return;
@@ -367,7 +367,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 						ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 						identifierValue = identifierValue.ToUpperInvariant();
 
-					BuildValue(null, identifierValue);
+					BuildValue(MappingSchema.GetDbDataType(typeof(string)), identifierValue);
 
 					StringBuilder
 						.AppendLine(")) THEN");
@@ -386,7 +386,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 				Convert(dropCommand.Value, identifier, ConvertType.NameToQueryTable);
 
-				BuildValue(null, dropCommand.Value.ToString());
+				BuildValue(MappingSchema.GetDbDataType(typeof(string)), dropCommand.Value.ToString());
 
 				StringBuilder.AppendLine(";");
 
@@ -500,7 +500,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 							ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 							identifierValue = identifierValue.ToUpperInvariant();
 
-						BuildValue(null, identifierValue);
+						BuildValue(MappingSchema.GetDbDataType(typeof(string)), identifierValue);
 
 						StringBuilder
 							.AppendLine(")) THEN");
@@ -666,7 +666,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		protected virtual int NullCharSize    => 1;
 		protected virtual int UnknownCharSize => 8191;
 
-		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
+		protected override void BuildTypedExpression(in DbDataType dataType, ISqlExpression value)
 		{
 			if (dataType is { DbType: null, DataType: DataType.NVarChar or DataType.NChar })
 			{
@@ -729,7 +729,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					var scale = DecimalHelper.GetScale(val);
 					if (precision == 0 && scale == 0)
 						precision = 1;
-					dataType = dataType.WithPrecision(precision).WithScale(scale);
+
+					var newType = dataType.WithPrecision(precision).WithScale(scale);
+					base.BuildTypedExpression(in newType, value);
 				}
 				else if (value is SqlParameter param)
 				{
@@ -741,11 +743,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 						var scale = DecimalHelper.GetScale(decValue);
 						if (precision == 0 && scale == 0)
 							precision = 1;
-						dataType = dataType.WithPrecision(precision).WithScale(scale);
+
+						var newType = dataType.WithPrecision(precision).WithScale(scale);
+						base.BuildTypedExpression(in newType, value);
 					}
 				}
-
-				base.BuildTypedExpression(dataType, value);
+				else
+					base.BuildTypedExpression(in dataType, value);
 			}
 		}
 	}

@@ -1035,7 +1035,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				return null;
 			}
 
-			public static OracleDbType GetDbType(DbDataType dbDataType)
+			public static OracleDbType GetDbType(in DbDataType dbDataType)
 			{
 				return dbDataType.DataType switch
 				{

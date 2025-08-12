@@ -231,12 +231,7 @@ namespace LinqToDB.Internal.DataProvider
 				.ToString();
 		}
 
-		protected struct ProviderConnections
-		{
-			public DataConnection DataConnection;
-			public DbConnection   ProviderConnection;
-			public DbTransaction? ProviderTransaction;
-		}
+		protected readonly record struct ProviderConnections(DataConnection DataConnection, DbConnection ProviderConnection, DbTransaction? ProviderTransaction);
 
 		#region ProviderSpecific Support
 

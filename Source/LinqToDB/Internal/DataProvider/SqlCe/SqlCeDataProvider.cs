@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			return new SqlCeSchemaProvider();
 		}
 
-		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, in DbDataType dataType, object? value)
 		{
 #if SUPPORTS_DATEONLY
 			if (value is DateOnly d)
@@ -86,19 +86,23 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			switch (dataType.DataType)
 			{
 				case DataType.Xml :
-					dataType = dataType.WithDataType(DataType.NVarChar);
+				{
+					if (value is SqlXml xml)
+						value = xml.IsNull ? null : xml.Value;
+					else if (value is XDocument xdoc)
+						value = xdoc.ToString();
+					else if (value is XmlDocument doc)
+						value = doc.InnerXml;
 
-					if      (value is SqlXml xml)      value = xml.IsNull ? null : xml.Value;
-					else if (value is XDocument xdoc)  value = xdoc.ToString();
-					else if (value is XmlDocument doc) value = doc.InnerXml;
-
-					break;
+					base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.NVarChar), value);
+					return;
+				}
 			}
 
-			base.SetParameter(dataConnection, parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, in dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, in DbDataType dataType)
 		{
 			SqlDbType? type = null;
 
@@ -144,7 +148,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 				case DataType.Image      : parameter.DbType = DbType.Binary;            return;
 			}
 
-			base.SetParameterType(dataConnection, parameter, dataType);
+			base.SetParameterType(dataConnection, parameter, in dataType);
 		}
 
 #endregion

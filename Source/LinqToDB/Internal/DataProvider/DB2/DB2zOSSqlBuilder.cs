@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected override DB2Version Version => DB2Version.zOS;
 
-		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(in DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.DataType)
 			{

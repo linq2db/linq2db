@@ -74,19 +74,19 @@ namespace LinqToDB.Internal.SqlQuery
 			return this;
 		}
 
-		public SqlSelectClause Expr(DbDataType type, string expr, params ISqlExpression[] values)
+		public SqlSelectClause Expr(in DbDataType type, string expr, params ISqlExpression[] values)
 		{
 			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(type, expr, values)));
 			return this;
 		}
 
-		public SqlSelectClause Expr(DbDataType type, string expr, int priority, params ISqlExpression[] values)
+		public SqlSelectClause Expr(in DbDataType type, string expr, int priority, params ISqlExpression[] values)
 		{
 			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(type, expr, priority, values)));
 			return this;
 		}
 
-		public SqlSelectClause Expr(DbDataType type, string alias, string expr, int priority, params ISqlExpression[] values)
+		public SqlSelectClause Expr(in DbDataType type, string alias, string expr, int priority, params ISqlExpression[] values)
 		{
 			AddOrFindColumn(new SqlColumn(SelectQuery, new SqlExpression(type, expr, priority, values)) { Alias = alias });
 			return this;

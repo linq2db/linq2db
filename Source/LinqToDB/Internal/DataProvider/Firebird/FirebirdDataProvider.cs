@@ -122,7 +122,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			return true;
 		}
 
-		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, in DbDataType dataType, object? value)
 		{
 #if SUPPORTS_DATEONLY
 			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
@@ -131,10 +131,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			}
 #endif
 
-			base.SetParameter(dataConnection, parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, in dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, in DbDataType dataType)
 		{
 			FirebirdProviderAdapter.FbDbType? type = null;
 			switch (dataType.DataType)
@@ -154,15 +154,25 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 			switch (dataType.DataType)
 			{
-				case DataType.SByte      : dataType = dataType.WithDataType(DataType.Int16);    break;
-				case DataType.UInt16     : dataType = dataType.WithDataType(DataType.Int32);    break;
-				case DataType.UInt32     : dataType = dataType.WithDataType(DataType.Int64);    break;
-				case DataType.UInt64     : dataType = dataType.WithDataType(DataType.Decimal);  break;
-				case DataType.VarNumeric : dataType = dataType.WithDataType(DataType.Decimal);  break;
-				case DataType.DateTime2  : dataType = dataType.WithDataType(DataType.DateTime); break;
+				case DataType.SByte      :
+					base.SetParameterType(dataConnection, parameter, dataType.WithDataType(DataType.Int16));
+					return;
+				case DataType.UInt16     :
+					base.SetParameterType(dataConnection, parameter, dataType.WithDataType(DataType.Int32));
+					return;
+				case DataType.UInt32     :
+					base.SetParameterType(dataConnection, parameter, dataType.WithDataType(DataType.Int64));
+					return;
+				case DataType.UInt64     :
+				case DataType.VarNumeric :
+					base.SetParameterType(dataConnection, parameter, dataType.WithDataType(DataType.Decimal));
+					return;
+				case DataType.DateTime2  :
+					base.SetParameterType(dataConnection, parameter, dataType.WithDataType(DataType.DateTime));
+					return;
 			}
 
-			base.SetParameterType(dataConnection, parameter, dataType);
+			base.SetParameterType(dataConnection, parameter, in dataType);
 		}
 
 		#region BulkCopy

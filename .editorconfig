@@ -760,3 +760,13 @@ dotnet_diagnostic.MA0170.severity = none
 # LindhartAnalyserMissingAwaitWarningVariable: Possible unwanted Task returned from method.
 dotnet_diagnostic.LindhartAnalyserMissingAwaitWarningVariable.severity = error
 ################################################################################################
+
+################################################################################################
+# ErrorProne.NET : https://github.com/SergeyTeplyakov/ErrorProne.NET
+# EPC12: Suspicious exception handling: only the 'Message' property is observed in the catch block
+dotnet_diagnostic.EPC12.severity = none
+# EPC37: Do not validate arguments in async methods
+dotnet_diagnostic.EPC37.severity = none
+# ERP022: Unobserved exception
+dotnet_diagnostic.ERP022.severity = none
+################################################################################################

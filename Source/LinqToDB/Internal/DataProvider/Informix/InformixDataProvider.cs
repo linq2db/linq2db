@@ -111,7 +111,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return new InformixSchemaProvider(this);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, in DbDataType dataType, object? value)
 		{
 			if (value is TimeSpan ts)
 			{
@@ -123,7 +123,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			else if (value is Guid || value == null && dataType.DataType == DataType.Guid)
 			{
 				value    = value == null ? null : string.Format(CultureInfo.InvariantCulture, "{0}", value);
-				dataType = dataType.WithDataType(DataType.Char);
+
+				base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Char), value);
+				return;
 			}
 			else if (value is byte byteValue && dataType.DataType == DataType.Int16)
 			{
@@ -135,13 +137,15 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				if (parameter is BulkCopyReader.Parameter)
 				{
 					value    = (short)(b ? 1 : 0);
-					dataType = dataType.WithDataType(DataType.Int16);
+					base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Int16), value);
 				}
 				else
 				{
 					value    = b ? 't' : 'f';
-					dataType = dataType.WithDataType(DataType.Char);
+					base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Char), value);
 				}
+
+				return;
 			}
 #if SUPPORTS_DATEONLY
 			else if (value is DateOnly d)
@@ -153,7 +157,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, in DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -185,16 +189,26 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 			switch (dataType.DataType)
 			{
-				case DataType.UInt16    : dataType = dataType.WithDataType(DataType.Int32);    break;
-				case DataType.UInt32    : dataType = dataType.WithDataType(DataType.Int64);    break;
+				case DataType.UInt16    :
+					base.SetParameterType(dataConnection, parameter, dataType.WithDataType(DataType.Int32));
+					return;
+				case DataType.UInt32    :
+					base.SetParameterType(dataConnection, parameter, dataType.WithDataType(DataType.Int64));
+					return;
 				case DataType.UInt64    :
-				case DataType.VarNumeric: dataType = dataType.WithDataType(DataType.Decimal);  break;
-				case DataType.DateTime2 : dataType = dataType.WithDataType(DataType.DateTime); break;
+				case DataType.VarNumeric:
+					base.SetParameterType(dataConnection, parameter, dataType.WithDataType(DataType.Decimal));
+					return;
+				case DataType.DateTime2 :
+					base.SetParameterType(dataConnection, parameter, dataType.WithDataType(DataType.DateTime));
+					return;
 				case DataType.Text      :
-				case DataType.NText     : dataType = dataType.WithDataType(DataType.NVarChar); break;
+				case DataType.NText     :
+					base.SetParameterType(dataConnection, parameter, dataType.WithDataType(DataType.NVarChar));
+					return;
 			}
 
-			base.SetParameterType(dataConnection, parameter, dataType);
+			base.SetParameterType(dataConnection, parameter, in dataType);
 		}
 
 		static MappingSchema GetMappingSchema(InformixProvider provider)

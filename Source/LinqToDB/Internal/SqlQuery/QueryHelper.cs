@@ -1450,7 +1450,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return CreateSqlValue(value, GetDbDataType(be, mappingSchema), be.Expr1, be.Expr2);
 		}
 
-		public static ISqlExpression CreateSqlValue(object? value, DbDataType dbDataType, params ISqlExpression[] basedOn)
+		public static ISqlExpression CreateSqlValue(object? value, in DbDataType dbDataType, params ISqlExpression[] basedOn)
 		{
 			SqlParameter? foundParam = null;
 

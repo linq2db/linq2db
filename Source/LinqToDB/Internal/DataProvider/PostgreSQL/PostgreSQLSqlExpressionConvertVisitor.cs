@@ -94,7 +94,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		}
 
 		// TODO: remove and use DataType check when we implement DbType parsing to DbDataType
-		internal static bool IsJson(DbDataType type, out bool isJsonB)
+		internal static bool IsJson(in DbDataType type, out bool isJsonB)
 		{
 			isJsonB = type.DataType == DataType.BinaryJson
 				|| type.DbType?.Equals("jsonb", StringComparison.OrdinalIgnoreCase) == true;

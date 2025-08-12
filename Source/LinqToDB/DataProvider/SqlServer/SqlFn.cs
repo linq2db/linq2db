@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable EPC30 // Method calls itself recursively
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;

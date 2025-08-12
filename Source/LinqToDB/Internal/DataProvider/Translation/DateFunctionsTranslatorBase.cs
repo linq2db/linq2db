@@ -695,7 +695,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		protected virtual ISqlExpression? TranslateMakeDateTime(
 			ITranslationContext translationContext,
-			DbDataType          resulType,
+			in DbDataType       resulType,
 			ISqlExpression      year,
 			ISqlExpression      month,
 			ISqlExpression      day,
@@ -709,7 +709,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		protected virtual ISqlExpression? TranslateMakeDateOnly(
 			ITranslationContext translationContext,
-			DbDataType          resulType,
+			in DbDataType       resulType,
 			ISqlExpression      year,
 			ISqlExpression      month,
 			ISqlExpression      day)

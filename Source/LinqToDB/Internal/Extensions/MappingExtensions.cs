@@ -20,7 +20,7 @@ namespace LinqToDB.Internal.Extensions
 			return new SqlValue(columnDescriptor.GetDbDataType(true), providerValue);
 		}
 
-		public static SqlValue GetSqlValue<T>(this MappingSchema mappingSchema, DbDataType type, T originalValue)
+		public static SqlValue GetSqlValue<T>(this MappingSchema mappingSchema, in DbDataType type, T originalValue)
 			where T: notnull
 		{
 			var converter = mappingSchema.GetConverter<T, DataParameter>(ConversionType.ToDatabase);
@@ -34,10 +34,10 @@ namespace LinqToDB.Internal.Extensions
 			return new SqlValue(type, originalValue);
 		}
 
-		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object? originalValue, DbDataType? columnType)
+		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object? originalValue, in DbDataType columnType)
 		{
 			if (originalValue is DataParameter p)
-				return new SqlValue(p.Value == null ? p.GetOrSetDbDataType(columnType) : p.DbDataType, p.Value);
+				return new SqlValue(p.Value == null ? p.GetOrSetDbDataType(in columnType) : p.DbDataType, p.Value);
 
 			var underlyingType = systemType.ToNullableUnderlying();
 
@@ -65,19 +65,19 @@ namespace LinqToDB.Internal.Extensions
 				systemType = originalValue.GetType();
 
 			var valueDbType = originalValue == null
-				? columnType ?? mappingSchema.GetDbDataType(systemType)
+				? columnType
 				: mappingSchema.GetDbDataType(systemType);
 
 			return new SqlValue(valueDbType, originalValue);
 		}
 
-		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, DbDataType? dataType, DataOptions options, object? value)
+		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, in DbDataType dataType, DataOptions options, object? value)
 		{
 			var sqlConverter = mappingSchema.ValueToSqlConverter;
 
 			if (value is null)
 			{
-				return sqlConverter.TryConvert(stringBuilder, mappingSchema, dataType, options, value);
+				return sqlConverter.TryConvert(stringBuilder, in dataType, options, value);
 			}
 
 			var systemType     = value.GetType();
@@ -100,13 +100,13 @@ namespace LinqToDB.Internal.Extensions
 				}
 			}
 
-			return sqlConverter.TryConvert(stringBuilder, mappingSchema, dataType, options, value);
+			return sqlConverter.TryConvert(stringBuilder, in dataType, options, value);
 		}
 
 		public static void ConvertToSqlValue(this MappingSchema mappingSchema, StringBuilder stringBuilder,
-			DbDataType? dataType, DataOptions options, object? value)
+			in DbDataType dataType, DataOptions options, object? value)
 		{
-			if (!mappingSchema.TryConvertToSql(stringBuilder, dataType, options, value))
+			if (!mappingSchema.TryConvertToSql(stringBuilder, in dataType, options, value))
 				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 		}
 

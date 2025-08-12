@@ -9,7 +9,7 @@ namespace LinqToDB.Internal.SqlQuery
 	public abstract class SqlParameterizedExpressionBase : SqlExpressionBase
 	{
 		protected SqlParameterizedExpressionBase(
-			DbDataType type,
+			in DbDataType type,
 			string exprOrName,
 			int precedence,
 			SqlFlags flags,

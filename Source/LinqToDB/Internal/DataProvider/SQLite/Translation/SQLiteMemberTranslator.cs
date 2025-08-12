@@ -88,12 +88,12 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				return resultExpression;
 			}
 
-			ISqlExpression StrFTime(ISqlExpressionFactory factory, DbDataType resultDbType, string format, ISqlExpression date)
+			ISqlExpression StrFTime(ISqlExpressionFactory factory, in DbDataType resultDbType, string format, ISqlExpression date)
 			{
 				return factory!.Function(resultDbType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(format), date);
 			}
 
-			ISqlExpression StrFTimeInt(ISqlExpressionFactory factory, DbDataType intDbType, DbDataType stringDbType, string format, ISqlExpression date)
+			ISqlExpression StrFTimeInt(ISqlExpressionFactory factory, in DbDataType intDbType, DbDataType stringDbType, string format, ISqlExpression date)
 			{
 				return factory.Cast(StrFTime(factory, stringDbType, format, date), intDbType);
 			}
@@ -137,7 +137,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
-				DbDataType          resulType,
+				in DbDataType       resulType,
 				ISqlExpression      year,
 				ISqlExpression      month,
 				ISqlExpression      day,

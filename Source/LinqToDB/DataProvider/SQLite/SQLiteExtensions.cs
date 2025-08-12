@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable EPC30 // Method calls itself recursively
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -333,7 +334,9 @@ namespace LinqToDB.DataProvider.SQLite
 		static Expression<Func<ISQLiteExtensions, TEntity, double[], double>> Fts5bm25Impl2<TEntity>()
 			where TEntity : class
 		{
+#pragma warning disable EPC20 // Avoid using default ToString implementation
 			return (ext, entity, weights) => Sql.Expr<double>($"bm25({Sql.TableAsField<TEntity, string>(entity)}, {Sql.Spread(weights)})");
+#pragma warning restore EPC20 // Avoid using default ToString implementation
 		}
 
 		/// <summary>

@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(in DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			// FLOAT/DOUBLE support in CAST added only in v8.0.17
 			if (!forCreateTable && type.DataType is DataType.Double or DataType.Single)

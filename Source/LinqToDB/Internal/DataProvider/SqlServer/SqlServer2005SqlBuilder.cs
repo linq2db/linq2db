@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		protected override bool IsValuesSyntaxSupported => false;
 
-		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(in DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.DataType)
 			{

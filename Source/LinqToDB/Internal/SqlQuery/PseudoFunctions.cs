@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// <summary>
 		/// Creates cast expression: <c>CAST(value AS to_type)</c>
 		/// </summary>
-		public static SqlCastExpression MakeCast(ISqlExpression value, DbDataType toType, SqlDataType? fromType = null)
+		public static SqlCastExpression MakeCast(ISqlExpression value, in DbDataType toType, SqlDataType? fromType = null)
 		{
 			return new SqlCastExpression(value, toType, fromType);
 		}
@@ -40,7 +40,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// <summary>
 		/// Function to convert value from one type to another: <c>CONVERT(to_type, from_type, value) { CanBeNull = value.CanBeNull, DoNotOptimize = true }</c>
 		/// </summary>
-		public static SqlCastExpression MakeMandatoryCast(ISqlExpression value, DbDataType toType, SqlDataType? fromType = null)
+		public static SqlCastExpression MakeMandatoryCast(ISqlExpression value, in DbDataType toType, SqlDataType? fromType = null)
 		{
 			return new SqlCastExpression(value, toType, fromType, true);
 		}

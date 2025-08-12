@@ -48,7 +48,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
-			protected override ISqlExpression? TranslateMakeDateTime(ITranslationContext translationContext, DbDataType      resulType, ISqlExpression  year, ISqlExpression month, ISqlExpression day, ISqlExpression? hour,
+			protected override ISqlExpression? TranslateMakeDateTime(ITranslationContext translationContext, in DbDataType      resulType, ISqlExpression  year, ISqlExpression month, ISqlExpression day, ISqlExpression? hour,
 				ISqlExpression?                                                          minute,             ISqlExpression? second,    ISqlExpression? millisecond)
 			{
 				var factory        = translationContext.ExpressionFactory;

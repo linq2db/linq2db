@@ -6,7 +6,7 @@ namespace LinqToDB.Internal.SqlQuery
 {
 	public sealed class SqlParameter : SqlExpressionBase
 	{
-		public SqlParameter(DbDataType type, string? name, object? value)
+		public SqlParameter(in DbDataType type, string? name, object? value)
 		{
 			IsQueryParameter = true;
 			Name             = name;

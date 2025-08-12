@@ -512,8 +512,8 @@ namespace LinqToDB.Mapping
 		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
 		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <c>false</c>.</returns>
 		public LambdaExpression? GetConvertExpression(
-			DbDataType     from,
-			DbDataType     to,
+			in DbDataType  from,
+			in DbDataType  to,
 			bool           checkNull      = true,
 			bool           createDefault  = true,
 			ConversionType conversionType = ConversionType.Common)
@@ -605,8 +605,8 @@ namespace LinqToDB.Mapping
 		/// </param>
 		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
 		public MappingSchema SetConvertExpression(
-			DbDataType       fromType,
-			DbDataType       toType,
+			in DbDataType    fromType,
+			in DbDataType    toType,
 			LambdaExpression expr,
 			bool             addNullCheck   = true,
 			ConversionType   conversionType = ConversionType.Common)
@@ -719,8 +719,8 @@ namespace LinqToDB.Mapping
 		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
 		public MappingSchema SetConverter<TFrom,TTo>(
 			Func<TFrom,TTo> func,
-			DbDataType      from,
-			DbDataType      to,
+			in DbDataType   from,
+			in DbDataType   to,
 			ConversionType  conversionType = ConversionType.Common)
 		{
 			if (func == null) throw new ArgumentNullException(nameof(func));
@@ -849,7 +849,7 @@ namespace LinqToDB.Mapping
 			return false;
 		}
 
-		internal ConvertInfo.LambdaInfo? GetConverter(DbDataType from, DbDataType to, bool create, ConversionType conversionType)
+		internal ConvertInfo.LambdaInfo? GetConverter(in DbDataType from, in DbDataType to, bool create, ConversionType conversionType)
 		{
 			var currentFrom = from;
 			do
@@ -883,7 +883,9 @@ namespace LinqToDB.Mapping
 					: fromGenericArgs.Concat(toGenericArgs).ToArray();
 
 				if (InitGenericConvertProvider(args))
+#pragma warning disable EPC30 // Method calls itself recursively
 					return GetConverter(from, to, create, conversionType);
+#pragma warning restore EPC30 // Method calls itself recursively
 			}
 
 			if (create)

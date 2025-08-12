@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.SqlQuery
 			Value      = value;
 		}
 
-		public SqlValue(DbDataType valueType, object? value)
+		public SqlValue(in DbDataType valueType, object? value)
 		{
 			_valueType = valueType;
 			Value      = value;

@@ -625,7 +625,7 @@ namespace LinqToDB.Mapping
 
 			}
 
-			getterExpr = ApplyConversions(getterExpr, dbDataType, true);
+			getterExpr = ApplyConversions(getterExpr, in dbDataType, true);
 
 			_getDbParamLambda = Expression.Lambda(getterExpr, objParam);
 			return _getDbParamLambda;
@@ -643,7 +643,7 @@ namespace LinqToDB.Mapping
 
 			var dbDataType = GetDbDataType(true);
 
-			defaultExpression = ApplyConversions(defaultExpression, dbDataType, true);
+			defaultExpression = ApplyConversions(defaultExpression, in dbDataType, true);
 
 			_getDefaultDbParamExpression = defaultExpression;
 			return _getDefaultDbParamExpression;
@@ -658,7 +658,7 @@ namespace LinqToDB.Mapping
 		/// <param name="valueConverter">Optional <see cref="IValueConverter"/></param>
 		/// <param name="includingEnum">Provides default enum conversion.</param>
 		/// <returns>Expression with applied conversions.</returns>
-		public static Expression ApplyConversions(MappingSchema mappingSchema, Expression getterExpr, DbDataType dbDataType, IValueConverter? valueConverter, bool includingEnum)
+		public static Expression ApplyConversions(MappingSchema mappingSchema, Expression getterExpr, in DbDataType dbDataType, IValueConverter? valueConverter, bool includingEnum)
 		{
 			// search for type preparation converter
 			var prepareConverter = mappingSchema.GetConvertExpression(getterExpr.Type, getterExpr.Type, false, false, ConversionType.ToDatabase);
@@ -749,9 +749,9 @@ namespace LinqToDB.Mapping
 		/// <param name="dbDataType">Database type.</param>
 		/// <param name="includingEnum">Provides default enum conversion.</param>
 		/// <returns>Expression with applied conversions.</returns>
-		public Expression ApplyConversions(Expression getterExpr, DbDataType dbDataType, bool includingEnum)
+		public Expression ApplyConversions(Expression getterExpr, in DbDataType dbDataType, bool includingEnum)
 		{
-			return ApplyConversions(MappingSchema, getterExpr, dbDataType, ValueConverter, includingEnum);
+			return ApplyConversions(MappingSchema, getterExpr, in dbDataType, ValueConverter, includingEnum);
 		}
 
 		/// <summary>

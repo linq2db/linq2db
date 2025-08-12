@@ -1618,10 +1618,10 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		internal void BuildTypeName(StringBuilder sb, DbDataType type)
+		internal void BuildTypeName(StringBuilder sb, in DbDataType type)
 		{
 			StringBuilder = sb;
-			BuildDataType(type, forCreateTable: true, canBeNull: true);
+			BuildDataType(in type, forCreateTable: true, canBeNull: true);
 		}
 
 		protected virtual void BuildCreateTableFieldType(SqlField field)
@@ -2816,7 +2816,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (value is ISqlExpression expression)
 						BuildExpression(expression);
 					else
-						BuildValue(dbDataType, value);
+						BuildValue(in dbDataType, value);
 
 					StringBuilder.Append(InlineComma);
 				}
@@ -3478,7 +3478,7 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildExpression(precedence, expr, null, ref dummy);
 		}
 
-		protected virtual void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
+		protected virtual void BuildTypedExpression(in DbDataType dataType, ISqlExpression value)
 		{
 			var saveStep = BuildStep;
 			// TODO: Step.TypedExpression should be removed/reworked as it doesn't work with nested expressions
@@ -3488,7 +3488,7 @@ namespace LinqToDB.Internal.SqlProvider
 			StringBuilder.Append("CAST(");
 			BuildExpression(value);
 			StringBuilder.Append(" AS ");
-			BuildDataType(dataType, false, value.CanBeNullable(NullabilityContext));
+			BuildDataType(in dataType, false, value.CanBeNullable(NullabilityContext));
 			StringBuilder.Append(')');
 
 			BuildStep = saveStep;
@@ -3519,20 +3519,15 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#region BuildValue
 
-		protected virtual void BuildValue(DbDataType? dataType, object? value)
+		protected virtual void BuildValue(in DbDataType dataType, object? value)
 		{
 			if (value is Sql.SqlID id)
 				TryBuildSqlID(id);
 			else
 			{
-				if (!MappingSchema.TryConvertToSql(StringBuilder, dataType, DataOptions, value))
+				if (!MappingSchema.TryConvertToSql(StringBuilder, in dataType, DataOptions, value))
 				{
-					if (dataType == null)
-					{
-						throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
-					}
-
-					BuildParameter(new SqlParameter(dataType.Value, "value", value));
+					BuildParameter(new SqlParameter(dataType, "value", value));
 				}
 			}
 		}
@@ -3606,44 +3601,47 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <param name="sb"></param>
 		/// <param name="dataType"></param>
 		/// <returns>The stringbuilder with the type information appended.</returns>
-		public StringBuilder BuildDataType(StringBuilder sb, DbDataType dataType)
+		public StringBuilder BuildDataType(StringBuilder sb, in DbDataType dataType)
 		{
 			WithStringBuilder(sb, static ctx =>
 			{
-				ctx.this_.BuildDataType(ctx.dataType, forCreateTable: false, canBeNull: false);
+				ctx.this_.BuildDataType(in ctx.dataType, forCreateTable: false, canBeNull: false);
 			}, (this_: this, dataType));
 			return sb;
 		}
 
 		/// <param name="canBeNull">Type could store <c>NULL</c> values (could be used for column table type generation or for databases with explicit typee nullability like ClickHouse).</param>
-		protected void BuildDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		protected void BuildDataType(in DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			if (!string.IsNullOrEmpty(type.DbType))
 				StringBuilder.Append(type.DbType);
 			else
 			{
-				var systemType = type.SystemType.FullName;
 				if (type.DataType == DataType.Undefined)
-					type = MappingSchema.GetDbDataType(type.SystemType);
-
-				if (!string.IsNullOrEmpty(type.DbType))
 				{
-					StringBuilder.Append(type.DbType);
-					return;
+					var newType = MappingSchema.GetDbDataType(type.SystemType);
+
+					if (!string.IsNullOrEmpty(newType.DbType))
+					{
+						StringBuilder.Append(newType.DbType);
+						return;
+					}
+
+					if (newType.DataType == DataType.Undefined)
+						// give some hint to user that it is expected situation and he need to fix something on his side
+						throw new LinqToDBException($"Database column type cannot be determined automatically and must be specified explicitly for system type {type.SystemType.FullName}");
+
+					BuildDataTypeFromDataType(in newType, forCreateTable, canBeNull);
 				}
 
-				if (type.DataType == DataType.Undefined)
-					// give some hint to user that it is expected situation and he need to fix something on his side
-					throw new LinqToDBException($"Database column type cannot be determined automatically and must be specified explicitly for system type {systemType}");
-
-				BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
+				BuildDataTypeFromDataType(in type, forCreateTable, canBeNull);
 			}
 		}
 
 		/// <param name="type"></param>
 		/// <param name="forCreateTable"></param>
 		/// <param name="canBeNull">Type could store <c>NULL</c> values (could be used for column table type generation or for databases with explicit typee nullability like ClickHouse).</param>
-		protected virtual void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		protected virtual void BuildDataTypeFromDataType(in DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.DataType)
 			{
@@ -4106,7 +4104,7 @@ namespace LinqToDB.Internal.SqlProvider
 				//since ValueToSql always just .ToArray() anyway
 				var trimmed = new byte[maxBinaryLogging];
 				Array.Copy(binaryData.ToArray(), 0, trimmed, 0, maxBinaryLogging);
-				MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
+				MappingSchema.TryConvertToSql(sb, MappingSchema.GetDbDataType(trimmed.GetType()), DataOptions, trimmed);
 				MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
 				return true;
 			}
@@ -4116,10 +4114,10 @@ namespace LinqToDB.Internal.SqlProvider
 					 MappingSchema.ValueToSqlConverter.CanConvert(typeof(string)))
 			{
 				var trimmed = s.Substring(0, maxStringLogging);
-				MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
+				MappingSchema.TryConvertToSql(sb, MappingSchema.GetDbDataType(trimmed.GetType()), DataOptions, trimmed);
 				return true;
 			}
-			else if (!MappingSchema.TryConvertToSql(sb, null, DataOptions, value))
+			else if (!MappingSchema.TryConvertToSql(sb, value == null ? DbDataType.Undefined : MappingSchema.GetDbDataType(value.GetType()), DataOptions, value))
 				return FormatParameterValue(sb, value);
 
 			return false;

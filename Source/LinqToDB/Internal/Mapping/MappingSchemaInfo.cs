@@ -147,7 +147,7 @@ namespace LinqToDB.Internal.Mapping
 
 		ConvertInfo? _convertInfo;
 
-		public void SetConvertInfo(DbDataType from, DbDataType to, ConversionType conversionType, ConvertInfo.LambdaInfo expr, bool resetId)
+		public void SetConvertInfo(in DbDataType from, in DbDataType to, ConversionType conversionType, ConvertInfo.LambdaInfo expr, bool resetId)
 		{
 			_convertInfo ??= new ();
 			_convertInfo.Set(from, to, conversionType, expr);
@@ -161,7 +161,7 @@ namespace LinqToDB.Internal.Mapping
 			SetConvertInfo(new DbDataType(from), new DbDataType(to), conversionType, expr, true);
 		}
 
-		public ConvertInfo.LambdaInfo? GetConvertInfo(DbDataType from, DbDataType to, ConversionType conversionType)
+		public ConvertInfo.LambdaInfo? GetConvertInfo(in DbDataType from, in DbDataType to, ConversionType conversionType)
 		{
 			return _convertInfo?.Get(from, to, conversionType);
 		}

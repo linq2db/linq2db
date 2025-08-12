@@ -5,7 +5,7 @@ namespace LinqToDB.Internal.SqlQuery
 {
 	public sealed class SqlBinaryExpression : SqlExpressionBase
 	{
-		public SqlBinaryExpression(DbDataType dbDataType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = LinqToDB.SqlQuery.Precedence.Unknown)
+		public SqlBinaryExpression(in DbDataType dbDataType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = LinqToDB.SqlQuery.Precedence.Unknown)
 		{
 			_expr1     = expr1     ?? throw new ArgumentNullException(nameof(expr1));
 			Operation  = operation ?? throw new ArgumentNullException(nameof(operation));

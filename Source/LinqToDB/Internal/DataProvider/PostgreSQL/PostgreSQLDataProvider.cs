@@ -257,7 +257,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal object? NormalizeTimeStamp(PostgreSQLOptions options, object? value, DbDataType dataType, NpgsqlProviderAdapter.NpgsqlDbType? npgsqlType)
+		internal object? NormalizeTimeStamp(PostgreSQLOptions options, object? value, in DbDataType dataType, NpgsqlProviderAdapter.NpgsqlDbType? npgsqlType)
 		{
 			if (options.NormalizeTimestampData)
 			{
@@ -285,21 +285,19 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			return value;
 		}
 
-		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, in DbDataType dataType, object? value)
 		{
 			if (value is IDictionary && dataType.DataType == DataType.Undefined)
 			{
-				dataType = dataType.WithDataType(DataType.Dictionary);
-			}
-			else
-			{
-				value = NormalizeTimeStamp(dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default), value, dataType, GetNativeType(dataType.DbType));
+				base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.Dictionary), value);
+				return;
 			}
 
-			base.SetParameter(dataConnection, parameter, name, dataType, value);
+			value = NormalizeTimeStamp(dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default), value, in dataType, GetNativeType(dataType.DbType));
+			base.SetParameter(dataConnection, parameter, name, in dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, in DbDataType dataType)
 		{
 			// didn't tried to detect and cleanup unnecessary type mappings, as npgsql develops rapidly and
 			// it doesn't pay efforts to track changes for each version in this area

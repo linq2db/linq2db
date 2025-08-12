@@ -85,7 +85,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 		{
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
-				DbDataType resulType,
+				in DbDataType  resulType,
 				ISqlExpression year,
 				ISqlExpression month,
 				ISqlExpression day,

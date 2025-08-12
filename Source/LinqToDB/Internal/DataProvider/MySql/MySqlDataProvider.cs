@@ -134,7 +134,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			return _sqlOptimizer;
 		}
 
-		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, in DbDataType dataType, object? value)
 		{
 			// mysql.data bugs workaround
 			if (Adapter.MySqlDecimalType != null && Adapter.MySqlDecimalGetter != null && value?.GetType() == Adapter.MySqlDecimalType)
@@ -143,7 +143,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				// yep, MySql.Data just crash here on large decimals even for string value as it tries to convert it back
 				// to decimal for DataType.Decimal just to convert it back to string ¯\_(ツ)_/¯
 				// https://github.com/mysql/mysql-connector-net/blob/8.0/MySQL.Data/src/Types/MySqlDecimal.cs#L103
-				dataType = dataType.WithDataType(DataType.VarChar);
+				base.SetParameter(dataConnection, parameter, name, dataType.WithDataType(DataType.VarChar), value);
+				return;
 			}
 
 #if SUPPORTS_DATEONLY
@@ -153,10 +154,10 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			}
 #endif
 
-			base.SetParameter(dataConnection, parameter, name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, in dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, in DbDataType dataType)
 		{
 			// VarNumeric - mysql.data trims fractional part
 			// Date/DateTime2 - mysql.data trims time part

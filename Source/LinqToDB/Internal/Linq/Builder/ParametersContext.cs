@@ -449,7 +449,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression                 clientAccessorExpression,
 			Func<object?, object?>?    providerConvertFunc,
 			Func<object?, object?>?    itemProviderConvertFunc,
-			DbDataType                 dbDataType,
+			in DbDataType              dbDataType,
 			Func<object?, DbDataType>? dbDataTypeAccessorFunc,
 			Expression                 expression,
 			Expression?                parametersExpression,
