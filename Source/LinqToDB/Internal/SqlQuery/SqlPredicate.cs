@@ -358,6 +358,11 @@ namespace LinqToDB.Internal.SqlQuery
 				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, unknownAsValue);
 			}
 
+			public ISqlPredicate InvertWithoutNull()
+			{
+				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, null);
+			}
+
 			/// <summary>
 			/// Converts predicate to final form based on null comparison options.
 			/// </summary>
