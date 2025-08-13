@@ -42,12 +42,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
 		{
-#pragma warning disable RS0030 // Do not use banned APIs
 			AppendIndent()
 				.Append("PRIMARY KEY (")
-				.AppendJoin(InlineComma, fieldNames)
+				.AppendJoinStrings(InlineComma, fieldNames)
 				.Append(')');
-#pragma warning restore RS0030 // Do not use banned APIs
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
@@ -198,7 +196,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case ConvertType.NameToCteName:
 				{
 					var quote = (value.Length > 0 && char.IsDigit(value[0]))
-						|| value.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not '_');
+						|| value.Any(c => !c.IsAsciiLetterOrDigit() && c is not '_');
 
 					sb.Append('$');
 
@@ -215,7 +213,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				{
 					// don't check for __ydb_ prefix as it is not allowed even in quoted mode
 					var quote = (value.Length > 0 && char.IsDigit(value[0]))
-						|| value.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not '_')
+						|| value.Any(c => !c.IsAsciiLetterOrDigit() && c is not '_')
 						|| IsReserved(value);
 
 					if (quote)
@@ -296,6 +294,20 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			if (!statement.IsUpdate())
 				base.BuildFromClause(statement, selectQuery);
+		}
+
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
+		{
+			if (DataProvider is YdbDataProvider provider)
+			{
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
+				if (param != null)
+				{
+					return provider.Adapter.GetDbType(param).ToString();
+				}
+			}
+
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		//protected override void BuildSubQueryExtensions(SqlStatement statement)

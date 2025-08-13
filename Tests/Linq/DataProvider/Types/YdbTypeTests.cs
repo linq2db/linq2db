@@ -527,8 +527,8 @@ namespace Tests.DataProvider
 			var min = new DateTime(1970, 1, 1);
 			var max = new DateTime(2105, 12, 31);
 
-			var minWithTime = min.AddMicroseconds(1);
-			var maxWithtime = max.AddMicroseconds(-1);
+			var minWithTime = min.AddTicks(10);
+			var maxWithtime = max.AddTicks(-10);
 
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), TestData.Date, default);
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), min, max);
@@ -543,17 +543,13 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async ValueTask TestIterval([YdbDataSources] string context)
+		public async ValueTask TestInterval([YdbDataSources] string context)
 		{
 			var min = TimeSpan.FromDays(-49673) + TimeSpan.FromTicks(1);
 			var max = TimeSpan.FromDays(49673) - TimeSpan.FromTicks(1);
 
-			//var minExpected = TimeSpan.FromDays(-49673) + TimeSpan.FromTicks(10);
-			//var maxExpected = TimeSpan.FromDays(49673) - TimeSpan.FromTicks(10);
-			// TODO: provider bug - instead of using ticks it creates timespan from milliseconds as double leading to precision loss
-			// https://github.com/ydb-platform/ydb-dotnet-sdk/blob/main/src/Ydb.Sdk/src/Value/YdbValueParser.cs#L99
-			var minExpected = TimeSpan.FromDays(-49673) + TimeSpan.FromTicks(8);
-			var maxExpected = TimeSpan.FromDays(49673) - TimeSpan.FromTicks(8);
+			var minExpected = TimeSpan.FromDays(-49673) + TimeSpan.FromTicks(10);
+			var maxExpected = TimeSpan.FromDays(49673) - TimeSpan.FromTicks(10);
 
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), max, default, getExpectedValue: _ => maxExpected);
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), min, max, getExpectedValue: _ => minExpected, getExpectedNullableValue: _ => maxExpected);

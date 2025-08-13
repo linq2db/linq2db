@@ -87,7 +87,7 @@
 		<PackageVersion Include="System.Data.OleDb"                                     Version="$(NetLatest)"                 />
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.9.0"                        />
 		<PackageVersion Include="System.Data.SQLite.Core"                               Version="1.0.119"                      />
-		<PackageVersion Include="Ydb.Sdk"                                               Version="0.21.0"                       />
+		<PackageVersion Include="Ydb.Sdk"                                               Version="0.22.0"                       />
 	</ItemGroup>
 
 	<ItemGroup Label="Remote">

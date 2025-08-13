@@ -524,7 +524,7 @@ namespace LinqToDB.Internal.Expressions.Types
 							{
 								if (value.Value.GetType().GetEnumUnderlyingType() == typeof(int))
 								{
-									return Expression.Convert(Expression.Constant(Convert.ToInt32(value.Value)), type);
+									return Expression.Convert(Expression.Constant(Convert.ToInt32(value.Value, CultureInfo.InvariantCulture)), type);
 								}
 							}
 

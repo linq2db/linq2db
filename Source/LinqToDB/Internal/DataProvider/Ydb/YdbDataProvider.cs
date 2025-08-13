@@ -371,26 +371,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 				break;
 
-				case DataType.Json:
-				{
-					if (value is null)
-						value = Adapter.JsonNull;
-					else if (value is string str)
-					value = Adapter.MakeJson(str);
-				}
-
-				break;
-
-				case DataType.BinaryJson:
-				{
-					if (value is null)
-						value = Adapter.JsonDocumentNull;
-					else if (value is string str)
-						value = Adapter.MakeJsonDocument(str);
-				}
-
-				break;
-
 				case DataType.Yson:
 				{
 					if (value is null)
@@ -407,46 +387,18 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 				break;
 
-				case DataType.Interval:
-				{
-					if (value is null)
-						value = Adapter.IntervalNull;
-				}
-
-				break;
-
 				case DataType.Decimal:
 				{
-					// this is needed for bulk-copy
-					if (dataType.Precision == null)
-						dataType = dataType.WithPrecision(YdbMappingSchema.DEFAULT_DECIMAL_PRECISION);
-					if (dataType.Scale == null)
-						dataType = dataType.WithScale(YdbMappingSchema.DEFAULT_DECIMAL_SCALE);
-
-					if (value is null)
-						value = Adapter.MakeDecimalNull(dataType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION, dataType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE);
-					else if (value is byte b)
-						value = Adapter.MakeDecimalFix(b, dataType.Precision, dataType.Scale);
-					else if (value is sbyte sb)
-						value = Adapter.MakeDecimalFix(sb, dataType.Precision, dataType.Scale);
-					else if (value is ushort us)
-						value = Adapter.MakeDecimalFix(us, dataType.Precision, dataType.Scale);
-					else if (value is short s)
-						value = Adapter.MakeDecimalFix(s, dataType.Precision, dataType.Scale);
-					else if (value is uint u)
-						value = Adapter.MakeDecimalFix(u, dataType.Precision, dataType.Scale);
-					else if (value is int i)
-						value = Adapter.MakeDecimalFix(i, dataType.Precision, dataType.Scale);
-					else if (value is ulong ul)
-						value = Adapter.MakeDecimalFix(ul, dataType.Precision, dataType.Scale);
-					else if (value is long l)
-						value = Adapter.MakeDecimalFix(l, dataType.Precision, dataType.Scale);
-					else if (value is decimal dec)
-						value = Adapter.MakeDecimalFix(dec, dataType.Precision, dataType.Scale);
-					else if (value is float f)
-						value = Adapter.MakeDecimalFix(checked((decimal)f), dataType.Precision, dataType.Scale);
-					else if (value is double dbl)
-						value = Adapter.MakeDecimalFix(checked((decimal)dbl), dataType.Precision, dataType.Scale);
+					if      (value is byte b    ) value = (decimal)b;
+					else if (value is sbyte sb  ) value = (decimal)sb;
+					else if (value is ushort us ) value = (decimal)us;
+					else if (value is short s   ) value = (decimal)s;
+					else if (value is uint u    ) value = (decimal)u;
+					else if (value is int i     ) value = (decimal)i;
+					else if (value is ulong ul  ) value = (decimal)ul;
+					else if (value is long l    ) value = (decimal)l;
+					else if (value is float f   ) value = checked((decimal)f);
+					else if (value is double dbl) value = checked((decimal)dbl);
 					else if (value is string str)
 						value = Adapter.MakeDecimalFromString(str, dataType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION, dataType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE);
 				}
@@ -455,6 +407,41 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
+		}
+
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
+		{
+			YdbProviderAdapter.YdbDbType? type = null;
+
+			switch (dataType.DataType)
+			{
+				case DataType.Json      : type = YdbProviderAdapter.YdbDbType.Json;         break;
+				case DataType.BinaryJson: type = YdbProviderAdapter.YdbDbType.JsonDocument; break;
+				case DataType.Interval  : type = YdbProviderAdapter.YdbDbType.Interval;     break;
+
+				case DataType.Decimal:
+				{
+					if (dataType.Precision != null)
+						parameter.Precision = (byte)dataType.Precision.Value;
+
+					if (dataType.Scale != null)
+						parameter.Scale = (byte)dataType.Scale.Value;
+
+					break;
+				}
+			}
+
+			if (type != null)
+			{
+				var param = TryGetProviderParameter(dataConnection, parameter);
+				if (param != null)
+				{
+					Adapter.SetDbType(param, type.Value);
+					return;
+				}
+			}
+
+			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
 		#region BulkCopy

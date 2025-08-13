@@ -48,8 +48,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				?? throw new InvalidOperationException($"Cannot load assembly {AssemblyName}.");
 			var protosAsembly = Common.Tools.TryLoadAssembly(ProtosAssemblyName, null)
 				?? throw new InvalidOperationException($"Cannot load assembly {ProtosAssemblyName}.");
-			var protobufAsembly = Common.Tools.TryLoadAssembly(ProtobufAssemblyName, null)
-				?? throw new InvalidOperationException($"Cannot load assembly {ProtobufAssemblyName}.");
 
 			ConnectionType  = assembly.GetType($"{ClientNamespace}.YdbConnection",  true)!;
 			CommandType     = assembly.GetType($"{ClientNamespace}.YdbCommand",     true)!;
@@ -57,14 +55,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			DataReaderType  = assembly.GetType($"{ClientNamespace}.YdbDataReader",  true)!;
 			TransactionType = assembly.GetType($"{ClientNamespace}.YdbTransaction", true)!;
 
-			var bulkCopy     = assembly.GetType("Ydb.Sdk.Ado.BulkUpsert.IBulkUpsertImporter", true)!;
+			var parameterType = assembly.GetType($"{ClientNamespace}.YdbParameter"           , true)!;
+			var dbType        = assembly.GetType($"{ClientNamespace}.YdbType.YdbDbType"      , true)!;
+			var bulkCopy      = assembly.GetType("Ydb.Sdk.Ado.BulkUpsert.IBulkUpsertImporter", true)!;
 
 			var ydbValue     = assembly.GetType("Ydb.Sdk.Value.YdbValue", true)!;
 			var protoValue   = protosAsembly.GetType("Ydb.Value", true)!;
 			var protoType    = protosAsembly.GetType("Ydb.Type", true)!;
 			var decimalType  = protosAsembly.GetType("Ydb.DecimalType", true)!;
-			var optionalType = protosAsembly.GetType("Ydb.OptionalType", true)!;
-			var nullValue    = protobufAsembly.GetType("Google.Protobuf.WellKnownTypes.NullValue", true)!;
 
 			var typeMapper = new TypeMapper();
 
@@ -73,9 +71,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			typeMapper.RegisterTypeWrapper<ProtoValue>(protoValue);
 			typeMapper.RegisterTypeWrapper<ProtoType>(protoType);
 			typeMapper.RegisterTypeWrapper<DecimalType>(decimalType);
-			typeMapper.RegisterTypeWrapper<OptionalType>(optionalType);
-			typeMapper.RegisterTypeWrapper<NullValue>(nullValue);
 			typeMapper.RegisterTypeWrapper<IBulkUpsertImporter>(bulkCopy);
+			typeMapper.RegisterTypeWrapper<YdbParameter>(parameterType);
+			typeMapper.RegisterTypeWrapper<YdbDbType>(dbType);
 
 			typeMapper.FinalizeMappings();
 
@@ -83,15 +81,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			ClearAllPools      = typeMapper.BuildFunc<Task>(typeMapper.MapLambda(() => YdbConnection.ClearAllPools()));
 			ClearPool          = typeMapper.BuildFunc<DbConnection, Task>(typeMapper.MapLambda((YdbConnection connection) => YdbConnection.ClearPool(connection)));
 
-			MakeYson         = typeMapper.BuildFunc<byte[], object>(typeMapper.MapLambda((byte[] value) => YdbValue.MakeYson(value)));
-			MakeJson         = typeMapper.BuildFunc<string, object>(typeMapper.MapLambda((string value) => YdbValue.MakeJson(value)));
-			MakeJsonDocument = typeMapper.BuildFunc<string, object>(typeMapper.MapLambda((string value) => YdbValue.MakeJsonDocument(value)));
-			MakeDecimal      = typeMapper.BuildFunc<decimal, uint?, uint?, object>(typeMapper.MapLambda((decimal value, uint? precision, uint? scale) => YdbValue.MakeDecimalWithPrecision(value, precision, scale)));
+			var paramMapper   = typeMapper.Type<YdbParameter>();
+			var dbTypeBuilder = paramMapper.Member(p => p.YdbDbType);
+			SetDbType         = dbTypeBuilder.BuildSetter<DbParameter>();
+			GetDbType         = dbTypeBuilder.BuildGetter<DbParameter>();
 
-			JsonNull         = typeMapper.BuildFunc<object>(typeMapper.MapLambda(() => YdbValue.MakeOptionalJson(null)))();
-			JsonDocumentNull = typeMapper.BuildFunc<object>(typeMapper.MapLambda(() => YdbValue.MakeOptionalJsonDocument(null)))();
+			MakeYson         = typeMapper.BuildFunc<byte[], object>(typeMapper.MapLambda((byte[] value) => YdbValue.MakeYson(value)));
 			YsonNull         = typeMapper.BuildFunc<object>(typeMapper.MapLambda(() => YdbValue.MakeOptionalYson(null)))();
-			IntervalNull     = typeMapper.BuildFunc<object>(typeMapper.MapLambda(() => YdbValue.MakeOptionalInterval(null)))();
 
 			var makeDecimal = typeMapper.BuildFunc<DecimalValue, object>(
 				typeMapper.MapLambda((DecimalValue value) => new YdbValue(
@@ -100,34 +96,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 						DecimalType = new DecimalType()
 						{
 							Precision = value.Precision,
-							Scale = value.Scale
+							Scale     = value.Scale
 						}
 					},
 					new ProtoValue()
 					{
-						Low128 = value.Low,
+						Low128  = value.Low,
 						High128 = value.High
 					})));
-
-			MakeDecimalFix = (value, p, s) => makeDecimal(MakeDecimalValue(value, p, s));
-
-			MakeDecimalNull = typeMapper.BuildFunc<int, int, object>(
-				typeMapper.MapLambda((int precision, int scale) => new YdbValue(
-					new ProtoType()
-					{
-						OptionalType = new OptionalType()
-						{
-							Item = new ProtoType()
-							{
-								DecimalType = new DecimalType()
-								{
-									Precision = (uint)precision,
-									Scale = (uint)scale
-								}
-							}
-						}
-					},
-					new ProtoValue() { NullFlagValue = NullValue.NullValue })));
 
 			MakeDecimalFromString = (value, p, s) => makeDecimal(MakeDecimalValue(value, p, s));
 
@@ -143,82 +119,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		}
 
 		record struct DecimalValue(ulong Low, ulong High, uint Precision, uint Scale);
-
-		private static decimal[] _scalers =
-		[
-			1m,
-			1.0m,
-			1.00m,
-			1.000m,
-			1.0000m,
-			1.00000m,
-			1.000000m,
-			1.0000000m,
-			1.00000000m,
-			1.000000000m,
-			1.0000000000m,
-			1.00000000000m,
-			1.000000000000m,
-			1.0000000000000m,
-			1.00000000000000m,
-			1.000000000000000m,
-			1.0000000000000000m,
-			1.00000000000000000m,
-			1.000000000000000000m,
-			1.0000000000000000000m,
-			1.00000000000000000000m,
-			1.000000000000000000000m,
-			1.0000000000000000000000m,
-			1.00000000000000000000000m,
-			1.000000000000000000000000m,
-			1.0000000000000000000000000m,
-			1.00000000000000000000000000m,
-			1.000000000000000000000000000m,
-			1.0000000000000000000000000000m,
-		];
-
-		private static DecimalValue MakeDecimalValue(decimal value, int? precision, int? scale)
-		{
-			var valuePrecision = DecimalHelper.GetPrecision(value);
-			var valueScale = DecimalHelper.GetScale(value);
-
-			if (valueScale < scale)
-			{
-				value = value * _scalers[scale!.Value];
-			}
-
-			precision = precision ?? valuePrecision;
-			scale     = scale ?? valueScale;
-
-			if (precision == 0 && scale == 0)
-				precision = 1;
-
-			// copy of private method MakeDecimalValue
-			// https://github.com/ydb-platform/ydb-dotnet-sdk/blob/main/src/Ydb.Sdk/src/Value/YdbValueBuilder.cs#L112
-			var bits = decimal.GetBits(value);
-
-			var low64 = ((ulong)(uint)bits[1] << 32) + (uint)bits[0];
-			var high64 = (ulong)(uint)bits[2];
-
-			unchecked
-			{
-				// make value negative
-				if (value < 0)
-				{
-					low64 = ~low64;
-					high64 = ~high64;
-
-					if (low64 == (ulong)-1L)
-					{
-						high64 += 1;
-					}
-
-					low64 += 1;
-				}
-			}
-
-			return new DecimalValue(low64, high64, (uint)precision, (uint)scale);
-		}
 
 		private static DecimalValue MakeDecimalValue(string value, int precision, int scale)
 		{
@@ -278,22 +178,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		public Func<Task>               ClearAllPools { get; }
 		public Func<DbConnection, Task> ClearPool     { get; }
 
+		public Action<DbParameter, YdbDbType> SetDbType { get; }
+		public Func  <DbParameter, YdbDbType> GetDbType { get; }
+
 		// missing parameter value factories
 		public Func<byte[], object> MakeYson { get; }
-		public Func<string, object> MakeJson { get; }
-		public Func<string, object> MakeJsonDocument { get; }
+		public object YsonNull { get; }
 
-		public object JsonNull         { get; }
-		public object JsonDocumentNull { get; }
-		public object YsonNull         { get; }
-		public object IntervalNull     { get; }
-
-#pragma warning disable CS3003 // Type is not CLS-compliant
-		public  Func<decimal, uint?, uint?, object> MakeDecimal           { get; }
-		internal Func<decimal, int?, int?, object>  MakeDecimalFix        { get; }
-		internal Func<string, int, int, object>     MakeDecimalFromString { get; }
-#pragma warning restore CS3003 // Type is not CLS-compliant
-		internal Func<int, int, object>             MakeDecimalNull       { get; }
+		internal Func<string, int, int, object> MakeDecimalFromString { get; }
 
 		internal Func<DbConnection, string, IReadOnlyList<string>, CancellationToken, IBulkUpsertImporter> BeginBulkCopy { get; }
 
@@ -338,16 +230,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			[WrappedBindingFlags(BindingFlags.Instance | BindingFlags.NonPublic)]
 			public YdbValue(ProtoType type, ProtoValue value) => throw new NotImplementedException();
 
-			public static YdbValue MakeYson(byte[] value) => throw new NotImplementedException();
-			public static YdbValue MakeJson(string value) => throw new NotImplementedException();
-			public static YdbValue MakeJsonDocument(string value) => throw new NotImplementedException();
-
-			public static YdbValue MakeOptionalJson(string? value) => throw new NotImplementedException();
-			public static YdbValue MakeOptionalJsonDocument(string? value) => throw new NotImplementedException();
+			public static YdbValue MakeYson        (byte[] value) => throw new NotImplementedException();
 			public static YdbValue MakeOptionalYson(byte[]? value) => throw new NotImplementedException();
-			public static YdbValue MakeOptionalInterval(TimeSpan? value) => throw new NotImplementedException();
-
-			public static YdbValue MakeDecimalWithPrecision(decimal value, uint? precision = null, uint? scale = null) => throw new NotImplementedException();
 		}
 
 		[Wrapper("Value")]
@@ -366,14 +250,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				get => throw new NotImplementedException();
 				set => throw new NotImplementedException();
 			}
-
-			// actually type is
-			// enum NullValue { NullValue = 0 } from protobuf assembly
-			public NullValue NullFlagValue
-			{
-				get => throw new NotImplementedException();
-				set => throw new NotImplementedException();
-			}
 		}
 
 		[Wrapper("Type")]
@@ -382,24 +258,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			public ProtoType() => throw new NotImplementedException();
 
 			public DecimalType DecimalType
-			{
-				get => throw new NotImplementedException();
-				set => throw new NotImplementedException();
-			}
-
-			public OptionalType OptionalType
-			{
-				get => throw new NotImplementedException();
-				set => throw new NotImplementedException();
-			}
-		}
-
-		[Wrapper]
-		internal sealed class OptionalType
-		{
-			public OptionalType() => throw new NotImplementedException();
-
-			public ProtoType Item
 			{
 				get => throw new NotImplementedException();
 				set => throw new NotImplementedException();
@@ -425,11 +283,45 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		}
 
 		[Wrapper]
-		internal enum NullValue
+		private sealed class YdbParameter
 		{
-#pragma warning disable CA1712 // Do not prefix enum values with type name
-			NullValue = 0
-#pragma warning restore CA1712 // Do not prefix enum values with type name
+			public YdbDbType YdbDbType { get; set; }
+		}
+
+		[Wrapper]
+		public enum YdbDbType
+		{
+			Bool         = 1,
+			Bytes        = 13,
+			Date         = 18,
+			DateTime     = 19,
+			Decimal      = 12,
+			Double       = 11,
+			Float        = 10,
+			Int16        = 3,
+			Int32        = 4,
+			Int64        = 5,
+			Int8         = 2,
+			Interval     = 21,
+			Json         = 15,
+			JsonDocument = 16,
+			Text         = 14,
+			Timestamp    = 20,
+			UInt16       = 7,
+			UInt32       = 8,
+			UInt64       = 9,
+			UInt8        = 6,
+			Unspecified  = 0,
+			Uuid         = 17,
+
+			// missing simple types:
+			// DyNumber
+			// Yson
+
+			// missing simple non-column types:
+			// TzDate
+			// TzDateTime
+			// TzTimestamp
 		}
 
 		#endregion
