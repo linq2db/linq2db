@@ -983,7 +983,7 @@ namespace Cli.Fluent.Firebird
 		}
 
 		/// <summary>
-		/// INTEG_52 backreference
+		/// INTEG_18 backreference
 		/// </summary>
 		public static Patient? Patient(this Person obj, IDataContext db)
 		{
@@ -993,7 +993,7 @@ namespace Cli.Fluent.Firebird
 
 		#region Patient Associations
 		/// <summary>
-		/// INTEG_52
+		/// INTEG_18
 		/// </summary>
 		public static Person Integ(this Patient obj, IDataContext db)
 		{
