@@ -10,8 +10,8 @@ namespace LinqToDB.Internal.Mapping
 {
 	internal sealed class MappingAttributesCache
 	{
-		record struct CacheKey(Type AttributeType, Key SourceKey);
-		record struct Key(ICustomAttributeProvider Source, Type? SourceOwner);
+		readonly record struct CacheKey(Type AttributeType, Key SourceKey);
+		readonly record struct Key(ICustomAttributeProvider Source, Type? SourceOwner);
 
 		private readonly Func<CacheKey, MappingAttribute[]?> _getMappingAttributesInternal;
 		readonly ConcurrentDictionary<CacheKey, MappingAttribute[]?> _cache = new();
@@ -49,7 +49,7 @@ namespace LinqToDB.Internal.Mapping
 			return null;
 		}
 
-		MappingAttribute[] GetNoInheritMappingAttributes(Key key)
+		MappingAttribute[] GetNoInheritMappingAttributes(in Key key)
 		{
 			var attrs = _noInheritMappingAttributes.GetOrAdd(key, static (key, attributesGetter) =>
 			{
@@ -64,7 +64,7 @@ namespace LinqToDB.Internal.Mapping
 		readonly Func<Key, MappingAttribute[]> _getMappingAttributesTreeInternal;
 		MappingAttribute[] GetMappingAttributesTreeInternal(Key key)
 		{
-			var attrs = GetNoInheritMappingAttributes(key);
+			var attrs = GetNoInheritMappingAttributes(in key);
 
 			Type? type = null;
 			Func<Type, ICustomAttributeProvider, ICustomAttributeProvider?>? getSource = null;

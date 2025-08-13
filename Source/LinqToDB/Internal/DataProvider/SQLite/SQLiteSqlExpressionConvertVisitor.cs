@@ -149,15 +149,14 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			if (IsDateTime(leftType) || IsDateTime(rightType))
 			{
 				var dateType = IsDateTime(leftType) ? leftType : rightType;
-
-				var expr1 = QueryHelper.UnwrapNullablity(predicate.Expr1);
+				var expr1 = GetActualExpr(predicate.Expr1);
 				if (!(expr1 is SqlCastExpression || expr1 is SqlFunction { DoNotOptimize: true }))
 				{
 					var left = PseudoFunctions.MakeMandatoryCast(predicate.Expr1, dateType, null);
 					predicate = new SqlPredicate.ExprExpr(left, predicate.Operator, predicate.Expr2, predicate.UnknownAsValue);
 				}
 
-				var expr2 = QueryHelper.UnwrapNullablity(predicate.Expr2);
+				var expr2 = GetActualExpr(predicate.Expr2);
 				if (!(expr2 is SqlCastExpression || expr2 is SqlFunction { DoNotOptimize: true }))
 				{
 					var right = PseudoFunctions.MakeMandatoryCast(predicate.Expr2, dateType, null);
@@ -166,6 +165,18 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			}
 
 			return base.ConvertExprExprPredicate(predicate);
+
+			static ISqlExpression GetActualExpr(ISqlExpression expr)
+			{
+				expr = QueryHelper.UnwrapNullablity(expr);
+
+				if (expr is SelectQuery selectQuery && selectQuery.Select.Columns.Count == 1)
+				{
+					expr = selectQuery.Select.Columns[0].Expression;
+				}
+
+				return expr;
+			}
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
@@ -180,7 +191,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			{
 				if (!(cast.Expression.TryEvaluateExpression(EvaluationContext, out var value) && value is null))
 				{
-					return (ISqlExpression)Visit(WrapDateTime(cast.Expression, cast.ToType));
+					var newExpr = WrapDateTime(cast.Expression, cast.ToType);
+
+					if (!ReferenceEquals(cast.Expression, newExpr))
+						return (ISqlExpression)Visit(newExpr);
 				}
 			}
 

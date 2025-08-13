@@ -3816,5 +3816,52 @@ namespace Tests.Linq
 					gr.First().Value,
 				}, ed => ed.Property(r => r.Value).IsPrimaryKey());
 		}
+
+		static class Issue5070
+		{
+			public sealed class CustomerPrice
+			{
+				public int CustomerId { get; set; }
+				public int FinalCustomerId { get; set; }
+				public bool IsActive { get; set; }
+				public decimal Price { get; set; }
+			}
+
+			public sealed class Inventory
+			{
+				public int CustomerId { get; set; }
+				public decimal Volume { get; set; }
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5070")]
+		public void Issue5070Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue5070.CustomerPrice>();
+			using var t2 = db.CreateLocalTable<Issue5070.Inventory>();
+
+			var forceInactive = true;
+
+			var query = t2
+				.InnerJoin(
+					t1,
+					(v, p) => v.CustomerId == p.CustomerId,
+					(v, p) => new
+					{
+						FinalCustomerId = Sql.NullIf(p.FinalCustomerId, 0) ?? p.CustomerId,
+						IsActive = forceInactive ? false : p.IsActive,
+						Amount = v.Volume * p.Price
+					})
+				.GroupBy(t => new { t.FinalCustomerId, t.IsActive })
+				.Select(t => new
+				{
+					t.Key.FinalCustomerId,
+					t.Key.IsActive,
+					Amount = t.Sum(x => x.Amount)
+				});
+
+			query.ToArray();
+		}
 	}
 }

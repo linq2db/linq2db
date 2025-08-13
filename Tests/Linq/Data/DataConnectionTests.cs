@@ -954,7 +954,7 @@ namespace Tests.Data
 				TestProvName.AllOracle,
 				ProviderName.SqlCe,
 				// depends on connection pool size
-				//ProviderName.ClickHouseClient,
+				//ProviderName.ClickHouseDriver,
 				ProviderName.ClickHouseOctonica,
 				ProviderName.SybaseManaged)] string context)
 		{
@@ -1005,7 +1005,7 @@ namespace Tests.Data
 		[Test]
 		public void MARS_MultipleDataReadersOnSameCommand_NotSupported(
 			[DataSources(false,
-				ProviderName.ClickHouseClient,
+				ProviderName.ClickHouseDriver,
 				TestProvName.AllOracle,
 				ProviderName.SqlCe,
 				ProviderName.SQLiteMS,
@@ -1080,7 +1080,7 @@ namespace Tests.Data
 				ProviderName.SqlCe,
 				// disabled - depends on connection pool size
 				// which is one for session-aware connection
-				//ProviderName.ClickHouseClient,
+				//ProviderName.ClickHouseDriver,
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer,
@@ -1139,7 +1139,7 @@ namespace Tests.Data
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_NoDispose_NotSupported(
 			[DataSources(false,
 				TestProvName.AllAccess,
-			ProviderName.ClickHouseClient,
+			ProviderName.ClickHouseDriver,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -1223,7 +1223,7 @@ namespace Tests.Data
 				TestProvName.AllSQLiteClassic,
 				TestProvName.AllSqlServer,
 				// depends on connection pool size
-				//ProviderName.ClickHouseClient,
+				//ProviderName.ClickHouseDriver,
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSybase)] string context)
 		{
@@ -1279,7 +1279,7 @@ namespace Tests.Data
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_Dispose_NotSupported(
 			[DataSources(false,
 				TestProvName.AllAccess,
-				ProviderName.ClickHouseClient,
+				ProviderName.ClickHouseDriver,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
@@ -1339,7 +1339,7 @@ namespace Tests.Data
 				ProviderName.Ydb,
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
-				ProviderName.ClickHouseClient,
+				ProviderName.ClickHouseDriver,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -1432,7 +1432,7 @@ namespace Tests.Data
 				ProviderName.Ydb,
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
-				ProviderName.ClickHouseClient,
+				ProviderName.ClickHouseDriver,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataConnection(context))

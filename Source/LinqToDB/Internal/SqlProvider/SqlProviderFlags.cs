@@ -20,8 +20,8 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <summary>
 		/// Flags for use by external providers.
 		/// </summary>
-		[DataMember(Order =  1)]
-		public List<string> CustomFlags { get; set; } = new List<string>();
+		[DataMember(Order = 1)]
+		public HashSet<string> CustomFlags { get; set; } = new HashSet<string>();
 
 		/// <summary>
 		/// Indicates that provider (not database!) uses positional parameters instead of named parameters (parameter values assigned in order they appear in query, not by parameter name).
@@ -688,10 +688,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& DoesProviderTreatsEmptyStringAsNull                   == other.DoesProviderTreatsEmptyStringAsNull
 				&& IsOrderByAggregateFunctionSupported                   == other.IsOrderByAggregateFunctionSupported
 				&& IsComplexJoinConditionSupported                       == other.IsComplexJoinConditionSupported
-				// CustomFlags as List wasn't best idea
-				&& CustomFlags.Count                                     == other.CustomFlags.Count
-				&& (CustomFlags.Count                                    == 0
-					|| CustomFlags.OrderBy(_ => _).SequenceEqual(other.CustomFlags.OrderBy(_ => _)));
+				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion
 	}

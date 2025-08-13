@@ -82,7 +82,7 @@
 		"BasedOn": "CommonConnectionStrings",
 		"Connections": {
 			"ClickHouse.Octonica"       : { "Provider": "Octonica.ClickHouseClient",        "ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"                                                                                           },
-			"ClickHouse.Client"         : { "Provider": "ClickHouse.Client",                "ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true"                                                                       },
+			"ClickHouse.Driver"         : { "Provider": "ClickHouse.Driver",                "ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true"                                                                       },
 			"ClickHouse.MySql"          : { "Provider": "MySqlConnector",                   "ConnectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;"                                                                        },
 			"DB2"                       : { "Provider": "IBM.Data.DB2",                     "ConnectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!"                                                                                                 },
 			"Firebird.2.5"              : {                                                 "ConnectionString": "DataSource=localhost;Port=3025;Database=/firebird/data/testdb25.fdb;User Id=sysdba;Password=masterkey;charset=UTF8"                                                  },
@@ -200,7 +200,7 @@
 			"DB2"                       : { "Provider": "IBM.Data.DB2.Core",               "ConnectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!"                                                                                                 },
 			"SapHana.Odbc"              : { "Provider": "SapHana.Odbc",                    "ConnectionString": "<SET BY SCRIPT>"                                                                                                                                                     },
 			"ClickHouse.Octonica"       : { "Provider": "Octonica.ClickHouseClient",       "ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"                                                                                           },
-			"ClickHouse.Client"         : { "Provider": "ClickHouse.Client",               "ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true"                                                                       },
+			"ClickHouse.Driver"         : { "Provider": "ClickHouse.Driver",               "ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true"                                                                       },
 			"ClickHouse.MySql"          : { "Provider": "MySqlConnector",                  "ConnectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;"                                                                        },
 			"YDB"                       : { "Provider": "Ydb.Sdk",                         "ConnectionString": "Host=localhost;Port=2136;Database=/local;UseTls=false;DisableDiscovery=true"                                                                                         }
 		}
@@ -301,7 +301,7 @@
 			"SapHana.Native",
 			"SapHana.Odbc",
 			"ClickHouse.Octonica",
-			"ClickHouse.Client",
+			"ClickHouse.Driver",
 			"ClickHouse.MySql",
 			"YDB"
 		]

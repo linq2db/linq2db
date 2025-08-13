@@ -812,10 +812,10 @@ jobs:
             enabled: false
 
 # ClickHouse
-        - name: ClickHouse Client
-          title: ClickHouse Client
-          config_linux: clickhouse.client
-          config_macos: clickhouse.client
+        - name: ClickHouse Driver
+          title: ClickHouse Driver
+          config_linux: clickhouse.driver
+          config_macos: clickhouse.driver
           script_linux_global: clickhouse.sh
           script_macos_global: clickhouse.sh
           install_docker_macos: true

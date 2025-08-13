@@ -119,7 +119,7 @@ Legend:
 |Oracle 23c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |SAP HANA 2.0<br>ODBC Provider|:x:|:x:|:heavy_check_mark:|:x:|
 |ClickHouse (latest)<br>[Octonica.ClickHouseClient](https://www.nuget.org/packages/Octonica.ClickHouseClient/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|ClickHouse (latest)<br>[ClickHouse.Client](https://www.nuget.org/packages/ClickHouse.Client/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|ClickHouse (latest)<br>[ClickHouse.Driver](https://www.nuget.org/packages/ClickHouse.Driver/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |ClickHouse (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |YDB (latest)<br>[Ydb.Sdk](https://www.nuget.org/packages/Ydb.Sdk/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 
@@ -219,6 +219,6 @@ Legend:
 |`ProviderName.SapHanaNative`|SAP HANA 2 using native provider||
 |`ProviderName.SapHanaOdbc`|SAP HANA 2 using ODBC provider||
 |`ProviderName.ClickHouseOctonica`|ClickHouse using `Octonica.ClickHouseClient` provider||
-|`ProviderName.ClickHouseClient`|ClickHouse using `ClickHouse.Client` provider||
+|`ProviderName.ClickHouseDriver`|ClickHouse using `ClickHouse.Driver` provider||
 |`ProviderName.ClickHouseMySql`|ClickHouse using `MySqlConnector` provider||
 |`ProviderName.Ydb`|YDB using `Ydb.Sdk` provider||

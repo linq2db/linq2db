@@ -508,7 +508,7 @@ namespace Tests.xUpdate
 			db.AddInterceptor(interceptor);
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 
-			if (context.IsAnyOf(ProviderName.ClickHouseClient) && copyType is BulkCopyType.ProviderSpecific)
+			if (context.IsAnyOf(ProviderName.ClickHouseDriver) && copyType is BulkCopyType.ProviderSpecific)
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -630,7 +630,7 @@ namespace Tests.xUpdate
 
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 
-			if (context.IsAnyOf(ProviderName.ClickHouseClient) && copyType is BulkCopyType.ProviderSpecific)
+			if (context.IsAnyOf(ProviderName.ClickHouseDriver) && copyType is BulkCopyType.ProviderSpecific)
 			{
 				using (Assert.EnterMultipleScope())
 				{

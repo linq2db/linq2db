@@ -492,7 +492,7 @@ namespace Firebird3DataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_52 (SYSDBA.Person)
+		/// INTEG_18 (SYSDBA.Person)
 		/// </summary>
 		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Firebird3DataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -518,7 +518,7 @@ namespace Firebird3DataContext
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_52_BackReference (SYSDBA.Patient)
+		/// INTEG_18_BackReference (SYSDBA.Patient)
 		/// </summary>
 		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Firebird3DataContext.Patient.PersonID), CanBeNull=true)]
 		public Patient? INTEG { get; set; }

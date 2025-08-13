@@ -158,7 +158,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public class Expr : SqlPredicate
 		{
-			public Expr(ISqlExpression exp1, int precedence)
+			protected Expr(ISqlExpression exp1, int precedence)
 				: base(precedence)
 			{
 				Expr1 = exp1 ?? throw new ArgumentNullException(nameof(exp1));
@@ -356,6 +356,11 @@ namespace LinqToDB.Internal.SqlQuery
 					? true
 					: !UnknownAsValue;
 				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, unknownAsValue);
+			}
+
+			public ISqlPredicate InvertWithoutNull()
+			{
+				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, null);
 			}
 
 			/// <summary>
@@ -1165,7 +1170,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region IPredicate Members
 
-		public int  Precedence { get; }
+		public int  Precedence { get; internal set; }
 
 		public abstract bool           CanInvert    (NullabilityContext nullability);
 		public abstract ISqlPredicate  Invert       (NullabilityContext nullability);

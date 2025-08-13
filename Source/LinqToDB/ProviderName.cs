@@ -320,9 +320,9 @@ namespace LinqToDB
 		/// </summary>
 		public const string ClickHouseOctonica = "ClickHouse.Octonica";
 		/// <summary>
-		/// ClickHouse provider using ClickHouse.Client ADO.NET provider.
+		/// ClickHouse provider using ClickHouse.Driver ADO.NET provider.
 		/// </summary>
-		public const string ClickHouseClient   = "ClickHouse.Client";
+		public const string ClickHouseDriver   = "ClickHouse.Driver";
 		/// <summary>
 		/// ClickHouse provider using MySqlConnector ADO.NET provider.
 		/// </summary>

@@ -49,6 +49,11 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return base.ConvertSqlBinaryExpression(element);
 		}
 
+		protected override SqlCoalesceExpression? WrapBooleanCoalesceItems(SqlCoalesceExpression element, IQueryElement newElement, bool forceConvert)
+		{
+			return base.WrapBooleanCoalesceItems(element, newElement, forceConvert: true);
+		}
+
 		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
 			if (element.SystemType == null)
