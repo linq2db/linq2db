@@ -18,7 +18,7 @@ namespace Cli.Fluent.Firebird
 
 		#region Associations
 		/// <summary>
-		/// INTEG_52
+		/// INTEG_18
 		/// </summary>
 		public Person Integ { get; set; } = null!;
 		#endregion

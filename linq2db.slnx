@@ -53,7 +53,7 @@
     <File Path="Build/Azure/net80/access.ace.json" />
     <File Path="Build/Azure/net80/access.ace.x64.json" />
     <File Path="Build/Azure/net80/access.mdb.json" />
-    <File Path="Build/Azure/net80/clickhouse.client.json" />
+    <File Path="Build/Azure/net80/clickhouse.driver.json" />
     <File Path="Build/Azure/net80/clickhouse.mysql.json" />
     <File Path="Build/Azure/net80/clickhouse.octonica.json" />
     <File Path="Build/Azure/net80/db2.json" />
@@ -99,7 +99,7 @@
     <File Path="Build/Azure/net90/access.ace.json" />
     <File Path="Build/Azure/net90/access.ace.x64.json" />
     <File Path="Build/Azure/net90/access.mdb.json" />
-    <File Path="Build/Azure/net90/clickhouse.client.json" />
+    <File Path="Build/Azure/net90/clickhouse.driver.json" />
     <File Path="Build/Azure/net90/clickhouse.mysql.json" />
     <File Path="Build/Azure/net90/clickhouse.octonica.json" />
     <File Path="Build/Azure/net90/db2.json" />

@@ -1058,7 +1058,7 @@ namespace Cli.All.Firebird
 		}
 
 		/// <summary>
-		/// INTEG_52 backreference
+		/// INTEG_18 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(Firebird.Person.PersonId), OtherKey = nameof(Firebird.Patient.PersonId))]
 		public static Patient? Patient(this Person obj, IDataContext db)
@@ -1069,7 +1069,7 @@ namespace Cli.All.Firebird
 
 		#region Patient Associations
 		/// <summary>
-		/// INTEG_52
+		/// INTEG_18
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(Firebird.Patient.PersonId), OtherKey = nameof(Firebird.Person.PersonId))]
 		public static Person Integ(this Patient obj, IDataContext db)

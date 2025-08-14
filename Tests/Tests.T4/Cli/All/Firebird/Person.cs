@@ -52,7 +52,7 @@ namespace Cli.All.Firebird
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_52 backreference
+		/// INTEG_18 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Firebird.Patient.PersonId))]
 		public Patient? Patient { get; set; }

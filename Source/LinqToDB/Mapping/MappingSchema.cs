@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -1415,6 +1416,9 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(TimeSpan),        DataType.Time);
 #if SUPPORTS_DATEONLY
 				AddScalarType(typeof(DateOnly),        DataType.Date);
+				AddScalarType(typeof(TimeOnly),        DataType.Time);
+				AddScalarType(typeof(Int128),          DataType.Int128);
+				AddScalarType(typeof(UInt128),         DataType.UInt128);
 #endif
 				AddScalarType(typeof(byte[]),          DataType.VarBinary);
 				AddScalarType(typeof(Binary),          DataType.VarBinary);
@@ -1434,6 +1438,7 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(float),           DataType.Single);
 				AddScalarType(typeof(double),          DataType.Double);
 
+				AddScalarType(typeof(BigInteger),      DataType.Decimal);
 				AddScalarType(typeof(BitArray),        DataType.BitArray);
 
 				SetConverter<DBNull, object?>(static _ => null);
@@ -1478,6 +1483,8 @@ namespace LinqToDB.Mapping
 		/// <returns><c>true</c>, if type mapped to scalar database type.</returns>
 		public bool IsScalarType(Type type)
 		{
+			type = type.UnwrapNullableType();
+
 			foreach (var info in Schemas)
 			{
 				var o = info.GetScalarType(type);
@@ -1494,10 +1501,10 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				type = type.ToNullableUnderlying();
-
+#pragma warning disable CS0618 // Type or member is obsolete
 				if (type.IsEnum || type.IsPrimitive || (Common.Configuration.IsStructIsScalarType && type.IsValueType))
 					ret = true;
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			return ret;

@@ -1,0 +1,13 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"            #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                          #>
+<#@ output extension=".generated.cs"                                                                    #>
+<#@ include file="$(LinqToDBT4ClickHouseTemplatesPath)LinqToDB.ClickHouse.Driver.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                                      once="true" #>
+<#
+	NamespaceName                = "Default.ClickHouse.Driver";
+	DataContextName              = "ClickHouseClientDB";
+	EnableNullableReferenceTypes = false;
+
+	LoadClickHouseMetadata(GetConnectionString("ClickHouse.Driver"));
+	GenerateModel();
+#>

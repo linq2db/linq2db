@@ -408,9 +408,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var cacheKey = new ExprCacheKey(expression, context, null, null, flags);
 			
-			if (_translationCache.TryGetValue(cacheKey, out var translated))
+			if (GetAlreadyTranslated(cacheKey, out var translated))
 			{
-				DebugCacheHit(cacheKey, translated);
 				return translated;
 			}
 
@@ -579,8 +578,23 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var cacheKey = GetSqlCacheKey(path, selectQuery);
 
+			return GetAlreadyTranslated(cacheKey, out translated);
+		}
+
+		bool GetAlreadyTranslated(ExprCacheKey cacheKey, [NotNullWhen(true)] out Expression? translated)
+		{
 			if (_translationCache.TryGetValue(cacheKey, out translated))
+			{
+				if (cacheKey.Flags == ProjectFlags.SQL && _buildPurpose is BuildPurpose.Expression && SequenceHelper.HasError(translated))
+				{
+					// If we have error in translated expression, we should not use it.
+					translated = null;
+					return false;
+				}
+
+				DebugCacheHit(cacheKey, translated);
 				return true;
+			}
 
 			return false;
 		}
@@ -944,8 +958,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitMemberInit(MemberInitExpression node)
 		{
-			using var saveDescriptor = UsingColumnDescriptor(null);
-
 			if (_buildPurpose is BuildPurpose.Sql)
 			{
 				if (HandleValue(node, out var translated))
@@ -954,10 +966,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (HandleSqlRelated(node, out translated))
 					return Visit(translated);
 
-				var generic = Builder.ParseGenericConstructor(node, ProjectFlags.SQL, _columnDescriptor);
-				if (!IsSame(generic, node))
-					return Visit(generic);
+				using (UsingColumnDescriptor(null))
+				{
+					var generic = Builder.ParseGenericConstructor(node, ProjectFlags.SQL, _columnDescriptor);
+					if (!IsSame(generic, node))
+						return Visit(generic);
+				}
 			}
+
+			using var saveDescriptor = UsingColumnDescriptor(null);
 
 			var saveDisableNew = _disableNew;
 			var saveAlias      = _alias;
@@ -1436,9 +1453,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (_buildPurpose is BuildPurpose.Expression or BuildPurpose.Sql)
 					{
 						var exprCacheKey = GetSqlCacheKey(node);
-						if (_translationCache.TryGetValue(exprCacheKey, out var alreadyTranslated))
+						if (GetAlreadyTranslated(exprCacheKey, out var alreadyTranslated))
 						{
-							DebugCacheHit(exprCacheKey, alreadyTranslated);
 							return Visit(alreadyTranslated);
 						}
 					}
@@ -1502,7 +1518,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var cacheKey = new ExprCacheKey(node, null, _columnDescriptor, rootContext.SelectQuery, ProjectFlags.SQL);
 
-						if (_translationCache.TryGetValue(cacheKey, out var translatedLocal))
+						if (GetAlreadyTranslated(cacheKey, out var translatedLocal))
 							return translatedLocal;
 
 						if (TranslateMember(BuildContext, memberExpression : node, translated : out translatedLocal))
@@ -2173,7 +2189,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								return Visit(placeholder.WithType(node.Type));
 
 							if (node.Type == typeof(Enum) && node.Operand.Type.IsEnum)
-								return Visit(placeholder.WithType(node.Type));
+								return base.VisitUnary(node);
 
 							var t = node.Operand.Type;
 							var s = MappingSchema.GetDataType(t);
@@ -2195,9 +2211,9 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 					}
 
-					if (HandleValue(node, out var translatedМфдгу))
+					if (HandleValue(node, out var translatedValue))
 					{
-						return Visit(translatedМфдгу);
+						return Visit(translatedValue);
 					}
 
 					break;
@@ -2468,7 +2484,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var cacheKey = new ExprCacheKey(traversed, null, null, calculatedContext.SelectQuery, ProjectFlags.SQL | ProjectFlags.Subquery);
 
-			if (_translationCache.TryGetValue(cacheKey, out var alreadyTranslated))
+			if (GetAlreadyTranslated(cacheKey, out var alreadyTranslated))
 			{
 				subqueryExpression = alreadyTranslated;
 				return !IsSame(node, alreadyTranslated);
@@ -2851,7 +2867,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return true;
 					}
 				}
-
+			
 				translated = Visit(compareExpr);
 				return true;
 			}
@@ -3877,8 +3893,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (l != null && r != null)
 							break;
 
-						leftExpr  = Builder.ParseGenericConstructor(leftExpr, ProjectFlags.SQL  | ProjectFlags.Keys, columnDescriptor, true);
-						rightExpr = Builder.ParseGenericConstructor(rightExpr, ProjectFlags.SQL | ProjectFlags.Keys, columnDescriptor, true);
+						leftExpr  = Builder.ParseGenericConstructor(leftExpr, ProjectFlags.SQL  | ProjectFlags.Keys, columnDescriptor);
+						rightExpr = Builder.ParseGenericConstructor(rightExpr, ProjectFlags.SQL | ProjectFlags.Keys, columnDescriptor);
 
 						if (SequenceHelper.UnwrapDefaultIfEmpty(leftExpr) is SqlGenericConstructorExpression leftGenericConstructor &&
 						    SequenceHelper.UnwrapDefaultIfEmpty(rightExpr) is SqlGenericConstructorExpression rightGenericConstructor)

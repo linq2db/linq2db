@@ -272,7 +272,54 @@ namespace Tests.Linq
 			var distinctQuery = query.Select(x => x.Conditional).Distinct();
 
 			AssertQuery(distinctQuery);
+		}
 
+		[Test]
+		public void WithGroupedProjection([IncludeDataSources(
+			TestProvName.AllPostgreSQL93Plus,
+			TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var (items, colors, styles) = SomeItem.Seed();
+
+			using var itemsTable  = db.CreateLocalTable(items);
+			using var colorsTable = db.CreateLocalTable(colors);
+			using var stylesTable = db.CreateLocalTable(styles);
+
+			var groupingQuery =
+				from item in itemsTable.LoadWith(it => it.Color).LoadWith(it => it.Style)
+				group item by new { ColorName = item.Color!.Name ?? "", StyleName = item.Style!.Name ?? "" } into g
+				select new
+				{
+					ColorName   = g.Key.ColorName,
+					StyleName   = g.Key.StyleName,
+					Count       = g.Count(),
+				};
+
+			var query =
+				from item in groupingQuery
+				from it in new[]
+				{
+					new IntermediateProjection
+					{
+						ColorName   = item.ColorName,
+						StyleName   = item.StyleName,
+						Count       = item.Count,
+						Conditional = item.ColorName == "Red" ? item.Count : 0,
+						ArrayOfInts = new List<int> { 1, 2, 3 }
+					},
+					new IntermediateProjection()
+					{
+						ColorName   = null, 
+						StyleName   = item.StyleName, 
+						Count       = 0,
+						ArrayOfInts = new List<int> { 4, 5, 6 }
+					},
+				}.DefaultIfEmpty()
+				where it.ColorName == "Red" || it.Count == 0
+				select it;
+
+			AssertQuery(query);
 		}
 
 	}

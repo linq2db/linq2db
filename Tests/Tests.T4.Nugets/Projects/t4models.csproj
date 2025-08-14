@@ -22,10 +22,10 @@
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>Access.OleDb.tt</DependentUpon>
 		</Compile>
-		<Compile Include="..\Templates\ClickHouse.Client.generated.cs">
+		<Compile Include="..\Templates\ClickHouse.Driver.generated.cs">
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
-		  <DependentUpon>ClickHouse.Client.tt</DependentUpon>
+		  <DependentUpon>ClickHouse.Driver.tt</DependentUpon>
 		</Compile>
 		<Compile Include="..\Templates\ClickHouse.MySql.generated.cs">
 		  <DesignTime>True</DesignTime>
@@ -95,8 +95,8 @@
 		<None Include="..\Templates\Access.OleDb.tt" Generator="TextTemplatingFileGenerator">
 		  <LastGenOutput>Access.OleDb.generated.cs</LastGenOutput>
 		</None>
-		<None Include="..\Templates\ClickHouse.Client.tt" Generator="TextTemplatingFileGenerator">
-		  <LastGenOutput>ClickHouse.Client.generated.cs</LastGenOutput>
+		<None Include="..\Templates\ClickHouse.Driver.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>ClickHouse.Driver.generated.cs</LastGenOutput>
 		</None>
 		<None Include="..\Templates\ClickHouse.MySql.tt" Generator="TextTemplatingFileGenerator">
 		  <LastGenOutput>ClickHouse.MySql.generated.cs</LastGenOutput>

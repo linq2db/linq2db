@@ -50,20 +50,20 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			if (FbDecFloatType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbDecFloat>(FbDecFloatType);
-				MappingSchema.SetDataType(FbDecFloatType, new SqlDataType(DataType.DecFloat, FbDecFloatType));
+				MappingSchema.AddScalarType(FbDecFloatType, new SqlDataType(DataType.DecFloat, FbDecFloatType));
 				// we don't register literal generation for decfloat as it looks like special values (inf, (s)nan are not supported in literals)
 			}
 
 			if (FbZonedDateTimeType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbZonedDateTime>(FbZonedDateTimeType);
-				MappingSchema.SetDataType(FbZonedDateTimeType, new SqlDataType(DataType.DateTimeOffset, FbZonedDateTimeType));
+				MappingSchema.AddScalarType(FbZonedDateTimeType, new SqlDataType(DataType.DateTimeOffset, FbZonedDateTimeType));
 			}
 
 			if (FbZonedTimeType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbZonedTime>(FbZonedTimeType);
-				MappingSchema.SetDataType(FbZonedTimeType, new SqlDataType(DataType.TimeTZ, FbZonedTimeType));
+				MappingSchema.AddScalarType(FbZonedTimeType, new SqlDataType(DataType.TimeTZ, FbZonedTimeType));
 			}
 
 			typeMapper.FinalizeMappings();

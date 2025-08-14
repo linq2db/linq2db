@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq
@@ -19,7 +20,7 @@ namespace LinqToDB.Internal.Linq
 
 				if (!mappingSchema.IsScalarType(valueType))
 				{
-					if (node.Value is Array or FormattableString)
+					if (node.Value is Array or FormattableString or RawSqlString)
 						return false;
 
 					return true;
