@@ -106,7 +106,7 @@ namespace Tests.SchemaProvider
 								Assert.That(indexTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
 								Assert.That(indexTable.ForeignKeys, Has.Count.EqualTo(2));
 							}
-					}
+						}
 
 						break;
 				}
@@ -124,7 +124,7 @@ namespace Tests.SchemaProvider
 								Assert.That(col.Precision, Is.EqualTo(3));
 								Assert.That(col.Scale, Is.Null);
 							}
-					}
+						}
 
 						break;
 				}
