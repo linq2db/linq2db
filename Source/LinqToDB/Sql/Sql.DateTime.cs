@@ -37,6 +37,7 @@ namespace LinqToDB
 			/// <item>SQL Server</item>
 			/// <item>SAP/Sybase ASE</item>
 			/// <item>Informix</item>
+			/// <item>Ydb</item>
 			/// </list>
 			/// </item>
 			/// <item>US 0-based numbering schema used by MySQL database</item>

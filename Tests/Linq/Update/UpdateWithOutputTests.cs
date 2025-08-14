@@ -394,7 +394,7 @@ namespace Tests.xUpdate
 					.Where(_ => _.s.Id == 3)
 					.UpdateWithOutput(
 						target,
-						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						s => new DestinationTable { Value = s.s.Value, ValueStr = s.s.ValueStr, },
 						(source, deleted, inserted) => new
 						{
 							InsertedValue = inserted.Value,
@@ -1839,7 +1839,7 @@ namespace Tests.xUpdate
 				var output = source
 					.Where(s => s.Id > 3)
 					.UpdateWithOutput(
-						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+						s => new TableWithData { Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 						(deleted, inserted) => new { InsertedValue = inserted.Value, })
 					.ToArray();
 
@@ -1867,7 +1867,7 @@ namespace Tests.xUpdate
 				var output = source
 					.Where(s => s.Id == 3)
 					.UpdateWithOutput(
-						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+						s => new TableWithData { Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 						(deleted, inserted) => new { InsertedValue = inserted.Value, })
 					.ToArray();
 
@@ -1954,7 +1954,7 @@ namespace Tests.xUpdate
 					source
 						.Where(s => s.Id > 3)
 						.UpdateWithOutputAsync(
-							s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+							s => new TableWithData { Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 							(deleted, inserted) => new { InsertedValue = inserted.Value, }));
 
 				AreEqual(
@@ -1982,7 +1982,7 @@ namespace Tests.xUpdate
 					source
 						.Where(s => s.Id == 3)
 						.UpdateWithOutputAsync(
-							s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+							s => new TableWithData { Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 							(deleted, inserted) => new { InsertedValue = inserted.Value, }));
 
 				AreEqual(

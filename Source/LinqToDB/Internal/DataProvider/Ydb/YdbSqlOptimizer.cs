@@ -29,6 +29,25 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					// disable table alias
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
+				case QueryType.Insert:
+					statement = CorrectUpdateStatement((SqlInsertStatement)statement);
+					break;
+			}
+
+			return statement;
+		}
+
+		private SqlStatement CorrectUpdateStatement(SqlInsertStatement statement)
+		{
+			if (statement.SelectQuery != null
+				&& statement.SelectQuery.Select.Columns.Count == statement.Insert.Items.Count)
+			{
+				for (var i = 0; i < statement.Insert.Items.Count; i++)
+				{
+					statement.SelectQuery.Select.Columns[i].Alias = ((SqlField)statement.Insert.Items[i].Column).Name;
+				}
+
+				statement.SelectQuery.DoNotSetAliases = true;
 			}
 
 			return statement;
@@ -46,31 +65,46 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		private bool MoveScalarSubQueriesToCte(SqlStatement statement)
 		{
-			if (statement is not SqlStatementWithQueryBase withStatement
-				|| statement.SelectQuery == null
-				|| statement.QueryType == QueryType.Merge)
+			if (statement is not SqlStatementWithQueryBase withStatement)
 				return false;
 
 			var cteCount = withStatement.With?.Clauses.Count ?? 0;
-			statement.SelectQuery = statement.SelectQuery.Convert(withStatement, static (visitor, elem) =>
-			{
-				if (elem != visitor.Context.SelectQuery
-					&& elem is SelectQuery { IsParameterDependent: false, Select.Columns: [var column] } subQuery)
-				{
-					if (column.SystemType == null)
-					{
-						throw new NotImplementedException("TODO");
-					}
 
-					var cte = new CteClause(subQuery, column.SystemType, false, null);
-					(visitor.Context.With ??= new()).Clauses.Add(cte);
-					return new SqlCteTable(cte, column.SystemType);
-				}
+			if (statement.SelectQuery != null && statement.QueryType != QueryType.Merge)
+				statement.SelectQuery = ConvertToCte(statement.SelectQuery, withStatement);
 
-				return elem;
-			});
+			if (statement is SqlInsertStatement insert)
+				insert.Insert = ConvertToCte(insert.Insert, withStatement);
 
 			return withStatement.With?.Clauses.Count > cteCount;
+
+			static T ConvertToCte<T>(T statement, SqlStatementWithQueryBase withStatement)
+				where T: class, IQueryElement
+			{
+				return statement.Convert(withStatement, static (visitor, elem) =>
+				{
+					if (elem is SelectQuery { Select.Columns: [var column] } subQuery
+						&& !QueryHelper.IsDependsOnOuterSources(subQuery))
+					{
+						if (column.SystemType == null)
+							throw new InvalidOperationException();
+
+						if (visitor.Stack?.Count > 1
+							// in column or predicate
+							&& visitor.Stack[^2] is SqlSelectClause
+								or ISqlPredicate
+								or SqlExpressionBase
+								or SqlSetExpression)
+						{
+							var cte = new CteClause(subQuery, column.SystemType, false, null);
+							(visitor.Context.With ??= new()).Clauses.Add(cte);
+							return new SqlCteTable(cte, column.SystemType);
+						}
+					}
+
+					return elem;
+				}, true);
+			}
 		}
 	}
 }

@@ -108,7 +108,7 @@ CREATE COLUMN TABLE ""Person"" (
 						sql = new[] { $"UPDATE main.sqlite_sequence SET seq = {lastValue} WHERE name = 'Person'" };
 						break;
 					case string prov when prov.IsAnyOf(ProviderName.Ydb):
-						sql = new[] { $"ALTER SEQUENCE `/local/Person/_serial_column_PersonID` RESTART" };
+						sql = new[] { $"ALTER SEQUENCE `/local/Person/_serial_column_PersonID` RESTART WITH {lastValue + 1}" };
 						break;
 					default:
 #pragma warning disable RS0030 // Do not use banned APIs
@@ -248,7 +248,7 @@ CREATE COLUMN TABLE ""AllTypes""
 						sql = new[] { $"UPDATE main.sqlite_sequence SET seq = {lastValue} WHERE name = 'AllTypes'" };
 						break;
 					case string prov when prov.IsAnyOf(ProviderName.Ydb):
-						sql = new[] { $"ALTER SEQUENCE `/local/AllTypes/_serial_column_ID` RESTART" };
+						sql = new[] { $"ALTER SEQUENCE `/local/AllTypes/_serial_column_ID` RESTART WITH {lastValue + 1}" };
 						break;
 					default:
 #pragma warning disable RS0030 // Do not use banned APIs

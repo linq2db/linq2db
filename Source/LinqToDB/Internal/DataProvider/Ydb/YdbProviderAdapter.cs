@@ -30,7 +30,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		public  const string ClientNamespace      = "Ydb.Sdk.Ado";
 
 		private const string ProtosAssemblyName   = "Ydb.Protos";
-		private const string ProtobufAssemblyName = "Google.Protobuf";
 
 		// custom reader methods
 		internal const string GetBytes        = "GetBytes";

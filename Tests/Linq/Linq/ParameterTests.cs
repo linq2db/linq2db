@@ -1886,7 +1886,6 @@ namespace Tests.Linq
 			// test field
 			tb.Update(r => new TestBool()
 			{
-				Id = 1,
 				Value = !r.Value
 			});
 

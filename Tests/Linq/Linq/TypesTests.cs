@@ -372,7 +372,7 @@ namespace Tests.Linq
 
 				db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue2 = pdt });
 
-				if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				if (context.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.Ydb))
 					dt = dt.AddTicks(-dt.Ticks % 10);
 
 				Assert.That(dt2, Is.EqualTo(dt));
@@ -410,7 +410,7 @@ namespace Tests.Linq
 
 				db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue2 = pdt });
 
-				if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				if (context.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.Ydb))
 					dt = dt.AddTicks(-dt.Ticks % 10);
 
 				Assert.That(dt2, Is.EqualTo(dt));
@@ -448,7 +448,7 @@ namespace Tests.Linq
 
 				db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue2 = pdt });
 
-				if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				if (context.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.Ydb))
 					dt = dt.AddTicks(-dt.Ticks % 10);
 
 				Assert.That(dt2, Is.EqualTo(dt));

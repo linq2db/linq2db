@@ -31,7 +31,7 @@ namespace Tests.xUpdate
 					.Value(c => Sql.Property<int>(c, ParentIDColumn), () => 1)
 					.Value(c => Sql.Property<int>(c, ChildIDColumn), () => id)
 					.Insert();
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(db.Child.Count(c => Sql.Property<int>(c, ChildIDColumn) == id), Is.EqualTo(1));
@@ -101,7 +101,7 @@ namespace Tests.xUpdate
 					.Value(c => Sql.Property<string>(c, lastNameColumn), () => "The Dynamic")
 					.Value(c => Sql.Property<Gender>(c, "Gender"), () => Gender.Male)
 					.Insert();
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(db.GetTable<MyClass>().Count(c =>
@@ -128,7 +128,7 @@ namespace Tests.xUpdate
 						.Where(c => Sql.Property<string>(c, "LastName") == "Limonadovy")
 						.Set(c => Sql.Property<string>(c, "FirstName"), () => "Johnny")
 						.Update();
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(db.GetTable<MyClass>().Count(c => Sql.Property<string>(c, "FirstName") == "Johnny" && Sql.Property<string>(c, "LastName") == "Limonadovy"), Is.EqualTo(1));

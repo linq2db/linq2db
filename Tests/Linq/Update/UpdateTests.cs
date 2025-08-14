@@ -26,7 +26,7 @@ namespace Tests.xUpdate
 	public class UpdateTests : TestBase
 	{
 		[Test]
-		public void Update1([DataSources] string context)
+		public void Update1([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -38,7 +38,7 @@ namespace Tests.xUpdate
 				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID), Is.EqualTo(1));
 
 				var cnt = db.Parent.Update(p => p.ParentID == parent.ParentID, p => new Parent { ParentID = p.ParentID + 1 });
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID + 1), Is.EqualTo(1));
@@ -46,7 +46,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task Update1Async([DataSources] string context)
+		public async Task Update1Async([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -58,7 +58,7 @@ namespace Tests.xUpdate
 				Assert.That(await db.Parent.CountAsync(p => p.ParentID == parent.ParentID), Is.EqualTo(1));
 
 				var cnt = await db.Parent.UpdateAsync(p => p.ParentID == parent.ParentID, p => new Parent { ParentID = p.ParentID + 1 });
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(await db.Parent.CountAsync(p => p.ParentID == parent.ParentID + 1), Is.EqualTo(1));
@@ -66,7 +66,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update2([DataSources] string context)
+		public void Update2([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -78,7 +78,7 @@ namespace Tests.xUpdate
 				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID), Is.EqualTo(1));
 
 				var cnt = db.Parent.Where(p => p.ParentID == parent.ParentID).Update(p => new Parent { ParentID = p.ParentID + 1 });
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID + 1), Is.EqualTo(1));
@@ -86,7 +86,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task Update2Async([DataSources] string context)
+		public async Task Update2Async([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -98,7 +98,7 @@ namespace Tests.xUpdate
 				Assert.That(await db.Parent.CountAsync(p => p.ParentID == parent.ParentID), Is.EqualTo(1));
 
 				var cnt = await db.Parent.Where(p => p.ParentID == parent.ParentID).UpdateAsync(p => new Parent { ParentID = p.ParentID + 1 });
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(await db.Parent.CountAsync(p => p.ParentID == parent.ParentID + 1), Is.EqualTo(1));
@@ -218,7 +218,7 @@ namespace Tests.xUpdate
 						.Where(p => p.ParentID == id)
 							.Set(p => p.Value1, () => TypeValue.Value2)
 						.Update();
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(db.Parent4.Count(p => p.ParentID == id && p.Value1 == TypeValue.Value2), Is.EqualTo(1));
@@ -240,7 +240,7 @@ namespace Tests.xUpdate
 						.Where(p => p.ParentID == id)
 							.Set(p => p.Value1, TypeValue.Value2)
 						.Update();
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 				Assert.That(db.Parent4.Count(p => p.ParentID == id && p.Value1 == TypeValue.Value2), Is.EqualTo(1));
 
@@ -248,7 +248,7 @@ namespace Tests.xUpdate
 						.Where(p => p.ParentID == id)
 							.Set(p => p.Value1, TypeValue.Value3)
 						.Update();
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(db.Parent4.Count(p => p.ParentID == id && p.Value1 == TypeValue.Value3), Is.EqualTo(1));
@@ -694,7 +694,7 @@ namespace Tests.xUpdate
 						.Set(_ => _.Gender, _ => nullableGender.HasValue ? nullableGender.Value : _.Gender)
 						.Update();
 
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				var obj = db.GetTable<ComplexPerson2>()
@@ -735,7 +735,7 @@ namespace Tests.xUpdate
 						.Set(_ => _.Name.LastName, _ => _.Name.FirstName)
 						.Update();
 
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				var obj = db.GetTable<ComplexPerson2>().First(_ => _.ID == id);
@@ -1017,7 +1017,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateNullablePrimaryKey([DataSources] string context)
+		public void UpdateNullablePrimaryKey([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1034,7 +1034,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateTop([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void UpdateTop([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -1088,6 +1088,7 @@ namespace Tests.xUpdate
 		public void TestUpdateOrdered(
 			[DataSources(
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllInformix,
 			TestProvName.AllClickHouse,
 			TestProvName.AllDB2,
@@ -1194,7 +1195,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestUpdateTakeNotOrdered([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void TestUpdateTakeNotOrdered([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -1278,7 +1279,8 @@ namespace Tests.xUpdate
 							Value1 = queryResult.Value.ParentID
 						});
 
-				Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
 
@@ -2042,7 +2044,8 @@ namespace Tests.xUpdate
 				var data = main.OrderBy(_ => _.Id).ToArray();
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(cnt, Is.EqualTo(1));
+					if (context.SupportsRowcount())
+						Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));
@@ -2069,7 +2072,8 @@ namespace Tests.xUpdate
 				var data = main.OrderBy(_ => _.Id).ToArray();
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(cnt, Is.EqualTo(1));
+					if (context.SupportsRowcount())
+						Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));
@@ -2096,7 +2100,8 @@ namespace Tests.xUpdate
 				var data = main.OrderBy(_ => _.Id).ToArray();
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(cnt, Is.EqualTo(1));
+					if (context.SupportsRowcount())
+						Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));
@@ -2123,7 +2128,8 @@ namespace Tests.xUpdate
 				var data = main.OrderBy(_ => _.Id).ToArray();
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(cnt, Is.EqualTo(1));
+					if (context.SupportsRowcount())
+						Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));

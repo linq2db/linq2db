@@ -445,7 +445,7 @@ namespace LinqToDB
 		[Function  (PN.Informix, "Substr",                          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function  (PN.Oracle,   "Substr",                          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function  (PN.SQLite,   "Substr",                          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function  (PN.Ydb,      "SUBSTRING",                       PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function  (PN.Ydb,      "Unicode::Substring",              PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.Firebird, "Substring({0} from {1} for {2})", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Substring(string? str, int? start, int? length)
 		{
@@ -568,7 +568,7 @@ namespace LinqToDB
 		[Function(                           PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SQLite,     "LeftStr",  PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.ClickHouse, "leftUTF8", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.Ydb,      "SUBSTRING({0}, 0, {1})", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.Ydb,      "Unicode::Substring({0}, 0, {1})", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Left(string? str, int? length)
 		{
 			if (length == null || str == null) return null;
@@ -626,7 +626,7 @@ namespace LinqToDB
 		[Function(PN.ClickHouse, "rightUTF8", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Extension(PN.Oracle,    "",          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, BuilderType = typeof(OracleRightBuilder))]
 		[Extension(PN.SqlCe,     "",          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, BuilderType = typeof(SqlCeRightBuilder))]
-		[Expression(PN.Ydb, "SUBSTRING({0}, CAST(Unicode::GetLength({0}) - {1} AS UInt32), {1})", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.Ydb, "Unicode::Substring({0}, CAST(Unicode::GetLength({0}) - {1} AS UInt32), {1})", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Right(string? str, int? length)
 		{
 			if (length == null || str == null) return null;

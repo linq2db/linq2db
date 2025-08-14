@@ -10,10 +10,8 @@ namespace Tests
 	{
 		private static readonly string[] RecursiveCteUnsupportedProviders = new[]
 			{
-				//TestProvName.AllFirebird,
-				//ProviderName.DB2,
 				ProviderName.Ydb,
-				//TestProvName.AllSapHana,
+				TestProvName.AllSapHana,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 		public RecursiveCteContextSourceAttribute() : this(true)

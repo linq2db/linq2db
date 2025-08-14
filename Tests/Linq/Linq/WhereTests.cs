@@ -2159,12 +2159,12 @@ namespace Tests.Linq
 
 		[Test]
 		public void Issue_SubQueryFilter3([DataSources(
-			TestProvName.AllClickHouse, 
-			TestProvName.AllAccess, 
-			TestProvName.AllSapHana, 
-			TestProvName.AllFirebirdLess4, 
-			TestProvName.AllOracle, 
-			TestProvName.AllMySql57, 
+			TestProvName.AllClickHouse,
+			TestProvName.AllAccess,
+			TestProvName.AllSapHana,
+			TestProvName.AllFirebirdLess4,
+			TestProvName.AllOracle,
+			TestProvName.AllMySql57,
 			TestProvName.AllSybase
 			)] string context)
 		{
@@ -2577,6 +2577,8 @@ namespace Tests.Linq
 
 		class WithMultipleDates
 		{
+			[PrimaryKey] public int PK { get; set; }
+
 			public int? Id { get; set; }
 
 			public DateTime? Date1 { get; set; }
@@ -2603,6 +2605,7 @@ namespace Tests.Linq
 			{
 				new WithMultipleDates
 				{
+					PK    = 1,
 					Id    = 1,
 					Date1 = new DateTime(2023, 1, 1),
 					Date2 = new DateTime(2023, 1, 2),
@@ -2611,6 +2614,7 @@ namespace Tests.Linq
 				},
 				new WithMultipleDates
 				{
+					PK    = 2,
 					Id    = 2,
 					Date1 = new DateTime(2023, 2, 1),
 					Date2 = new DateTime(2023, 2, 2),
@@ -2619,6 +2623,7 @@ namespace Tests.Linq
 				},
 				new WithMultipleDates
 				{
+					PK    = 3,
 					Id    = null,
 					Date1 = null,
 					Date2 = null,

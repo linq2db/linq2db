@@ -166,8 +166,9 @@ namespace Tests.Linq
 					Where(p => p.Value1!.Value != 2));
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test]
-		public void Concat6([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Concat6([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

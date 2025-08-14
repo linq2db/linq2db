@@ -146,6 +146,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
 		public void Test_Feature_IsTrue([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -183,6 +184,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
 		public void Test_Feature_IsFalse([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -222,6 +224,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
 		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
 		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
 		public void Test_Feature_IsUnknown([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -362,6 +365,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
 		[ThrowsForProvider("MySql.Data.MySqlClient.MySqlException", TestProvName.AllMySqlData)]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
 		public void Test_Feature_Unknown([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -540,6 +544,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", TestProvName.AllFirebird)]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
 		public void Test_Feature_NullSaveEqual([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -579,6 +584,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2, TestProvName.AllDB2)]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
 		public void Test_Feature_Is([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -618,6 +624,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Npgsql.PostgresException", TestProvName.AllPostgreSQL)]
 		[ThrowsForProvider("System.Data.SQLite.SQLiteException", TestProvName.AllSQLiteClassic)]
 		[ThrowsForProvider("Microsoft.Data.Sqlite.SqliteException", ProviderName.SQLiteMS)]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
 		public void Test_Feature_Decode([DataSources(false, TestProvName.AllFirebird)] string context)
 		{
 			using var db = GetDataConnection(context);

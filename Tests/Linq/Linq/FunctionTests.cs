@@ -511,7 +511,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sum2([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Sum2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

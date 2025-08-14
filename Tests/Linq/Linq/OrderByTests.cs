@@ -379,7 +379,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void OrderByContinuous([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -749,7 +749,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EnableConstantExpressionInOrderByTest([DataSources(ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		public void EnableConstantExpressionInOrderByTest([DataSources(ProviderName.Ydb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
 		{
 			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
 
@@ -770,7 +770,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EnableConstantExpressionInOrderByTest2([DataSources(ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		public void EnableConstantExpressionInOrderByTest2([DataSources(ProviderName.Ydb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
 		{
 			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
 
@@ -791,7 +791,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EnableConstantExpressionInOrderByTest3([DataSources(ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		public void EnableConstantExpressionInOrderByTest3([DataSources(ProviderName.Ydb, ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
 		{
 			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
 

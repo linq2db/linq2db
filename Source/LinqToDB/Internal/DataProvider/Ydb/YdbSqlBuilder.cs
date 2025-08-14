@@ -182,6 +182,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			}
 		}
 
+		protected sealed override bool IsReserved(string word)
+		{
+			return ReservedWords.IsReserved(word, ProviderName.Ydb);
+		}
+
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			// https://ydb.tech/docs/en/yql/reference/syntax/create_table/#object-naming-rules
@@ -324,5 +329,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		//		suffix: null,
 		//		Sql.QueryExtensionScope.QueryHint);
 		//}
+
+		protected override void BuildMergeStatement(SqlMergeStatement merge) => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 	}
 }

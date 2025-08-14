@@ -54,7 +54,7 @@ namespace Tests.UserTests
 
 					var count = db.Insert(new TestTable() { Id = 1, Name = "John", Age = 15 });
 
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(count, Is.GreaterThan(0));
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
@@ -64,7 +64,7 @@ namespace Tests.UserTests
 
 					count = db.Insert(new TestTable() { Id = 2, Name = "Max", Age = 14 });
 
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(count, Is.GreaterThan(0));
 
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;

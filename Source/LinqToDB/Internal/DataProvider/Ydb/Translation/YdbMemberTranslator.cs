@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
@@ -16,10 +17,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		protected override IMemberTranslator CreateGuidMemberTranslator() => new GuidMemberTranslator();
 
-		//CreateSqlTypesTranslator
-		//CreateDateMemberTranslator
-		//CreateGuidMemberTranslator
-		//CreateMathMemberTranslator
+		protected override IMemberTranslator CreateSqlTypesTranslator() => new SqlTypesTranslation();
+
+		protected override IMemberTranslator CreateMathMemberTranslator() => new MathMemberTranslator();
 
 		//ConvertToString
 		//ProcessSqlConvert
@@ -70,10 +70,51 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 				return factory.Function(valueTypeString, "String::ReplaceAll", value, oldValue, newValue);
 			}
+
+			protected override Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				using var disposable = translationContext.UsingTypeFromExpression(methodCall.Arguments[0], methodCall.Arguments[1]);
+
+				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedField))
+					return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
+
+				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var translatedValue))
+					return translationContext.CreateErrorExpression(methodCall.Arguments[1], type: methodCall.Type);
+
+				ISqlExpression? escape = null;
+
+				if (methodCall.Arguments.Count == 3)
+				{
+					if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[2], out escape))
+						return translationContext.CreateErrorExpression(methodCall.Arguments[2], type: methodCall.Type);
+
+					if (escape is SqlValue { ValueType.DataType: not DataType.Binary } value)
+						value.ValueType = value.ValueType.WithDataType(DataType.Binary);
+				}
+
+				var predicate       = factory.LikePredicate(translatedField, false, translatedValue, escape);
+				var searchCondition = factory.SearchCondition().Add(predicate);
+
+				return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, searchCondition, methodCall);
+			}
 		}
 
-		//protected class SqlTypesTranslation : SqlTypesTranslationDefault
-		//{
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault
+		{
+			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+			{
+				//return base.ConvertBit(translationContext, memberExpression, translationFlags);
+				throw new NotImplementedException("55");
+			}
+
+			protected override Expression? ConvertDateOnly(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+			{
+				//return base.ConvertDateOnly(translationContext, memberExpression, translationFlags);
+				throw new NotImplementedException("52");
+			}
+
 		//	// YDB stores DateTime with microsecond precision in the Timestamp type
 		//	protected override Expression? ConvertDateTime(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 		//		=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Timestamp));
@@ -86,125 +127,143 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		//	protected override Expression? ConvertDateTimeOffset(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 		//		=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Timestamp));
-		//}
+		}
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
-			//	protected override ISqlExpression? TranslateDateTimeDatePart(
-			//			ITranslationContext translationContext, TranslationFlags translationFlag,
-			//			ISqlExpression dateTimeExpression, Sql.DateParts datepart)
-			//	{
-			//		var f       = translationContext.ExpressionFactory;
-			//		var intType = f.GetDbDataType(typeof(int));
+			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				//return base.TranslateDateTimeOffsetDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+				throw new NotImplementedException("11");
+			}
 
-			//		// Use direct DateTime::Get* functions
-			//		string? fn = datepart switch
-			//		{
-			//			Sql.DateParts.Year        => "DateTime::GetYear",
-			//			Sql.DateParts.Month       => "DateTime::GetMonth",
-			//			Sql.DateParts.Day         => "DateTime::GetDayOfMonth",
-			//			Sql.DateParts.DayOfYear   => "DateTime::GetDayOfYear",
-			//			Sql.DateParts.Week        => "DateTime::GetWeekOfYearIso8601",
-			//			Sql.DateParts.Hour        => "DateTime::GetHour",
-			//			Sql.DateParts.Minute      => "DateTime::GetMinute",
-			//			Sql.DateParts.Second      => "DateTime::GetSecond",
-			//			Sql.DateParts.Millisecond => "DateTime::GetMillisecondOfSecond",
-			//			Sql.DateParts.WeekDay     => "DateTime::GetDayOfWeek",
-			//			_                         => null
-			//		};
+			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				//return base.TranslateDateTimeOffsetTruncationToDate(translationContext, dateExpression, translationFlags);
+				throw new NotImplementedException("10");
+			}
 
-			//		// QUARTER = (Month + 2) / 3
-			//		if (datepart == Sql.DateParts.Quarter)
-			//		{
-			//			var month = f.Function(intType, "DateTime::GetMonth", dateTimeExpression);
-			//			var two  = f.Value(intType, 2);
-			//			var three = f.Value(intType, 3);
-			//			return f.Div(intType, f.Add(intType, month, two), three);
-			//		}
+			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				//return base.TranslateDateTimeOffsetTruncationToTime(translationContext, dateExpression, translationFlags);
+				throw new NotImplementedException("09");
+			}
 
-			//		if (fn == null)
-			//			return null;
+			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
 
-			//		var baseExpr = f.Function(intType, fn, dateTimeExpression);
+				var type = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
+				var cast = factory.Function(type, "DateTime::TimeOfDay", dateExpression);
 
-			//		// Adjust DayOfWeek to match T-SQL format (Sunday=1 ... Saturday=7)
-			//		var seven  = f.Value(intType, 7);
-			//		var one    = f.Value(intType, 1);
-			//		if (datepart == Sql.DateParts.WeekDay)
-			//			return f.Add(intType, f.Mod(baseExpr, seven), one);
+				return cast;
+			}
 
-			//		return baseExpr;
-			//	}
+			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				var f       = translationContext.ExpressionFactory;
+				var intType = f.GetDbDataType(typeof(int));
+
+				// QUARTER = (Month + 2) / 3
+				if (datepart == Sql.DateParts.Quarter)
+				{
+					var month = f.Function(intType, "DateTime::GetMonth", dateTimeExpression);
+					var two  = f.Value(intType, 2);
+					var three = f.Value(intType, 3);
+					return f.Div(intType, f.Add(intType, month, two), three);
+				}
+
+				string? fn = datepart switch
+				{
+					Sql.DateParts.Year        => "DateTime::GetYear",
+					Sql.DateParts.Month       => "DateTime::GetMonth",
+					Sql.DateParts.Day         => "DateTime::GetDayOfMonth",
+					Sql.DateParts.DayOfYear   => "DateTime::GetDayOfYear",
+					Sql.DateParts.Week        => "DateTime::GetWeekOfYearIso8601",
+					Sql.DateParts.Hour        => "DateTime::GetHour",
+					Sql.DateParts.Minute      => "DateTime::GetMinute",
+					Sql.DateParts.Second      => "DateTime::GetSecond",
+					Sql.DateParts.Millisecond => "DateTime::GetMillisecondOfSecond",
+					Sql.DateParts.WeekDay     => "DateTime::GetDayOfWeek",
+					_                         => null
+				};
+
+				if (fn == null)
+					return null;
+
+				var baseExpr = f.Function(intType, fn, dateTimeExpression);
+
+				// Adjust DayOfWeek to match T-SQL format (Sunday=1 ... Saturday=7)
+				if (datepart == Sql.DateParts.WeekDay)
+				{
+					var seven  = f.Value(intType, 7);
+					var one    = f.Value(intType, 1);
+					return f.Add(intType, f.Mod(baseExpr, seven), one);
+				}
+
+				return baseExpr;
+			}
 
 			//	protected override ISqlExpression? TranslateDateTimeOffsetDatePart(
 			//			ITranslationContext translationContext, TranslationFlags translationFlag,
 			//			ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			//		=> TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
 
-			//	protected override ISqlExpression? TranslateDateTimeDateAdd(
-			//			ITranslationContext translationContext, TranslationFlags translationFlag,
-			//			ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
-			//	{
-			//		var f        = translationContext.ExpressionFactory;
-			//		var dateType = f.GetDbDataType(dateTimeExpression);
-			//		var intType  = f.GetDbDataType(typeof(int));
+			protected override ISqlExpression? TranslateDateTimeDateAdd(
+					ITranslationContext translationContext, TranslationFlags translationFlag,
+					ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
+			{
+				var f        = translationContext.ExpressionFactory;
+				var dateType = f.GetDbDataType(dateTimeExpression);
+				var intType  = f.GetDbDataType(typeof(int));
 
-			//		// Shift by year/month/quarter using Shift* functions
-			//		if (datepart is Sql.DateParts.Year or Sql.DateParts.Month or Sql.DateParts.Quarter)
-			//		{
-			//			string shiftFn = datepart switch
-			//			{
-			//				Sql.DateParts.Year    => "DateTime::ShiftYears",
-			//				Sql.DateParts.Month   => "DateTime::ShiftMonths",
-			//				Sql.DateParts.Quarter => "DateTime::ShiftMonths",
-			//				_                     => throw new InvalidOperationException()
-			//			};
+				if (datepart is Sql.DateParts.Year or Sql.DateParts.Month or Sql.DateParts.Quarter)
+				{
+					string shiftFn = datepart switch
+					{
+						Sql.DateParts.Year    => "DateTime::ShiftYears",
+						Sql.DateParts.Month   => "DateTime::ShiftMonths",
+						Sql.DateParts.Quarter => "DateTime::ShiftMonths",
+						_                     => throw new InvalidOperationException()
+					};
 
-			//			ISqlExpression shiftArg = increment;
+					var shiftArg = increment;
 
-			//			// Quarter = 3 months
-			//			if (datepart == Sql.DateParts.Quarter)
-			//				shiftArg = f.Multiply(intType, increment, 3);
+					if (datepart == Sql.DateParts.Quarter)
+						shiftArg = f.Multiply(intType, increment, 3);
 
-			//			var split        = f.Function(f.GetDbDataType(dateTimeExpression), "DateTime::Split", dateTimeExpression);
-			//			var shifted      = f.Function(f.GetDbDataType(split), shiftFn, split, shiftArg);
-			//			var makeDateTime = f.Function(dateType, "DateTime::MakeDatetime", shifted);
+					var shifted      = f.Function(f.GetDbDataType(dateTimeExpression), shiftFn, dateTimeExpression, shiftArg);
+					var makeDateTime = f.Function(dateType, "DateTime::MakeDatetime", shifted);
 
-			//			return makeDateTime;
-			//		}
+					return makeDateTime;
+				}
 
-			//		// Week = 7 days → convert to days
-			//		if (datepart == Sql.DateParts.Week)
-			//		{
-			//			var days = f.Multiply(intType, increment, 7);
-			//			return TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, days, Sql.DateParts.Day);
-			//		}
+				string? intervalFn = datepart switch
+				{
+					Sql.DateParts.Week        => "DateTime::IntervalFromDays",
+					Sql.DateParts.Day         => "DateTime::IntervalFromDays",
+					Sql.DateParts.Hour        => "DateTime::IntervalFromHours",
+					Sql.DateParts.Minute      => "DateTime::IntervalFromMinutes",
+					Sql.DateParts.Second      => "DateTime::IntervalFromSeconds",
+					Sql.DateParts.Millisecond => "DateTime::IntervalFromMilliseconds",
+					_                         => null
+				};
 
-			//		// Day/Hour/Minute/Second/Millisecond → use interval functions
-			//		string? intervalFn = datepart switch
-			//		{
-			//			Sql.DateParts.Day         => "DateTime::IntervalFromDays",
-			//			Sql.DateParts.Hour        => "DateTime::IntervalFromHours",
-			//			Sql.DateParts.Minute      => "DateTime::IntervalFromMinutes",
-			//			Sql.DateParts.Second      => "DateTime::IntervalFromSeconds",
-			//			Sql.DateParts.Millisecond => "DateTime::IntervalFromMilliseconds",
-			//			_                         => null
-			//		};
+				if (intervalFn == null)
+					return null;
 
-			//		if (intervalFn == null)
-			//			return null;
+				if (datepart == Sql.DateParts.Week)
+				{
+					increment = f.Multiply(f.GetDbDataType(increment), increment, 7);
+				}
 
-			//		var interval = f.Function(
-			//			f.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval),
-			//			intervalFn, increment);
+				var interval = f.Function(
+						f.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval),
+						intervalFn,
+						increment);
 
-			//		return f.Add(dateType, dateTimeExpression, interval);
-			//	}
-
-			//	protected override ISqlExpression? TranslateDateTimeOffsetDateAdd(
-			//			ITranslationContext translationContext, TranslationFlags translationFlag,
-			//			ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
-			//		=> TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
+				return f.Add(dateType, dateTimeExpression, interval);
+			}
 
 			//	protected override ISqlExpression? TranslateDateTimeTruncationToDate(
 			//			ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
@@ -227,8 +286,74 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 			}
 		}
 
-		//protected class MathMemberTranslator : MathMemberTranslatorBase
-		//{
+		protected class MathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var valueType = factory.GetDbDataType(xValue);
+
+				var result = factory.Function(valueType, "MAX_OF", xValue, yValue);
+
+				return result;
+			}
+
+			protected override ISqlExpression? TranslateMinMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var valueType = factory.GetDbDataType(xValue);
+
+				var result = factory.Function(valueType, "MIN_OF", xValue, yValue);
+
+				return result;
+			}
+
+			protected override ISqlExpression? TranslatePow(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var xType      = factory.GetDbDataType(xValue);
+				var resultType = xType;
+
+				if (xType.DataType is not (DataType.Double or DataType.Single))
+				{
+					xType = factory.GetDbDataType(typeof(double));
+					xValue = factory.Cast(xValue, xType);
+				}
+
+				var yType        = factory.GetDbDataType(yValue);
+				var yValueResult = yValue;
+
+				if (yType.DataType is not (DataType.Double or DataType.Single))
+				{
+					yValueResult = factory.Cast(yValue, xType);
+				}
+
+				var result = factory.Function(xType, "Math::Pow", xValue, yValueResult);
+				if (!resultType.EqualsDbOnly(xType))
+				{
+					result = factory.Cast(result, resultType);
+				}
+
+				return result;
+			}
+
+			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				if (precision != null)
+					return base.TranslateRoundToEven(translationContext, methodCall, value, precision);
+
+				var factory = translationContext.ExpressionFactory;
+
+				var valueType = factory.GetDbDataType(value);
+
+
+				var result = factory.Function(valueType, "Math::NearbyInt", value, factory.Fragment("Math::RoundToNearest()"));
+
+				return result;
+			}
 
 		//	/// <summary>
 		//	/// Banker's rounding: In YQL, ROUND(value, precision?) already performs to-even rounding for Decimal types.
@@ -282,10 +407,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		//		return factory.Function(xType, "POWER", xValue, yValue);
 		//	}
-		//}
+		}
 
-		//protected override IMemberTranslator CreateSqlTypesTranslator() => new SqlTypesTranslation();
-
-		//protected override IMemberTranslator CreateMathMemberTranslator() => new MathMemberTranslator();
 	}
 }

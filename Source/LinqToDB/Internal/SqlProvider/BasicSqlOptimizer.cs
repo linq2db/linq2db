@@ -755,6 +755,25 @@ namespace LinqToDB.Internal.SqlProvider
 						}
 					);
 				}
+				else if (select is SqlInsertStatement insert)
+				{
+					insert.Insert.Visit(cteHolder, static (foundCte, e) =>
+					{
+						if (e.ElementType == QueryElementType.SqlCteTable)
+						{
+							var cte = ((SqlCteTable)e).Cte!;
+							RegisterDependency(cte, foundCte.WriteableValue ??= new());
+						}
+					});
+					select.SelectQuery.Visit(cteHolder, static (foundCte, e) =>
+					{
+						if (e.ElementType == QueryElementType.SqlCteTable)
+						{
+							var cte = ((SqlCteTable)e).Cte!;
+							RegisterDependency(cte, foundCte.WriteableValue ??= new());
+						}
+					});
+				}
 				else
 				{
 					select.SelectQuery.Visit(cteHolder, static (foundCte, e) =>

@@ -644,7 +644,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sum3([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Sum3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -846,7 +847,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void CountInGroup([DataSources] string context)
 		{
@@ -1324,7 +1325,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void GroupByAggregate1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1339,7 +1340,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void GroupByAggregate11([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1356,7 +1357,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void GroupByAggregate12([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -2686,7 +2687,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3761Test1([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSybase)] string context)
+		public void Issue3761Test1([DataSources(ProviderName.Ydb, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue3761Table>();
@@ -2710,7 +2711,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3761Test2([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005)] string context)
+		public void Issue3761Test2([DataSources(ProviderName.Ydb, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue3761Table>();
@@ -3821,15 +3822,15 @@ namespace Tests.Linq
 		{
 			public sealed class CustomerPrice
 			{
-				public int CustomerId { get; set; }
-				public int FinalCustomerId { get; set; }
+				[PrimaryKey] public int CustomerId { get; set; }
+				[PrimaryKey] public int FinalCustomerId { get; set; }
 				public bool IsActive { get; set; }
 				public decimal Price { get; set; }
 			}
 
 			public sealed class Inventory
 			{
-				public int CustomerId { get; set; }
+				[PrimaryKey] public int CustomerId { get; set; }
 				public decimal Volume { get; set; }
 			}
 		}
