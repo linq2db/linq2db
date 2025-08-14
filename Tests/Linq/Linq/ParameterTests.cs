@@ -1990,6 +1990,19 @@ namespace Tests.Linq
 			AssertQuery(db.Parent.Where(r => r.ParentID == valueGetter()));
 		}
 
+		[Test]
+		public void LambdaBodyInQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Expression<Func<Parent, int>> valueGetter = p => p.ParentID;
+
+			var query = db.Parent
+				.Select(p => (valueGetter.Body as MemberExpression)!.Member.Name);
+
+			AssertQuery(query);
+		}
+
 		sealed class Issue4963Table
 		{
 			public byte Field { get; set; }
