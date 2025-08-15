@@ -627,25 +627,27 @@ namespace Tests.Data
 			{
 				conn.AddInterceptor(new TestConnectionInterceptor(
 					(args, cn) =>
-				{
-					if (cn.State == ConnectionState.Closed)
-						open = true;
+					{
+						if (cn.State == ConnectionState.Closed)
+							open = true;
 					},
 					null,
 					async (args, cn, ct) => await Task.Run(() =>
-				{
-					if (cn.State == ConnectionState.Closed)
-						openAsync = true;
+					{
+						if (cn.State == ConnectionState.Closed)
+							openAsync = true;
 					}, ct),
-					null));
+					null)
+				);
+
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(open, Is.False);
+					Assert.That(open,      Is.False);
 					Assert.That(openAsync, Is.False);
 					var connection = conn.OpenDbConnection();
 					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
-					Assert.That(open, Is.True);
-					Assert.That(openAsync, Is.False);
+					Assert.That(open,              Is.True);
+					Assert.That(openAsync,         Is.False);
 				}
 			}
 		}
@@ -665,11 +667,13 @@ namespace Tests.Data
 					},
 					null,
 					async (args, cn, ct) => await Task.Run(() =>
-						{
-							if (cn.State == ConnectionState.Closed)
-								openAsync = true;
+					{
+						if (cn.State == ConnectionState.Closed)
+							openAsync = true;
 					}, ct),
-					null));
+					null)
+				);
+
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(open, Is.False);

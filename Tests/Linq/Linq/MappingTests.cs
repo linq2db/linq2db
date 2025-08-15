@@ -401,7 +401,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue171Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
 			db.GetTable<Table171>()
 				.Where (t => t.Gender == Gender.Male)
 				.Select(t => new { value = (int)t.Gender })
