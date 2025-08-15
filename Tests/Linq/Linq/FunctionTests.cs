@@ -451,6 +451,7 @@ namespace Tests.Linq
 		public void NewGuidOrder(
 			[DataSources(false,
 				ProviderName.DB2,
+				ProviderName.Ydb,
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
@@ -510,7 +511,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sum2([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Sum2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

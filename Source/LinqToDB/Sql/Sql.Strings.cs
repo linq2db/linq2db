@@ -72,6 +72,7 @@ namespace LinqToDB
 		[Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({source}), {separator})",              IsAggregate = true, ChainPrecedence = 10, CanBeNull = false)]
+		[Extension(PN.Ydb,           "Unicode::JoinFromList(AGGREGATE_LIST({source}), {separator})",      IsAggregate = true, ChainPrecedence = 10, CanBeNull = false)]
 		[Extension("{source}",        TokenName = "aggregate")]
 		public static IAggregateFunctionNotOrdered<string?, string> StringAggregate(
 			[ExprParameter] this IQueryable<string?> source,
@@ -104,6 +105,7 @@ namespace LinqToDB
 		[Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
 		[Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
 		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({selector}), {separator})",              IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, CanBeNull = false)]
+		[Extension(PN.Ydb,           "Unicode::JoinFromList(AGGREGATE_LIST({selector}), {separator})",      IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, CanBeNull = false)]
 		public static IAggregateFunctionNotOrdered<T, string> StringAggregate<T>(
 							this IEnumerable<T>   source,
 			[ExprParameter]      string           separator,
@@ -125,6 +127,7 @@ namespace LinqToDB
 		[Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({selector}), {separator})",              IsAggregate = true, ChainPrecedence = 10, CanBeNull = false)]
+		[Extension(PN.Ydb,           "Unicode::JoinFromList(AGGREGATE_LIST({selector}), {separator})",      IsAggregate = true, ChainPrecedence = 10, CanBeNull = false)]
 		public static IAggregateFunctionNotOrdered<T, string> StringAggregate<T>(
 							this IQueryable<T> source,
 			[ExprParameter] string separator,
@@ -158,6 +161,7 @@ namespace LinqToDB
 		[Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
 		[Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
 		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({source}), {separator})",              IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, CanBeNull = false)]
+		[Extension(PN.Ydb,           "Unicode::JoinFromList(AGGREGATE_LIST({source}), {separator})",      IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, CanBeNull = false)]
 		public static IAggregateFunctionNotOrdered<string?, string> StringAggregate(
 			[ExprParameter] this IEnumerable<string?> source,
 			[ExprParameter] string separator)
@@ -280,9 +284,10 @@ namespace LinqToDB
 		[Extension(PN.SqlServer2017, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = true)]
 		[Extension(PN.PostgreSQL,    "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null, IsAggregate = true)]
 		[Extension(PN.MySql,         "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null, IsAggregate = true)]
-		[Extension(PN.SqlServer,     "", BuilderType = typeof(OldSqlServerConcatWsBuilder), IsAggregate = true)]
-		[Extension(PN.SQLite,        "", BuilderType = typeof(SqliteConcatWsBuilder), IsAggregate = true)]
-		[Extension(PN.ClickHouse,   "arrayStringConcat([{arguments, ', '}], {separator})", IsAggregate = true, CanBeNull = false)]
+		[Extension(PN.SqlServer,     "",                                         BuilderType = typeof(OldSqlServerConcatWsBuilder),    IsAggregate = true)]
+		[Extension(PN.SQLite,        "",                                         BuilderType = typeof(SqliteConcatWsBuilder),          IsAggregate = true)]
+		[Extension(PN.ClickHouse,    "arrayStringConcat([{arguments, ', '}], {separator})", IsAggregate = true, CanBeNull = false)]
+		[Extension(PN.Ydb,           "ListConcat([{arguments, ', '}], {separator})",        IsAggregate = true, CanBeNull = false)]
 		public static string ConcatStrings(
 			[ExprParameter(ParameterKind = ExprParameterKind.Values)]        string    separator,
 			[ExprParameter(ParameterKind = ExprParameterKind.Values)] params string?[] arguments)

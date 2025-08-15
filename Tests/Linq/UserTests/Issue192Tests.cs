@@ -15,6 +15,8 @@ namespace Tests.UserTests
 		[Table(Name = "TypeConvertTable")]
 		public class TypeConvertTable
 		{
+			[PrimaryKey] public int Id { get; set; }
+
 			[Column(Length = 50), NotNull]
 			public string Name   { get; set; } = null!;
 
@@ -83,6 +85,7 @@ namespace Tests.UserTests
 			{
 				var notVerified = new TypeConvertTable
 				{
+					Id        = 1,
 					Name      = "NotVerified",
 					BoolValue = false,
 					GuidValue = TestData.Guid1
@@ -90,6 +93,7 @@ namespace Tests.UserTests
 
 				var verified = new TypeConvertTable
 				{
+					Id        = 2,
 					Name      = "Verified",
 					BoolValue = true,
 					GuidValue = TestData.Guid2

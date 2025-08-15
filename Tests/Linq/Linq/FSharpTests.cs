@@ -1,4 +1,5 @@
-﻿using LinqToDB.Data;
+﻿using LinqToDB;
+using LinqToDB.Data;
 
 using NUnit.Framework;
 
@@ -155,7 +156,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Insert1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Insert1([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				FSharp.InsertTest.Insert1(db);

@@ -62,6 +62,8 @@
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) OR $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net472')) ">SUPPORTS_READONLY;$(DefineConstants)</DefineConstants>
 		<!--regex generators-->
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_REGEX_GENERATORS;$(DefineConstants)</DefineConstants>
+		<!--(u)int128 types-->
+		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_INT128;$(DefineConstants)</DefineConstants>
 
 		<ArtifactsPath>$(MSBuildThisFileDirectory).build</ArtifactsPath>
 		<ArtifactsPivots>$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)</ArtifactsPivots>
