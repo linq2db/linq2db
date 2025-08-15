@@ -108,12 +108,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				//return base.ConvertBit(translationContext, memberExpression, translationFlags);
 				throw new NotImplementedException("55");
 			}
+#if SUPPORTS_DATEONLY
 
 			protected override Expression? ConvertDateOnly(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 			{
 				//return base.ConvertDateOnly(translationContext, memberExpression, translationFlags);
 				throw new NotImplementedException("52");
 			}
+#endif
 
 		//	// YDB stores DateTime with microsecond precision in the Timestamp type
 		//	protected override Expression? ConvertDateTime(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -348,8 +350,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var factory = translationContext.ExpressionFactory;
 
 				var valueType = factory.GetDbDataType(value);
-
-
+				
 				var result = factory.Function(valueType, "Math::NearbyInt", value, factory.Fragment("Math::RoundToNearest()"));
 
 				return result;
