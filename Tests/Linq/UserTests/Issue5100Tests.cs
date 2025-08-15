@@ -49,7 +49,7 @@ namespace Tests.UserTests
 				db.Insert(new LanguageDTO() { LanguageID = 1, Name = "aaaa", AlternativeLanguageID = 1 });
 				db.Insert(new TextDTO() { Id = 1, Nr = 77 });
 
-				var qrySorted =
+				Assert.Throws<LinqToDBException>(()=>
 					db.GetTable<TextTranslationDTO>()
 						.OrderBy(tt =>
 							db.GetTable<LanguageDTO>()
@@ -60,8 +60,20 @@ namespace Tests.UserTests
 							db.GetTable<TextDTO>()
 								.Where(t => t.Id == tt.TextId)
 								.Select(t =>
-									t.ServerOnlyText));
+									t.ServerOnlyText)).FirstOrDefault()
+				);
 
+				var qrySorted = db.GetTable<TextTranslationDTO>()
+						.OrderBy(tt =>
+							db.GetTable<LanguageDTO>()
+								.Where(l => l.AlternativeLanguageID == tt.LanguageId)
+								.Select(l => l.LanguageID)
+								.Count())
+						.ThenBy(tt =>
+							db.GetTable<TextDTO>()
+								.Where(t => t.Id == tt.TextId)
+								.Select(t =>
+									t.ServerOnlyText).Single());
 				var translation1 = qrySorted.FirstOrDefault();
 				var qryString = ((DataConnection) db).LastQuery;
 			}
