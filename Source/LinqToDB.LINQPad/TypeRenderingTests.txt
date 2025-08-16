@@ -1,0 +1,212 @@
+﻿// generic
+new object[]
+{
+	new
+	{
+		BigInteger = System.Numerics.BigInteger.Parse("-2352454252352345235235235235235346353523523"),
+		IPv4 = System.Net.IPAddress.Parse("127.0.0.1"),
+		IPv6 = System.Net.IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
+	}
+}
+
+
+// firebird
+new object[]
+{
+	new
+	{
+		FbDecFloat1 = new FirebirdSql.Data.Types.FbDecFloat(System.Numerics.BigInteger.Parse("-1234"), 0),
+		FbDecFloat2 = new FirebirdSql.Data.Types.FbDecFloat(System.Numerics.BigInteger.Parse("-1234"), 1),
+		FbDecFloat3 = new FirebirdSql.Data.Types.FbDecFloat(System.Numerics.BigInteger.Parse("-1234"), -1),
+		FbDecFloat4 = new FirebirdSql.Data.Types.FbDecFloat(System.Numerics.BigInteger.Parse("-1234"), -4),
+		FbDecFloat5 = new FirebirdSql.Data.Types.FbDecFloat(System.Numerics.BigInteger.Parse("-1234"), -5),
+		FbDecFloat6 = new FirebirdSql.Data.Types.FbDecFloat(System.Numerics.BigInteger.Parse("1234"), 0),
+		FbDecFloat7 = new FirebirdSql.Data.Types.FbDecFloat(System.Numerics.BigInteger.Parse("1234"), 1),
+		FbDecFloat8 = new FirebirdSql.Data.Types.FbDecFloat(System.Numerics.BigInteger.Parse("1234"), -1),
+		FbDecFloat9 = new FirebirdSql.Data.Types.FbDecFloat(System.Numerics.BigInteger.Parse("1234"), -4),
+		FbDecFloat0 = new FirebirdSql.Data.Types.FbDecFloat(System.Numerics.BigInteger.Parse("1234"), -5),
+		FbZonedDateTime = new FirebirdSql.Data.Types.FbZonedDateTime(DateTime.UtcNow, "Europe/Amsterdam"),
+		FbZonedTime = new FirebirdSql.Data.Types.FbZonedTime(TimeSpan.FromMinutes(-2222), "Europe/Amsterdam"),
+	}
+}
+
+// sqlce
+new object[]
+{
+	new
+	{
+		SqlBinary = new System.Data.SqlTypes.SqlBinary(new byte[]{0,1,2,3,4,5}),
+		SqlBinaryNull = new System.Data.SqlTypes.SqlBinary(null),
+		SqlBoolean = new System.Data.SqlTypes.SqlBoolean(true),
+		SqlBooleanFalse = new System.Data.SqlTypes.SqlBoolean(false),
+		SqlBooleanNull = System.Data.SqlTypes.SqlBoolean.Null,
+		SqlByte = new System.Data.SqlTypes.SqlByte(255),
+		SqlBytes = new System.Data.SqlTypes.SqlBytes(new byte[]{0,1,2,3,4,5}),
+		SqlChars = new System.Data.SqlTypes.SqlChars(new char[]{(char)0,(char)1, 'S', 'ы'}),
+		SqlDateTime = new System.Data.SqlTypes.SqlDateTime(DateTime.Now),
+		SqlDecimal = new System.Data.SqlTypes.SqlDecimal(-123.456m),
+		SqlDouble = new System.Data.SqlTypes.SqlDouble(-123.456e123),
+		SqlGuid = new System.Data.SqlTypes.SqlGuid(Guid.NewGuid()),
+		SqlInt16 = new System.Data.SqlTypes.SqlInt16(short.MinValue),
+		SqlInt32 = new System.Data.SqlTypes.SqlInt32(int.MinValue),
+		SqlInt64 = new System.Data.SqlTypes.SqlInt64(long.MinValue),
+		SqlMoney = new System.Data.SqlTypes.SqlMoney(-123.456m),
+		SqlSingle = new System.Data.SqlTypes.SqlSingle(-123.456e-23),
+		SqlString = new System.Data.SqlTypes.SqlString("test\0\r\nтест"),
+		SqlXml = new System.Data.SqlTypes.SqlXml(new MemoryStream(Encoding.UTF8.GetBytes("<root>тест</root>"))),
+	}
+}
+
+
+// ase
+new object[]
+{
+	new
+	{
+		AseDecimal = AdoNetCore.AseClient.AseDecimal.Parse("-99999999999999999999.999999999999999999"),
+	}
+}
+
+// clickhouse client
+new object[]
+{
+	new
+	{
+		ClickHouseDecimal = new ClickHouse.Client.Numerics.ClickHouseDecimal(System.Numerics.BigInteger.Parse("-2352454252352345235235235235235346353523523"), 10),
+	}
+}
+
+// mysqlconnector
+new object[]
+{
+	new
+	{
+		MySqlDateTime  = new MySqlConnector.MySqlDateTime(DateTime.Now),
+		MySqlDateTimeZero  = new MySqlConnector.MySqlDateTime(),
+		MySqlDecimal = Activator.CreateInstance(typeof(MySqlConnector.MySqlDecimal), BindingFlags.NonPublic | BindingFlags.Instance, null, new object[]{"-23524542523523452352352352352.35346353523523"}, null),
+		MySqlGeometry = MySqlConnector.MySqlGeometry.FromWkb(123, new byte[] { 0x00, 0x00, 0x00, 0x00, 0x01, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }),
+	}
+}
+
+// sqlserver.types
+new object[]
+{
+	new
+	{
+		SqlHierarchyId = Microsoft.SqlServer.Types.SqlHierarchyId.Parse("/1/2/3/4/5/"),
+		SqlGeometry = Microsoft.SqlServer.Types.SqlGeometry.Point(66.56, -66.2343, 4977),
+		SqlGeography = Microsoft.SqlServer.Types.SqlGeography.Point(66.56, -66.2343, 4977),
+	}
+}
+
+// npgsql
+new object[]
+{
+	new
+	{
+		NpgsqlLogSequenceNumber = new NpgsqlTypes.NpgsqlLogSequenceNumber(123),
+		NpgsqlTid = new NpgsqlTypes.NpgsqlTid(123, 456),
+		NpgsqlTsQueryLexeme = new NpgsqlTypes.NpgsqlTsQueryLexeme("one two", NpgsqlTypes.NpgsqlTsQueryLexeme.Weight.C, true),
+		NpgsqlTsQueryAnd = new NpgsqlTypes.NpgsqlTsQueryAnd(new NpgsqlTypes.NpgsqlTsQueryLexeme("x ы", NpgsqlTypes.NpgsqlTsQueryLexeme.Weight.C, true), new NpgsqlTypes.NpgsqlTsQueryLexeme("one two", NpgsqlTypes.NpgsqlTsQueryLexeme.Weight.C, true)),
+		NpgsqlTsQueryNot = new NpgsqlTypes.NpgsqlTsQueryNot(new NpgsqlTypes.NpgsqlTsQueryLexeme("one two", NpgsqlTypes.NpgsqlTsQueryLexeme.Weight.C, true)),
+		NpgsqlTsQueryOr = new NpgsqlTypes.NpgsqlTsQueryOr(new NpgsqlTypes.NpgsqlTsQueryLexeme("x ы", NpgsqlTypes.NpgsqlTsQueryLexeme.Weight.C, true), new NpgsqlTypes.NpgsqlTsQueryLexeme("one two", NpgsqlTypes.NpgsqlTsQueryLexeme.Weight.C, true)),
+		NpgsqlTsQueryFollowedBy = new NpgsqlTypes.NpgsqlTsQueryFollowedBy(new NpgsqlTypes.NpgsqlTsQueryLexeme("x ы", NpgsqlTypes.NpgsqlTsQueryLexeme.Weight.C, true), 3, new NpgsqlTypes.NpgsqlTsQueryLexeme("one two", NpgsqlTypes.NpgsqlTsQueryLexeme.Weight.C, true)),
+		NpgsqlTsQueryEmpty = new NpgsqlTypes.NpgsqlTsQueryEmpty(),
+		NpgsqlTsVector = NpgsqlTypes.NpgsqlTsVector.Parse("dg80h wi0fhweiofwe "),
+		NpgsqlInet = new NpgsqlTypes.NpgsqlInet(System.Net.IPAddress.Parse("2001:0db8:85a3:0000:0000:8a2e:0370:7334"), 123),
+		NpgsqlInterval = new NpgsqlTypes.NpgsqlInterval(1, 2, 3),
+		NpgsqlLine = new NpgsqlTypes.NpgsqlLine(-1, -2, -3),
+		NpgsqlPoint = new NpgsqlTypes.NpgsqlPoint(1, 2),
+		NpgsqlCircle = new NpgsqlTypes.NpgsqlCircle(1, 2, 3),
+		NpgsqlPolygon = new NpgsqlTypes.NpgsqlPolygon(new []{new NpgsqlTypes.NpgsqlPoint(1, 2), new NpgsqlTypes.NpgsqlPoint(3, -2)}),
+		NpgsqlPath = new NpgsqlTypes.NpgsqlPath(new []{new NpgsqlTypes.NpgsqlPoint(1, 2), new NpgsqlTypes.NpgsqlPoint(3, -2)}, true),
+		NpgsqlBox = new NpgsqlTypes.NpgsqlBox(new NpgsqlTypes.NpgsqlPoint(1, 2), new NpgsqlTypes.NpgsqlPoint(3, -2)),
+		NpgsqlLSeg = new NpgsqlTypes.NpgsqlLSeg(new NpgsqlTypes.NpgsqlPoint(1, 2), new NpgsqlTypes.NpgsqlPoint(3, -2)),
+		BitArray = new BitArray(new byte[]{0x7E}),
+		BitVector32 = new System.Collections.Specialized.BitVector32(1354467),
+		Tuple = Tuple.Create(new NpgsqlTypes.NpgsqlBox(new NpgsqlTypes.NpgsqlPoint(1, 2), new NpgsqlTypes.NpgsqlPoint(3, -2)), 123),
+		ValueTuple = (new NpgsqlTypes.NpgsqlBox(new NpgsqlTypes.NpgsqlPoint(1, 2), new NpgsqlTypes.NpgsqlPoint(3, -2)), 123),
+		PhysicalAddress = System.Net.NetworkInformation.PhysicalAddress.Parse("00-11-22-33-44-55"),
+		Array1 = new int[]{ 1, 2,3 },
+		Array2 = new object[]{ 1, 2,3 },
+		Array3 = new NpgsqlTypes.NpgsqlPoint[]{ new NpgsqlTypes.NpgsqlPoint(1, 2), new NpgsqlTypes.NpgsqlPoint(1, 2)},
+		Array4 = new object[]{ new NpgsqlTypes.NpgsqlPoint(1, 2), new NpgsqlTypes.NpgsqlPoint(1, 2), 1 },
+		Array5 = new object[][]{ new object[]{new NpgsqlTypes.NpgsqlPoint(1, 2), 2 }, new object[]{1,new NpgsqlTypes.NpgsqlPoint(1, 2) } },
+		List = new List<object>(){ new NpgsqlTypes.NpgsqlPoint(1, 2), new NpgsqlTypes.NpgsqlPath(new []{new NpgsqlTypes.NpgsqlPoint(1, 2), new NpgsqlTypes.NpgsqlPoint(3, -2)}, true), 1 },
+		NpgsqlRange1 = new NpgsqlTypes.NpgsqlRange<int>(-1, true, 22, false),
+		NpgsqlRange2 = new NpgsqlTypes.NpgsqlRange<NpgsqlTypes.NpgsqlPoint>(new NpgsqlTypes.NpgsqlPoint(1, 2), true, new NpgsqlTypes.NpgsqlPoint(31, 22), false),
+		Memory = new System.Memory<byte>(new byte[]{1,2,3}),
+		ReadOnlyMemory = new System.ReadOnlyMemory<byte>(new byte[]{1,2,3}),
+		Dictionary1 = System.Collections.Immutable.ImmutableDictionary.CreateRange<int, NpgsqlTypes.NpgsqlPoint>(new System.Collections.Generic.Dictionary<int, NpgsqlTypes.NpgsqlPoint>() { { 1, new NpgsqlTypes.NpgsqlPoint(1, 2) } }),
+		Dictionary2 = new System.Collections.Generic.Dictionary<int, NpgsqlTypes.NpgsqlPoint>() { { 1, new NpgsqlTypes.NpgsqlPoint(1, 2) } },
+		ArraySegment = new ArraySegment<NpgsqlTypes.NpgsqlPoint>(new[]{new NpgsqlTypes.NpgsqlPoint(1, 2), new NpgsqlTypes.NpgsqlPoint(1, 22)}),
+	}
+}
+
+// oracle
+new object[]
+{
+	new
+	{
+		Null = Oracle.ManagedDataAccess.Types.OracleBFile.Null,
+		//OracleBFile = new Oracle.ManagedDataAccess.Types.OracleBFile(cn),
+		//OracleBlob = new Oracle.ManagedDataAccess.Types.OracleBlob(cn),
+		//OracleClob = new Oracle.ManagedDataAccess.Types.OracleClob(cn),
+		//OracleRef = new Oracle.ManagedDataAccess.Types.OracleRef(),
+		//OracleRefCursor = new Oracle.ManagedDataAccess.Types.OracleRefCursor(),
+		//OracleXmlType = new Oracle.ManagedDataAccess.Types.OracleXmlType(),
+		OracleBinary = new Oracle.ManagedDataAccess.Types.OracleBinary(new byte[]{1,2,3}),
+		OracleBoolean1 = new Oracle.ManagedDataAccess.Types.OracleBoolean(true),
+		OracleBoolean2 = new Oracle.ManagedDataAccess.Types.OracleBoolean(2),
+		OracleDate = Oracle.ManagedDataAccess.Types.OracleDate.MinValue,
+		OracleDecimal1 = Oracle.ManagedDataAccess.Types.OracleDecimal.Pi,
+		OracleDecimal2 = Oracle.ManagedDataAccess.Types.OracleDecimal.MinValue,
+		OracleIntervalDS = Oracle.ManagedDataAccess.Types.OracleIntervalDS.MinValue,
+		OracleIntervalYM = Oracle.ManagedDataAccess.Types.OracleIntervalYM.MinValue,
+		OracleString = new Oracle.ManagedDataAccess.Types.OracleString("ткст"),
+		OracleTimeStamp1 = Oracle.ManagedDataAccess.Types.OracleTimeStamp.MinValue,
+		OracleTimeStamp2 = Oracle.ManagedDataAccess.Types.OracleTimeStamp.MaxValue,
+		OracleTimeStampLTZ1 = Oracle.ManagedDataAccess.Types.OracleTimeStampLTZ.MinValue,
+		OracleTimeStampLTZ2 = Oracle.ManagedDataAccess.Types.OracleTimeStampLTZ.MaxValue,
+		OracleTimeStampTZ1 = Oracle.ManagedDataAccess.Types.OracleTimeStampTZ.MinValue,
+		OracleTimeStampTZ2 = Oracle.ManagedDataAccess.Types.OracleTimeStampTZ.MaxValue,
+	}
+}
+
+// sap hana native
+new object[]
+{
+	new
+	{
+		Decimal1 = new Sap.Data.Hana.HanaDecimal(decimal.MinValue),
+		Decimal2 = new Sap.Data.Hana.HanaDecimal("423534872389057234523486234.2345238465234908523457234"),
+	}
+}
+
+// db2/ifx
+new object[]
+{
+	new
+	{
+		Null = IBM.Data.DB2Types.DB2Binary.Null,
+		DB2Binary = new IBM.Data.DB2Types.DB2Binary(new byte[]{1,2,3}),
+		DB2Blob = new IBM.Data.DB2Types.DB2Blob(new byte[]{1,2,3}),
+		DB2Clob = new IBM.Data.DB2Types.DB2Clob("тест"),
+		DB2Date = IBM.Data.DB2Types.DB2Date.MaxValue,
+		DB2DateTime = IBM.Data.DB2Types.DB2DateTime.MinValue,
+		DB2Decimal = IBM.Data.DB2Types.DB2Decimal.MinValue,
+		DB2DecimalFloat = IBM.Data.DB2Types.DB2DecimalFloat.MinValue,
+		DB2Double = IBM.Data.DB2Types.DB2Double.MinValue,
+		DB2Int16 = IBM.Data.DB2Types.DB2Int16.MinValue,
+		DB2Int32 = IBM.Data.DB2Types.DB2Int32.MinValue,
+		DB2Int64 = IBM.Data.DB2Types.DB2Int64.MinValue,
+		DB2Real = IBM.Data.DB2Types.DB2Real.MinValue,
+		DB2Real370 = IBM.Data.DB2Types.DB2Real370.MinValue,
+		DB2RowId = new IBM.Data.DB2Types.DB2RowId(),
+		DB2String = new IBM.Data.DB2Types.DB2String("Тест"),
+		DB2Time = IBM.Data.DB2Types.DB2Time.MaxValue,
+		DB2TimeStamp = IBM.Data.DB2Types.DB2TimeStamp.MaxValue,
+		DB2TimeStampOffset = IBM.Data.DB2Types.DB2TimeStampOffset.MaxValue,
+		DB2XsrObjectId = new IBM.Data.DB2Types.DB2XsrObjectId(),
+	}
+}

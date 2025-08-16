@@ -1,0 +1,128 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+	<PropertyGroup>
+		<RootNamespace>LinqToDB.LINQPad</RootNamespace>
+		<AssemblyName>linq2db.LINQPad</AssemblyName>
+
+		<TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+		<UseWPF>true</UseWPF>
+
+		<!--don't forget to (un)comment reference in nuspec file!-->
+		<!--<DefineConstants>WITH_ISERIES;$(DefineConstants)</DefineConstants>-->
+
+		<!--disable DB2 provider arch warnings-->
+		<MSBuildWarningsAsMessages>MSB3270</MSBuildWarningsAsMessages>
+		<SignAssembly>False</SignAssembly>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
+
+		<PackageReference Include="LINQPad.Reference" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+		<PackageReference Include="MySqlConnector" />
+		<PackageReference Include="AdoNetCore.AseClient" />
+		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<PackageReference Include="Npgsql" />
+		<PackageReference Include="ClickHouse.Driver" />
+		<PackageReference Include="linq2db4iSeries" Condition="$(DefineConstants.Contains('WITH_ISERIES'))" />
+		<PackageReference Include="Microsoft.SqlServer.Types" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net48'">
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System.Configuration" />
+
+		<PackageReference Include="System.Threading.Tasks.Extensions" />
+		<PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
+		<PackageReference Include="System.Memory" />
+		<PackageReference Include="System.Buffers" />
+		<!--<PackageReference Include="System.Text.Json" />-->
+
+		<PackageReference Include="Oracle.ManagedDataAccess" VersionOverride="23.9.1" />
+
+		<!--PackageReference + Reference beelongs to same nuget-->
+		<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />
+		<Reference Include="IBM.Data.DB2" Condition=" $(PlatformTarget) != 'x86' ">
+			<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll</HintPath>
+		</Reference>
+		<Reference Include="IBM.Data.DB2" Condition=" $(PlatformTarget) == 'x86' ">
+			<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.DLL</HintPath>
+		</Reference>
+
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net48' ">
+		<PackageReference Include="System.Configuration.ConfigurationManager" VersionOverride="9.0.8" />
+
+		<PackageReference Include="System.Data.Odbc" />
+		<PackageReference Include="System.Data.OleDb" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
+		<PackageReference Include="Net.IBM.Data.Db2" />
+		<PackageReference Include="Octonica.ClickHouseClient" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Page Update="UI\Settings\DynamicConnectionTab.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\LinqToDBTab.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\SchemaTab.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\ScaffoldTab.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\UniqueStringListControl.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\SharedConnectionOptions.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\StaticConnectionTab.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\AboutTab.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+			<SubType>Designer</SubType>
+		</Page>
+		<Page Update="UI\Settings\SettingsDialog.xaml">
+			<XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+		</Page>
+	</ItemGroup>
+
+	<!--<Target Name="PostBuild1" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net48'">
+		<Exec Command="$(ProjectDir)..\Build\Pack.cmd $(TargetDir) lpx6" />
+	</Target>
+
+	<Target Name="PostBuild2" AfterTargets="CopySQLiteInteropFiles" Condition="'$(TargetFramework)' == 'net48'">
+		-->
+	<!--we are trying to deceive DB2 provider here, see UnsafeNativeMethods.DB2Interop.Init() method logic-->
+	<!--
+		<Delete Files="$(TargetDir)\IBM.Data.DB2.dll" />
+		<MakeDir Directories="$(TargetDir)\IBM.Data.DB2.DLL_provider" />
+		<Copy SourceFiles="$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll" DestinationFiles="$(TargetDir)\IBM.Data.DB2.DLL_provider\x64\IBM.Data.DB2.dll" />
+		<Copy SourceFiles="$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll" DestinationFiles="$(TargetDir)\IBM.Data.DB2.DLL_provider\x86\IBM.Data.DB2.dll" />
+
+		<Exec Command="$(ProjectDir)..\Build\Pack.cmd $(TargetDir) lpx" />
+	</Target>-->
+
+	<ItemGroup>
+		<Resource Include="..\..\NuGet\icon.png" Link="Resources\Logo.png" />
+
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+	</ItemGroup>
+
+</Project>
