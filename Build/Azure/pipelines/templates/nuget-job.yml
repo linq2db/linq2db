@@ -123,6 +123,12 @@ jobs:
       artifactName: '$(artifact_t4_binaries)'
       targetPath: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)'
 
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.LINQPad files
+    inputs:
+      artifactName: '$(artifact_linq2db_linqpad_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.LINQPad/Release/'
+
 #dotnet tool install -g dotnet-script
   - task: DotNetCoreCLI@2
     displayName: Install dotnet-script tool

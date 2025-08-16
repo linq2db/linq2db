@@ -1,7 +1,7 @@
 ECHO ON
 ECHO Packing %2
 
-SET RELDIR=%1..\..\..\..\releases
+SET RELDIR=%1..\..\..\..\lpx
 SET RESDIR=%1..\..\..\..\..\NuGet\LINQPad
 
 DEL %RELDIR%\linq2db.LINQPad.%2

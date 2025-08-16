@@ -271,3 +271,27 @@ jobs:
       artifact: '$(artifact_t4_binaries)'
     displayName: Publish nuget artifacts part 1
     condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: CmdLine@2
+    inputs:
+      script: |
+        ECHO ON
+        RD $(Build.SourcesDirectory)/.build/bin/LinqToDB.LINQPad/Release/net472 /S /Q
+        RD $(Build.SourcesDirectory)/.build/bin/LinqToDB.LINQPad/Release/net8.0-windows/clidriver /S /Q
+        FOR %i in ($(Build.SourcesDirectory)/.build/bin/LinqToDB.LINQPad/Release/net8.0-windows/*) DO IF NOT "%~i" == linq2db.LINQPad.dll DEL "%~i" /Q
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+    displayName: Cleanup LINQPad artifacts
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.LINQPad/Release'
+      artifact: '$(artifact_linq2db_linqpad_binaries)'
+    displayName: Publish linq2db.LINQPad build results
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: '$(Build.SourcesDirectory)/.build/lpx'
+      artifactName: '$(artifact_linq2db_linqpad_lpx)'
+    displayName: Publish LPX to artifacts
+    condition: succeeded()
