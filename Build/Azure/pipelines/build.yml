@@ -23,9 +23,11 @@ stages:
       with_examples: true
       with_tests: false
       with_analyzers: true
+      with_release: true
 ##############
 #  NUGET JOB #
 ##############
   - template: templates/nuget-job.yml
     parameters:
       publish: false
+      release: true
