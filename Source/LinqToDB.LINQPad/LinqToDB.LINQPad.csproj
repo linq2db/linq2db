@@ -103,21 +103,19 @@
 		</Page>
 	</ItemGroup>
 
-	<!--<Target Name="PostBuild1" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net48'">
-		<Exec Command="$(ProjectDir)..\Build\Pack.cmd $(TargetDir) lpx6" />
+	<Target Name="PostBuild1" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net48'">
+		<Exec Command="$(ProjectDir)..\..\NuGet\LINQPad\Pack.cmd $(TargetDir) lpx6" />
 	</Target>
 
 	<Target Name="PostBuild2" AfterTargets="CopySQLiteInteropFiles" Condition="'$(TargetFramework)' == 'net48'">
-		-->
 	<!--we are trying to deceive DB2 provider here, see UnsafeNativeMethods.DB2Interop.Init() method logic-->
-	<!--
 		<Delete Files="$(TargetDir)\IBM.Data.DB2.dll" />
 		<MakeDir Directories="$(TargetDir)\IBM.Data.DB2.DLL_provider" />
 		<Copy SourceFiles="$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll" DestinationFiles="$(TargetDir)\IBM.Data.DB2.DLL_provider\x64\IBM.Data.DB2.dll" />
 		<Copy SourceFiles="$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll" DestinationFiles="$(TargetDir)\IBM.Data.DB2.DLL_provider\x86\IBM.Data.DB2.dll" />
 
-		<Exec Command="$(ProjectDir)..\Build\Pack.cmd $(TargetDir) lpx" />
-	</Target>-->
+		<Exec Command="$(ProjectDir)..\..\NuGet\LINQPad\Pack.cmd $(TargetDir) lpx" />
+	</Target>
 
 	<ItemGroup>
 		<Resource Include="..\..\NuGet\icon.png" Link="Resources\Logo.png" />
