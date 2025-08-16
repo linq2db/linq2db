@@ -306,6 +306,9 @@
     <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.STS.csproj" />
     <Project Path="Source/LinqToDB.Extensions/LinqToDB.Extensions.csproj" />
     <Project Path="Source/LinqToDB.FSharp/LinqToDB.FSharp.fsproj" />
+    <Project Path="Source/LinqToDB.LINQPad/LinqToDB.LINQPad.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
     <Project Path="Source/LinqToDB.Remote.Grpc/LinqToDB.Remote.Grpc.csproj" />
     <Project Path="Source/LinqToDB.Remote.HttpClient.Client/LinqToDB.Remote.HttpClient.Client.csproj" />
     <Project Path="Source/LinqToDB.Remote.HttpClient.Server/LinqToDB.Remote.HttpClient.Server.csproj" />

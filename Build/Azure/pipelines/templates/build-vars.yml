@@ -24,6 +24,8 @@ variables:
   artifact_linq2db_fsharp_binaries: 'linq2db_fsharp_binaries'
   artifact_linq2db_efcore_binaries: 'linq2db_efcore_binaries'
   artifact_linq2db_efcore_sts_binaries: 'linq2db_efcore_sts_binaries'
+  artifact_linq2db_linqpad_binaries: 'linq2db_linqpad_binaries'
+  artifact_linq2db_linqpad_lpx: 'linq2db_linqpad_lpx'
   artifact_t4_binaries: 't4_binaries'
   artifact_test_binaries: 'test_binaries'
 # nuget/assembly versions

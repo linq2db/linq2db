@@ -10,9 +10,6 @@ contact_links:
   - name: "💬 Join our Discord server"
     url:  https://discord.gg/PcV6pTXt4s
     about: You could also join our Discord server to ask questions here.
-  - name: Issue or feature request for Linq To DB LINQPad driver
-    url:  https://github.com/linq2db/linq2db.LINQPad/issues/new
-    about: For LINQPad driver requests, open them in linq2db/linq2db.LINQPad repository.
   - name: Issue or feature request for Linq To DB ASP.NET Identity provider
     url:  https://github.com/linq2db/LinqToDB.Identity/issues/new
     about: For Identity provider requests, open them in linq2db/LinqToDB.Identity repository.
