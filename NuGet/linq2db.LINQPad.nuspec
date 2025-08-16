@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
 	<metadata>
 		<id>linq2db.LINQPad</id>
-		<title>LINQ to DB driver for LINQPad 7+</title>
+		<title>LINQ to DB driver for LINQPad</title>
 		<description>Supported databases: IBM DB2 LUW/zOS, Firebird, IBM Informix, Microsoft Access, Microsoft Sql Server (+Azure), Microsoft Sql Server Compact, MySql, MariaDB, Oracle, PostgreSQL, SQLite, SAP HANA, SAP/Sybase ASE, ClickHouse.</description>
 		<tags>linqpaddriver linqpad iseries</tags>
 		<dependencies>

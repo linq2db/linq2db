@@ -1,6 +1,6 @@
-# LINQ to DB LINQPad 8 Driver
+# LINQ to DB LINQPad Driver
 
-This nuget package is a driver for [LINQPad 8](http://www.linqpad.net). Support for older versions of LINQPad is available via older versions drivers.
+This nuget package is a driver for [LINQPad](http://www.linqpad.net). Support for older versions of LINQPad is available via older versions drivers.
 
 Following databases supported:
 
