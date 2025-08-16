@@ -6,7 +6,7 @@ internal static class ReadOnlySetExtensions
 	public static IReadOnlySet<T> AsReadOnly<T>(this HashSet<T> set)
 #pragma warning restore CA1859 // change return type
 	{
-#if NET5_0_OR_GREATER
+#if !NETFRAMEWORK
 		return set;
 #else
 		return new ReadOnlyHashSet<T>(set);

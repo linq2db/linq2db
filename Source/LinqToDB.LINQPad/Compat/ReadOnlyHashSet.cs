@@ -1,4 +1,4 @@
-﻿#if !NET5_0_OR_GREATER
+﻿#if NETFRAMEWORK
 namespace System.Collections.Generic;
 
 internal sealed class ReadOnlyHashSet<T>(ISet<T> set) : IReadOnlySet<T>
