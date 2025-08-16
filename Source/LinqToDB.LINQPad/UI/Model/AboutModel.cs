@@ -27,6 +27,6 @@ internal sealed class AboutModel
 	public BitmapImage Logo          { get; }
 	public string      Project       { get; }
 	public string      Copyright     { get; }
-	public Uri         RepositoryUri { get; } = new("https://github.com/linq2db/linq2db.LINQPad");
-	public Uri         ReportsUri    { get; } = new("https://github.com/linq2db/linq2db.LINQPad/issues/new");
+	public Uri         RepositoryUri { get; } = new("https://github.com/linq2db/linq2db");
+	public Uri         ReportsUri    { get; } = new("https://github.com/linq2db/linq2db/issues/new");
 }
