@@ -270,7 +270,7 @@ jobs:
     inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)'
       artifact: '$(artifact_t4_binaries)'
-    displayName: Publish nuget artifacts part 1
+    displayName: Publish T4 nuget artifacts
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: CmdLine@2
@@ -280,7 +280,7 @@ jobs:
         RD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net472 /S /Q
         RD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net8.0-windows\clidriver /S /Q
         CD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net8.0-windows
-        FOR %i in (*) DO IF NOT "%~i" == "linq2db.LINQPad.dll" DEL "%~i" /Q
+        FOR %%f IN (*) DO IF NOT "%%f"=="linq2db.LINQPad.dll" DEL "%%f" /Q
     condition: and(succeeded(), ${{ parameters.with_nugets }})
     displayName: Cleanup LINQPad artifacts
 
