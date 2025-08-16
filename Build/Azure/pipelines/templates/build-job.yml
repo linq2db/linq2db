@@ -279,7 +279,8 @@ jobs:
         ECHO ON
         RD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net472 /S /Q
         RD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net8.0-windows\clidriver /S /Q
-        FOR %i in ($(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net8.0-windows\*) DO IF NOT "%~i" == linq2db.LINQPad.dll DEL "%~i" /Q
+        CD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net8.0-windows
+        FOR %i in (*) DO IF NOT "%~i" == "linq2db.LINQPad.dll" DEL "%~i" /Q
     condition: and(succeeded(), ${{ parameters.with_nugets }})
     displayName: Cleanup LINQPad artifacts
 
@@ -296,3 +297,20 @@ jobs:
       artifactName: '$(artifact_linq2db_linqpad_lpx)'
     displayName: Publish LPX to artifacts
     condition: succeeded()
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        $relnotesVersion = '$(assemblyVersion)' -replace '\.',''
+        Write-Host "Create release v$(assemblyVersion) draft"
+        $output = gh release create v$(assemblyVersion) "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx" "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx6" --draft --fail-on-no-commits --generate-notes --latest --notes "[Release notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap#release-$relnotesVersion) [Nugets](https://www.nuget.org/profiles/LinqToDB)" --title "Release $(assemblyVersion)"
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Command failed. Error code ${LASTEXITCODE}, output: ${output}"
+            exit 1
+        }
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
+    displayName: Create Release Draft
+    condition: and(succeeded(), ${{ parameters.with_release }})
+    env:
+      GITHUB_TOKEN: $(BASELINES_GH_PAT)
