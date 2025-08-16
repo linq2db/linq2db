@@ -4,7 +4,7 @@
 		<RootNamespace>LinqToDB.LINQPad</RootNamespace>
 		<AssemblyName>linq2db.LINQPad</AssemblyName>
 
-		<TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+		<TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
 		<UseWPF>true</UseWPF>
 
 		<!--don't forget to (un)comment reference in nuspec file!-->
@@ -32,7 +32,7 @@
 		<PackageReference Include="Microsoft.SqlServer.Types" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net48'">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net472'">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System.Configuration" />
 
@@ -55,7 +55,7 @@
 
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net48' ">
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<PackageReference Include="System.Configuration.ConfigurationManager" VersionOverride="9.0.8" />
 
 		<PackageReference Include="System.Data.Odbc" />
@@ -103,11 +103,11 @@
 		</Page>
 	</ItemGroup>
 
-	<Target Name="PostBuild1" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net48'">
+	<Target Name="PostBuild1" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net472'">
 		<Exec Command="$(ProjectDir)..\..\NuGet\LINQPad\Pack.cmd $(TargetDir) lpx6" />
 	</Target>
 
-	<Target Name="PostBuild2" AfterTargets="CopySQLiteInteropFiles" Condition="'$(TargetFramework)' == 'net48'">
+	<Target Name="PostBuild2" AfterTargets="CopySQLiteInteropFiles" Condition="'$(TargetFramework)' == 'net472'">
 	<!--we are trying to deceive DB2 provider here, see UnsafeNativeMethods.DB2Interop.Init() method logic-->
 		<Delete Files="$(TargetDir)\IBM.Data.DB2.dll" />
 		<MakeDir Directories="$(TargetDir)\IBM.Data.DB2.DLL_provider" />
