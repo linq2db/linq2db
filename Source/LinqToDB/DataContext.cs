@@ -287,6 +287,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets or sets flag to close context after query execution or leave it open.
 		/// </summary>
+		[Obsolete("This API will be removed in version 7. Use SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
 		public bool CloseAfterUse { get; set; }
 
 		/// <summary>

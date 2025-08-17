@@ -199,8 +199,10 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				options.RowsCopiedCallback(rc);
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (table.DataContext.CloseAfterUse)
 				await table.DataContext.CloseAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			return rc;
 		}
@@ -265,8 +267,10 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				options.RowsCopiedCallback(rc);
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (table.DataContext.CloseAfterUse)
 				table.DataContext.Close();
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			return rc;
 		}
@@ -338,8 +342,10 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				options.RowsCopiedCallback(rc);
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (table.DataContext.CloseAfterUse)
 				await table.DataContext.CloseAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			return rc;
 		}

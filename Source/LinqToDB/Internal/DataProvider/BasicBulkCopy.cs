@@ -380,8 +380,10 @@ namespace LinqToDB.Internal.DataProvider
 
 					if (!helper.Execute())
 					{
+#pragma warning disable CS0618 // Type or member is obsolete
 						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
 							helper.OriginalContext.Close();
+#pragma warning restore CS0618 // Type or member is obsolete
 
 						return helper.RowsCopied;
 					}
@@ -399,8 +401,10 @@ namespace LinqToDB.Internal.DataProvider
 				helper.Execute();
 			}
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
 				helper.OriginalContext.Close();
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			return helper.RowsCopied;
 		}
@@ -443,8 +447,10 @@ namespace LinqToDB.Internal.DataProvider
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false))
 					{
+#pragma warning disable CS0618 // Type or member is obsolete
 						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
 							await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 
 						return helper.RowsCopied;
 					}
@@ -462,8 +468,10 @@ namespace LinqToDB.Internal.DataProvider
 				await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false);
 			}
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
 				await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			return helper.RowsCopied;
 		}
@@ -506,8 +514,10 @@ namespace LinqToDB.Internal.DataProvider
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false))
 					{
+#pragma warning disable CS0618 // Type or member is obsolete
 						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
 							await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 
 						return helper.RowsCopied;
 					}
@@ -525,8 +535,10 @@ namespace LinqToDB.Internal.DataProvider
 				await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false);
 			}
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
 				await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			return helper.RowsCopied;
 		}

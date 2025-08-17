@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
@@ -139,8 +140,9 @@ namespace Tests.Data
 			}
 		}
 
+		[Obsolete("This API will be removed in version 7. Use DataContext with SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
 		[Test]
-		public void CommandInitializedOnDataContextTest_OptionsBuilder([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
+		public void CommandInitializedOnDataContextTest_OptionsBuilder_Old([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
 			var triggered1 = false;
 			var triggered2 = false;
@@ -199,12 +201,131 @@ namespace Tests.Data
 			}
 		}
 
-		private void CommandInitializedOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
+		[Test]
+		public void CommandInitializedOnDataContextTest_OptionsBuilder([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
+		{
+			var triggered1 = false;
+			var triggered2 = false;
+			var interceptor1 = new TestCommandInterceptor();
+			var interceptor2 = new TestCommandInterceptor();
+
+			var builder = new DataOptions()
+				.UseConfiguration(context)
+				.UseInterceptor(interceptor1)
+				.UseInterceptor(interceptor2);
+
+			using (var db = new DataContext(builder))
+			{
+				db.SetKeepConnectionAlive(closeAfterUse);
+
+				db.OnNextCommandInitialized((args, command) =>
+				{
+					triggered1 = true;
+					return command;
+				});
+				db.OnNextCommandInitialized((args, command) =>
+				{
+					triggered2 = true;
+					return command;
+				});
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
+					Assert.That(triggered1, Is.False);
+					Assert.That(triggered2, Is.False);
+				}
+
+				db.GetTable<Child>().ToList();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+					Assert.That(triggered1, Is.True);
+					Assert.That(triggered2, Is.True);
+				}
+
+				triggered1 = false;
+				triggered2 = false;
+				interceptor1.CommandInitializedTriggered = false;
+				interceptor2.CommandInitializedTriggered = false;
+
+				db.GetTable<Person>().ToList();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+					Assert.That(triggered1, Is.False);
+					Assert.That(triggered2, Is.False);
+				}
+			}
+		}
+
+		[Test]
+		[Obsolete("This API will be removed in version 7. Use DataContext with SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
+		public void CommandInitializedOnDataContextTest_Old([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
 			using (var db = new DataContext(context))
 			{
 				// test that interceptors not lost after underlying data connection recreation
 				db.CloseAfterUse = closeAfterUse;
+
+				var triggered1 = false;
+				var triggered2 = false;
+				var interceptor1 = new TestCommandInterceptor();
+				var interceptor2 = new TestCommandInterceptor();
+				db.AddInterceptor(interceptor1);
+				db.OnNextCommandInitialized((args, command) =>
+				{
+					triggered1 = true;
+					return command;
+				});
+				db.OnNextCommandInitialized((args, command) =>
+				{
+					triggered2 = true;
+					return command;
+				});
+				db.AddInterceptor(interceptor2);
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
+					Assert.That(triggered1, Is.False);
+					Assert.That(triggered2, Is.False);
+				}
+
+				db.GetTable<Child>().ToList();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+					Assert.That(triggered1, Is.True);
+					Assert.That(triggered2, Is.True);
+				}
+
+				triggered1 = false;
+				triggered2 = false;
+				interceptor1.CommandInitializedTriggered = false;
+				interceptor2.CommandInitializedTriggered = false;
+
+				db.GetTable<Person>().ToList();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+					Assert.That(triggered1, Is.False);
+					Assert.That(triggered2, Is.False);
+				}
+			}
+		}
+
+		[Test]
+		public void CommandInitializedOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
+		{
+			using (var db = new DataContext(context))
+			{
+				// test that interceptors not lost after underlying data connection recreation
+				db.SetKeepConnectionAlive(closeAfterUse);
 
 				var triggered1 = false;
 				var triggered2 = false;
@@ -819,8 +940,9 @@ namespace Tests.Data
 			}
 		}
 
+		[Obsolete("This API will be removed in version 7. Use DataContext with SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
 		[Test]
-		public void ConnectionOpenOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
+		public void ConnectionOpenOnDataContextTest_Old([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
 			using (var db = new DataContext(context))
 			{
@@ -878,12 +1000,129 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task ConnectionOpenAsyncOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
+		public void ConnectionOpenOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
+		{
+			using (var db = new DataContext(context))
+			{
+				// test that interceptors not lost after underlying data connection recreation
+				db.SetKeepConnectionAlive(closeAfterUse);
+
+				var interceptor = new TestConnectionInterceptor();
+				db.AddInterceptor(interceptor);
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				}
+
+				db.GetTable<Child>().ToList();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				}
+
+				interceptor.ConnectionOpenedTriggered = false;
+				interceptor.ConnectionOpeningTriggered = false;
+
+				db.GetTable<Child>().ToList();
+				using (Assert.EnterMultipleScope())
+				{
+					// TODO: right now enumerable queries behave like CloseAfterUse=true for data context
+					//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpenedTriggered);
+					//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpeningTriggered);
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				}
+
+				interceptor.ConnectionOpenedTriggered = false;
+				interceptor.ConnectionOpeningTriggered = false;
+
+				((IDataContext)db).Close();
+
+				db.GetTable<Child>().ToList();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				}
+			}
+		}
+
+		[Obsolete("This API will be removed in version 7. Use DataContext with SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
+		[Test]
+		public async Task ConnectionOpenAsyncOnDataContextTest_Old([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
 			using (var db = new DataContext(context))
 			{
 				// test that interceptors not lost after underlying data connection recreation
 				db.CloseAfterUse = closeAfterUse;
+
+				var interceptor = new TestConnectionInterceptor();
+				db.AddInterceptor(interceptor);
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+				}
+
+				await db.GetTable<Child>().ToListAsync();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
+				}
+
+				interceptor.ConnectionOpenedAsyncTriggered = false;
+				interceptor.ConnectionOpeningAsyncTriggered = false;
+
+				await db.GetTable<Child>().ToListAsync();
+				using (Assert.EnterMultipleScope())
+				{
+					// TODO: right now enumerable queries behave like CloseAfterUse=true for data context
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpenedAsyncTriggered);
+					//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpeningAsyncTriggered);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
+				}
+
+				interceptor.ConnectionOpenedAsyncTriggered = false;
+				interceptor.ConnectionOpeningAsyncTriggered = false;
+
+				await ((IDataContext)db).CloseAsync();
+
+				await db.GetTable<Child>().ToListAsync();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
+					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
+				}
+			}
+		}
+
+		[Test]
+		public async Task ConnectionOpenAsyncOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
+		{
+			using (var db = new DataContext(context))
+			{
+				// test that interceptors not lost after underlying data connection recreation
+				db.SetKeepConnectionAlive(closeAfterUse);
 
 				var interceptor = new TestConnectionInterceptor();
 				db.AddInterceptor(interceptor);
@@ -1313,8 +1552,9 @@ namespace Tests.Data
 			}
 		}
 
+		[Obsolete("This API will be removed in version 7. Use DataContext with SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4457")]
-		public async Task Test_Connection_Release_EagerLoad_AutoConnection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		public async Task Test_Connection_Release_EagerLoad_AutoConnection_Old([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
 		{
 			var closeInterceptor = new TestDataContextInterceptor();
 			var openInterceptor = new TestConnectionInterceptor();
@@ -1371,7 +1611,64 @@ namespace Tests.Data
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4457")]
-		public async Task Test_Connection_Release_EagerLoad_PersistentConnection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		public async Task Test_Connection_Release_EagerLoad_AutoConnection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		{
+			var closeInterceptor = new TestDataContextInterceptor();
+			var openInterceptor = new TestConnectionInterceptor();
+
+			IDataContext main;
+			using (var db = main = new DataContext(context))
+			{
+				((DataContext)db).SetKeepConnectionAlive(closeAfterUse);
+				db.AddInterceptor(closeInterceptor);
+				db.AddInterceptor(openInterceptor);
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(GetOpenedCount(), Is.Zero);
+					Assert.That(GetClosedCount(), Is.Zero);
+				}
+
+				db.GetTable<Person>().LoadWith(p => p.Patient).ToList();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(GetOpenedCount(), Is.Not.Zero);
+					Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+				}
+
+				db.GetTable<Parent>().LoadWith(p => p.Children).ToList();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.GetTable<Person>().LoadWith(p => p.Patient).ToListAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.GetTable<Parent>().LoadWith(p => p.Children).ToListAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefault();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefault();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefaultAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefaultAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+				await db.CloseAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+			}
+
+			Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+			int GetOpenedCount() => openInterceptor.ConnectionOpenedCount + openInterceptor.ConnectionOpenedAsyncCount;
+			int GetClosedCount() => closeInterceptor.OnClosedContexts.Concat(closeInterceptor.OnClosedAsyncContexts).Where(c => c.Key is DataConnection).Sum(c => c.Value);
+		}
+
+		[Obsolete("This API will be removed in version 7. Use DataContext with SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4457")]
+		public async Task Test_Connection_Release_EagerLoad_PersistentConnection_Old([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
 		{
 			var closeInterceptor = new TestDataContextInterceptor();
 			var openInterceptor = new TestConnectionInterceptor();
@@ -1381,6 +1678,90 @@ namespace Tests.Data
 			{
 				((DataContext)db).SetKeepConnectionAlive(true);
 				db.CloseAfterUse = closeAfterUse;
+				db.AddInterceptor(closeInterceptor);
+				db.AddInterceptor(openInterceptor);
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(GetOpenedCount(), Is.Zero);
+					Assert.That(GetClosedCount(), Is.Zero);
+				}
+
+				db.GetTable<Person>().LoadWith(p => p.Patient).ToList();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				}
+
+				db.GetTable<Parent>().LoadWith(p => p.Children).ToList();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				}
+
+				await db.GetTable<Person>().LoadWith(p => p.Patient).ToListAsync();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				}
+
+				await db.GetTable<Parent>().LoadWith(p => p.Children).ToListAsync();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				}
+
+				db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefault();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				}
+
+				db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefault();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				}
+
+				await db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefaultAsync();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				}
+
+				await db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefaultAsync();
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(GetOpenedCount(), Is.EqualTo(1));
+					Assert.That(GetClosedCount(), Is.Zero);
+				}
+
+				await db.CloseAsync();
+				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+			}
+
+			Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
+
+			int GetOpenedCount() => openInterceptor.ConnectionOpenedCount + openInterceptor.ConnectionOpenedAsyncCount;
+			int GetClosedCount() => closeInterceptor.OnClosedContexts.Concat(closeInterceptor.OnClosedAsyncContexts).Where(c => c.Key is DataConnection).Sum(c => c.Value);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4457")]
+		public async Task Test_Connection_Release_EagerLoad_PersistentConnection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		{
+			var closeInterceptor = new TestDataContextInterceptor();
+			var openInterceptor = new TestConnectionInterceptor();
+
+			IDataContext main;
+			using (var db = main = new DataContext(context))
+			{
+				((DataContext)db).SetKeepConnectionAlive(closeAfterUse);
 				db.AddInterceptor(closeInterceptor);
 				db.AddInterceptor(openInterceptor);
 				using (Assert.EnterMultipleScope())

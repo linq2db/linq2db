@@ -23,8 +23,10 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			{
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
 
+#pragma warning disable CS0618 // Type or member is obsolete
 				if (helper.OriginalContext.CloseAfterUse)
 					helper.OriginalContext.Close();
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			return ret;
@@ -48,8 +50,10 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(false);
 
+#pragma warning disable CS0618 // Type or member is obsolete
 				if (helper.OriginalContext.CloseAfterUse)
 					await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			return ret;
@@ -73,8 +77,10 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(false);
 
+#pragma warning disable CS0618 // Type or member is obsolete
 				if (helper.OriginalContext.CloseAfterUse)
 					await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			return ret;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -8,6 +9,7 @@ using LinqToDB.Async;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
+using LinqToDB.Tools;
 
 using NUnit.Framework;
 
@@ -306,6 +308,25 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
+		public void Close_DataContext([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			// test we don't leak connections here
+
+			// save connection to list to prevent it from being collected
+			var dbs = new List<IDataContext>();
+
+			for (var i = 0; i < 101; i++)
+			{
+				var db = new DataContext(context);
+				db.SetKeepConnectionAlive(true);
+				dbs.Add(db);
+
+				foreach (var x in db.GetTable<Person>()) { }
+			}
+		}
+
+		[Obsolete("This API will be removed in version 7. Use DataContext with SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
 		public void CloseAfterUse_DataContext([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			// test we don't leak connections here
@@ -323,6 +344,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[Obsolete("This API will be removed in version 7. Use DataContext with SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
 		public void CloseAfterUse_DataConnection([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -342,6 +364,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[Obsolete("This API will be removed in version 7. Use DataContext with SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
 		public void DontCloseAfterUse_DataContext([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -368,6 +391,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[Obsolete("This API will be removed in version 7. Use DataContext with SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
 		public void DontCloseAfterUse_DataConnection([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -382,6 +406,32 @@ namespace Tests.Linq
 				{
 					IDataContext db = GetDataConnection(context);
 					db.CloseAfterUse = false;
+					dbs.Add(db);
+
+					foreach (var x in db.GetTable<Person>()) { }
+				}
+			}, Throws.Exception);
+
+			foreach (var db in dbs)
+			{
+				db.Dispose();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
+		public void DontClose_DataContext([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			// test we don't leak connections here
+
+			// save connection to list to prevent it from being collected
+			var dbs = new List<IDataContext>();
+
+			Assert.That(() =>
+			{
+				for (var i = 0; i < 101; i++)
+				{
+					var db = new DataContext(context);
+					db.SetKeepConnectionAlive(false);
 					dbs.Add(db);
 
 					foreach (var x in db.GetTable<Person>()) { }
@@ -410,8 +460,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[Obsolete("This API will be removed in version 7. Use DataContext with SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4729")]
-		public void Issue4729Test([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		public void Issue4729Test_Old([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
 		{
 			var interceptor = new CountingContextInterceptor();
 			using var db = GetDataConnection(context, o => o.UseInterceptor(interceptor));
@@ -425,5 +476,19 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4729")]
+		public void Issue4729Test([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		{
+			var interceptor = new CountingContextInterceptor();
+			using var db = new DataContext(new DataOptions().UseConfiguration(context).UseInterceptor(interceptor));
+			db.SetKeepConnectionAlive(closeAfterUse);
+
+			db.Query<int>("SELECT 1").SingleOrDefault();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.OnClosedCount, Is.EqualTo(closeAfterUse ? 1 : 0));
+				Assert.That(interceptor.OnClosedAsyncCount, Is.Zero);
+			}
+		}
 	}
 }

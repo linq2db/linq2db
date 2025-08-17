@@ -42,14 +42,18 @@ namespace LinqToDB.Internal.Linq
 
 		public virtual void Dispose()
 		{
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (DataContext.CloseAfterUse)
 				DataContext.Close();
+#pragma warning restore CS0618 // Type or member is obsolete
 		}
 
 		public virtual ValueTask DisposeAsync()
 		{
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (DataContext.CloseAfterUse)
 				return new ValueTask(DataContext.CloseAsync());
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			return default;
 		}

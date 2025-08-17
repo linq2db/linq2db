@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data.Common;
 using System.Linq.Expressions;
 
@@ -22,6 +23,7 @@ namespace LinqToDB.Data
 		TableOptions     IDataContext.SupportedTableOptions => DataProvider.SupportedTableOptions;
 		Type             IDataContext.DataReaderType        => DataProvider.DataReaderType;
 
+		[Obsolete("This API will be removed in version 7. Use DataContext with SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
 		bool             IDataContext.CloseAfterUse    { get; set; }
 
 		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)

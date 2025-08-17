@@ -232,8 +232,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				writer.Dispose();
 			}
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (originalContext.CloseAfterUse)
 				originalContext.Close();
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			return rowsCopied;
 		}
@@ -353,8 +355,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					.ConfigureAwait(false);
 			}
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (table.DataContext.CloseAfterUse)
 				await table.DataContext.CloseAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			return rowsCopied;
 		}
@@ -476,8 +480,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					.ConfigureAwait(false);
 			}
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (table.DataContext.CloseAfterUse)
 				await table.DataContext.CloseAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			return rowsCopied;
 		}

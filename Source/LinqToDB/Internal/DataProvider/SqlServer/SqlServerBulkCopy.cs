@@ -203,8 +203,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					options.RowsCopiedCallback(rc);
 			}
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (table.DataContext.CloseAfterUse)
 				await table.DataContext.CloseAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			return rc;
 		}
@@ -279,8 +281,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					options.RowsCopiedCallback(rc);
 			}
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (table.DataContext.CloseAfterUse)
 				table.DataContext.Close();
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			return rc;
 		}
@@ -306,8 +310,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
 
+#pragma warning disable CS0618 // Type or member is obsolete
 				if (helper.OriginalContext.CloseAfterUse)
 					helper.OriginalContext.Close();
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			return ret;
@@ -342,8 +348,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(false);
 
+#pragma warning disable CS0618 // Type or member is obsolete
 				if (helper.OriginalContext.CloseAfterUse)
 					await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			return ret;
@@ -378,8 +386,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(false);
 
+#pragma warning disable CS0618 // Type or member is obsolete
 				if (helper.OriginalContext.CloseAfterUse)
 					await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			return ret;

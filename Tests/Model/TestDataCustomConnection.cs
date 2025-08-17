@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -103,6 +104,7 @@ namespace Tests.Model
 
 		public List<string> NextQueryHints => ((IDataContext)Connection).NextQueryHints;
 
+		[Obsolete("This API will be removed in version 7. Use DataContext with KeepConnectionAlive property instead."), EditorBrowsable(EditorBrowsableState.Never)]
 		public bool CloseAfterUse { get => ((IDataContext)Connection).CloseAfterUse; set => ((IDataContext)Connection).CloseAfterUse = value; }
 
 		public DataOptions Options => ((IDataContext)Connection).Options;

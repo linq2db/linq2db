@@ -63,8 +63,10 @@ namespace LinqToDB.Data
 				_dataConnection!.DataProvider.DisposeCommand(Command);
 			}
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (((IDataContext?)_dataConnection)?.CloseAfterUse == true)
 				_dataConnection.Close();
+#pragma warning restore CS0618 // Type or member is obsolete
 		}
 
 		public async ValueTask DisposeAsync()
@@ -93,8 +95,10 @@ namespace LinqToDB.Data
 				await _dataConnection!.DataProvider.DisposeCommandAsync(Command).ConfigureAwait(false);
 			}
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			if (((IDataContext?)_dataConnection)?.CloseAfterUse == true)
 				await _dataConnection.CloseAsync().ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 		}
 	}
 }

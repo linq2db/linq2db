@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
@@ -461,12 +462,33 @@ namespace Tests.Data
 			}
 		}
 
+		[Obsolete("This API will be removed in version 7. Use DataContext with SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4431")]
-		public void Issue4431Test([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool closeAfterUse)
+		public void Issue4431Test_Old([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool closeAfterUse)
 		{
 			var interceptor = new CountingContextInterceptor();
 			using var db = GetDataConnection(context, o => o.UseInterceptor(interceptor));
 			((IDataContext)db).CloseAfterUse = closeAfterUse;
+
+			var input = DataParameter.Int32("input", 1);
+			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var persons = db.QueryProc(reader => new Person(), "QueryProcParameters", input, output1, output2);
+
+			persons.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.OnClosedCount, Is.EqualTo(closeAfterUse ? 1 : 0));
+				Assert.That(interceptor.OnClosedAsyncCount, Is.Zero);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4431")]
+		public void Issue4431Test([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool closeAfterUse)
+		{
+			var interceptor = new CountingContextInterceptor();
+			using var db = new DataContext(new DataOptions().UseConfiguration(context).UseInterceptor(interceptor));
+			db.SetKeepConnectionAlive(closeAfterUse);
 
 			var input = DataParameter.Int32("input", 1);
 			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };

@@ -287,6 +287,7 @@ namespace LinqToDB.Remote
 		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, MappingSchema);
 
 		public  bool InlineParameters { get; set; }
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public  bool CloseAfterUse    { get; set; }
 
 		private List<string>? _queryHints;

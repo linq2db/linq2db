@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -65,6 +66,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets or sets flag to close context after query execution or leave it open.
 		/// </summary>
+		[Obsolete("This API will be removed in version 7. Use DataContext with SetKeepConnectionAlive[Async] instead."), EditorBrowsable(EditorBrowsableState.Never)]
 		bool                CloseAfterUse         { get; set; }
 
 		/// <summary>
