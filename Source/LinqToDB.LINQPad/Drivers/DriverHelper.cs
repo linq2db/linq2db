@@ -12,14 +12,14 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 #if NETFRAMEWORK
-using System.Text.Json;
-using System.Numerics;
 using System.Buffers;
-using System.Runtime.CompilerServices;
-//using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.Diagnostics;
-//using System.Reflection.Metadata;
 using Microsoft.Extensions.Logging;
+using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+//using System.Reflection.Metadata;
 #endif
 
 namespace LinqToDB.LINQPad;
@@ -67,9 +67,10 @@ internal static class DriverHelper
 		RegisterResolver("System.Diagnostics.DiagnosticSource", static () => typeof(DiagnosticSource).Assembly);
 		RegisterResolver("Microsoft.Bcl.AsyncInterfaces", static () => typeof(IAsyncDisposable).Assembly);
 		RegisterResolver("Microsoft.Extensions.Logging.Abstractions", static () => typeof(ILogger).Assembly);
+		RegisterResolver("System.Collections.Immutable", static () => typeof(ImmutableArray).Assembly);
+		RegisterResolver("System.Collections.Immutable", static () => typeof(ImmutableArray).Assembly);
 
 		// not needed anymore?
-		//RegisterResolver("System.Collections.Immutable", static () => typeof(ImmutableArray).Assembly);
 		//RegisterResolver("System.Reflection.Metadata", static () => typeof(Blob).Assembly);
 
 		AppDomain.CurrentDomain.DomainUnload += static (_, _) => DatabaseProviders.Unload();
