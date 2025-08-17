@@ -226,4 +226,4 @@ jobs:
     displayName: Upload LINQPad nuget to Release Draft
     condition: and(succeeded(), ${{ parameters.release }})
     env:
-      GITHUB_TOKEN: $(BASELINES_GH_PAT)
+      GITHUB_TOKEN: $(RELEASES_GH_PAT)

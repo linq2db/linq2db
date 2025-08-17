@@ -313,4 +313,4 @@ jobs:
     displayName: Create Release Draft
     condition: and(succeeded(), ${{ parameters.with_release }})
     env:
-      GITHUB_TOKEN: $(BASELINES_GH_PAT)
+      GITHUB_TOKEN: $(RELEASES_GH_PAT)
