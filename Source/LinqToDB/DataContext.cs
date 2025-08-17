@@ -447,7 +447,7 @@ namespace LinqToDB
 		/// releases connection, if it is not locked (<see cref="LockDbManagerCounter"/>)
 		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
 		/// </summary>
-		internal async Task ReleaseQueryAsync()
+		internal async ValueTask ReleaseQueryAsync()
 		{
 			AssertDisposed();
 
