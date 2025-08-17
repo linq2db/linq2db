@@ -15,11 +15,12 @@ using System.Threading.Tasks;
 using System.Buffers;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using Microsoft.Extensions.Logging;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 //using System.Reflection.Metadata;
+
+using Microsoft.Extensions.Logging;
 #endif
 
 namespace LinqToDB.LINQPad;
@@ -67,7 +68,6 @@ internal static class DriverHelper
 		RegisterResolver("System.Diagnostics.DiagnosticSource", static () => typeof(DiagnosticSource).Assembly);
 		RegisterResolver("Microsoft.Bcl.AsyncInterfaces", static () => typeof(IAsyncDisposable).Assembly);
 		RegisterResolver("Microsoft.Extensions.Logging.Abstractions", static () => typeof(ILogger).Assembly);
-		RegisterResolver("System.Collections.Immutable", static () => typeof(ImmutableArray).Assembly);
 		RegisterResolver("System.Collections.Immutable", static () => typeof(ImmutableArray).Assembly);
 
 		// not needed anymore?

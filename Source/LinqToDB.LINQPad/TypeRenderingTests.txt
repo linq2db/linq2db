@@ -72,7 +72,7 @@ new object[]
 {
 	new
 	{
-		ClickHouseDecimal = new ClickHouse.Client.Numerics.ClickHouseDecimal(System.Numerics.BigInteger.Parse("-2352454252352345235235235235235346353523523"), 10),
+		ClickHouseDecimal = new ClickHouse.Driver.Numerics.ClickHouseDecimal(System.Numerics.BigInteger.Parse("-2352454252352345235235235235235346353523523"), 10),
 	}
 }
 
