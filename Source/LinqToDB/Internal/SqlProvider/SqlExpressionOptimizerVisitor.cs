@@ -631,6 +631,8 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
+			/* TODO: it is buggy.
+
 			// Optimizations: PREDICATE vs (GROUP)
 			// 1. A OR (A AND B) => A
 			// 2. A AND (A OR B) => A
@@ -639,6 +641,8 @@ namespace LinqToDB.Internal.SqlProvider
 			newElement = OptimizeSimilarForSinglePredicate(element);
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
+
+			*/
 
 			return element;
 		}

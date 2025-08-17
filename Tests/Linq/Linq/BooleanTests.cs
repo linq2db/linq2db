@@ -728,5 +728,21 @@ namespace Tests.Linq
 
 			Assert.That(db.LastQuery, Does.Not.Contain(" = "));
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5090")]
+		public void Test_Coalesce([DataSources(false, TestProvName.AllSybase)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			db.InlineParameters = inline;
+
+			var True = true;
+			var False = false;
+
+			AssertQuery(tb.Where(r => r.BooleanN ?? True));
+			AssertQuery(tb.Where(r => r.BooleanN ?? False));
+			AssertQuery(tb.Where(r => r.BooleanN ?? (r.Id % 2 == 1)));
+		}
 	}
 }

@@ -75,8 +75,8 @@ namespace Tests.Linq
 				{
 					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(1));
 					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
+				}
 			}
-		}
 		}
 
 		[Test]
@@ -95,8 +95,8 @@ namespace Tests.Linq
 				{
 					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(3));
 					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
+				}
 			}
-		}
 		}
 
 		[ActiveIssue(
@@ -1435,7 +1435,7 @@ namespace Tests.Linq
 					Assert.That(_cnt1, Is.EqualTo(1));
 					Assert.That(_cnt2, Is.EqualTo(1));
 					Assert.That(_cnt3, Is.EqualTo(1));
-			}
+				}
 			}
 
 			List<Person> Query(ITestDataContext db)
@@ -1672,7 +1672,7 @@ namespace Tests.Linq
 				{
 					Assert.That(persons.All(p => p.ID != _param), Is.True);
 					Assert.That(_cnt, Is.EqualTo(1));
-			}
+				}
 			}
 
 			List<Person> Query(ITestDataContext db)
@@ -1956,7 +1956,7 @@ namespace Tests.Linq
 				if (iteration > 1)
 				{
 					Assert.That(tb.GetCacheMissCount(), Is.EqualTo(cacheMissCount));
-		}
+				}
 
 				var record = tb.Single();
 				using (Assert.EnterMultipleScope())
@@ -1966,8 +1966,8 @@ namespace Tests.Linq
 					Assert.That(record.Value3, Is.EqualTo(f3.Value));
 					Assert.That(record.Value4, Is.EqualTo(f4.Value));
 					Assert.That(record.Value5, Is.EqualTo(f5.Value));
-	}
-}
+				}
+			}
 		}
 
 		readonly struct Wrap<TValue>
@@ -1988,6 +1988,19 @@ namespace Tests.Linq
 			var valueGetter = () => 1;
 
 			AssertQuery(db.Parent.Where(r => r.ParentID == valueGetter()));
+		}
+
+		[Test]
+		public void LambdaBodyInQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Expression<Func<Parent, int>> valueGetter = p => p.ParentID;
+
+			var query = db.Parent
+				.Select(p => (valueGetter.Body as MemberExpression)!.Member.Name);
+
+			AssertQuery(query);
 		}
 
 		sealed class Issue4963Table

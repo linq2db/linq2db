@@ -258,7 +258,7 @@ namespace LinqToDB.Internal.Cache
 		private static void ExpirationTokensExpired(object obj)
 		{
 			// start a new thread to avoid issues with callbacks called from RegisterChangeCallback
-			Task.Factory.StartNew(state =>
+			_ = Task.Factory.StartNew(state =>
 			{
 				var entry = (CacheEntry<TKey,TEntry>)state!;
 				entry.SetExpired(EvictionReason.TokenExpired);
@@ -287,7 +287,7 @@ namespace LinqToDB.Internal.Cache
 		{
 			if (_postEvictionCallbacks != null)
 			{
-				Task.Factory.StartNew(state => InvokeCallbacks((CacheEntry<TKey,TEntry>)state!), this,
+				_ = Task.Factory.StartNew(state => InvokeCallbacks((CacheEntry<TKey,TEntry>)state!), this,
 					CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
 			}
 		}

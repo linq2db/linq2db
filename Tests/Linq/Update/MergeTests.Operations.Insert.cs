@@ -1535,7 +1535,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 				AssertRow(InitialTargetData[3], result[3], null, null);
 				if (result.Count != 6)
-				AssertRow(InitialSourceData[3], result[4], null, 216);
+					AssertRow(InitialSourceData[3], result[4], null, 216);
 			}
 		}
 

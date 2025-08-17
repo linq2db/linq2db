@@ -2549,5 +2549,96 @@ namespace Tests.Linq
 							&& ((p4 <= p.ID && p.ID <= p4) || (p4 <= p.ID && p.ID <= p4))))
 				.ToArray();
 		}
+
+		[Test]
+		public void PredicateOptimization_SimilarInSearch1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var noPersons = db.Person.Where(x => x.ID > 3 && (x.FirstName == "John" || x.FirstName == "Jane"));
+			var specificNoPersons = noPersons.Where(x => x.FirstName == "Jane");
+
+			AssertQuery(specificNoPersons);
+			AssertQuery(noPersons);
+		}
+
+		[Test]
+		public void PredicateOptimization_SimilarInSearch2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var noPersons         = db.Person.Where(x => (x.FirstName == "John" || x.FirstName == "Jane") && x.ID > 3);
+			var specificNoPersons = noPersons.Where(x => x.FirstName == "Jane");
+
+			AssertQuery(specificNoPersons);
+			AssertQuery(noPersons);
+		}
+
+		class WithMultipleDates
+		{
+			public int? Id { get; set; }
+
+			public DateTime? Date1 { get; set; }
+			public DateTime? Date2 { get; set; }
+			public DateTime? Date3 { get; set; }
+			public DateTime? Date4 { get; set; }
+		}
+
+		[Test]
+		public void PredicateOptimization_Subquery([DataSources(
+			TestProvName.AllOracle,
+			TestProvName.AllSybase,
+			TestProvName.AllAccess,
+			TestProvName.AllMariaDB,
+			TestProvName.AllMySql57,
+			TestProvName.AllDB2,
+			// yep, it works in older versions...
+			TestProvName.AllFirebird5Plus,
+			TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var tb = db.CreateLocalTable(new[]
+			{
+				new WithMultipleDates
+				{
+					Id    = 1,
+					Date1 = new DateTime(2023, 1, 1),
+					Date2 = new DateTime(2023, 1, 2),
+					Date3 = new DateTime(2023, 1, 3),
+					Date4 = new DateTime(2023, 1, 4)
+				},
+				new WithMultipleDates
+				{
+					Id    = 2,
+					Date1 = new DateTime(2023, 2, 1),
+					Date2 = new DateTime(2023, 2, 2),
+					Date3 = new DateTime(2023, 2, 3),
+					Date4 = new DateTime(2023, 2, 4)
+				},
+				new WithMultipleDates
+				{
+					Id    = null,
+					Date1 = null,
+					Date2 = null,
+					Date3 = null,
+					Date4 = null
+				}
+			});
+
+			var query1 =
+				from p in tb
+				where new[] { p.Date1, p.Date2, p.Date3, p.Date4 }.Max() > new DateTime(2023, 1, 1)
+				select p;
+
+			var query2 =
+				from p in tb
+				where !(new[] { p.Date1, p.Date2, p.Date3, p.Date4 }.Max() > p.Date1)
+				select p;
+
+			var result1 = query1.ToArray();
+			var result2 = query2.ToArray();
+		}
+
 	}
 }
