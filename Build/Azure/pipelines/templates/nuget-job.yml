@@ -215,7 +215,7 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        $relnotesVersion = $(assemblyVersion).Replace(".", "")
+        $relnotesVersion = '$(assemblyVersion)' -replace '\.',''
         Write-Host "Add linqpad nuget to release v$(assemblyVersion) draft"
         $output = gh release upload v$(assemblyVersion) "$(Build.SourcesDirectory)/.build/nugets/linq2db.LINQPad.$(assemblyVersion).nupkg"
         if ($LASTEXITCODE -ne 0) {
