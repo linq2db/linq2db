@@ -172,7 +172,7 @@ namespace LinqToDB.Remote
 		{
 			string? result = null;
 
-			if (scalar != null)
+			if (scalar is not (null or DBNull))
 			{
 				var lsr = new LinqServiceResult
 				{
@@ -184,9 +184,7 @@ namespace LinqToDB.Remote
 					Data       =
 					[
 						[
-							scalar == DBNull.Value
-								? string.Empty
-								: SerializationConverter.Serialize(SerializationMappingSchema, scalar)
+							SerializationConverter.Serialize(SerializationMappingSchema, scalar)
 						]
 					],
 				};
@@ -297,7 +295,7 @@ namespace LinqToDB.Remote
 				FieldCount = rd.DataReader!.FieldCount,
 				FieldNames = new string[rd.DataReader!.FieldCount],
 				FieldTypes = new Type  [rd.DataReader!.FieldCount],
-				Data       = new List<string[]>(),
+				Data       = new List<string?[]>(),
 			};
 
 			var names             = new HashSet<string>();
