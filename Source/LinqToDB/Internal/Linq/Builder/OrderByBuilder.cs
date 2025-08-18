@@ -81,7 +81,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							break;
 					}
 
-					if (isValid && !prevSequence.SelectQuery.OrderBy.IsEmpty)
+					if (isValid && !prevSequence.SelectQuery.OrderBy.IsEmpty && sequence.SelectQuery != prevSequence.SelectQuery)
 					{
 						sequence.SelectQuery.OrderBy.Items.AddRange(prevSequence.SelectQuery.OrderBy.Items.Select(x => x.Clone()));
 					}
