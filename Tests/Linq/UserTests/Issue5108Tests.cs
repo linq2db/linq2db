@@ -1,13 +1,12 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Dynamic.Core;
+﻿using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -32,51 +31,50 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void OrderByCleanUp([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle)] string context)
+		public void OrderByCleanUp([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<TextTranslationDTO>())
-			using (db.CreateLocalTable<TextDTO>())
+			var textTranslationsData = new[]
 			{
-				db.Insert(new TextTranslationDTO() { LanguageId = 1, TextId = 1, Text = "bbb", TooltipText = "ccc" });
-				db.Insert(new TextDTO() { Id = 1, Nr = 77 });
+				new TextTranslationDTO() { LanguageId = 1, TextId = 1, Text = "bbb", TooltipText = "ccc" },
+			};
 
-				var qryUnsorted =
+			var textData = new[]
+			{
+				new TextDTO() { Id = 1, Nr = 77, ServerOnlyText = true },
+			};
+
+			using var db = GetDataContext(context);
+
+			using var translations = db.CreateLocalTable(textTranslationsData);
+			using var texts = db.CreateLocalTable(textData);
+			
+			var qryUnsorted =
 				from tt in db.GetTable<TextTranslationDTO>()
 				select tt;
 
-				var qrySortedJoin1 = from tt in qryUnsorted
-									join t in db.GetTable<TextDTO>() on tt.TextId equals t.Id
-									orderby t.ServerOnlyText
-									select tt;
-				var qry1 = qrySortedJoin1.OrderBy(x => x.LanguageId);
+			var qrySortedJoin1 = from tt in qryUnsorted
+				join t in db.GetTable<TextDTO>() on tt.TextId equals t.Id
+				orderby t.ServerOnlyText
+				select tt;
 
-				Configuration.Linq.DoNotClearOrderBys = false;
+			var qry = qrySortedJoin1.OrderBy(x => x.LanguageId);
 
-				var l1 = qry1.ToList();
-				var sql1 = ((DataConnection)db).LastQuery!;
-				Assert.That(sql1.LastIndexOf("ServerOnlyText", StringComparison.OrdinalIgnoreCase), Is.LessThan(0), "first order by should be deleted");
+			var sqlWithOrder = qry.ToSqlQuery().Sql;
+			BaselinesManager.LogQuery(sqlWithOrder);
 
-				Configuration.Linq.DoNotClearOrderBys = true;
+			var sqlWithOrderAst = qry.GetSelectQuery();
 
-				var qrySortedJoin2 = from tt in qryUnsorted
-									 join t in db.GetTable<TextDTO>() on tt.TextId equals t.Id
-									 orderby t.ServerOnlyText
-									 select tt;
-				var qry2 = qrySortedJoin2.OrderBy(x => x.LanguageId);
-				var l2 = qry2.ToList();
-				var sql2 = ((DataConnection)db).LastQuery!;
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(sql2.ToLower(), Does.Contain("serveronlytext"));
-					Assert.That(sql2.LastIndexOf("ServerOnlyText", StringComparison.OrdinalIgnoreCase), Is.LessThan(sql2.LastIndexOf("LanguageId", StringComparison.OrdinalIgnoreCase)), "error in order by order");
-				}
+			sqlWithOrderAst.OrderBy.Items.Count.ShouldBe(2);
+			sqlWithOrderAst.OrderBy.Items[0].Expression.ShouldBeOfType<SqlField>().Name.ShouldBe("LanguageId");
+			sqlWithOrderAst.OrderBy.Items[1].Expression.ShouldBeOfType<SqlField>().Name.ShouldBe("ServerOnlyText");
 
-				var qry3 = qry2.RemoveOrderBy();
-				var l3 = qry3.ToList();
-				var sql3 = ((DataConnection)db).LastQuery!;
-				Assert.That(sql3.ToLower(), Does.Not.Contain("order"), "es sollte kein order by enthalten sein");
-			}
+			var noOrderBy = qry.RemoveOrderBy();
+
+			var sqlNoOrder = noOrderBy.ToSqlQuery().Sql;
+			BaselinesManager.LogQuery(sqlNoOrder);
+
+			var sqlNoOrderAst = noOrderBy.GetSelectQuery();
+			sqlNoOrderAst.OrderBy.Items.Count.ShouldBe(0);
 		}
 	}
 }

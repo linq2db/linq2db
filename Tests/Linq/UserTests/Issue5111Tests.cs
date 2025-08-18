@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq;
-using System.Linq.Dynamic.Core;
 
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -40,10 +40,8 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CollectionModifiedException([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void PreservingOrderBy([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			Configuration.Linq.DoNotClearOrderBys = true;
-
 			var textTranslationsData = new[]
 			{
 				new TextTranslationDTO { LanguageId = 1, TextId = 1, Text = "1aaa", TooltipText = "4bbb" },
@@ -71,7 +69,9 @@ namespace Tests.UserTests
 			using var textTranslations = db.CreateLocalTable<TextTranslationDTO>(textTranslationsData);
 			using var languages = db.CreateLocalTable<LanguageDTO>(languagesData);
 			using var texts = db.CreateLocalTable<TextDTO>(textsData);
-			
+
+			using var disp = db.UseLinqOptions(o => o.WithDoNotClearOrderBys(true));
+
 			var qrySorted1 =
 				textTranslations
 					.OrderBy(tt =>
@@ -89,12 +89,19 @@ namespace Tests.UserTests
 				qrySorted1
 					.ThenBy(tt => tt.TooltipText);
 
+			var sqA = qrySorted2A.GetSelectQuery();
+
+			sqA.OrderBy.Items.Count.ShouldBe(3);
+			sqA.OrderBy.Items[2].Expression.ShouldBeOfType<SqlField>().Name.ShouldBe("TooltipText");
+
 			var qrySorted2B =
 				qrySorted1
 					.OrderBy(tt => tt.TooltipText);
 
-			AssertQuery(qrySorted2A);
-			AssertQuery(qrySorted2B);
+			var sqB = qrySorted2B.GetSelectQuery();
+
+			sqB.OrderBy.Items.Count.ShouldBe(3);
+			sqB.OrderBy.Items[2].Expression.ShouldBeOfType<SqlField>().Name.ShouldBe("TooltipText");
 		}
 	}
 }

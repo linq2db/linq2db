@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var info        = new BuildInfo(buildInfo, methodCall.Arguments[0]);
+			var info        = new BuildInfo(buildInfo, methodCall.Arguments[0]) { IgnoreOrderBy = false };
 			var buildResult = builder.TryBuildSequence(info);
 
 			if (buildResult.BuildContext == null)
