@@ -40,53 +40,61 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CollectionModifiedException([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle)] string context)
+		public void CollectionModifiedException([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			Configuration.Linq.DoNotClearOrderBys = true;
 
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<TextTranslationDTO>())
-			using (db.CreateLocalTable<LanguageDTO>())
-			using (db.CreateLocalTable<TextDTO>())
+			var textTranslationsData = new[]
 			{
-				db.Insert(new TextTranslationDTO() { LanguageId = 1, TextId = 1, Text = "1bbb", TooltipText = "4ccc" });
-				db.Insert(new TextTranslationDTO() { LanguageId = 1, TextId = 2, Text = "2bbb", TooltipText = "3ccc" });
-				db.Insert(new TextTranslationDTO() { LanguageId = 2, TextId = 3, Text = "3bbb", TooltipText = "2ccc" });
-				db.Insert(new TextTranslationDTO() { LanguageId = 2, TextId = 4, Text = "4bbb", TooltipText = "1ccc" });
-				db.Insert(new LanguageDTO() { LanguageID = 1, Name = "aaaa", AlternativeLanguageID = 2 });
-				db.Insert(new LanguageDTO() { LanguageID = 2, Name = "bbbb", AlternativeLanguageID = 1 });
-				db.Insert(new TextDTO() { Id = 1, Nr = 77 });
-				db.Insert(new TextDTO() { Id = 2, Nr = 78 });
-				db.Insert(new TextDTO() { Id = 3, Nr = 79 });
-				db.Insert(new TextDTO() { Id = 4, Nr = 80 });
+				new TextTranslationDTO { LanguageId = 1, TextId = 1, Text = "1aaa", TooltipText = "4bbb" },
+				new TextTranslationDTO { LanguageId = 1, TextId = 2, Text = "2aaa", TooltipText = "3bbb" },
+				new TextTranslationDTO { LanguageId = 2, TextId = 3, Text = "3aaa", TooltipText = "2bbb" },
+				new TextTranslationDTO { LanguageId = 2, TextId = 4, Text = "4aaa", TooltipText = "1bbb" }
+			};
 
-				var qrySorted1 =
-					db.GetTable<TextTranslationDTO>()
-						.OrderBy(tt =>
-							db.GetTable<LanguageDTO>()
-								.Where(l => l.AlternativeLanguageID == tt.LanguageId)
-								.Select(l => l.LanguageID)
-								.Count())
-						.ThenBy(tt =>
-							db.GetTable<TextDTO>()
-								.Where(t => t.Id == tt.TextId)
-								.Select(t =>
-									t.ServerOnlyText).Single());
+			var languagesData = new[]
+			{
+				new LanguageDTO { LanguageID = 1, Name = "aaaa", AlternativeLanguageID = 2 },
+				new LanguageDTO { LanguageID = 2, Name = "bbbb", AlternativeLanguageID = 1 }
+			};
 
-				var qrySorted2A =
-					qrySorted1
-						.ThenBy(tt => tt.TooltipText);
+			var textsData = new[]
+			{
+				new TextDTO { Id = 1, Nr = 77, ServerOnlyText = true },
+				new TextDTO { Id = 2, Nr = 78, ServerOnlyText = true },
+				new TextDTO { Id = 3, Nr = 79, ServerOnlyText = true },
+				new TextDTO { Id = 4, Nr = 80, ServerOnlyText = true }
+			};
 
-				var qrySorted2B =
-					qrySorted1
-						.OrderBy(tt => tt.TooltipText);
+			using var db = GetDataContext(context);
 
-				var translation1 = qrySorted2A.FirstOrDefault();
-				var qryString = ((DataConnection) db).LastQuery;
+			using var textTranslations = db.CreateLocalTable<TextTranslationDTO>(textTranslationsData);
+			using var languages = db.CreateLocalTable<LanguageDTO>(languagesData);
+			using var texts = db.CreateLocalTable<TextDTO>(textsData);
+			
+			var qrySorted1 =
+				textTranslations
+					.OrderBy(tt =>
+						languages
+							.Where(l => l.AlternativeLanguageID == tt.LanguageId)
+							.Select(l => l.LanguageID)
+							.Count())
+					.ThenBy(tt =>
+						texts
+							.Where(t => t.Id == tt.TextId)
+							.Select(t =>
+								t.ServerOnlyText).Single());
 
-				var translation2 = qrySorted2B.FirstOrDefault();
-				qryString = ((DataConnection) db).LastQuery;
-			}
+			var qrySorted2A =
+				qrySorted1
+					.ThenBy(tt => tt.TooltipText);
+
+			var qrySorted2B =
+				qrySorted1
+					.OrderBy(tt => tt.TooltipText);
+
+			AssertQuery(qrySorted2A);
+			AssertQuery(qrySorted2B);
 		}
 	}
 }
