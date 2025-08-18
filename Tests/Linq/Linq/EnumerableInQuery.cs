@@ -322,5 +322,53 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[Test]
+		public void CoalesceColumnSelection([IncludeDataSources(
+			TestProvName.AllPostgreSQL93Plus,
+			TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var (items, colors, styles) = SomeItem.Seed();
+
+			using var itemsTable  = db.CreateLocalTable(items);
+			using var colorsTable = db.CreateLocalTable(colors);
+			using var stylesTable = db.CreateLocalTable(styles);
+
+			var query =
+				from item in itemsTable.LoadWith(it => it.Color).LoadWith(it => it.Style)
+				from it in new[]
+				{
+					new
+					{
+						ColorName   = (string?)item.Color!.Name,
+						StyleName   = item.Style!.Name,
+						ColorId     = (item.Color == null ? null : item.ColorId) ?? 0,
+						Conditional = item.Color!.Name == "Red" ? itemsTable.Count() : 0,
+					},
+					new
+					{
+						ColorName   = (string?)null,
+						StyleName   = item.Style!.Name,
+						ColorId     = (item.Color == null ? null : item.ColorId) ?? 0,
+						Conditional = 0,
+					},
+				}.DefaultIfEmpty()
+				where it.ColorName == "Red"
+				select new
+				{
+					it.ColorName,
+					it.StyleName,
+					it.Conditional,
+#pragma warning disable CS8602
+					StrValue = Sql.ConcatStrings(",", "", it.StyleName) == null ? null : Sql.ConcatStrings(",", "", it.StyleName) + ":" + Sql.ToNullable(it!.ColorId).ToString().PadLeft(4, '0'),
+#pragma warning restore CS8602
+				};
+
+			query = query
+				.OrderBy(x => x.StrValue);
+
+			AssertQuery(query);
+		}
+
 	}
 }

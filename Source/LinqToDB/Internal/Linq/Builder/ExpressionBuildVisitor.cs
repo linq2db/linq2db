@@ -620,7 +620,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		[Conditional("DEBUG")]
 		public void LogVisit(Expression node, [CallerMemberName] string callerName = "")
 		{
-			Debug.WriteLine($"{callerName}: {_buildPurpose}, {_buildFlags}, {node}");
+			//Debug.WriteLine($"{callerName}: {_buildPurpose}, {_buildFlags}, {node}");
 		}
 
 		protected override Expression VisitLambda<T>(Expression<T> node)
@@ -1843,6 +1843,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (!IsSqlOrExpression() || BuildContext == null)
 			{
+				using var _ = UsingColumnDescriptor(null);
 				var newNode = base.VisitConditional(node);
 				FoundRoot = null;
 				return newNode;
