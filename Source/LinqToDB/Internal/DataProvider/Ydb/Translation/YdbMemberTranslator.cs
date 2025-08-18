@@ -350,7 +350,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var factory = translationContext.ExpressionFactory;
 
 				var valueType = factory.GetDbDataType(value);
-				
+
 				var result = factory.Function(valueType, "Math::NearbyInt", value, factory.Fragment("Math::RoundToNearest()"));
 
 				return result;

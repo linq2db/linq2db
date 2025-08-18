@@ -17,7 +17,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 {
 	public class YdbSqlBuilder : BasicSqlBuilder<YdbOptions>
 	{
-		readonly YdbOptions _providerOptions;
+		readonly         YdbOptions                     _providerOptions;
+		private readonly Dictionary<string, DbDataType> _usedParams = new(StringComparer.Ordinal);
 
 		public YdbSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
@@ -46,6 +47,41 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				.Append("PRIMARY KEY (")
 				.AppendJoinStrings(InlineComma, fieldNames)
 				.Append(')');
+		}
+		
+		protected override void BuildParameter(SqlParameter parameter)
+		{
+			var p = OptimizationContext.AddParameter(parameter);
+
+			if (p.Name != null && !_usedParams.ContainsKey(p.Name))
+				_usedParams[p.Name] = p.Type;
+
+			Convert(StringBuilder, p.Name!, ConvertType.NameToQueryParameter);
+		}
+
+		protected override void FinalizeBuildQuery(SqlStatement statement)
+		{
+			if (_usedParams.Count > 0)
+			{
+				var prolog = new StringBuilder();
+
+				foreach (var kv in _usedParams)
+				{
+					var name = kv.Key;
+					var type = kv.Value;
+
+					prolog.Append("DECLARE ");
+					Convert(prolog, name, ConvertType.NameToQueryParameter);
+					prolog.Append(" AS ");
+					BuildDataType(prolog, type);
+					prolog.AppendLine(";");
+				}
+
+				prolog.AppendLine();
+				StringBuilder.Insert(0, prolog.ToString());
+			}
+
+			base.FinalizeBuildQuery(statement);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
