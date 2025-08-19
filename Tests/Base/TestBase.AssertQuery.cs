@@ -227,7 +227,6 @@ namespace Tests
 			return result;
 		}
 
-
 		static Expression RemapMethod(MethodCallExpression mc)
 		{
 			MethodCallExpression SetOperationRemap(MethodInfo genericMethodInfo)
