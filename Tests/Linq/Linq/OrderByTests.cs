@@ -165,7 +165,7 @@ namespace Tests.Linq
 		[Test]
 		public void OrderBy7([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, o => o.UseDoNotClearOrderBys(true)))
+			using (var db = GetDataContext(context, o => o.UseConcatenateOrderBy(true)))
 			{
 
 				var expected =

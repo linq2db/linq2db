@@ -45,19 +45,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var sequence = sequenceResult.BuildContext;
 
-			var isNewOrder = methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy)) && !builder.DataContext.Options.LinqOptions.DoNotClearOrderBys;
+			var isNewOrder = methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy)) && !builder.DataContext.Options.LinqOptions.ConcatenateOrderBy;
 
 			if (isNewOrder)
 				sequence = new SubQueryContext(sequence);
 
-			if (builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
+			if (builder.DataContext.Options.LinqOptions.ConcatenateOrderBy)
 			{
 				var prevSequence = sequence;
 
 				if (sequence is not SubQueryContext)
 					sequence = new SubQueryContext(sequence);
 
-				if (builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
+				if (builder.DataContext.Options.LinqOptions.ConcatenateOrderBy)
 				{
 					var isValid = true;
 					while (true)

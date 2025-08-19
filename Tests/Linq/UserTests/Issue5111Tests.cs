@@ -70,7 +70,7 @@ namespace Tests.UserTests
 			using var languages = db.CreateLocalTable<LanguageDTO>(languagesData);
 			using var texts = db.CreateLocalTable<TextDTO>(textsData);
 
-			using var disp = db.UseLinqOptions(o => o.WithDoNotClearOrderBys(true));
+			using var disp = db.UseLinqOptions(o => o.WithConcatenateOrderBy(true));
 
 			var qrySorted1 =
 				textTranslations

@@ -34,7 +34,7 @@ namespace LinqToDB
 	/// See <see cref="DataConnection.TraceSwitch"/> for more details.
 	/// Default value: <c>false</c>.
 	/// </param>
-	/// <param name="DoNotClearOrderBys">
+	/// <param name="ConcatenateOrderBy">
 	/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
 	/// - if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;
 	/// - if <c>false</c> - OrderBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
@@ -160,7 +160,7 @@ namespace LinqToDB
 		bool         IgnoreEmptyUpdate       = false,
 		bool         GenerateExpressionTest  = false,
 		bool         TraceMapperExpression   = false,
-		bool         DoNotClearOrderBys      = false,
+		bool         ConcatenateOrderBy      = false,
 		bool         OptimizeJoins           = true,
 		CompareNulls CompareNulls            = CompareNulls.LikeClr,
 		bool         GuardGrouping           = true,
@@ -189,7 +189,7 @@ namespace LinqToDB
 			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
 			GenerateExpressionTest  = original.GenerateExpressionTest;
 			TraceMapperExpression   = original.TraceMapperExpression;
-			DoNotClearOrderBys      = original.DoNotClearOrderBys;
+			ConcatenateOrderBy      = original.ConcatenateOrderBy;
 			OptimizeJoins           = original.OptimizeJoins;
 			CompareNulls            = original.CompareNulls;
 			GuardGrouping           = original.GuardGrouping;
@@ -212,7 +212,7 @@ namespace LinqToDB
 						.Add(IgnoreEmptyUpdate)
 						.Add(GenerateExpressionTest)
 						.Add(TraceMapperExpression)
-						.Add(DoNotClearOrderBys)
+						.Add(ConcatenateOrderBy)
 						.Add(OptimizeJoins)
 						.Add((int)CompareNulls)
 						.Add(GuardGrouping)
