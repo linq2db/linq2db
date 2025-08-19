@@ -102,6 +102,16 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>SqlServerHints.tt</DependentUpon>
 		</Compile>
+		<None Update="DataProvider\Ydb\YdbHints.tt">
+		  <LastGenOutput>YdbHints.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+
+		<Compile Update="DataProvider\Ydb\YdbHints.generated.cs">
+		  <DependentUpon>YdbHints.tt</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		</Compile>
 
 		<None Update="Async\AsyncExtensions.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
@@ -116,6 +126,11 @@
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>MutableTuple.tt</DependentUpon>
+		</Compile>
+		<Compile Update="DataProvider\Ydb\YdbHints.generated.cs">
+		  <AutoGen>True</AutoGen>
+		  <DesignTime>True</DesignTime>
+		  <DependentUpon>YdbHints.tt</DependentUpon>
 		</Compile>
 	</ItemGroup>
 
@@ -145,4 +160,11 @@
 		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
 		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
 	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0'">
+         <PackageReference Include="Ydb.Sdk" />
+    </ItemGroup>
+	<ItemGroup>
+	   <PackageReference Include="Microsoft.Net.Compilers.Toolset"/>
+	</ItemGroup>
+
 </Project>

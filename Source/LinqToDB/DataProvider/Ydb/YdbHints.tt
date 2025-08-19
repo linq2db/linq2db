@@ -1,0 +1,61 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".generated.cs" #>
+#nullable enable
+// Generated.
+//
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+
+using LinqToDB.Mapping;
+
+namespace LinqToDB.DataProvider.Ydb
+{
+	public static partial class YdbHints
+	{
+<#
+	void Gen(string name)
+	{
+#>
+		// 1) IYdbSpecificQueryable<T>
+		[ExpressionMethod(nameof(<#= name #>HintImpl))]
+		public static IYdbSpecificQueryable<TSource> <#= name #>Hint<TSource>(
+			this IYdbSpecificQueryable<TSource> query,
+			params string[]                     columns)
+			where TSource : notnull
+		{
+			return QueryHint(query, <#= name #>, columns);
+		}
+		static Expression<Func<IYdbSpecificQueryable<TSource>,string[],IYdbSpecificQueryable<TSource>>> <#= name #>HintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, columns) => QueryHint(query, <#= name #>, columns);
+		}
+
+		// 2) IQueryable<T> (мостик)
+		[ExpressionMethod(nameof(<#= name #>HintQImpl))]
+		public static IYdbSpecificQueryable<TSource> <#= name #>Hint<TSource>(
+			this IQueryable<TSource> query,
+			params string[]          columns)
+			where TSource : notnull
+		{
+			// через перегрузку QueryHint(IQueryable<T>)
+			return QueryHint(query, <#= name #>, columns);
+		}
+		static Expression<Func<IQueryable<TSource>,string[],IYdbSpecificQueryable<TSource>>> <#= name #>HintQImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, columns) => QueryHint(query, <#= name #>, columns);
+		}
+
+<#
+	}
+	Gen("Unique");
+	Gen("Distinct");
+#>
+	}
+}

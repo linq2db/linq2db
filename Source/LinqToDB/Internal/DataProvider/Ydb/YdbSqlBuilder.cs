@@ -317,20 +317,20 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
-		//protected override void BuildSubQueryExtensions(SqlStatement statement)
-		//{
-		//	var sqlExts = statement.SelectQuery?.SqlQueryExtensions;
-		//	if (sqlExts is null || sqlExts.Count == 0)
-		//		return;
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
+		{
+			var sqlExts = statement.SelectQuery?.SqlQueryExtensions;
+			if (sqlExts is null || sqlExts.Count == 0)
+				return;
 
-		//	BuildQueryExtensions(
-		//		StringBuilder,
-		//		sqlExts,
-		//		prefix: null,     // PragmaQueryHintBuilder will insert line breaks/PRAGMA
-		//		delimiter: "\n",
-		//		suffix: null,
-		//		Sql.QueryExtensionScope.QueryHint);
-		//}
+			BuildQueryExtensions(
+				StringBuilder,
+				sqlExts,
+				prefix: null,     // PragmaQueryHintBuilder will insert line breaks/PRAGMA
+				delimiter: "\n",
+				suffix: null,
+				Sql.QueryExtensionScope.SubQueryHint);
+		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge) => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 	}
