@@ -6,7 +6,6 @@
 		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<OutputType>Exe</OutputType>
-		<WarningsAsErrors>true</WarningsAsErrors>
 		<SignAssembly>False</SignAssembly>
 		<RollForward>Major</RollForward>
 		<RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
