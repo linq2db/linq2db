@@ -219,10 +219,10 @@ namespace LinqToDB.Common
 			/// query.OrderBy(r => r.FirstName).OrderBy(r => r.LastName)
 			/// 
 			/// // <c><see cref="ConcatenateOrderBy"/>=true</c> - non-first OrderBy* calls treated as ordering continuation (non-standard)
-			/// ORDER BY p.FIST_NAME, p.LAST_NAME
+			/// ORDER BY p.FIRST_NAME, p.LAST_NAME
 			/// 
 			/// // <c><see cref="ConcatenateOrderBy"/>=false</c> - last OrderBy* calls have higher priority like they should per API documentation
-			/// ORDER BY p.LAST_NAME, p.FIST_NAME
+			/// ORDER BY p.LAST_NAME, p.FIRST_NAME
 			/// 
 			/// // to completely discard old sort specification, use <see cref="LinqExtensions.RemoveOrderBy{TSource}(System.Linq.IQueryable{TSource})"/> API:
 			/// query.OrderBy(r => r.FirstName).RemoveOrderBy().OrderBy(r => r.LastName)
