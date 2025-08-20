@@ -32,8 +32,8 @@ namespace Tests.UserTests
 					new LargeData()
 					{
 						Id = 1,
-						Bytes1 = Enumerable.Repeat<byte>(55, 100000).ToArray(),
-						Bytes2 = Enumerable.Repeat<byte>(55, 100000).ToArray(),
+						Bytes1 = Enumerable.Repeat<byte>(55, 7999).ToArray(),
+						Bytes2 = Enumerable.Repeat<byte>(55, 7999).ToArray(),
 						Bytes3 = Enumerable.Repeat<byte>(55, 100000).ToArray()
 					}
 				};
@@ -42,7 +42,8 @@ namespace Tests.UserTests
 					new BulkCopyOptions()
 					{
 						BulkCopyType = BulkCopyType.ProviderSpecific,
-						TableName = "LargeData"
+						TableName = "LargeData",
+						UseParameters = true,
 					},
 					obj
 					);
