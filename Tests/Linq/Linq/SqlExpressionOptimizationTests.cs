@@ -67,7 +67,7 @@ namespace Tests.Linq
 
 		class OptimizationData
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			public int IntVlaue { get; set; }
 			[Nullable]

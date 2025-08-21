@@ -1,14 +1,15 @@
 ﻿#pragma warning disable MA0047 // Declare types in namespaces
 #pragma warning disable MA0048 // File name must match type name
 
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 
 #if NETFRAMEWORK || NETSTANDARD2_0
 
 using System;
-using System.Collections.Generic;
 using System.Data.Common;
+using System.Reflection;
 using System.Threading.Tasks;
 
 internal static class StringBuilderExtensions
@@ -39,6 +40,12 @@ internal static class StringBuilderExtensions
 	{
 		sb.AppendLine(formattableString.ToString(provider));
 		return sb;
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static StringBuilder AppendJoinStrings(this StringBuilder sb, string? separator, IEnumerable<string> values)
+	{
+		return sb.Append(string.Join(separator, values));
 	}
 }
 
@@ -88,6 +95,16 @@ internal static class AdoAsyncDispose
 		return default;
 	}
 }
+
+internal static class TypeExtensions
+{
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static ConstructorInfo? GetConstructor(this Type type, BindingFlags bindingAttr, Type[] types)
+	{
+		return type.GetConstructor(bindingAttr, null, types, null);
+	}
+}
+
 #else
 
 internal static class CharExtensions
@@ -104,5 +121,14 @@ internal static class StringBuilderExtensions
 {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static StringBuilder AppendBuilder(this StringBuilder sb, StringBuilder? stringBuilder) => sb.Append(stringBuilder);
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static StringBuilder AppendJoinStrings(this StringBuilder sb, string? separator, IEnumerable<string> values)
+	{
+#pragma warning disable RS0030 // Do not use banned APIs
+		return sb.AppendJoin<string>(separator, values);
+#pragma warning restore RS0030 // Do not use banned APIs
+	}
 }
+
 #endif

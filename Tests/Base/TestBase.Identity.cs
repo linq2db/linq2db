@@ -107,6 +107,9 @@ CREATE COLUMN TABLE ""Person"" (
 						// default schema for this table changes to temp on windows (sqlite bug?)
 						sql = new[] { $"UPDATE main.sqlite_sequence SET seq = {lastValue} WHERE name = 'Person'" };
 						break;
+					case string prov when prov.IsAnyOf(ProviderName.Ydb):
+						sql = new[] { $"ALTER SEQUENCE `/local/Person/_serial_column_PersonID` RESTART WITH {lastValue + 1}" };
+						break;
 					default:
 #pragma warning disable RS0030 // Do not use banned APIs
 						Console.WriteLine($"Unknown provider: {provider}");
@@ -243,6 +246,14 @@ CREATE COLUMN TABLE ""AllTypes""
 						// specify schema explicitly because after temp table creation (Issue4671Test)
 						// default schema for this table changes to temp on windows (sqlite bug?)
 						sql = new[] { $"UPDATE main.sqlite_sequence SET seq = {lastValue} WHERE name = 'AllTypes'" };
+						break;
+					case string prov when prov.IsAnyOf(ProviderName.Ydb):
+						sql = new[] { $"ALTER SEQUENCE `/local/AllTypes/_serial_column_ID` RESTART WITH {lastValue + 1}" };
+						break;
+					default:
+#pragma warning disable RS0030 // Do not use banned APIs
+						Console.WriteLine($"Unknown provider: {provider}");
+#pragma warning restore RS0030 // Do not use banned APIs
 						break;
 				}
 			}

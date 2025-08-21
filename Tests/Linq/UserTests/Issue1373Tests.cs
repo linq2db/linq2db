@@ -104,7 +104,7 @@ namespace Tests.UserTests
 			ms.SetConvertExpression<CustomFieldType, DataParameter>(
 				_ => _ == null
 					? new DataParameter(null, null, DataType.NVarChar)
-					: new DataParameter(null, _.ToString()), false);
+					: new DataParameter(null, _.ToString(), DataType.NVarChar), false);
 
 			using (var db = GetDataContext(context, ms))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -211,7 +211,7 @@ namespace Tests.UserTests
 			ms.SetConvertExpression<CustomFieldType?, DataParameter>(
 				_ => _ == null
 					? new DataParameter(null, null, DataType.NVarChar)
-					: new DataParameter(null, _.ToString()), false);
+					: new DataParameter(null, _.ToString(), DataType.NVarChar), false);
 
 			using (var db = GetDataContext(context, ms))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())

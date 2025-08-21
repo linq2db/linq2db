@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -17,6 +18,8 @@ namespace Tests.UserTests
 
 		sealed class CustomTableColumn
 		{
+			[PrimaryKey] public int  Id;
+
 			public int? DataTypeID { get; set; }
 		}
 

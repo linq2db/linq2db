@@ -157,6 +157,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					goto case ConvertType.NameToQueryFieldAlias;
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTable     :
+				case ConvertType.NameToCteName        :
 				case ConvertType.NameToProcedure      :
 				case ConvertType.NameToQueryTableAlias:
 				case ConvertType.NameToDatabase       :

@@ -86,7 +86,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestSkipDistinct([TestDataContextSource(TestProvName.AllClickHouse)] string context)
+		public void TestSkipDistinct([TestDataContextSource(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -113,7 +113,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDistinctSkip([TestDataContextSource(TestProvName.AllClickHouse)] string context)
+		public void TestDistinctSkip([TestDataContextSource(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -140,7 +140,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestSkip([TestDataContextSource(TestProvName.AllClickHouse)] string context)
+		public void TestSkip([TestDataContextSource(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

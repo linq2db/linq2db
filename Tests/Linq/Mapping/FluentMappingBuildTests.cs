@@ -12,7 +12,7 @@ namespace Tests.Mapping
 	public class FluentMappingBuildTests : TestBase
 	{
 		[Test]
-		public void InsertOrUpdatePrimaryKeyTest([DataSources(TestProvName.AllClickHouse, TestProvName.AllOracle)] string context)
+		public void InsertOrUpdatePrimaryKeyTest([InsertOrUpdateDataSources(TestProvName.AllOracle)] string context)
 		{
 			using var db  = GetDataContext(context);
 
@@ -43,6 +43,7 @@ namespace Tests.Mapping
 				"FluentTemp",
 				[new { ID = 1, Name = "John", LastName = "Doe" }],
 				mb => mb
+					.Property(t => t.ID).IsPrimaryKey()
 					.Property(t => t.Name)
 						.HasLength(20)
 						.HasColumnName("Value")
@@ -66,6 +67,7 @@ namespace Tests.Mapping
 				"FluentTemp",
 				[new { ID = 1, Name = "John", LastName = "Doe" }],
 				mb => mb
+					.Property(t => t.ID).IsPrimaryKey()
 					.Property(t => t.Name)
 						.HasLength(20)
 						.HasColumnName("Value")
@@ -127,6 +129,7 @@ namespace Tests.Mapping
 					"FluentTemp",
 					[new { ID = 1, Name = "John", LastName = "Doe" }],
 					mb => mb
+						.Property(t => t.ID).IsPrimaryKey()
 						.Property(t => t.Name)
 						.HasLength(20)
 						.HasColumnName(name)
