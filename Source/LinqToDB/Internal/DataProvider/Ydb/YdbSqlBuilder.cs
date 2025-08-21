@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
@@ -330,6 +331,107 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				delimiter: "\n",
 				suffix: null,
 				Sql.QueryExtensionScope.SubQueryHint);
+		}
+
+		protected override void BuildInListPredicate(SqlPredicate.InList predicate)
+		{
+			static List<object?>? TryMaterializeItems(
+				OptimizationContext           opt,
+				IReadOnlyList<ISqlExpression> values)
+			{
+				if (values is [SqlParameter pr])
+				{
+					var pv = pr.GetParameterValue(opt.EvaluationContext.ParameterValues).ProviderValue;
+					switch (pv)
+					{
+						case string:
+							return null;
+						case IEnumerable en:
+						{
+							return en.Cast<object?>().ToList();
+						}
+					}
+				}
+
+				var tmp = new List<object?>(values.Count);
+				foreach (var v in values)
+				{
+					switch (v)
+					{
+						case SqlValue sv:
+							tmp.Add(sv.Value);
+							break;
+						case SqlParameter sp:
+							tmp.Add(sp.GetParameterValue(opt.EvaluationContext.ParameterValues).ProviderValue);
+							break;
+						default:
+							return null;
+					}
+				}
+
+				return tmp;
+			}
+
+			var items = TryMaterializeItems(OptimizationContext, predicate.Values);
+			if (items == null)
+			{
+				base.BuildInListPredicate(predicate);
+				return;
+			}
+
+			var dbDataType = QueryHelper.GetDbDataType(predicate.Expr1, MappingSchema);
+
+			var hasNull = false;
+			for (var i = items.Count - 1; i >= 0; i--)
+			{
+				if (items[i] != null)
+				{
+					continue;
+				}
+
+				hasNull = true;
+				items.RemoveAt(i);
+			}
+
+			if (items.Count == 0)
+			{
+				BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot));
+				return;
+			}
+
+			var max         = SqlProviderFlags.MaxInListValuesCount;
+			var startLen    = StringBuilder.Length;
+			var bucketIndex = 0;
+			for (var i = 0; i < items.Count; i += max, bucketIndex++)
+			{
+				if (i > 0)
+					StringBuilder.Append(predicate.IsNot ? " AND " : " OR ");
+
+				BuildExpression(GetPrecedence(predicate), predicate.Expr1);
+				StringBuilder.Append(predicate.IsNot ? " NOT IN (" : " IN (");
+
+				var within = 1;
+				for (var j = i; j < Math.Min(i + max, items.Count); j++, within++)
+				{
+					var p = new SqlParameter(dbDataType, FormattableString.Invariant($"Ids{bucketIndex}_{within}"), items[j]);
+					BuildParameter(p);
+					StringBuilder.Append(InlineComma);
+				}
+
+				RemoveInlineComma().Append(')');
+			}
+
+			// 'x IN (...) OR x IS NULL'
+			if (hasNull)
+			{
+				StringBuilder.Append(predicate.IsNot ? " AND " : " OR ");
+				BuildPredicate(new SqlPredicate.IsNull(predicate.Expr1, predicate.IsNot));
+			}
+
+			if (bucketIndex > 1 || hasNull)
+			{
+				StringBuilder.Insert(startLen, "(").Append(')');
+			}
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge) => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
