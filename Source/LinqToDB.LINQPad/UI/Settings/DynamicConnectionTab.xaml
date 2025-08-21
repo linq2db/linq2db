@@ -1,0 +1,74 @@
+﻿<UserControl
+	x:Class         = "LinqToDB.LINQPad.UI.DynamicConnectionTab"
+	x:ClassModifier = "internal"
+	xmlns           = "http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x         = "http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d         = "http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc        = "http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:us        = "clr-namespace:LinqToDB.LINQPad.UI"
+	xmlns:main      = "clr-namespace:LinqToDB.LINQPad"
+	mc:Ignorable    = "d"
+	d:DataContext   = "{d:DesignInstance us:DynamicConnectionModel, IsDesignTimeCreatable=true}"
+	>
+
+	<StackPanel>
+		<us:SharedConnectionOptions />
+
+		<GroupBox Header="Custom Connection">
+			<StackPanel Margin="5">
+				<DockPanel Margin="0 5 0 0" ToolTip="Select database">
+					<Label>Database Type</Label>
+					<ComboBox Width="380" Margin="10 0 0 0" ItemsSource="{Binding Databases}" SelectedValue="{Binding Database}" HorizontalAlignment="Right">
+						<ComboBox.ItemTemplate>
+							<DataTemplate>
+								<TextBlock Text="{Binding (main:IDatabaseProvider.Description)}" />
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+				</DockPanel>
+
+				<DockPanel Margin="0 5 0 0" ToolTip="Select SQL dialect version or database provider" Visibility="{Binding ProviderVisibility}">
+					<Label>Provider</Label>
+					<ComboBox Width="380" Margin="10 0 0 0" ItemsSource="{Binding Providers}" SelectedValue="{Binding Provider}" DisplayMemberPath="DisplayName" HorizontalAlignment="Right" />
+				</DockPanel>
+
+				<TextBlock Margin="0 5 0 0" Visibility="{Binding ProviderDownloadUrlVisibility}">You can download provider <Hyperlink NavigateUri="{Binding ProviderDownloadUrl}" RequestNavigate="Url_Click">here</Hyperlink>.</TextBlock>
+
+				<DockPanel Margin="0 5 0 0" ToolTip="Specify path to ADO.NET provider location" Visibility="{Binding ProviderPathVisibility}">
+					<Button DockPanel.Dock="Right" Margin="5 0 0 0" Padding="10 5" Content="Select" Click="Click_SelectProvider" />
+					<TextBox Padding="5" Text="{Binding ProviderPath}" />
+				</DockPanel>
+
+				<StackPanel Margin="0 5 0 0" ToolTip="Specify database connection string. Connection string could reference values from LINPad Password Manager (see File -> Password Manager) using following format: {pm:name}, e.g. &quot;Server=.;Database=DB;User Id=user;Password={pm:my-password}&quot;">
+					<Label>Connection string</Label>
+					<TextBox Padding="5" Text="{Binding ConnectionString}" TextWrapping="Wrap" Height="60" VerticalScrollBarVisibility="Auto" />
+				</StackPanel>
+
+				<StackPanel Margin="0 5 0 0"
+				Visibility="{Binding SecondaryConnectionStringVisibility}"
+				ToolTip="Specify secondary connection string for MS Access to improve generated schema. This connection string is used for database schema fetching only and must be ODBC connection string when primary connection string use OLE DB and vice versa.">
+					<Label>Additional connection string</Label>
+					<TextBox Padding="5" Text="{Binding SecondaryConnectionString}" TextWrapping="Wrap" Height="60" VerticalScrollBarVisibility="Auto" />
+				</StackPanel>
+
+				<Grid  Margin="0 5 0 0">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition/>
+						<ColumnDefinition/>
+					</Grid.ColumnDefinitions>
+
+					<CheckBox Margin="5" Grid.Column="0" ToolTip="Store connection strings in LINQPad in encrypted form" Content="Encrypt connection strings" IsChecked="{Binding EncryptConnectionString}" />
+
+					<StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+					ToolTip="Database command timeout in seconds. Use empty for default provider timeout.">
+						<StackPanel.Resources>
+							<us:CommandTimeoutConverter x:Key="Converter" />
+						</StackPanel.Resources>
+						<TextBox Padding="5" Text="{Binding CommandTimeout, Converter={StaticResource Converter}}" Width="50" />
+						<Label Padding="5" Content="Command timeout"/>
+					</StackPanel>
+				</Grid>
+			</StackPanel>
+		</GroupBox>
+	</StackPanel>
+</UserControl>

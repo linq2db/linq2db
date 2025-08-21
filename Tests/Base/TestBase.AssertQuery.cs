@@ -178,7 +178,56 @@ namespace Tests
 			return items1;
 		}
 
-		static MethodCallExpression RemapMethod(MethodCallExpression mc)
+		static string [] validPasthroughMethods = { nameof(Queryable.Where), nameof(Queryable.Select), nameof(Queryable.DefaultIfEmpty), nameof(Queryable.Distinct) };
+		static string [] validOrderByMethods    = { nameof(Queryable.OrderBy), nameof(Queryable.OrderByDescending), nameof(Queryable.ThenBy), nameof(Queryable.ThenBy) };
+		static string [] validMethodNames       = [..validPasthroughMethods, ..validOrderByMethods];
+
+		static bool IsQueryableMethod(MethodCallExpression method)
+		{
+			var type = method.Method.DeclaringType;
+
+			return
+				type == typeof(Queryable)              ||
+				type == typeof(LinqExtensions)         ||
+				type == typeof(DataExtensions)         ||
+				type == typeof(TableExtensions);
+		}
+
+		static bool IsQueryableMethod(MethodCallExpression method, string[] names)
+		{
+			if (IsQueryableMethod(method))
+				foreach (var name in names)
+					if (method.Method.Name == name)
+						return true;
+
+			return false;
+		}
+
+		static Expression RemoveOrderBy(Expression expression)
+		{
+			if (expression is not MethodCallExpression methodCall || !IsQueryableMethod(methodCall, validMethodNames))
+				return expression;
+
+			Expression result;
+
+			if (IsQueryableMethod(methodCall, validOrderByMethods))
+			{
+				result = RemoveOrderBy(methodCall.Arguments[0]);
+			}
+			else
+			{
+				var firstArg = RemoveOrderBy(methodCall.Arguments[0]);
+				result = methodCall.Update(methodCall.Object,
+					[firstArg, .. methodCall.Arguments.Skip(1)]);
+			}
+
+			if (!expression.Type.IsAssignableFrom(result.Type))
+				result = Expression.Convert(result, expression.Type);
+
+			return result;
+		}
+
+		static Expression RemapMethod(MethodCallExpression mc)
 		{
 			MethodCallExpression SetOperationRemap(MethodInfo genericMethodInfo)
 			{
@@ -216,6 +265,11 @@ namespace Tests
 			if (mc.Method.Name == nameof(LinqExtensions.Having))
 			{
 				return TypeHelper.MakeMethodCall(Methods.Queryable.Where, mc.Arguments.ToArray());
+			}
+
+			if (mc.Method.Name == nameof(LinqExtensions.RemoveOrderBy))
+			{
+				return RemoveOrderBy(mc.Arguments[0]);
 			}
 
 			if (mc.Method.Name == nameof(LinqExtensions.UnionAll))
@@ -308,9 +362,9 @@ namespace Tests
 						return new TransformInfo(itemsExpression);
 					}
 
-					mc = RemapMethod(mc);
+					var newExpr = RemapMethod(mc);
 
-					return new TransformInfo(mc, false, true);
+					return new TransformInfo(newExpr, false, true);
 					//return mc.Update(CheckForNull(mc.Object), mc.Arguments.Select(CheckForNull));
 				}
 				else if (e.NodeType == ExpressionType.MemberAccess)

@@ -4,6 +4,7 @@ parameters:
   with_tests: false
   with_analyzers: false
   with_api_analyzers: false
+  with_release: false
 
 jobs:
 - job: build_job
@@ -269,5 +270,47 @@ jobs:
     inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)'
       artifact: '$(artifact_t4_binaries)'
-    displayName: Publish nuget artifacts part 1
+    displayName: Publish T4 nuget artifacts
     condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: CmdLine@2
+    inputs:
+      script: |
+        ECHO ON
+        RD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net472 /S /Q
+        RD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net8.0-windows\clidriver /S /Q
+        CD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net8.0-windows
+        FOR %%f IN (*) DO IF NOT "%%f"=="linq2db.LINQPad.dll" DEL "%%f" /Q
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+    displayName: Cleanup LINQPad artifacts
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.LINQPad/Release'
+      artifact: '$(artifact_linq2db_linqpad_binaries)'
+    displayName: Publish linq2db.LINQPad build results
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: '$(Build.SourcesDirectory)/.build/lpx'
+      artifactName: '$(artifact_linq2db_linqpad_lpx)'
+    displayName: Publish LPX to artifacts
+    condition: succeeded()
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        $relnotesVersion = '$(assemblyVersion)' -replace '\.',''
+        Write-Host "Create release v$(assemblyVersion) draft"
+        $output = gh release create v$(assemblyVersion) "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx" "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx6" --draft --fail-on-no-commits --generate-notes --latest --notes "[Release notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap#release-$relnotesVersion) [Nugets](https://www.nuget.org/profiles/LinqToDB)" --title "Release $(assemblyVersion)"
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Command failed. Error code ${LASTEXITCODE}, output: ${output}"
+            exit 1
+        }
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
+    displayName: Create Release Draft
+    condition: and(succeeded(), ${{ parameters.with_release }})
+    env:
+      GITHUB_TOKEN: $(RELEASES_GH_PAT)

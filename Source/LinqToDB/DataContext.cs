@@ -180,7 +180,13 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets or sets trace handler, used for data connection instance.
 		/// </summary>
-		public Action<TraceInfo>? OnTraceConnection { get; set; }
+		public Action<TraceInfo>? OnTraceConnection
+		{
+			get;
+			// TODO: Make private in v7 and remove obsoletion warning ignores from callers
+			[Obsolete("This API scheduled for removal in v7. Use DataOptions's UseTracing API"), EditorBrowsable(EditorBrowsableState.Never)]
+			set;
+		}
 
 		private bool _keepConnectionAlive;
 		/// <summary>

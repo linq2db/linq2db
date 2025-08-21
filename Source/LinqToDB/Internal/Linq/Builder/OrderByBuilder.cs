@@ -40,22 +40,24 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (sequenceResult.BuildContext == null)
 				return sequenceResult;
 
+			if (buildInfo.IgnoreOrderBy)
+				return sequenceResult;
+
 			var sequence = sequenceResult.BuildContext;
 
-			var isContinuousOrder   = !sequence.SelectQuery.OrderBy.IsEmpty && methodCall.Method.Name.StartsWith("Then");
-			var lambda              = (LambdaExpression)methodCall.Arguments[1].Unwrap();
+			var isNewOrder = methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy)) && !builder.DataContext.Options.LinqOptions.ConcatenateOrderBy;
 
-			if (!isContinuousOrder)
+			if (isNewOrder)
+				sequence = new SubQueryContext(sequence);
+
+			if (builder.DataContext.Options.LinqOptions.ConcatenateOrderBy)
 			{
 				var prevSequence = sequence;
-
-				if (!builder.DataContext.Options.LinqOptions.DoNotClearOrderBys && !sequence.SelectQuery.Select.HasModifier)
-					sequence.SelectQuery.OrderBy.Items.Clear();
 
 				if (sequence is not SubQueryContext)
 					sequence = new SubQueryContext(sequence);
 
-				if (builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
+				if (builder.DataContext.Options.LinqOptions.ConcatenateOrderBy)
 				{
 					var isValid = true;
 					while (true)
@@ -81,18 +83,18 @@ namespace LinqToDB.Internal.Linq.Builder
 							break;
 					}
 
-					if (isValid && !prevSequence.SelectQuery.OrderBy.IsEmpty)
+					if (isValid && !prevSequence.SelectQuery.OrderBy.IsEmpty && sequence.SelectQuery != prevSequence.SelectQuery)
 					{
 						sequence.SelectQuery.OrderBy.Items.AddRange(prevSequence.SelectQuery.OrderBy.Items.Select(x => x.Clone()));
 					}
 				}
 			}
 
+			var lambda = methodCall.Arguments[1].UnwrapLambda();
+			var body   = SequenceHelper.PrepareBody(lambda, sequence).Unwrap();
+
 			Expression sqlExpr;
-
-			var body = SequenceHelper.PrepareBody(lambda, sequence).Unwrap();
-
-			bool byIndex;
+			bool       byIndex;
 
 			if (body is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql) && mc.Method.Name == nameof(Sql.Ordinal))
 			{
@@ -137,7 +139,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						continue;
 					}
 				}
-				
+
 				sequence.SelectQuery.OrderBy.Expr(orderSql, methodCall.Method.Name.EndsWith("Descending"), isPositioned);
 			}
 

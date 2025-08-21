@@ -1403,15 +1403,15 @@ namespace Tests.Linq
 		[Table]
 		public class Issue3323Table
 		{
-			[PrimaryKey                      ] public int     Id       { get; set; }
-			[Column(SkipOnEntityFetch = true)] public string? FistName { get; set; }
-			[Column(SkipOnEntityFetch = true)] public string? LastName { get; set; }
-			[Column(CanBeNull = false)       ] public string  Text     { get; set; } = null!;
+			[PrimaryKey                      ] public int     Id        { get; set; }
+			[Column(SkipOnEntityFetch = true)] public string? FirstName { get; set; }
+			[Column(SkipOnEntityFetch = true)] public string? LastName  { get; set; }
+			[Column(CanBeNull = false)       ] public string  Text      { get; set; } = null!;
 
 			[ExpressionMethod(nameof(FullNameExpr), IsColumn = true)]
 			public string FullName { get; set; } = null!;
 
-			private static Expression<Func<Issue3323Table, string>> FullNameExpr() => entity => entity.FistName + " " + entity.LastName;
+			private static Expression<Func<Issue3323Table, string>> FullNameExpr() => entity => entity.FirstName + " " + entity.LastName;
 		}
 
 		[Test(Description = "calculated column in set select")]
@@ -1421,10 +1421,10 @@ namespace Tests.Linq
 			using var tb = db.CreateLocalTable<Issue3323Table>();
 			tb.Insert(() => new Issue3323Table()
 			{
-				Id       = 1,
-				FistName = "one",
-				LastName = "two",
-				Text     = "text"
+				Id        = 1,
+				FirstName = "one",
+				LastName  = "two",
+				Text      = "text"
 			});
 
 			var res = tb.Concat(tb).ToArray();
@@ -1444,10 +1444,10 @@ namespace Tests.Linq
 			using var tb = db.CreateLocalTable<Issue3323Table>();
 			tb.Insert(() => new Issue3323Table()
 			{
-				Id       = 1,
-				FistName = "one",
-				LastName = "two",
-				Text     = "text"
+				Id        = 1,
+				FirstName = "one",
+				LastName  = "two",
+				Text      = "text"
 			});
 
 			var query1 = tb.Select(r => new { r.Id, Text = r.FullName });
