@@ -13,6 +13,16 @@ namespace LinqToDB.Internal.Extensions
 {
 	static class TableExtensions
 	{
+		public static IDataProvider GetDataProvider(this IDataContext context)
+		{
+			if (context is DataConnection dataConnection)
+				return dataConnection.DataProvider;
+			if (context is DataContext dataContext)
+				return dataContext.DataProvider;
+
+			throw new ArgumentException($"Data context must be of {nameof(DataConnection)} or {nameof(DataContext)} type.", nameof(context));
+		}
+
 		public static IDataProvider GetDataProvider<T>(this ITable<T> table)
 			where T : notnull
 		{

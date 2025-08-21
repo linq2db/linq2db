@@ -2358,9 +2358,9 @@ namespace LinqToDB.Data
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
-			return dataConnection.DataProvider.BulkCopy(
-				dataConnection.Options.WithOptions(options),
-				dataConnection.GetTable<T>(),
+			return dataContext.GetDataProvider().BulkCopy(
+				dataContext.Options.WithOptions(options),
+				dataContext.GetTable<T>(),
 				source);
 		}
 
@@ -2379,9 +2379,9 @@ namespace LinqToDB.Data
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
-			return dataConnection.DataProvider.BulkCopy(
-				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
-				dataConnection.GetTable<T>(),
+			return dataContext.GetDataProvider().BulkCopy(
+				dataContext.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
+				dataContext.GetTable<T>(),
 				source);
 		}
 
@@ -2399,9 +2399,9 @@ namespace LinqToDB.Data
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
-			return dataConnection.DataProvider.BulkCopy(
-				dataConnection.Options,
-				dataConnection.GetTable<T>(),
+			return dataContext.GetDataProvider().BulkCopy(
+				dataContext.Options,
+				dataContext.GetTable<T>(),
 				source);
 		}
 
@@ -2517,9 +2517,9 @@ namespace LinqToDB.Data
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 
 			return CallMetrics(() =>
-				dataConnection.DataProvider.BulkCopyAsync(
-					dataConnection.Options.WithOptions(options),
-					dataConnection.GetTable<T>(),
+				dataContext.GetDataProvider().BulkCopyAsync(
+					dataContext.Options.WithOptions(options),
+					dataContext.GetTable<T>(),
 					source,
 					cancellationToken));
 		}
@@ -2540,9 +2540,9 @@ namespace LinqToDB.Data
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 
 			return CallMetrics(() =>
-				dataConnection.DataProvider.BulkCopyAsync(
-					dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
-					dataConnection.GetTable<T>(),
+				dataContext.GetDataProvider().BulkCopyAsync(
+					dataContext.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
+					dataContext.GetTable<T>(),
 					source,
 					cancellationToken));
 		}
@@ -2562,9 +2562,9 @@ namespace LinqToDB.Data
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 
 			return CallMetrics(() =>
-				dataConnection.DataProvider.BulkCopyAsync(
-					dataConnection.Options,
-					dataConnection.GetTable<T>(),
+				dataContext.GetDataProvider().BulkCopyAsync(
+					dataContext.Options,
+					dataContext.GetTable<T>(),
 					source,
 					cancellationToken));
 		}
@@ -2676,9 +2676,9 @@ namespace LinqToDB.Data
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 
 			return CallMetrics(() =>
-				dataConnection.DataProvider.BulkCopyAsync(
-					dataConnection.Options.WithOptions(options),
-					dataConnection.GetTable<T>(),
+				dataContext.GetDataProvider().BulkCopyAsync(
+					dataContext.Options.WithOptions(options),
+					dataContext.GetTable<T>(),
 					source,
 					cancellationToken));
 		}
@@ -2699,9 +2699,9 @@ namespace LinqToDB.Data
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 
 			return CallMetrics(() =>
-				dataConnection.DataProvider.BulkCopyAsync(
-					dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
-					dataConnection.GetTable<T>(),
+				dataContext.GetDataProvider().BulkCopyAsync(
+					dataContext.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
+					dataContext.GetTable<T>(),
 					source,
 					cancellationToken));
 		}
@@ -2721,9 +2721,9 @@ namespace LinqToDB.Data
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 
 			return CallMetrics(() =>
-				dataConnection.DataProvider.BulkCopyAsync(
-					dataConnection.Options,
-					dataConnection.GetTable<T>(),
+				dataContext.GetDataProvider().BulkCopyAsync(
+					dataContext.Options,
+					dataContext.GetTable<T>(),
 					source,
 					cancellationToken));
 		}
@@ -2803,8 +2803,7 @@ namespace LinqToDB.Data
 		}
 
 		#endregion
-	}
 
-	[SuppressMessage("Design", "MA0048:File name must match type name")]
-	sealed class RowByRowBulkCopy : BasicBulkCopy;
+		sealed class RowByRowBulkCopy : BasicBulkCopy;
+	}
 }

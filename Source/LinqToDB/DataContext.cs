@@ -217,7 +217,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Sets connection management behavior to specify if context should dispose underlying connection after use or not.
 		/// </summary>
-		public Task SetKeepConnectionAliveAsync(bool keepAlive)
+		public ValueTask SetKeepConnectionAliveAsync(bool keepAlive)
 		{
 			AssertDisposed();
 
@@ -226,7 +226,7 @@ namespace LinqToDB
 			if (keepAlive == false)
 				return ReleaseQueryAsync();
 
-			return Task.CompletedTask;
+			return default;
 		}
 
 		// TODO: Remove in v7
