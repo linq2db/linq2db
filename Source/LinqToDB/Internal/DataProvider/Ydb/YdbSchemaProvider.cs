@@ -91,6 +91,24 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			return true;
 		}
+		
+		static DataTable QueryToDataTable(DataConnection dc, string sql)
+        		{
+        			var conn = GetOpenConnection(dc, out var created);
+        			try
+        			{
+        				using var cmd = conn.CreateCommand();
+        				cmd.CommandText = sql;
+        				using var reader = cmd.ExecuteReader();
+        				var table = new DataTable();
+        				table.Load(reader);
+        				return table;
+        			}
+        			finally
+        			{
+        				if (created) conn.Close();
+        			}
+        		}
 
 		protected override string GetDataSourceName(DataConnection dbConnection) => dbConnection.DataProvider.Name;
 		protected override string GetDatabaseName(DataConnection dbConnection) => dbConnection.DataProvider.Name;
@@ -98,155 +116,270 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var conn    = GetOpenConnection(dataConnection, out var created);
+
+			const string sql = @"
+				SELECT
+					NULL           AS TABLE_CATALOG,
+					NULL           AS TABLE_SCHEMA,
+					t.TABLE_NAME   AS TABLE_NAME,
+					t.TABLE_TYPE   AS TABLE_TYPE
+				FROM INFORMATION_SCHEMA.TABLES AS t
+				WHERE t.TABLE_TYPE IN ('BASE TABLE','TABLE')
+			";
+
 			try
 			{
-				LoadCollections(conn);
-				if (!Has("Tables"))
-					return new List<TableInfo>();
+				using var dt     = QueryToDataTable(dataConnection, sql);
+				var       result = new List<TableInfo>();
 
-				using var schema = conn.GetSchema("Tables", new[] { null, "TABLE" });
-
-				var result = new List<TableInfo>();
-
-				foreach (DataRow row in schema.Rows)
+				foreach (DataRow row in dt.Rows)
 				{
-					string name = Invariant(row["TABLE_NAME"]);
-					string? schemaName = schema.Columns.Contains("TABLE_SCHEMA")
-				? Invariant(row["TABLE_SCHEMA"])
-				: null;
-					string? catalog = schema.Columns.Contains("TABLE_CATALOG")
-				? Invariant(row["TABLE_CATALOG"])
-				: null;
+					var name       = Invariant(row["TABLE_NAME"]);
+					var schemaName = dt.Columns.Contains("TABLE_SCHEMA") ? Invariant(row["TABLE_SCHEMA"]) : null;
+					var catalog    = dt.Columns.Contains("TABLE_CATALOG") ? Invariant(row["TABLE_CATALOG"]) : null;
 
-					if (schemaName?.StartsWith(".sys", StringComparison.OrdinalIgnoreCase) == true)
-						continue;
-					if (name.StartsWith(".sys", StringComparison.OrdinalIgnoreCase))
-						continue;
+					// отсеиваем .sys*
+					if (schemaName?.StartsWith(".sys", StringComparison.OrdinalIgnoreCase) == true) continue;
+					if (name.StartsWith(".sys", StringComparison.OrdinalIgnoreCase)) continue;
 
 					if (!IsSchemaAllowed(options, schemaName) || !IsCatalogAllowed(options, catalog))
 						continue;
 
 					result.Add(new TableInfo
 					{
-						TableID = MakeTableId(schemaName, name),
-						CatalogName = catalog,
-						SchemaName = schemaName,
-						TableName = name,
-						IsView = false,
-						IsDefaultSchema = string.IsNullOrEmpty(schemaName) ||
-											 (!string.IsNullOrEmpty(options.DefaultSchema) &&
-											  options.StringComparer.Equals(schemaName, options.DefaultSchema)),
+						TableID           = MakeTableId(schemaName, name),
+						CatalogName       = catalog,
+						SchemaName        = schemaName,
+						TableName         = name,
+						IsView            = false,
+						IsDefaultSchema   = string.IsNullOrEmpty(schemaName)
+							|| (!string.IsNullOrEmpty(options.DefaultSchema) && options.StringComparer.Equals(schemaName, options.DefaultSchema)),
 						IsProviderSpecific = false
 					});
 				}
 
 				return result;
 			}
-			finally
+			catch
 			{
-				if (created)
-					conn.Close();
+				// If provider INFORMATION_SCHEMA is empty
+				var conn = GetOpenConnection(dataConnection, out var created);
+				try
+				{
+					LoadCollections(conn);
+					if (!Has("Tables"))
+						return new List<TableInfo>();
+
+					using var schema = conn.GetSchema("Tables", new[] { null, "TABLE" });
+
+					var result = new List<TableInfo>();
+					foreach (DataRow row in schema.Rows)
+					{
+						string name         = Invariant(row["TABLE_NAME"]);
+						string? schemaName  = schema.Columns.Contains("TABLE_SCHEMA") ? Invariant(row["TABLE_SCHEMA"]) : null;
+						string? catalog     = schema.Columns.Contains("TABLE_CATALOG") ? Invariant(row["TABLE_CATALOG"]) : null;
+
+						if (schemaName?.StartsWith(".sys", StringComparison.OrdinalIgnoreCase) == true) continue;
+						if (name.StartsWith(".sys", StringComparison.OrdinalIgnoreCase)) continue;
+
+						if (!IsSchemaAllowed(options, schemaName) || !IsCatalogAllowed(options, catalog))
+							continue;
+
+						result.Add(new TableInfo
+						{
+							TableID            = MakeTableId(schemaName, name),
+							CatalogName        = catalog,
+							SchemaName         = schemaName,
+							TableName          = name,
+							IsView             = false,
+							IsDefaultSchema    = string.IsNullOrEmpty(schemaName)
+								|| (!string.IsNullOrEmpty(options.DefaultSchema) && options.StringComparer.Equals(schemaName, options.DefaultSchema)),
+							IsProviderSpecific = false
+						});
+					}
+
+					return result;
+				}
+				finally { if (created) conn.Close(); }
 			}
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
+			_pkMap = new Dictionary<string, List<string>>(options.StringComparer);
 
-			var conn = GetOpenConnection(dataConnection, out var created);
+			const string sql = @"
+				SELECT
+					NULL                         AS TABLE_CATALOG,
+					c.TABLE_SCHEMA               AS TABLE_SCHEMA,
+					c.TABLE_NAME                 AS TABLE_NAME,
+					c.COLUMN_NAME                AS COLUMN_NAME,
+					c.ORDINAL_POSITION           AS ORDINAL_POSITION,
+					c.IS_NULLABLE                AS IS_NULLABLE,
+					c.DATA_TYPE                  AS DATA_TYPE,
+					c.CHARACTER_MAXIMUM_LENGTH   AS CHARACTER_MAXIMUM_LENGTH,
+					c.NUMERIC_PRECISION          AS NUMERIC_PRECISION,
+					c.NUMERIC_SCALE              AS NUMERIC_SCALE
+				FROM INFORMATION_SCHEMA.COLUMNS AS c
+			";
+
 			try
 			{
-				LoadCollections(conn);
-				if (!Has("Columns"))
+				using var dt     = QueryToDataTable(dataConnection, sql);
+				var       result = new List<ColumnInfo>();
+
+				foreach (DataRow row in dt.Rows)
 				{
-					return new();
-				}
-
-				using var schemaTable = conn.GetSchema("Columns");
-
-				var result = new List<ColumnInfo>();
-				_pkMap = new Dictionary<string, List<string>>(options.StringComparer);
-
-				foreach (DataRow row in schemaTable.Rows)
-				{
-					string  tableName  = Invariant(row["TABLE_NAME"]);
-					string  columnName = Invariant(row["COLUMN_NAME"]);
-					string? schemaName = schemaTable.Columns.Contains("TABLE_SCHEMA") ? Invariant(row["TABLE_SCHEMA"]) : null;
+					var tableName  = Invariant(row["TABLE_NAME"]);
+					var columnName = Invariant(row["COLUMN_NAME"]);
+					var schemaName = dt.Columns.Contains("TABLE_SCHEMA") ? Invariant(row["TABLE_SCHEMA"]) : null;
 
 					if (!IsSchemaAllowed(options, schemaName))
 						continue;
 
-					string tableId = MakeTableId(schemaName, tableName);
-
-					int ordinal = schemaTable.Columns.Contains("ORDINAL_POSITION")
+					var tableId  = MakeTableId(schemaName, tableName);
+					var ordinal  = dt.Columns.Contains("ORDINAL_POSITION")
 						? Convert.ToInt32(row["ORDINAL_POSITION"], CultureInfo.InvariantCulture)
 						: 0;
 
-					bool isNullable = !schemaTable.Columns.Contains("IS_NULLABLE") || !Invariant(row["IS_NULLABLE"]).Equals("NO", StringComparison.OrdinalIgnoreCase);
+					var isNullable = !dt.Columns.Contains("IS_NULLABLE")
+						|| !Invariant(row["IS_NULLABLE"]).Equals("NO", StringComparison.OrdinalIgnoreCase);
 
-					// ---- 1. raw datatype names --------------------------------------
-					string dataTypeName = string.Empty;
-					if (schemaTable.Columns.Contains("TYPE_NAME"))
-						dataTypeName = Invariant(row["TYPE_NAME"]);
-					else if (schemaTable.Columns.Contains("DATA_TYPE_NAME"))
-						dataTypeName = Invariant(row["DATA_TYPE_NAME"]);
+					var dataTypeName =
+						dt.Columns.Contains("DATA_TYPE")     ? Invariant(row["DATA_TYPE"]) :
+						dt.Columns.Contains("TYPE_NAME")     ? Invariant(row["TYPE_NAME"]) :
+						dt.Columns.Contains("DATA_TYPE_NAME")? Invariant(row["DATA_TYPE_NAME"]) :
+						string.Empty;
 
-					if (string.IsNullOrWhiteSpace(dataTypeName))
-						dataTypeName = schemaTable.Columns.Contains("DATA_TYPE") ? Invariant(row["DATA_TYPE"]) : string.Empty;
-					if (dataTypeName.All(char.IsDigit))
-						dataTypeName = string.Empty;
-
-					// ---- 2. length / precision / scale ------------------------------
 					int? length = null;
-					if (schemaTable.Columns.Contains("CHARACTER_MAXIMUM_LENGTH") && int.TryParse(Invariant(row["CHARACTER_MAXIMUM_LENGTH"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out var len))
+					if (dt.Columns.Contains("CHARACTER_MAXIMUM_LENGTH")
+					 && int.TryParse(Invariant(row["CHARACTER_MAXIMUM_LENGTH"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out var len))
 						length = len;
 
 					int? precision = null;
-					if (schemaTable.Columns.Contains("NUMERIC_PRECISION") && int.TryParse(Invariant(row["NUMERIC_PRECISION"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out var prec))
+					if (dt.Columns.Contains("NUMERIC_PRECISION")
+					 && int.TryParse(Invariant(row["NUMERIC_PRECISION"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out var prec))
 						precision = prec;
-					else if (schemaTable.Columns.Contains("COLUMN_SIZE") && int.TryParse(Invariant(row["COLUMN_SIZE"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out prec))
+					else if (dt.Columns.Contains("COLUMN_SIZE")
+					 && int.TryParse(Invariant(row["COLUMN_SIZE"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out prec))
 						precision = prec;
 
 					int? scale = null;
-					if (schemaTable.Columns.Contains("NUMERIC_SCALE") && int.TryParse(Invariant(row["NUMERIC_SCALE"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out var sc))
+					if (dt.Columns.Contains("NUMERIC_SCALE")
+					 && int.TryParse(Invariant(row["NUMERIC_SCALE"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out var sc))
 						scale = sc;
-					else if (schemaTable.Columns.Contains("DECIMAL_DIGITS") && int.TryParse(Invariant(row["DECIMAL_DIGITS"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out sc))
+					else if (dt.Columns.Contains("DECIMAL_DIGITS")
+					 && int.TryParse(Invariant(row["DECIMAL_DIGITS"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out sc))
 						scale = sc;
 
-					// ---- 3. compose column type string -----------------------------
-					string columnType = ComposeColumnType(dataTypeName, length, precision, scale);
+					var columnType = ComposeColumnType(dataTypeName, length, precision, scale);
 
-					// ---- 4. map to LinqToDB.DataType -------------------------------
-					DataType linq2dbType = GetDataType(dataTypeName, columnType, length, precision, scale);
+					var l2dbType = GetDataType(dataTypeName, columnType, length, precision, scale);
 
-					// ---- 5. add ColumnInfo -----------------------------------------
 					result.Add(new ColumnInfo
 					{
-						TableID = tableId,
-						Name = columnName,
-						Ordinal = ordinal,
-						IsNullable = isNullable,
-						DataType = dataTypeName,
-						ColumnType = columnType,
-						Type = linq2dbType,
-						Length = length,
-						Precision = precision,
-						Scale = scale,
-						IsIdentity = false
+						TableID     = tableId,
+						Name        = columnName,
+						Ordinal     = ordinal,
+						IsNullable  = isNullable,
+						DataType    = dataTypeName,
+						ColumnType  = columnType,
+						Type        = l2dbType,
+						Length      = length,
+						Precision   = precision,
+						Scale       = scale,
+						IsIdentity  = false
 					});
 
-					// ---- 6. PK map --------------------------------------------------
-					if (schemaTable.Columns.Contains("COLUMN_KEY") && Invariant(row["COLUMN_KEY"]).Equals("PRI", StringComparison.OrdinalIgnoreCase))
-					{
-						if (!_pkMap.TryGetValue(tableId, out var pkCols))
-							_pkMap[tableId] = pkCols = new();
-						pkCols.Add(columnName);
-					}
 				}
 
 				return result;
 			}
-			finally { if (created) conn.Close(); }
+			catch
+			{
+				// Fallback to old GetSchema("Columns")
+				var conn = GetOpenConnection(dataConnection, out var created);
+				try
+				{
+					LoadCollections(conn);
+					if (!Has("Columns"))
+						return new();
+
+					using var schemaTable = conn.GetSchema("Columns");
+
+					var result = new List<ColumnInfo>();
+					foreach (DataRow row in schemaTable.Rows)
+					{
+						string  tableName  = Invariant(row["TABLE_NAME"]);
+						string  columnName = Invariant(row["COLUMN_NAME"]);
+						string? schemaName = schemaTable.Columns.Contains("TABLE_SCHEMA") ? Invariant(row["TABLE_SCHEMA"]) : null;
+
+						if (!IsSchemaAllowed(options, schemaName))
+							continue;
+
+						string tableId = MakeTableId(schemaName, tableName);
+
+						int ordinal = schemaTable.Columns.Contains("ORDINAL_POSITION")
+							? Convert.ToInt32(row["ORDINAL_POSITION"], CultureInfo.InvariantCulture)
+							: 0;
+
+						bool isNullable = !schemaTable.Columns.Contains("IS_NULLABLE")
+							|| !Invariant(row["IS_NULLABLE"]).Equals("NO", StringComparison.OrdinalIgnoreCase);
+
+						string dataTypeName = string.Empty;
+						if (schemaTable.Columns.Contains("TYPE_NAME"))
+							dataTypeName = Invariant(row["TYPE_NAME"]);
+						else if (schemaTable.Columns.Contains("DATA_TYPE_NAME"))
+							dataTypeName = Invariant(row["DATA_TYPE_NAME"]);
+						if (string.IsNullOrWhiteSpace(dataTypeName))
+							dataTypeName = schemaTable.Columns.Contains("DATA_TYPE")
+								? Invariant(row["DATA_TYPE"])
+								: string.Empty;
+
+						int? length = null;
+						if (schemaTable.Columns.Contains("CHARACTER_MAXIMUM_LENGTH")
+						 && int.TryParse(Invariant(row["CHARACTER_MAXIMUM_LENGTH"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out var len))
+							length = len;
+
+						int? precision = null;
+						if (schemaTable.Columns.Contains("NUMERIC_PRECISION")
+						 && int.TryParse(Invariant(row["NUMERIC_PRECISION"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out var prec))
+							precision = prec;
+						else if (schemaTable.Columns.Contains("COLUMN_SIZE")
+						 && int.TryParse(Invariant(row["COLUMN_SIZE"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out prec))
+							precision = prec;
+
+						int? scale = null;
+						if (schemaTable.Columns.Contains("NUMERIC_SCALE")
+						 && int.TryParse(Invariant(row["NUMERIC_SCALE"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out var sc))
+							scale = sc;
+						else if (schemaTable.Columns.Contains("DECIMAL_DIGITS")
+						 && int.TryParse(Invariant(row["DECIMAL_DIGITS"]), NumberStyles.Integer, CultureInfo.InvariantCulture, out sc))
+							scale = sc;
+
+						string columnType = ComposeColumnType(dataTypeName, length, precision, scale);
+						DataType linq2dbType = GetDataType(dataTypeName, columnType, length, precision, scale);
+
+						result.Add(new ColumnInfo
+						{
+							TableID     = tableId,
+							Name        = columnName,
+							Ordinal     = ordinal,
+							IsNullable  = isNullable,
+							DataType    = dataTypeName,
+							ColumnType  = columnType,
+							Type        = linq2dbType,
+							Length      = length,
+							Precision   = precision,
+							Scale       = scale,
+							IsIdentity  = false
+						});
+					}
+
+					return result;
+				}
+				finally { if (created) conn.Close(); }
+			}
 		}
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(
