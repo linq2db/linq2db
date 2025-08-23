@@ -90,7 +90,7 @@ namespace Tests.Linq
 		void Test(string context, Action<IDataContext> action)
 		{
 			// test with DataConnection
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				action(db);
 			}
@@ -124,7 +124,7 @@ namespace Tests.Linq
 		async ValueTask TestAsync(string context, Func<IDataContext, ValueTask> action)
 		{
 			// test with DataConnection
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				await action(db);
 			}
@@ -611,12 +611,6 @@ namespace Tests.Linq
 			{
 				var res = db.Query<int>(sql, p1).ToArray();
 				AssertResults(res);
-			});
-
-			await TestAsync(context, async db =>
-			{
-				var res = await db.QueryAsync<int>(sql, p1);
-				AssertResults(res.ToArray());
 			});
 
 			await TestAsync(context, async db =>
@@ -1194,7 +1188,7 @@ namespace Tests.Linq
 
 			await TestAsync(context, async db =>
 			{
-				var res = await db.QueryToArrayAsync<int>(sql, cancellationToken: default, p1);
+				var res = await db.QueryToArrayAsync<int>(sql, p1, cancellationToken: default);
 				AssertResults(res);
 			});
 
@@ -1483,6 +1477,472 @@ namespace Tests.Linq
 				{
 					Assert.That(getValue(i), Is.EqualTo(cnt));
 					cnt--;
+				}
+
+				Assert.That(cnt, Is.Zero);
+			}
+		}
+
+		[Test]
+		public async ValueTask Execute_NonQuery([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var sql = "UPDATE Person SET MiddleName = NULL WHERE MiddleName IS NULL";
+
+			Test(context, db =>
+			{
+				var res = db.Execute(sql);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteAsync(sql, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int res)
+			{
+				Assert.That(res, Is.EqualTo(3));
+			}
+		}
+
+		[Test]
+		public async ValueTask Execute_NonQuery_WithDataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "UPDATE Person SET MiddleName = NULL WHERE MiddleName IS NULL AND PersionID NOT IN(@p1, @p2)";
+
+			Test(context, db =>
+			{
+				var res = db.Execute(sql, p1, p2);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteAsync(sql, p1, p2);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteAsync(sql, cancellationToken: default, p1, p2);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int res)
+			{
+				Assert.That(res, Is.EqualTo(1));
+			}
+		}
+
+		[Test]
+		public async ValueTask Execute_NonQuery_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "UPDATE Person SET MiddleName = NULL WHERE MiddleName IS NULL AND PersionID NOT IN(@p1, @p2)";
+
+			Test(context, db =>
+			{
+				var res = db.Execute(sql, parameters);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteAsync(sql, parameters, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int res)
+			{
+				Assert.That(res, Is.EqualTo(1));
+			}
+		}
+
+		[Test]
+		public async ValueTask ExecuteProc_NonQuery_WithDataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("input", 2);
+			var sql = "ExecuteProcIntParameters";
+
+			Test(context, db =>
+			{
+				var res = db.ExecuteProc(sql, p1);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteProcAsync(sql, p1);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteProcAsync(sql, cancellationToken: default, p1);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int res)
+			{
+				Assert.That(res, Is.EqualTo(1));
+			}
+		}
+
+		[Test]
+		public async ValueTask ExecuteProc_NonQuery_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { input = 1 };
+			var sql = "ExecuteProcIntParameters";
+
+			Test(context, db =>
+			{
+				var res = db.ExecuteProc(sql, parameters);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteProcAsync(sql, parameters, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int res)
+			{
+				Assert.That(res, Is.EqualTo(1));
+			}
+		}
+
+		[Test]
+		public async ValueTask Execute_Scalar([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var sql = "SELECT 5";
+
+			Test(context, db =>
+			{
+				var res = db.Execute<int>(sql);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteAsync<int>(sql, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int res)
+			{
+				Assert.That(res, Is.EqualTo(5));
+			}
+		}
+
+		[Test]
+		public async ValueTask Execute_Scalar_WithDataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p1 + @p2";
+
+			Test(context, db =>
+			{
+				var res = db.Execute<int>(sql, p1, p2);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteAsync<int>(sql, p1, p2);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteAsync<int>(sql, cancellationToken: default, p1, p2);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int res)
+			{
+				Assert.That(res, Is.EqualTo(3));
+			}
+		}
+
+		[Test]
+		public async ValueTask Execute_Scalar_WithDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 2);
+			var sql = "SELECT @p1 + 3";
+
+			Test(context, db =>
+			{
+				var res = db.Execute<int>(sql, p1);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteAsync<int>(sql, p1, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int res)
+			{
+				Assert.That(res, Is.EqualTo(5));
+			}
+		}
+
+		[Test]
+		public async ValueTask Execute_Scalar_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p1 + @p2";
+
+			Test(context, db =>
+			{
+				var res = db.Execute<int>(sql, parameters);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteAsync<int>(sql, parameters, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int res)
+			{
+				Assert.That(res, Is.EqualTo(3));
+			}
+		}
+
+		[Test]
+		public async ValueTask ExecuteProc_Scalar_WithDataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("input", 2);
+			var sql = "ExecuteProcStringParameters";
+
+			Test(context, db =>
+			{
+				var res = db.ExecuteProc<string>(sql, p1);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteProcAsync<string>(sql, p1);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteProcAsync<string>(sql, cancellationToken: default, p1);
+				AssertResults(res);
+			});
+
+			static void AssertResults(string res)
+			{
+				Assert.That(res, Is.EqualTo("издрасте"));
+			}
+		}
+
+		[Test]
+		public async ValueTask ExecuteProc_Scalar_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { input = 1 };
+			var sql = "ExecuteProcStringParameters";
+
+			Test(context, db =>
+			{
+				var res = db.ExecuteProc<string>(sql, parameters);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.ExecuteProcAsync<string>(sql, parameters, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(string res)
+			{
+				Assert.That(res, Is.EqualTo("издрасте"));
+			}
+		}
+
+		[Test]
+		public async ValueTask ExecuteReader([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var sql = "SELECT 1 UNION SELECT 2";
+
+			Test(context, db =>
+			{
+				using var res = db.ExecuteReader(sql);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				await using var res = (await db.ExecuteReaderAsync(sql, cancellationToken: default));
+				AssertResults(res);
+			});
+
+			static void AssertResults(DataReaderAsync res)
+			{
+				var cnt = 0;
+				while (res.Reader!.Read())
+				{
+					cnt++;
+					var v = res.Reader.GetInt32(0);
+
+					Assert.That(v, Is.EqualTo(cnt));
+				}
+
+				Assert.That(cnt, Is.EqualTo(2));
+			}
+		}
+
+		[Test]
+		public async ValueTask ExecuteReader_With_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 2);
+			var p2 = DataParameter.Int32("p2", 1);
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			Test(context, db =>
+			{
+				using var res = db.ExecuteReader(sql, p1, p2);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				await using var res = await db.ExecuteReaderAsync(sql, p1, p2);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				await using var res = await db.ExecuteReaderAsync(sql, cancellationToken: default, p1, p2);
+				AssertResults(res);
+			});
+
+			static void AssertResults(DataReaderAsync res)
+			{
+				var cnt = 0;
+				while (res.Reader!.Read())
+				{
+					cnt++;
+					var v = res.Reader.GetInt32(0);
+
+					Assert.That(v, Is.EqualTo(cnt));
+				}
+
+				Assert.That(cnt, Is.EqualTo(2));
+			}
+		}
+
+		[Test]
+		public async ValueTask ExecuteReader_With_SingleDataParam([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var sql = "SELECT @p1 UNION SELECT @p1 + 1";
+
+			Test(context, db =>
+			{
+				using var res = db.ExecuteReader(sql, p1);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				await using var res = await db.ExecuteReaderAsync(sql, p1, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(DataReaderAsync res)
+			{
+				var cnt = 0;
+				while (res.Reader!.Read())
+				{
+					cnt++;
+					var v = res.Reader.GetInt32(0);
+
+					Assert.That(v, Is.EqualTo(cnt));
+				}
+
+				Assert.That(cnt, Is.EqualTo(2));
+			}
+		}
+
+		[Test]
+		public async ValueTask ExecuteReader_With_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p1 UNION SELECT @p2";
+
+			Test(context, db =>
+			{
+				using var res = db.ExecuteReader(sql, parameters);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				await using var res = await db.ExecuteReaderAsync(sql, parameters, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(DataReaderAsync res)
+			{
+				var cnt = 0;
+				while (res.Reader!.Read())
+				{
+					cnt++;
+					var v = res.Reader.GetInt32(0);
+
+					Assert.That(v, Is.EqualTo(cnt));
+				}
+
+				Assert.That(cnt, Is.EqualTo(2));
+			}
+		}
+
+		[Test]
+		public async ValueTask ExecuteReader_With_DataParams_AndBehavior([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 2);
+			var p2 = DataParameter.Int32("p2", 1);
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			Test(context, db =>
+			{
+				using var res = db.ExecuteReader(sql, CommandType.Text, CommandBehavior.SchemaOnly, p1, p2);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				await using var res = await db.ExecuteReaderAsync(sql, CommandType.Text, CommandBehavior.SchemaOnly, p1, p2);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				await using var res = await db.ExecuteReaderAsync(sql, CommandType.Text, CommandBehavior.SchemaOnly, cancellationToken: default, p1, p2);
+				AssertResults(res);
+			});
+
+			static void AssertResults(DataReaderAsync res)
+			{
+				var cnt = 0;
+				while (res.Reader!.Read())
+				{
+					cnt++;
+					var v = res.Reader.GetInt32(0);
+
+					Assert.That(v, Is.EqualTo(cnt));
 				}
 
 				Assert.That(cnt, Is.Zero);

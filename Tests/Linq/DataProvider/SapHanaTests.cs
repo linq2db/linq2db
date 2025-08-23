@@ -68,7 +68,7 @@ namespace Tests.DataProvider
 		{
 			var param1Name = context.Contains("Odbc") ? "?" : ":p";
 			var param2Name = context.Contains("Odbc") ? "?" : ":p2";
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -146,7 +146,7 @@ namespace Tests.DataProvider
 		public void TestDate([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12);
 				using (Assert.EnterMultipleScope())
@@ -163,7 +163,7 @@ namespace Tests.DataProvider
 		public void TestDateTime([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 				using (Assert.EnterMultipleScope())
@@ -182,7 +182,7 @@ namespace Tests.DataProvider
 		public void TestChar([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -217,7 +217,7 @@ namespace Tests.DataProvider
 		public void TestString([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -241,7 +241,7 @@ namespace Tests.DataProvider
 		public void TestBinaryFromDb([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var arr = new byte[] {97, 98, 99, 100, 101, 102, 103, 104};
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -257,7 +257,7 @@ namespace Tests.DataProvider
 		{
 			var arr1 = new byte[] { 46, 127, 0, 5 };
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -278,7 +278,7 @@ namespace Tests.DataProvider
 		public void TestXml([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -309,7 +309,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -325,7 +325,7 @@ namespace Tests.DataProvider
 		public void TestEnum2([IncludeDataSources(CurrentProvider)] string context)
 		{
 			var paramName = context.Contains("Odbc") ? "?" : ":p";
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -404,7 +404,7 @@ namespace Tests.DataProvider
 
 		void BulkCopyTest(string context, BulkCopyType bulkCopyType)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				conn.BeginTransaction();
 
@@ -445,7 +445,7 @@ namespace Tests.DataProvider
 
 		async Task BulkCopyTestAsync(string context, BulkCopyType bulkCopyType)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				conn.BeginTransaction();
 
@@ -511,7 +511,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyProviderSpecificUpperCaseColumns([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				try
 				{
@@ -541,7 +541,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyProviderSpecificUpperCaseColumnsAsync([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				try
 				{
@@ -571,7 +571,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyProviderSpecificLowerCaseColumns([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				try
 				{
@@ -601,7 +601,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyProviderSpecificLowerCaseColumnsAsync([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				try
 				{
@@ -633,7 +633,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{
@@ -664,7 +664,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{

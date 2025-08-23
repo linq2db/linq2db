@@ -276,7 +276,7 @@ namespace Tests.Data
 		[Test]
 		public async Task TestQueryProcAsyncReaderRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -344,7 +344,7 @@ namespace Tests.Data
 		[Test]
 		public void TestExecuteProcIntRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -360,7 +360,7 @@ namespace Tests.Data
 		[Test]
 		public async Task TestExecuteProcAsyncIntRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -376,7 +376,7 @@ namespace Tests.Data
 		[Test]
 		public void TestExecuteProcTRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -392,7 +392,7 @@ namespace Tests.Data
 		[Test]
 		public async Task TestExecuteProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -408,7 +408,7 @@ namespace Tests.Data
 		[Test]
 		public void TestExecuteReaderProcRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
@@ -436,7 +436,7 @@ namespace Tests.Data
 		[Test]
 		public async Task TestExecuteReaderProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var input = DataParameter.Int32("input", 1);
 				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };

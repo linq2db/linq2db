@@ -989,7 +989,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithGuidIdentity([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var id = (Guid)db.InsertWithIdentity(new GuidID { Field1 = 1 });
 				Assert.That(id, Is.Not.EqualTo(Guid.Empty));
@@ -999,7 +999,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithGuidIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using var db = GetDataConnection(context, o => o.UseSqlServer(o => o with { GenerateScopeIdentity = false }));
+			using var db = GetDataContext(context, o => o.UseSqlServer(o => o with { GenerateScopeIdentity = false }));
 
 			var id = (Guid) db.InsertWithIdentity(new GuidID {Field1 = 1});
 			Assert.That(id, Is.Not.EqualTo(Guid.Empty));
@@ -1008,7 +1008,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using var db = GetDataConnection(context, o => o.UseSqlServer(o => o with { GenerateScopeIdentity = false }));
+			using var db = GetDataContext(context, o => o.UseSqlServer(o => o with { GenerateScopeIdentity = false }));
 			using (new DeletePerson(db))
 			{
 
@@ -1041,7 +1041,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithGuidIdentity2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var id = (Guid)db.InsertWithIdentity(new GuidID2 {});
 			}

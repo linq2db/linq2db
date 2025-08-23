@@ -150,7 +150,7 @@ namespace Tests.DataProvider
 		{
 			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
 			using (var external = GetDataConnection(context))
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var result = from record in db.FromSql<SqlServerTestUtils.TVPRecord>($"{testCase.Factory(external)}")
 							 select new SqlServerTestUtils.TVPRecord() { Id = record.Id, Name = record.Name };
@@ -176,7 +176,7 @@ namespace Tests.DataProvider
 		{
 			using (new DisableBaseline("Provider-specific output", IsMsProvider(context)))
 			using (var external = GetDataConnection(context))
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (var table = db.CreateTempTable<TestMergeTVPTable>())
 			{
 				var cnt = table
@@ -210,7 +210,7 @@ namespace Tests.DataProvider
 			[ValueSource(nameof(QueryDataParameterFactories))] DataParameterFactoryTestCase testCase)
 		{
 			using (var external = GetDataConnection(context))
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var result =
 					from record in TableValue(db, testCase.Factory(external))
@@ -224,7 +224,7 @@ namespace Tests.DataProvider
 		public void TableValuedParameterProcedureAsNullTest(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var external = GetDataConnection(context))
+			using (var external = GetDataContext(context))
 			using (var db = GetDataContext(context))
 			{
 				var result = db.QueryProc<SqlServerTestUtils.TVPRecord>("TableTypeTestProc", new DataParameter("@table", null, DataType.Structured) {  DbType = TYPE_NAME});
@@ -236,8 +236,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void TableValuedParameterAsNullInQueryUsingFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var external = GetDataConnection(context))
-			using (var db = GetDataConnection(context))
+			using (var external = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			{
 				var result = from record in db.FromSql<SqlServerTestUtils.TVPRecord>($"select * from  {new DataParameter("table", null, DataType.Structured) { DbType = TYPE_NAME }}")
 							 select new SqlServerTestUtils.TVPRecord() { Id = record.Id, Name = record.Name };
@@ -318,8 +318,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void TableValuedParameterProcedureT4Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var external = GetDataConnection(context))
-			using (var db = GetDataConnection(context))
+			using (var external = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			{
 				using var table = GetDataTable();
 				var result = TableTypeTestProc(db, table);

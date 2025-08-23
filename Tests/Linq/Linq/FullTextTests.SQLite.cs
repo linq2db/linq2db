@@ -775,7 +775,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts3SegDirTableQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<FTS3_TABLE_segdir>().ToList();
 			}

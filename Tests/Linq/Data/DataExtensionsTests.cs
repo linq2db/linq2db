@@ -67,7 +67,7 @@ namespace Tests.Data
 		[Test]
 		public void TestObject2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var list = conn.Query(
 					new
@@ -126,7 +126,7 @@ namespace Tests.Data
 		[Test]
 		public void TestObject51([DataSources(false)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				conn.InlineParameters = true;
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.FirstName).Take(1).ToSqlQuery().Sql;
@@ -244,7 +244,7 @@ namespace Tests.Data
 		[Test]
 		public void TestDataReader([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn   = GetDataConnection(context))
+			using (var conn   = GetDataContext(context))
 			using (var reader = conn.ExecuteReader("SELECT 1; SELECT '2'"))
 			{
 				var n = reader.Execute<int>();
