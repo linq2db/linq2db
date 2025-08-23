@@ -460,7 +460,7 @@ namespace Tests.DataProvider
 				new DataParameter("unused", unused, DataType.Int32));
 		}
 
-		private static List<Scalar_DataReaderResult> Scalar_DataReader(DataConnection dataConnection, bool odbc)
+		private static List<Scalar_DataReaderResult> Scalar_DataReader(IDataContext dataConnection, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Scalar_DataReader() }" : "Scalar_DataReader";
 			return dataConnection.QueryProc<Scalar_DataReaderResult>(commandText).ToList();
@@ -472,7 +472,7 @@ namespace Tests.DataProvider
 			public string? stringField { get; set; }
 		}
 
-		private static List<Person> Person_SelectByKey(DataConnection dataConnection, int id, bool odbc)
+		private static List<Person> Person_SelectByKey(IDataContext dataConnection, int id, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_SelectByKey(?) }" : "Person_SelectByKey";
 			return dataConnection.QueryProc<Person>(
@@ -480,13 +480,13 @@ namespace Tests.DataProvider
 				new DataParameter("id", id, DataType.Int32)).ToList();
 		}
 
-		private static List<Person> Person_SelectAll(DataConnection dataConnection, bool odbc)
+		private static List<Person> Person_SelectAll(IDataContext dataConnection, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_SelectAll() }" : "Person_SelectAll";
 			return dataConnection.QueryProc<Person>(commandText).ToList();
 		}
 
-		private static List<Person> Person_SelectByName(DataConnection dataConnection, string firstName, string lastName, bool odbc)
+		private static List<Person> Person_SelectByName(IDataContext dataConnection, string firstName, string lastName, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_SelectByName(?, ?) }" : "Person_SelectByName";
 			return dataConnection.QueryProc<Person>(
@@ -495,7 +495,7 @@ namespace Tests.DataProvider
 				new DataParameter("lastName" , lastName , DataType.VarChar)).ToList();
 		}
 
-		private static List<Person> Person_SelectListByName(DataConnection dataConnection, string firstName, string lastName, bool odbc)
+		private static List<Person> Person_SelectListByName(IDataContext dataConnection, string firstName, string lastName, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_SelectListByName(?, ?) }" : "Person_SelectListByName";
 			return dataConnection.QueryProc<Person>(
@@ -504,13 +504,13 @@ namespace Tests.DataProvider
 				new DataParameter("lastName" , lastName , DataType.VarChar)).ToList();
 		}
 
-		private static List<PatientResult> Patient_SelectAll(DataConnection dataConnection, bool odbc)
+		private static List<PatientResult> Patient_SelectAll(IDataContext dataConnection, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Patient_SelectAll() }" : "Patient_SelectAll";
 			return dataConnection.QueryProc<PatientResult>(commandText).ToList();
 		}
 
-		private static List<PatientResult> Patient_SelectByName(DataConnection dataConnection, string firstName, string lastName, bool odbc)
+		private static List<PatientResult> Patient_SelectByName(IDataContext dataConnection, string firstName, string lastName, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Patient_SelectByName(?, ?) }" : "Patient_SelectByName";
 			return dataConnection.QueryProc<PatientResult>(

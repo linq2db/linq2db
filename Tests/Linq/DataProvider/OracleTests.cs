@@ -2445,7 +2445,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		private static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, int id)
+		private static IEnumerable<Person> PersonSelectByKey(IDataContext dataConnection, int id)
 		{
 			return dataConnection.QueryProc<Person>("PERSON_SELECTBYKEY",
 				new DataParameter("pID", @id),

@@ -403,7 +403,7 @@ namespace Tests.DataProvider
 		{
 			var param = context.Contains("Odbc") ? "?" : "@p";
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{

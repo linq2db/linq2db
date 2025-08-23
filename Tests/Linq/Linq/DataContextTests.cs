@@ -414,7 +414,7 @@ namespace Tests.Linq
 		public void Issue4729Test([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
 		{
 			var interceptor = new CountingContextInterceptor();
-			using var db = GetDataConnection(context, o => o.UseInterceptor(interceptor));
+			using var db = GetDataContext(context, o => o.UseInterceptor(interceptor));
 			((IDataContext)db).CloseAfterUse = closeAfterUse;
 
 			db.Query<int>("SELECT 1").SingleOrDefault();

@@ -817,7 +817,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestModule([IncludeDataSources(false, TestProvName.AllSapHana)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				Assert.That(db.ExecuteProc<int>("TEST_PROCEDURE", new { i = 1 }), Is.EqualTo(4));
 

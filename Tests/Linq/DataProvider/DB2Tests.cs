@@ -978,7 +978,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestModule([IncludeDataSources(false, ProviderName.DB2)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var parameters = new []
 				{

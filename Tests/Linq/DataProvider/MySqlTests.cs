@@ -2134,7 +2134,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestModule([IncludeDataSources(false, TestProvName.AllMariaDB)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.Execute("SET SQL_MODE='ORACLE'");
 
@@ -2477,7 +2477,7 @@ namespace Tests.DataProvider
 			return ret;
 		}
 
-		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
+		public static IEnumerable<Person> TestProcedure(this IDataContext dataConnection, int? param3, ref int? param2, out int? param1)
 		{
 			var parameters = new []
 			{

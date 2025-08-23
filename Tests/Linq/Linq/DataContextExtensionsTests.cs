@@ -1,0 +1,1492 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
+
+using Microsoft.Identity.Client;
+
+using NUnit.Framework;
+
+using Tests.Model;
+
+namespace Tests.Linq
+{
+	/*
+	 * Provides basic test coverage for:
+	 * - DataContextExtensions APIs
+	 * - CommandInfo (implicitly as calls from DataContextExtensions)
+	 * 
+	 * Test with:
+	 * - DataConnection
+	 * - DataContext with KeepConnectionAlive true/false
+	 * 
+	 * DataContextExtensions.SetCommand converage provided implicitly through other DataContextExtensions calls
+	 */
+	[TestFixture]
+	public class DataContextExtensionsTests : TestBase
+	{
+		sealed class CountOpenInterceptor : ConnectionInterceptor
+		{
+			private int _sync;
+			private int _async;
+
+			public override void ConnectionOpened(ConnectionEventData eventData, DbConnection connection)
+			{
+				_sync++;
+			}
+
+			public override Task ConnectionOpenedAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+			{
+				_async++;
+
+				return Task.CompletedTask;
+			}
+
+			public void AssertCounters(int expectedSync, int expectedAsync)
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(_sync, Is.EqualTo(expectedSync));
+					Assert.That(_async, Is.EqualTo(expectedAsync));
+				}
+			}
+		}
+
+		sealed class CountCloseInterceptor : DataContextInterceptor
+		{
+			private int _sync;
+			private int _async;
+
+			public override void OnClosed(DataContextEventData eventData)
+			{
+				_sync++;
+			}
+
+			public override Task OnClosedAsync(DataContextEventData eventData)
+			{
+				_async++;
+
+				return Task.CompletedTask;
+			}
+
+			public void AssertCounters(int expectedSync, int expectedAsync)
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(_sync, Is.EqualTo(expectedSync));
+					Assert.That(_async, Is.EqualTo(expectedAsync));
+				}
+			}
+		}
+
+		void Test(string context, Action<IDataContext> action)
+		{
+			// test with DataConnection
+			using (var db = GetDataConnection(context))
+			{
+				action(db);
+			}
+
+			// test with DataContext
+			var open = new CountOpenInterceptor();
+			var close = new CountCloseInterceptor();
+			using (var db = new DataContext(new DataOptions().UseConfiguration(context).UseInterceptors(open, close)))
+			{
+				db.SetKeepConnectionAlive(true);
+
+				action(db);
+
+				open.AssertCounters(1, 0);
+				close.AssertCounters(0, 0);
+			}
+
+			open = new CountOpenInterceptor();
+			close = new CountCloseInterceptor();
+			using (var db = new DataContext(new DataOptions().UseConfiguration(context).UseInterceptors(open, close)))
+			{
+				db.SetKeepConnectionAlive(false);
+
+				action(db);
+
+				open.AssertCounters(1, 0);
+				close.AssertCounters(1, 0);
+			}
+		}
+
+		async ValueTask TestAsync(string context, Func<IDataContext, ValueTask> action)
+		{
+			// test with DataConnection
+			using (var db = GetDataConnection(context))
+			{
+				await action(db);
+			}
+
+			// test with DataContext
+			var open = new CountOpenInterceptor();
+			var close = new CountCloseInterceptor();
+			using (var db = new DataContext(new DataOptions().UseConfiguration(context).UseInterceptors(open, close)))
+			{
+				db.SetKeepConnectionAlive(true);
+
+				await action(db);
+
+				open.AssertCounters(0, 1);
+				close.AssertCounters(0, 0);
+			}
+
+			open = new CountOpenInterceptor();
+			close = new CountCloseInterceptor();
+			using (var db = new DataContext(new DataOptions().UseConfiguration(context).UseInterceptors(open, close)))
+			{
+				db.SetKeepConnectionAlive(false);
+
+				await action(db);
+
+				open.AssertCounters(0, 1);
+				close.AssertCounters(0, 1);
+			}
+		}
+
+		[Test]
+		public async ValueTask Query_WithReader([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var sql = "SELECT 1 UNION SELECT 2";
+
+			Test(context, db =>
+			{
+				var res = db.Query(r => r.GetInt32(0), sql).ToArray();
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryAsync(r => r.GetInt32(0), sql, cancellationToken: default);
+				AssertResults(res.ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(1));
+					Assert.That(res[1], Is.EqualTo(2));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask Query_WithReader_And_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			Test(context, db =>
+			{
+				var res = db.Query(r => r.GetInt32(0), sql, p1, p2).ToArray();
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryAsync(r => r.GetInt32(0), sql, p1, p2);
+				AssertResults(res.ToArray());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryAsync(r => r.GetInt32(0), sql, cancellationToken: default, p1, p2);
+				AssertResults(res.ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask Query_WithReader_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			Test(context, db =>
+			{
+				var res = db.Query(r => r.GetInt32(0), sql, parameters).ToArray();
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryAsync(r => r.GetInt32(0),sql, parameters, cancellationToken: default);
+				AssertResults(res.ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryProc_WithReader_And_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var input = DataParameter.Int32("input", 1);
+			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var sql = "QueryProcParameters";
+
+			Test(context, db =>
+			{
+				var res = db.QueryProc(r => r.GetInt32(0), sql, input, output1, output2).ToArray();
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryProcAsync(r => r.GetInt32(0), sql, input, output1, output2);
+				AssertResults(res.ToArray());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryProcAsync(r => r.GetInt32(0), sql, cancellationToken: default, input, output1, output2);
+				AssertResults(res.ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(4));
+				Assert.That(res, Does.Contain(1));
+				Assert.That(res, Does.Contain(2));
+				Assert.That(res, Does.Contain(3));
+				Assert.That(res, Does.Contain(4));
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryProc_WithReader_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { input = 1 };
+			var sql = "QueryProcParameters";
+
+			Test(context, db =>
+			{
+				var res = db.QueryProc(r => r.GetInt32(0), sql, parameters).ToArray();
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryProcAsync(r => r.GetInt32(0), sql, parameters, cancellationToken: default);
+				AssertResults(res.ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(4));
+				Assert.That(res, Does.Contain(1));
+				Assert.That(res, Does.Contain(2));
+				Assert.That(res, Does.Contain(3));
+				Assert.That(res, Does.Contain(4));
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToListAsync_WithReader([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var sql = "SELECT 1 UNION SELECT 2";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToListAsync(r => r.GetInt32(0), sql, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(List<int> res)
+			{
+				Assert.That(res, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(1));
+					Assert.That(res[1], Is.EqualTo(2));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToListAsync_WithReader_And_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToListAsync(r => r.GetInt32(0), sql, p1, p2);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToListAsync(r => r.GetInt32(0), sql, cancellationToken: default, p1, p2);
+				AssertResults(res);
+			});
+
+			static void AssertResults(List<int> res)
+			{
+				Assert.That(res, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToListAsync_WithReader_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToListAsync(r => r.GetInt32(0), sql, parameters, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(List<int> res)
+			{
+				Assert.That(res, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToArrayAsync_WithReader([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var sql = "SELECT 1 UNION SELECT 2";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToArrayAsync(r => r.GetInt32(0), sql, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(1));
+					Assert.That(res[1], Is.EqualTo(2));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToArrayAsync_WithReader_And_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToArrayAsync(r => r.GetInt32(0), sql, p1, p2);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToArrayAsync(r => r.GetInt32(0), sql, cancellationToken: default, p1, p2);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToArrayAsync_WithReader_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToArrayAsync(r => r.GetInt32(0), sql, parameters, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToAsyncEnumerable_WithReader([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var sql = "SELECT 1 UNION SELECT 2";
+
+			await TestAsync(context, async db =>
+			{
+				var res = db.QueryToAsyncEnumerable(r => r.GetInt32(0), sql);
+				await AssertResults(res);
+			});
+
+			static async ValueTask AssertResults(IAsyncEnumerable<int> res)
+			{
+				var cnt = 0;
+				await foreach (var i in res)
+				{
+					cnt++;
+					Assert.That(i, Is.EqualTo(cnt));
+				}
+
+				Assert.That(cnt, Is.EqualTo(2));
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToAsyncEnumerable_WithReader_And_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = db.QueryToAsyncEnumerable(r => r.GetInt32(0), sql, p1, p2);
+				await AssertResults(res);
+			});
+
+			static async ValueTask AssertResults(IAsyncEnumerable<int> res)
+			{
+				var cnt = 2;
+				await foreach (var i in res)
+				{
+					Assert.That(i, Is.EqualTo(cnt));
+					cnt--;
+				}
+
+				Assert.That(cnt, Is.Zero);
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToAsyncEnumerable_WithReader_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = db.QueryToAsyncEnumerable(r => r.GetInt32(0), sql, parameters);
+				await AssertResults(res);
+			});
+
+			static async ValueTask AssertResults(IAsyncEnumerable<int> res)
+			{
+				var cnt = 2;
+				await foreach (var i in res)
+				{
+					Assert.That(i, Is.EqualTo(cnt));
+					cnt--;
+				}
+
+				Assert.That(cnt, Is.Zero);
+			}
+		}
+
+		[Test]
+		public async ValueTask Query([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var sql = "SELECT 1 UNION SELECT 2";
+
+			Test(context, db =>
+			{
+				var res = db.Query<int>(sql).ToArray();
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = (await db.QueryAsync<int>(sql, cancellationToken: default)).ToArray();
+				AssertResults(res);
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(1));
+					Assert.That(res[1], Is.EqualTo(2));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask Query_And_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			Test(context, db =>
+			{
+				var res = db.Query<int>(sql, p1, p2).ToArray();
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryAsync<int>(sql, p1, p2);
+				AssertResults(res.ToArray());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryAsync<int>(sql, cancellationToken: default, p1, p2);
+				AssertResults(res.ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask Query_And_SingleDataParam([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var sql = "SELECT @p1 UNION SELECT @p1 + 2";
+
+			Test(context, db =>
+			{
+				var res = db.Query<int>(sql, p1).ToArray();
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryAsync<int>(sql, p1);
+				AssertResults(res.ToArray());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryAsync<int>(sql, p1, cancellationToken: default);
+				AssertResults(res.ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(1));
+					Assert.That(res[1], Is.EqualTo(3));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask Query_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			Test(context, db =>
+			{
+				var res = db.Query<int>(sql, parameters).ToArray();
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryAsync<int>(sql, parameters, cancellationToken: default);
+				AssertResults(res.ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask Query_WithTemplate_And_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p2 as ID UNION SELECT @p1";
+
+			Test(context, db =>
+			{
+				var res = db.Query(new { ID = 1 }, sql, p1, p2);
+				AssertResults(res.Select(r => r.ID).ToArray());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryAsync(new { ID = 1 }, sql, p1, p2);
+				AssertResults(res.Select(r => r.ID).ToArray());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryAsync(new { ID = 1 }, sql, cancellationToken: default, p1, p2);
+				AssertResults(res.Select(r => r.ID).ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask Query_WithTemplate_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p2 AS ID UNION SELECT @p1";
+
+			Test(context, db =>
+			{
+				var res = db.Query(new { ID = 1 }, sql, parameters);
+				AssertResults(res.Select(r => r.ID).ToArray());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryAsync(new { ID = 1 }, sql, parameters, cancellationToken: default);
+				AssertResults(res.Select(r => r.ID).ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		sealed class MultipleResultExample
+		{
+			[ResultSetIndex(2)] public List<Person>? Set3 { get; set; }
+			[ResultSetIndex(1)] public IEnumerable<Person>? Set2 { get; set; }
+			[ResultSetIndex(0)] public Person[]? Set1 { get; set; }
+		}
+
+		[Test]
+		public async ValueTask QueryMultiple_With_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var p3 = DataParameter.Int32("p3", 3);
+			var sql = "SELECT * FROM Person WHERE PersonID <> @p1; SELECT * FROM Person WHERE PersonID <> @p2; SELECT * FROM Person WHERE PersonID <> @p3";
+
+			Test(context, db =>
+			{
+				var res = db.QueryMultiple<MultipleResultExample>(sql, p1, p2, p3);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryMultipleAsync<MultipleResultExample>(sql, p1, p2, p3);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryMultipleAsync<MultipleResultExample>(sql, cancellationToken: default, p1, p2, p3);
+				AssertResults(res);
+			});
+
+			static void AssertResults(MultipleResultExample res)
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res.Set1, Is.Not.Null);
+					Assert.That(res.Set2, Is.Not.Null);
+					Assert.That(res.Set3, Is.Not.Null);
+				}
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res.Set1, Has.Length.EqualTo(3));
+					Assert.That(res.Set2.Count(), Is.EqualTo(3));
+					Assert.That(res.Set3, Has.Count.EqualTo(3));
+				}
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res.Set1.Count(r => r.ID == 2), Is.EqualTo(1));
+					Assert.That(res.Set1.Count(r => r.ID == 3), Is.EqualTo(1));
+					Assert.That(res.Set1.Count(r => r.ID == 4), Is.EqualTo(1));
+
+					Assert.That(res.Set2.Count(r => r.ID == 1), Is.EqualTo(1));
+					Assert.That(res.Set2.Count(r => r.ID == 3), Is.EqualTo(1));
+					Assert.That(res.Set2.Count(r => r.ID == 4), Is.EqualTo(1));
+
+					Assert.That(res.Set3.Count(r => r.ID == 1), Is.EqualTo(1));
+					Assert.That(res.Set3.Count(r => r.ID == 2), Is.EqualTo(1));
+					Assert.That(res.Set3.Count(r => r.ID == 4), Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryProc_With_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var input = DataParameter.Int32("input", 1);
+			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var sql = "QueryProcParameters";
+
+			Test(context, db =>
+			{
+				var res = db.QueryProc<Person>(sql, input, output1, output2);
+				AssertResults(res.Select(p => p.ID).ToArray());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryProcAsync<Person>(sql, input, output1, output2);
+				AssertResults(res.Select(p => p.ID).ToArray());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryProcAsync<Person>(sql, cancellationToken: default, input, output1, output2);
+				AssertResults(res.Select(p => p.ID).ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(4));
+				Assert.That(res, Does.Contain(1));
+				Assert.That(res, Does.Contain(2));
+				Assert.That(res, Does.Contain(3));
+				Assert.That(res, Does.Contain(4));
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryProc_With_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { input = 1 };
+			var sql = "QueryProcParameters";
+
+			Test(context, db =>
+			{
+				var res = db.QueryProc<Person>(sql, parameters);
+				AssertResults(res.Select(p => p.ID).ToArray());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryProcAsync<Person>(sql, parameters, cancellationToken: default);
+				AssertResults(res.Select(p => p.ID).ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(4));
+				Assert.That(res, Does.Contain(1));
+				Assert.That(res, Does.Contain(2));
+				Assert.That(res, Does.Contain(3));
+				Assert.That(res, Does.Contain(4));
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryProc_WithTemplate_And_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var input = DataParameter.Int32("input", 1);
+			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var sql = "QueryProcParameters";
+
+			Test(context, db =>
+			{
+				var res = db.QueryProc(new { PersonID = 1 }, sql, input, output1, output2);
+				AssertResults(res.Select(p => p.PersonID).ToArray());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryProcAsync(new { PersonID = 1 }, sql, input, output1, output2);
+				AssertResults(res.Select(p => p.PersonID).ToArray());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryProcAsync(new { PersonID = 1 }, sql, cancellationToken: default, input, output1, output2);
+				AssertResults(res.Select(p => p.PersonID).ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(4));
+				Assert.That(res, Does.Contain(1));
+				Assert.That(res, Does.Contain(2));
+				Assert.That(res, Does.Contain(3));
+				Assert.That(res, Does.Contain(4));
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryProc_WithTemplate_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { input = 1 };
+			var sql = "QueryProcParameters";
+
+			Test(context, db =>
+			{
+				var res = db.QueryProc(new { PersonID = 1 }, sql, parameters);
+				AssertResults(res.Select(p => p.PersonID).ToArray());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryProcAsync(new { PersonID = 1 }, sql, parameters, cancellationToken: default);
+				AssertResults(res.Select(p => p.PersonID).ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(4));
+				Assert.That(res, Does.Contain(1));
+				Assert.That(res, Does.Contain(2));
+				Assert.That(res, Does.Contain(3));
+				Assert.That(res, Does.Contain(4));
+			}
+		}
+
+		sealed class MultipleProcResultExample
+		{
+			[ResultSetIndex(1)] public Doctor[]? Set2 { get; set; }
+			[ResultSetIndex(0)] public Person[]? Set1 { get; set; }
+		}
+
+		[Test]
+		public async ValueTask QueryProcMultiple_With_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("input", 1);
+			var sql = "QueryProcMultipleParameters";
+
+			Test(context, db =>
+			{
+				var res = db.QueryProcMultiple<MultipleProcResultExample>(sql, p1);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryProcMultipleAsync<MultipleProcResultExample>(sql, p1);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryProcMultipleAsync<MultipleProcResultExample>(sql, cancellationToken: default, p1);
+				AssertResults(res);
+			});
+
+			static void AssertResults(MultipleProcResultExample res)
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res.Set1, Is.Not.Null);
+					Assert.That(res.Set2, Is.Not.Null);
+				}
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res.Set1, Has.Length.EqualTo(4));
+					Assert.That(res.Set2.Count(), Is.EqualTo(1));
+				}
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res.Set1.Count(r => r.ID == 1), Is.EqualTo(1));
+					Assert.That(res.Set1.Count(r => r.ID == 2), Is.EqualTo(1));
+					Assert.That(res.Set1.Count(r => r.ID == 3), Is.EqualTo(1));
+					Assert.That(res.Set1.Count(r => r.ID == 4), Is.EqualTo(1));
+
+					Assert.That(res.Set2.Count(r => r.PersonID == 1), Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryProcMultiple_With_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { input = 2 };
+			var sql = "QueryProcMultipleParameters";
+
+			Test(context, db =>
+			{
+				var res = db.QueryProcMultiple<MultipleProcResultExample>(sql, parameters);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryProcMultipleAsync<MultipleProcResultExample>(sql, parameters, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(MultipleProcResultExample res)
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res.Set1, Is.Not.Null);
+					Assert.That(res.Set2, Is.Not.Null);
+				}
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res.Set1, Has.Length.EqualTo(4));
+					Assert.That(res.Set2.Count(), Is.EqualTo(1));
+				}
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res.Set1.Count(r => r.ID == 1), Is.EqualTo(1));
+					Assert.That(res.Set1.Count(r => r.ID == 2), Is.EqualTo(1));
+					Assert.That(res.Set1.Count(r => r.ID == 3), Is.EqualTo(1));
+					Assert.That(res.Set1.Count(r => r.ID == 4), Is.EqualTo(1));
+
+					Assert.That(res.Set2.Count(r => r.PersonID == 1), Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToListAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var sql = "SELECT 1 UNION SELECT 2";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToListAsync<int>(sql, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(List<int> res)
+			{
+				Assert.That(res, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(1));
+					Assert.That(res[1], Is.EqualTo(2));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToListAsync_WithDataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToListAsync<int>(sql, p1, p2);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToListAsync<int>(sql, cancellationToken: default, p1, p2);
+				AssertResults(res);
+			});
+
+			static void AssertResults(List<int> res)
+			{
+				Assert.That(res, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToListAsync_WithDataParmeter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var sql = "SELECT @p1 UNION SELECT @p1 + 2";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToListAsync<int>(sql, p1);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToListAsync<int>(sql, cancellationToken: default, p1);
+				AssertResults(res);
+			});
+
+			static void AssertResults(List<int> res)
+			{
+				Assert.That(res, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(1));
+					Assert.That(res[1], Is.EqualTo(3));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToListAsync_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p1 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToListAsync<int>(sql, parameters, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(List<int> res)
+			{
+				Assert.That(res, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToArrayAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var sql = "SELECT 1 UNION SELECT 2";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToArrayAsync<int>(sql, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(1));
+					Assert.That(res[1], Is.EqualTo(2));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToArrayAsync_WithDataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToArrayAsync<int>(sql, p1, p2);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToArrayAsync<int>(sql, cancellationToken: default, p1, p2);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToArrayAsync_WithDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var sql = "SELECT @p1 + 1 UNION SELECT @p1 + 3";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToArrayAsync<int>(sql, p1);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToArrayAsync<int>(sql, cancellationToken: default, p1);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(4));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToArrayAsync_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToArrayAsync<int>(sql, parameters, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToAsyncEnumerable([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var sql = "SELECT 1 UNION SELECT 2";
+
+			await TestAsync(context, async db =>
+			{
+				var res = db.QueryToAsyncEnumerable<int>(sql);
+				await AssertResults(res);
+			});
+
+			static async ValueTask AssertResults(IAsyncEnumerable<int> res)
+			{
+				var cnt = 0;
+				await foreach (var i in res)
+				{
+					cnt++;
+					Assert.That(i, Is.EqualTo(cnt));
+				}
+
+				Assert.That(cnt, Is.EqualTo(2));
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToAsyncEnumerable_WithDataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = db.QueryToAsyncEnumerable<int>(sql, p1, p2);
+				await AssertResults(res);
+			});
+
+			static async ValueTask AssertResults(IAsyncEnumerable<int> res)
+			{
+				var cnt = 2;
+				await foreach (var i in res)
+				{
+					Assert.That(i, Is.EqualTo(cnt));
+					cnt--;
+				}
+
+				Assert.That(cnt, Is.Zero);
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToAsyncEnumerable_WithDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var sql = "SELECT @p1 + 1 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = db.QueryToAsyncEnumerable<int>(sql, p1);
+				await AssertResults(res);
+			});
+
+			static async ValueTask AssertResults(IAsyncEnumerable<int> res)
+			{
+				var cnt = 2;
+				await foreach (var i in res)
+				{
+					Assert.That(i, Is.EqualTo(cnt));
+					cnt--;
+				}
+
+				Assert.That(cnt, Is.Zero);
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToAsyncEnumerable_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = db.QueryToAsyncEnumerable<int>(sql, parameters);
+				await AssertResults(res);
+			});
+
+			static async ValueTask AssertResults(IAsyncEnumerable<int> res)
+			{
+				var cnt = 2;
+				await foreach (var i in res)
+				{
+					Assert.That(i, Is.EqualTo(cnt));
+					cnt--;
+				}
+
+				Assert.That(cnt, Is.Zero);
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToListAsync_WithTemplate_And_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p2 AS Id UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToListAsync(new { Id = 1 }, sql, p1, p2);
+				AssertResults(res.Select(r => r.Id).ToList());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToListAsync(new { Id = 1 }, sql, cancellationToken: default, p1, p2);
+				AssertResults(res.Select(r => r.Id).ToList());
+			});
+
+			static void AssertResults(List<int> res)
+			{
+				Assert.That(res, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToListAsync_WithTemplate_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToListAsync(new { Id = 1 }, sql, parameters, cancellationToken: default);
+				AssertResults(res.Select(r => r.Id).ToList());
+			});
+
+			static void AssertResults(List<int> res)
+			{
+				Assert.That(res, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToArrayAsync_WithTemplate_And_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToArrayAsync(new { Id = 1 }, sql, p1, p2);
+				AssertResults(res.Select(r => r.Id).ToArray());
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToArrayAsync(new { Id = 1 }, sql, cancellationToken: default, p1, p2);
+				AssertResults(res.Select(r => r.Id).ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToArrayAsync_WithTemplate_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = await db.QueryToArrayAsync(new { Id = 1 }, sql, parameters, cancellationToken: default);
+				AssertResults(res.Select(r => r.Id).ToArray());
+			});
+
+			static void AssertResults(int[] res)
+			{
+				Assert.That(res, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToAsyncEnumerable_WithTemplate_And_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = db.QueryToAsyncEnumerable(new { Id = 1 }, sql, p1, p2);
+				await AssertResults(res, r => r.Id);
+			});
+
+			static async ValueTask AssertResults<T>(IAsyncEnumerable<T> res, Func<T, int> getValue)
+			{
+				var cnt = 2;
+				await foreach (var i in res)
+				{
+					Assert.That(getValue(i), Is.EqualTo(cnt));
+					cnt--;
+				}
+
+				Assert.That(cnt, Is.Zero);
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryToAsyncEnumerable_WithTemplate_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = db.QueryToAsyncEnumerable(new { Id = 1 }, sql, parameters);
+				await AssertResults(res, r => r.Id);
+			});
+
+			static async ValueTask AssertResults<T>(IAsyncEnumerable<T> res, Func<T, int> getValue)
+			{
+				var cnt = 2;
+				await foreach (var i in res)
+				{
+					Assert.That(getValue(i), Is.EqualTo(cnt));
+					cnt--;
+				}
+
+				Assert.That(cnt, Is.Zero);
+			}
+		}
+	}
+}

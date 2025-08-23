@@ -17,7 +17,7 @@ namespace Tests.Data
 		[Test]
 		public void TestScalar1([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var list = conn.Query(rd => rd[0], "SELECT 1").ToList();
 
@@ -28,7 +28,7 @@ namespace Tests.Data
 		[Test]
 		public void TestScalar2([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var list = conn.Query<int>("SELECT 1").ToList();
 
@@ -39,7 +39,7 @@ namespace Tests.Data
 		[Test]
 		public void TestScalar3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var list = conn.Query<DateTimeOffset>("SELECT CURRENT_TIMESTAMP").ToList();
 
@@ -56,7 +56,7 @@ namespace Tests.Data
 		[Test]
 		public void TestObject1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var list = conn.Query<QueryObject>("SELECT 1 as Column1, CURRENT_TIMESTAMP as Column2").ToList();
 
@@ -233,7 +233,7 @@ namespace Tests.Data
 		[Test]
 		public void TestStruct1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var list = conn.Query<QueryStruct>("SELECT 1 as Column1, CURRENT_TIMESTAMP as Column2").ToList();
 
@@ -322,7 +322,7 @@ namespace Tests.Data
 		[Test]
 		public void CacheTest([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
-			using (var dc= GetDataConnection(context))
+			using (var dc= GetDataContext(context))
 			{
 				dc.Execute("CREATE TABLE #t1(v1 int not null)");
 				dc.Execute("INSERT INTO #t1(v1) values (1)");

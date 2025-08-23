@@ -1104,7 +1104,7 @@ namespace Tests.DataProvider
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4065")]
 		public void TestParameterlessProcedure([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			// call as proc
 			db.ExecuteProc("\"Person_SelectAll\"");
@@ -1301,7 +1301,7 @@ namespace Tests.DataProvider
 			public int? PERSONID { get; set; }
 		}
 
-		public static IEnumerable<PersonInsertResult> PersonInsert(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
+		public static IEnumerable<PersonInsertResult> PersonInsert(this IDataContext dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
 			var parameters = new []
 			{
@@ -1335,7 +1335,7 @@ namespace Tests.DataProvider
 			return ret;
 		}
 
-		public static IEnumerable<TestV4TYPESResult> TestV4Types(this DataConnection dataConnection, FbZonedDateTime? TSTZ, FbZonedTime? TTZ, FbDecFloat? DECFLOAT16, FbDecFloat? DECFLOAT34, BigInteger? INT_128)
+		public static IEnumerable<TestV4TYPESResult> TestV4Types(this IDataContext dataConnection, FbZonedDateTime? TSTZ, FbZonedTime? TTZ, FbDecFloat? DECFLOAT16, FbDecFloat? DECFLOAT34, BigInteger? INT_128)
 		{
 			return dataConnection.QueryProc<TestV4TYPESResult>("TEST_V4_TYPES",
 				new DataParameter("TSTZ",       TSTZ,       DataType.DateTimeOffset),
