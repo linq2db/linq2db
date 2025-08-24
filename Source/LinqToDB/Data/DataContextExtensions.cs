@@ -414,7 +414,6 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters. Supported values:
 		/// <para> - <c>null</c> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
@@ -425,6 +424,7 @@ namespace LinqToDB.Data
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with array of query result records.</returns>
 		public static Task<T[]> QueryToArrayAsync<T>(this IDataContext dataContext, Func<DbDataReader, T> objectReader, string sql, object? parameters, CancellationToken cancellationToken = default)
 		{
@@ -660,8 +660,8 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="sql">Command text.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns collection of query result records.</returns>
 		public static Task<IEnumerable<T>> QueryAsync<T>(this IDataContext dataContext, T template, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
@@ -1239,7 +1239,6 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result set type.</typeparam>
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters. Supported values:
 		/// <para> - <c>null</c> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
@@ -1250,6 +1249,7 @@ namespace LinqToDB.Data
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>
 		///     A task that represents the asynchronous operation.
 		///     The task result contains object with multiply result sets.
@@ -1353,7 +1353,6 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters. Supported values:
 		/// <para> - <c>null</c> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
@@ -1364,6 +1363,7 @@ namespace LinqToDB.Data
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with list of query result records.</returns>
 		public static Task<List<T>> QueryToListAsync<T>(this IDataContext dataContext, string sql, object? parameters, CancellationToken cancellationToken = default)
 		{
@@ -1430,7 +1430,6 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters. Supported values:
 		/// <para> - <c>null</c> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
@@ -1441,6 +1440,7 @@ namespace LinqToDB.Data
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with array of query result records.</returns>
 		public static Task<T[]> QueryToArrayAsync<T>(this IDataContext dataContext, string sql, object? parameters, CancellationToken cancellationToken = default)
 		{
@@ -1549,7 +1549,6 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters. Supported values:
 		/// <para> - <c>null</c> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
@@ -1560,6 +1559,7 @@ namespace LinqToDB.Data
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with list of query result records.</returns>
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public static Task<List<T>> QueryToListAsync<T>(this IDataContext dataContext, T template, string sql, object? parameters, CancellationToken cancellationToken = default)
@@ -1605,7 +1605,6 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters. Supported values:
 		/// <para> - <c>null</c> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
@@ -1616,6 +1615,7 @@ namespace LinqToDB.Data
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with array of query result records.</returns>
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public static Task<T[]> QueryToArrayAsync<T>(this IDataContext dataContext, T template, string sql, object? parameters, CancellationToken cancellationToken = default)
@@ -1838,7 +1838,6 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters. Supported values:
 		/// <para> - <c>null</c> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
@@ -1849,6 +1848,7 @@ namespace LinqToDB.Data
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
 		public static Task<int> ExecuteProcAsync(this IDataContext dataContext, string sql, object? parameters, CancellationToken cancellationToken = default)
 		{
@@ -1979,7 +1979,6 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters. Supported values:
 		/// <para> - <c>null</c> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
@@ -1990,6 +1989,7 @@ namespace LinqToDB.Data
 		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Task with resulting value.</returns>
 		public static Task<T> ExecuteAsync<T>(this IDataContext dataContext, string sql, object? parameters, CancellationToken cancellationToken = default)
 		{

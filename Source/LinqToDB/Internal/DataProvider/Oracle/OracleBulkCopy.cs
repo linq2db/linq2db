@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public OracleBulkCopy(OracleDataProvider provider, AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			_provider                    = provider;
+			_provider               = provider;
 			_useAlternativeBulkCopy = useAlternativeBulkCopy;
 		}
 

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
@@ -1078,13 +1079,7 @@ namespace Tests.Linq
 
 			await TestAsync(context, async db =>
 			{
-				var res = await db.QueryToListAsync<int>(sql, p1);
-				AssertResults(res);
-			});
-
-			await TestAsync(context, async db =>
-			{
-				var res = await db.QueryToListAsync<int>(sql, cancellationToken: default, p1);
+				var res = await db.QueryToListAsync<int>(sql, p1, cancellationToken: default);
 				AssertResults(res);
 			});
 
@@ -1179,12 +1174,6 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var sql = "SELECT @p1 + 1 UNION SELECT @p1 + 3";
-
-			await TestAsync(context, async db =>
-			{
-				var res = await db.QueryToArrayAsync<int>(sql, p1);
-				AssertResults(res);
-			});
 
 			await TestAsync(context, async db =>
 			{
@@ -1946,6 +1935,377 @@ namespace Tests.Linq
 				}
 
 				Assert.That(cnt, Is.Zero);
+			}
+		}
+
+		sealed class BulkCopyTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[PrimaryKey] public int Value { get; set; }
+
+			public static readonly BulkCopyTable[] Data =
+			[
+				new () { Id = 1, Value = 10 },
+				new () { Id = 2, Value = 20 },
+			];
+
+			public static async IAsyncEnumerable<BulkCopyTable> AsyncEnumerableData()
+			{
+				yield return new BulkCopyTable() { Id = 1, Value = 10 };
+				await Task.CompletedTask;
+				yield return new BulkCopyTable() { Id = 2, Value = 20 };
+			}
+		}
+
+		[Test]
+		public async ValueTask BulkCopy_Enumerable([DataSources(false)] string context, [Values] BulkCopyType type)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<BulkCopyTable>();
+
+			TestBulkCopy(tb, context, db =>
+			{
+				db.BulkCopy(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.Data);
+			});
+
+			TestBulkCopy(tb, context, db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
+				db.BulkCopy(1, BulkCopyTable.Data);
+			});
+
+			TestBulkCopy(tb, context, db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
+				db.BulkCopy(BulkCopyTable.Data);
+			});
+
+			TestBulkCopy(tb, context, db =>
+			{
+				db.GetTable<BulkCopyTable>().BulkCopy(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.Data);
+			});
+
+			TestBulkCopy(tb, context, db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
+				db.GetTable<BulkCopyTable>().BulkCopy(1, BulkCopyTable.Data);
+			});
+
+			TestBulkCopy(tb, context, db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
+				db.GetTable<BulkCopyTable>().BulkCopy(BulkCopyTable.Data);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				await db.BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.Data);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
+				await db.BulkCopyAsync(1, BulkCopyTable.Data);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
+				await db.BulkCopyAsync(BulkCopyTable.Data);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				await db.GetTable<BulkCopyTable>().BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.Data);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
+				await db.GetTable<BulkCopyTable>().BulkCopyAsync(1, BulkCopyTable.Data);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
+				await db.GetTable<BulkCopyTable>().BulkCopyAsync(BulkCopyTable.Data);
+			});
+		}
+
+		[Test]
+		public async ValueTask BulkCopy_AsyncEnumerable([DataSources(false)] string context, [Values] BulkCopyType type)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<BulkCopyTable>();
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				await db.BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
+				await db.BulkCopyAsync(1, BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
+				await db.BulkCopyAsync(BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				await db.GetTable<BulkCopyTable>().BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
+				await db.GetTable<BulkCopyTable>().BulkCopyAsync(1, BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
+				await db.GetTable<BulkCopyTable>().BulkCopyAsync(BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
+			});
+		}
+
+		[Test]
+		public async ValueTask BulkCopy_Enumerable_OracleModes([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] AlternativeBulkCopy type)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<BulkCopyTable>();
+
+			TestBulkCopy(tb, context, db =>
+			{
+				db.BulkCopy(new BulkCopyOptions().WithBulkCopyType(BulkCopyType.MultipleRows), BulkCopyTable.Data);
+			});
+
+			TestBulkCopy(tb, context, db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
+				db.BulkCopy(1, BulkCopyTable.Data);
+			});
+
+			TestBulkCopy(tb, context, db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
+				db.BulkCopy(BulkCopyTable.Data);
+			});
+
+			TestBulkCopy(tb, context, db =>
+			{
+				db.GetTable<BulkCopyTable>().BulkCopy(new BulkCopyOptions().WithBulkCopyType(BulkCopyType.MultipleRows), BulkCopyTable.Data);
+			});
+
+			TestBulkCopy(tb, context, db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
+				db.GetTable<BulkCopyTable>().BulkCopy(1, BulkCopyTable.Data);
+			});
+
+			TestBulkCopy(tb, context, db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
+				db.GetTable<BulkCopyTable>().BulkCopy(BulkCopyTable.Data);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				await db.BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(BulkCopyType.MultipleRows), BulkCopyTable.Data);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
+				await db.BulkCopyAsync(1, BulkCopyTable.Data);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
+				await db.BulkCopyAsync(BulkCopyTable.Data);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				await db.GetTable<BulkCopyTable>().BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(BulkCopyType.MultipleRows), BulkCopyTable.Data);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
+				await db.GetTable<BulkCopyTable>().BulkCopyAsync(1, BulkCopyTable.Data);
+			});
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
+				await db.GetTable<BulkCopyTable>().BulkCopyAsync(BulkCopyTable.Data);
+			});
+		}
+
+		[Test]
+		public async ValueTask BulkCopy_AsyncEnumerable_OracleModes([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] AlternativeBulkCopy type)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<BulkCopyTable>();
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				await db.BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(BulkCopyType.MultipleRows), BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
+				await db.BulkCopyAsync(1, BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
+				await db.BulkCopyAsync(BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				await db.GetTable<BulkCopyTable>().BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(BulkCopyType.MultipleRows), BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
+				await db.GetTable<BulkCopyTable>().BulkCopyAsync(1, BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
+
+			await TestBulkCopyAsync(tb, context, async db =>
+			{
+				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
+				await db.GetTable<BulkCopyTable>().BulkCopyAsync(BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
+		}
+
+		void TestBulkCopy(ITable<BulkCopyTable> table, string context, Action<IDataContext> action, Func<DataOptions, DataOptions>? customOptions = null)
+		{
+			var options = new DataOptions().UseConfiguration(context);
+			if (customOptions != null)
+				options = customOptions(options);
+
+			// test with DataConnection
+			using (var db = new DataConnection(options))
+			{
+				action(db);
+			}
+
+			AssertResults(table);
+
+			// test with DataContext
+			var open = new CountOpenInterceptor();
+			var close = new CountCloseInterceptor();
+			using (var db = new DataContext(options.UseInterceptors(open, close)))
+			{
+				db.SetKeepConnectionAlive(true);
+
+				action(db);
+
+				open.AssertCounters(1, 0);
+				close.AssertCounters(0, 0);
+			}
+
+			AssertResults(table);
+
+			open = new CountOpenInterceptor();
+			close = new CountCloseInterceptor();
+			using (var db = new DataContext(options.UseInterceptors(open, close)))
+			{
+				db.SetKeepConnectionAlive(false);
+
+				action(db);
+
+				open.AssertCounters(1, 0);
+				close.AssertCounters(1, 0);
+			}
+
+			AssertResults(table);
+
+			static void AssertResults(ITable<BulkCopyTable> table)
+			{
+				var res = table.OrderBy(r => r.Id).ToArray();
+				table.Delete();
+
+				Assert.That(res, Has.Length.EqualTo(2));
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0].Id, Is.EqualTo(1));
+					Assert.That(res[0].Value, Is.EqualTo(10));
+					Assert.That(res[1].Id, Is.EqualTo(2));
+					Assert.That(res[1].Value, Is.EqualTo(20));
+				}
+			}
+		}
+
+		async ValueTask TestBulkCopyAsync(ITable<BulkCopyTable> table, string context, Func<IDataContext, ValueTask> action, Func<DataOptions, DataOptions>? customOptions = null)
+		{
+			var options = new DataOptions().UseConfiguration(context);
+			if (customOptions != null)
+				options = customOptions(options);
+
+			// test with DataConnection
+			using (var db = new DataConnection(options))
+			{
+				await action(db);
+			}
+
+			AssertResults(table);
+
+			// test with DataContext
+			var open = new CountOpenInterceptor();
+			var close = new CountCloseInterceptor();
+			using (var db = new DataContext(options.UseInterceptors(open, close)))
+			{
+				db.SetKeepConnectionAlive(true);
+
+				await action(db);
+
+				open.AssertCounters(1, 0);
+				close.AssertCounters(0, 0);
+			}
+
+			AssertResults(table);
+
+			open = new CountOpenInterceptor();
+			close = new CountCloseInterceptor();
+			using (var db = new DataContext(options.UseInterceptors(open, close)))
+			{
+				db.SetKeepConnectionAlive(false);
+
+				await action(db);
+
+				open.AssertCounters(1, 0);
+				close.AssertCounters(1, 0);
+			}
+
+			AssertResults(table);
+
+			static void AssertResults(ITable<BulkCopyTable> table)
+			{
+				var res = table.OrderBy(r => r.Id).ToArray();
+				table.Delete();
+
+				Assert.That(res, Has.Length.EqualTo(2));
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0].Id, Is.EqualTo(1));
+					Assert.That(res[0].Value, Is.EqualTo(10));
+					Assert.That(res[1].Id, Is.EqualTo(2));
+					Assert.That(res[1].Value, Is.EqualTo(20));
+				}
 			}
 		}
 	}
