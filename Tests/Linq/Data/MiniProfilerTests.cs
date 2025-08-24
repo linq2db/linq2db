@@ -1420,7 +1420,7 @@ namespace Tests.Data
 
 			OracleDataProvider provider;
 			Type connectionType;
-			using (var db = GetDataContext(context))
+			using (var db = GetDataConnection(context))
 			{
 				provider = new OracleTests.TestOracleDataProvider(db.DataProvider.Name, ((OracleDataProvider)db.DataProvider).Provider, ((OracleDataProvider)db.DataProvider).Version);
 				connectionType = ((OracleDataProvider)db.DataProvider).Adapter.ConnectionType;

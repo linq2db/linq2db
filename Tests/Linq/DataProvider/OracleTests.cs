@@ -1313,7 +1313,7 @@ namespace Tests.DataProvider
 				new OracleSpecific.SequenceTest { Value = "Value"},
 			};
 
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
 			{
 				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 
@@ -1347,7 +1347,7 @@ namespace Tests.DataProvider
 				new OracleSpecific.SequenceTest { Value = "Value"},
 			};
 
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
 			{
 				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 

@@ -1251,7 +1251,7 @@ namespace Tests.DataProvider
 		{
 				var data = Enumerable.Range(1, 40).Select(i => new SequenceTest { Value = $"SeqValue{i}" }).ToArray();
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				try
 				{

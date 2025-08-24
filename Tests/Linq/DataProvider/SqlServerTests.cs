@@ -2112,7 +2112,7 @@ END
 		[Test]
 		public void TestRetrieveIdentity([IncludeDataSources(false, TestProvName.AllSqlServer)] string context, [Values] bool useIdentity)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				using (db.BeginTransaction())
 				{

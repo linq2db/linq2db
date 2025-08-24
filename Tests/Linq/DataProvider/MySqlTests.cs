@@ -943,7 +943,7 @@ namespace Tests.DataProvider
 				new Person { FirstName = "Psychiatry"     , LastName = "test"  }
 			};
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				MySqlTestUtils.EnableNativeBulk(db, context);
@@ -973,7 +973,7 @@ namespace Tests.DataProvider
 				new Person { FirstName = "Psychiatry"     , LastName = "test"  }
 			};
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				MySqlTestUtils.EnableNativeBulk(db, context);

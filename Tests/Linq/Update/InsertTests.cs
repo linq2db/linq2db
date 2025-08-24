@@ -2535,7 +2535,7 @@ namespace Tests.xUpdate
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4702")]
 		public void Issue4702Test([DataSources(false)] string context, [Values] bool useSequence)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue4702Table>();
 
 			List<Issue4702Table> records = [
