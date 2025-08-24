@@ -2046,12 +2046,7 @@ namespace LinqToDB.Data
 
 			ValueTask IAsyncDisposable.DisposeAsync()
 			{
-				if (dataContext != null)
-				{
-					return dataContext.ReleaseQueryAsync();
-				}
-
-				return default;
+				dataContext?.ReleaseQueryAsync();
 			}
 		}
 	}
