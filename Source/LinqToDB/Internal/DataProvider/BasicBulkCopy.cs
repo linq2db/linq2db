@@ -489,7 +489,7 @@ namespace LinqToDB.Internal.DataProvider
 			if (dataContext.CloseAfterUse)
 				await dataContext.CloseAsync().ConfigureAwait(false);
 
-			if (dataContext is DataContext dctx && !dctx.KeepConnectionAlive)
+			if (dataContext is DataContext { KeepConnectionAlive: false } dctx)
 				await dctx.ReleaseQueryAsync().ConfigureAwait(false);
 		}
 
