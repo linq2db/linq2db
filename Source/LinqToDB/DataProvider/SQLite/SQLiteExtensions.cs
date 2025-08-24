@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 
@@ -391,9 +392,9 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('optimize')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void FTS3Optimize<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS3Optimize<TEntity>(this IDataContext dc, ITable<TEntity> table)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('optimize')");
@@ -404,9 +405,9 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('rebuild')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void FTS3Rebuild<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS3Rebuild<TEntity>(this IDataContext dc, ITable<TEntity> table)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('rebuild')");
@@ -417,9 +418,9 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('integrity-check')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void FTS3IntegrityCheck<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS3IntegrityCheck<TEntity>(this IDataContext dc, ITable<TEntity> table)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')");
@@ -430,11 +431,11 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('merge=blocks,segments')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="blocks">Blocks command parameter.</param>
 		/// <param name="segments">Segments command parameter.</param>
-		public static void FTS3Merge<TEntity>(this DataConnection dc, ITable<TEntity> table, int blocks, int segments)
+		public static void FTS3Merge<TEntity>(this IDataContext dc, ITable<TEntity> table, int blocks, int segments)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('merge={blocks.ToString(NumberFormatInfo.InvariantInfo)},{segments.ToString(NumberFormatInfo.InvariantInfo)}')");
@@ -445,10 +446,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('automerge=segments')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="segments">Segments command parameter.</param>
-		public static void FTS3AutoMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int segments)
+		public static void FTS3AutoMerge<TEntity>(this IDataContext dc, ITable<TEntity> table, int segments)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('automerge={segments.ToString(NumberFormatInfo.InvariantInfo)}')");
@@ -461,10 +462,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table, rank) VALUES('automerge', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void FTS5AutoMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5AutoMerge<TEntity>(this IDataContext dc, ITable<TEntity> table, int value)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('automerge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
@@ -475,10 +476,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table, rank) VALUES('crisismerge', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void FTS5CrisisMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5CrisisMerge<TEntity>(this IDataContext dc, ITable<TEntity> table, int value)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('crisismerge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
@@ -489,11 +490,11 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table, rowid, col1, col2) VALUES('delete', rowid, 'col1_value', 'col2_value')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="rowid">Record rowid value.</param>
 		/// <param name="record">Current record entity.</param>
-		public static void FTS5Delete<TEntity>(this DataConnection dc, ITable<TEntity> table, int rowid, TEntity record)
+		public static void FTS5Delete<TEntity>(this IDataContext dc, ITable<TEntity> table, int rowid, TEntity record)
 			where TEntity : class
 		{
 			var ed = dc.MappingSchema.GetEntityDescriptor(typeof(TEntity), dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
@@ -502,7 +503,7 @@ namespace LinqToDB.DataProvider.SQLite
 			var parameterTokens = new string[ed.Columns.Count];
 			var parameters = new DataParameter[ed.Columns.Count];
 
-			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options);
+			var sqlBuilder = dc.GetDataProvider().CreateSqlBuilder(dc.MappingSchema, dc.Options);
 
 			for (var i = 0; i < ed.Columns.Count; i++)
 			{
@@ -519,9 +520,9 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('delete-all')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void FTS5DeleteAll<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS5DeleteAll<TEntity>(this IDataContext dc, ITable<TEntity> table)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('delete-all')");
@@ -532,9 +533,9 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('integrity-check')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void FTS5IntegrityCheck<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS5IntegrityCheck<TEntity>(this IDataContext dc, ITable<TEntity> table)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')");
@@ -545,10 +546,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table, rank) VALUES('merge', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void FTS5Merge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5Merge<TEntity>(this IDataContext dc, ITable<TEntity> table, int value)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('merge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
@@ -559,9 +560,9 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('optimize')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void FTS5Optimize<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS5Optimize<TEntity>(this IDataContext dc, ITable<TEntity> table)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('optimize')");
@@ -572,10 +573,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table, rank) VALUES('pgsz', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void FTS5Pgsz<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5Pgsz<TEntity>(this IDataContext dc, ITable<TEntity> table, int value)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('pgsz', {value.ToString(NumberFormatInfo.InvariantInfo)})");
@@ -586,10 +587,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table, rank) VALUES('rank', 'function')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="function">Rank function.</param>
-		public static void FTS5Rank<TEntity>(this DataConnection dc, ITable<TEntity> table, string function)
+		public static void FTS5Rank<TEntity>(this IDataContext dc, ITable<TEntity> table, string function)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('rank', @rank)", DataParameter.VarChar("@rank", function));
@@ -600,9 +601,9 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('rebuild')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void FTS5Rebuild<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS5Rebuild<TEntity>(this IDataContext dc, ITable<TEntity> table)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('rebuild')");
@@ -613,10 +614,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table, rank) VALUES('usermerge', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void FTS5UserMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5UserMerge<TEntity>(this IDataContext dc, ITable<TEntity> table, int value)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('usermerge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
