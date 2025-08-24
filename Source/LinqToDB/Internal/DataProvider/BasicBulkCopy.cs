@@ -480,7 +480,7 @@ namespace LinqToDB.Internal.DataProvider
 			if (dataContext.CloseAfterUse)
 				dataContext.Close();
 
-			if (dataContext is DataContext dctx && !dctx.KeepConnectionAlive)
+			if (dataContext is DataContext { KeepConnectionAlive: false } dctx)
 				dctx.ReleaseQuery();
 		}
 
