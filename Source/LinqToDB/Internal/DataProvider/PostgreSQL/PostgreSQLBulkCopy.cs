@@ -232,8 +232,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				writer.Dispose();
 			}
 
-			if (originalContext.CloseAfterUse)
-				originalContext.Close();
+			CloseConnectionIfNecessary(originalContext);
 
 			return rowsCopied;
 		}
@@ -353,8 +352,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					.ConfigureAwait(false);
 			}
 
-			if (table.DataContext.CloseAfterUse)
-				await table.DataContext.CloseAsync().ConfigureAwait(false);
+			await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 			return rowsCopied;
 		}
@@ -476,8 +474,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					.ConfigureAwait(false);
 			}
 
-			if (table.DataContext.CloseAfterUse)
-				await table.DataContext.CloseAsync().ConfigureAwait(false);
+			await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 			return rowsCopied;
 		}

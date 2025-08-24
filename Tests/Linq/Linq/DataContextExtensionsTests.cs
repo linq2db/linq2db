@@ -13,8 +13,6 @@ using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 
-using Microsoft.Identity.Client;
-
 using NUnit.Framework;
 
 using Tests.Model;
@@ -123,7 +121,7 @@ namespace Tests.Linq
 			}
 		}
 
-		async ValueTask TestAsync(string context, Func<IDataContext, ValueTask> action)
+		async ValueTask TestAsync(string context, Func<IDataContext, ValueTask> action, bool forceCloseSync = false)
 		{
 			// test with DataConnection
 			using (var db = GetDataContext(context))
@@ -153,14 +151,18 @@ namespace Tests.Linq
 				await action(db);
 
 				open.AssertCounters(0, 1);
-				close.AssertCounters(0, 1);
+
+				if (forceCloseSync)
+					close.AssertCounters(1, 0);
+				else
+					close.AssertCounters(0, 1);
 			}
 		}
 
 		[Test]
 		public async ValueTask Query_WithReader([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var sql = "SELECT 1 UNION SELECT 2";
+			var sql = "SELECT 1 UNION ALL SELECT 2";
 
 			Test(context, db =>
 			{
@@ -172,7 +174,7 @@ namespace Tests.Linq
 			{
 				var res = await db.QueryAsync(r => r.GetInt32(0), sql, cancellationToken: default);
 				AssertResults(res.ToArray());
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -190,7 +192,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			Test(context, db =>
 			{
@@ -202,13 +204,13 @@ namespace Tests.Linq
 			{
 				var res = await db.QueryAsync(r => r.GetInt32(0), sql, p1, p2);
 				AssertResults(res.ToArray());
-			});
+			}, forceCloseSync: true);
 
 			await TestAsync(context, async db =>
 			{
 				var res = await db.QueryAsync(r => r.GetInt32(0), sql, cancellationToken: default, p1, p2);
 				AssertResults(res.ToArray());
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -225,7 +227,7 @@ namespace Tests.Linq
 		public async ValueTask Query_WithReader_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			Test(context, db =>
 			{
@@ -237,7 +239,7 @@ namespace Tests.Linq
 			{
 				var res = await db.QueryAsync(r => r.GetInt32(0),sql, parameters, cancellationToken: default);
 				AssertResults(res.ToArray());
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -268,13 +270,13 @@ namespace Tests.Linq
 			{
 				var res = await db.QueryProcAsync(r => r.GetInt32(0), sql, input, output1, output2);
 				AssertResults(res.ToArray());
-			});
+			}, forceCloseSync: true);
 
 			await TestAsync(context, async db =>
 			{
 				var res = await db.QueryProcAsync(r => r.GetInt32(0), sql, cancellationToken: default, input, output1, output2);
 				AssertResults(res.ToArray());
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -289,7 +291,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask QueryProc_WithReader_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var parameters = new { input = 1 };
+			var parameters = new { input = 1, output1 = 0, output2 = 0 };
 			var sql = "QueryProcParameters";
 
 			Test(context, db =>
@@ -302,7 +304,7 @@ namespace Tests.Linq
 			{
 				var res = await db.QueryProcAsync(r => r.GetInt32(0), sql, parameters, cancellationToken: default);
 				AssertResults(res.ToArray());
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -317,7 +319,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask QueryToListAsync_WithReader([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var sql = "SELECT 1 UNION SELECT 2";
+			var sql = "SELECT 1 UNION ALL SELECT 2";
 
 			await TestAsync(context, async db =>
 			{
@@ -341,7 +343,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -370,7 +372,7 @@ namespace Tests.Linq
 		public async ValueTask QueryToListAsync_WithReader_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -392,7 +394,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask QueryToArrayAsync_WithReader([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var sql = "SELECT 1 UNION SELECT 2";
+			var sql = "SELECT 1 UNION ALL SELECT 2";
 
 			await TestAsync(context, async db =>
 			{
@@ -416,7 +418,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -445,7 +447,7 @@ namespace Tests.Linq
 		public async ValueTask QueryToArrayAsync_WithReader_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -467,7 +469,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask QueryToAsyncEnumerable_WithReader([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var sql = "SELECT 1 UNION SELECT 2";
+			var sql = "SELECT 1 UNION ALL SELECT 2";
 
 			await TestAsync(context, async db =>
 			{
@@ -493,7 +495,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -518,7 +520,7 @@ namespace Tests.Linq
 		public async ValueTask QueryToAsyncEnumerable_WithReader_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -544,7 +546,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -575,7 +577,7 @@ namespace Tests.Linq
 		public async ValueTask QueryForEachAsync_WithReader_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -598,7 +600,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask Query([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var sql = "SELECT 1 UNION SELECT 2";
+			var sql = "SELECT 1 UNION ALL SELECT 2";
 
 			Test(context, db =>
 			{
@@ -610,7 +612,7 @@ namespace Tests.Linq
 			{
 				var res = (await db.QueryAsync<int>(sql, cancellationToken: default)).ToArray();
 				AssertResults(res);
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -628,7 +630,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			Test(context, db =>
 			{
@@ -640,13 +642,13 @@ namespace Tests.Linq
 			{
 				var res = await db.QueryAsync<int>(sql, p1, p2);
 				AssertResults(res.ToArray());
-			});
+			}, forceCloseSync: true);
 
 			await TestAsync(context, async db =>
 			{
 				var res = await db.QueryAsync<int>(sql, cancellationToken: default, p1, p2);
 				AssertResults(res.ToArray());
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -663,7 +665,7 @@ namespace Tests.Linq
 		public async ValueTask Query_And_SingleDataParam([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var p1 = DataParameter.Int32("p1", 1);
-			var sql = "SELECT @p1 UNION SELECT @p1 + 2";
+			var sql = "SELECT @p1 UNION ALL SELECT @p1 + 2";
 
 			Test(context, db =>
 			{
@@ -675,7 +677,7 @@ namespace Tests.Linq
 			{
 				var res = await db.QueryAsync<int>(sql, p1, cancellationToken: default);
 				AssertResults(res.ToArray());
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -692,7 +694,7 @@ namespace Tests.Linq
 		public async ValueTask Query_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			Test(context, db =>
 			{
@@ -704,7 +706,7 @@ namespace Tests.Linq
 			{
 				var res = await db.QueryAsync<int>(sql, parameters, cancellationToken: default);
 				AssertResults(res.ToArray());
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -722,7 +724,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "SELECT @p2 as ID UNION SELECT @p1";
+			var sql = "SELECT @p2 as ID UNION ALL SELECT @p1";
 
 			Test(context, db =>
 			{
@@ -734,13 +736,13 @@ namespace Tests.Linq
 			{
 				var res = await db.QueryAsync(new { ID = 1 }, sql, p1, p2);
 				AssertResults(res.Select(r => r.ID).ToArray());
-			});
+			}, forceCloseSync: true);
 
 			await TestAsync(context, async db =>
 			{
 				var res = await db.QueryAsync(new { ID = 1 }, sql, cancellationToken: default, p1, p2);
 				AssertResults(res.Select(r => r.ID).ToArray());
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -757,7 +759,7 @@ namespace Tests.Linq
 		public async ValueTask Query_WithTemplate_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p2 AS ID UNION SELECT @p1";
+			var sql = "SELECT @p2 AS ID UNION ALL SELECT @p1";
 
 			Test(context, db =>
 			{
@@ -769,7 +771,7 @@ namespace Tests.Linq
 			{
 				var res = await db.QueryAsync(new { ID = 1 }, sql, parameters, cancellationToken: default);
 				AssertResults(res.Select(r => r.ID).ToArray());
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -866,13 +868,13 @@ namespace Tests.Linq
 			{
 				var res = await db.QueryProcAsync<Person>(sql, input, output1, output2);
 				AssertResults(res.Select(p => p.ID).ToArray());
-			});
+			}, forceCloseSync: true);
 
 			await TestAsync(context, async db =>
 			{
 				var res = await db.QueryProcAsync<Person>(sql, cancellationToken: default, input, output1, output2);
 				AssertResults(res.Select(p => p.ID).ToArray());
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -887,7 +889,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask QueryProc_With_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var parameters = new { input = 1 };
+			var parameters = new { input = 1, output1 = 0, output2 = 0 };
 			var sql = "QueryProcParameters";
 
 			Test(context, db =>
@@ -900,7 +902,7 @@ namespace Tests.Linq
 			{
 				var res = await db.QueryProcAsync<Person>(sql, parameters, cancellationToken: default);
 				AssertResults(res.Select(p => p.ID).ToArray());
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -930,13 +932,13 @@ namespace Tests.Linq
 			{
 				var res = await db.QueryProcAsync(new { PersonID = 1 }, sql, input, output1, output2);
 				AssertResults(res.Select(p => p.PersonID).ToArray());
-			});
+			}, forceCloseSync: true);
 
 			await TestAsync(context, async db =>
 			{
 				var res = await db.QueryProcAsync(new { PersonID = 1 }, sql, cancellationToken: default, input, output1, output2);
 				AssertResults(res.Select(p => p.PersonID).ToArray());
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -951,7 +953,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask QueryProc_WithTemplate_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var parameters = new { input = 1 };
+			var parameters = new { input = 1, output1 = 0, output2 = 0 };
 			var sql = "QueryProcParameters";
 
 			Test(context, db =>
@@ -964,7 +966,7 @@ namespace Tests.Linq
 			{
 				var res = await db.QueryProcAsync(new { PersonID = 1 }, sql, parameters, cancellationToken: default);
 				AssertResults(res.Select(p => p.PersonID).ToArray());
-			});
+			}, forceCloseSync: true);
 
 			static void AssertResults(int[] res)
 			{
@@ -986,23 +988,26 @@ namespace Tests.Linq
 		public async ValueTask QueryProcMultiple_With_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var p1 = DataParameter.Int32("input", 1);
+			var p2 = DataParameter.Int32("output1", 0);
+			var p3 = DataParameter.Int32("output2", 0);
+			var p4 = DataParameter.Int32("output3", 0);
 			var sql = "QueryProcMultipleParameters";
 
 			Test(context, db =>
 			{
-				var res = db.QueryProcMultiple<MultipleProcResultExample>(sql, p1);
+				var res = db.QueryProcMultiple<MultipleProcResultExample>(sql, p1, p2, p3, p4);
 				AssertResults(res);
 			});
 
 			await TestAsync(context, async db =>
 			{
-				var res = await db.QueryProcMultipleAsync<MultipleProcResultExample>(sql, p1);
+				var res = await db.QueryProcMultipleAsync<MultipleProcResultExample>(sql, p1, p2, p3, p4);
 				AssertResults(res);
 			});
 
 			await TestAsync(context, async db =>
 			{
-				var res = await db.QueryProcMultipleAsync<MultipleProcResultExample>(sql, cancellationToken: default, p1);
+				var res = await db.QueryProcMultipleAsync<MultipleProcResultExample>(sql, cancellationToken: default, p1, p2, p3, p4);
 				AssertResults(res);
 			});
 
@@ -1035,7 +1040,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask QueryProcMultiple_With_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var parameters = new { input = 2 };
+			var parameters = new { input = 2, output1 = 0, output2 = 0, output3 = 0 };
 			var sql = "QueryProcMultipleParameters";
 
 			Test(context, db =>
@@ -1079,7 +1084,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask QueryToListAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var sql = "SELECT 1 UNION SELECT 2";
+			var sql = "SELECT 1 UNION ALL SELECT 2";
 
 			await TestAsync(context, async db =>
 			{
@@ -1103,7 +1108,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1132,7 +1137,7 @@ namespace Tests.Linq
 		public async ValueTask QueryToListAsync_WithDataParmeter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var p1 = DataParameter.Int32("p1", 1);
-			var sql = "SELECT @p1 UNION SELECT @p1 + 2";
+			var sql = "SELECT @p1 UNION ALL SELECT @p1 + 2";
 
 			await TestAsync(context, async db =>
 			{
@@ -1155,7 +1160,7 @@ namespace Tests.Linq
 		public async ValueTask QueryToListAsync_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p1 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1177,7 +1182,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask QueryToArrayAsync([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var sql = "SELECT 1 UNION SELECT 2";
+			var sql = "SELECT 1 UNION ALL SELECT 2";
 
 			await TestAsync(context, async db =>
 			{
@@ -1201,7 +1206,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1230,7 +1235,7 @@ namespace Tests.Linq
 		public async ValueTask QueryToArrayAsync_WithDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var p1 = DataParameter.Int32("p1", 1);
-			var sql = "SELECT @p1 + 1 UNION SELECT @p1 + 3";
+			var sql = "SELECT @p1 + 1 UNION ALL SELECT @p1 + 3";
 
 			await TestAsync(context, async db =>
 			{
@@ -1253,7 +1258,7 @@ namespace Tests.Linq
 		public async ValueTask QueryToArrayAsync_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1275,7 +1280,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask QueryToAsyncEnumerable([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var sql = "SELECT 1 UNION SELECT 2";
+			var sql = "SELECT 1 UNION ALL SELECT 2";
 
 			await TestAsync(context, async db =>
 			{
@@ -1301,7 +1306,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1326,7 +1331,7 @@ namespace Tests.Linq
 		public async ValueTask QueryToAsyncEnumerable_WithDataParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var p1 = DataParameter.Int32("p1", 1);
-			var sql = "SELECT @p1 + 1 UNION SELECT @p1";
+			var sql = "SELECT @p1 + 1 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1351,7 +1356,7 @@ namespace Tests.Linq
 		public async ValueTask QueryToAsyncEnumerable_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1377,7 +1382,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1408,7 +1413,7 @@ namespace Tests.Linq
 		public async ValueTask QueryForEachAsync_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1433,7 +1438,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "SELECT @p2 AS Id UNION SELECT @p1";
+			var sql = "SELECT @p2 AS Id UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1462,7 +1467,7 @@ namespace Tests.Linq
 		public async ValueTask QueryToListAsync_WithTemplate_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 AS Id UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1486,7 +1491,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 AS Id UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1515,7 +1520,7 @@ namespace Tests.Linq
 		public async ValueTask QueryToArrayAsync_WithTemplate_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 AS Id UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1539,7 +1544,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 AS Id UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1564,7 +1569,7 @@ namespace Tests.Linq
 		public async ValueTask QueryToAsyncEnumerable_WithTemplate_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 AS Id UNION ALL SELECT @p1";
 
 			await TestAsync(context, async db =>
 			{
@@ -1613,7 +1618,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 1);
 			var p2 = DataParameter.Int32("p2", 2);
-			var sql = "UPDATE Person SET MiddleName = NULL WHERE MiddleName IS NULL AND PersionID NOT IN(@p1, @p2)";
+			var sql = "UPDATE Person SET MiddleName = NULL WHERE MiddleName IS NULL AND PersonID NOT IN(@p1, @p2)";
 
 			Test(context, db =>
 			{
@@ -1642,8 +1647,8 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask Execute_NonQuery_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "UPDATE Person SET MiddleName = NULL WHERE MiddleName IS NULL AND PersionID NOT IN(@p1, @p2)";
+			var parameters = new { p1 = 1, p2 = 2, output = 0 };
+			var sql = "UPDATE Person SET MiddleName = NULL WHERE MiddleName IS NULL AND PersonID NOT IN(@p1, @p2)";
 
 			Test(context, db =>
 			{
@@ -1667,23 +1672,24 @@ namespace Tests.Linq
 		public async ValueTask ExecuteProc_NonQuery_WithDataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var p1 = DataParameter.Int32("input", 2);
+			var p2 = DataParameter.Int32("output", 0);
 			var sql = "ExecuteProcIntParameters";
 
 			Test(context, db =>
 			{
-				var res = db.ExecuteProc(sql, p1);
+				var res = db.ExecuteProc(sql, p1, p2);
 				AssertResults(res);
 			});
 
 			await TestAsync(context, async db =>
 			{
-				var res = await db.ExecuteProcAsync(sql, p1);
+				var res = await db.ExecuteProcAsync(sql, p1, p2);
 				AssertResults(res);
 			});
 
 			await TestAsync(context, async db =>
 			{
-				var res = await db.ExecuteProcAsync(sql, cancellationToken: default, p1);
+				var res = await db.ExecuteProcAsync(sql, cancellationToken: default, p1, p2);
 				AssertResults(res);
 			});
 
@@ -1696,7 +1702,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask ExecuteProc_NonQuery_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var parameters = new { input = 1 };
+			var parameters = new { input = 1, output = 0 };
 			var sql = "ExecuteProcIntParameters";
 
 			Test(context, db =>
@@ -1823,23 +1829,24 @@ namespace Tests.Linq
 		public async ValueTask ExecuteProc_Scalar_WithDataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var p1 = DataParameter.Int32("input", 2);
+			var p2 = DataParameter.Int32("output", 2);
 			var sql = "ExecuteProcStringParameters";
 
 			Test(context, db =>
 			{
-				var res = db.ExecuteProc<string>(sql, p1);
+				var res = db.ExecuteProc<string>(sql, p1, p2);
 				AssertResults(res);
 			});
 
 			await TestAsync(context, async db =>
 			{
-				var res = await db.ExecuteProcAsync<string>(sql, p1);
+				var res = await db.ExecuteProcAsync<string>(sql, p1, p2);
 				AssertResults(res);
 			});
 
 			await TestAsync(context, async db =>
 			{
-				var res = await db.ExecuteProcAsync<string>(sql, cancellationToken: default, p1);
+				var res = await db.ExecuteProcAsync<string>(sql, cancellationToken: default, p1, p2);
 				AssertResults(res);
 			});
 
@@ -1852,7 +1859,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask ExecuteProc_Scalar_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var parameters = new { input = 1 };
+			var parameters = new { input = 1, output = 0 };
 			var sql = "ExecuteProcStringParameters";
 
 			Test(context, db =>
@@ -1876,7 +1883,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask ExecuteReader([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var sql = "SELECT 1 UNION SELECT 2";
+			var sql = "SELECT 1 UNION ALL SELECT 2";
 
 			Test(context, db =>
 			{
@@ -1910,7 +1917,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 2);
 			var p2 = DataParameter.Int32("p2", 1);
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			Test(context, db =>
 			{
@@ -1949,7 +1956,7 @@ namespace Tests.Linq
 		public async ValueTask ExecuteReader_With_SingleDataParam([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var p1 = DataParameter.Int32("p1", 1);
-			var sql = "SELECT @p1 UNION SELECT @p1 + 1";
+			var sql = "SELECT @p1 UNION ALL SELECT @p1 + 1";
 
 			Test(context, db =>
 			{
@@ -1982,7 +1989,7 @@ namespace Tests.Linq
 		public async ValueTask ExecuteReader_With_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var parameters = new { p1 = 1, p2 = 2 };
-			var sql = "SELECT @p1 UNION SELECT @p2";
+			var sql = "SELECT @p1 UNION ALL SELECT @p2";
 
 			Test(context, db =>
 			{
@@ -2016,7 +2023,7 @@ namespace Tests.Linq
 		{
 			var p1 = DataParameter.Int32("p1", 2);
 			var p2 = DataParameter.Int32("p2", 1);
-			var sql = "SELECT @p2 UNION SELECT @p1";
+			var sql = "SELECT @p2 UNION ALL SELECT @p1";
 
 			Test(context, db =>
 			{
@@ -2061,23 +2068,24 @@ namespace Tests.Linq
 		public async ValueTask ExecuteReaderProc_With_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var p1 = DataParameter.Int32("input", 2);
+			var p2 = DataParameter.Int32("output", 0);
 			var sql = "ExecuteProcStringParameters";
 
 			Test(context, db =>
 			{
-				using var res = db.ExecuteReaderProc(sql, p1);
+				using var res = db.ExecuteReaderProc(sql, p1, p2);
 				AssertResults(res);
 			});
 
 			await TestAsync(context, async db =>
 			{
-				await using var res = await db.ExecuteReaderProcAsync(sql, p1);
+				await using var res = await db.ExecuteReaderProcAsync(sql, p1, p2);
 				AssertResults(res);
 			});
 
 			await TestAsync(context, async db =>
 			{
-				await using var res = await db.ExecuteReaderProcAsync(sql, cancellationToken: default, p1);
+				await using var res = await db.ExecuteReaderProcAsync(sql, cancellationToken: default, p1, p2);
 				AssertResults(res);
 			});
 
@@ -2099,7 +2107,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask ExecuteReaderProc_With_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			var parameters = new { input = 1 };
+			var parameters = new { input = 1, output = 0 };
 			var sql = "ExecuteProcStringParameters";
 
 			Test(context, db =>
@@ -2149,7 +2157,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async ValueTask BulkCopy_Enumerable([DataSources(false)] string context, [Values] BulkCopyType type)
+		public async ValueTask BulkCopy_Enumerable([DataSources(false)] string context, [Values(BulkCopyType.RowByRow, BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType type)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<BulkCopyTable>();
@@ -2188,80 +2196,88 @@ namespace Tests.Linq
 				db.GetTable<BulkCopyTable>().BulkCopy(BulkCopyTable.Data);
 			});
 
+			// provider doesn't have async BulkCopy API
+			var forceSync = type == BulkCopyType.ProviderSpecific
+				&& context.IsAnyOf(TestProvName.AllOracle);
+
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				await db.BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.Data);
-			});
+			}, forceSync: forceSync);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.BulkCopyAsync(1, BulkCopyTable.Data);
-			});
+			}, forceSync: forceSync);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.BulkCopyAsync(BulkCopyTable.Data);
-			});
+			}, forceSync: forceSync);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.Data);
-			});
+			}, forceSync: forceSync);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(1, BulkCopyTable.Data);
-			});
+			}, forceSync: forceSync);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(BulkCopyTable.Data);
-			});
+			}, forceSync: forceSync);
 		}
 
 		[Test]
-		public async ValueTask BulkCopy_AsyncEnumerable([DataSources(false)] string context, [Values] BulkCopyType type)
+		public async ValueTask BulkCopy_AsyncEnumerable([DataSources(false)] string context, [Values(BulkCopyType.RowByRow, BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType type)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<BulkCopyTable>();
 
+			// provider doesn't have async BulkCopy API
+			var forceSync = type == BulkCopyType.ProviderSpecific
+				&& context.IsAnyOf(TestProvName.AllOracle);
+
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				await db.BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
-			});
+			}, forceSync: forceSync);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.BulkCopyAsync(1, BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
-			});
+			}, forceSync: forceSync);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.BulkCopyAsync(BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
-			});
+			}, forceSync: forceSync);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
-			});
+			}, forceSync: forceSync);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(1, BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
-			});
+			}, forceSync: forceSync);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
-			});
+			}, forceSync: forceSync);
 		}
 
 		[Test]
@@ -2440,7 +2456,7 @@ namespace Tests.Linq
 			}
 		}
 
-		async ValueTask TestBulkCopyAsync(ITable<BulkCopyTable> table, string context, Func<IDataContext, ValueTask> action, Func<DataOptions, DataOptions>? customOptions = null)
+		async ValueTask TestBulkCopyAsync(ITable<BulkCopyTable> table, string context, Func<IDataContext, ValueTask> action, Func<DataOptions, DataOptions>? customOptions = null, bool forceSync = false)
 		{
 			var options = new DataOptions().UseConfiguration(context);
 			if (customOptions != null)
@@ -2463,7 +2479,10 @@ namespace Tests.Linq
 
 				await action(db);
 
-				open.AssertCounters(1, 0);
+				if (forceSync)
+					open.AssertCounters(1, 0);
+				else
+					open.AssertCounters(0, 1);
 				close.AssertCounters(0, 0);
 			}
 
@@ -2477,8 +2496,16 @@ namespace Tests.Linq
 
 				await action(db);
 
-				open.AssertCounters(1, 0);
-				close.AssertCounters(1, 0);
+				if (forceSync)
+				{
+					open.AssertCounters(1, 0);
+					close.AssertCounters(1, 0);
+				}
+				else
+				{
+					open.AssertCounters(0, 1);
+					close.AssertCounters(0, 1);
+				}
 			}
 
 			AssertResults(table);
@@ -2525,8 +2552,8 @@ namespace Tests.Linq
 
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(records[0].Id, Is.EqualTo(1));
-					Assert.That(records[1].Id, Is.EqualTo(2));
+					Assert.That(records[0].Id, Is.EqualTo(2));
+					Assert.That(records[1].Id, Is.EqualTo(3));
 				}
 			});
 
@@ -2542,8 +2569,8 @@ namespace Tests.Linq
 
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(records[0].Id, Is.EqualTo(1));
-					Assert.That(records[1].Id, Is.EqualTo(2));
+					Assert.That(records[0].Id, Is.EqualTo(2));
+					Assert.That(records[1].Id, Is.EqualTo(3));
 				}
 			});
 		}

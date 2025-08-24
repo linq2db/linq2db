@@ -382,7 +382,7 @@ namespace LinqToDB.Data
 			var stopwatch  = Stopwatch.StartNew();
 			var rowCount   = 0;
 
-			using (disposeReader ? (IDisposable?)null : new ReleaseQuery(_dataContext as DataContext))
+			using (!disposeReader ? (IDisposable?)null : new ReleaseQuery(_dataContext as DataContext))
 			using (scope)
 				try
 				{

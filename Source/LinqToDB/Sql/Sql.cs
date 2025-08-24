@@ -1446,6 +1446,9 @@ namespace LinqToDB
 		/// <summary>
 		/// Returns last identity value (current value) for specific table.
 		/// </summary>
+		/// <remarks>
+		/// Note that for SQL Server this function will return start value if no values were generated yet.
+		/// </remarks>
 		[Function  (PN.SqlServer    , "IDENT_CURRENT", ServerSideOnly = true, CanBeNull = true)]
 		[Expression(                  "NULL"         , ServerSideOnly = true, CanBeNull = true)]
 		internal static object? CurrentIdentity(string tableName) => throw new ServerSideOnlyException(nameof(CurrentIdentity));
