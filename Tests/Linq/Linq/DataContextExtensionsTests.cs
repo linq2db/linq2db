@@ -2050,6 +2050,84 @@ namespace Tests.Linq
 			}
 		}
 
+		/// <summary>
+		/// 
+		/// 
+		/// </summary>
+		/// 
+
+		[Test]
+		public async ValueTask ExecuteReaderProc_With_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("input", 2);
+			var sql = "ExecuteProcStringParameters";
+
+			Test(context, db =>
+			{
+				using var res = db.ExecuteReaderProc(sql, p1);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				await using var res = await db.ExecuteReaderProcAsync(sql, p1);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				await using var res = await db.ExecuteReaderProcAsync(sql, cancellationToken: default, p1);
+				AssertResults(res);
+			});
+
+			static void AssertResults(DataReaderAsync res)
+			{
+				var cnt = 0;
+				while (res.Reader!.Read())
+				{
+					cnt++;
+					var v = res.Reader.GetString(0);
+
+					Assert.That(v, Is.EqualTo("издрасте"));
+				}
+
+				Assert.That(cnt, Is.EqualTo(1));
+			}
+		}
+
+		[Test]
+		public async ValueTask ExecuteReaderProc_With_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { input = 1 };
+			var sql = "ExecuteProcStringParameters";
+
+			Test(context, db =>
+			{
+				using var res = db.ExecuteReaderProc(sql, parameters);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				await using var res = await db.ExecuteReaderProcAsync(sql, parameters, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(DataReaderAsync res)
+			{
+				var cnt = 0;
+				while (res.Reader!.Read())
+				{
+					cnt++;
+					var v = res.Reader.GetString(0);
+
+					Assert.That(v, Is.EqualTo("издрасте"));
+				}
+
+				Assert.That(cnt, Is.EqualTo(1));
+			}
+		}
+
 		sealed class BulkCopyTable
 		{
 			[PrimaryKey] public int Id { get; set; }
