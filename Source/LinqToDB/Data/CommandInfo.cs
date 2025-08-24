@@ -392,7 +392,7 @@ namespace LinqToDB.Data
 
 						DbDataReader reader;
 
-						if (dataConnection is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: {} interceptor })
+						if (dataConnection is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 						{
 							using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
 								reader = interceptor.UnwrapDataReader(dataConnection, rd.DataReader!);
