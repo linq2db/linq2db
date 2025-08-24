@@ -539,6 +539,62 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public async ValueTask QueryForEachAsync_WithReader_And_DataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = new List<int>();
+				await db.QueryForEachAsync(r => r.GetInt32(0), r => res.Add(r), sql, p1, p2);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = new List<int>();
+				await db.QueryForEachAsync(r => r.GetInt32(0), r => res.Add(r), sql, cancellationToken: default, p1, p2);
+				AssertResults(res);
+			});
+
+			static void AssertResults(List<int> res)
+			{
+				Assert.That(res, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryForEachAsync_WithReader_And_ObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = new List<int>();
+				await db.QueryForEachAsync(r => r.GetInt32(0), r => res.Add(r), sql, parameters, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(List<int> res)
+			{
+				Assert.That(res, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
 		public async ValueTask Query([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			var sql = "SELECT 1 UNION SELECT 2";
@@ -1312,6 +1368,62 @@ namespace Tests.Linq
 				}
 
 				Assert.That(cnt, Is.Zero);
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryForEachAsync_WithDataParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var p1 = DataParameter.Int32("p1", 1);
+			var p2 = DataParameter.Int32("p2", 2);
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = new List<int>();
+				await db.QueryForEachAsync<int>(r => res.Add(r), sql, p1, p2);
+				AssertResults(res);
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var res = new List<int>();
+				await db.QueryForEachAsync<int>(r => res.Add(r), sql, cancellationToken: default, p1, p2);
+				AssertResults(res);
+			});
+
+			static void AssertResults(List<int> res)
+			{
+				Assert.That(res, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask QueryForEachAsync_WithObjectParams([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var parameters = new { p1 = 1, p2 = 2 };
+			var sql = "SELECT @p2 UNION SELECT @p1";
+
+			await TestAsync(context, async db =>
+			{
+				var res = new List<int>();
+				await db.QueryForEachAsync<int>(r => res.Add(r), sql, parameters, cancellationToken: default);
+				AssertResults(res);
+			});
+
+			static void AssertResults(List<int> res)
+			{
+				Assert.That(res, Has.Count.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0], Is.EqualTo(2));
+					Assert.That(res[1], Is.EqualTo(1));
+				}
 			}
 		}
 
