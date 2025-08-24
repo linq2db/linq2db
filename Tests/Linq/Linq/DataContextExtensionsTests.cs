@@ -11,6 +11,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
+using LinqToDB.Tools;
 
 using Microsoft.Identity.Client;
 
@@ -2497,6 +2498,54 @@ namespace Tests.Linq
 					Assert.That(res[1].Value, Is.EqualTo(20));
 				}
 			}
+		}
+
+		[Table]
+		sealed class RetrieveIdentityTable
+		{
+			[PrimaryKey, Identity] public int Id { get; set; }
+			[Column] public int Value { get; set; }
+		}
+
+		[Test]
+		public async ValueTask RetrieveIdentity([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<RetrieveIdentityTable>();
+
+			Test(context, db =>
+			{
+				var records = new RetrieveIdentityTable[]
+				{
+					new(),
+					new(),
+				};
+
+				records.RetrieveIdentity(db, useIdentity: true);
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(records[0].Id, Is.EqualTo(1));
+					Assert.That(records[1].Id, Is.EqualTo(2));
+				}
+			});
+
+			await TestAsync(context, async db =>
+			{
+				var records = new RetrieveIdentityTable[]
+				{
+					new(),
+					new(),
+				};
+
+				await records.RetrieveIdentityAsync(db, useIdentity: true, cancellationToken: default);
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(records[0].Id, Is.EqualTo(1));
+					Assert.That(records[1].Id, Is.EqualTo(2));
+				}
+			});
 		}
 	}
 }
