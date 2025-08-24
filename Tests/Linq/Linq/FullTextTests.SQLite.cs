@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.DataProvider.SQLite;
@@ -428,6 +429,21 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public async ValueTask Fts3CommandOptimizeAsync([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.AddMappingSchema(SetupFtsMapping(type));
+
+				await db.FTS3OptimizeAsync(db.GetTable<FtsTable>());
+
+				var tableName = type.ToString() + "_TABLE";
+
+				Assert.That(db.LastQuery, Is.EqualTo($"INSERT INTO [{tableName}]([{tableName}]) VALUES('optimize')"));
+			}
+		}
+
+		[Test]
 		public void Fts3CommandRebuild([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = GetDataConnection(context))
@@ -435,6 +451,21 @@ namespace Tests.Linq
 				db.AddMappingSchema(SetupFtsMapping(type));
 
 				db.FTS3Rebuild(db.GetTable<FtsTable>());
+
+				var tableName = type.ToString() + "_TABLE";
+
+				Assert.That(db.LastQuery, Is.EqualTo($"INSERT INTO [{tableName}]([{tableName}]) VALUES('rebuild')"));
+			}
+		}
+
+		[Test]
+		public async ValueTask Fts3CommandRebuildAsync([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.AddMappingSchema(SetupFtsMapping(type));
+
+				await db.FTS3RebuildAsync(db.GetTable<FtsTable>());
 
 				var tableName = type.ToString() + "_TABLE";
 
@@ -458,6 +489,21 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public async ValueTask Fts3CommandIntegrityCheckAsync([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.AddMappingSchema(SetupFtsMapping(type));
+
+				await db.FTS3IntegrityCheckAsync(db.GetTable<FtsTable>());
+
+				var tableName = type.ToString() + "_TABLE";
+
+				Assert.That(db.LastQuery, Is.EqualTo($"INSERT INTO [{tableName}]([{tableName}]) VALUES('integrity-check')"));
+			}
+		}
+
+		[Test]
 		public void Fts3CommandMerge([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = GetDataConnection(context))
@@ -473,6 +519,21 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public async ValueTask Fts3CommandMergeAsync([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.AddMappingSchema(SetupFtsMapping(type));
+
+				await db.FTS3MergeAsync(db.GetTable<FtsTable>(), 4, 3);
+
+				var tableName = type.ToString() + "_TABLE";
+
+				Assert.That(db.LastQuery, Is.EqualTo($"INSERT INTO [{tableName}]([{tableName}]) VALUES('merge=4,3')"));
+			}
+		}
+
+		[Test]
 		public void Fts3CommandAutoMerge([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
 			using (var db = GetDataConnection(context))
@@ -480,6 +541,21 @@ namespace Tests.Linq
 				db.AddMappingSchema(SetupFtsMapping(type));
 
 				db.FTS3AutoMerge(db.GetTable<FtsTable>(), 5);
+
+				var tableName = type.ToString() + "_TABLE";
+
+				Assert.That(db.LastQuery, Is.EqualTo($"INSERT INTO [{tableName}]([{tableName}]) VALUES('automerge=5')"));
+			}
+		}
+
+		[Test]
+		public async ValueTask Fts3CommandAutoMergeAsync([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.AddMappingSchema(SetupFtsMapping(type));
+
+				await db.FTS3AutoMergeAsync(db.GetTable<FtsTable>(), 5);
 
 				var tableName = type.ToString() + "_TABLE";
 
@@ -510,6 +586,28 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public async ValueTask Fts5CommandAutoMergeAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
+
+				try
+				{
+					await db.FTS5AutoMergeAsync(db.GetTable<FtsTable>(), 5);
+				}
+				catch
+				{
+					// we don't have FTS5 table, but we need to get sql for validation
+				}
+				finally
+				{
+					Assert.That(db.LastQuery, Is.EqualTo("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rank) VALUES('automerge', 5)"));
+				}
+			}
+		}
+
+		[Test]
 		public void Fts5CommandCrisisMerge([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -519,6 +617,28 @@ namespace Tests.Linq
 				try
 				{
 					db.FTS5CrisisMerge(db.GetTable<FtsTable>(), 2);
+				}
+				catch
+				{
+					// we don't have FTS5 table, but we need to get sql for validation
+				}
+				finally
+				{
+					Assert.That(db.LastQuery, Is.EqualTo("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rank) VALUES('crisismerge', 2)"));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask Fts5CommandCrisisMergeAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
+
+				try
+				{
+					await db.FTS5CrisisMergeAsync(db.GetTable<FtsTable>(), 2);
 				}
 				catch
 				{
@@ -570,6 +690,44 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public async ValueTask Fts5CommandDeleteAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				var commandInterceptor = new SaveCommandInterceptor();
+				db.AddInterceptor(commandInterceptor);
+
+				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
+
+				try
+				{
+					var record = new FtsTable()
+					{
+						text1 = "one",
+						text2 = "two"
+					};
+
+					await db.FTS5DeleteAsync(db.GetTable<FtsTable>(), 2, record);
+				}
+				catch
+				{
+					// we don't have FTS5 table, but we need to get sql for validation
+				}
+				finally
+				{
+					using (Assert.EnterMultipleScope())
+					{
+						Assert.That(db.LastQuery, Is.EqualTo("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rowid, [text1], [text2]) VALUES('delete', 2, @p0, @p1)"));
+
+						Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(2));
+						Assert.That(commandInterceptor.Parameters.Any(p => p.Value!.Equals("one")), Is.True);
+						Assert.That(commandInterceptor.Parameters.Any(p => p.Value!.Equals("two")), Is.True);
+					}
+				}
+			}
+		}
+
+		[Test]
 		public void Fts5CommandDeleteAll([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -579,6 +737,28 @@ namespace Tests.Linq
 				try
 				{
 					db.FTS5DeleteAll(db.GetTable<FtsTable>());
+				}
+				catch
+				{
+					// we don't have FTS5 table, but we need to get sql for validation
+				}
+				finally
+				{
+					Assert.That(db.LastQuery, Is.EqualTo("INSERT INTO [FTS5_TABLE]([FTS5_TABLE]) VALUES('delete-all')"));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask Fts5CommandDeleteAllAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
+
+				try
+				{
+					await db.FTS5DeleteAllAsync(db.GetTable<FtsTable>());
 				}
 				catch
 				{
@@ -614,6 +794,28 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public async ValueTask Fts5CommandIntegrityCheckAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
+
+				try
+				{
+					await db.FTS5IntegrityCheckAsync(db.GetTable<FtsTable>());
+				}
+				catch
+				{
+					// we don't have FTS5 table, but we need to get sql for validation
+				}
+				finally
+				{
+					Assert.That(db.LastQuery, Is.EqualTo("INSERT INTO [FTS5_TABLE]([FTS5_TABLE]) VALUES('integrity-check')"));
+				}
+			}
+		}
+
+		[Test]
 		public void Fts5CommandMerge([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -623,6 +825,28 @@ namespace Tests.Linq
 				try
 				{
 					db.FTS5Merge(db.GetTable<FtsTable>(), 234);
+				}
+				catch
+				{
+					// we don't have FTS5 table, but we need to get sql for validation
+				}
+				finally
+				{
+					Assert.That(db.LastQuery, Is.EqualTo("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rank) VALUES('merge', 234)"));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask Fts5CommandMergeAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
+
+				try
+				{
+					await db.FTS5MergeAsync(db.GetTable<FtsTable>(), 234);
 				}
 				catch
 				{
@@ -658,6 +882,28 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public async ValueTask Fts5CommandOptimizeAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
+
+				try
+				{
+					await db.FTS5OptimizeAsync(db.GetTable<FtsTable>());
+				}
+				catch
+				{
+					// we don't have FTS5 table, but we need to get sql for validation
+				}
+				finally
+				{
+					Assert.That(db.LastQuery, Is.EqualTo("INSERT INTO [FTS5_TABLE]([FTS5_TABLE]) VALUES('optimize')"));
+				}
+			}
+		}
+
+		[Test]
 		public void Fts5CommandPgsz([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -667,6 +913,28 @@ namespace Tests.Linq
 				try
 				{
 					db.FTS5Pgsz(db.GetTable<FtsTable>(), 3333);
+				}
+				catch
+				{
+					// we don't have FTS5 table, but we need to get sql for validation
+				}
+				finally
+				{
+					Assert.That(db.LastQuery, Is.EqualTo("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rank) VALUES('pgsz', 3333)"));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask Fts5CommandPgszAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
+
+				try
+				{
+					await db.FTS5PgszAsync(db.GetTable<FtsTable>(), 3333);
 				}
 				catch
 				{
@@ -712,6 +980,38 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public async ValueTask Fts5CommandRankasync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				var commandInterceptor = new SaveCommandInterceptor();
+				db.AddInterceptor(commandInterceptor);
+
+				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
+
+				try
+				{
+					await db.FTS5RankAsync(db.GetTable<FtsTable>(), "strange('function\")");
+				}
+				catch
+				{
+					// we don't have FTS5 table, but we need to get sql for validation
+				}
+				finally
+				{
+					using (Assert.EnterMultipleScope())
+					{
+						Assert.That(db.LastQuery, Is.EqualTo("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rank) VALUES('rank', @rank)"));
+
+						Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(1));
+					}
+
+					Assert.That(commandInterceptor.Parameters[0].Value, Is.EqualTo("strange('function\")"));
+				}
+			}
+		}
+
+		[Test]
 		public void Fts5CommandRebuild([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -721,6 +1021,28 @@ namespace Tests.Linq
 				try
 				{
 					db.FTS5Rebuild(db.GetTable<FtsTable>());
+				}
+				catch
+				{
+					// we don't have FTS5 table, but we need to get sql for validation
+				}
+				finally
+				{
+					Assert.That(db.LastQuery, Is.EqualTo("INSERT INTO [FTS5_TABLE]([FTS5_TABLE]) VALUES('rebuild')"));
+				}
+			}
+		}
+
+		[Test]
+		public async ValueTask Fts5CommandRebuildAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
+
+				try
+				{
+					await db.FTS5RebuildAsync(db.GetTable<FtsTable>());
 				}
 				catch
 				{
@@ -754,6 +1076,29 @@ namespace Tests.Linq
 				}
 			}
 		}
+
+		[Test]
+		public async ValueTask Fts5CommandUserMergeAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
+
+				try
+				{
+					await db.FTS5UserMergeAsync(db.GetTable<FtsTable>(), 7);
+				}
+				catch
+				{
+					// we don't have FTS5 table, but we need to get sql for validation
+				}
+				finally
+				{
+					Assert.That(db.LastQuery, Is.EqualTo("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rank) VALUES('usermerge', 7)"));
+				}
+			}
+		}
+
 		#endregion
 
 		#region FTS shadow tables
