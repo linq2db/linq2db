@@ -130,9 +130,9 @@ namespace LinqToDB.Tools
 					var sequenceName = useSequenceName && column.SequenceName != null ? column.SequenceName.SequenceName : null;
 
 					if (sequenceName != null)
-						{
-                            await GetColumnSequenceValuesAsync(context, sourceList, column, sqlBuilder, sequenceName, cancellationToken).ConfigureAwait(false);
-                        }
+					{
+						await GetColumnSequenceValuesAsync(context, sourceList, column, sqlBuilder, sequenceName, cancellationToken).ConfigureAwait(false);
+					}
 					else
 					{
 						if (useIdentity)
