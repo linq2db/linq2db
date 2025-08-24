@@ -367,6 +367,11 @@ namespace LinqToDB.CodeModel
 			public static IType DataExtensions            { get; } = Parser.Parse(typeof(DataExtensions));
 
 			/// <summary>
+			/// <see cref="global::LinqToDB.DataContext"/> type descriptor.
+			/// </summary>
+			public static IType DataContext { get; } = Parser.Parse<DataContext>();
+
+			/// <summary>
 			/// <see cref="Async.AsyncExtensions"/> type descriptor.
 			/// </summary>
 			public static IType AsyncExtensions           { get; } = Parser.Parse(typeof(AsyncExtensions));
