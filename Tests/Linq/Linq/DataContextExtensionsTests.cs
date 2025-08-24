@@ -2162,77 +2162,81 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<BulkCopyTable>();
 
+			var forceAsyncClose = type == BulkCopyType.ProviderSpecific && context.IsAnyOf(ProviderName.ClickHouseDriver);
+
 			TestBulkCopy(tb, context, db =>
 			{
 				db.BulkCopy(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.Data);
-			});
+			}, forceAsyncClose: forceAsyncClose);
 
 			TestBulkCopy(tb, context, db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				db.BulkCopy(1, BulkCopyTable.Data);
-			});
+			}, forceAsyncClose: forceAsyncClose);
 
 			TestBulkCopy(tb, context, db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				db.BulkCopy(BulkCopyTable.Data);
-			});
+			}, forceAsyncClose: forceAsyncClose);
 
 			TestBulkCopy(tb, context, db =>
 			{
 				db.GetTable<BulkCopyTable>().BulkCopy(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.Data);
-			});
+			}, forceAsyncClose: forceAsyncClose);
 
 			TestBulkCopy(tb, context, db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				db.GetTable<BulkCopyTable>().BulkCopy(1, BulkCopyTable.Data);
-			});
+			}, forceAsyncClose: forceAsyncClose);
 
 			TestBulkCopy(tb, context, db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				db.GetTable<BulkCopyTable>().BulkCopy(BulkCopyTable.Data);
-			});
+			}, forceAsyncClose: forceAsyncClose);
 
 			// provider doesn't have async BulkCopy API
-			var forceSync = type == BulkCopyType.ProviderSpecific
+			var forceSyncOpen = type == BulkCopyType.ProviderSpecific
 				&& context.IsAnyOf(TestProvName.AllOracle);
+			var forceSyncClose = type == BulkCopyType.ProviderSpecific
+				&& context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllInformix);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				await db.BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.Data);
-			}, forceSync: forceSync);
+			}, forceSyncOpen: forceSyncOpen, forceSyncClose: forceSyncClose);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.BulkCopyAsync(1, BulkCopyTable.Data);
-			}, forceSync: forceSync);
+			}, forceSyncOpen: forceSyncOpen, forceSyncClose: forceSyncClose);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.BulkCopyAsync(BulkCopyTable.Data);
-			}, forceSync: forceSync);
+			}, forceSyncOpen: forceSyncOpen, forceSyncClose: forceSyncClose);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.Data);
-			}, forceSync: forceSync);
+			}, forceSyncOpen: forceSyncOpen, forceSyncClose: forceSyncClose);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(1, BulkCopyTable.Data);
-			}, forceSync: forceSync);
+			}, forceSyncOpen: forceSyncOpen, forceSyncClose: forceSyncClose);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(BulkCopyTable.Data);
-			}, forceSync: forceSync);
+			}, forceSyncOpen: forceSyncOpen, forceSyncClose: forceSyncClose);
 		}
 
 		[Test]
@@ -2242,42 +2246,44 @@ namespace Tests.Linq
 			using var tb = db.CreateLocalTable<BulkCopyTable>();
 
 			// provider doesn't have async BulkCopy API
-			var forceSync = type == BulkCopyType.ProviderSpecific
+			var forceSyncOpen = type == BulkCopyType.ProviderSpecific
 				&& context.IsAnyOf(TestProvName.AllOracle);
+			var forceSyncClose = type == BulkCopyType.ProviderSpecific
+				&& context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllInformix);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				await db.BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
-			}, forceSync: forceSync);
+			}, forceSyncOpen: forceSyncOpen, forceSyncClose: forceSyncClose);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.BulkCopyAsync(1, BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
-			}, forceSync: forceSync);
+			}, forceSyncOpen: forceSyncOpen, forceSyncClose: forceSyncClose);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.BulkCopyAsync(BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
-			}, forceSync: forceSync);
+			}, forceSyncOpen: forceSyncOpen, forceSyncClose: forceSyncClose);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(type), BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
-			}, forceSync: forceSync);
+			}, forceSyncOpen: forceSyncOpen, forceSyncClose: forceSyncClose);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(1, BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
-			}, forceSync: forceSync);
+			}, forceSyncOpen: forceSyncOpen, forceSyncClose: forceSyncClose);
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(type));
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(BulkCopyTable.AsyncEnumerableData(), cancellationToken: default);
-			}, forceSync: forceSync);
+			}, forceSyncOpen: forceSyncOpen, forceSyncClose: forceSyncClose);
 		}
 
 		[Test]
@@ -2396,7 +2402,7 @@ namespace Tests.Linq
 			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
 		}
 
-		void TestBulkCopy(ITable<BulkCopyTable> table, string context, Action<IDataContext> action, Func<DataOptions, DataOptions>? customOptions = null)
+		void TestBulkCopy(ITable<BulkCopyTable> table, string context, Action<IDataContext> action, Func<DataOptions, DataOptions>? customOptions = null, bool forceAsyncClose = false)
 		{
 			var options = new DataOptions().UseConfiguration(context);
 			if (customOptions != null)
@@ -2406,9 +2412,9 @@ namespace Tests.Linq
 			using (var db = new DataConnection(options))
 			{
 				action(db);
-			}
 
-			AssertResults(table);
+				AssertResults(db.GetTable<BulkCopyTable>());
+			}
 
 			// test with DataContext
 			var open = new CountOpenInterceptor();
@@ -2421,9 +2427,9 @@ namespace Tests.Linq
 
 				open.AssertCounters(1, 0);
 				close.AssertCounters(0, 0);
-			}
 
-			AssertResults(table);
+				AssertResults(db.GetTable<BulkCopyTable>());
+			}
 
 			open = new CountOpenInterceptor();
 			close = new CountCloseInterceptor();
@@ -2434,10 +2440,14 @@ namespace Tests.Linq
 				action(db);
 
 				open.AssertCounters(1, 0);
-				close.AssertCounters(1, 0);
-			}
 
-			AssertResults(table);
+				if (forceAsyncClose)
+					close.AssertCounters(0, 1);
+				else
+					close.AssertCounters(1, 0);
+
+				AssertResults(db.GetTable<BulkCopyTable>());
+			}
 
 			static void AssertResults(ITable<BulkCopyTable> table)
 			{
@@ -2456,7 +2466,7 @@ namespace Tests.Linq
 			}
 		}
 
-		async ValueTask TestBulkCopyAsync(ITable<BulkCopyTable> table, string context, Func<IDataContext, ValueTask> action, Func<DataOptions, DataOptions>? customOptions = null, bool forceSync = false)
+		async ValueTask TestBulkCopyAsync(ITable<BulkCopyTable> table, string context, Func<IDataContext, ValueTask> action, Func<DataOptions, DataOptions>? customOptions = null, bool forceSyncOpen = false, bool forceSyncClose = false)
 		{
 			var options = new DataOptions().UseConfiguration(context);
 			if (customOptions != null)
@@ -2466,9 +2476,9 @@ namespace Tests.Linq
 			using (var db = new DataConnection(options))
 			{
 				await action(db);
+			
+				AssertResults(db.GetTable<BulkCopyTable>());
 			}
-
-			AssertResults(table);
 
 			// test with DataContext
 			var open = new CountOpenInterceptor();
@@ -2479,14 +2489,14 @@ namespace Tests.Linq
 
 				await action(db);
 
-				if (forceSync)
+				if (forceSyncOpen)
 					open.AssertCounters(1, 0);
 				else
 					open.AssertCounters(0, 1);
 				close.AssertCounters(0, 0);
-			}
 
-			AssertResults(table);
+				AssertResults(db.GetTable<BulkCopyTable>());
+			}
 
 			open = new CountOpenInterceptor();
 			close = new CountCloseInterceptor();
@@ -2496,19 +2506,18 @@ namespace Tests.Linq
 
 				await action(db);
 
-				if (forceSync)
-				{
+				if (forceSyncOpen)
 					open.AssertCounters(1, 0);
-					close.AssertCounters(1, 0);
-				}
 				else
-				{
 					open.AssertCounters(0, 1);
-					close.AssertCounters(0, 1);
-				}
-			}
 
-			AssertResults(table);
+				if (forceSyncClose)
+					close.AssertCounters(1, 0);
+				else
+					close.AssertCounters(0, 1);
+
+				AssertResults(db.GetTable<BulkCopyTable>());
+			}
 
 			static void AssertResults(ITable<BulkCopyTable> table)
 			{
