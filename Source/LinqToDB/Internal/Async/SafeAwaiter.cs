@@ -11,101 +11,49 @@ namespace LinqToDB.Internal.Async
 	{
 		public static T Run<T>(Func<ValueTask<T>> task)
 		{
-			try
-			{
-				// awaited ValueTask retrieved in Task.Run context as doing it in main thread could cause deadlock too
-				var awaitable = Task.Run(async () => await task().ConfigureAwait(false));
-				awaitable.Wait();
+			// awaited ValueTask retrieved in Task.Run context as doing it in main thread could cause deadlock too
+			var awaitable = Task.Run(async () => await task().ConfigureAwait(false));
 
-				return awaitable.Result;
-			}
-			catch (AggregateException ex) when (ex.InnerException != null)
-			{
-				throw ex.InnerException;
-			}
+			return awaitable.GetAwaiter().GetResult();
 		}
 
 		public static T Run<T>(Func<CancellationToken, ValueTask<T>> task)
 		{
-			try
-			{
-				// awaited ValueTask retrieved in Task.Run context as doing it in main thread could cause deadlock too
-				var awaitable = Task.Run(async () => await task(default).ConfigureAwait(false));
-				awaitable.Wait();
-				return awaitable.Result;
-			}
-			catch (AggregateException ex) when(ex.InnerException != null)
-			{
-				throw ex.InnerException;
-			}
+			// awaited ValueTask retrieved in Task.Run context as doing it in main thread could cause deadlock too
+			var awaitable = Task.Run(async () => await task(default).ConfigureAwait(false));
+
+			return awaitable.GetAwaiter().GetResult();
 		}
 
 		public static T Run<T>(Func<Task<T>> task)
 		{
-			try
-			{
-				// awaited ValueTask retrieved in Task.Run context as doing it in main thread could cause deadlock too
-				var awaitable = Task.Run(async () => await task().ConfigureAwait(false));
-				awaitable.Wait();
+			// awaited ValueTask retrieved in Task.Run context as doing it in main thread could cause deadlock too
+			var awaitable = Task.Run(async () => await task().ConfigureAwait(false));
 
-				return awaitable.Result;
-			}
-			catch (AggregateException ex) when (ex.InnerException != null)
-			{
-				throw ex.InnerException;
-			}
+			return awaitable.GetAwaiter().GetResult();
 		}
 
 		public static T Run<T>(Func<CancellationToken, Task<T>> task)
 		{
-			try
-			{
-				// awaited ValueTask retrieved in Task.Run context as doing it in main thread could cause deadlock too
-				var awaitable = Task.Run(async () => await task(default).ConfigureAwait(false));
-				awaitable.Wait();
+			// awaited ValueTask retrieved in Task.Run context as doing it in main thread could cause deadlock too
+			var awaitable = Task.Run(async () => await task(default).ConfigureAwait(false));
 
-				return awaitable.Result;
-			}
-			catch (AggregateException ex) when (ex.InnerException != null)
-			{
-				throw ex.InnerException;
-			}
+			return awaitable.GetAwaiter().GetResult();
 		}
 
 		public static void Run(Func<CancellationToken, ValueTask> task)
 		{
-			try
-			{
-				Task.Run(async () => await task(default).ConfigureAwait(false)).Wait();
-			}
-			catch (AggregateException ex) when (ex.InnerException != null)
-			{
-				throw ex.InnerException;
-			}
+			Task.Run(async () => await task(default).ConfigureAwait(false)).GetAwaiter().GetResult();
 		}
 
 		public static void Run(Func<CancellationToken, Task> task)
 		{
-			try
-			{
-				Task.Run(async () => await task(default).ConfigureAwait(false)).Wait();
-			}
-			catch (AggregateException ex) when (ex.InnerException != null)
-			{
-				throw ex.InnerException;
-			}
+			Task.Run(async () => await task(default).ConfigureAwait(false)).GetAwaiter().GetResult();
 		}
 
 		public static void Run(Func<ValueTask> task)
 		{
-			try
-			{
-				Task.Run(async () => await task().ConfigureAwait(false)).Wait();
-			}
-			catch (AggregateException ex) when (ex.InnerException != null)
-			{
-				throw ex.InnerException;
-			}
+			Task.Run(async () => await task().ConfigureAwait(false)).GetAwaiter().GetResult();
 		}
 	}
 }
