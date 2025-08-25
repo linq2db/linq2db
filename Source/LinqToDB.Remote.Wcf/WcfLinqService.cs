@@ -19,72 +19,12 @@ namespace LinqToDB.Remote.Wcf
 			_transferInternalExceptionToClient = transferInternalExceptionToClient;
 		}
 
-		LinqServiceInfo IWcfLinqService.GetInfo(string? configuration)
-		{
-			try
-			{
-				return _linqService.GetInfo(configuration);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
-		}
-
-		int IWcfLinqService.ExecuteBatch(string? configuration, string queryData)
-		{
-			try
-			{
-				return _linqService.ExecuteBatch(configuration, queryData);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
-		}
-
-		int IWcfLinqService.ExecuteNonQuery(string? configuration, string queryData)
-		{
-			try
-			{
-				return _linqService.ExecuteNonQuery(configuration, queryData);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
-		}
-
-		string IWcfLinqService.ExecuteReader(string? configuration, string queryData)
-		{
-			try
-			{
-				return _linqService.ExecuteReader(configuration, queryData);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
-		}
-
-		string? IWcfLinqService.ExecuteScalar(string? configuration, string queryData)
-		{
-			try
-			{
-				return _linqService.ExecuteScalar(configuration, queryData);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new FaultException(exception.ToString());
-			}
-		}
-
 		async Task<LinqServiceInfo> IWcfLinqService.GetInfoAsync(string? configuration)
 		{
 			try
 			{
 				return await _linqService.GetInfoAsync(configuration)
-					.ConfigureAwait(false); ;
+					.ConfigureAwait(false);
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
@@ -97,7 +37,7 @@ namespace LinqToDB.Remote.Wcf
 			try
 			{
 				return await _linqService.ExecuteBatchAsync(configuration, queryData)
-					.ConfigureAwait(false); ;
+					.ConfigureAwait(false);
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
@@ -110,7 +50,7 @@ namespace LinqToDB.Remote.Wcf
 			try
 			{
 				return await _linqService.ExecuteNonQueryAsync(configuration, queryData)
-					.ConfigureAwait(false); ;
+					.ConfigureAwait(false);
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
@@ -123,7 +63,7 @@ namespace LinqToDB.Remote.Wcf
 			try
 			{
 				return await _linqService.ExecuteReaderAsync(configuration, queryData)
-					.ConfigureAwait(false); ;
+					.ConfigureAwait(false);
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
@@ -136,7 +76,7 @@ namespace LinqToDB.Remote.Wcf
 			try
 			{
 				return await _linqService.ExecuteScalarAsync(configuration, queryData)
-					.ConfigureAwait(false); ;
+					.ConfigureAwait(false);
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{

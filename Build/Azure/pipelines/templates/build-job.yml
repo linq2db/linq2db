@@ -296,7 +296,7 @@ jobs:
       pathToPublish: '$(Build.SourcesDirectory)/.build/lpx'
       artifactName: '$(artifact_linq2db_linqpad_lpx)'
     displayName: Publish LPX to artifacts
-    condition: succeeded()
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PowerShell@2
     inputs:

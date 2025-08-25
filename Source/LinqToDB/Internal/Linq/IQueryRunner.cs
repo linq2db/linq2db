@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.Linq
 		/// Executes query and returns data reader.
 		/// </summary>
 		/// <returns>Data reader with query results.</returns>
-		DataReaderWrapper     ExecuteReader  ();
+		IDataReaderAsync      ExecuteReader  ();
 
 		/// <summary>
 		/// Executes query asynchronously and returns number of affected records.

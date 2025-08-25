@@ -648,42 +648,37 @@ namespace LinqToDB.Data
 				return dataConnection.ExecuteDataReader(CommandBehavior.Default);
 			}
 
-			public override DataReaderWrapper ExecuteReader()
+			public override IDataReaderAsync ExecuteReader()
 			{
 				SetCommand(false);
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
-				return _dataConnection.ExecuteDataReader(CommandBehavior.Default);
+				var dataReader = _dataConnection.ExecuteDataReader(CommandBehavior.Default);
+
+				return new DataReaderAsync(dataReader);
 			}
 
 			#endregion
 
 			sealed class DataReaderAsync : IDataReaderAsync
 			{
+				readonly DataReaderWrapper _dataReader;
+
 				public DataReaderAsync(DataReaderWrapper dataReader)
 				{
 					_dataReader = dataReader;
 				}
 
-				readonly DataReaderWrapper _dataReader;
+				DbDataReader IDataReaderAsync.DataReader => _dataReader.DataReader!;
 
-				public DbDataReader DataReader => _dataReader.DataReader!;
+				bool IDataReaderAsync.Read() => _dataReader.DataReader!.Read();
 
-				public Task<bool> ReadAsync(CancellationToken cancellationToken)
-				{
-					return _dataReader.DataReader!.ReadAsync(cancellationToken);
-				}
+				Task<bool> IDataReaderAsync.ReadAsync(CancellationToken cancellationToken) => _dataReader.DataReader!.ReadAsync(cancellationToken);
 
-				public void Dispose()
-				{
-					_dataReader.Dispose();
-				}
+				void IDisposable.Dispose() => _dataReader.Dispose();
 
-				public ValueTask DisposeAsync()
-				{
-					 return _dataReader.DisposeAsync();
-				}
+				ValueTask IAsyncDisposable.DisposeAsync() => _dataReader.DisposeAsync();
 			}
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
