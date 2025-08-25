@@ -80,6 +80,38 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
+		/// <list type="bullet">
+		/// <item>if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;</item>
+		/// <item>if <c>false</c> - OrderBy* call will place sort specifications, added by previous OrderBy* and ThenBy* calls, after current call.</item>
+		/// </list>
+		/// Default value: <c>false</c>.
+		/// <para>
+		/// Example:
+		/// <code>
+		/// query.OrderBy(r => r.FirstName).OrderBy(r => r.LastName)
+		/// 
+		/// // <c><paramref name="concatenateOrderBy"/>=true</c> - non-first OrderBy* calls treated as ordering continuation (non-standard)
+		/// ORDER BY p.FIRST_NAME, p.LAST_NAME
+		/// 
+		/// // <c><paramref name="concatenateOrderBy"/>=false</c> - last OrderBy* calls have higher priority like they should per API documentation
+		/// ORDER BY p.LAST_NAME, p.FIRST_NAME
+		/// 
+		/// // to completely discard old sort specification, use <see cref="LinqExtensions.RemoveOrderBy{TSource}(System.Linq.IQueryable{TSource})"/> API:
+		/// query.OrderBy(r => r.FirstName).RemoveOrderBy().OrderBy(r => r.LastName)
+		/// 
+		/// // for any <paramref name="concatenateOrderBy"/> value will produce
+		/// ORDER BY p.LAST_NAME
+		/// </code>
+		/// </para>
+		/// </summary>
+		[Pure]
+		public static LinqOptions WithConcatenateOrderBy(this LinqOptions options, bool concatenateOrderBy)
+		{
+			return options with { ConcatenateOrderBy = concatenateOrderBy };
+		}
+
+		/// <summary>
 		/// Controls behavior, when LINQ query chain contains multiple
 		/// <see cref="System.Linq.Queryable.OrderBy          {TSource,TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or
 		/// <see cref="System.Linq.Queryable.OrderByDescending{TSource,TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
@@ -88,9 +120,11 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		[Pure]
+		// TODO: Remove in v7
+		[Obsolete("This API was renamed to WithConcatenateOrderBy. Compatibility alias will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static LinqOptions WithDoNotClearOrderBys(this LinqOptions options, bool doNotClearOrderBys)
 		{
-			return options with { DoNotClearOrderBys = doNotClearOrderBys };
+			return options with { ConcatenateOrderBy = doNotClearOrderBys };
 		}
 
 		/// <summary>
@@ -321,6 +355,38 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
+		/// <list type="bullet">
+		/// <item>if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;</item>
+		/// <item>if <c>false</c> - OrderBy* call will place sort specifications, added by previous OrderBy* and ThenBy* calls, after current call.</item>
+		/// </list>
+		/// Default value: <c>false</c>.
+		/// <para>
+		/// Example:
+		/// <code>
+		/// query.OrderBy(r => r.FirstName).OrderBy(r => r.LastName)
+		/// 
+		/// // <c><paramref name="concatenateOrderBy"/>=true</c> - non-first OrderBy* calls treated as ordering continuation (non-standard)
+		/// ORDER BY p.FIRST_NAME, p.LAST_NAME
+		/// 
+		/// // <c><paramref name="concatenateOrderBy"/>=false</c> - last OrderBy* calls have higher priority like they should per API documentation
+		/// ORDER BY p.LAST_NAME, p.FIRST_NAME
+		/// 
+		/// // to completely discard old sort specification, use <see cref="LinqExtensions.RemoveOrderBy{TSource}(System.Linq.IQueryable{TSource})"/> API:
+		/// query.OrderBy(r => r.FirstName).RemoveOrderBy().OrderBy(r => r.LastName)
+		/// 
+		/// // for any <paramref name="concatenateOrderBy"/> value will produce
+		/// ORDER BY p.LAST_NAME
+		/// </code>
+		/// </para>
+		/// </summary>
+		[Pure]
+		public static DataOptions UseConcatenateOrderBy(this DataOptions options, bool concatenateOrderBy)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { ConcatenateOrderBy = concatenateOrderBy });
+		}
+
+		/// <summary>
 		/// Controls behavior, when LINQ query chain contains multiple
 		/// <see cref="System.Linq.Queryable.OrderBy          {TSource,TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or
 		/// <see cref="System.Linq.Queryable.OrderByDescending{TSource,TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
@@ -329,9 +395,11 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		[Pure]
+		// TODO: Remove in v7
+		[Obsolete("This API was renamed to UseConcatenateOrderBy. Compatibility alias will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static DataOptions UseDoNotClearOrderBys(this DataOptions options, bool doNotClearOrderBys)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { DoNotClearOrderBys = doNotClearOrderBys });
+			return options.WithOptions<LinqOptions>(o => o with { ConcatenateOrderBy = doNotClearOrderBys });
 		}
 
 		/// <summary>

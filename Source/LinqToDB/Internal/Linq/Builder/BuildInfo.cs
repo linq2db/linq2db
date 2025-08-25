@@ -17,15 +17,17 @@ namespace LinqToDB.Internal.Linq.Builder
 		public BuildInfo(BuildInfo buildInfo, Expression expression)
 			: this(buildInfo.Parent, expression, buildInfo.SelectQuery)
 		{
-			SequenceInfo         = buildInfo;
-			CreateSubQuery       = buildInfo.CreateSubQuery;
+			SequenceInfo   = buildInfo;
+			CreateSubQuery = buildInfo.CreateSubQuery;
+			IgnoreOrderBy  = buildInfo.IgnoreOrderBy;
 		}
 
 		public BuildInfo(BuildInfo buildInfo, Expression expression, SelectQuery selectQuery)
 			: this(buildInfo.Parent, expression, selectQuery)
 		{
-			SequenceInfo         = buildInfo;
-			CreateSubQuery       = buildInfo.CreateSubQuery;
+			SequenceInfo   = buildInfo;
+			CreateSubQuery = buildInfo.CreateSubQuery;
+			IgnoreOrderBy  = buildInfo.IgnoreOrderBy;
 		}
 
 		public BuildInfo?     SequenceInfo             { get; set; }
@@ -37,6 +39,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public bool           IsAssociation            { get; set; }
 		public JoinType       JoinType                 { get; set; }
 		public bool           IsSubQuery               => Parent != null;
+		public bool           IgnoreOrderBy            { get; set; }
 
 		bool _isAssociationBuilt;
 		public bool   IsAssociationBuilt
