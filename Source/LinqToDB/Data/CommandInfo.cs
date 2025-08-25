@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
@@ -238,7 +239,9 @@ namespace LinqToDB.Data
 		public async Task<List<T>> QueryToListAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken = default)
 		{
 			var list = new List<T>();
+#pragma warning disable CS0618 // Type or member is obsolete
 			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 			return list;
 		}
 
@@ -252,7 +255,9 @@ namespace LinqToDB.Data
 		public async Task<T[]> QueryToArrayAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken = default)
 		{
 			var list = new List<T>();
+#pragma warning disable CS0618 // Type or member is obsolete
 			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 			return list.ToArray();
 		}
 
@@ -264,6 +269,8 @@ namespace LinqToDB.Data
 		/// <param name="action">Action, applied to each result record.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
+		// TODO: make it private in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public async Task QueryForEachAsync<T>(Func<DbDataReader, T> objectReader, Action<T> action, CancellationToken cancellationToken = default)
 		{
 			var dataConnection = GetDataConnection();
@@ -467,7 +474,9 @@ namespace LinqToDB.Data
 		public async Task<List<T>> QueryToListAsync<T>(CancellationToken cancellationToken = default)
 		{
 			var list = new List<T>();
+#pragma warning disable CS0618 // Type or member is obsolete
 			await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 			return list;
 		}
 
@@ -480,7 +489,9 @@ namespace LinqToDB.Data
 		public async Task<T[]> QueryToArrayAsync<T>(CancellationToken cancellationToken = default)
 		{
 			var list = new List<T>();
+#pragma warning disable CS0618 // Type or member is obsolete
 			await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
 			return list.ToArray();
 		}
 
@@ -491,6 +502,8 @@ namespace LinqToDB.Data
 		/// <param name="action">Action, applied to each result record.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
+		// TODO: make it private in v7
+		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public async Task QueryForEachAsync<T>(Action<T> action, CancellationToken cancellationToken = default)
 		{
 			var dataConnection = GetDataConnection();

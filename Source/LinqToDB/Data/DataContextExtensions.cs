@@ -481,62 +481,6 @@ namespace LinqToDB.Data
 			return SetCommand(dataContext, sql, parameters).QueryToAsyncEnumerable(objectReader);
 		}
 
-		/// <summary>
-		/// Executes command asynchronously and apply provided action to each record, mapped using provided mapping function.
-		/// </summary>
-		/// <typeparam name="T">Result record type.</typeparam>
-		/// <param name="dataContext">Database connection.</param>
-		/// <param name="objectReader">Record mapping function from data reader.</param>
-		/// <param name="action">Action, applied to each result record.</param>
-		/// <param name="sql">Command text.</param>
-		/// <param name="parameters">Command parameters.</param>
-		/// <returns>Returns task.</returns>
-		public static Task QueryForEachAsync<T>(this IDataContext dataContext, Func<DbDataReader, T> objectReader, Action<T> action, string sql, params DataParameter[] parameters)
-		{
-			return SetCommand(dataContext, sql, parameters).QueryForEachAsync(objectReader, action);
-		}
-
-		/// <summary>
-		/// Executes command asynchronously and apply provided action to each record, mapped using provided mapping function.
-		/// </summary>
-		/// <typeparam name="T">Result record type.</typeparam>
-		/// <param name="dataContext">Database connection.</param>
-		/// <param name="objectReader">Record mapping function from data reader.</param>
-		/// <param name="action">Action, applied to each result record.</param>
-		/// <param name="sql">Command text.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <param name="parameters">Command parameters.</param>
-		/// <returns>Returns task.</returns>
-		public static Task QueryForEachAsync<T>(this IDataContext dataContext, Func<DbDataReader, T> objectReader, Action<T> action, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
-		{
-			return SetCommand(dataContext, sql, parameters).QueryForEachAsync(objectReader, action, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes command asynchronously and apply provided action to each record, mapped using provided mapping function.
-		/// </summary>
-		/// <typeparam name="T">Result record type.</typeparam>
-		/// <param name="dataContext">Database connection.</param>
-		/// <param name="objectReader">Record mapping function from data reader.</param>
-		/// <param name="action">Action, applied to each result record.</param>
-		/// <param name="sql">Command text.</param>
-		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
-		/// <para> - single <see cref="DataParameter"/> instance;</para>
-		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
-		/// <para> - mapping class entity.</para>
-		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
-		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
-		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
-		/// </param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Returns task.</returns>
-		public static Task QueryForEachAsync<T>(this IDataContext dataContext, Func<DbDataReader, T> objectReader, Action<T> action, string sql, object? parameters, CancellationToken cancellationToken = default)
-		{
-			return SetCommand(dataContext, sql, parameters).QueryForEachAsync(objectReader, action, cancellationToken);
-		}
-
 		#endregion
 
 		#region Query[Async] with built-in mapper
@@ -1561,59 +1505,6 @@ namespace LinqToDB.Data
 		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this IDataContext dataContext, string sql, object? parameters)
 		{
 			return SetCommand(dataContext, sql, parameters).QueryToAsyncEnumerable<T>();
-		}
-
-		/// <summary>
-		/// Executes command asynchronously and apply provided action to each record.
-		/// </summary>
-		/// <typeparam name="T">Result record type.</typeparam>
-		/// <param name="dataContext">Database connection.</param>
-		/// <param name="action">Action, applied to each result record.</param>
-		/// <param name="sql">Command text.</param>
-		/// <param name="parameters">Command parameters.</param>
-		/// <returns>Returns task.</returns>
-		public static Task QueryForEachAsync<T>(this IDataContext dataContext, Action<T> action, string sql, params DataParameter[] parameters)
-		{
-			return SetCommand(dataContext, sql, parameters).QueryForEachAsync(action);
-		}
-
-		/// <summary>
-		/// Executes command asynchronously and apply provided action to each record.
-		/// </summary>
-		/// <typeparam name="T">Result record type.</typeparam>
-		/// <param name="dataContext">Database connection.</param>
-		/// <param name="action">Action, applied to each result record.</param>
-		/// <param name="sql">Command text.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <param name="parameters">Command parameters.</param>
-		/// <returns>Returns task.</returns>
-		public static Task QueryForEachAsync<T>(this IDataContext dataContext, Action<T> action, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
-		{
-			return SetCommand(dataContext, sql, parameters).QueryForEachAsync(action, cancellationToken);
-		}
-
-		/// <summary>
-		/// Executes command asynchronously and apply provided action to each record.
-		/// </summary>
-		/// <typeparam name="T">Result record type.</typeparam>
-		/// <param name="dataContext">Database connection.</param>
-		/// <param name="action">Action, applied to each result record.</param>
-		/// <param name="sql">Command text.</param>
-		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
-		/// <para> - single <see cref="DataParameter"/> instance;</para>
-		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
-		/// <para> - mapping class entity.</para>
-		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
-		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
-		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
-		/// </param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Returns task.</returns>
-		public static Task QueryForEachAsync<T>(this IDataContext dataContext, Action<T> action, string sql, object? parameters, CancellationToken cancellationToken = default)
-		{
-			return SetCommand(dataContext, sql, parameters).QueryForEachAsync(action, cancellationToken);
 		}
 
 		#endregion
