@@ -36,7 +36,7 @@ namespace Tests.UserTests
 		[Test]
 		public void MergeWithSubquery([IncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			var users = new[]
 			{

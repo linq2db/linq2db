@@ -1032,9 +1032,9 @@ namespace LinqToDB.Tools.ModelGeneration
 								: "IEnumerable<" + p.ResultTable.TypeName + ">";
 
 						if (p.IsDefaultSchema || !GenerateSchemaAsType)
-							p.ParameterBuilders.Add(() => $"this {(GenerateProceduresOnTypedContext ? currentContext?.Name : "DataConnection")} dataConnection");
+							p.ParameterBuilders.Add(() => $"this {(GenerateProceduresOnTypedContext ? currentContext?.Name : "IDataContext")} dataConnection");
 						else
-							p.ParameterBuilders.Add(() => $"{(GenerateProceduresOnTypedContext ? currentContext?.Name : "DataConnection")} dataConnection");
+							p.ParameterBuilders.Add(() => $"{(GenerateProceduresOnTypedContext ? currentContext?.Name : "IDataContext")} dataConnection");
 					}
 
 					if (!p.IsAggregateFunction)

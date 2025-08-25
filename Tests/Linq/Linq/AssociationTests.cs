@@ -1905,7 +1905,7 @@ namespace Tests.Linq
 			{
 				LinqToDB.Common.Configuration.Sql.AssociationAlias = "test.[aLыi`\",:!@#$%^&*()_'=as].{0}";
 
-				using var db = GetDataConnection(context);
+				using var db = GetDataContext(context);
 
 				db.Child.Select(c => new { c.ChildID, c.Parent!.Value1 }).ToArray();
 			}
@@ -2152,7 +2152,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4274")]
 		public void Issue4274Test([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			var query1 = (
 					from serv in db.Patient

@@ -188,8 +188,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						options.RowsCopiedCallback(rc);
 				}
 
-				if (table.DataContext.CloseAfterUse)
-					await table.DataContext.CloseAsync().ConfigureAwait(false);
+				await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 				return rc;
 			}
@@ -260,8 +259,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						options.RowsCopiedCallback(rc);
 				}
 
-				if (table.DataContext.CloseAfterUse)
-					table.DataContext.Close();
+				CloseConnectionIfNecessary(table.DataContext);
 
 				return rc;
 			}

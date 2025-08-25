@@ -27,7 +27,7 @@ namespace LinqToDB.Data
 		ExecuteScalar,
 
 		/// <summary>
-		/// <see cref="DataConnectionExtensions.BulkCopy{T}(ITable{T}, System.Collections.Generic.IEnumerable{T})"/> or <see cref="DataConnectionExtensions.BulkCopyAsync{T}(DataConnection, int, System.Collections.Generic.IEnumerable{T}, System.Threading.CancellationToken)"/> operation.
+		/// <see cref="DataContextExtensions.BulkCopy{T}(ITable{T}, System.Collections.Generic.IEnumerable{T})"/> or <see cref="DataContextExtensions.BulkCopyAsync{T}(IDataContext, int, System.Collections.Generic.IEnumerable{T}, System.Threading.CancellationToken)"/> operation.
 		/// See also <seealso cref="TraceInfo.IsAsync"/>.
 		/// </summary>
 		BulkCopy,

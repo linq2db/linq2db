@@ -23,8 +23,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			{
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
 
-				if (helper.OriginalContext.CloseAfterUse)
-					helper.OriginalContext.Close();
+				CloseConnectionIfNecessary(helper.OriginalContext);
 			}
 
 			return ret;
@@ -48,8 +47,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(false);
 
-				if (helper.OriginalContext.CloseAfterUse)
-					await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+				await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 			}
 
 			return ret;
@@ -73,8 +71,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(false);
 
-				if (helper.OriginalContext.CloseAfterUse)
-					await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+				await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 			}
 
 			return ret;

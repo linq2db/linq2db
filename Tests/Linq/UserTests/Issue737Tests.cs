@@ -15,7 +15,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var one = new QueryOne(db).Query().ToArray();
 				var two = new QueryTwo(db).Query().ToArray();
@@ -24,9 +24,9 @@ namespace Tests.UserTests
 
 		sealed class QueryOne
 		{
-			readonly DataConnection _db;
+			readonly IDataContext _db;
 
-			public QueryOne(DataConnection db)
+			public QueryOne(IDataContext db)
 			{
 				_db = db;
 			}
@@ -37,9 +37,9 @@ namespace Tests.UserTests
 
 		sealed class QueryTwo
 		{
-			readonly DataConnection _db;
+			readonly IDataContext _db;
 
-			public QueryTwo(DataConnection db)
+			public QueryTwo(IDataContext db)
 			{
 				_db = db;
 			}

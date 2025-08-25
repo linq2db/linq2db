@@ -211,8 +211,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					options.RowsCopiedCallback(rc);
 			}
 
-			if (table.DataContext.CloseAfterUse)
-				table.DataContext.Close();
+			CloseConnectionIfNecessary(table.DataContext);
 
 			return rc;
 		}

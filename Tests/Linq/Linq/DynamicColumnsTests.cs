@@ -688,7 +688,7 @@ namespace Tests.Linq
 					)
 					.ToDictionary(f => f.Id);
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			using var tb = db.CreateLocalTable(testData.Values);
 
 			var testRows = db.GetTable<TestJsonRead>().ToArray();
@@ -739,7 +739,7 @@ namespace Tests.Linq
 					)
 					.ToDictionary(f => f.Id);
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			using var tb = db.CreateLocalTable(testData.Values);
 
 			var testRows = db.GetTable<TestJsonRead>().ToArray();

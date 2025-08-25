@@ -203,8 +203,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					options.RowsCopiedCallback(rc);
 			}
 
-			if (table.DataContext.CloseAfterUse)
-				await table.DataContext.CloseAsync().ConfigureAwait(false);
+			await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 			return rc;
 		}
@@ -279,8 +278,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					options.RowsCopiedCallback(rc);
 			}
 
-			if (table.DataContext.CloseAfterUse)
-				table.DataContext.Close();
+			CloseConnectionIfNecessary(table.DataContext);
 
 			return rc;
 		}
@@ -306,8 +304,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
 
-				if (helper.OriginalContext.CloseAfterUse)
-					helper.OriginalContext.Close();
+				CloseConnectionIfNecessary(helper.OriginalContext);
 			}
 
 			return ret;
@@ -342,8 +339,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(false);
 
-				if (helper.OriginalContext.CloseAfterUse)
-					await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+				await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 			}
 
 			return ret;
@@ -378,8 +374,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(false);
 
-				if (helper.OriginalContext.CloseAfterUse)
-					await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+				await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 			}
 
 			return ret;

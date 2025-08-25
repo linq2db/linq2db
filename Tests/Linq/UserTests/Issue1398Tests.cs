@@ -66,7 +66,7 @@ namespace Tests.UserTests
 			SQLiteTools.ClearAllPools(provider: null);
 
 			using (new DisableBaseline("Multi-threading"))
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InsertTable>())
 			{
 				var tasks = new List<Task>();
@@ -85,7 +85,7 @@ namespace Tests.UserTests
 
 		private void Insert(string context, int value)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<InsertTable>().Insert(() => new InsertTable { Value = value });
 			}

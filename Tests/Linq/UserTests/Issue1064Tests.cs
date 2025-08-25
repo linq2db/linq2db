@@ -27,7 +27,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSybase)] string configuration)
 		{
-			using (var db = GetDataConnection(configuration))
+			using (var db = GetDataContext(configuration))
 			{
 				using (db.CreateLocalTable<TableTest1064>())
 				{

@@ -759,7 +759,7 @@ namespace Tests.Mapping
 				.UseSequence("sequencetestseq")
 				.Build();
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			var records = Enumerable.Range(1, 10).Select(x => new SequenceTable()).ToArray();
 
 			records.RetrieveIdentity(db, true);
@@ -779,7 +779,7 @@ namespace Tests.Mapping
 				.HasAttribute(new SequenceNameAttribute("sequencetestseq"))
 				.Build();
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			var records = Enumerable.Range(1, 10).Select(x => new SequenceTable()).ToArray();
 
 			records.RetrieveIdentity(db, true);

@@ -8,7 +8,7 @@ using LinqToDB.Internal.Options;
 namespace LinqToDB.DataProvider.Informix
 {
 	/// <param name="BulkCopyType">
-	/// Default bulk copy mode, used for Informix by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
+	/// Default bulk copy mode, used for Informix by <see cref="DataContextExtensions.BulkCopy{T}(IDataContext, IEnumerable{T})"/>
 	/// methods, if mode is not specified explicitly.
 	/// Default value: <see cref="BulkCopyType.ProviderSpecific"/>.
 	/// </param>

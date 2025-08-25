@@ -39,7 +39,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void NoTransaction([DataSources(false)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var list = new[]
 				{
