@@ -72,6 +72,7 @@ namespace LinqToDB.CommandLine
 				DatabaseType.SQLite          => ProviderName.SQLite,
 				DatabaseType.Sybase          => ProviderName.Sybase,
 				DatabaseType.SapHana         => ProviderName.SapHana,
+				DatabaseType.Ydb             => ProviderName.Ydb,
 				DatabaseType.ClickHouseMySql => ProviderName.ClickHouseMySql,
 				DatabaseType.ClickHouseHttp  => ProviderName.ClickHouseDriver,
 				DatabaseType.ClickHouseTcp   => ProviderName.ClickHouseOctonica,
@@ -193,6 +194,7 @@ namespace LinqToDB.CommandLine
 			// - allow user to specify provider discovery hints (e.g. provider path) for unmanaged providers
 			switch (provider)
 			{
+				case ProviderName.Ydb:
 				case ProviderName.ClickHouseMySql   :
 				case ProviderName.ClickHouseDriver:
 				case ProviderName.ClickHouseOctonica:

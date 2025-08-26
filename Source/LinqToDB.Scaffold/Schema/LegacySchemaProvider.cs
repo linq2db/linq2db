@@ -42,13 +42,14 @@ namespace LinqToDB.Schema
 		private readonly ISet<string>      _defaultSchemas = new HashSet<string>();
 
 		// database provider name, used to workaround provider-specific issues with legacy API...
-		private readonly string            _providerName;
-		private readonly bool              _isPostgreSql;
-		private readonly bool              _isMySqlOrMariaDB;
-		private readonly bool              _isAccessOleDb;
-		private readonly bool              _isAccessOdbc;
-		private readonly bool              _isSystemDataSqlite;
-		private readonly bool              _isSqlServer;
+		private readonly string _providerName;
+		private readonly bool   _isPostgreSql;
+		private readonly bool   _isMySqlOrMariaDB;
+		private readonly bool   _isAccessOleDb;
+		private readonly bool   _isAccessOdbc;
+		private readonly bool   _isSystemDataSqlite;
+		private readonly bool   _isSqlServer;
+		private readonly bool   _isYdb;
 
 		public LegacySchemaProvider(DataConnection connection, SchemaOptions options, ILanguageProvider languageProvider)
 		{
@@ -63,6 +64,7 @@ namespace LinqToDB.Schema
 			_isAccessOleDb      = _providerName is ProviderName.AccessJetOleDb or ProviderName.AccessAceOleDb;
 			_isAccessOdbc       = _providerName is ProviderName.AccessJetOdbc or ProviderName.AccessAceOdbc;
 			_isSqlServer        = _providerName.Contains(ProviderName.SqlServer);
+			_isYdb              = _providerName.Contains(ProviderName.Ydb);
 
 			// load schema from legacy API and convrt it into new model
 			ParseSchema(
@@ -598,7 +600,39 @@ namespace LinqToDB.Schema
 			else
 			{
 				if (systemType == null)
+				{
+					if (!_isYdb)
+					{
+						return;
+					}
+
+					var name = (dbType.Name ?? string.Empty).Trim('"').ToLowerInvariant();
+					switch (name)
+					{
+						case "text":
+						case "utf8":
+							_typeMappings[dbType] = new TypeMapping(WellKnownTypes.System.String, DataType.Text);
+							return;
+
+						case "string":         // YDB "String" = byte array
+							_typeMappings[dbType] = new TypeMapping(
+								_languageProvider.TypeParser.Parse("System.Byte[]", true),
+								DataType.VarBinary);
+
+							return;
+
+						case "json":
+						    _typeMappings[dbType] = new TypeMapping(WellKnownTypes.System.String, DataType.Json);
+						    return;
+						case "jsondocument":
+						    _typeMappings[dbType] = new TypeMapping(
+							    _languageProvider.TypeParser.Parse("System.Byte[]", true),
+							    DataType.BinaryJson);
+						    return;
+					}
+
 					return;
+				}
 
 				type = _languageProvider.TypeParser.Parse(systemType);
 			}
