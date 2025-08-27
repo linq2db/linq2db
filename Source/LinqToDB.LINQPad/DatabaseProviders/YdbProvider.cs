@@ -16,22 +16,22 @@ internal sealed class YdbProvider() : DatabaseProviderBase(ProviderName.Ydb, "YD
 
 	public override void ClearAllPools(string providerName)
 	{
-		// На текущий момент публичного API для очистки пулов в Ydb.Sdk.Ado нет — оставляем no-op.
-		// Если появится — можно вызвать статический метод через рефлексию:
+		// At the moment, there is no public API in Ydb.Sdk.Ado to clear connection pools — so this is a no-op.
+		// If such an API appears in the future, we can invoke the static method via reflection:
 		// TryInvokeStatic("Ydb.Sdk.Ado.YdbConnection, Ydb.Sdk", "ClearAllPools");
 	}
 
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings)
 	{
-		// В системной схеме YDB времени модификации таблиц нет — возвращаем null.
+		// YDB system schema does not store modification timestamps for tables — return null.
 		return null;
 	}
 
 	public override DbProviderFactory GetProviderFactory(string providerName)
 	{
-		// Пытаемся найти фабрику провайдера разными известными именами типов.
-		// 1) Официальный SDK (Ydb.Sdk) с ADO.NET-провайдером
-		// 2) Старый пакет Yandex.Ydb.ADO (если кто-то использует легаси)
+		// Try to locate the provider factory by different known type names:
+		// 1) Official SDK (Ydb.Sdk) with ADO.NET provider
+		// 2) Legacy package Yandex.Ydb.ADO (for backward compatibility)
 		var factory =
 			TryGetFactory("Ydb.Sdk.Ado.YdbFactory, Ydb.Sdk") ??
 			TryGetFactory("Ydb.Sdk.Ado.YdbProviderFactory, Ydb.Sdk") ??
@@ -42,8 +42,8 @@ internal sealed class YdbProvider() : DatabaseProviderBase(ProviderName.Ydb, "YD
 			return factory;
 
 		throw new LinqToDBLinqPadException(
-			"Не найден ADO.NET-провайдер YDB. Убедитесь, что пакет Ydb.Sdk (с ADO) доступен приложению " +
-			"(например, рядом с LINQPad.exe или в probing-пути). См. документацию YDB .NET SDK.");
+			"YDB ADO.NET provider not found. Make sure the Ydb.Sdk package (with ADO) is available " +
+			"to the application (e.g., next to LINQPad.exe or in a probing path). See the YDB .NET SDK documentation.");
 	}
 
 	private static DbProviderFactory? TryGetFactory(string qualifiedTypeName)
@@ -51,7 +51,7 @@ internal sealed class YdbProvider() : DatabaseProviderBase(ProviderName.Ydb, "YD
 		var t = Type.GetType(qualifiedTypeName, throwOnError: false);
 		if (t == null) return null;
 
-		// Большинство фабрик имеют статическое свойство Instance/Singleton
+		// Most factories expose a static property Instance/Singleton
 		var pi = t.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)
 		      ?? t.GetProperty("Singleton", BindingFlags.Public | BindingFlags.Static);
 
