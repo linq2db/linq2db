@@ -9,7 +9,7 @@ open Tests.Tools
 
 [<Table>]
 type Issue4132Table =
-    { [<Column>]
+    { [<PrimaryKey>]
       Id: int
       [<Column>]
       Number: int

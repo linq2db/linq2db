@@ -20,7 +20,7 @@ namespace Tests.Linq
 		public abstract class TypeTable<TType>
 			where TType : struct
 		{
-			[Column] public int    Id             { get; set; }
+			[PrimaryKey] public int    Id         { get; set; }
 			[Column] public TType  Column         { get; set; }
 			[Column] public TType? ColumnNullable { get; set; }
 		}
@@ -72,8 +72,8 @@ namespace Tests.Linq
 		{
 			public static DateOnlyTable[] Data = new[]
 			{
-				new DateOnlyTable() { Id = 1, Column = new DateOnly(1950, 1, 1), ColumnNullable = null },
-				new DateOnlyTable() { Id = 2, Column = new DateOnly(2020, 2, 29), ColumnNullable = new DateOnly(2200, 1, 1) },
+				new DateOnlyTable() { Id = 1, Column = new DateOnly(1980, 1, 1), ColumnNullable = null },
+				new DateOnlyTable() { Id = 2, Column = new DateOnly(2020, 2, 29), ColumnNullable = new DateOnly(2020, 1, 1) },
 			};
 		}
 
@@ -296,7 +296,7 @@ namespace Tests.Linq
 		[Table("Issue4163Table")]
 		sealed class Issue1918Table
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column(DataType = DataType.Blob)] public Stream? Blob { get; set; }
 		}
 		#endregion

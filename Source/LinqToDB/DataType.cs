@@ -169,6 +169,11 @@
 		Date,
 
 		/// <summary>
+		/// A type representing a date value with timezone.
+		/// </summary>
+		DateTz,
+
+		/// <summary>
 		/// Date32 ClickHouse type.
 		/// </summary>
 		Date32,
@@ -191,12 +196,22 @@
 		DateTime2,
 
 		/// <summary>
+		/// Date and time data with timezone information with low precision.
+		/// </summary>
+		DateTimeTz,
+
+		/// <summary>
+		/// Date and time data with timezone information with high precision.
+		/// </summary>
+		DateTime2Tz,
+
+		/// <summary>
 		/// Date and time data ranging in value from January 1, 1900 to June 6, 2079 to an accuracy of one minute.
 		/// </summary>
 		SmallDateTime,
 
 		/// <summary>
-		/// Date and time data with time zone awareness.
+		/// Date and time data with DST offset awareness.
 		/// Date value range is from January 1,1 AD through December 31, 9999 AD.
 		/// Time value range is 00:00:00 through 23:59:59.9999999 with an accuracy of 100 nanoseconds.
 		/// Time zone value range is -14:00 through +14:00.
@@ -260,6 +275,11 @@
 		/// Binary type utilized postgres provider (jsonb).
 		/// </summary>
 		BinaryJson,
+
+		/// <summary>
+		/// Yandex YSON type.
+		/// </summary>
+		Yson,
 
 		/// <summary>
 		/// SQL Server 2008+ table-valued parameter type (TVP).

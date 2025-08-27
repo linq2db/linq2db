@@ -13,7 +13,7 @@ namespace Tests.UserTests
 	{
 		sealed class Table1
 		{
-			public int Field1 { get; set; }
+			[PrimaryKey] public int Field1 { get; set; }
 			public int  Field2 { get; set; }
 
 			[Nullable]
@@ -31,13 +31,13 @@ namespace Tests.UserTests
 
 		sealed class Table2
 		{
-			public int     Field2 { get; set; }
+			[PrimaryKey] public int     Field2 { get; set; }
 			public string? Field4 { get; set; }
 		}
 
 		sealed class Table3
 		{
-			public int  Field5 { get; set; }
+			[PrimaryKey] public int  Field5 { get; set; }
 			public int Field1 { get; set; }
 
 			[Association(ThisKey = "Field5", OtherKey = "Field5", CanBeNull = false)]
@@ -46,7 +46,7 @@ namespace Tests.UserTests
 
 		sealed class Table4
 		{
-			public int Field5 { get; set; }
+			[PrimaryKey] public int Field5 { get; set; }
 			public int Field6 { get; set; }
 		}
 
@@ -54,7 +54,7 @@ namespace Tests.UserTests
 		{
 			[Nullable]
 			public int? Field3 { get; set; }
-			public int  Field7 { get; set; }
+			[PrimaryKey] public int  Field7 { get; set; }
 
 			[Association(ThisKey = "Field7", OtherKey = "Field7", CanBeNull = true)]
 			public Table6? Ref5 { get; set; }
@@ -62,7 +62,7 @@ namespace Tests.UserTests
 
 		public class Table6
 		{
-			public int     Field7 { get; set; }
+			[PrimaryKey] public int     Field7 { get; set; }
 			public string? Field8 { get; set; }
 		}
 

@@ -566,6 +566,7 @@ namespace Tests.Linq
 
 		sealed class User
 		{
+			[PrimaryKey] public int Id { get; set; }
 			public string? FirstName;
 			public int?    Status;
 		}
