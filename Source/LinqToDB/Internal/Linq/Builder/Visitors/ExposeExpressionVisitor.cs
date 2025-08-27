@@ -74,16 +74,6 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			if (node == null)
 				return null;
 
-			if (node.NodeType != ExpressionType.Quote && typeof(Expression<>).IsSameOrParentOf(node.Type))
-			{
-				if (IsCompilable(node))
-				{
-					var evaluated = EvaluateExpression(node);
-					if (evaluated is Expression evaluatedExpr)
-						return Visit(evaluatedExpr);
-				}
-			}
-
 			return base.Visit(node);
 		}
 
@@ -221,6 +211,34 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 			if (_isSingleConvert)
 				return node;
+
+			Expression[]? newEvaluatedArguments = null;
+
+			for (var i = 0; i < node.Arguments.Count; i++)
+			{
+				var argument = node.Arguments[i];
+
+				if (argument.NodeType != ExpressionType.Quote && typeof(Expression<>).IsSameOrParentOf(argument.Type))
+				{
+					if (IsCompilable(argument))
+					{
+						var evaluated = EvaluateExpression(argument);
+						if (evaluated is Expression evaluatedExpr)
+						{
+							if (newEvaluatedArguments == null)
+							{
+								newEvaluatedArguments    ??= node.Arguments.ToArray();
+								newEvaluatedArguments[i] =   evaluatedExpr;
+							}
+						}
+					}
+				}
+			}
+
+			if (newEvaluatedArguments != null)
+			{
+				return Visit(node.Update(node.Object, newEvaluatedArguments));
+			}
 
 			var result = base.VisitMethodCall(node);
 			return result;

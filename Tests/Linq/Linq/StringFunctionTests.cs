@@ -33,7 +33,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Length((string)null!), Is.Null);
 				Assert.That(Sql.Length(string.Empty), Is.Zero);
 				Assert.That(Sql.Length("test"), Is.EqualTo(4));
-		}
+			}
 		}
 
 		[Test]
@@ -52,7 +52,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Substring("test", 3, 1), Is.EqualTo("s"));
 				Assert.That(Sql.Substring("test", 3, 2), Is.EqualTo("st"));
 				Assert.That(Sql.Substring("test", 3, 3), Is.EqualTo("st"));
-		}
+			}
 		}
 
 		[Test]
@@ -77,7 +77,7 @@ namespace Tests.Linq
 				Assert.That(Sql.CharIndex("", "test"), Is.Zero);
 				Assert.That(Sql.CharIndex("g", "test"), Is.Zero);
 				Assert.That(Sql.CharIndex("st", "test"), Is.EqualTo(3));
-		}
+			}
 		}
 
 		[Test]
@@ -95,7 +95,7 @@ namespace Tests.Linq
 				Assert.That(Sql.CharIndex("st", "test", 2), Is.EqualTo(3));
 				Assert.That(Sql.CharIndex("st", "test", 4), Is.Zero);
 				Assert.That(Sql.CharIndex("st", "test", 5), Is.Zero);
-		}
+			}
 		}
 
 		[Test]
@@ -109,7 +109,7 @@ namespace Tests.Linq
 				Assert.That(Sql.CharIndex(Char.MinValue, "test"), Is.Zero);
 				Assert.That(Sql.CharIndex('g', "test"), Is.Zero);
 				Assert.That(Sql.CharIndex('s', "test"), Is.EqualTo(3));
-		}
+			}
 		}
 
 		[Test]
@@ -127,7 +127,7 @@ namespace Tests.Linq
 				Assert.That(Sql.CharIndex('s', "test", 2), Is.EqualTo(3));
 				Assert.That(Sql.CharIndex('s', "test", 4), Is.Zero);
 				Assert.That(Sql.CharIndex('s', "test", 5), Is.Zero);
-		}
+			}
 		}
 
 		[Test]
@@ -138,7 +138,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Reverse(null), Is.Null);
 				Assert.That(Sql.Reverse(string.Empty), Is.EqualTo(string.Empty));
 				Assert.That(Sql.Reverse("abcd"), Is.EqualTo("dcba"));
-		}
+			}
 		}
 
 		[Test]
@@ -152,7 +152,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Left("test", 0), Is.EqualTo(""));
 				Assert.That(Sql.Left("test", 2), Is.EqualTo("te"));
 				Assert.That(Sql.Left("test", 5), Is.EqualTo("test"));
-		}
+			}
 		}
 
 		[Test]
@@ -166,7 +166,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Right("test", 0), Is.EqualTo(""));
 				Assert.That(Sql.Right("test", 2), Is.EqualTo("st"));
 				Assert.That(Sql.Right("test", 5), Is.EqualTo("test"));
-		}
+			}
 		}
 
 		[Test]
@@ -195,7 +195,7 @@ namespace Tests.Linq
 
 				// Correct length
 				Assert.That(Sql.Stuff("1234", 3, 5, "5678"), Is.EqualTo("125678"));
-		}
+			}
 		}
 
 		[Test]
@@ -214,7 +214,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Space(-1), Is.Null);
 				Assert.That(Sql.Space(0), Is.EqualTo(""));
 				Assert.That(Sql.Space(1), Is.EqualTo(" "));
-		}
+			}
 		}
 
 		[Test]
@@ -231,7 +231,7 @@ namespace Tests.Linq
 				Assert.That(Sql.PadLeft("test", 3, '.'), Is.EqualTo("tes"));
 				Assert.That(Sql.PadLeft("test", 4, '.'), Is.EqualTo("test"));
 				Assert.That(Sql.PadLeft("test", 5, '.'), Is.EqualTo(".test"));
-		}
+			}
 		}
 
 		[Test]
@@ -248,7 +248,7 @@ namespace Tests.Linq
 				Assert.That(Sql.PadRight("test", 3, '.'), Is.EqualTo("tes"));
 				Assert.That(Sql.PadRight("test", 4, '.'), Is.EqualTo("test"));
 				Assert.That(Sql.PadRight("test", 5, '.'), Is.EqualTo("test."));
-		}
+			}
 		}
 
 		[Test]
@@ -264,7 +264,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Replace("test", "", "oa"), Is.EqualTo("test"));
 				Assert.That(Sql.Replace("test", "g", "oa"), Is.EqualTo("test"));
 				Assert.That(Sql.Replace("test", "e", "oa"), Is.EqualTo("toast"));
-		}
+			}
 		}
 
 		[Test]
@@ -279,7 +279,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Replace("", 'e', 'o'), Is.EqualTo(""));
 				Assert.That(Sql.Replace("test", 'g', 'o'), Is.EqualTo("test"));
 				Assert.That(Sql.Replace("test", 'e', 'o'), Is.EqualTo("tost"));
-		}
+			}
 		}
 
 		#endregion
@@ -487,8 +487,8 @@ namespace Tests.Linq
 				{
 					Assert.That(r.p.ID, Is.EqualTo(1));
 					Assert.That(r.str, Is.EqualTo(str));
+				}
 			}
-		}
 		}
 
 		[Test]
@@ -1296,7 +1296,7 @@ namespace Tests.Linq
 				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(4, '.'))), Is.EqualTo("test"));
 				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(5, '.'))), Is.EqualTo("test."));
 				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(6, '.'))), Is.EqualTo("test.."));
-		}
+			}
 		}
 
 		[Test]
@@ -2035,8 +2035,8 @@ namespace Tests.Linq
 				{
 					Assert.That(table.Any(sampleClass => sampleClass.Value   == test || sampleClass.Value2!.Contains(test)), Is.True);
 					Assert.That(table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.EqualTo(1));
+				}
 			}
-		}
 		}
 		#endregion
 	}

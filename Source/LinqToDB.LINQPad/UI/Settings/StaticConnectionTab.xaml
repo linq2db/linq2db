@@ -1,0 +1,49 @@
+﻿<UserControl
+	x:Class         ="LinqToDB.LINQPad.UI.StaticConnectionTab"
+	x:ClassModifier ="internal"
+	xmlns           = "http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x         = "http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d         = "http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc        = "http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:us        = "clr-namespace:LinqToDB.LINQPad.UI"
+	mc:Ignorable    = "d"
+	d:DataContext   = "{d:DesignInstance us:StaticConnectionModel, IsDesignTimeCreatable=true}"
+	>
+
+
+	<StackPanel>
+		<us:SharedConnectionOptions />
+
+		<GroupBox Header="Precompiled Model Options">
+			<StackPanel Margin="5">
+				<Label>Assembly path</Label>
+				<DockPanel ToolTip="Path to assembly with custom data model">
+					<Button DockPanel.Dock="Right" Margin="5 0 0 0" Padding="10 5" Content="Select" Click="Click_SelectAssembly" />
+					<TextBox Padding="5" Text="{Binding ContextAssemblyPath}" />
+				</DockPanel>
+
+				<DockPanel Margin="0 5 0 0" ToolTip="Full name of data model context class. Class must be public class, based on LinqToDB.Data.DataConnection, LinqToDB.DataContext or any other class implementing LinqToDB.IDataContext with default constructor or constructor that accepts configuration name">
+					<Label>Context</Label>
+					<ComboBox Width="380" Margin="10 0 0 0" ItemsSource="{Binding ContextTypes}" SelectedItem="{Binding ContextTypeName}" HorizontalAlignment="Right" />
+				</DockPanel>
+
+				<Label>
+				<TextBlock>
+			Configuration file in
+			<Hyperlink NavigateUri="https://learn.microsoft.com/en-us/dotnet/framework/data/adonet/connection-strings-and-configuration-files#the-connectionstrings-section" RequestNavigate="Url_Click">app.config</Hyperlink> or
+			<Hyperlink NavigateUri="https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-6.0#appsettingsjson" RequestNavigate="Url_Click">appsettings.json</Hyperlink> format
+				</TextBlock>
+				</Label>
+				<DockPanel ToolTip="Path to app.config or config.json file with connection strings">
+					<Button DockPanel.Dock="Right" Margin="5 0 0 0" Padding="10 5" Content="Select" Click="Click_SelectConfig" />
+					<TextBox Padding="5" Text="{Binding ConfigurationPath}" />
+				</DockPanel>
+
+				<DockPanel Margin="0 5 0 0" ToolTip="Name of connection string from configuration file to pass to context class constructor">
+					<Label>Configuration</Label>
+					<ComboBox Width="380" Margin="10 0 0 0" ItemsSource="{Binding Configurations}" SelectedItem="{Binding ConfigurationName}" HorizontalAlignment="Right" />
+				</DockPanel>
+			</StackPanel>
+		</GroupBox>
+	</StackPanel>
+</UserControl>

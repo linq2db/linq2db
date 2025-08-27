@@ -455,7 +455,7 @@ namespace Tests.xUpdate
 					while (expected.Length > 1 && expected[expected.Length - 1] == 0)
 						expected = expected.Take(expected.Length - 1).ToArray();
 
-					 if (expected.Length == 0)
+					if (expected.Length == 0)
 						expected = new byte[] { 0 };
 				}
 

@@ -26,8 +26,8 @@ FOR %%n IN (linq2db linq2db.Extensions linq2db.Compat linq2db.Tools linq2db.Scaf
     )
 )
 
-ECHO build cli/t4 nugets (no debug support required)
-FOR %%n IN (cli Access ClickHouse DB2 Firebird Informix MySql Oracle PostgreSQL SapHana SqlCe SQLite SqlServer Sybase t4models) DO (
+ECHO build cli/linqpad/t4 nugets (no debug support required)
+FOR %%n IN (cli LINQPad Access ClickHouse DB2 Firebird Informix MySql Oracle PostgreSQL SapHana SqlCe SQLite SqlServer Sybase t4models) DO (
     ECHO %NUSPECS%/%%n.nuspec
     dotnet pack empty/empty.csproj --no-build -p:NuspecFile=../%NUSPECS%/linq2db.%%n.nuspec -o %NUGETS%
     IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%

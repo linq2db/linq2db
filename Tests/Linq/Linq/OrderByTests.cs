@@ -165,7 +165,7 @@ namespace Tests.Linq
 		[Test]
 		public void OrderBy7([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, o => o.UseDoNotClearOrderBys(true)))
+			using (var db = GetDataContext(context, o => o.UseConcatenateOrderBy(true)))
 			{
 
 				var expected =
@@ -805,6 +805,25 @@ namespace Tests.Linq
 			.ToList();
 
 			Assert.That(q[0].ID, Is.EqualTo(enableConstantExpressionInOrderBy ? 1 : 3));
+		}
+
+		[Test]
+		public void RemoveOrderBy([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Parent1
+					.OrderBy(p => p.ParentID)
+					.Take(2)
+					.OrderByDescending(p => p.ParentID)
+					.RemoveOrderBy();
+
+				var queryAst = query.GetSelectQuery();
+				queryAst.OrderBy.Items.Count.ShouldBe(1);
+				queryAst.OrderBy.Items[0].IsDescending.ShouldBe(false);
+
+				AssertQuery(query);
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4586")]
