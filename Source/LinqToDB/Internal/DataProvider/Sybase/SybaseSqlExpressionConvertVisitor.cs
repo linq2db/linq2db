@@ -10,8 +10,6 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		{
 		}
 
-		protected override bool SupportsNullIf => false;
-
 		// could be enabled if we add SP03 version support (also IsDistinctFromSupported should be enabled)
 		//protected override bool SupportsDistinctAsExistsIntersect => true;
 
