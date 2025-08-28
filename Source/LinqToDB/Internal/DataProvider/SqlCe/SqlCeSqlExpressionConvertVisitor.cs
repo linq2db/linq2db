@@ -14,6 +14,8 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		{
 		}
 
+		protected override bool SupportsNullIf => false;
+
 		#region LIKE
 
 		private static string[] LikeSqlCeCharactersToEscape = { "_", "%" };
