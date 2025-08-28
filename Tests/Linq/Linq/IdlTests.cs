@@ -138,7 +138,7 @@ namespace Tests.Linq
 
 		public class PersonWithObjectId : WithObjectIdBase, IHasObjectId2
 		{
-			public string FistName { get; set; } = null!;
+			public string FirstName { get; set; } = null!;
 		}
 
 		public struct NullableObjectId
@@ -499,10 +499,10 @@ namespace Tests.Linq
 				var persons =
 					from x in db.Person
 					select new PersonWithObjectId
-						{
-							Id = new ObjectId { Value = x.ID },
-							FistName = x.FirstName,
-						};
+					{
+						Id = new ObjectId { Value = x.ID },
+						FirstName = x.FirstName,
+					};
 
 				// this works
 				var r1 = FilterSourceByIdDefinedInBaseClass(persons, 5).ToArray();

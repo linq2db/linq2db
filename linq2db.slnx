@@ -13,12 +13,14 @@
     <File Path=".github/ISSUE_TEMPLATE/02_bug_report_linq2db.efcore.yml" />
     <File Path=".github/ISSUE_TEMPLATE/03_bug_report_linq2db.cli.yml" />
     <File Path=".github/ISSUE_TEMPLATE/04_bug_report_linq2db.t4.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/05_bug_report_linq2db.other.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/05_bug_report_linq2db.linqpad.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/09_bug_report_linq2db.other.yml" />
     <File Path=".github/ISSUE_TEMPLATE/11_feture_request_linq2db.yml" />
     <File Path=".github/ISSUE_TEMPLATE/12_feture_request_linq2db.efcore.yml" />
     <File Path=".github/ISSUE_TEMPLATE/13_feture_request_linq2db.cli.yml" />
     <File Path=".github/ISSUE_TEMPLATE/14_feture_request_linq2db.t4.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/15_feture_request_linq2db.other.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/15_feture_request_linq2db.linqpad.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/19_feture_request_linq2db.other.yml" />
     <File Path=".github/ISSUE_TEMPLATE/config.yml" />
   </Folder>
   <Folder Name="/.root/">
@@ -306,6 +308,9 @@
     <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.STS.csproj" />
     <Project Path="Source/LinqToDB.Extensions/LinqToDB.Extensions.csproj" />
     <Project Path="Source/LinqToDB.FSharp/LinqToDB.FSharp.fsproj" />
+    <Project Path="Source/LinqToDB.LINQPad/LinqToDB.LINQPad.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
     <Project Path="Source/LinqToDB.Remote.Grpc/LinqToDB.Remote.Grpc.csproj" />
     <Project Path="Source/LinqToDB.Remote.HttpClient.Client/LinqToDB.Remote.HttpClient.Client.csproj" />
     <Project Path="Source/LinqToDB.Remote.HttpClient.Server/LinqToDB.Remote.HttpClient.Server.csproj" />
