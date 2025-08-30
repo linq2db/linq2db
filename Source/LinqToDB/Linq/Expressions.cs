@@ -1512,7 +1512,7 @@ namespace LinqToDB.Linq
 		/// </summary>
 		public static void AddTimeSpanMappings()
 		{
-			LinqToDB.Common.Configuration.DisableLegacySqlBuilderDateDiffCalls = true;
+			Common.Configuration.DisableLegacySqlBuilderDateDiffCalls = true;
 			MapMember<TimeSpan>(p => p.Days, (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Days, p)!.Value));
 			MapMember<TimeSpan>(p => p.TotalDays, (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalDays, p)!.Value));
 			MapMember<TimeSpan>(p => p.Hours, (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Hours, p)!.Value));

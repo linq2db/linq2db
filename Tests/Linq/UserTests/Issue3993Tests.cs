@@ -129,6 +129,7 @@ namespace Tests.UserTests.Test3993
 					NotificationDateTime6 = t.StartDateTime + t.PreNotification,
 					NotificationDateTime7 = t.StartDateTime2 - t.PreNotification,
 					NotificationDateTime8 = t.StartDateTime2 - t.PreNotification3,
+					NotificationDateTime9 = t.StartDateTime2 + -t.PreNotification3,
 					t.StrField!.Value.Day
 				};
 
@@ -348,6 +349,38 @@ namespace Tests.UserTests.Test3993
 				var hour = qryComplex.Where(x => x.NotificationDateTime!.Value.Hour == 13).First();
 				var minute = qryComplex.Where(x => x.NotificationDateTime!.Value.Minute == 51).First();
 				var second = qryComplex.Where(x => x.NotificationDateTime!.Value.Second >= 52 && x.NotificationDateTime!.Value.Second <= 54).First();
+			}
+			finally
+			{
+				db?.Dispose();
+			}
+		}
+
+		[Test]
+		public void TestIssue3993_Test4([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSapHana, TestProvName.AllSybase)] string configuration)
+		{
+			MappingSchema ms;
+			Model.ITestDataContext? db = null;
+			try
+			{
+				ms = new FluentMappingBuilder()
+						.Entity<Test>()
+							.HasTableName("Common_Topology_Locations")
+							.Property(e => e.StartDateTime)
+						.Build()
+						.MappingSchema;
+
+				db = GetDataContext(configuration, ms);
+
+				using var tbl = db.CreateLocalTable(new[]
+				{
+					new Test
+					{
+						StartDateTime    = TestData.DateTime4Utc
+					}
+				});
+
+				var hour =  db.GetTable<Test>().Where(x => x.StartDateTime!.Value.Hour == 13).FirstOrDefault();
 			}
 			finally
 			{
