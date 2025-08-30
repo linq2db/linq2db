@@ -6,6 +6,7 @@ using LinqToDB;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Informix.Translation
 {
@@ -230,7 +231,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 						var result =
 							factory.Cast(
 								factory.Cast(
-									factory.Fragment(intervalType, Precedence.Primary, "{0}::datetime Second to Fraction", dateTimeExpression),
+									factory.Cast(dateTimeExpression, intervalType.WithDbType("datetime Second to Fraction"), isMandatory: true),
 									factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(3)),
 								intDataType
 							);

@@ -129,6 +129,17 @@ namespace LinqToDB.Linq
 
 		#region MapUnary
 
+		static UnaryExpression GetUnaryNode(Expression expr)
+		{
+			while (expr.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs)
+				expr = ((UnaryExpression)expr).Operand;
+
+			if (expr is UnaryExpression unary)
+				return unary;
+
+			throw new ArgumentException($"Expression '{expr}' is not UnaryExpression node.");
+		}
+
 		/// <summary>
 		/// Maps specific UnaryExpression to another Lambda expression during SQL generation.
 		/// </summary>
@@ -188,7 +199,7 @@ namespace LinqToDB.Linq
 			Expression<Func<TOperand, TR>> unaryExpression,
 			Expression<Func<TOperand, TR>> expression)
 		{
-			MapUnary(providerName, unaryExpression.Body.UnwrapConvert().NodeType, typeof(TOperand), expression);
+			MapUnary(providerName, GetUnaryNode(unaryExpression.Body).NodeType, typeof(TOperand), expression);
 		}
 
 		/// <summary>

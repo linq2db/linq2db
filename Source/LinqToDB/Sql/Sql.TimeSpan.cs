@@ -4,14 +4,17 @@ using System.Linq.Expressions;
 using System.Globalization;
 using System.Diagnostics.CodeAnalysis;
 
+using LinqToDB.Linq;
+using LinqToDB.SqlQuery;
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+
+using PN = LinqToDB.ProviderName;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlQuery;
+
 namespace LinqToDB
 {
-	using Linq;
-	using SqlQuery;
-	using Expressions;
-
-	using PN = ProviderName;
-
 	public partial class Sql
 	{
 		[Enum]
@@ -44,7 +47,7 @@ namespace LinqToDB
 				var partStr  = TimeSpanPartToStr(part);
 				var timeSpan = builder.GetExpression("timeSpan");
 
-				builder.ResultExpression = new SqlExpression(typeof(long), "{0} " + partStr, timeSpan!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), "{0} " + partStr, timeSpan!);
 			}
 
 			public static string TimeSpanPartToStr(TimeSpanParts part)
@@ -72,7 +75,7 @@ namespace LinqToDB
 				var partStr  = TimeSpanPartBuilder.TimeSpanPartToStr(part);
 				var timeSpan = builder.GetExpression("timeSpan");
 
-				builder.ResultExpression = new SqlExpression(typeof(long), "round({0} " + partStr + ")", timeSpan!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), "round({0} " + partStr + ")", timeSpan!);
 			}
 		}
 
@@ -90,11 +93,11 @@ namespace LinqToDB
 				if (dt == DataType.Int64)
 				{
 					partStr = TimeSpanPartBuilder.TimeSpanPartToStr(part);
-					builder.ResultExpression = new SqlExpression(typeof(long), "{0} " + partStr, timeSpan!);
+					builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), "{0} " + partStr, timeSpan!);
 				}
 				else
 				{
-					builder.ResultExpression = new SqlExpression(typeof(long), builder.Expression + partStr, timeSpan!);
+					builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), builder.Expression + partStr, timeSpan!);
 				}
 			}
 
@@ -353,7 +356,7 @@ namespace LinqToDB
 				var timeSpan = builder.GetExpression("timeSpan", true);
 				var expStr = "strftime('%Y-%m-%d %H:%M:%f', {0}, ({1}/10000000.0) || ' Second')";
 
-				builder.ResultExpression = new SqlExpression(typeof(DateTime?), expStr, Precedence.Concatenate, date!, timeSpan!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(DateTime?)), expStr, Precedence.Concatenate, date!, timeSpan!);
 			}
 		}
 

@@ -487,7 +487,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (expr is UnaryExpression unary)
 					{
-						var l = Expressions.ConvertUnary(MappingSchema, unary);
+						var l = LinqToDB.Linq.Expressions.ConvertUnary(MappingSchema, unary);
 						if (l != null)
 						{
 							var body = l.Body.Unwrap();
@@ -498,12 +498,14 @@ namespace LinqToDB.Internal.Linq.Builder
 									if (context.l.Parameters[0] == wpi)
 										return context.unary.Operand;
 								}
+
 								return wpi;
 							});
 
 							return PreferServerSide(newExpr, enforceServerSide);
 						}
 					}
+
 					if (expr is BinaryExpression binary)
 					{
 						var l = LinqToDB.Linq.Expressions.ConvertBinary(MappingSchema, binary);

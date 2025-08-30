@@ -269,8 +269,8 @@ namespace LinqToDB
 						resultExpr = builder.Add<int>(
 							builder.Mul(resultExpr, 1000_000),
 							builder.Sub<int>(
-								new SqlFunction(typeof(int), "MICROSECOND", endDate),
-								new SqlFunction(typeof(int), "MICROSECOND", startDate))
+								new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "MICROSECOND", endDate),
+								new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "MICROSECOND", startDate))
 							);
 						break;
 					default:
@@ -537,7 +537,7 @@ namespace LinqToDB
 				var startdate = builder.GetExpression(0);
 				var endDate   = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlExpression(typeof(long), builder.Expression + "(nanosecond, {0}, {1}) / 100", startdate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), builder.Expression + "(nanosecond, {0}, {1}) / 100", startdate!, endDate!);
 			}
 		}
 
@@ -548,7 +548,7 @@ namespace LinqToDB
 				var startdate  = builder.GetExpression(0);
 				var endDate    = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlFunction(typeof(long), "Nano100_Between", startdate!, endDate!);
+				builder.ResultExpression = new SqlFunction(builder.Mapping.GetDbDataType(typeof(long)), "Nano100_Between", startdate!, endDate!);
 			}
 		}
 
@@ -559,7 +559,7 @@ namespace LinqToDB
 				var startdate = builder.GetExpression(0);
 				var endDate   = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlExpression(typeof(long), builder.Expression + "(MICROSECOND, {0}, {1}) * 10", startdate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), builder.Expression + "(MICROSECOND, {0}, {1}) * 10", startdate!, endDate!);
 			}
 		}
 
@@ -570,7 +570,7 @@ namespace LinqToDB
 				var startdate = builder.GetExpression(0);
 				var endDate   = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlExpression(typeof(long), builder.Expression + "(microsecond, {0}, {1}) * 10", startdate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), builder.Expression + "(microsecond, {0}, {1}) * 10", startdate!, endDate!);
 			}
 		}
 
@@ -581,7 +581,7 @@ namespace LinqToDB
 				var startdate = builder.GetExpression(0);
 				var endDate   = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlExpression(typeof(long), "Cast(DateDiff(millisecond, {0}, {1}) * 10000 as BIGINT)", startdate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), "Cast(DateDiff(millisecond, {0}, {1}) * 10000 as BIGINT)", startdate!, endDate!);
 			}
 		}
 
@@ -593,13 +593,13 @@ namespace LinqToDB
 				var endDate    = builder.GetExpression(1);
 
 				var secondsExpr = builder.Mul<int>(builder.Sub<int>(
-						new SqlFunction(typeof(int), "Days", endDate!),
-						new SqlFunction(typeof(int), "Days", startDate!)),
+						new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "Days", endDate!),
+						new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "Days", startDate!)),
 					new SqlValue(86400));
 
 				var midnight = builder.Sub<int>(
-					new SqlFunction(typeof(int), "MIDNIGHT_SECONDS", endDate!),
-					new SqlFunction(typeof(int), "MIDNIGHT_SECONDS", startDate!));
+					new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "MIDNIGHT_SECONDS", endDate!),
+					new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "MIDNIGHT_SECONDS", startDate!));
 
 				var resultExpr = builder.Add<int>(secondsExpr, midnight);
 
@@ -607,8 +607,8 @@ namespace LinqToDB
 					builder.Mul(resultExpr, 10000000),
 					builder.Mul(
 						builder.Sub<int>(
-							new SqlFunction(typeof(int), "MICROSECOND", endDate!),
-							new SqlFunction(typeof(int), "MICROSECOND", startDate!)),
+							new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "MICROSECOND", endDate!),
+							new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), "MICROSECOND", startDate!)),
 						10));
 
 				builder.ResultExpression = resultExpr;
@@ -623,7 +623,7 @@ namespace LinqToDB
 				var endDate = builder.GetExpression(1);
 
 				var expStr = "cast(round((julianday({1}) - julianday({0})) * 864000000000) as INTEGER)";
-				builder.ResultExpression = new SqlExpression(typeof(long), expStr, startDate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), expStr, startDate!, endDate!);
 			}
 		}
 
@@ -634,7 +634,7 @@ namespace LinqToDB
 				var startDate = builder.GetExpression(0);
 				var endDate = builder.GetExpression(1);
 				var expStr =  "({1}::timestamp - {0}::timestamp)";
-				builder.ResultExpression = new SqlExpression(typeof(long), expStr, Precedence.Multiplicative, startDate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), expStr, Precedence.Multiplicative, startDate!, endDate!);
 			}
 		}
 
@@ -647,7 +647,7 @@ namespace LinqToDB
 
 				var expStr = "DATEDIFF('s', {0}, {1}) * 10000000";
 
-				builder.ResultExpression = new SqlExpression(typeof(long), expStr, startDate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), expStr, startDate!, endDate!);
 			}
 		}
 
@@ -661,7 +661,7 @@ namespace LinqToDB
 				// Subtracting two TIMESTAMP returns an INTERVAL.
 				// Unfortunately, it's not possible to know based on C# type if an expression was mapped to `DATE` or `TIMESTAMP` in DB :(
 				var expStr = "(CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))";
-				builder.ResultExpression = new SqlExpression(typeof(long), expStr, startDate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), expStr, startDate!, endDate!);
 			}
 		}
 
@@ -673,7 +673,7 @@ namespace LinqToDB
 				var endDate    = builder.GetExpression(1);
 
 				builder.ResultExpression = new SqlExpression(
-					typeof(long?),
+					builder.Mapping.GetDbDataType(typeof(long?)),
 					"toInt64((toUnixTimestamp64Nano(toDateTime64({1}, 3)) - toUnixTimestamp64Nano(toDateTime64({0}, 3))) / 100)",
 					Precedence.Subtraction,
 					startDate!,

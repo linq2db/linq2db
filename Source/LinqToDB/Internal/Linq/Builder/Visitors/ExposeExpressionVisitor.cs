@@ -267,7 +267,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		Expression? ConvertUnary(UnaryExpression node)
 		{
-			var l = Expressions.ConvertUnary(MappingSchema, node);
+			var l = LinqToDB.Linq.Expressions.ConvertUnary(MappingSchema, node);
 			if (l != null)
 			{
 				var body = l.Body.Unwrap();
@@ -278,6 +278,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 						if (context.l.Parameters[0] == wpi)
 							return context.node.Operand;
 					}
+
 					return wpi;
 				});
 
@@ -603,7 +604,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return expr;
 			}
 
-			if (!Common.Configuration.DisableLegacySqlBuilderDateDiffCalls)
+			if (!LinqToDB.Common.Configuration.DisableLegacySqlBuilderDateDiffCalls)
 			{
 				if (node.Member.DeclaringType == typeof(TimeSpan) && node.Expression != null)
 				{
