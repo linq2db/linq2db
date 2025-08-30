@@ -2755,8 +2755,43 @@ namespace LinqToDB.Internal.Linq.Builder
 			return base.VisitBinary(node);
 		}
 
+		//Expression? ConvertBinary(BinaryExpression node)
+		//{
+		//	var l = LinqToDB.Linq.Expressions.ConvertBinary(MappingSchema, node);
+		//	if (l != null)
+		//	{
+		//		var body = l.Body.Unwrap();
+		//		var expr = body.Transform((l, node), static (context, wpi) =>
+		//		{
+		//			if (wpi.NodeType == ExpressionType.Parameter)
+		//			{
+		//				if (context.l.Parameters[0] == wpi)
+		//					return context.node.Left;
+		//				if (context.l.Parameters[1] == wpi)
+		//					return context.node.Right;
+		//			}
+
+		//			return wpi;
+		//		});
+
+		//		if (expr.Type != node.Type)
+		//			expr = new ChangeTypeExpression(expr, node.Type);
+
+		//		return expr;
+		//	}
+
+		//	return null;
+		//}
+
 		bool HandleBinary(BinaryExpression node, out Expression translated)
 		{
+			translated = ExpressionConvertHelper.ConvertBinary(MappingSchema, node)!;
+			if (translated != null)
+			{
+				translated = Visit(translated);
+				return true;
+			}
+
 			switch (node.NodeType)
 			{
 				case ExpressionType.Equal:
