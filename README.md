@@ -40,11 +40,9 @@ Code examples and demos can be found [here](https://github.com/linq2db/examples)
 
 - [linq2db.EntityFrameworkCore](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB.EntityFrameworkCore) (adds support for linq2db functionality in EF.Core projects)
 - [LinqToDB.Identity](https://github.com/linq2db/LinqToDB.Identity) - ASP.NET Core Identity provider using Linq To DB
-- [LINQPad Driver](https://github.com/linq2db/linq2db.LINQPad)
+- [LINQPad Driver](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB.LINQPad)
 - [DB2 iSeries Provider](https://github.com/LinqToDB4iSeries/Linq2DB4iSeries)
-- [ASP.NET CORE 2 Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-2/tree/master/LINQ2DB-MVC-Core-2)
-- [ASP.NET CORE 3 Template with Angular](https://github.com/David-Mawer/LINQ2DB-AngularWebApp-Core-3)
-- [ASP.NET CORE 5 Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-5)
+- [ASP.NET Core Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-5)
 - [PostGIS extensions for linq2db](https://github.com/apdevelop/linq2db-postgis-extensions)
 
 Notable open-source users:
@@ -87,10 +85,9 @@ var dc = new DataContext(options);
 
 > [!TIP]
 > There are a lot of configuration methods on `DataOptions` you can use.
->
+
 > [!TIP]
 > It is recommended to create configured `DataOptions` instance once and use it everywhere. E.g. you can register it in your DI container.
->
 
 ### Using Config File (.NET Framework)
 
@@ -255,7 +252,6 @@ This approach involves no attributes at all. In this case Linq To DB will use PO
 
 ```c#
 using System;
-using LinqToDB.Mapping;
 
 public class Product
 {
@@ -297,7 +293,6 @@ And now let's get some data:
 
 ```cs
 using LinqToDB;
-using LinqToDB.Common;
 
 public static List<Product> GetProducts()
 {

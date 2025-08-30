@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -61,7 +61,7 @@ namespace Tests.UserTests
 
 				var count = qry.Where(x => x.MlogCombined1 != null).Count();
 
-				count.Should().Be(1);
+				count.ShouldBe(1);
 			}
 		}
 	}

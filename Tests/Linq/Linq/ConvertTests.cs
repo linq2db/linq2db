@@ -4,14 +4,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text.Json;
 
-using FluentAssertions;
-
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -686,7 +686,7 @@ namespace Tests.Linq
 
 			TestContext.Out.WriteLine($"Expected {expected} result {r}");
 
-			Assert.That(Math.Abs(LinqToDB.Common.Convert<TTo, decimal>.From(expected) - LinqToDB.Common.Convert<TTo, decimal>.From(r)), Is.LessThan(0.01m));
+			Assert.That(Math.Abs(Convert<TTo, decimal>.From(expected) - Convert<TTo, decimal>.From(r)), Is.LessThan(0.01m));
 		}
 
 		[ExpressionMethod(nameof(ServerConvertImp))]
@@ -1608,7 +1608,7 @@ namespace Tests.Linq
 					})
 					.First();
 
-				sqlConverted.Should().Be(noSqlConverted);
+				sqlConverted.ShouldBeEquivalentTo(noSqlConverted);
 			}
 		}
 

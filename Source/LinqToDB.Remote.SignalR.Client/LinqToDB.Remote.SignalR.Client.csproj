@@ -19,4 +19,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+	</ItemGroup>
 </Project>

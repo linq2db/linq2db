@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -274,10 +275,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return ((Prev != null ? Prev.GetHashCode() : 0) * 397) ^ (Field != null ? Field.GetHashCode() : 0);
-				}
+				return HashCode.Combine(Prev, Field);
 			}
 		}
 
@@ -2308,10 +2306,11 @@ namespace Tests.Linq
 				var query = db.Person
 					.GroupBy(_ => _.Gender);
 
+				var act = () => query.ToList();
 				if (guard)
-					query.Invoking(q => q.ToList()).Should().Throw<LinqToDBException>();
+					act.ShouldThrow<LinqToDBException>();
 				else
-					query.Invoking(q => q.ToList()).Should().NotThrow();
+					act.ShouldNotThrow();
 			}
 		}
 
@@ -3081,10 +3080,10 @@ namespace Tests.Linq
 			// We check that grouping is left in the subquery
 
 			var sqlJoinedTable = selectQuery.From.Tables[0].Joins[0];
-			sqlJoinedTable.JoinType.Should().Be(JoinType.OuterApply);
+			sqlJoinedTable.JoinType.ShouldBe(JoinType.OuterApply);
 			var joinQuery = (SelectQuery)sqlJoinedTable.Table.Source;
-			joinQuery.GroupBy.IsEmpty.Should().BeTrue();
-			joinQuery.OrderBy.Items.Should().HaveCount(2);
+			joinQuery.GroupBy.IsEmpty.ShouldBeTrue();
+			joinQuery.OrderBy.Items.Count.ShouldBe(2);
 		}
 
 		#region issue 4256
@@ -3228,7 +3227,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Should().HaveCount(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3257,7 +3256,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Should().HaveCount(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3286,7 +3285,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Should().HaveCount(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3315,7 +3314,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Should().HaveCount(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3344,7 +3343,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Should().HaveCount(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3373,7 +3372,7 @@ namespace Tests.Linq
 				})
 				.OrderByDescending(_ => _.cnt.count);
 
-			query.Should().HaveCount(2);
+			query.ToList().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -3643,7 +3642,7 @@ namespace Tests.Linq
 
 			query.ToList();
 
-			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+			db.LastQuery!.ShouldContain("SELECT", Exactly.Once());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3486")]
@@ -3664,7 +3663,7 @@ namespace Tests.Linq
 
 			query.ToList();
 
-			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+			db.LastQuery!.ShouldContain("SELECT", Exactly.Once());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
@@ -3683,7 +3682,7 @@ namespace Tests.Linq
 
 			query.ToList();
 
-			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+			db.LastQuery!.ShouldContain("SELECT", Exactly.Once());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
@@ -3701,7 +3700,7 @@ namespace Tests.Linq
 
 			query.ToList();
 
-			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+			db.LastQuery!.ShouldContain("SELECT", Exactly.Once());
 		}
 
 		[Test]
@@ -3813,6 +3812,53 @@ namespace Tests.Linq
 				{
 					gr.First().Value,
 				});
+		}
+
+		static class Issue5070
+		{
+			public sealed class CustomerPrice
+			{
+				public int CustomerId { get; set; }
+				public int FinalCustomerId { get; set; }
+				public bool IsActive { get; set; }
+				public decimal Price { get; set; }
+			}
+
+			public sealed class Inventory
+			{
+				public int CustomerId { get; set; }
+				public decimal Volume { get; set; }
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5070")]
+		public void Issue5070Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue5070.CustomerPrice>();
+			using var t2 = db.CreateLocalTable<Issue5070.Inventory>();
+
+			var forceInactive = true;
+
+			var query = t2
+				.InnerJoin(
+					t1,
+					(v, p) => v.CustomerId == p.CustomerId,
+					(v, p) => new
+					{
+						FinalCustomerId = Sql.NullIf(p.FinalCustomerId, 0) ?? p.CustomerId,
+						IsActive = forceInactive ? false : p.IsActive,
+						Amount = v.Volume * p.Price
+					})
+				.GroupBy(t => new { t.FinalCustomerId, t.IsActive })
+				.Select(t => new
+				{
+					t.Key.FinalCustomerId,
+					t.Key.IsActive,
+					Amount = t.Sum(x => x.Amount)
+				});
+
+			query.ToArray();
 		}
 	}
 }

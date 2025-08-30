@@ -10,7 +10,7 @@
   <Folder Name="/Templates/">
     <File Path="Templates/Access.Odbc.tt" />
     <File Path="Templates/Access.OleDb.tt" />
-    <File Path="Templates/ClickHouse.Client.tt" />
+    <File Path="Templates/ClickHouse.Driver.tt" />
     <File Path="Templates/ClickHouse.MySql.tt" />
     <File Path="Templates/ConnectionStrings.ttinclude" />
     <File Path="Templates/DB2.tt" />
@@ -28,7 +28,7 @@
   </Folder>
   <Project Path="Projects/Access.ODBC.csproj" />
   <Project Path="Projects/Access.OleDb.csproj" />
-  <Project Path="Projects/ClickHouse.Client.csproj" />
+  <Project Path="Projects/ClickHouse.Driver.csproj" />
   <Project Path="Projects/ClickHouse.MySql.csproj" />
   <Project Path="Projects/DB2.csproj" />
   <Project Path="Projects/Firebird.csproj" />

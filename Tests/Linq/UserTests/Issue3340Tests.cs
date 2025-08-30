@@ -7,10 +7,9 @@ using System.Reflection;
 using System.Text;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using Newtonsoft.Json;
 
@@ -268,10 +267,7 @@ namespace Tests.UserTests
 					return ToSqlExpression(serializedValue.Trim('"'));
 				}
 
-				return new SqlExpression(
-					"JSON_QUERY({0})",
-					ToSqlExpression(serializedValue)
-				);
+				return new SqlFragment("JSON_QUERY({0})", ToSqlExpression(serializedValue));
 			}
 
 			#region CLASSES

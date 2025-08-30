@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
+using LinqToDB.Data;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB
 {
@@ -128,9 +129,47 @@ namespace LinqToDB
 		string?                       ConfigurationString         { get; }
 
 		/// <summary>
+		/// Sets new options for current data context.
+		/// <para>
+		/// <b>Implements the Disposable pattern, which must be used to properly restore previous options.</b>
+		/// </para>
+		/// </summary>
+		/// <remarks>
+		/// For <see cref="ConnectionOptions"/> we update only mapping schema and connection interceptor. Connection string, configuration, data provider, etc. are not updatable.
+		/// </remarks>
+		/// <param name="optionsSetter">
+		/// Options setter function.
+		/// </param>
+		/// <returns>
+		/// Returns disposable object, which could be used to restore previous options.
+		/// </returns>
+		/// <exception cref="ArgumentNullException"></exception>
+		public IDisposable? UseOptions(Func<DataOptions, DataOptions> optionsSetter);
+
+		/// <summary>
+		/// Sets new mapping schema for current data context.
+		/// <para>
+		/// <b>Implements the Disposable pattern, which must be used to properly restore previous settings.</b>
+		/// </para>
+		/// </summary>
+		/// <param name="mappingSchema">Mapping schema to set.</param>
+		/// <returns></returns>
+		public IDisposable? UseMappingSchema(MappingSchema mappingSchema);
+
+		/// <summary>
 		/// Adds mapping schema to current context.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema to add.</param>
 		void AddMappingSchema(MappingSchema mappingSchema);
+
+		/// <summary>
+		/// Sets the current <see cref="MappingSchema"/> instance for the context.
+		/// <para>
+		/// <b>Note:</b> This method ultimately replaces the current mapping schema and should only be used
+		/// if you need to create a new schema based on the existing one, or you are absolutely sure you know what you are doing.
+		/// </para>
+		/// </summary>
+		/// <param name="mappingSchema">Mapping schema to set.</param>
+		void SetMappingSchema(MappingSchema mappingSchema);
 	}
 }

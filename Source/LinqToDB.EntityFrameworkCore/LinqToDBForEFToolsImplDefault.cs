@@ -12,7 +12,6 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
@@ -24,7 +23,8 @@ using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Internal;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 using LinqToDB.SqlQuery;
@@ -48,8 +48,6 @@ namespace LinqToDB.EntityFrameworkCore
 	[PublicAPI]
 	public class LinqToDBForEFToolsImplDefault : ILinqToDBForEFTools
 	{
-		private static readonly char[] _nameSeparator = ['.'];
-
 		sealed class ProviderKey
 		{
 			public ProviderKey(string? providerName, string? connectionString)
@@ -78,10 +76,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return ((ProviderName != null ? ProviderName.GetHashCode() : 0) * 397) ^ (ConnectionString != null ? ConnectionString.GetHashCode() : 0);
-				}
+				return HashCode.Combine(ProviderName, ConnectionString);
 			}
 			
 			#endregion
@@ -183,6 +178,7 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.SqlServer2017                                                => CreateSqlServerProvider(SqlServerVersion.v2017, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.SqlServer2019                                                => CreateSqlServerProvider(SqlServerVersion.v2019, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.SqlServer2022                                                => CreateSqlServerProvider(SqlServerVersion.v2022, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.SqlServer2025                                                => CreateSqlServerProvider(SqlServerVersion.v2025, connectionInfo.ConnectionString, connectionInfo.Connection),
 
 				ProviderName.MySql                                                        => MySqlTools.GetDataProvider(MySqlVersion.AutoDetect, MySqlProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.MySql57                                                      => MySqlTools.GetDataProvider(MySqlVersion.MySql57, MySqlProvider.AutoDetect, connectionInfo.ConnectionString, connectionInfo.Connection),
@@ -194,6 +190,7 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.PostgreSQL93                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v93, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.PostgreSQL95                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v95, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.PostgreSQL15                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v15, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.PostgreSQL18                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v18, connectionInfo.ConnectionString, connectionInfo.Connection),
 
 				ProviderName.SQLite or ProviderName.SQLiteMS                              => SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft, connectionInfo.ConnectionString, connectionInfo.Connection),
 
@@ -297,7 +294,7 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <returns>Linq To DB SQL Server provider instance.</returns>
 		protected virtual IDataProvider CreateSqlServerProvider(SqlServerVersion version, string? connectionString, DbConnection? connection)
 		{
-			return DataProvider.SqlServer.SqlServerTools.GetDataProvider(version, SqlServerProvider.MicrosoftDataSqlClient, connectionString, connection);
+			return SqlServerTools.GetDataProvider(version, SqlServerProvider.MicrosoftDataSqlClient, connectionString, connection);
 		}
 
 		/// <summary>
@@ -405,7 +402,7 @@ namespace LinqToDB.EntityFrameworkCore
 					{
 						var typedLabels = labels.ToDictionary(kv => kv.Key, kv => $"'{kv.Value}'::{mapping.StoreType}");
 
-						mappingSchema.SetDataType(type, new SqlDataType(new DbDataType(type, DataType.Enum, mapping.StoreType)));
+						mappingSchema.AddScalarType(type, new SqlDataType(new DbDataType(type, DataType.Enum, mapping.StoreType)));
 						mappingSchema.SetValueToSqlConverter(type, (sb, _, v) => sb.Append(typedLabels[v]));
 					}
 				}

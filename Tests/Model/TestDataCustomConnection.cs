@@ -5,11 +5,11 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common.Internal;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 namespace Tests.Model
 {
@@ -109,7 +109,12 @@ namespace Tests.Model
 
 		public string? ConfigurationString => ((IDataContext)Connection).ConfigurationString;
 
+		public IDisposable? UseOptions(Func<DataOptions, DataOptions> optionsSetter) => null;
+
+		public IDisposable? UseMappingSchema(MappingSchema mappingSchema) => null;
+
 		public void AddMappingSchema(MappingSchema mappingSchema) {}
+		public void SetMappingSchema(MappingSchema mappingSchema) {}
 
 		public int ConfigurationID => ((IConfigurationID)Connection).ConfigurationID;
 

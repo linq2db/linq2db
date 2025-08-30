@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Data.Common;
 
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.DataProvider;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Options;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
 
@@ -33,7 +33,8 @@ namespace LinqToDB.Data
 	/// </param>
 	/// <param name="DisposeConnection">
 	/// Gets <see cref="DbConnection"/> ownership status for <see cref="DataConnection"/> instance.
-	/// If <c>true</c>, <see cref="DataConnection"/> will dispose provided connection on own dispose.
+	/// If <c>true</c>, <see cref="DataConnection"/> will dispose provided/created connection on own dispose.
+	/// If <c>null</c>, <see cref="DataConnection"/> will dispose connection on own dispose only if it created by <see cref="DataConnection"/> instance.
 	/// </param>
 	/// <param name="ConnectionFactory">
 	/// Gets connection factory to use with <see cref="DataConnection"/> instance. Accepts current context <see cref="DataOptions" /> settings.
@@ -58,15 +59,18 @@ namespace LinqToDB.Data
 		MappingSchema?                                  MappingSchema             = default,
 		DbConnection?                                   DbConnection              = default,
 		DbTransaction?                                  DbTransaction             = default,
-		bool                                            DisposeConnection         = default,
-		Func<DataOptions, DbConnection>?                ConnectionFactory         = default,
+		bool?                                           DisposeConnection         = default,
+		Func<DataOptions,DbConnection>?                 ConnectionFactory         = default,
 		Func<ConnectionOptions, IDataProvider>?         DataProviderFactory       = default,
 		ConnectionOptionsConnectionInterceptor?         ConnectionInterceptor     = default,
 		Action<MappingSchema, IEntityChangeDescriptor>? OnEntityDescriptorCreated = default
+
 		// If you add another parameter here, don't forget to update
 		// ConnectionOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
-		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>, IApplicable<RemoteDataContextBase>
+		: IOptionSet,
+			IApplicable<DataConnection>, IApplicable<DataContext>, IApplicable<RemoteDataContextBase>,
+			IReapplicable<DataConnection>, IReapplicable<DataContext>, IReapplicable<RemoteDataContextBase>
 	{
 		public ConnectionOptions() : this((string?)null)
 		{
@@ -122,6 +126,8 @@ namespace LinqToDB.Data
 		internal string?        SavedConfigurationString;
 		internal bool           SavedEnableContextSchemaEdit;
 
+		#region IApplicable implementation
+
 		void IApplicable<DataConnection>.Apply(DataConnection obj)
 		{
 			DataConnection.ConfigurationApplier.Apply(obj, this);
@@ -137,6 +143,56 @@ namespace LinqToDB.Data
 			RemoteDataContextBase.ConfigurationApplier.Apply(obj, this);
 		}
 
+		#endregion
+
+		#region IReapplicable implementation
+
+		Action? IReapplicable<DataConnection>.Apply(DataConnection obj, IOptionSet? previousObject)
+		{
+			return ((IConfigurationID)this).ConfigurationID == previousObject?.ConfigurationID
+				? null
+				: DataConnection.ConfigurationApplier.Reapply(obj, this, (ConnectionOptions?)previousObject);
+		}
+
+		Action? IReapplicable<DataContext>.Apply(DataContext obj, IOptionSet? previousObject)
+		{
+			return ((IConfigurationID)this).ConfigurationID == previousObject?.ConfigurationID
+				? null
+				: DataContext.ConfigurationApplier.Reapply(obj, this, (ConnectionOptions?)previousObject);
+		}
+
+		Action? IReapplicable<RemoteDataContextBase>.Apply(RemoteDataContextBase obj, IOptionSet? previousObject)
+		{
+			return ((IConfigurationID)this).ConfigurationID == previousObject?.ConfigurationID
+				? null
+				: RemoteDataContextBase.ConfigurationApplier.Reapply(obj, this, (ConnectionOptions?)previousObject);
+		}
+
+		#endregion
+
+		#region Default Options
+
+		static ConnectionOptions _default = new();
+
+		/// <summary>
+		/// Gets default <see cref="ConnectionOptions"/> instance.
+		/// </summary>
+		public static ConnectionOptions Default
+		{
+			get => _default;
+			set
+			{
+				_default = value;
+				DataConnection.ResetDefaultOptions();
+				DataConnection.ConnectionOptionsByConfigurationString.Clear();
+			}
+		}
+
+		/// <inheritdoc />
+		IOptionSet IOptionSet.Default => Default;
+
+		#endregion
+
 		#region IEquatable implementation
 
 		public bool Equals(ConnectionOptions? other)
@@ -144,12 +200,12 @@ namespace LinqToDB.Data
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
 
-			return ((IOptionSet)this).ConfigurationID == ((IOptionSet)other).ConfigurationID;
+			return ((IConfigurationID)this).ConfigurationID == ((IConfigurationID)other).ConfigurationID;
 		}
 
 		public override int GetHashCode()
 		{
-			return ((IOptionSet)this).ConfigurationID;
+			return ((IConfigurationID)this).ConfigurationID;
 		}
 
 		#endregion

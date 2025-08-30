@@ -13,24 +13,25 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if NETFRAMEWORK || NETSTANDARD2_0
-using System.Text;
-#endif
-
 using JetBrains.Annotations;
 
-using LinqToDB.Async;
-using LinqToDB.Common.Internal.Cache;
-using LinqToDB.Common.Internal;
 using LinqToDB.Common;
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Async;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
-using LinqToDB.Tools;
-using LinqToDB.Compatibility.System;
+using LinqToDB.Internal.Conversion;
+using LinqToDB.Internal.Cache;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Interceptors;
+using LinqToDB.Metrics;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Data
 {
@@ -270,14 +271,12 @@ namespace LinqToDB.Data
 
 				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 				{
-#if NET8_0_OR_GREATER
 					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false);
 					await using (rd.ConfigureAwait(false))
-#else
-					using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false))
-#endif
+					{
 						while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(false))
 							yield return objectReader(rd.DataReader!);
+					}
 				}
 			}
 		}
@@ -526,12 +525,8 @@ namespace LinqToDB.Data
 
 				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 				{
-#if NET8_0_OR_GREATER
 					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false);
 					await using (rd.ConfigureAwait(false))
-#else
-					using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false))
-#endif
 					{
 						if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(false))
 						{
@@ -589,6 +584,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <returns>Returns collection of query result records.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used to provide T generic argument")]
 		public IEnumerable<T> Query<T>(T template)
 		{
 			return Query<T>();
@@ -600,6 +596,7 @@ namespace LinqToDB.Data
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <returns>Returns collection of query result records.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used to provide T generic argument")]
 		public IEnumerable<T> QueryProc<T>(T template)
 		{
 			return QueryProc<T>();
@@ -612,6 +609,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns collection of query result records.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used to provide T generic argument")]
 		public Task<IEnumerable<T>> QueryProcAsync<T>(T template, CancellationToken cancellationToken = default)
 		{
 			return QueryProcAsync<T>(cancellationToken);

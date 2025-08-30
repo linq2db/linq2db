@@ -4,10 +4,7 @@ using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -15,6 +12,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -426,7 +425,7 @@ namespace Tests.Linq
 
 				var selectResult = query.ToArray();
 
-				selectResult.Should().HaveCount(10);
+				selectResult.Length.ShouldBe(10);
 			}
 		}
 
@@ -447,7 +446,7 @@ namespace Tests.Linq
 
 				var selectResult = query.Concat(query).ToArray();
 
-				selectResult.Should().HaveCount(20);
+				selectResult.Length.ShouldBe(20);
 			}
 		}
 
@@ -470,7 +469,7 @@ namespace Tests.Linq
 
 				var selectResult = query.Union(query).ToArray();
 
-				selectResult.Should().HaveCount(10);
+				selectResult.Length.ShouldBe(10);
 			}
 		}
 
@@ -721,14 +720,14 @@ namespace Tests.Linq
 
 				var record = rawTable.Single(e => e.Id == iteration);
 
-				record.Id.Should().Be(iteration);
-				record.Value1.Should().Be(JsonConvert.SerializeObject(new JArray()));
-				record.Value2.Should().Be(JsonConvert.SerializeObject(inserted));
-				record.Enum.Should().Be("Value1");
-				record.EnumWithNull.Should().BeNull();
-				record.EnumWithNullDeclarative.Should().BeNull();
-				record.BoolValue.Should().Be(boolValue ? 'Y' : 'N');
-				record.AnotherBoolValue.Should().Be(boolValue ? 'T' : 'F');
+				record.Id.ShouldBe(iteration);
+				record.Value1.ShouldBe(JsonConvert.SerializeObject(new JArray()));
+				record.Value2.ShouldBe(JsonConvert.SerializeObject(inserted));
+				record.Enum.ShouldBe("Value1");
+				record.EnumWithNull.ShouldBeNull();
+				record.EnumWithNullDeclarative.ShouldBeNull();
+				record.BoolValue.ShouldBe(boolValue ? 'Y' : 'N');
+				record.AnotherBoolValue.ShouldBe(boolValue ? 'T' : 'F');
 
 			}
 		}
@@ -895,6 +894,82 @@ namespace Tests.Linq
 				} into p
 				where p.ID == p.Value
 				select p);
+		}
+
+		static class Issue5075
+		{
+			public sealed class Table
+			{
+				public required int Id { get; init; }
+
+				[ValueConverter(ConverterType = typeof(EnumConverter))]
+				[Column(DataType = DataType.NVarChar)]
+				public required EnumValue EnumValue { get; init; }
+
+				[ValueConverter(ConverterType = typeof(EnumConverter))]
+				[Column(DataType = DataType.NVarChar, CanBeNull = true)]
+				public required EnumValue EnumValueNullable { get; init; }
+
+				[ValueConverter(ConverterType = typeof(EnumConverter))]
+				[Column(DataType = DataType.NVarChar)]
+				public required EnumValue? EnumValueNull { get; init; }
+
+				sealed class EnumConverter() : ValueConverter<EnumValue, string>(
+					v => v.ToString(),
+#pragma warning disable CA2263 // Prefer generic overload when type is known
+					v => (EnumValue)Enum.Parse(typeof(EnumValue), v),
+#pragma warning restore CA2263 // Prefer generic overload when type is known
+					false)
+				{
+				}
+
+				public static readonly Table[] Data =
+				[
+					new (){ Id = 1, EnumValue = EnumValue.Admin, EnumValueNullable = EnumValue.Admin, EnumValueNull = null },
+					new (){ Id = 2, EnumValue = EnumValue.User, EnumValueNullable = EnumValue.User, EnumValueNull = EnumValue.Admin },
+					new (){ Id = 3, EnumValue = EnumValue.User, EnumValueNullable = EnumValue.User, EnumValueNull = EnumValue.User },
+				];
+			}
+
+			public enum EnumValue
+			{
+				Admin,
+				User
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5075")]
+		public void Issue5075Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue5075.Table.Data);
+
+			Issue5075.EnumValue? value = Issue5075.EnumValue.User;
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(tb.Where(t => t.EnumValue == value.Value).Count(), Is.EqualTo(2));
+				Assert.That(tb.Where(t => t.EnumValue == value).Count(), Is.EqualTo(2));
+
+				Assert.That(tb.Where(t => t.EnumValueNullable == value.Value).Count(), Is.EqualTo(2));
+				Assert.That(tb.Where(t => t.EnumValueNullable == value).Count(), Is.EqualTo(2));
+
+				Assert.That(tb.Where(t => t.EnumValueNull == value.Value).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(t => t.EnumValueNull == value).Count(), Is.EqualTo(1));
+			}
+
+			value = null;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(tb.Where(t => t.EnumValue == value).Count(), Is.Zero);
+				Assert.That(tb.Where(t => t.EnumValue == value!.Value).Count(), Is.Zero);
+
+				Assert.That(tb.Where(t => t.EnumValueNullable == value).Count(), Is.Zero);
+				Assert.That(tb.Where(t => t.EnumValueNullable == value!.Value).Count(), Is.Zero);
+
+				Assert.That(tb.Where(t => t.EnumValueNull == value!.Value).Count(), Is.EqualTo(1));
+				Assert.That(tb.Where(t => t.EnumValueNull == value).Count(), Is.EqualTo(1));
+			}
 		}
 	}
 }

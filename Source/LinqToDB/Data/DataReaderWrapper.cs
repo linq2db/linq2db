@@ -3,7 +3,8 @@ using System.Data.Common;
 using System.Threading.Tasks;
 
 using LinqToDB.Interceptors;
-using LinqToDB.Tools;
+using LinqToDB.Internal.Interceptors;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {
@@ -58,17 +59,14 @@ namespace LinqToDB.Data
 				OnBeforeCommandDispose?.Invoke(Command);
 				OnBeforeCommandDispose = null;
 
-				if (_dataConnection != null)
-					_dataConnection.DataProvider.DisposeCommand(Command);
-				else
-					Command.Dispose();
+				// if command set, _dataConnection is set too
+				_dataConnection!.DataProvider.DisposeCommand(Command);
 			}
 
 			if (((IDataContext?)_dataConnection)?.CloseAfterUse == true)
 				_dataConnection.Close();
 		}
 
-#if NET8_0_OR_GREATER
 		public async ValueTask DisposeAsync()
 		{
 			if (_disposed)
@@ -91,21 +89,12 @@ namespace LinqToDB.Data
 			{
 				OnBeforeCommandDispose?.Invoke(Command);
 
-				if (_dataConnection != null)
-					await _dataConnection.DataProvider.DisposeCommandAsync(Command).ConfigureAwait(false);
-				else
-					await Command.DisposeAsync().ConfigureAwait(false);
+				// if command set, _dataConnection is set too
+				await _dataConnection!.DataProvider.DisposeCommandAsync(Command).ConfigureAwait(false);
 			}
 
 			if (((IDataContext?)_dataConnection)?.CloseAfterUse == true)
 				await _dataConnection.CloseAsync().ConfigureAwait(false);
 		}
-#else
-		public ValueTask DisposeAsync()
-		{
-			Dispose();
-			return new ValueTask(Task.CompletedTask);
-		}
-#endif
 	}
 }

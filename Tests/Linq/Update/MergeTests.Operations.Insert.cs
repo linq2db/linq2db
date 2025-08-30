@@ -2,14 +2,14 @@
 using System.Linq;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.xUpdate
 {
@@ -454,22 +454,22 @@ namespace Tests.xUpdate
 				var results = source.ToList();
 
 				var selectQuery = source.GetSelectQuery();
-				selectQuery.Select.Columns.Count.Should().Be(6);
+				selectQuery.Select.Columns.Count.ShouldBe(6);
 
 				if (db.DataProvider.SqlProviderFlags.IsCrossJoinSupported)
 				{
-					selectQuery.Select.From.Tables.Should().HaveCount(1);
-					selectQuery.Select.From.Tables[0].Joins.Should().HaveCount(1);
-					selectQuery.Select.From.Tables[0].Joins[0].JoinType.Should().Be(JoinType.Cross);
+					selectQuery.Select.From.Tables.Count.ShouldBe(1);
+					selectQuery.Select.From.Tables[0].Joins.Count.ShouldBe(1);
+					selectQuery.Select.From.Tables[0].Joins[0].JoinType.ShouldBe(JoinType.Cross);
 				}
 				else
 				{
-					selectQuery.Select.From.Tables.Should().HaveCount(2);
-					selectQuery.Select.From.Tables[0].Joins.Should().HaveCount(0);
-					selectQuery.Select.From.Tables[1].Joins.Should().HaveCount(0);
+					selectQuery.Select.From.Tables.Count.ShouldBe(2);
+					selectQuery.Select.From.Tables[0].Joins.Count.ShouldBe(0);
+					selectQuery.Select.From.Tables[1].Joins.Count.ShouldBe(0);
 				}
 
-				results.Should().HaveCount(16);
+				results.Count.ShouldBe(16);
 			}
 		}
 
@@ -498,9 +498,9 @@ namespace Tests.xUpdate
 				var results = source.ToList();
 
 				var selectQuery = source.GetSelectQuery();
-				selectQuery.Select.Columns.Count.Should().Be(6);
+				selectQuery.Select.Columns.Count.ShouldBe(6);
 
-				results.Should().HaveCount(16);
+				results.Count.ShouldBe(16);
 			}
 		}
 
@@ -1535,7 +1535,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 				AssertRow(InitialTargetData[3], result[3], null, null);
 				if (result.Count != 6)
-				AssertRow(InitialSourceData[3], result[4], null, 216);
+					AssertRow(InitialSourceData[3], result[4], null, 216);
 			}
 		}
 

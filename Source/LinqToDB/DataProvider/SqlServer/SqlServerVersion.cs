@@ -41,5 +41,9 @@
 		/// SQL Server 2022 dialect.
 		/// </summary>
 		v2022,
+		/// <summary>
+		/// SQL Server 2025 dialect.
+		/// </summary>
+		v2025,
 	}
 }

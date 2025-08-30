@@ -3,8 +3,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Concurrency;
 using LinqToDB.Mapping;
@@ -458,7 +456,7 @@ namespace Tests.Linq
 
 		// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 		// https://github.com/ClickHouse/ClickHouse/issues/38790
-		[ActiveIssue(Configurations = new[] { ProviderName.ClickHouseClient, ProviderName.ClickHouseMySql })]
+		[ActiveIssue(Configurations = new[] { ProviderName.ClickHouseDriver, ProviderName.ClickHouseMySql })]
 		[Test]
 		public void TestGuidBinary([DataSources(TestProvName.AllInformix)] string context)
 		{

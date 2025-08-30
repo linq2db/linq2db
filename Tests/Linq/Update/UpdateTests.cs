@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -950,8 +952,8 @@ namespace Tests.xUpdate
 					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1 == 1))
 					.Update();
 
-				db.LastQuery!.Should().Contain("INNER JOIN");
-				db.LastQuery!.Should().Contain("DISTINCT");
+				db.LastQuery!.ShouldContain("INNER JOIN");
+				db.LastQuery!.ShouldContain("DISTINCT");
 			}
 		}
 

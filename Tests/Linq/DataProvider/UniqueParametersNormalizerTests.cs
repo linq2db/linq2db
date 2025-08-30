@@ -9,13 +9,14 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
-using LinqToDB.Infrastructure;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
-using LinqToDB.SqlProvider;
 
 using NUnit.Framework;
 
@@ -362,9 +363,7 @@ namespace Tests.DataProvider
 			public DbConnection CreateConnection(string connectionString) => _baseProvider.CreateConnection(connectionString);
 			public ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions) => _baseProvider.CreateSqlBuilder(mappingSchema, dataOptions);
 			public void DisposeCommand(DbCommand command) => _baseProvider.DisposeCommand(command);
-#if NET8_0_OR_GREATER
 			public ValueTask DisposeCommandAsync(DbCommand command) => _baseProvider.DisposeCommandAsync(command);
-#endif
 			public IExecutionScope? ExecuteScope(DataConnection dataConnection) => _baseProvider.ExecuteScope(dataConnection);
 			public CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior) => _baseProvider.GetCommandBehavior(commandBehavior);
 			// TODO: Remove in v7

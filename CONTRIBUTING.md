@@ -16,10 +16,16 @@ uid: contributing
 |.\Source\CodeGenerators| LINQ to DB internal source generators source code|
 |.\Source\LinqToDB| LINQ to DB source code|
 |.\Source\LinqToDB.CLI| LINQ to DB CLI scaffold tool source code|
+|.\Source\LinqToDB.Compat| LINQ to DB Compat library source code|
 |.\Source\LinqToDB.EntityFrameworkCore| LINQ to DB integration with Entity Framework Core source code|
 |.\Source\LinqToDB.Extensions| LINQ to DB Dependency Injection and Logging extensions library source code|
 |.\Source\LinqToDB.FSharp | F# support extension for Linq To DB|
+|.\Source\LinqToDB.LINQPad | LINQPad driver for Linq To DB|
 |.\Source\LinqToDB.Remote.Grpc| LINQ to DB Remote Context GRPC client/server source code|
+|.\Source\LinqToDB.Remote.HttpClient.Client| LINQ to DB Remote Context HttpClient client source code|
+|.\Source\LinqToDB.Remote.HttpClient.Server| LINQ to DB Remote Context HttpClient server source code|
+|.\Source\LinqToDB.Remote.SignalR.Client| LINQ to DB Remote Context Signal/R client source code|
+|.\Source\LinqToDB.Remote.SignalR.Server| LINQ to DB Remote Context Signal/R server source code|
 |.\Source\LinqToDB.Remote.Wcf| LINQ to DB Remote Context WCF client/server source code|
 |.\Source\LinqToDB.Scaffold| LINQ to DB scaffold framework for cli and T4|
 |.\Source\LinqToDB.Templates| LINQ to DB t4models source code|
@@ -52,7 +58,6 @@ Custom feature symbols:
 
 Custom debugging symbols:
 
-* `OVERRIDETOSTRING` - enables `ToString()` overrides for AST model (must be enabled in LinqToDB.csproj by renaming existing `OVERRIDETOSTRING1` define)
 * `BUGCHECK` - enables extra bugchecks in debug and ci test builds
 
 #### Test projects
@@ -107,14 +112,11 @@ public class Test: TestBase
         // TestBase.GetDataContext - creates new IDataContext
         // also supports creation of remote client and server
         // for remote contexts
-        using(var db = GetDataContext(context))
-        {
-            // Here is the most interesting
-            // this.Person - list of persons, corresponding Person table in database (derived from TestBase)
-            // db.Person - database table
-            // So test checks that LINQ to Objects query produces the same result as executed database query
-            AreEqual(this.Person.Where(_ => _.Name == "John"), db.Person.Where(_ => _.Name == "John"));
-        }
+        using var db = GetDataContext(context);
+
+        // AssertQuery method will execute query against both DB and memory-based collections
+        // and check that both return same results
+        AssertQuery(db.Person.Where(_ => _.Name == "John"));
     }
 
 }

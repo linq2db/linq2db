@@ -2,12 +2,12 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -72,7 +72,7 @@ namespace Tests.UserTests
 				.Select(x => new {x.Id, x.IsHouseMultiLevel})
 				.First();
 
-			data.IsHouseMultiLevel.Should().BeTrue();
+			data.IsHouseMultiLevel.ShouldBeTrue();
 		}
 	}
 }

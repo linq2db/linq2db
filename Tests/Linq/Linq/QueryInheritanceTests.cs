@@ -5,9 +5,9 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -45,8 +45,7 @@ namespace Tests.Linq
 					isAlreadyOptimizedAndConverted : false,
 					parametersNormalizerFactory : connection.DataProvider.GetQueryParameterNormalizer
 				),
-				aliases: new AliasesContext()
-			);
+				aliases : new AliasesContext(), nullabilityContext : null);
 
 			return connection.Query<T>(sb.ToString());
 		}

@@ -5,14 +5,13 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 using Tests.Model;
-
-using static Tests.xUpdate.MergeTests;
 
 namespace Tests.Linq
 {
@@ -1078,7 +1077,6 @@ namespace Tests.Linq
 			Assert.That(record.Age, Is.EqualTo(10));
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
 		public void Issue4460Test_InterfaceFilter([DataSources] string context)
 		{

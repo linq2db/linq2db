@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
-using LinqToDB.Infrastructure;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
-using LinqToDB.Tools;
+using LinqToDB.Metrics;
 
 namespace LinqToDB
 {
@@ -111,6 +111,12 @@ namespace LinqToDB
 			_configurationID = null;
 		}
 
+		void IDataContext.SetMappingSchema(MappingSchema mappingSchema)
+		{
+			MappingSchema    = mappingSchema;
+			_configurationID = null;
+		}
+
 		/// <summary>
 		/// Gets initial value for database connection string.
 		/// </summary>
@@ -174,7 +180,13 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets or sets trace handler, used for data connection instance.
 		/// </summary>
-		public Action<TraceInfo>? OnTraceConnection { get; set; }
+		public Action<TraceInfo>? OnTraceConnection
+		{
+			get;
+			// TODO: Make private in v7 and remove obsoletion warning ignores from callers
+			[Obsolete("This API scheduled for removal in v7. Use DataOptions's UseTracing API"), EditorBrowsable(EditorBrowsableState.Never)]
+			set;
+		}
 
 		private bool _keepConnectionAlive;
 		/// <summary>
@@ -305,11 +317,7 @@ namespace LinqToDB
 
 				if (value < 0)
 				{
-#if NET8_0_OR_GREATER
 					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout or ResetCommandTimeoutAsync methods instead.");
-#else
-					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout method instead.");
-#endif
 				}
 				else
 				{
@@ -336,7 +344,6 @@ namespace LinqToDB
 #pragma warning restore CS0618 // Type or member is obsolete
 		}
 
-#if NET8_0_OR_GREATER
 		/// <summary>
 		/// Sets command timeout to default connection value.
 		/// Note that default provider/connection timeout is not the same value as timeout value you can specify upon context configuration.
@@ -349,7 +356,6 @@ namespace LinqToDB
 			return _dataConnection?.ResetCommandTimeoutAsync() ?? default;
 #pragma warning restore CS0618 // Type or member is obsolete
 		}
-#endif
 
 		/// <summary>
 		/// Underlying active database connection.
@@ -560,10 +566,11 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction for current context with specified isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="level">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)
 		{
 			AssertDisposed();
@@ -577,9 +584,10 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction for current context with default isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual DataContextTransaction BeginTransaction()
 		{
 			AssertDisposed();
@@ -593,11 +601,12 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction asynchronously for current context with specified isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="level">Transaction isolation level.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
 		{
 			AssertDisposed();
@@ -611,10 +620,11 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction asynchronously for current context with default isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
 			AssertDisposed();
@@ -778,6 +788,63 @@ namespace LinqToDB
 				}
 			}
 
+			public static Action? Reapply(DataContext dataContext, ConnectionOptions options, ConnectionOptions? previousOptions)
+			{
+				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
+				// Connection string, configuration, data provider, etc. are not reapplyable.
+				//
+				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ConfigurationString)} cannot be changed for context dynamically.");
+				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ConnectionString)} cannot be changed for context dynamically.");
+				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ProviderName)} cannot be changed for context dynamically.");
+				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DbConnection)} cannot be changed for context dynamically.");
+				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DbTransaction)} cannot be changed for context dynamically.");
+				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DisposeConnection)} cannot be changed for context dynamically.");
+				if (options.DataProvider              != previousOptions?.DataProvider)              throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DataProvider)} cannot be changed for context dynamically.");
+				if (options.ConnectionFactory         != previousOptions?.ConnectionFactory)         throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ConnectionFactory)} cannot be changed for context dynamically.");
+				if (options.DataProviderFactory       != previousOptions?.DataProviderFactory)       throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DataProviderFactory)} cannot be changed for context dynamically.");
+				if (options.OnEntityDescriptorCreated != previousOptions?.OnEntityDescriptorCreated) throw new LinqToDBException($"Option '{nameof(ConnectionOptions.OnEntityDescriptorCreated)} cannot be changed for context dynamically.");
+
+				Action? action = null;
+
+				if (!ReferenceEquals(options.ConnectionInterceptor, previousOptions?.ConnectionInterceptor))
+				{
+					if (previousOptions?.ConnectionInterceptor != null)
+						dataContext.RemoveInterceptor(previousOptions.ConnectionInterceptor);
+
+					if (options.ConnectionInterceptor != null)
+						dataContext.AddInterceptor(options.ConnectionInterceptor);
+
+					action += () =>
+					{
+						if (options.ConnectionInterceptor != null)
+							dataContext.RemoveInterceptor(options.ConnectionInterceptor);
+
+						if (previousOptions?.ConnectionInterceptor != null)
+							dataContext.AddInterceptor(previousOptions.ConnectionInterceptor);
+					};
+				}
+
+				if (!ReferenceEquals(options.MappingSchema, previousOptions?.MappingSchema))
+				{
+					var mappingSchema = dataContext.MappingSchema;
+
+					dataContext.MappingSchema = dataContext.DataProvider.MappingSchema;
+
+					if (options.MappingSchema != null)
+					{
+						dataContext.MappingSchema = options.MappingSchema;
+					}
+					else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
+					{
+						dataContext.MappingSchema = new (dataContext.MappingSchema);
+					}
+
+					action += () => dataContext.MappingSchema = mappingSchema;
+				}
+
+				return action;
+			}
+
 			public static void Apply(DataContext dataContext, DataContextOptions options)
 			{
 				dataContext._commandTimeout = options.CommandTimeout;
@@ -786,11 +853,103 @@ namespace LinqToDB
 					foreach (var interceptor in options.Interceptors)
 						dataContext.AddInterceptor(interceptor, false);
 			}
+
+			public static Action? Reapply(DataContext dataContext, DataContextOptions options, DataContextOptions? previousOptions)
+			{
+				Action? action = null;
+
+				if (options.CommandTimeout != previousOptions?.CommandTimeout)
+				{
+					var commandTimeout = dataContext._commandTimeout;
+
+					if (options.CommandTimeout != null)
+						dataContext.CommandTimeout = options.CommandTimeout.Value;
+					else
+						dataContext.ResetCommandTimeout();
+
+					action += () =>
+					{
+						if (commandTimeout != null)
+							dataContext.CommandTimeout = commandTimeout.Value;
+						else
+							dataContext.ResetCommandTimeout();
+					};
+				}
+
+				if (!ReferenceEquals(options.Interceptors, previousOptions?.Interceptors))
+				{
+					if (previousOptions?.Interceptors != null)
+						foreach (var interceptor in previousOptions.Interceptors)
+							dataContext.RemoveInterceptor(interceptor);
+
+					if (options.Interceptors != null)
+						foreach (var interceptor in options.Interceptors)
+							dataContext.AddInterceptor(interceptor);
+
+					action += () =>
+					{
+						if (options.Interceptors != null)
+							foreach (var interceptor in options.Interceptors)
+								dataContext.RemoveInterceptor(interceptor);
+
+						if (previousOptions?.Interceptors != null)
+							foreach (var interceptor in previousOptions.Interceptors)
+								dataContext.AddInterceptor(interceptor);
+					};
+				}
+
+				return action;
+			}
 		}
 
 		/// <summary>
 		/// Gets service provider, used for data connection instance.
 		/// </summary>
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance => ((IInfrastructure<IServiceProvider>)DataProvider).Instance;
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public IDisposable? UseOptions(Func<DataOptions,DataOptions> optionsSetter)
+		{
+			var prevOptions = Options;
+			var newOptions  = optionsSetter(Options) ?? throw new ArgumentNullException(nameof(optionsSetter));
+
+			if (((IConfigurationID)prevOptions).ConfigurationID == ((IConfigurationID)newOptions).ConfigurationID)
+				return null;
+
+			var configurationID = _configurationID;
+
+			Options          = newOptions;
+			_configurationID = null;
+
+			var action = Options.Reapply(this, prevOptions);
+
+			action += () =>
+			{
+				Options          = prevOptions;
+
+#if DEBUG
+				_configurationID = null;
+#else
+				_configurationID = configurationID;
+#endif
+			};
+
+			return new DisposableAction(action);
+		}
+
+		/// <inheritdoc cref="IDataContext.UseMappingSchema"/>
+		public IDisposable? UseMappingSchema(MappingSchema mappingSchema)
+		{
+			var oldSchema       = MappingSchema;
+			var configurationID = _configurationID;
+
+			AddMappingSchema(mappingSchema);
+
+			return new DisposableAction(() =>
+			{
+				((IDataContext)this).SetMappingSchema(oldSchema);
+				_configurationID = configurationID;
+			});
+		}
 	}
 }

@@ -4,6 +4,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.SchemaProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 
@@ -105,7 +106,7 @@ namespace Tests.SchemaProvider
 								Assert.That(indexTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
 								Assert.That(indexTable.ForeignKeys, Has.Count.EqualTo(2));
 							}
-					}
+						}
 
 						break;
 				}
@@ -123,7 +124,7 @@ namespace Tests.SchemaProvider
 								Assert.That(col.Precision, Is.EqualTo(3));
 								Assert.That(col.Scale, Is.Null);
 							}
-					}
+						}
 
 						break;
 				}
@@ -134,8 +135,8 @@ namespace Tests.SchemaProvider
 		{
 			var e = mappingSchema.GetEntityDescriptor(typeof(T));
 
-			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName!.Equals(e.Name.Name, StringComparison.OrdinalIgnoreCase))!;
-			Assert.That(schemaTable, Is.Not.Null, e.Name.Name);
+			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName!.Equals(e.TableName, StringComparison.OrdinalIgnoreCase))!;
+			Assert.That(schemaTable, Is.Not.Null, e.TableName);
 
 			Assert.That(schemaTable.Columns, Has.Count.GreaterThanOrEqualTo(e.Columns.Count));
 

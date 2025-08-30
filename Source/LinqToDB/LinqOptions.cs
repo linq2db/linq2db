@@ -2,9 +2,9 @@
 using System.ComponentModel;
 using System.Linq.Expressions;
 
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Options;
 using LinqToDB.Linq;
 
 namespace LinqToDB
@@ -34,7 +34,7 @@ namespace LinqToDB
 	/// See <see cref="DataConnection.TraceSwitch"/> for more details.
 	/// Default value: <c>false</c>.
 	/// </param>
-	/// <param name="DoNotClearOrderBys">
+	/// <param name="ConcatenateOrderBy">
 	/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
 	/// - if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;
 	/// - if <c>false</c> - OrderBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
@@ -51,9 +51,9 @@ namespace LinqToDB
 	/// <param name="CompareNulls">
 	/// <summary>
 	/// If set to <see cref="CompareNulls.LikeClr" /> nullable fields would be checked for <c>IS NULL</c> in Equal/NotEqual comparisons.
-	/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators, 
+	/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators,
 	/// which consider nulls values as not equal.
-	/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />, 
+	/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />,
 	/// but sniffs parameters value and changes = into <c>IS NULL</c> when parameters are null.
 	/// Comparisons to literal null are always compiled into <c>IS NULL</c>.
 	/// This affects: Equal, NotEqual, Not Contains
@@ -111,7 +111,7 @@ namespace LinqToDB
 	/// Default value: <c>false</c>.
 	/// <para />
 	/// It is not recommended to enable this option as it could lead to severe slowdown. Better approach will be
-	/// to call <see cref="Query{T}.ClearCache"/> method to cleanup cache after queries, that produce severe memory leaks you need to fix.
+	/// to use <see cref="NoLinqCache"/> scope around queries, that produce severe memory leaks you need to fix.
 	/// <para />
 	/// <a href="https://github.com/linq2db/linq2db/issues/256">More details</a>.
 	/// </summary>
@@ -160,7 +160,7 @@ namespace LinqToDB
 		bool         IgnoreEmptyUpdate       = false,
 		bool         GenerateExpressionTest  = false,
 		bool         TraceMapperExpression   = false,
-		bool         DoNotClearOrderBys      = false,
+		bool         ConcatenateOrderBy      = false,
 		bool         OptimizeJoins           = true,
 		CompareNulls CompareNulls            = CompareNulls.LikeClr,
 		bool         GuardGrouping           = true,
@@ -189,7 +189,7 @@ namespace LinqToDB
 			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
 			GenerateExpressionTest  = original.GenerateExpressionTest;
 			TraceMapperExpression   = original.TraceMapperExpression;
-			DoNotClearOrderBys      = original.DoNotClearOrderBys;
+			ConcatenateOrderBy      = original.ConcatenateOrderBy;
 			OptimizeJoins           = original.OptimizeJoins;
 			CompareNulls            = original.CompareNulls;
 			GuardGrouping           = original.GuardGrouping;
@@ -212,7 +212,7 @@ namespace LinqToDB
 						.Add(IgnoreEmptyUpdate)
 						.Add(GenerateExpressionTest)
 						.Add(TraceMapperExpression)
-						.Add(DoNotClearOrderBys)
+						.Add(ConcatenateOrderBy)
 						.Add(OptimizeJoins)
 						.Add((int)CompareNulls)
 						.Add(GuardGrouping)
@@ -229,6 +229,29 @@ namespace LinqToDB
 		}
 
 		public TimeSpan CacheSlidingExpirationOrDefault => CacheSlidingExpiration ?? TimeSpan.FromHours(1);
+
+		#region Default Options
+
+		static LinqOptions _default = new();
+
+		/// <summary>
+		/// Gets default <see cref="LinqOptions"/> instance.
+		/// </summary>
+		public static LinqOptions Default
+		{
+			get => _default;
+			set
+			{
+				_default = value;
+				DataConnection.ResetDefaultOptions();
+				DataConnection.ConnectionOptionsByConfigurationString.Clear();
+			}
+		}
+
+		/// <inheritdoc />
+		IOptionSet IOptionSet.Default => Default;
+
+		#endregion
 
 		#region IEquatable implementation
 

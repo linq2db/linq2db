@@ -6,6 +6,7 @@
 // ---------------------------------------------------------------------------------------------------
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using System.Linq;
 using System.Threading;

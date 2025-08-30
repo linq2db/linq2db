@@ -4,7 +4,8 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Extensions;
+using LinqToDB.Async;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -86,15 +87,13 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					var result = ID;
-					result = (result * 397) ^ (LastName != null ? LastName.GetHashCode() : 0);
-					result = (result * 397) ^ (MiddleName != null ? MiddleName.GetHashCode() : 0);
-					result = (result * 397) ^ Gender.GetHashCode();
-					result = (result * 397) ^ (FirstName != null ? FirstName.GetHashCode() : 0);
-					return result;
-				}
+				return HashCode.Combine(
+					ID,
+					LastName,
+					MiddleName,
+					Gender,
+					FirstName
+				);
 			}
 		}
 		#endregion
@@ -139,7 +138,7 @@ namespace Tests.Linq
 
 		public class PersonWithObjectId : WithObjectIdBase, IHasObjectId2
 		{
-			public string FistName { get; set; } = null!;
+			public string FirstName { get; set; } = null!;
 		}
 
 		public struct NullableObjectId
@@ -500,10 +499,10 @@ namespace Tests.Linq
 				var persons =
 					from x in db.Person
 					select new PersonWithObjectId
-						{
-							Id = new ObjectId { Value = x.ID },
-							FistName = x.FirstName,
-						};
+					{
+						Id = new ObjectId { Value = x.ID },
+						FirstName = x.FirstName,
+					};
 
 				// this works
 				var r1 = FilterSourceByIdDefinedInBaseClass(persons, 5).ToArray();

@@ -13,9 +13,10 @@ using System.Xml;
 using System.Xml.Linq;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.MySql;
+using LinqToDB.Internal.DataProvider.MySql;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
@@ -2380,6 +2381,30 @@ namespace Tests.DataProvider
 			[PrimaryKey] public int Id { get; set; }
 			[Column] public uint Value { get; set; }
 			[Column] public string? Value2 { get; set; }
+		}
+		#endregion
+
+		#region Issue 4929
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4929")]
+		public void Issue4929Test([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			var ms = new MappingSchema();
+			using var db = GetDataContext(context, o => o.UseMappingSchema(ms));
+			using var tb = db.CreateLocalTable<Issue4929Table>();
+
+			var query = from a in tb
+					where
+							a.Date.Day == TestData.Date.Day &&
+							a.Date.Month == TestData.Date.Month
+					select a;
+
+			query.ToArray();
+		}
+
+		sealed class Issue4929Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public DateTime Date { get; set; }
 		}
 		#endregion
 	}

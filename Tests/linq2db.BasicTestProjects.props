@@ -2,6 +2,6 @@
 	<ItemGroup>
 		<PackageReference Include="NUnit3TestAdapter" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
-		<PackageReference Include="FluentAssertions" />
+		<PackageReference Include="Shouldly" />
 	</ItemGroup>
 </Project>

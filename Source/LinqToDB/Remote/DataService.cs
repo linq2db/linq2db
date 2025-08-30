@@ -6,11 +6,10 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Remote
 {
@@ -25,7 +24,7 @@ namespace LinqToDB.Remote
 
 			_metadata = new MetadataProvider(_defaultMetadata.Item2);
 			_query    = new QueryProvider   (_defaultMetadata.Item2);
-			_update   = new UpdateProvider  (_defaultMetadata.Item2, _metadata, _query);
+			_update   = new UpdateProvider  (_defaultMetadata.Item2, _metadata);
 		}
 
 		static Tuple<T,MetadataInfo>? _defaultMetadata;
@@ -39,7 +38,7 @@ namespace LinqToDB.Remote
 
 				_metadata = new MetadataProvider(data.Item2);
 				_query    = new QueryProvider   (data.Item2);
-				_update   = new UpdateProvider  (data.Item2, _metadata, _query);
+				_update   = new UpdateProvider  (data.Item2, _metadata);
 			}
 		}
 
@@ -351,16 +350,14 @@ namespace LinqToDB.Remote
 		{
 #region Init
 
-			public UpdateProvider(MetadataInfo data, MetadataProvider metadata, QueryProvider query)
+			public UpdateProvider(MetadataInfo data, MetadataProvider metadata)
 			{
 				_data     = data;
 				_metadata = metadata;
-				_query    = query;
 			}
 
 			readonly MetadataInfo         _data;
 			readonly MetadataProvider     _metadata;
-			readonly QueryProvider        _query;
 			readonly List<ResourceAction> _actions = new();
 
 #endregion

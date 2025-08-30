@@ -5,11 +5,11 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-using LinqToDB.Async;
-using LinqToDB.Common.Internal;
 using LinqToDB.Configuration;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Data
 {
@@ -533,7 +533,7 @@ namespace LinqToDB.Data
 				                                                                                             options.DbTransaction,
 				                                                                                                             options.ConnectionFactory)
 				{
-					case (_,               {} connectionString, {} provider, _,               _,             _,              _) :
+					case (_,               {} connectionString, {} provider, _,               null,          null,           null) :
 					{
 						dataConnection.DataProvider     = provider;
 						dataConnection.ConnectionString = connectionString;
@@ -541,7 +541,7 @@ namespace LinqToDB.Data
 
 						break;
 					}
-					case (_,               {} connectionString, _,           {} providerName, _,             _,              _) :
+					case (_,               {} connectionString, _,           {} providerName, null,          null,           null) :
 					{
 						dataConnection.DataProvider     = GetDataProviderEx(providerName, connectionString);
 						dataConnection.ConnectionString = connectionString;
@@ -549,43 +549,51 @@ namespace LinqToDB.Data
 
 						break;
 					}
-					case (_,               {},                  _,           _,               _,             _,              _) :
-					case (_,               _,                   null,        _,               {},            _,              _) :
-					case (_,               _,                   null,        _,               _,             {},             _) :
-					case (_,               _,                   null,        _,               _,             _,              {}) :
+					case ({} configString, _,                   {} provider, _,               null,          null,           null) :
+					{
+						dataConnection.ConfigurationString = configString;
+
+						var ci = GetConfigurationInfo(configString);
+
+						dataConnection.DataProvider     = provider;
+						dataConnection.ConnectionString = ci.ConnectionString;
+						dataConnection.MappingSchema    = provider.MappingSchema;
+
+						break;
+					}
+					case ({} configString, {} connectionString, _,           _,               null,          null,           null) :
+					{
+						dataConnection.ConfigurationString = configString;
+
+						var ci = GetConfigurationInfo(configString);
+
+						dataConnection.DataProvider     = ci.DataProvider;
+						dataConnection.ConnectionString = connectionString;
+						dataConnection.MappingSchema    = ci.DataProvider.MappingSchema;
+
+						break;
+					}
+					case (_,               not null,            null,        null,            _,             _,              _) :
+					case (_,               _,                   null,        null,            not null,      _,              _) :
+					case (_,               _,                   null,        null,            _,             not null,       _) :
+					case (_,               _,                   null,        _,               _,             _,              not null) :
 					{
 						throw new LinqToDBException("DataProvider was not specified");
 					}
 					case (_,               _,                   {} provider, _,               {} connection, _,              _) :
 					{
-						dataConnection._connection        = WrapConnection(connection);
-						dataConnection._disposeConnection = options.DisposeConnection;
-
-						dataConnection.DataProvider  = provider;
-						dataConnection.MappingSchema = provider.MappingSchema;
-
-						doSave = false;
-
+						SetConnection(provider, connection);
 						break;
 					}
 					case (_,               _,                   {} provider, _,               _,             {} transaction, _) :
 					{
-						dataConnection._connection        = WrapConnection(transaction.Connection!);
-						dataConnection._closeTransaction  = false;
-						dataConnection._closeConnection   = false;
-						dataConnection._disposeConnection = false;
-
-						dataConnection.TransactionAsync = AsyncFactory.CreateAndSetDataContext(dataConnection, transaction);
-						dataConnection.DataProvider     = provider;
-						dataConnection.MappingSchema    = provider.MappingSchema;
-
-						doSave = false;
-
+						SetTransaction(provider, transaction);
 						break;
 					}
-					case (_,               _,                   {} provider, _,               _,             _,              {} factory) :
+					case (_,               _,                   {} provider, _,               _,             _,              {} connectionFactory) :
 					{
-						dataConnection._connectionFactory = factory;
+						dataConnection._connectionFactory = connectionFactory;
+						dataConnection._disposeConnection = options.DisposeConnection ?? true;
 
 						dataConnection.DataProvider  = provider;
 						dataConnection.MappingSchema = provider.MappingSchema;
@@ -623,6 +631,11 @@ namespace LinqToDB.Data
 						throw new LinqToDBException("Invalid configuration. Configuration string is not provided.");
 				}
 
+				// If DataProvider and ConnectionString are set, we do not really need ConfigurationString.
+				// However, it can be useful for logging and debugging.
+				//
+				dataConnection.ConfigurationString ??= options.ConfigurationString ?? dataConnection.DataProvider.Name;
+
 				if (options.MappingSchema != null)
 				{
 					dataConnection.AddMappingSchema(options.MappingSchema);
@@ -649,12 +662,106 @@ namespace LinqToDB.Data
 						? asyncDbConnection
 						: AsyncFactory.CreateAndSetDataContext(dataConnection, connection);
 				}
+
+				void SetConnection(IDataProvider provider, DbConnection dbConnection)
+				{
+					dataConnection._connection        = WrapConnection(dbConnection);
+					dataConnection._disposeConnection = options.DisposeConnection ?? false;
+
+					dataConnection.DataProvider  = provider;
+					dataConnection.MappingSchema = provider.MappingSchema;
+
+					doSave = false;
+				}
+
+				void SetTransaction(IDataProvider provider, DbTransaction transaction)
+				{
+					dataConnection._connection        = WrapConnection(transaction.Connection!);
+					dataConnection._closeTransaction  = false;
+					dataConnection._closeConnection   = false;
+					dataConnection._disposeConnection = false;
+
+					dataConnection.TransactionAsync = AsyncFactory.CreateAndSetDataContext(dataConnection, transaction);
+					dataConnection.DataProvider     = provider;
+					dataConnection.MappingSchema    = provider.MappingSchema;
+
+					doSave = false;
+				}
+
+			}
+
+			public static Action? Reapply(DataConnection dataConnection, ConnectionOptions options, ConnectionOptions? previousOptions)
+			{
+				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
+				// Connection string, configuration, data provider, etc. are not reapplyable.
+				//
+				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException($"Option '{nameof(options.ConfigurationString)}' string cannot be changed for context dynamically.");
+				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException($"Option '{nameof(options.ConnectionString)}' cannot be changed for context dynamically.");
+				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException($"Option '{nameof(options.ProviderName)}' cannot be changed for context dynamically.");
+				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException($"Option '{nameof(options.DbConnection)}' cannot be changed for context dynamically.");
+				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException($"Option '{nameof(options.DbTransaction)}' cannot be changed for context dynamically.");
+				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException($"Option '{nameof(options.DisposeConnection)}' cannot be changed for context dynamically.");
+				if (options.DataProvider              != previousOptions?.DataProvider)              throw new LinqToDBException($"Option '{nameof(options.DataProvider)}' cannot be changed for context dynamically.");
+				if (options.ConnectionFactory         != previousOptions?.ConnectionFactory)         throw new LinqToDBException($"Option '{nameof(options.ConnectionFactory)}' cannot be changed for context dynamically.");
+				if (options.DataProviderFactory       != previousOptions?.DataProviderFactory)       throw new LinqToDBException($"Option '{nameof(options.DataProviderFactory)}' cannot be changed for context dynamically.");
+				if (options.OnEntityDescriptorCreated != previousOptions?.OnEntityDescriptorCreated) throw new LinqToDBException($"Option '{nameof(options.OnEntityDescriptorCreated)}' cannot be changed for context dynamically.");
+
+				Action? action = null;
+
+				if (!ReferenceEquals(options.ConnectionInterceptor, previousOptions?.ConnectionInterceptor))
+				{
+					if (previousOptions?.ConnectionInterceptor != null)
+						dataConnection.RemoveInterceptor(previousOptions.ConnectionInterceptor);
+
+					if (options.ConnectionInterceptor != null)
+						dataConnection.AddInterceptor(options.ConnectionInterceptor);
+
+					action += () =>
+					{
+						if (options.ConnectionInterceptor != null)
+							dataConnection.RemoveInterceptor(options.ConnectionInterceptor);
+
+						if (previousOptions?.ConnectionInterceptor != null)
+							dataConnection.AddInterceptor(previousOptions.ConnectionInterceptor);
+					};
+				}
+
+				if (!ReferenceEquals(options.MappingSchema, previousOptions?.MappingSchema))
+				{
+					var mappingSchema = dataConnection.MappingSchema;
+
+					dataConnection.MappingSchema = dataConnection.DataProvider.MappingSchema;
+
+					if (options.MappingSchema != null)
+					{
+						dataConnection.AddMappingSchema(options.MappingSchema);
+					}
+					else if (dataConnection.Options.LinqOptions.EnableContextSchemaEdit)
+					{
+						dataConnection.MappingSchema = new (dataConnection.MappingSchema);
+					}
+
+					action += () => dataConnection.MappingSchema = mappingSchema;
+				}
+
+				return action;
 			}
 
 			public static void Apply(DataConnection dataConnection, RetryPolicyOptions options)
 			{
 #pragma warning disable CS0618 // Type or member is obsolete
 				dataConnection.RetryPolicy = options.RetryPolicy ?? options.Factory?.Invoke(dataConnection);
+#pragma warning restore CS0618 // Type or member is obsolete
+			}
+
+			public static Action? Reapply(DataConnection dataConnection, RetryPolicyOptions options)
+			{
+				var retryPolicy = dataConnection.RetryPolicy;
+
+				Apply(dataConnection, options);
+
+#pragma warning disable CS0618 // Type or member is obsolete
+				return () => dataConnection.RetryPolicy = retryPolicy;
 #pragma warning restore CS0618 // Type or member is obsolete
 			}
 
@@ -667,15 +774,83 @@ namespace LinqToDB.Data
 						dataConnection.AddInterceptor(interceptor);
 			}
 
+			public static Action? Reapply(DataConnection dataConnection, DataContextOptions options, DataContextOptions? previousOptions)
+			{
+				Action? action = null;
+
+				if (options.CommandTimeout != previousOptions?.CommandTimeout)
+				{
+					var commandTimeout = dataConnection._commandTimeout;
+
+					if (options.CommandTimeout != null)
+						dataConnection.CommandTimeout = options.CommandTimeout.Value;
+					else
+						dataConnection.ResetCommandTimeout();
+
+					action += () =>
+					{
+						if (commandTimeout != null)
+							dataConnection.CommandTimeout = commandTimeout.Value;
+						else
+							dataConnection.ResetCommandTimeout();
+					};
+				}
+
+				if (!ReferenceEquals(options.Interceptors, previousOptions?.Interceptors))
+				{
+					if (previousOptions?.Interceptors != null)
+						foreach (var interceptor in previousOptions.Interceptors)
+							dataConnection.RemoveInterceptor(interceptor);
+
+					if (options.Interceptors != null)
+						foreach (var interceptor in options.Interceptors)
+							dataConnection.AddInterceptor(interceptor);
+
+					action += () =>
+					{
+						if (options.Interceptors != null)
+							foreach (var interceptor in options.Interceptors)
+								dataConnection.RemoveInterceptor(interceptor);
+
+						if (previousOptions?.Interceptors != null)
+							foreach (var interceptor in previousOptions.Interceptors)
+								dataConnection.AddInterceptor(interceptor);
+					};
+				}
+
+				return action;
+			}
+
 			public static void Apply(DataConnection dataConnection, QueryTraceOptions options)
 			{
 #pragma warning disable CS0618 // Type or member is obsolete
-				if (options.OnTrace    != null) dataConnection.OnTraceConnection     = options.OnTrace;
-				if (options.WriteTrace != null) dataConnection.WriteTraceLineConnection = options.WriteTrace;
-
-				if      (options.TraceSwitch != null) dataConnection.TraceSwitchConnection = options.TraceSwitch;
-				else if (options.TraceLevel  != null) dataConnection.TraceSwitchConnection = new("DataConnection", "DataConnection trace switch") {Level = options.TraceLevel.Value};
+				dataConnection.OnTraceConnection        = options.OnTrace    ?? DefaultOnTraceConnection;
+				dataConnection.WriteTraceLineConnection = options.WriteTrace ?? WriteTraceLine;
+				dataConnection._traceSwitchConnection   =
+					options.TraceSwitch != null
+						? dataConnection.TraceSwitchConnection = options.TraceSwitch
+						: options.TraceLevel != null
+							? new ("DataConnection", "DataConnection trace switch") { Level = options.TraceLevel.Value }
+							: null;
 #pragma warning restore CS0618 // Type or member is obsolete
+			}
+
+			public static Action Reapply(DataConnection dataConnection, QueryTraceOptions options)
+			{
+				var onTraceConnection        = dataConnection.OnTraceConnection;
+				var writeTraceLineConnection = dataConnection.WriteTraceLineConnection;
+				var traceSwitchConnection    = dataConnection._traceSwitchConnection;
+
+				Apply(dataConnection, options);
+
+				return () =>
+				{
+#pragma warning disable CS0618 // Type or member is obsolete
+					dataConnection.OnTraceConnection        = onTraceConnection;
+					dataConnection.WriteTraceLineConnection = writeTraceLineConnection;
+					dataConnection._traceSwitchConnection   = traceSwitchConnection;
+#pragma warning restore CS0618 // Type or member is obsolete
+				};
 			}
 		}
 	}

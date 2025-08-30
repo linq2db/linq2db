@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
@@ -7,21 +6,23 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Async;
 using LinqToDB.Common;
-using LinqToDB.Compatibility.System;
-using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Interceptors;
-using LinqToDB.Tools;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Interceptors;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {
 	public partial class DataConnection
 	{
-#if NET8_0_OR_GREATER
+#if ADO_ASYNC
 		// TODO: Mark private in v7 and remove warning suppressions from callers
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public async ValueTask DisposeCommandAsync()
+		public
+#endif
+		async ValueTask DisposeCommandAsync()
 		{
 			if (_command != null)
 			{
@@ -42,7 +43,6 @@ namespace LinqToDB.Data
 			return DisposeCommandAsync();
 #pragma warning restore CS0618 // Type or member is obsolete
 		}
-#endif
 
 		/// <summary>
 		/// Starts new transaction asynchronously for current connection with default isolation level.
@@ -50,6 +50,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
 			CheckAndThrowOnDisposed();
@@ -93,6 +94,7 @@ namespace LinqToDB.Data
 		/// <param name="isolationLevel">Transaction isolation level.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual async Task<DataConnectionTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
 		{
 			CheckAndThrowOnDisposed();
@@ -337,11 +339,7 @@ namespace LinqToDB.Data
 			}
 
 #pragma warning disable CS0618 // Type or member is obsolete
-#if NET8_0_OR_GREATER
 			await DisposeCommandAsync().ConfigureAwait(false);
-#else
-			DisposeCommand();
-#endif
 #pragma warning restore CS0618 // Type or member is obsolete
 
 			if (TransactionAsync != null && _closeTransaction)

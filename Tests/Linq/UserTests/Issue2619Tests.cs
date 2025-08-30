@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -24,9 +24,10 @@ namespace Tests.UserTests
 
 				var sql = union.ToSqlQuery().Sql;
 
-				sql.Should().NotContain("ORDER");
+				sql.ShouldNotContain("ORDER");
 
-				FluentActions.Enumerating(() => union).Should().NotThrow();
+				var act = () => union.ToArray();
+				act.ShouldNotThrow();
 			}
 		}
 
@@ -43,9 +44,10 @@ namespace Tests.UserTests
 
 				var sql = union.ToSqlQuery().Sql;
 
-				sql.Should().Contain("ORDER", Exactly.Twice());
+				sql.ShouldContain("ORDER", Exactly.Twice());
 
-				FluentActions.Enumerating(() => union).Should().NotThrow();
+				var act = () => union.ToArray();
+				act.ShouldNotThrow();
 			}
 		}
 
@@ -62,9 +64,10 @@ namespace Tests.UserTests
 
 				var sql = concat.ToSqlQuery().Sql;
 
-				sql.Should().Contain("ORDER", Exactly.Twice());
+				sql.ShouldContain("ORDER", Exactly.Twice());
 
-				FluentActions.Enumerating(() => concat).Should().NotThrow();
+				var act = () => concat.ToArray();
+				act.ShouldNotThrow();
 			}
 		}
 
@@ -81,9 +84,10 @@ namespace Tests.UserTests
 
 				var sql = concat.ToSqlQuery().Sql;
 
-				sql.Should().Contain("ORDER", Exactly.Twice());
+				sql.ShouldContain("ORDER", Exactly.Twice());
 
-				FluentActions.Enumerating(() => concat).Should().NotThrow();
+				var act = () => concat.ToArray();
+				act.ShouldNotThrow();
 			}
 		}
 
@@ -101,9 +105,10 @@ namespace Tests.UserTests
 				var sql = concat.ToSqlQuery().Sql;
 
 				if (!sql.Contains("EXISTS"))
-					sql.Should().NotContain("ORDER");
+					sql.ShouldNotContain("ORDER");
 
-				FluentActions.Enumerating(() => concat).Should().NotThrow();
+				var act = () => concat.ToArray();
+				act.ShouldNotThrow();
 			}
 		}
 
@@ -121,9 +126,10 @@ namespace Tests.UserTests
 
 				var sql = except.ToSqlQuery().Sql;
 
-				sql.Should().Contain("ORDER", AtLeast.Once());
+				sql.ShouldContain("ORDER");
 
-				FluentActions.Enumerating(() => except).Should().NotThrow();
+				var act = () => except.ToArray();
+				act.ShouldNotThrow();
 			}
 		}
 

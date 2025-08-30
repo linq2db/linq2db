@@ -6,6 +6,7 @@
 // ---------------------------------------------------------------------------------------------------
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using Microsoft.SqlServer.Types;
 using System;

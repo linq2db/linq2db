@@ -5,7 +5,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Metadata
@@ -17,7 +18,7 @@ namespace LinqToDB.Metadata
 	{
 		/// <summary>
 		/// Default instance of <see cref="MetadataReader"/>, used by <see cref="MappingSchema.Default"/>.
-		/// By default contains only <see cref="AttributeReader"/>.
+		/// By default, contains only <see cref="AttributeReader"/>.
 		/// </summary>
 		public static MetadataReader Default = new (new AttributeReader());
 
@@ -32,10 +33,7 @@ namespace LinqToDB.Metadata
 
 		public MetadataReader(params IMetadataReader[] readers)
 		{
-			if (readers == null)
-				throw new ArgumentNullException(nameof(readers));
-
-			_readers  = readers;
+			_readers  = readers ?? throw new ArgumentNullException(nameof(readers));
 			_objectId = $"[{string.Join(",", _readers.Select(r => r.GetObjectID()))}]";
 
 			_cache = new(
@@ -78,40 +76,23 @@ namespace LinqToDB.Metadata
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
-			return _dynamicColumns.GetOrAdd(type,
-#if NET462 || NETSTANDARD2_0
-			type =>
-			{
-				if (_readers.Length == 0)
-					return [];
-				if (_readers.Length == 1)
-					return _readers[0].GetDynamicColumns(type);
+			return _dynamicColumns.GetOrAdd(
+				type,
+				static (type, readers) =>
+				{
+					if (readers.Length == 0)
+						return [];
+					if (readers.Length == 1)
+						return readers[0].GetDynamicColumns(type);
 
-				var cols = new MemberInfo[_readers.Length][];
+					var cols = new MemberInfo[readers.Length][];
 
-				for (var i = 0; i < _readers.Length; i++)
-					cols[i] = _readers[i].GetDynamicColumns(type);
+					for (var i = 0; i < readers.Length; i++)
+						cols[i] = readers[i].GetDynamicColumns(type);
 
-				return cols.Flatten();
-			}
-#else
-			static (type, readers) =>
-			{
-				if (readers.Length == 0)
-					return [];
-				if (readers.Length == 1)
-					return readers[0].GetDynamicColumns(type);
-
-				var cols = new MemberInfo[readers.Length][];
-
-				for (var i = 0; i < readers.Length; i++)
-					cols[i] = readers[i].GetDynamicColumns(type);
-
-				return cols.Flatten();
-			}
-			, _readers
-#endif
-			);
+					return cols.Flatten();
+				},
+				_readers);
 		}
 
 		/// <summary>

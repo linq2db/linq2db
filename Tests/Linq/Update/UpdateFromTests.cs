@@ -2,7 +2,9 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
@@ -578,9 +580,9 @@ namespace Tests.xUpdate
 		public void Issue2815Test2([DataSources(false, ProviderName.SqlCe, TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataConnection(context);
-			using var t1 = db.CreateLocalTable<Issue2815Table1>();
-			using var t2 = db.CreateLocalTable<Issue2815Table2>();
-			using var t3 = db.CreateLocalTable<Issue2815Table3>();
+			using var t1 = db.CreateLocalTable(Issue2815Table1.Data);
+			using var t2 = db.CreateLocalTable(Issue2815Table2.Data);
+			using var t3 = db.CreateLocalTable(Issue2815Table3.Data);
 
 			var query = (from ext in t1
 						 from source in t2.LeftJoin(c => c.ISO == ext.SRC_BIC)
@@ -596,11 +598,17 @@ namespace Tests.xUpdate
 						 where ext.NOT_HANDLED == 2 && ext.TRANS_CHANNEL == null
 						 select new {channel, ext });
 
-			query.Update(q => q.ext, x => new Issue2815Table1()
+			var cnt = query.Update(q => q.ext, x => new Issue2815Table1()
 			{
 				TRANS_CHANNEL = ((TransChannel?)x.channel.Trans_Channel) ?? TransChannel.Swift,
-				IDF = x.channel.Idf
+				IDF = (int?)x.channel.Idf ?? 0
 			});
+
+			Assert.That(cnt, Is.EqualTo(8));
+
+			var res = t1.OrderBy(r => r.SRC_BIC).ThenBy(r => r.DES_BIC).ToArray();
+
+			AreEqual(res, Issue2815Table1.Expected, ComparerBuilder.GetEqualityComparer<Issue2815Table1>());
 		}
 
 		enum EnumType
@@ -612,7 +620,9 @@ namespace Tests.xUpdate
 
 		enum TransChannel
 		{
-			Swift
+			Tardy,
+			Swift,
+
 		}
 
 		[Table]
@@ -624,6 +634,40 @@ namespace Tests.xUpdate
 			[Column] public int TREA_CENT { get; set; }
 			[Column] public int NOT_HANDLED { get; set; }
 			[Column] public TransChannel? TRANS_CHANNEL { get; set; }
+
+			public static readonly Issue2815Table1[] Data =
+			[
+				new Issue2815Table1() { SRC_BIC = 1, DES_BIC = 1, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
+				new Issue2815Table1() { SRC_BIC = 2, DES_BIC = 3, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
+				new Issue2815Table1() { SRC_BIC = 4, DES_BIC = 4, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
+				new Issue2815Table1() { SRC_BIC = 5, DES_BIC = 6, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new Issue2815Table1() { SRC_BIC = 7, DES_BIC = 7, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new Issue2815Table1() { SRC_BIC = 8, DES_BIC = 8, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new Issue2815Table1() { SRC_BIC = 9, DES_BIC = 9, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new Issue2815Table1() { SRC_BIC = 9, DES_BIC = 10, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new Issue2815Table1() { SRC_BIC = 11, DES_BIC = 11, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = TransChannel.Swift },
+				new Issue2815Table1() { SRC_BIC = 12, DES_BIC = 12, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new Issue2815Table1() { SRC_BIC = 12, DES_BIC = 13, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
+				new Issue2815Table1() { SRC_BIC = 13, DES_BIC = 13, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+				new Issue2815Table1() { SRC_BIC = 14, DES_BIC = 14, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = null },
+			];
+
+			public static readonly Issue2815Table1[] Expected =
+			[
+				new Issue2815Table1() { SRC_BIC = 1, DES_BIC = 1, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
+				new Issue2815Table1() { SRC_BIC = 2, DES_BIC = 3, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
+				new Issue2815Table1() { SRC_BIC = 4, DES_BIC = 4, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
+				new Issue2815Table1() { SRC_BIC = 5, DES_BIC = 6, IDF = 5, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
+				new Issue2815Table1() { SRC_BIC = 7, DES_BIC = 7, IDF = 4, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
+				new Issue2815Table1() { SRC_BIC = 8, DES_BIC = 8, IDF = 0, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL =  TransChannel.Swift },
+				new Issue2815Table1() { SRC_BIC = 9, DES_BIC = 9, IDF = 6, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Tardy },
+				new Issue2815Table1() { SRC_BIC = 9, DES_BIC = 10, IDF = 6, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Tardy },
+				new Issue2815Table1() { SRC_BIC = 11, DES_BIC = 11, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = TransChannel.Swift },
+				new Issue2815Table1() { SRC_BIC = 12, DES_BIC = 12, IDF = 9, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL = TransChannel.Swift },
+				new Issue2815Table1() { SRC_BIC = 12, DES_BIC = 13, IDF = 1, TREA_CENT = 1, NOT_HANDLED = 1, TRANS_CHANNEL = null },
+				new Issue2815Table1() { SRC_BIC = 13, DES_BIC = 13, IDF = 0, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL =  TransChannel.Swift },
+				new Issue2815Table1() { SRC_BIC = 14, DES_BIC = 14, IDF = 0, TREA_CENT = 1, NOT_HANDLED = 2, TRANS_CHANNEL =  TransChannel.Swift },
+			];
 		}
 
 		[Table]
@@ -631,6 +675,23 @@ namespace Tests.xUpdate
 		{
 			[Column] public int ISO { get; set; }
 			[Column] public bool SEPA { get; set; }
+
+			public static readonly Issue2815Table2[] Data =
+			[
+				new Issue2815Table2() { ISO = 2, SEPA = true },
+				new Issue2815Table2() { ISO = 3 },
+				new Issue2815Table2() { ISO = 4, SEPA = true },
+				new Issue2815Table2() { ISO = 5, SEPA = true },
+				new Issue2815Table2() { ISO = 6, SEPA = true },
+				new Issue2815Table2() { ISO = 7, SEPA = true },
+				new Issue2815Table2() { ISO = 8, SEPA = true },
+				new Issue2815Table2() { ISO = 9 },
+				new Issue2815Table2() { ISO = 10, SEPA = true },
+				new Issue2815Table2() { ISO = 11 },
+				new Issue2815Table2() { ISO = 12, SEPA = true },
+				new Issue2815Table2() { ISO = 13 },
+				new Issue2815Table2() { ISO = 14, SEPA = true },
+			];
 		}
 
 		[Table]
@@ -641,6 +702,24 @@ namespace Tests.xUpdate
 			[Column] public EnumType Sepa { get; set; }
 			[Column] public TransChannel Trans_Channel { get; set; }
 			[Column] public int Idf { get; set; }
+
+			public static readonly Issue2815Table3[] Data =
+			[
+				new Issue2815Table3() { TreasuryCenter = 1, BIC = 1, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Swift, Idf = 1 },
+				new Issue2815Table3() { TreasuryCenter = 2, BIC = 2, Sepa = EnumType.SepaCrossBorder, Trans_Channel = TransChannel.Tardy, Idf = 2 },
+				new Issue2815Table3() { TreasuryCenter = 1, BIC = 3, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Swift, Idf = 3 },
+				new Issue2815Table3() { TreasuryCenter = 2, BIC = 4, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Tardy, Idf = 4 },
+				new Issue2815Table3() { TreasuryCenter = 1, BIC = 5, Sepa = EnumType.SepaCrossBorder, Trans_Channel = TransChannel.Swift, Idf = 5 },
+				new Issue2815Table3() { TreasuryCenter = 2, BIC = 6, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Tardy, Idf = 6 },
+				new Issue2815Table3() { TreasuryCenter = 1, BIC = 7, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Swift, Idf = 4 },
+				new Issue2815Table3() { TreasuryCenter = 1, BIC = 9, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Tardy, Idf = 6 },
+				new Issue2815Table3() { TreasuryCenter = 1, BIC = 10, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Swift, Idf = 7 },
+				new Issue2815Table3() { TreasuryCenter = 1, BIC = 11, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Tardy, Idf = 8 },
+				new Issue2815Table3() { TreasuryCenter = 1, BIC = 12, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Swift, Idf = 9 },
+				new Issue2815Table3() { TreasuryCenter = 1, BIC = 13, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Tardy, Idf = 10 },
+				new Issue2815Table3() { TreasuryCenter = 1, BIC = 14, Sepa = EnumType.Foreign, Trans_Channel = TransChannel.Swift, Idf = 11 },
+				new Issue2815Table3() { TreasuryCenter = 1, BIC = 15, Sepa = EnumType.Sepa, Trans_Channel = TransChannel.Tardy, Idf = 11 },
+			];
 		}
 
 		#endregion

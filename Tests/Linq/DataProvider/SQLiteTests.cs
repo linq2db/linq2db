@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.Linq;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -16,6 +15,8 @@ using LinqToDB.Mapping;
 using NUnit.Framework;
 
 using Tests.Model;
+
+using Binary = System.Data.Linq.Binary;
 
 namespace Tests.DataProvider
 {
@@ -972,5 +973,63 @@ namespace Tests.DataProvider
 			}
 		}
 		#endregion
+
+		[Sql.TableFunction("pragma_table_info")]
+		static ITable<PragmaTableInfoTable> PragmaTableInfo(string tableName) => throw new InvalidOperationException();
+
+		sealed class PragmaTableInfoTable
+		{
+			public string Name { get; set; } = null!;
+		}
+
+		[Table("sqlite_master")]
+		sealed class SQLiteMaster
+		{
+			[Column] public string Name { get; set; } = null!;
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/discussions/4985")]
+		public void CrossApplyJoin([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from sqliteMaster in db.GetTable<SQLiteMaster>()
+						from pragmaTableInfo in PragmaTableInfo(sqliteMaster.Name)
+						select new
+						{
+							TableName = sqliteMaster.Name,
+							PrimaryKeyColumn = pragmaTableInfo.Name
+						};
+
+			_ = query.ToArray();
+		}
+
+		sealed record Issue4904Table
+		{
+			public DateTime RecordDate { get; init; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4904")]
+		public void Issue4904Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4904Table>();
+
+			db.Insert(new Issue4904Table { RecordDate = TestData.DateTime.AddDays(-1) });
+			db.Insert(new Issue4904Table { RecordDate = TestData.DateTime });
+			db.Insert(new Issue4904Table { RecordDate = TestData.DateTime.AddDays(1) });
+
+			db.InlineParameters = true;
+
+			var records1 = tb.Where(r => r.RecordDate <= DateTime.MaxValue).ToList();
+			var records2 = tb.Where(r => r.RecordDate <= DateTime.MaxValue.AddMilliseconds(-1)).ToList();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(records1, Has.Count.EqualTo(3));
+				Assert.That(records2, Has.Count.EqualTo(3));
+			}
+		}
 	}
 }

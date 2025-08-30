@@ -139,7 +139,7 @@ dotnet_code_quality.enable_platform_analyzer_on_pre_net5_target = true
 ########################
 # public api analyzers #
 ########################
-# https://github.com/dotnet/roslyn-analyzers/blob/main/src/PublicApiAnalyzers/PublicApiAnalyzers.Help.md
+# https://github.com/dotnet/roslyn/blob/main/src/RoslynAnalyzers/PublicApiAnalyzers/Microsoft.CodeAnalysis.PublicApiAnalyzers.md
 dotnet_public_api_analyzer.require_api_files = true
 dotnet_diagnostic.RS0016.severity = error # Add public types and members to the declared API
 dotnet_diagnostic.RS0017.severity = error # Remove deleted types and members from the declared API
@@ -147,18 +147,18 @@ dotnet_diagnostic.RS0022.severity = error # Constructor make noninheritable base
 dotnet_diagnostic.RS0024.severity = error # The contents of the public API files are invalid
 dotnet_diagnostic.RS0025.severity = error # Do not duplicate symbols in public API files
 dotnet_diagnostic.RS0026.severity = none # Do not add multiple public overloads with optional parameters
-dotnet_diagnostic.RS0027.severity = error # API with optional parameter(s) should have the most parameters amongst its public overloads
+dotnet_diagnostic.RS0027.severity = none # API with optional parameter(s) should have the most parameters amongst its public overloads
 dotnet_diagnostic.RS0036.severity = error # Annotate nullability of public types and members in the declared API
 dotnet_diagnostic.RS0037.severity = error # Enable tracking of nullability of reference types in the declared API
 dotnet_diagnostic.RS0041.severity = none # Public members should not use oblivious types
 dotnet_diagnostic.RS0048.severity = error # Missing shipped or unshipped public API file
 dotnet_diagnostic.RS0050.severity = error # API is marked as removed but it exists in source code
-dotnet_diagnostic.RS0051.severity = error # Add internal types and members to the declared API
+dotnet_diagnostic.RS0051.severity = none # Add internal types and members to the declared API
 dotnet_diagnostic.RS0052.severity = error # Remove deleted types and members from the declared internal API
 dotnet_diagnostic.RS0053.severity = error # The contents of the internal API files are invalid
 dotnet_diagnostic.RS0054.severity = error # Do not duplicate symbols in internal API files
 dotnet_diagnostic.RS0055.severity = error # Annotate nullability of internal types and members in the declared API
-dotnet_diagnostic.RS0056.severity = error # Enable tracking of nullability of reference types in the declared API
+dotnet_diagnostic.RS0056.severity = none # (internal API) Enable tracking of nullability of reference types in the declared API
 dotnet_diagnostic.RS0057.severity = error # Internal members should not use oblivious types
 dotnet_diagnostic.RS0058.severity = error # Missing shipped or unshipped internal API file
 dotnet_diagnostic.RS0059.severity = error # Do not add multiple public overloads with optional parameters
@@ -265,6 +265,7 @@ dotnet_diagnostic.CA1721.severity = none # CA1721: Property names should not mat
 dotnet_diagnostic.CA1724.severity = none # CA1724: Type names should not match namespaces
 dotnet_diagnostic.CA1806.severity = none # CA1806: Do not ignore method results
 dotnet_diagnostic.CA1810.severity = none # CA1810: Initialize reference type static fields inline
+dotnet_diagnostic.CA1812.severity = none # CA1812: Avoid uninstantiated internal classes
 dotnet_diagnostic.CA1813.severity = none # CA1813: Avoid unsealed attributes
 dotnet_diagnostic.CA1815.severity = none # CA1815: Override equals and operator equals on value types
 dotnet_diagnostic.CA1819.severity = none # CA1819: Properties should not return arrays
@@ -745,6 +746,16 @@ dotnet_diagnostic.MA0163.severity = none
 dotnet_diagnostic.MA0164.severity = none
 # MA0165: Make interpolated string
 dotnet_diagnostic.MA0165.severity = none
+# MA0166: Forward the TimeProvider to methods that take one
+dotnet_diagnostic.MA0166.severity = none
+# MA0167: Use an overload with a TimeProvider argument
+dotnet_diagnostic.MA0167.severity = none
+# MA0168: Use readonly struct for in or ref readonly parameter
+dotnet_diagnostic.MA0168.severity = error
+# MA0169: Use Equals method instead of operator
+dotnet_diagnostic.MA0169.severity = none
+# MA0170: Type cannot be used as an attribute argument
+dotnet_diagnostic.MA0170.severity = none
 ################################################################################################
 # LindhartAnalyserMissingAwaitWarningVariable: Possible unwanted Task returned from method.
 dotnet_diagnostic.LindhartAnalyserMissingAwaitWarningVariable.severity = error

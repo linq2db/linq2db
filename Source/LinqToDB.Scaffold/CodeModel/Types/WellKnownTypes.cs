@@ -8,9 +8,10 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -366,7 +367,7 @@ namespace LinqToDB.CodeModel
 			public static IType DataExtensions            { get; } = Parser.Parse(typeof(DataExtensions));
 
 			/// <summary>
-			/// <see cref="global::LinqToDB.AsyncExtensions"/> type descriptor.
+			/// <see cref="Async.AsyncExtensions"/> type descriptor.
 			/// </summary>
 			public static IType AsyncExtensions           { get; } = Parser.Parse(typeof(AsyncExtensions));
 
@@ -455,11 +456,11 @@ namespace LinqToDB.CodeModel
 			/// <summary>
 			/// <see cref="AsyncExtensions.FirstOrDefaultAsync{TSource}(IQueryable{TSource}, Expression{Func{TSource, bool}}, CancellationToken)"/> method reference.
 			/// </summary>
-			public static CodeIdentifier AsyncExtensions_FirstOrDefaultAsync { get; } = new CodeIdentifier(nameof(global::LinqToDB.AsyncExtensions.FirstOrDefaultAsync), true);
+			public static CodeIdentifier AsyncExtensions_FirstOrDefaultAsync { get; } = new CodeIdentifier(nameof(Async.AsyncExtensions.FirstOrDefaultAsync), true);
 			/// <summary>
 			/// <see cref="AsyncExtensions.ToListAsync{TSource}(IQueryable{TSource}, CancellationToken)"/> method reference.
 			/// </summary>
-			public static CodeIdentifier AsyncExtensions_ToListAsync { get; } = new CodeIdentifier(nameof(global::LinqToDB.AsyncExtensions.ToListAsync), true);
+			public static CodeIdentifier AsyncExtensions_ToListAsync { get; } = new CodeIdentifier(nameof(Async.AsyncExtensions.ToListAsync), true);
 
 			/// <summary>
 			/// Returns <see cref="ITable{T}"/> type descriptor.
@@ -467,19 +468,6 @@ namespace LinqToDB.CodeModel
 			/// <param name="tableType">Record type.</param>
 			/// <returns>Type descriptor.</returns>
 			public static IType ITable(IType tableType) => ITableT.WithTypeArguments(tableType);
-
-			public static class Expressions
-			{
-				/// <summary>
-				/// <see cref="global::LinqToDB.Expressions.MemberHelper"/> type descriptor.
-				/// </summary>
-				public static IType MemberHelper { get; } = Parser.Parse(typeof(MemberHelper));
-
-				/// <summary>
-				/// <see cref="MemberHelper.MethodOf(Expression{Action})"/> method reference.
-				/// </summary>
-				public static CodeIdentifier MemberHelper_MethodOf { get; } = new CodeIdentifier(nameof(global::LinqToDB.Expressions.MemberHelper.MethodOf), true);
-			}
 
 			public static class Common
 			{

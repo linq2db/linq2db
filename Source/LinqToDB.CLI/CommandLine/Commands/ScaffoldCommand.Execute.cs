@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -74,7 +73,7 @@ namespace LinqToDB.CommandLine
 				DatabaseType.Sybase          => ProviderName.Sybase,
 				DatabaseType.SapHana         => ProviderName.SapHana,
 				DatabaseType.ClickHouseMySql => ProviderName.ClickHouseMySql,
-				DatabaseType.ClickHouseHttp  => ProviderName.ClickHouseClient,
+				DatabaseType.ClickHouseHttp  => ProviderName.ClickHouseDriver,
 				DatabaseType.ClickHouseTcp   => ProviderName.ClickHouseOctonica,
 				_                            => throw new InvalidOperationException($"Unsupported provider: {providerName}")
 			};
@@ -95,7 +94,7 @@ namespace LinqToDB.CommandLine
 			if (options.Count > 0)
 			{
 				foreach (var kvp in options)
-					Console.Error.WriteLine($"{Name} command miss '{kvp.Key.Name}' option handler");
+					await Console.Error.WriteLineAsync($"{Name} command miss '{kvp.Key.Name}' option handler").ConfigureAwait(false);
 
 				// throw exception as it is implementation bug, not bad input or other expected error
 				throw new InvalidOperationException($"Not all options handled by {Name} command");
@@ -195,7 +194,7 @@ namespace LinqToDB.CommandLine
 			switch (provider)
 			{
 				case ProviderName.ClickHouseMySql   :
-				case ProviderName.ClickHouseClient  :
+				case ProviderName.ClickHouseDriver:
 				case ProviderName.ClickHouseOctonica:
 				case ProviderName.SqlServer         :
 					break;
@@ -399,7 +398,7 @@ Provider could be downloaded from:
 			// currently we support multiarch only for Windows
 			if (!OperatingSystem.IsWindows())
 			{
-				Console.Out.WriteLine($"'{General.Architecture.Name}' parameter ignored for non-Windows system");
+				await Console.Out.WriteLineAsync($"'{General.Architecture.Name}' parameter ignored for non-Windows system").ConfigureAwait(false);
 				return null;
 			}
 

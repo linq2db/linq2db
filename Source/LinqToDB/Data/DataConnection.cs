@@ -6,22 +6,20 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
-#if NETFRAMEWORK || NETSTANDARD2_0
-using System.Text;
-#endif
 
 using JetBrains.Annotations;
 
-using LinqToDB.Async;
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
-using LinqToDB.Infrastructure;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {
@@ -770,6 +768,7 @@ namespace LinqToDB.Data
 		/// Gets underlying database connection, used by current connection object, or opens new.
 		/// </summary>
 		// TODO: Remove in v7
+		// What is the point to remove this API?
 		[Obsolete("This API scheduled for removal in v7. Use TryGetDbConnection, OpenDbConnection or OpenDbConnectionAsync instead based on your use-case"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DbConnection Connection => OpenDbConnection();
 
@@ -982,7 +981,6 @@ namespace LinqToDB.Data
 		}
 
 		private int? _commandTimeout;
-#if NET8_0_OR_GREATER
 		/// <summary>
 		/// Gets or sets command execution timeout in seconds.
 		/// Supported values:
@@ -993,18 +991,6 @@ namespace LinqToDB.Data
 		/// <item> negative value on property set : throws <see cref="InvalidOperationException"/> exception. To reset timeout to provider/connection defaults use <see cref="ResetCommandTimeout"/> or <see cref="ResetCommandTimeoutAsync"/> methods</item>
 		/// </list>
 		/// </summary>
-#else
-		/// <summary>
-		/// Gets or sets command execution timeout in seconds.
-		/// Supported values:
-		/// <list type="bullet">
-		/// <item>0 : infinite timeout</item>
-		/// <item> &gt; 0 : command timeout in seconds</item>
-		/// <item> -1 on property get : default provider/connection command timeout value used (not controlled by Linq To DB)</item>
-		/// <item> negative value on property set : throws <see cref="InvalidOperationException"/> exception. To reset timeout to provider/connection defaults use <see cref="ResetCommandTimeout"/> method</item>
-		/// </list>
-		/// </summary>
-#endif
 		public int   CommandTimeout
 		{
 			get => _commandTimeout ?? -1;
@@ -1014,13 +1000,10 @@ namespace LinqToDB.Data
 
 				if (value < 0)
 				{
-#if NET8_0_OR_GREATER
 					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout or ResetCommandTimeoutAsync methods instead.");
-#else
-					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout method instead.");
-#endif
 				}
-				else
+
+				if (_commandTimeout != value)
 				{
 					_commandTimeout = value;
 					if (_command != null)
@@ -1069,8 +1052,6 @@ namespace LinqToDB.Data
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public void DisposeCommand()
 		{
-			CheckAndThrowOnDisposed();
-
 			if (_command != null)
 			{
 				DataProvider.DisposeCommand(_command);
@@ -1472,7 +1453,7 @@ namespace LinqToDB.Data
 			CommandInfo.ClearObjectReaderCache();
 		}
 
-#endregion
+		#endregion
 
 		#region Transaction
 
@@ -1498,6 +1479,7 @@ namespace LinqToDB.Data
 		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual DataConnectionTransaction BeginTransaction()
 		{
 			CheckAndThrowOnDisposed();
@@ -1538,6 +1520,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="isolationLevel">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual DataConnectionTransaction BeginTransaction(IsolationLevel isolationLevel)
 		{
 			CheckAndThrowOnDisposed();
@@ -1777,6 +1760,14 @@ namespace LinqToDB.Data
 			_configurationID = null;
 		}
 
+		void IDataContext.SetMappingSchema(MappingSchema mappingSchema)
+		{
+			CheckAndThrowOnDisposed();
+
+			MappingSchema    = mappingSchema;
+			_configurationID = null;
+		}
+
 		#endregion
 
 		#region System.IDisposable Members
@@ -1784,7 +1775,7 @@ namespace LinqToDB.Data
 		protected bool  Disposed        { get; private set; }
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public bool? ThrowOnDisposed { get; set; }
+		public    bool? ThrowOnDisposed { get; set; }
 
 		protected void CheckAndThrowOnDisposed()
 		{
@@ -1818,5 +1809,50 @@ namespace LinqToDB.Data
 		}
 
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance => ((IInfrastructure<IServiceProvider>)DataProvider).Instance;
+
+		/// <inheritdoc cref="IDataContext.UseOptions"/>
+		public IDisposable? UseOptions(Func<DataOptions,DataOptions> optionsSetter)
+		{
+			var prevOptions = Options;
+			var newOptions  = optionsSetter(Options) ?? throw new ArgumentNullException(nameof(optionsSetter));
+
+			if (((IConfigurationID)prevOptions).ConfigurationID == ((IConfigurationID)newOptions).ConfigurationID)
+				return null;
+
+			var configurationID = _configurationID;
+
+			Options          = newOptions;
+			_configurationID = null;
+
+			var action = Options.Reapply(this, prevOptions);
+
+			action += () =>
+			{
+				Options          = prevOptions;
+
+#if DEBUG
+				_configurationID = null;
+#else
+				_configurationID = configurationID;
+#endif
+			};
+
+			return new DisposableAction(action);
+		}
+
+		/// <inheritdoc cref="IDataContext.UseMappingSchema"/>
+		public IDisposable? UseMappingSchema(MappingSchema mappingSchema)
+		{
+			var oldSchema       = MappingSchema;
+			var configurationID = _configurationID;
+
+			AddMappingSchema(mappingSchema);
+
+			return new DisposableAction(() =>
+			{
+				((IDataContext)this).SetMappingSchema(oldSchema);
+				_configurationID = configurationID;
+			});
+		}
 	}
 }

@@ -2,25 +2,23 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.DataProvider;
-using LinqToDB.Tools;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {
-	sealed class RowByRowBulkCopy : BasicBulkCopy
-	{
-	}
-
 	/// <summary>
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
 	[PublicAPI]
-	public static partial class DataConnectionExtensions
+	public static class DataConnectionExtensions
 	{
 		#region SetCommand
 
@@ -1526,6 +1524,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with list of query result records.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, T template, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync<T>();
@@ -1541,6 +1540,7 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with list of query result records.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, T template, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync<T>(cancellationToken);
@@ -1555,6 +1555,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with array of query result records.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, T template, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>();
@@ -1570,6 +1571,7 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with array of query result records.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, T template, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
@@ -1584,6 +1586,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Async sequence of records returned by the query.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection, T template, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable<T>();
@@ -1607,6 +1610,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, T template, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync<T>();
@@ -1631,6 +1635,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, T template, string sql, CancellationToken cancellationToken, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync<T>(cancellationToken);
@@ -1654,6 +1659,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, T template, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>();
@@ -1678,6 +1684,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, T template, string sql, CancellationToken cancellationToken, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
@@ -1701,6 +1708,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Async sequence of records returned by the query.</returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection, T template, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable<T>();
@@ -2580,7 +2588,7 @@ namespace LinqToDB.Data
 
 			if (options.BulkCopyType == BulkCopyType.RowByRow && !table.TryGetDataConnection(out dataConnection))
 			{
-				return CallMetrics(() =>
+			return CallMetrics(() =>
 					new RowByRowBulkCopy().BulkCopyAsync(
 						BulkCopyType.RowByRow,
 						table,
@@ -2796,4 +2804,7 @@ namespace LinqToDB.Data
 
 		#endregion
 	}
+
+	[SuppressMessage("Design", "MA0048:File name must match type name")]
+	sealed class RowByRowBulkCopy : BasicBulkCopy;
 }

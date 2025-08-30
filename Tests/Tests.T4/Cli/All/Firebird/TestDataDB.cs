@@ -7,6 +7,7 @@
 
 using FirebirdSql.Data.Types;
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;

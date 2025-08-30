@@ -9,12 +9,15 @@ using System.Threading.Tasks;
 using System.Transactions;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.DataProvider.DB2;
+using LinqToDB.Internal.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
 
@@ -41,7 +44,7 @@ namespace Tests.Data
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(connection.State,         Is.EqualTo(ConnectionState.Open));
-					Assert.That(conn.ConfigurationString, Is.Null);
+					Assert.That(conn.ConfigurationString, Is.EqualTo(dataProvider.Name));
 				}
 			}
 		}
@@ -624,25 +627,27 @@ namespace Tests.Data
 			{
 				conn.AddInterceptor(new TestConnectionInterceptor(
 					(args, cn) =>
-				{
-					if (cn.State == ConnectionState.Closed)
-						open = true;
+					{
+						if (cn.State == ConnectionState.Closed)
+							open = true;
 					},
 					null,
 					async (args, cn, ct) => await Task.Run(() =>
-				{
-					if (cn.State == ConnectionState.Closed)
-						openAsync = true;
+					{
+						if (cn.State == ConnectionState.Closed)
+							openAsync = true;
 					}, ct),
-					null));
+					null)
+				);
+
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(open, Is.False);
+					Assert.That(open,      Is.False);
 					Assert.That(openAsync, Is.False);
 					var connection = conn.OpenDbConnection();
 					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
-					Assert.That(open, Is.True);
-					Assert.That(openAsync, Is.False);
+					Assert.That(open,              Is.True);
+					Assert.That(openAsync,         Is.False);
 				}
 			}
 		}
@@ -662,11 +667,13 @@ namespace Tests.Data
 					},
 					null,
 					async (args, cn, ct) => await Task.Run(() =>
-						{
-							if (cn.State == ConnectionState.Closed)
-								openAsync = true;
+					{
+						if (cn.State == ConnectionState.Closed)
+							openAsync = true;
 					}, ct),
-					null));
+					null)
+				);
+
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(open, Is.False);
@@ -952,7 +959,7 @@ namespace Tests.Data
 				TestProvName.AllOracle,
 				ProviderName.SqlCe,
 				// depends on connection pool size
-				//ProviderName.ClickHouseClient,
+				//ProviderName.ClickHouseDriver,
 				ProviderName.ClickHouseOctonica,
 				ProviderName.SybaseManaged)] string context)
 		{
@@ -1003,7 +1010,7 @@ namespace Tests.Data
 		[Test]
 		public void MARS_MultipleDataReadersOnSameCommand_NotSupported(
 			[DataSources(false,
-				ProviderName.ClickHouseClient,
+				ProviderName.ClickHouseDriver,
 				TestProvName.AllOracle,
 				ProviderName.SqlCe,
 				ProviderName.SQLiteMS,
@@ -1078,7 +1085,7 @@ namespace Tests.Data
 				ProviderName.SqlCe,
 				// disabled - depends on connection pool size
 				// which is one for session-aware connection
-				//ProviderName.ClickHouseClient,
+				//ProviderName.ClickHouseDriver,
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer,
@@ -1137,7 +1144,7 @@ namespace Tests.Data
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_NoDispose_NotSupported(
 			[DataSources(false,
 				TestProvName.AllAccess,
-			ProviderName.ClickHouseClient,
+			ProviderName.ClickHouseDriver,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -1221,7 +1228,7 @@ namespace Tests.Data
 				TestProvName.AllSQLiteClassic,
 				TestProvName.AllSqlServer,
 				// depends on connection pool size
-				//ProviderName.ClickHouseClient,
+				//ProviderName.ClickHouseDriver,
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSybase)] string context)
 		{
@@ -1277,7 +1284,7 @@ namespace Tests.Data
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_Dispose_NotSupported(
 			[DataSources(false,
 				TestProvName.AllAccess,
-				ProviderName.ClickHouseClient,
+				ProviderName.ClickHouseDriver,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
@@ -1336,7 +1343,7 @@ namespace Tests.Data
 				TestProvName.AllMySql,
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
-				ProviderName.ClickHouseClient,
+				ProviderName.ClickHouseDriver,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -1427,7 +1434,7 @@ namespace Tests.Data
 				TestProvName.AllMySql,
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
-				ProviderName.ClickHouseClient,
+				ProviderName.ClickHouseDriver,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataConnection(context))

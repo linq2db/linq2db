@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 
 using NUnit.Framework;
@@ -59,11 +60,11 @@ namespace Tests.Data
 			using (var db0 = (TestDataConnection)GetDataContext(context))
 			using (var db  = new DataContext(new DataOptions().UseConnectionString(db0.DataProvider.Name, "BAD")))
 			{
-				db.OnTraceConnection = e =>
+				using var scope = db.UseQueryTraceOptions(o => o.WithOnTrace(e =>
 				{
 					events[e.TraceInfoStep] = e;
 					counters[e.TraceInfoStep]++;
-				};
+				}));
 
 				Assert.That(
 					() => db.GetTable<Child>().ToList(),
@@ -92,11 +93,11 @@ namespace Tests.Data
 			using (var db0 = (TestDataConnection)GetDataContext(context))
 			using (var db  = new DataContext(new DataOptions().UseConnectionString(db0.DataProvider.Name, "BAD")))
 			{
-				db.OnTraceConnection = e =>
+				using var scope = db.UseQueryTraceOptions(o => o.WithOnTrace(e =>
 				{
 					events[e.TraceInfoStep] = e;
 					counters[e.TraceInfoStep]++;
-				};
+				}));
 
 				Assert.That(
 					() => db.GetTable<Child>().ToListAsync(),

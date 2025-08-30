@@ -13,25 +13,27 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
-using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq;
-using LinqToDB.Linq.Internal;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.Oracle;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
+using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
 
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -367,8 +369,8 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<DateTime?>("SELECT \"datetimeoffsetDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.Default);
 				}
 
-				conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto)).Should().Be(dto);
-				conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto, DataType.DateTimeOffset)).Should().Be(dto);
+				conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto)).ShouldBe(dto);
+				conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto, DataType.DateTimeOffset)).ShouldBe(dto);
 			}
 		}
 
@@ -966,7 +968,7 @@ namespace Tests.DataProvider
 
 				_ = query.FirstOrDefault();
 
-				parameters.Should().HaveCount(1);
+				parameters.Length.ShouldBe(1);
 
 				if (context.IsAnyOf(TestProvName.AllOracleDevart))
 					// another case of sloppy implementation by devart...
@@ -996,7 +998,7 @@ namespace Tests.DataProvider
 
 				_ = query.FirstOrDefault();
 
-				parameters.Should().HaveCount(1);
+				parameters.Length.ShouldBe(1);
 
 				if (context.IsAnyOf(TestProvName.AllOracleDevart))
 					// another case of sloppy implementation by devart...
@@ -2825,13 +2827,11 @@ namespace Tests.DataProvider
 
 				public int GetHashCode(BooleanMapping obj)
 				{
-					unchecked
-					{
-						var hashCode = obj.Id;
-						hashCode = (hashCode * 397) ^ obj.BoolProp.GetHashCode();
-						hashCode = (hashCode * 397) ^ obj.NullableBoolProp.GetHashCode();
-						return hashCode;
-					}
+					return HashCode.Combine(
+						obj.Id,
+						obj.BoolProp,
+						obj.NullableBoolProp
+					);
 				}
 			}
 
@@ -2854,6 +2854,7 @@ namespace Tests.DataProvider
 				_ != null
 					? DataParameter.Char(null, _.HasValue && _.Value ? 'Y' : 'N')
 					: new DataParameter(null, DBNull.Value));
+			ms.AddScalarType(typeof(bool), new SqlDataType(new DbDataType(typeof(bool), DataType.Char).WithLength(1)));
 
 			var testData = new[]
 			{
@@ -2881,6 +2882,7 @@ namespace Tests.DataProvider
 				_ != null
 					? DataParameter.Char(null, _.HasValue && _.Value ? 'Y' : 'N')
 					: new DataParameter(null, DBNull.Value));
+			ms.AddScalarType(typeof(bool), new SqlDataType(new DbDataType(typeof(bool), DataType.Char).WithLength(1)));
 
 			var testData = new[]
 			{
@@ -3885,11 +3887,11 @@ CREATE TABLE ""TABLE_A""(
 				.GetTable<LinqDataTypesBlobs>()
 				.Where(x => x.ID.In(-10, -20))
 				.Select(x => Sql.Expr<int>("LENGTH(\"BinaryValue\")"))
-				.ToList();
+				.ToArray();
 
 			tx.Rollback();
 
-			inserted.Should().Equal(1, 1);
+			inserted.ShouldBeEquivalentTo(new int[] { 1, 1 });
 		}
 
 		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
@@ -3921,11 +3923,11 @@ CREATE TABLE ""TABLE_A""(
 				.GetTable<LinqDataTypesBlobsDevart>()
 				.Where(x => x.ID.In(-10, -20))
 				.Select(x => Sql.Expr<int>("LENGTH(\"BinaryValue\")"))
-				.ToList();
+				.ToArray();
 
 			tx.Rollback();
 
-			inserted.Should().Equal(1, 1);
+			inserted.ShouldBeEquivalentTo(new int[] { 1, 1 });
 		}
 
 #if NETFRAMEWORK
@@ -3958,11 +3960,11 @@ CREATE TABLE ""TABLE_A""(
 				.GetTable<LinqDataTypesBlobsNative>()
 				.Where(x => x.ID.In(-10, -20))
 				.Select(x => Sql.Expr<int>("LENGTH(\"BinaryValue\")"))
-				.ToList();
+				.ToArray();
 
 			tx.Rollback();
 
-			inserted.Should().Equal(1, 1);
+			inserted.ShouldBeEquivalentTo(new int[] { 1, 1 });
 		}
 #endif
 

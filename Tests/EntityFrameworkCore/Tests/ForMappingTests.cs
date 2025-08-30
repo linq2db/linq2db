@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Tests.Models.ForMapping;
@@ -13,6 +11,8 @@ using LinqToDB.Mapping;
 using Microsoft.EntityFrameworkCore;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests;
 
@@ -41,7 +41,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var ed = connection.MappingSchema.GetEntityDescriptor(typeof(WithIdentity));
 			var pk = ed.Columns.Single(c => c.IsPrimaryKey);
 
-			pk.IsIdentity.Should().BeTrue();
+			pk.IsIdentity.ShouldBeTrue();
 		}
 
 		[Test]
@@ -53,7 +53,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var ed = connection.MappingSchema.GetEntityDescriptor(typeof(NoIdentity));
 			var pk = ed.Columns.Single(c => c.IsPrimaryKey);
 
-			pk.IsIdentity.Should().BeFalse();
+			pk.IsIdentity.ShouldBeFalse();
 		}
 
 		[Test]
@@ -82,7 +82,45 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			t.BulkCopy(items);
 
-			items.Should().BeEquivalentTo(t);
+			t.ToList().OrderByDescending(r => r.Name).ToList().ShouldBeEquivalentTo(items);
+		}
+
+		[Test(Description = "Needed to test we still have compatibility with old provider versions")]
+		public virtual void TestNativeBulkCopyNoIdentity([EFDataSources] string provider)
+		{
+			using var context = CreateContext(provider);
+			using var connection = context.CreateLinqToDBConnection();
+
+			using var t = connection.CreateTempTable<NoIdentity>();
+
+			var items = new List<NoIdentity>()
+			{
+				new() {Id = TestData.Guid1, Name = "John Doe"},
+				new() {Id = TestData.Guid2, Name = "Jane Doe"}
+			};
+
+			t.BulkCopy(new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific }, items);
+
+			t.ToList().OrderByDescending(r => r.Name).ToList().ShouldBeEquivalentTo(items);
+		}
+
+		[Test(Description = "Needed to test we still have compatibility with old provider versions")]
+		public virtual async Task TestNativeBulkCopyAsyncNoIdentity([EFDataSources] string provider)
+		{
+			using var context = CreateContext(provider);
+			using var connection = context.CreateLinqToDBConnection();
+
+			using var t = connection.CreateTempTable<NoIdentity>();
+
+			var items = new List<NoIdentity>()
+			{
+				new() {Id = TestData.Guid1, Name = "John Doe"},
+				new() {Id = TestData.Guid2, Name = "Jane Doe"}
+			};
+
+			await t.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific }, items);
+
+			t.ToList().OrderByDescending(r => r.Name).ToList().ShouldBeEquivalentTo(items);
 		}
 
 		// postgres: cannot create such identity table
@@ -102,7 +140,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			t.BulkCopy(items);
 
-			t.Should().HaveCount(items.Count);
+			t.ToList().Count.ShouldBe(items.Count);
 		}
 
 		[Test]
@@ -130,8 +168,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var context = CreateContext(provider);
 
-			FluentActions.Invoking(() =>  context.WithDuplicateProperties.Where(x => x.Value == 1)
-				.ToArray()).Should().NotThrow();
+			var act = () =>  context.WithDuplicateProperties.Where(x => x.Value == 1).ToArray();
+			act.ShouldNotThrow();
 		}
 
 		[Test]
@@ -169,12 +207,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			// check EF mapping is in place
 			var ed = connection1.MappingSchema.GetEntityDescriptor(typeof(WithIdentity));
 			var pk = ed.Columns.Single(c => c.IsPrimaryKey);
-			pk.IsIdentity.Should().BeTrue();
+			pk.IsIdentity.ShouldBeTrue();
 
 			// check additional mapping also used
 			ed = connection1.MappingSchema.GetEntityDescriptor(typeof(TestEntity));
 			pk = ed.Columns.Single(c => c.IsPrimaryKey);
-			pk.IsIdentity.Should().BeFalse();
+			pk.IsIdentity.ShouldBeFalse();
 			Assert.That(pk.ColumnName, Is.EqualTo("Field"));
 		}
 
@@ -191,9 +229,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var result = context.GetTable<WithInheritanceA>().ToList();
 			
-			result.OfType<WithInheritance>().Should().HaveCount(5);
-			result.OfType<WithInheritanceA1>().Should().HaveCount(2);
-			result.OfType<WithInheritanceA2>().Should().HaveCount(2);
+			result.OfType<WithInheritance>().Count().ShouldBe(5);
+			result.OfType<WithInheritanceA1>().Count().ShouldBe(2);
+			result.OfType<WithInheritanceA2>().Count().ShouldBe(2);
 		}
 
 		[Test]
@@ -204,11 +242,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				var ms = LinqToDBForEFTools.GetMappingSchema(db.Model, db, null);
 				var ed = ms.GetEntityDescriptor(typeof(StringTypes));
 
-				ed.Columns.First(c => c.MemberName == nameof(StringTypes.AsciiString)).DataType.Should()
-					.Be(DataType.VarChar);
+				ed.Columns.First(c => c.MemberName == nameof(StringTypes.AsciiString)).DataType.ShouldBe(DataType.VarChar);
 
-				ed.Columns.First(c => c.MemberName == nameof(StringTypes.UnicodeString)).DataType.Should()
-					.Be(DataType.NVarChar);
+				ed.Columns.First(c => c.MemberName == nameof(StringTypes.UnicodeString)).DataType.ShouldBe(DataType.NVarChar);
 			}
 		}
 
@@ -220,8 +256,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				var ms = LinqToDBForEFTools.GetMappingSchema(db.Model, db, null);
 				var ed = ms.GetEntityDescriptor(typeof(TypesTable));
 
-				ed.Columns.First(c => c.MemberName == nameof(TypesTable.DateTime)).Length.Should().BeNull();
-				ed.Columns.First(c => c.MemberName == nameof(TypesTable.String)).Length.Should().Be(100);
+				ed.Columns.First(c => c.MemberName == nameof(TypesTable.DateTime)).Length.ShouldBeNull();
+				ed.Columns.First(c => c.MemberName == nameof(TypesTable.String)).Length.ShouldBe(100);
 			}
 		}
 

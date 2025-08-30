@@ -13,8 +13,6 @@ using System.Xml.Linq;
 
 using FirebirdSql.Data.Types;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -23,6 +21,8 @@ using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -782,11 +782,11 @@ namespace Tests.DataProvider
 
 				if (quoteMode == FirebirdIdentifierQuoteMode.None)
 				{
-					sql.Should().Contain("Client a_Owner");
+					sql.ShouldContain("Client a_Owner");
 				}
 				else
 				{
-					sql.Should().Contain("\"Client\" \"a_Owner\"");
+					sql.ShouldContain("\"Client\" \"a_Owner\"");
 				}
 			}
 		}

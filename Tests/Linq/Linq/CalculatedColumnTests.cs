@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using FluentAssertions;
-
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -155,8 +156,8 @@ namespace Tests.Linq
 						.Select(d => d.FirstName);
 				var l = q.ToList();
 
-				l.Should().NotBeEmpty();
-				l[0].Should().NotBeNull();
+				l.ShouldNotBeEmpty();
+				l[0].ShouldNotBeNull();
 			}
 		}
 

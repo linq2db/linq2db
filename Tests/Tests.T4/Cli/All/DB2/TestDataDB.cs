@@ -7,6 +7,7 @@
 
 using IBM.Data.DB2Types;
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using System;

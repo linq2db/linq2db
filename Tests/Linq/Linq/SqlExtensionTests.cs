@@ -6,8 +6,9 @@ using System.Linq;
 using System.Reflection;
 
 using LinqToDB;
-using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -39,7 +40,7 @@ namespace Tests.Linq
 					Sql.DateParts.Millisecond   => "millisecond",
 					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
-				builder.AddExpression("part", partStr);
+				builder.AddFragment("part", partStr);
 			}
 		}
 
@@ -72,7 +73,7 @@ namespace Tests.Linq
 				}
 
 				if (partStr != null)
-					builder.AddExpression("part", partStr);
+					builder.AddFragment("part", partStr);
 			}
 		}
 
@@ -105,7 +106,7 @@ namespace Tests.Linq
 				}
 
 				if (partStr != null)
-					builder.AddExpression("part", partStr);
+					builder.AddFragment("part", partStr);
 			}
 		}
 
@@ -142,7 +143,7 @@ namespace Tests.Linq
 				}
 
 				if (partStr != null)
-					builder.AddExpression("part", partStr);
+					builder.AddFragment("part", partStr);
 			}
 		}
 
@@ -165,7 +166,7 @@ namespace Tests.Linq
 					Sql.DateParts.Second    => "s",
 					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
-				builder.AddExpression("part", partStr);
+				builder.AddFragment("part", partStr);
 			}
 		}
 
@@ -324,7 +325,7 @@ namespace Tests.Linq
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
 
-				builder.AddExpression("part", partStr);
+				builder.AddFragment("part", partStr);
 
 				switch (part)
 				{

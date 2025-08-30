@@ -5,13 +5,12 @@ using System.Numerics;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 #if !NETFRAMEWORK
-using ClickHouse.Client.Numerics;
+using ClickHouse.Driver.Numerics;
 #endif
 
 namespace Tests.DataProvider
@@ -323,7 +322,7 @@ namespace Tests.DataProvider
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date), TestData.Date, default);
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date), min, max);
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly), DataType.Date), DateOnly.FromDateTime(TestData.Date), default);
 			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly), DataType.Date), DateOnly.FromDateTime(min), DateOnly.FromDateTime(max));
 #endif
@@ -351,7 +350,7 @@ namespace Tests.DataProvider
 			var max = new DateTime(2299, 12, 31);
 
 			// Date32
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly)), DateOnly.FromDateTime(TestData.Date), default);
 			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly)), DateOnly.FromDateTime(min), DateOnly.FromDateTime(max));
 
@@ -483,7 +482,7 @@ namespace Tests.DataProvider
 			await TestType<decimal, decimal?>(context, new(typeof(decimal)), defaultMax, defaultMin);
 
 #if !NETFRAMEWORK
-			if (context.IsAnyOf(ProviderName.ClickHouseClient))
+			if (context.IsAnyOf(ProviderName.ClickHouseDriver))
 			{
 				var customMin = new ClickHouseDecimal(BigInteger.Parse("-" + new string('9', 76)), 10);
 				var customMax = new ClickHouseDecimal(BigInteger.Parse(new string('9', 76)), 10);
@@ -500,7 +499,7 @@ namespace Tests.DataProvider
 				if (p >= 29 && context.IsAnyOf(ProviderName.ClickHouseOctonica))
 					continue;
 
-				var skipBasicTypes = p >= 29 && context.IsAnyOf(ProviderName.ClickHouseClient);
+				var skipBasicTypes = p >= 29 && context.IsAnyOf(ProviderName.ClickHouseDriver);
 
 				for (var s = 0; s <= p; s++)
 				{
@@ -526,9 +525,9 @@ namespace Tests.DataProvider
 					var minString = $"-{maxString}";
 
 					// not really issue
-					// only ClickHouseClient fails because other providers parse values differently
+					// only ClickHouseDriver fails because other providers parse values differently
 					// and we test only 0 value, which works for them
-					var skipOutOfRange = p >= 29 && context.IsAnyOf(ProviderName.ClickHouseClient);
+					var skipOutOfRange = p >= 29 && context.IsAnyOf(ProviderName.ClickHouseDriver);
 					decimal minDecimal;
 					decimal maxDecimal;
 					if (p >= 29)
@@ -554,14 +553,14 @@ namespace Tests.DataProvider
 						await TestType<decimal, decimal?>(context, decimalType, minDecimal, maxDecimal);
 
 					var zero = "0";
-					if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseClient) && s > 0)
+					if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver) && s > 0)
 						zero = $"{zero}.{new string('0', s)}";
 					await TestType<string, string?>(context, stringType, "0", default, getExpectedValue: v => zero);
 					if (!skipBasicTypes)
 						await TestType<string, string?>(context, stringType, minString, maxString);
 
 #if !NETFRAMEWORK
-					if (context.IsAnyOf(ProviderName.ClickHouseClient))
+					if (context.IsAnyOf(ProviderName.ClickHouseDriver))
 					{
 						var customDecimalType = new DbDataType(typeof(ClickHouseDecimal), dataType, null, null, p, s);
 						var customMin         = new ClickHouseDecimal(BigInteger.Parse("-" + new string('9', p)), s);
@@ -604,7 +603,7 @@ namespace Tests.DataProvider
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), new byte[] { 2 }, new byte[] { 3 });
 			// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 			// https://github.com/ClickHouse/ClickHouse/issues/38790
-			if (!context.IsAnyOf(ProviderName.ClickHouseClient, ProviderName.ClickHouseMySql))
+			if (!context.IsAnyOf(ProviderName.ClickHouseDriver, ProviderName.ClickHouseMySql))
 			{
 				await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), new byte[] { 255 }, new byte[] { 254 });
 			}
@@ -641,13 +640,13 @@ namespace Tests.DataProvider
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), new byte[] { 2 }, new byte[] { 3 }, getExpectedValue: v => { Array.Resize(ref v, 7); return v; }, getExpectedNullableValue: v => { Array.Resize(ref v, 7); return v; });
 			// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 			// https://github.com/ClickHouse/ClickHouse/issues/38790
-			if (!context.IsAnyOf(ProviderName.ClickHouseClient, ProviderName.ClickHouseMySql))
+			if (!context.IsAnyOf(ProviderName.ClickHouseDriver, ProviderName.ClickHouseMySql))
 			{
 				await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), new byte[] { 255 }, new byte[] { 254 }, getExpectedValue: v => { Array.Resize(ref v, 7); return v; }, getExpectedNullableValue: v => { Array.Resize(ref v, 7); return v; });
 			}
 		}
 
-		[ActiveIssue(Configurations = [ProviderName.ClickHouseClient, ProviderName.ClickHouseOctonica])]
+		[ActiveIssue(Configurations = [ProviderName.ClickHouseDriver, ProviderName.ClickHouseOctonica])]
 		[Test]
 		public async ValueTask TestJSONType([ClickHouseDataSources(false)] string context)
 		{
@@ -664,7 +663,7 @@ namespace Tests.DataProvider
 			// provider errors not reported as JSON type is not yet unusable - nothing to fix on client side
 			// Client: ArgumentException: 'Unknown type: JSON'
 			// Octonica: ClickHouseException : The type "JSON" is not supported
-			//if (!context.IsAnyOf(ProviderName.ClickHouseClient, ProviderName.ClickHouseOctonica))
+			//if (!context.IsAnyOf(ProviderName.ClickHouseDriver, ProviderName.ClickHouseOctonica))
 			{
 				// WTF is (0)
 				await TestType<string, string?>(context, new(typeof(string), DataType.Json), "null", "null",

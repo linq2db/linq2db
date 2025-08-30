@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Common.Internal;
-using LinqToDB.Linq.Builder;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB
 {
@@ -64,7 +65,7 @@ namespace LinqToDB
 
 			public QueryExtensionScope Scope                { get; }
 			/// <summary>
-			/// Instance of <see cref="ISqlExtensionBuilder"/>.
+			/// Type implementing <see cref="ISqlExtensionBuilder"/>.
 			/// </summary>
 			public Type?               ExtensionBuilderType { get; set; }
 			public string[]?           ExtensionArguments   { get; set; }
@@ -130,6 +131,29 @@ namespace LinqToDB
 			public override string GetObjectID()
 			{
 				return FormattableString.Invariant($".{Configuration}.{(int)Scope}.{IdentifierBuilder.GetObjectID(ExtensionBuilderType)}.{IdentifierBuilder.GetObjectID(ExtensionArguments)}.");
+			}
+		}
+
+		[DebuggerDisplay("{ToDebugString()}")]
+		public sealed class SqlQueryExtensionData
+		{
+			public SqlQueryExtensionData(string name, Expression expr, ParameterInfo parameter, int paramsIndex = -1)
+			{
+				Name = name;
+				Expression = expr;
+				Parameter = parameter;
+				ParamsIndex = paramsIndex;
+			}
+
+			public string Name { get; }
+			public Expression Expression { get; }
+			public ParameterInfo Parameter { get; }
+			public int ParamsIndex { get; }
+			public ISqlExpression? SqlExpression { get; set; }
+
+			public string ToDebugString()
+			{
+				return $"{Name} = {SqlExpression?.ToDebugString() ?? "Expr:" + Expression.ToString()}";
 			}
 		}
 	}

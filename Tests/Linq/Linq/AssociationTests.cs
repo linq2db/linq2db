@@ -5,14 +5,16 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-
 using JetBrains.Annotations;
 
 using LinqToDB;
+using LinqToDB.Async;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -1454,11 +1456,11 @@ namespace Tests.Linq
 				.OrderBy(_ => _.OwnerId)
 				.ToArray();
 
-			res.Length.Should().Be(2);
-			res[0].Id.Should().Be(1);
-			res[0].OwnerId.Should().Be(1);
-			res[1].OwnerId.Should().Be(2);
-			res[1].Id.Should().BeNull();
+			res.Length.ShouldBe(2);
+			res[0].Id.ShouldBe(1);
+			res[0].OwnerId.ShouldBe(1);
+			res[1].OwnerId.ShouldBe(2);
+			res[1].Id.ShouldBeNull();
 		}
 
 		#endregion
@@ -1879,7 +1881,6 @@ namespace Tests.Linq
 			var result = query.ToArray();
 		}
 
-		[ActiveIssue("Not supported yet. Needs analysis.")]
 		[Test]
 		public void ViaInterfaceLoadWith([DataSources(TestProvName.AllClickHouse)] string context)
 		{

@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -93,7 +93,10 @@ namespace Tests.Linq
 					.AsCte();
 
 				if (!db.SqlProviderFlags.IsCTESupportsOrdering)
-					FluentActions.Enumerating(() => query).Should().NotThrow();
+				{
+					var act = () => query.ToArray();
+					act.ShouldNotThrow();
+				}
 				else
 				{
 					var result = query.ToList();
@@ -454,10 +457,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return (ChildID * 397) ^ ParentID;
-				}
+				return HashCode.Combine(ChildID, ParentID);
 			}
 
 			public int ChildID  { get; set; }
@@ -506,7 +506,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
 		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
 		{
@@ -541,7 +541,7 @@ namespace Tests.Linq
 		}
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
 		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB, TestProvName.AllClickHouse)] string context)
 		{
@@ -562,7 +562,7 @@ namespace Tests.Linq
 		}
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
-		[ActiveIssue(3015, Configurations = [TestProvName.AllOracle, TestProvName.AllSapHana, TestProvName.AllInformix], Details = "Oracle needs special syntax for CTE + UPDATE")]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.InformixDB2], Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
 			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllMariaDB)]
@@ -777,7 +777,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
 		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2)] string context)
 		{
@@ -864,10 +864,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return ((Child != null ? Child.GetHashCode() : 0) * 397) ^ (Parent != null ? Parent.GetHashCode() : 0);
-				}
+				return HashCode.Combine(Child, Parent);
 			}
 		}
 
@@ -1211,7 +1208,7 @@ namespace Tests.Linq
 			query.ToArray();
 
 			if (db is TestDataConnection cn)
-				cn.LastQuery!.Should().Contain("SELECT", Exactly.Times(4));
+				cn.LastQuery!.ShouldContain("SELECT", Exactly.Times(4));
 		}
 
 		public record class  Issue3357RecordClass (int Id, string FirstName, string LastName);
@@ -1305,8 +1302,9 @@ namespace Tests.Linq
 
 			if (db is TestDataConnection dc)
 			{
-				dc.LastQuery!.Should().NotContain("N'");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Once());
+				dc.LastQuery!.ShouldNotContain("N'");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS VARCHAR(MAX))");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS VARCHAR(MAX))", Exactly.Once());
 			}
 		}
 
@@ -1391,9 +1389,9 @@ namespace Tests.Linq
 
 			if (db is TestDataConnection dc)
 			{
-				dc.LastQuery!.Should().NotContain("N'");
-				dc.LastQuery!.Should().Contain("'THIS_IS_TWO'");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(50))", Exactly.Once());
+				dc.LastQuery!.ShouldNotContain("N'");
+				dc.LastQuery!.ShouldContain("'THIS_IS_TWO'");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS VARCHAR(50))", Exactly.Once());
 			}
 		}
 
@@ -1455,8 +1453,8 @@ namespace Tests.Linq
 			query.ToArray();
 			if (db is TestDataConnection dc)
 			{
-				dc.LastQuery!.Should().NotContain("N'");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Twice());
+				dc.LastQuery!.ShouldNotContain("N'");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS VARCHAR(MAX))", Exactly.Twice());
 			}
 		}
 
@@ -1596,6 +1594,36 @@ namespace Tests.Linq
 			;
 
 			query.ToArray();
+		}
+
+		[ActiveIssue]
+		[Test]
+		public void Issue3360_TypedNullEnumInAnchor2([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();
+
+			var query = from node in db.GetCte<Issue3360_TypedNullEnumInAnchorProjection>(
+				cte =>
+				{
+					return db.GetTable<Issue3360NullInAnchor>().Select(p => new Issue3360_TypedNullEnumInAnchorProjection(p.Id, VarChar<StrEnum?>(null, 50)))
+						.Concat(
+						from p in db.GetTable<Issue3360NullInAnchor>()
+						join parent in cte on p.Id equals parent.Id + 1
+						select new Issue3360_TypedNullEnumInAnchorProjection(p.Id, StrEnum.One))
+						.Concat(
+						from p in db.GetTable<Issue3360NullInAnchor>()
+						select new Issue3360_TypedNullEnumInAnchorProjection(p.Id, p.Enum1))
+						.Concat(
+						from p in db.GetTable<Issue3360NullInAnchor>()
+						select new Issue3360_TypedNullEnumInAnchorProjection(p.Id, null));
+				})
+						select new Issue3360_TypedNullEnumInAnchorProjection(node.Id, node.Value);
+
+			query.ToArray();
+
+			Assert.That(db.LastQuery!.ToUpper(), Does.Not.Contain("SQL_VARIANT"));
 		}
 
 		#region InvalidColumnIndexMapping issue
@@ -1859,8 +1887,8 @@ namespace Tests.Linq
 
 			if (db is TestDataConnection dc)
 			{
-				dc.LastQuery!.Should().NotContain("Convert(VarChar");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS NVARCHAR(MAX))", Exactly.Twice());
+				dc.LastQuery!.ShouldNotContain("Convert(VarChar");
+				dc.LastQuery!.ToUpperInvariant().ShouldContain("AS NVARCHAR(MAX))", Exactly.Twice());
 			}
 		}
 
@@ -1957,7 +1985,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
 		public void Issue3945([CteContextSource] string context)
 		{
@@ -2504,20 +2532,20 @@ namespace Tests.Linq
 			var booksQuery = db.GetTable<Book>()
 				.Select(b => new
 				{
-					Book = b, 
+					Book = b,
 					b.Author
 				})
 				.AsCte("BooksCte");
 
 			var query1 = booksQuery.Select(r => new
 			{
-				Book = (Book?)r.Book, 
+				Book = (Book?)r.Book,
 				Author = (Author?)null
 			});
 
 			var query2 = booksQuery.Select(r => new
 			{
-				Book = (Book?)null, 
+				Book = (Book?)null,
 				Author = (Author?)r.Author
 			});
 
@@ -2548,7 +2576,7 @@ namespace Tests.Linq
 						select new SequenceBuildFailedRecord(p.PersonID));
 			});
 
-			var query = 
+			var query =
 				from r in cte
 				join p in db.Patient on r.Id equals p.PersonID
 				select new
@@ -2566,7 +2594,7 @@ namespace Tests.Linq
 
 			var cte = db.Person.Select(s => new { s.Patient!.PersonID }).AsCte();
 
-			var query = 
+			var query =
 				from r in cte
 				join p in db.Patient on r.PersonID equals p.PersonID
 				select new
@@ -2575,6 +2603,108 @@ namespace Tests.Linq
 				};
 
 			var result = query.ToArray();
+		}
+
+		sealed class Issue4968Menu
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		sealed class Issue4968Item
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int MenuId { get; set; }
+			public int? ParentItemId { get; set; }
+		}
+
+		sealed class Issue4968Projection
+		{ 
+			public int Id1 { get; set; }
+			public int? Id2 { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4968")]
+		public void Issue4968Test_Tuple_Select([CteContextSource(TestProvName.AllClickHouse, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tm = db.CreateLocalTable<Issue4968Menu>();
+			using var ti = db.CreateLocalTable<Issue4968Item>();
+
+			var menuId = 1;
+
+			var cte = db.GetCte<Tuple<int, int?>>(
+				cteQueryable => ti
+					.Where(item => item.MenuId == menuId)
+					.Select(item => Tuple.Create(item.Id, item.ParentItemId))
+					.UnionAll(ti.InnerJoin(
+						cteQueryable,
+						(item, cte) => item.ParentItemId == cte.Item1,
+						(item, cte) => Tuple.Create(item.Id, item.ParentItemId))));
+
+			ti.Where(i => cte.Any(t => t.Item1 == i.Id)).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4968")]
+		public void Issue4968Test_Tuple_Delete([CteContextSource(TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySqlWithCTE, TestProvName.AllClickHouse, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tm = db.CreateLocalTable<Issue4968Menu>();
+			using var ti = db.CreateLocalTable<Issue4968Item>();
+
+			var menuId = 1;
+
+			var cte = db.GetCte<Tuple<int, int?>>(
+				cteQueryable => ti
+					.Where(item => item.MenuId == menuId)
+					.Select(item => Tuple.Create(item.Id, item.ParentItemId))
+					.UnionAll(ti.InnerJoin(
+						cteQueryable,
+						(item, cte) => item.ParentItemId == cte.Item1,
+						(item, cte) => Tuple.Create(item.Id, item.ParentItemId))));
+
+			ti.Where(i => cte.Any(tuple => tuple.Item1 == i.Id)).Delete();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4968")]
+		public void Issue4968Test_Class_Select([CteContextSource(TestProvName.AllClickHouse, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tm = db.CreateLocalTable<Issue4968Menu>();
+			using var ti = db.CreateLocalTable<Issue4968Item>();
+
+			var menuId = 1;
+
+			var cte = db.GetCte<Issue4968Projection>(
+				cteQueryable => ti
+					.Where(item => item.MenuId == menuId)
+					.Select(item => new Issue4968Projection() {Id1 = item.Id, Id2 = item.ParentItemId })
+					.UnionAll(ti.InnerJoin(
+						cteQueryable,
+						(item, cte) => item.ParentItemId == cte.Id1,
+						(item, cte) => new Issue4968Projection() {Id1 = item.Id, Id2 = item.ParentItemId })));
+
+			ti.Where(i => cte.Any(t => t.Id1 == i.Id)).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4968")]
+		public void Issue4968Test_Class_Delete([CteContextSource(TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySqlWithCTE, TestProvName.AllClickHouse, TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tm = db.CreateLocalTable<Issue4968Menu>();
+			using var ti = db.CreateLocalTable<Issue4968Item>();
+
+			var menuId = 1;
+
+			var cte = db.GetCte<Issue4968Projection>(
+				cteQueryable => ti
+					.Where(item => item.MenuId == menuId)
+					.Select(item => new Issue4968Projection() {Id1 = item.Id, Id2 = item.ParentItemId })
+					.UnionAll(ti.InnerJoin(
+						cteQueryable,
+						(item, cte) => item.ParentItemId == cte.Id1,
+						(item, cte) => new Issue4968Projection() {Id1 = item.Id, Id2 = item.ParentItemId })));
+
+			ti.Where(i => cte.Any(tuple => tuple.Id1 == i.Id)).Delete();
 		}
 	}
 }

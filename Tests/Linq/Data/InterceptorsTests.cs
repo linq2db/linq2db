@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
@@ -683,13 +684,8 @@ namespace Tests.Data
 			await db.Person.ToListAsync();
 			using (Assert.EnterMultipleScope())
 			{
-#if NETFRAMEWORK
-				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.True);
-				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.False);
-#else
 				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.False);
 				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.True);
-#endif
 			}
 		}
 
@@ -713,13 +709,8 @@ namespace Tests.Data
 			await db.GetTable<Person>().ToListAsync();
 			using (Assert.EnterMultipleScope())
 			{
-#if NETFRAMEWORK
-				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.True);
-				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.False);
-#else
 				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.False);
 				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.True);
-#endif
 			}
 		}
 

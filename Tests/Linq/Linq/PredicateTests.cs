@@ -5,7 +5,6 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
 
@@ -137,7 +136,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
-		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
 		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
 		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
@@ -174,7 +173,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
-		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
 		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
 		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
@@ -219,7 +218,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("System.Data.SQLite.SQLiteException", TestProvName.AllSQLiteClassic)]
 		[ThrowsForProvider("Microsoft.Data.Sqlite.SqliteException", ProviderName.SQLiteMS)]
-		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
 		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
 		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		public void Test_Feature_IsUnknown([DataSources(false)] string context)
@@ -350,7 +349,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
 		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
 		[ThrowsForProvider("Npgsql.PostgresException", TestProvName.AllPostgreSQL)]
-		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
 		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql, TestProvName.AllMySqlConnector)]
 		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2, TestProvName.AllDB2)]
@@ -494,7 +493,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServer2019MinusMS)]
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
-		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
 		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql, TestProvName.AllMySqlConnector)]
 		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
@@ -529,7 +528,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
 		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
 		[ThrowsForProvider("Npgsql.PostgresException", TestProvName.AllPostgreSQL)]
-		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
 		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
 		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2, TestProvName.AllDB2)]
@@ -565,7 +564,7 @@ namespace Tests.Linq
 		// Supported: SQLite
 		[Test(Description = "<A> IS <B>")]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", TestProvName.AllFirebird)]
-		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
 		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql, TestProvName.AllMySqlConnector)]
 		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
@@ -611,7 +610,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
 		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
-		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
 		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql, TestProvName.AllMySqlConnector)]
 		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		[ThrowsForProvider("MySql.Data.MySqlClient.MySqlException", TestProvName.AllMySqlData)]
@@ -649,7 +648,7 @@ namespace Tests.Linq
 		[Test(Description = "EXISTS INTERSECT")]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", TestProvName.AllAccessOdbc)]
-		[ThrowsForProvider("ClickHouse.Client.ClickHouseServerException", ProviderName.ClickHouseClient)]
+		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
 		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
 		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		public void Test_Feature_Intersect([DataSources(false)] string context)
@@ -822,11 +821,11 @@ namespace Tests.Linq
 
 			db.InlineParameters = inline;
 
-			var True = true;
-			var False = false;
-			bool? TrueN = true;
+			var   True   = true;
+			var   False  = false;
+			bool? TrueN  = true;
 			bool? FalseN = false;
-			bool? Null = null;
+			bool? Null   = null;
 
 			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == True));
 			AssertQuery(tb.Where(r => (r.Value1 == r.Value2) == TrueN));
@@ -1310,6 +1309,157 @@ namespace Tests.Linq
 			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 0 : r.Value5) < null));
 			AssertQuery(tb.Where(r => (r.Value1 > r.Value4 ? 0 : r.Value5) <= null));
 #pragma warning restore CS0464 // Comparing with null of struct type always produces 'false'
+		}
+
+		[Test]
+		public void Test_PredicateAsNonConditionBooleanValue_Test1([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			AssertQuery(tb.Select(r => new
+			{
+				Id = r.Id,
+				Value11 = r.Value1 == r.Value2,
+				Value12 = r.Value1 != r.Value2,
+				Value13 = r.Value1 > r.Value2,
+				Value14 = r.Value1 < r.Value2,
+				Value15 = r.Value1 >= r.Value2,
+				Value16 = r.Value1 <= r.Value2,
+
+				Value21 = r.Value4 == r.Value5,
+				Value22 = r.Value4 != r.Value5,
+				Value23 = r.Value4 > r.Value5,
+				Value24 = r.Value4 < r.Value5,
+				Value25 = r.Value4 >= r.Value5,
+				Value26 = r.Value4 <= r.Value5,
+
+				Value31 = r.Value1 == r.Value4,
+				Value32 = r.Value1 != r.Value4,
+				Value33 = r.Value1 > r.Value4,
+				Value34 = r.Value1 < r.Value4,
+				Value35 = r.Value1 >= r.Value4,
+				Value36 = r.Value1 <= r.Value4,
+
+				Value41 = r.Value5 == r.Value2,
+				Value42 = r.Value5 != r.Value2,
+				Value43 = r.Value5 > r.Value2,
+				Value44 = r.Value5 < r.Value2,
+				Value45 = r.Value5 >= r.Value2,
+				Value46 = r.Value5 <= r.Value2,
+			}).Where(r => r.Id != -1));
+		}
+
+		[Test]
+		public void Test_PredicateAsNonConditionBooleanValue_Test2([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			AssertQuery(from r in tb group r by r.Value1 == r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 != r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 > r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 < r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 >= r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 <= r.Value2 into g select new { g.Key, Count = g.Count() });
+
+			AssertQuery(from r in tb group r by r.Value4 == r.Value5 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value4 != r.Value5 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value4 > r.Value5 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value4 < r.Value5 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value4 >= r.Value5 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value4 <= r.Value5 into g select new { g.Key, Count = g.Count() });
+
+			AssertQuery(from r in tb group r by r.Value1 == r.Value4 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 != r.Value4 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 > r.Value4 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 < r.Value4 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 >= r.Value4 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value1 <= r.Value4 into g select new { g.Key, Count = g.Count() });
+
+			AssertQuery(from r in tb group r by r.Value5 == r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value5 != r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value5 > r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value5 < r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value5 >= r.Value2 into g select new { g.Key, Count = g.Count() });
+			AssertQuery(from r in tb group r by r.Value5 <= r.Value2 into g select new { g.Key, Count = g.Count() });
+		}
+
+		[Test]
+		public void Test_PredicateOptimization([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			// A OR (A AND B) => A
+			AssertQuery(tb.Where(r => r.Value1 == r.Value2 || (r.Value1 == r.Value2 && r.Value1 == r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 || (r.Value1 == r.Value5 && r.Value1 == r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 || (r.Value1 == r.Value5 && r.Value1 == r.Value4)));
+
+			AssertQuery(tb.Where(r => r.Value1 != r.Value2 || (r.Value1 != r.Value2 && r.Value1 != r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 != r.Value5 || (r.Value1 != r.Value5 && r.Value1 != r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 != r.Value5 || (r.Value1 != r.Value5 && r.Value1 != r.Value4)));
+
+			AssertQuery(tb.Where(r => r.Value1 > r.Value2 || (r.Value1 > r.Value2 && r.Value1 > r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 > r.Value5 || (r.Value1 > r.Value5 && r.Value1 > r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 > r.Value5 || (r.Value1 > r.Value5 && r.Value1 > r.Value4)));
+
+			// A AND (A OR B) => A
+			AssertQuery(tb.Where(r => r.Value1 == r.Value2 && (r.Value1 == r.Value2 || r.Value1 == r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 && (r.Value1 == r.Value5 || r.Value1 == r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 && (r.Value1 == r.Value5 || r.Value1 == r.Value4)));
+
+			AssertQuery(tb.Where(r => r.Value1 != r.Value2 && (r.Value1 != r.Value2 || r.Value1 != r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 != r.Value5 && (r.Value1 != r.Value5 || r.Value1 != r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 != r.Value5 && (r.Value1 != r.Value5 || r.Value1 != r.Value4)));
+
+			AssertQuery(tb.Where(r => r.Value1 >= r.Value2 && (r.Value1 >= r.Value2 || r.Value1 >= r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 >= r.Value5 && (r.Value1 >= r.Value5 || r.Value1 >= r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 >= r.Value5 && (r.Value1 >= r.Value5 || r.Value1 >= r.Value4)));
+
+			// A OR (!A AND B) => A OR B
+			AssertQuery(tb.Where(r => r.Value1 == r.Value2 || (r.Value1 != r.Value2 && r.Value1 == r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 || (r.Value1 != r.Value5 && r.Value1 == r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 || (r.Value1 != r.Value5 && r.Value1 == r.Value4)));
+
+			AssertQuery(tb.Where(r => r.Value1 > r.Value2 || (r.Value1 <= r.Value2 && r.Value1 > r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 > r.Value5 || (r.Value1 <= r.Value5 && r.Value1 > r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 > r.Value5 || (r.Value1 <= r.Value5 && r.Value1 > r.Value4)));
+
+			// A AND (!A OR B) => A AND B
+			AssertQuery(tb.Where(r => r.Value1 == r.Value2 && (r.Value1 != r.Value2 || r.Value1 == r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 && (r.Value1 != r.Value5 || r.Value1 == r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 == r.Value5 && (r.Value1 != r.Value5 || r.Value1 == r.Value4)));
+
+			AssertQuery(tb.Where(r => r.Value1 < r.Value2 && (r.Value1 >= r.Value2 || r.Value1 < r.Value4)));
+			AssertQuery(tb.Where(r => r.Value1 < r.Value5 && (r.Value1 >= r.Value5 || r.Value1 < r.Value2)));
+			AssertQuery(tb.Where(r => r.Value1 < r.Value5 && (r.Value1 >= r.Value5 || r.Value1 < r.Value4)));
+
+			// A OR !A
+			AssertQuery(tb.Where(r => r.Value1 == r.Value2 || r.Value1 != r.Value2));
+			AssertQuery(tb.Where(r => r.Value1 > r.Value2 || r.Value1 <= r.Value2));
+			AssertQuery(tb.Where(r => r.Value1 >= r.Value2 || r.Value1 < r.Value2));
+
+			AssertQuery(tb.Where(r => r.Value1 == r.Value4 || r.Value1 != r.Value4));
+			AssertQuery(tb.Where(r => r.Value1 < r.Value4 || r.Value1 >= r.Value4));
+			AssertQuery(tb.Where(r => r.Value1 > r.Value4 || r.Value1 <= r.Value4));
+
+			AssertQuery(tb.Where(r => r.Value5 == r.Value4 || r.Value5 != r.Value4));
+			AssertQuery(tb.Where(r => r.Value5 > r.Value4 || r.Value5 <= r.Value4));
+			AssertQuery(tb.Where(r => r.Value5 >= r.Value4 || r.Value5 < r.Value4));
+
+			// A AND !A
+			AssertQuery(tb.Where(r => r.Value1 == r.Value2 && r.Value1 != r.Value2));
+			AssertQuery(tb.Where(r => r.Value1 > r.Value2 && r.Value1 <= r.Value2));
+			AssertQuery(tb.Where(r => r.Value1 >= r.Value2 && r.Value1 < r.Value2));
+
+			AssertQuery(tb.Where(r => r.Value1 == r.Value4 && r.Value1 != r.Value4));
+			AssertQuery(tb.Where(r => r.Value1 < r.Value4 && r.Value1 >= r.Value4));
+			AssertQuery(tb.Where(r => r.Value1 > r.Value4 && r.Value1 <= r.Value4));
+
+			AssertQuery(tb.Where(r => r.Value5 == r.Value4 && r.Value5 != r.Value4));
+			AssertQuery(tb.Where(r => r.Value5 > r.Value4 && r.Value5 <= r.Value4));
+			AssertQuery(tb.Where(r => r.Value5 >= r.Value4 && r.Value5 < r.Value4));
 		}
 		#endregion
 	}

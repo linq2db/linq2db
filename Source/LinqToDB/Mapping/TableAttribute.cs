@@ -1,5 +1,7 @@
 ﻿using System;
 
+using LinqToDB.Internal.SqlProvider;
+
 namespace LinqToDB.Mapping
 {
 	/// <summary>

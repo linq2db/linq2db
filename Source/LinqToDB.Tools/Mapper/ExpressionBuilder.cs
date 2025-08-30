@@ -7,9 +7,9 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Reflection;
 
 using static System.Linq.Expressions.Expression;

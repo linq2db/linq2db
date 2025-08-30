@@ -2,13 +2,13 @@
 using System.Linq;
 using System.Threading.Tasks;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -46,7 +46,7 @@ namespace Tests.UserTests
 				.Set(r => r.t.Sum, r => r.t.Sum + r.eg.SumAggr)
 				.UpdateAsync();
 
-			db.LastQuery.Should().NotContain("JOIN");
+			db.LastQuery!.ShouldNotContain("JOIN");
 		}
 
 		[Obsolete("Remove test after API removed")]
@@ -67,7 +67,7 @@ namespace Tests.UserTests
 				.UpdateAsync(totals, g =>
 					new Total { Sum = g.OldSum + g.SumAggr });
 
-				db.LastQuery.Should().NotContain("JOIN");
+				db.LastQuery!.ShouldNotContain("JOIN");
 		}
 
 		[Test]
@@ -87,7 +87,7 @@ namespace Tests.UserTests
 				.UpdateAsync(q => q.t, g =>
 					new Total { Sum = g.t.Sum + g.SumAggr });
 
-			db.LastQuery.Should().NotContain("JOIN");
+			db.LastQuery!.ShouldNotContain("JOIN");
 		}
 
 		[Obsolete("Remove test after API removed")]
@@ -110,7 +110,7 @@ namespace Tests.UserTests
 							Sum = g.OldSum + g.SumAggr
 						});
 
-			db.LastQuery.Should().NotContain("JOIN");
+			db.LastQuery!.ShouldNotContain("JOIN");
 		}
 
 		[Test]
@@ -132,7 +132,7 @@ namespace Tests.UserTests
 							Sum = g.t.Sum + g.SumAggr
 						});
 
-			db.LastQuery.Should().NotContain("JOIN");
+			db.LastQuery!.ShouldNotContain("JOIN");
 		}
 	}
 }

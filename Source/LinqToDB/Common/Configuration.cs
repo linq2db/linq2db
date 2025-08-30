@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Linq;
 
 #if SUPPORTS_COMPOSITE_FORMAT
@@ -16,46 +17,6 @@ using System.Text;
 
 namespace LinqToDB.Common
 {
-	/// <summary>
-	/// Contains LINQ expression compilation options.
-	/// </summary>
-	public static class Compilation
-	{
-		private static Func<LambdaExpression,Delegate?>? _compiler;
-
-		/// <summary>
-		/// Sets LINQ expression compilation method.
-		/// </summary>
-		/// <param name="compiler">Method to use for expression compilation or <c>null</c> to reset compilation logic to defaults.</param>
-		public static void SetExpressionCompiler(Func<LambdaExpression, Delegate?>? compiler)
-		{
-			_compiler = compiler;
-		}
-
-		/// <summary>
-		/// Internal API.
-		/// </summary>
-		public static TDelegate CompileExpression<TDelegate>(this Expression<TDelegate> expression)
-			where TDelegate : Delegate
-		{
-			return ((TDelegate?)_compiler?.Invoke(expression))
-#pragma warning disable RS0030 // Do not use banned APIs
-				?? expression.Compile();
-#pragma warning restore RS0030 // Do not use banned APIs
-		}
-
-		/// <summary>
-		/// Internal API.
-		/// </summary>
-		public static Delegate CompileExpression(this LambdaExpression expression)
-		{
-			return _compiler?.Invoke(expression)
-#pragma warning disable RS0030 // Do not use banned APIs
-				?? expression.Compile();
-#pragma warning restore RS0030 // Do not use banned APIs
-		}
-	}
-
 	/// <summary>
 	/// Contains global linq2db settings.
 	/// </summary>
@@ -68,11 +29,13 @@ namespace LinqToDB.Common
 		internal static bool DisableLegacySqlBuilderDateDiffCalls;
 
 		/// <summary>
-		/// If <c>true</c> - non-primitive and non-enum value types (structures) will be treated as scalar types (e.g. <see cref="DateTime"/>) during mapping;
+		/// If <c>true</c> - structures (except primitive values including enums) will be treated as scalar types during mapping;
 		/// otherwise they will be treated the same way as classes.
-		/// Default value: <c>true</c>.
+		/// Default value: <c>false</c>.
 		/// </summary>
-		public static bool IsStructIsScalarType = true;
+		// TODO: Remove in v7
+		[Obsolete("This API planned for removal in version 7. Use MappingSchema.SetScalarType or ScalarTypeAttribute to configure scalar structs"), EditorBrowsable(EditorBrowsableState.Never)]
+		public static bool IsStructIsScalarType = false;
 
 		/// <summary>
 		/// If <c>true</c> - Enum values are stored as by calling ToString().
@@ -97,8 +60,7 @@ namespace LinqToDB.Common
 
 		/// <summary>
 		/// Determines the length after which logging of binary data in SQL will be truncated.
-		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
-		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>.
 		/// </summary>
 		/// <remarks>
 		/// This value defaults to 100.
@@ -109,8 +71,7 @@ namespace LinqToDB.Common
 
 		/// <summary>
 		/// Determines the length after which logging of string data in SQL will be truncated.
-		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
-		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>.
 		/// </summary>
 		/// <remarks>
 		/// This value defaults to 200.
@@ -121,8 +82,7 @@ namespace LinqToDB.Common
 
 		/// <summary>
 		/// Determines number of items after which logging of collection data in SQL will be truncated.
-		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
-		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>.
 		/// </summary>
 		/// <remarks>
 		/// This value defaults to 8 elements.
@@ -146,7 +106,7 @@ namespace LinqToDB.Common
 			set
 			{
 				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.
-				if (value) Mapping.Nullability.EnsureSupport();
+				if (value) Nullability.EnsureSupport();
 				_useNullableTypesMetadata = value;
 			}
 		}
@@ -168,7 +128,7 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Controls behavior of bulk copy timeout if <see cref="BulkCopyOptions.BulkCopyTimeout"/> is not provided.
-			/// - if <c>true</c> - the current timeout on the <see cref="DataConnection"/> is used
+			/// - if <c>true</c> - the currently set command timeout on the <see cref="DataConnection"/> is used
 			/// - if <c>false</c> - command timeout is infinite.
 			/// Default value: <c>false</c>.
 			/// </summary>
@@ -183,20 +143,13 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class Linq
 		{
-			private static volatile LinqOptions _options = new ();
-
 			/// <summary>
 			/// Default <see cref="LinqOptions"/> options. Automatically synchronized with other settings in <see cref="Linq"/> class.
 			/// </summary>
 			public  static LinqOptions Options
 			{
-				get => _options;
-				set
-				{
-					_options = value;
-					DataConnection.ResetDefaultOptions();
-					DataConnection.ConnectionOptionsByConfigurationString.Clear();
-				}
+				get => LinqOptions.Default;
+				set => LinqOptions.Default = value;
 			}
 
 			/// <summary>
@@ -260,17 +213,55 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
+			/// <list type="bullet">
+			/// <item>if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;</item>
+			/// <item>if <c>false</c> - OrderBy* call will place sort specifications, added by previous OrderBy* and ThenBy* calls, after current call.</item>
+			/// </list>
+			/// Default value: <c>false</c>.
+			/// <para>
+			/// Example:
+			/// <code>
+			/// query.OrderBy(r => r.FirstName).OrderBy(r => r.LastName)
+			/// 
+			/// // <c><see cref="ConcatenateOrderBy"/>=true</c> - non-first OrderBy* calls treated as ordering continuation (non-standard)
+			/// ORDER BY p.FIRST_NAME, p.LAST_NAME
+			/// 
+			/// // <c><see cref="ConcatenateOrderBy"/>=false</c> - last OrderBy* calls have higher priority like they should per API documentation
+			/// ORDER BY p.LAST_NAME, p.FIRST_NAME
+			/// 
+			/// // to completely discard old sort specification, use <see cref="LinqExtensions.RemoveOrderBy{TSource}(System.Linq.IQueryable{TSource})"/> API:
+			/// query.OrderBy(r => r.FirstName).RemoveOrderBy().OrderBy(r => r.LastName)
+			/// 
+			/// // for any <see cref="ConcatenateOrderBy"/> value will produce
+			/// ORDER BY p.LAST_NAME
+			/// </code>
+			/// </para>
+			/// </summary>
+			public static bool ConcatenateOrderBy
+			{
+				get => Options.ConcatenateOrderBy;
+				set
+				{
+					if (Options.ConcatenateOrderBy != value)
+						Options = Options with { ConcatenateOrderBy = value };
+				}
+			}
+
+			/// <summary>
+			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
 			/// - if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;
 			/// - if <c>false</c> - OrderBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
 			/// Default value: <c>false</c>.
 			/// </summary>
+			// TODO: Remove in v7
+			[property: Obsolete("This API was renamed to ConcatenateOrderBy. Compatibility alias will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 			public static bool DoNotClearOrderBys
 			{
-				get => Options.DoNotClearOrderBys;
+				get => Options.ConcatenateOrderBy;
 				set
 				{
-					if (Options.DoNotClearOrderBys != value)
-						Options = Options with { DoNotClearOrderBys = value };
+					if (Options.ConcatenateOrderBy != value)
+						Options = Options with { ConcatenateOrderBy = value };
 				}
 			}
 
@@ -378,7 +369,7 @@ namespace LinqToDB.Common
 			/// Default value: <c>false</c>.
 			/// <para />
 			/// It is not recommended to enable this option as it could lead to severe slowdown. Better approach will be
-			/// to call <see cref="Query{T}.ClearCache"/> method to cleanup cache after queries, that produce severe memory leaks you need to fix.
+			/// to use <see cref="NoLinqCache"/> scope around queries, that produce severe memory leaks you need to fix.
 			/// <para />
 			/// <a href="https://github.com/linq2db/linq2db/issues/256">More details</a>.
 			/// </summary>
@@ -464,7 +455,7 @@ namespace LinqToDB.Common
 		{
 			/// <summary>
 			/// if set to <c>true</c>, SchemaProvider uses <see cref="CommandBehavior.SchemaOnly"/> to get metadata.
-			/// Otherwise the sp_describe_first_result_set sproc is used.
+			/// Otherwise, the <c>sp_describe_first_result_set</c> sproc is used.
 			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool UseSchemaOnlyToGetSchema;
@@ -499,26 +490,13 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class RetryPolicy
 		{
-			static volatile RetryPolicyOptions _options = new(
-				null,
-				MaxRetryCount   : 5,
-				MaxDelay        : TimeSpan.FromSeconds(30),
-				RandomFactor    : 1.1,
-				ExponentialBase : 2,
-				Coefficient     : TimeSpan.FromSeconds(1));
-
 			/// <summary>
 			/// Default <see cref="RetryPolicyOptions"/> options. Automatically synchronized with other settings in <see cref="RetryPolicy"/> class.
 			/// </summary>
 			public static  RetryPolicyOptions Options
 			{
-				get => _options;
-				set
-				{
-					_options = value;
-					DataConnection.ResetDefaultOptions();
-					DataConnection.ConnectionOptionsByConfigurationString.Clear();
-				}
+				get => RetryPolicyOptions.Default;
+				set => RetryPolicyOptions.Default = value;
 			}
 
 			/// <summary>
@@ -574,7 +552,7 @@ namespace LinqToDB.Common
 			}
 
 			/// <summary>
-			/// The default base for the exponential function used to compute the delay between retries, must be positive.
+			/// The default base for the exponential function used to compute the delay between retries, must not be lesser than 1.
 			/// Default value: <c>2</c>.
 			/// </summary>
 			public static double DefaultExponentialBase
@@ -600,20 +578,13 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class Sql
 		{
-			static volatile SqlOptions _options = new();
-
 			/// <summary>
 			/// Default <see cref="SqlOptions"/> options. Automatically synchronized with other settings in <see cref="Sql"/> class.
 			/// </summary>
 			public static SqlOptions Options
 			{
-				get => _options;
-				set
-				{
-					_options = value;
-					DataConnection.ResetDefaultOptions();
-					DataConnection.ConnectionOptionsByConfigurationString.Clear();
-				}
+				get => SqlOptions.Default;
+				set => SqlOptions.Default = value;
 			}
 
 			/// <summary>
@@ -713,6 +684,70 @@ namespace LinqToDB.Common
 			{
 				get => Options.EnableConstantExpressionInOrderBy;
 				set => Options = Options with { EnableConstantExpressionInOrderBy = value };
+			}
+		}
+
+		/// <summary>
+		/// Bulk copy global settings.
+		/// </summary>
+		[PublicAPI]
+		public static class BulkCopy
+		{
+			/// <summary>
+			/// Default <see cref="BulkCopyOptions"/> options.
+			/// </summary>
+			public static BulkCopyOptions Options
+			{
+				get => BulkCopyOptions.Default;
+				set => BulkCopyOptions.Default = value;
+			}
+		}
+
+		/// <summary>
+		/// DataContext global settings.
+		/// </summary>
+		[PublicAPI]
+		public static class DataContext
+		{
+			/// <summary>
+			/// Default <see cref="DataContextOptions"/> options.
+			/// </summary>
+			public static DataContextOptions Options
+			{
+				get => DataContextOptions.Default;
+				set => DataContextOptions.Default = value;
+			}
+		}
+
+		/// <summary>
+		/// Connection global settings.
+		/// </summary>
+		[PublicAPI]
+		public static class Connection
+		{
+			/// <summary>
+			/// Default <see cref="ConnectionOptions"/> options.
+			/// </summary>
+			public static ConnectionOptions Options
+			{
+				get => ConnectionOptions.Default;
+				set => ConnectionOptions.Default = value;
+			}
+		}
+
+		/// <summary>
+		/// QueryTrace global settings.
+		/// </summary>
+		[PublicAPI]
+		public static class QueryTrace
+		{
+			/// <summary>
+			/// Default <see cref="QueryTraceOptions"/> options.
+			/// </summary>
+			public static QueryTraceOptions Options
+			{
+				get => QueryTraceOptions.Default;
+				set => QueryTraceOptions.Default = value;
 			}
 		}
 	}

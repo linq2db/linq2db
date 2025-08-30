@@ -5,7 +5,9 @@ using System.Reflection;
 using System.Text.Json;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
@@ -870,7 +872,7 @@ namespace Tests.Linq
 
 		sealed class Issue4770Person
 		{
-			public long Id { get; set; }
+			public int Id { get; set; }
 			public Issue4770Address? Address { get; set; }
 			public string ?TestPostcode { get; set; }
 		}

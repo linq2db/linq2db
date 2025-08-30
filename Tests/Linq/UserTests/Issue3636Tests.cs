@@ -1,11 +1,11 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
-
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -48,7 +48,7 @@ namespace Tests.UserTests
 			var result      = query.OrderBy(x => x.Key).First();
 			var groupResult = result.ToArray();
 
-			groupResult.Select(x => x.s.ID2).Should().AllBeEquivalentTo(myId);
+			groupResult.Select(x => x.s.ID2).ShouldAllBe(id => id == myId);
 
 			if (myId == 2)
 			{
