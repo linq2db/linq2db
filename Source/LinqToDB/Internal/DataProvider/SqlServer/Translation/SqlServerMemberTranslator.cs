@@ -92,7 +92,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				var factory = translationContext.ExpressionFactory;
 				var dateType = factory.GetDbDataType(dateTimeExpression);
 
-
 				var partStr = DatePartToStr(datepart);
 
 				if (partStr == null)

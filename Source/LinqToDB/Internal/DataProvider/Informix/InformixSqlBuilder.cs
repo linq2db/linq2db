@@ -141,6 +141,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 						return;
 					}
+
 					break;
 				case DataType.Interval:
 					StringBuilder.Append("interval day (9) to fraction (5)");                 return;

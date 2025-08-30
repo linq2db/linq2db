@@ -1551,8 +1551,10 @@ namespace LinqToDB.Linq
 			MapBinary((DateTimeOffset? d, TimeSpan t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
 			MapBinary((DateTimeOffset? d, TimeSpan? t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
 
+#pragma warning disable IDE0350
 			MapUnary<TimeSpan, TimeSpan?>((TimeSpan t) => -t, (t) => Sql.NegateInterval(t)!.Value);
 			MapUnary<TimeSpan?, TimeSpan?>((TimeSpan? t) => -t, (t) => Sql.NegateInterval(t)!.Value);
+#pragma warning restore
 
 			MapBinary((DateTime d, TimeSpan t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
 			MapBinary((DateTime d, TimeSpan? t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
