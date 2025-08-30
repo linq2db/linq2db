@@ -32,7 +32,7 @@ namespace Tests.UserTests.Test3993
 		}
 
 		[Test]
-		public void TestIssue3993_Test1([IncludeDataSources(false, TestProvName.AllSqlServer2019, TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSapHana)] string configuration)
+		public void TestIssue3993_Test1([IncludeDataSources(TestProvName.AllSqlServer2019, TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSapHana)] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
@@ -157,7 +157,6 @@ namespace Tests.UserTests.Test3993
 				var res4 = qry4.Where(x => x.NotificationDateTime4 < TestData.DateTimeUtc).ToList();
 				Assert.That(res3, Has.Count.EqualTo(1));
 
-
 				var qry5 =
 				from t in db.GetTable<Test>()
 				select new
@@ -186,7 +185,7 @@ namespace Tests.UserTests.Test3993
 		}
 		
 		[Test]
-		public void TestIssue3993_Test2([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSapHana, TestProvName.AllSybase)] string configuration)
+		public void TestIssue3993_Test2([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSapHana, TestProvName.AllSybase)] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
@@ -257,8 +256,6 @@ namespace Tests.UserTests.Test3993
 					}
 				});
 
-
-
 				var qryComplex = from t in db.GetTable<Test>()
 								 select new
 								 {
@@ -276,7 +273,7 @@ namespace Tests.UserTests.Test3993
 		}
 
 		[Test]
-		public void TestIssue3993_Test3([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSapHana, TestProvName.AllSybase)] string configuration)
+		public void TestIssue3993_Test3([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSapHana, TestProvName.AllSybase)] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
@@ -368,7 +365,7 @@ namespace Tests.UserTests.Test3993
 		}
 
 		[Test]
-		public void TestIssue3993_BulkCopy([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
+		public void TestIssue3993_BulkCopy([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
 		{
 			var ms = new FluentMappingBuilder()
 					.Entity<LanguageDTO>()
@@ -386,6 +383,7 @@ namespace Tests.UserTests.Test3993
 				ms.AddScalarType(typeof(TimeSpan), DataType.Int64);
 				ms.AddScalarType(typeof(TimeSpan?), DataType.Int64);
 			}
+
 			LinqToDB.Linq.Expressions.AddTimeSpanMappings();
 
 			using var db = (DataConnection) GetDataContext(configuration, ms);
