@@ -2092,6 +2092,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translated);
 			}
 
+			var exposed = Builder.ConvertSingleExpression(node);
+			if (!IsSame(exposed, node))
+			{
+				var translated = Visit(exposed);
+				if (SequenceHelper.HasError(translated))
+					return node;
+				return translated;
+			}
+
 			switch (node.NodeType)
 			{
 				case ExpressionType.Not:
@@ -2744,14 +2753,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (_buildPurpose is BuildPurpose.Expression)
 				return base.VisitBinary(node);
 
-			if (HandleBinary(node, out translated))
-				return translated; // Do not Visit again
-
 			var exposed = Builder.ConvertSingleExpression(node);
 
 			if (!IsSame(exposed, node))
 				return Visit(exposed);
-			
+
+			if (HandleBinary(node, out translated))
+				return translated; // Do not Visit again
+
 			return base.VisitBinary(node);
 		}
 
