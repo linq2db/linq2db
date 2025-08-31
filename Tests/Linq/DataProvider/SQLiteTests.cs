@@ -607,7 +607,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue784Test([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
+		public void Issue784Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1035,7 +1035,7 @@ namespace Tests.DataProvider
 
 		// TODO: Enable AllSQLite when MSSQLite provider is supported. Related: #4117
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5014")]
-		public void Issue5014Test([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
+		public void Issue5014Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
 
