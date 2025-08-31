@@ -265,59 +265,59 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			return result;
 		}
 
-		//Expression? ConvertUnary(UnaryExpression node)
-		//{
-		//	var l = LinqToDB.Linq.Expressions.ConvertUnary(MappingSchema, node);
-		//	if (l != null)
-		//	{
-		//		var body = l.Body.Unwrap();
-		//		var expr = body.Transform((l, node), static (context, wpi) =>
-		//		{
-		//			if (wpi.NodeType == ExpressionType.Parameter)
-		//			{
-		//				if (context.l.Parameters[0] == wpi)
-		//					return context.node.Operand;
-		//			}
+		Expression? ConvertUnary(UnaryExpression node)
+		{
+			var l = LinqToDB.Linq.Expressions.ConvertUnary(MappingSchema, node);
+			if (l != null)
+			{
+				var body = l.Body.Unwrap();
+				var expr = body.Transform((l, node), static (context, wpi) =>
+				{
+					if (wpi.NodeType == ExpressionType.Parameter)
+					{
+						if (context.l.Parameters[0] == wpi)
+							return context.node.Operand;
+					}
 
-		//			return wpi;
-		//		});
+					return wpi;
+				});
 
-		//		if (expr.Type != node.Type)
-		//			expr = new ChangeTypeExpression(expr, node.Type);
+				if (expr.Type != node.Type)
+					expr = new ChangeTypeExpression(expr, node.Type);
 
-		//		return expr;
-		//	}
+				return expr;
+			}
 
-		//	return null;
-		//}
+			return null;
+		}
 
-		//Expression? ConvertBinary(BinaryExpression node)
-		//{
-		//	var l = LinqToDB.Linq.Expressions.ConvertBinary(MappingSchema, node);
-		//	if (l != null)
-		//	{
-		//		var body = l.Body.Unwrap();
-		//		var expr = body.Transform((l, node), static (context, wpi) =>
-		//		{
-		//			if (wpi.NodeType == ExpressionType.Parameter)
-		//			{
-		//				if (context.l.Parameters[0] == wpi)
-		//					return context.node.Left;
-		//				if (context.l.Parameters[1] == wpi)
-		//					return context.node.Right;
-		//			}
+		Expression? ConvertBinary(BinaryExpression node)
+		{
+			var l = LinqToDB.Linq.Expressions.ConvertBinary(MappingSchema, node);
+			if (l != null)
+			{
+				var body = l.Body.Unwrap();
+				var expr = body.Transform((l, node), static (context, wpi) =>
+				{
+					if (wpi.NodeType == ExpressionType.Parameter)
+					{
+						if (context.l.Parameters[0] == wpi)
+							return context.node.Left;
+						if (context.l.Parameters[1] == wpi)
+							return context.node.Right;
+					}
 
-		//			return wpi;
-		//		});
+					return wpi;
+				});
 
-		//		if (expr.Type != node.Type)
-		//			expr = new ChangeTypeExpression(expr, node.Type);
+				if (expr.Type != node.Type)
+					expr = new ChangeTypeExpression(expr, node.Type);
 
-		//		return expr;
-		//	}
+				return expr;
+			}
 
-		//	return null;
-		//}
+			return null;
+		}
 
 		object? EvaluateExpression(Expression? expression)
 		{
@@ -788,7 +788,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 			if (_includeConvert)
 			{
-				var converted = ExpressionConvertHelper.ConvertBinary(MappingSchema, node);
+				var converted = ConvertBinary(node);
 				if (converted != null)
 				{
 					return Visit(converted);
