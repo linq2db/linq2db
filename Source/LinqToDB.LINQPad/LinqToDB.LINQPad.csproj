@@ -62,6 +62,7 @@
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
 		<PackageReference Include="Net.IBM.Data.Db2" />
 		<PackageReference Include="Octonica.ClickHouseClient" />
+		<PackageReference Include="Ydb.Sdk" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -103,7 +104,7 @@
 	</ItemGroup>
 
 	<Target Name="PostBuild1" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net472'">
-		<Exec Command="$(ProjectDir)..\..\NuGet\LINQPad\Pack.cmd $(TargetDir) lpx6" />
+		<Exec Command="&quot;$(ProjectDir)..\..\NuGet\LINQPad\Pack.cmd&quot; &quot;$(TargetDir)&quot; lpx6" />
 	</Target>
 
 	<Target Name="PostBuild2" AfterTargets="CopySQLiteInteropFiles" Condition="'$(TargetFramework)' == 'net472'">
@@ -113,7 +114,7 @@
 		<Copy SourceFiles="$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll" DestinationFiles="$(TargetDir)\IBM.Data.DB2.DLL_provider\x64\IBM.Data.DB2.dll" />
 		<Copy SourceFiles="$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll" DestinationFiles="$(TargetDir)\IBM.Data.DB2.DLL_provider\x86\IBM.Data.DB2.dll" />
 
-		<Exec Command="$(ProjectDir)..\..\NuGet\LINQPad\Pack.cmd $(TargetDir) lpx" />
+		<Exec Command="&quot;$(ProjectDir)..\..\NuGet\LINQPad\Pack.cmd&quot; &quot;$(TargetDir)&quot; lpx" />
 	</Target>
 
 	<ItemGroup>
