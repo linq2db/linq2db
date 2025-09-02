@@ -139,15 +139,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case DataType.DecFloat   : StringBuilder.Append("DyNumber");     break;
 				case DataType.Binary
 					or DataType.Blob
-					or DataType.VarBinary: StringBuilder.Append("String");       break;
+					or DataType.VarBinary: StringBuilder.Append("Bytes");       break;
 				case DataType.NChar
 					or DataType.Char
 					or DataType.NVarChar
 					or DataType.VarChar
-										 : StringBuilder.Append("Utf8");         break;
+										 : StringBuilder.Append("Text");         break;
 				case DataType.Json       : StringBuilder.Append("Json");         break;
 				case DataType.BinaryJson : StringBuilder.Append("JsonDocument"); break;
-				case DataType.Yson       : StringBuilder.Append("Yson");         break;
 				case DataType.Guid       : StringBuilder.Append("Uuid");         break;
 				case DataType.Date       : StringBuilder.Append("Date");         break;
 				case DataType.DateTime   : StringBuilder.Append("Datetime");     break;
