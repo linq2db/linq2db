@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -14,147 +16,90 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 {
 	public class SQLiteSchemaProvider : SchemaProviderBase
 	{
-		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
-		{
-			// TODO: Connection.GetSchema is not supported by MS provider, so we need to implement direct read of metadata
-			if (dataConnection.DataProvider.Name == ProviderName.SQLiteMS)
-				return new DatabaseSchema()
-				{
-					DataSource      = string.Empty,
-					Database        = string.Empty,
-					ServerVersion   = string.Empty,
-					Tables          = new List<TableSchema>(),
-					Procedures      = new List<ProcedureSchema>(),
-					DataTypesSchema = new DataTable()
-				};
-
-			return base.GetSchema(dataConnection, options);
-		}
-
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var dbConnection = dataConnection.OpenDbConnection();
-
-			var tables = dbConnection.GetSchema("Tables");
-			var views =  dbConnection.GetSchema("Views");
-
-			return Enumerable
-				.Empty<TableInfo>()
-				.Concat
-				(
-					from t in tables.AsEnumerable()
-					where t.Field<string>("TABLE_TYPE") != "SYSTEM_TABLE"
-					let catalog = t.Field<string>("TABLE_CATALOG")
-					let schema  = t.Field<string>("TABLE_SCHEMA")
-					let name    = t.Field<string>("TABLE_NAME")
-					select new TableInfo
-					{
-						TableID         = catalog + '.' + schema + '.' + name,
-						CatalogName     = catalog,
-						SchemaName      = schema,
-						TableName       = name,
-						IsDefaultSchema = string.IsNullOrEmpty(schema),
-					}
-				)
-				.Concat(
-					from t in views.AsEnumerable()
-					let catalog = t.Field<string>("TABLE_CATALOG")
-					let schema  = t.Field<string>("TABLE_SCHEMA")
-					let name    = t.Field<string>("TABLE_NAME")
-					select new TableInfo
-					{
-						TableID         = catalog + '.' + schema + '.' + name,
-						CatalogName     = catalog,
-						SchemaName      = schema,
-						TableName       = name,
-						IsDefaultSchema = string.IsNullOrEmpty(schema),
-						IsView          = true,
-					}
-				).ToList();
+			return dataConnection.Query<TableInfo>(@"
+				SELECT
+					t.schema || '..' || t.name as TableID,
+					'' as CatalogName,
+					t.schema as SchemaName,
+					t.name as TableName,
+					t.schema = 'main' as IsDefaultSchema
+				FROM pragma_table_list() t
+				WHERE t.type IN ('table', 'view')
+				;
+			").ToList();
 		}
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var dbConnection = dataConnection.OpenDbConnection();
-			var pks          = dbConnection.GetSchema("IndexColumns");
-			var idxs         = dbConnection.GetSchema("Indexes");
-
-			return
-			(
-				from pk  in pks. AsEnumerable()
-				join idx in idxs.AsEnumerable()
-					on pk.Field<string>("CONSTRAINT_NAME") equals idx.Field<string>("INDEX_NAME")
-				where idx.Field<bool>("PRIMARY_KEY")
-				select new PrimaryKeyInfo
-				{
-					TableID        = pk.Field<string>("TABLE_CATALOG") + "." + pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = pk.Field<string>("CONSTRAINT_NAME")!,
-					ColumnName     = pk.Field<string>("COLUMN_NAME")!,
-					Ordinal        = pk.Field<int>   ("ORDINAL_POSITION"),
-				}
-			).ToList();
+			return dataConnection.Query<PrimaryKeyInfo>(@"
+				SELECT
+					t.schema || '..' || t.name as TableID,
+					i.name AS PrimaryKeyName,
+					c.name AS ColumnName,
+					c.pk - 1 AS Ordinal
+				FROM pragma_table_list() t
+				LEFT OUTER JOIN pragma_table_info(t.name) c
+				LEFT OUTER JOIN pragma_index_list(t.name) i ON i.origin = 'pk'
+				WHERE t.type IN ('table', 'view') AND c.pk != 0
+				;
+			").ToList();
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = dataConnection.OpenDbConnection().GetSchema("Columns");
-
-			return
-			(
-				from c in cs.AsEnumerable()
-				let tschema  = c.Field<string>("TABLE_SCHEMA")
-				let schema   = tschema == "sqlite_default_schema" ? "" : tschema
-				let dataType = c.Field<string>("DATA_TYPE")!.Trim()
-				let length   = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"])
-				select new ColumnInfo
+			return dataConnection
+				.Query<ColumnInfo>(@"
+					WITH pk_counts AS (
+						SELECT t.name AS table_name, COUNT(*) AS pk_count
+						FROM pragma_table_list() t
+						JOIN pragma_table_info(t.name) c
+						WHERE c.pk > 0
+						GROUP BY t.name
+					)
+					SELECT
+						t.schema || '..' || t.name as TableID,
+						c.name as Name,
+						c.[notnull] = 0 as IsNullable,
+						c.cid as Ordinal,
+						c.type as DataType,
+						(pk.pk_count = 1 AND c.pk = 1 AND UPPER(c.type) = 'INTEGER' AND m.sql LIKE '%AUTOINCREMENT%') as [IsIdentity]						
+					FROM pragma_table_list() t
+					LEFT OUTER JOIN pragma_table_info(t.name) c
+					INNER JOIN sqlite_master m ON m.tbl_name = t.name AND m.type IN ('table', 'view')
+					LEFT JOIN pk_counts pk ON pk.table_name = t.name
+					WHERE t.type IN ('table', 'view');
+				")
+				.Select(x =>
 				{
-					TableID    = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + c.Field<string>("TABLE_NAME"),
-					Name       = c.Field<string>("COLUMN_NAME")!,
-					IsNullable = c.Field<bool>  ("IS_NULLABLE"),
-					Ordinal    = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
-					DataType   = dataType,
-					Length     = length > int.MaxValue ? null : (int?)length,
-					Precision  = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
-					Scale      = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
-					IsIdentity = c.Field<bool>  ("AUTOINCREMENT"),
-				}
-			).ToList();
+					var (length, precision, scale) = GetLengthPrecisionScale(x.DataType!);
+					x.Length = length;
+					x.Precision = precision;
+					x.Scale = scale;
+					return x;
+				})
+				.ToList();
 		}
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var fks = dataConnection.OpenDbConnection().GetSchema("ForeignKeys");
-
-			var result =
-			(
-				from fk in fks.AsEnumerable()
-				where fk.Field<string>("CONSTRAINT_TYPE") == "FOREIGN KEY"
-				select new ForeignKeyInfo
-				{
-					Name         = fk.Field<string>("CONSTRAINT_NAME"           )!,
-					ThisTableID  = fk.Field<string>("TABLE_CATALOG"             ) + "." + fk.Field<string>("TABLE_SCHEMA")   + "." + fk.Field<string>("TABLE_NAME"),
-					ThisColumn   = fk.Field<string>("FKEY_FROM_COLUMN"          )!,
-					OtherTableID = fk.Field<string>("FKEY_TO_CATALOG"           ) + "." + fk.Field<string>("FKEY_TO_SCHEMA") + "." + fk.Field<string>("FKEY_TO_TABLE"),
-					OtherColumn  = fk.Field<string>("FKEY_TO_COLUMN"            )!,
-					Ordinal      = fk.Field<int>   ("FKEY_FROM_ORDINAL_POSITION"),
-				}
-			).ToList();
-
-			// Handle case where Foreign Key reference does not include a column name (Issue #784)
-			if (result.Any(fk => string.IsNullOrEmpty(fk.OtherColumn)))
-			{
-				var pks = GetPrimaryKeys(dataConnection, tables, options).ToDictionary(pk => string.Format(CultureInfo.InvariantCulture, "{0}:{1}", pk.TableID, pk.Ordinal), pk => pk.ColumnName);
-				foreach (var f in result.Where(fk => string.IsNullOrEmpty(fk.OtherColumn)))
-				{
-					var k = string.Format(CultureInfo.InvariantCulture, "{0}:{1}", f.OtherTableID, f.Ordinal);
-					if (pks.TryGetValue(k, out var column))
-						f.OtherColumn = column;
-				}
-			}
-
-			return result;
+			return dataConnection.Query<ForeignKeyInfo>(@"
+				SELECT
+					'FK_' || tThis.name || '_' || f.id || '_' || f.seq as Name,
+					tThis.schema || '..' || tThis.name as ThisTableID,
+					f.[from] as ThisColumn,
+					tOther.schema || '..' || tOther.name as OtherTableID,
+					coalesce(f.[to], cOther.name) as OtherColumn,
+					f.seq as Ordinal
+				FROM pragma_table_list() tThis
+				LEFT OUTER JOIN pragma_foreign_key_list(tThis.name) f
+				INNER JOIN pragma_table_list() tOther on f.[table] = tOther.name
+				LEFT JOIN pragma_table_info(tOther.name) cOther ON (cOther.pk -1) == f.seq
+				WHERE tThis.type IN ('table', 'view');
+			").ToList();
 		}
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
@@ -230,6 +175,85 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				"datetime2" => typeof(DateTime),
 				_ => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
 			};
+		}
+
+		static (int? length, int? precision, int? scale) GetLengthPrecisionScale(string dataType)
+		{
+			int? length    = null;
+			int? precision = null;
+			int? scale     = null;
+
+			if (string.IsNullOrWhiteSpace(dataType))
+			{
+				return (null, null, null);
+			}
+
+			string affinityType = GetAffinityType(dataType);
+
+			if (affinityType == "NUMERIC")
+			{
+				// For NUMERIC affinity, try to parse both precision and scale.
+				// E.g., "DECIMAL(10, 2)"
+				var match = Regex.Match(dataType, @"\((?<precision>\d+)\s*,\s*(?<scale>\d+)\)");
+				if (match.Success)
+				{
+					precision = int.Parse(match.Groups["precision"].Value, CultureInfo.InvariantCulture);
+					scale     = int.Parse(match.Groups["scale"].Value,     CultureInfo.InvariantCulture);
+				}
+			}
+			else
+			{
+				// For all other affinities, try to parse a single length value.
+				// The first number is considered the length.
+				// E.g., "VARCHAR(16)"
+				var match = Regex.Match(dataType, @"\((?<length>\d+)\)");
+				if (match.Success)
+				{
+					length = int.Parse(match.Groups["length"].Value, CultureInfo.InvariantCulture);
+				}
+			}
+
+			return (length, precision, scale);
+		}
+
+		// https://www.sqlite.org/datatype3.html Point 3.1
+		static string GetAffinityType(string dataType)
+		{
+			// If the data type is null or whitespace, it's considered BLOB.
+			if (string.IsNullOrWhiteSpace(dataType))
+			{
+				return "BLOB";
+			}
+
+			// Convert the data type to uppercase for case-insensitive comparison.
+			var upperDataType = dataType.ToUpper(CultureInfo.InvariantCulture);
+
+			// 1. Check for INTEGER affinity.
+			if (upperDataType.Contains("INT"))
+			{
+				return "INTEGER";
+			}
+
+			// 2. Check for TEXT affinity.
+			if (upperDataType.Contains("CHAR") || upperDataType.Contains("CLOB") || upperDataType.Contains("TEXT"))
+			{
+				return "TEXT";
+			}
+
+			// 3. Check for BLOB affinity.
+			if (upperDataType.Contains("BLOB"))
+			{
+				return "BLOB";
+			}
+
+			// 4. Check for REAL affinity.
+			if (upperDataType.Contains("REAL") || upperDataType.Contains("FLOA") || upperDataType.Contains("DOUB"))
+			{
+				return "REAL";
+			}
+
+			// 5. Otherwise, the affinity is NUMERIC.
+			return "NUMERIC";
 		}
 	}
 }
