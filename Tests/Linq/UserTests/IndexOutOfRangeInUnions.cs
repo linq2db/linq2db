@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -39,7 +40,7 @@ namespace Tests.UserTests
 
 		public class ClassTypeOne
 		{
-			public int     DocEntry    { get; set; }
+			[PrimaryKey] public int     DocEntry    { get; set; }
 			public int     BplId       { get; set; }
 			public string? ChaveAcesso { get; set; }
 			public string? DocStatus   { get; set; }

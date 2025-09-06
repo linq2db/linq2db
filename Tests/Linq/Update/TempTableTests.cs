@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.xUpdate
@@ -10,11 +12,13 @@ namespace Tests.xUpdate
 	{
 		class Table1
 		{
+			[PrimaryKey]
 			public int ID;
 		}
 
 		class Table2
 		{
+			[PrimaryKey]
 			public int       ID;
 			public DateTime? Date;
 		}

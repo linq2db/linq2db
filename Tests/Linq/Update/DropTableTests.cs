@@ -14,7 +14,7 @@ namespace Tests.xUpdate
 	{
 		sealed class DropTableTest
 		{
-			public int ID { get; set; }
+			[PrimaryKey] public int ID { get; set; }
 		}
 
 		[Test]
@@ -125,7 +125,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class Table
 		{
-			[Column] public int ID { get; set; }
+			[PrimaryKey] public int ID { get; set; }
 		}
 
 		// ! don't use it for other tests

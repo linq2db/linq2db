@@ -99,7 +99,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith3([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void LoadWith3([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<IEnumerable<Child>, ImmutableList<Child>>(t => ImmutableList.Create(t.ToArray()));
@@ -121,7 +122,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWithAsTable3([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void LoadWithAsTable3([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -153,7 +155,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith4([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void LoadWith4([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetGenericConvertProvider(typeof(EnumerableToImmutableListConvertProvider<>));
@@ -175,7 +178,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith5([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void LoadWith5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -196,7 +200,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith6([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void LoadWith6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -508,6 +508,32 @@ namespace LinqToDB.Internal.Expressions.Types
 
 				switch (e.NodeType)
 				{
+					case ExpressionType.Constant       :
+					{
+						var value = (ConstantExpression)e;
+						var type = context.Mapper.TryMapType(value.Type, out var newType) ? newType : value.Type;
+
+						if (type != value.Type )
+						{
+							// map typed nulls
+							if (value.Value is null)
+								return Expression.Constant(null, type);
+
+							// map enums (for int-based only for now)
+							if (value.Value.GetType().IsEnum)
+							{
+								if (value.Value.GetType().GetEnumUnderlyingType() == typeof(int))
+								{
+									return Expression.Convert(Expression.Constant(Convert.ToInt32(value.Value, CultureInfo.InvariantCulture)), type);
+								}
+							}
+
+							// other cases?
+						}
+					}
+
+					break;
+
 					case ExpressionType.Convert        :
 					case ExpressionType.ConvertChecked :
 						{
@@ -638,7 +664,8 @@ namespace LinqToDB.Internal.Expressions.Types
 									.Select(p => context.Mapper.TryMapType(p.ParameterType, out var newType) ? newType : p.ParameterType)
 									.ToArray();
 
-								var ctor = replacement.GetConstructor(paramTypes);
+								var bindingFlags = ne.Constructor.GetAttribute<WrappedBindingFlagsAttribute>()?.BindingFlags ?? BindingFlags.Public | BindingFlags.Instance;
+								var ctor = replacement.GetConstructor(bindingFlags, paramTypes);
 
 								if (ctor == null)
 								{
@@ -927,6 +954,7 @@ namespace LinqToDB.Internal.Expressions.Types
 
 		#region MapLambda
 
+		public LambdaExpression MapLambda<TR>(Expression<Func<TR>> func) => MapLambdaInternal(func, true)!;
 		public LambdaExpression MapLambda<T, TR>(Expression<Func<T, TR>> func) => MapLambdaInternal(func, true)!;
 		public LambdaExpression MapLambda<T1, T2, TR>(Expression<Func<T1, T2, TR>> func) => MapLambdaInternal(func, true)!;
 		public LambdaExpression MapLambda<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> func) => MapLambdaInternal(func, true)!;

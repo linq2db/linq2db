@@ -15,21 +15,21 @@ namespace Tests.UserTests
 		[Table]
 		public class Task
 		{
-			[Column] public int     AdminPartyId { get; set; }
+			[PrimaryKey] public int     AdminPartyId { get; set; }
 			[Column] public string? Description  { get; set; }
 		}
 
 		[Table]
 		public class Party
 		{
-			[Column] public int     Id   { get; set; }
+			[PrimaryKey] public int     Id   { get; set; }
 			[Column] public string? Name { get; set; }
 		}
 
 		[Table]
 		public class PartyAccess
 		{
-			[Column] public int     PartyId { get; set; }
+			[PrimaryKey] public int     PartyId { get; set; }
 			[Column] public string? Role    { get; set; }
 		}
 

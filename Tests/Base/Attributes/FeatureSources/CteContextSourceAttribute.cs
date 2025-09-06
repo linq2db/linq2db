@@ -6,7 +6,7 @@ using LinqToDB;
 namespace Tests
 {
 	[AttributeUsage(AttributeTargets.Parameter)]
-	public sealed class CteContextSourceAttribute : IncludeDataSourcesAttribute
+	public class CteContextSourceAttribute : IncludeDataSourcesAttribute
 	{
 		public static string[] CteSupportedProviders = new[]
 			{
@@ -14,6 +14,7 @@ namespace Tests
 				TestProvName.AllFirebird,
 				TestProvName.AllPostgreSQL,
 				ProviderName.DB2,
+				ProviderName.Ydb,
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllClickHouse,

@@ -1426,12 +1426,13 @@ namespace LinqToDB.Internal.SqlQuery
 
 			bool? isNullableParameters = isNullable switch
 			{
-				ParametersNullabilityType.SameAsFirstParameter     => SameAs(0),
-				ParametersNullabilityType.SameAsSecondParameter    => SameAs(1),
-				ParametersNullabilityType.SameAsThirdParameter     => SameAs(2),
-				ParametersNullabilityType.SameAsLastParameter      => SameAs(parameters.Length - 1),
-				ParametersNullabilityType.IfAnyParameterNullable   => parameters.Any(static p => p),
-				ParametersNullabilityType.IfAllParametersNullable  => parameters.All(static p => p),
+				ParametersNullabilityType.SameAsFirstParameter         => SameAs(0),
+				ParametersNullabilityType.SameAsSecondParameter        => SameAs(1),
+				ParametersNullabilityType.SameAsThirdParameter         => SameAs(2),
+				ParametersNullabilityType.SameAsFirstOrSecondParameter => SameAs(0) || SameAs(1),
+				ParametersNullabilityType.SameAsLastParameter          => SameAs(parameters.Length - 1),
+				ParametersNullabilityType.IfAnyParameterNullable       => parameters.Any(static p => p),
+				ParametersNullabilityType.IfAllParametersNullable      => parameters.All(static p => p),
 				_ => null
 			};
 

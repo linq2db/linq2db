@@ -11,6 +11,7 @@ namespace Tests.Mapping
 	{
 		sealed class InstanceClass : IProjected
 		{
+			[PrimaryKey]
 			public int     Id       { get; set; }
 			public int     Value    { get; set; }
 			public string? ValueStr { get; set; }
