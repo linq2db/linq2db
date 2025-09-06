@@ -322,8 +322,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[Test]
-		public void CoalesceColumnSelection([IncludeDataSources(
+		[Test(Description = "Anonymous type factory converted to constructor call")]
+		public void CoalesceColumnSelection_AsConstructorParameters([IncludeDataSources(
 			TestProvName.AllPostgreSQL93Plus,
 			TestProvName.AllSqlServer)] string context)
 		{
@@ -370,5 +370,68 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		sealed class InnerProjection
+		{
+			public string? ColorName   { get; set; }
+			public string? StyleName   { get; set; }
+			public int     ColorId     { get; set; }
+			public int     Conditional { get; set; }
+		}
+
+		sealed class OuterProjection
+		{
+			public string? ColorName   { get; set; }
+			public string? StyleName   { get; set; }
+			public string? StrValue    { get; set; }
+			public int     Conditional { get; set; }
+		}
+
+		[Test(Description = "Explicitly use factory with field init syntax")]
+		public void CoalesceColumnSelection_AsFieldInit([IncludeDataSources(
+			TestProvName.AllPostgreSQL93Plus,
+			TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var (items, colors, styles) = SomeItem.Seed();
+
+			using var itemsTable  = db.CreateLocalTable(items);
+			using var colorsTable = db.CreateLocalTable(colors);
+			using var stylesTable = db.CreateLocalTable(styles);
+
+			var query =
+				from item in itemsTable.LoadWith(it => it.Color).LoadWith(it => it.Style)
+				from it in new InnerProjection[]
+				{
+					new InnerProjection
+					{
+						ColorName   = (string?)item.Color!.Name,
+						StyleName   = item.Style!.Name,
+						ColorId     = (item.Color == null ? null : item.ColorId) ?? 0,
+						Conditional = item.Color!.Name == "Red" ? itemsTable.Count() : 0,
+					},
+					new InnerProjection
+					{
+						ColorName   = (string?)null,
+						StyleName   = item.Style!.Name,
+						ColorId     = (item.Color == null ? null : item.ColorId) ?? 0,
+						Conditional = 0,
+					},
+				}.DefaultIfEmpty()
+				where it.ColorName == "Red"
+				select new OuterProjection
+				{
+					ColorName   = it.ColorName,
+					StyleName   = it.StyleName,
+					Conditional = it.Conditional,
+#pragma warning disable CS8602
+					StrValue = Sql.ConcatStrings(",", "", it.StyleName) == null ? null : Sql.ConcatStrings(",", "", it.StyleName) + ":" + Sql.ToNullable(it!.ColorId).ToString().PadLeft(4, '0'),
+#pragma warning restore CS8602
+				};
+
+			query = query
+				.OrderBy(x => x.StrValue);
+
+			AssertQuery(query);
+		}
 	}
 }
