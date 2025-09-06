@@ -2895,7 +2895,7 @@ namespace LinqToDB.Internal.Remote
 					QueryID      = new Guid(ReadString()!),
 					FieldNames   = new string[fieldCount],
 					FieldTypes   = new Type  [fieldCount],
-					Data         = new List<string[]>(),
+					Data         = new List<string?[]>(),
 				};
 
 				NextLine();

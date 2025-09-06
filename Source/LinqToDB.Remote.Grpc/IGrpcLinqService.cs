@@ -13,21 +13,6 @@ namespace LinqToDB.Remote.Grpc
 	[Service]
 	public interface IGrpcLinqService
 	{
-		[Operation("GetInfo")]
-		LinqServiceInfo GetInfo(GrpcConfiguration configuration, CallContext context = default);
-
-		[Operation("ExecuteNonQuery")]
-		GrpcInt ExecuteNonQuery(GrpcConfigurationQuery caq, CallContext context = default);
-
-		[Operation("ExecuteScalar")]
-		GrpcString ExecuteScalar(GrpcConfigurationQuery caq, CallContext context = default);
-
-		[Operation("ExecuteReader")]
-		GrpcString ExecuteReader(GrpcConfigurationQuery caq, CallContext context = default);
-
-		[Operation("ExecuteBatch")]
-		GrpcInt ExecuteBatch(GrpcConfigurationQuery caq, CallContext context = default);
-
 		[Operation("GetInfoAsync")]
 		Task<LinqServiceInfo> GetInfoAsync(GrpcConfiguration configuration, CallContext context = default);
 
