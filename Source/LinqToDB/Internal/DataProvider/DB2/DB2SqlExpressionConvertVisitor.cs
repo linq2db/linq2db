@@ -16,6 +16,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		public override string[] LikeCharactersToEscape => DB2LikeCharactersToEscape;
 
+		protected override bool SupportsNullIf => false;
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			switch (element.Operation)
