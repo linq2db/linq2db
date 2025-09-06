@@ -45,7 +45,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					from t in tables.AsEnumerable()
 					where t.Field<string>("TABLE_TYPE") != "SYSTEM_TABLE"
 					let catalog = t.Field<string>("TABLE_CATALOG")
-					let schema  = t.Field<string>("TABLE_SCHEMA")
+					let schema  = TrueSchemaName(t.Field<string>("TABLE_SCHEMA"))
 					let name    = t.Field<string>("TABLE_NAME")
 					select new TableInfo
 					{
@@ -59,7 +59,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				.Concat(
 					from t in views.AsEnumerable()
 					let catalog = t.Field<string>("TABLE_CATALOG")
-					let schema  = t.Field<string>("TABLE_SCHEMA")
+					let schema  = TrueSchemaName(t.Field<string>("TABLE_SCHEMA"))
 					let name    = t.Field<string>("TABLE_NAME")
 					select new TableInfo
 					{
@@ -77,23 +77,47 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			var dbConnection = dataConnection.OpenDbConnection();
-			var pks          = dbConnection.GetSchema("IndexColumns");
-			var idxs         = dbConnection.GetSchema("Indexes");
 
-			return
-			(
-				from pk  in pks. AsEnumerable()
-				join idx in idxs.AsEnumerable()
-					on pk.Field<string>("CONSTRAINT_NAME") equals idx.Field<string>("INDEX_NAME")
-				where idx.Field<bool>("PRIMARY_KEY")
-				select new PrimaryKeyInfo
-				{
-					TableID        = pk.Field<string>("TABLE_CATALOG") + "." + pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = pk.Field<string>("CONSTRAINT_NAME")!,
-					ColumnName     = pk.Field<string>("COLUMN_NAME")!,
-					Ordinal        = pk.Field<int>   ("ORDINAL_POSITION"),
-				}
-			).ToList();
+			// Find all column-based primary keys
+			var cols = dbConnection.GetSchema("Columns");
+
+			var colPrimaryKeys = cols
+				.AsEnumerable()
+				.Where(x => x.Field<bool>("PRIMARY_KEY"))
+				.Select(x => new PrimaryKeyInfo
+					{
+						TableID    = x.Field<string>("TABLE_CATALOG") + "." + TrueSchemaName(x.Field<string>("TABLE_SCHEMA")) + "." + x.Field<string>("TABLE_NAME"),
+						ColumnName = x.Field<string>("COLUMN_NAME")!
+					}
+				);
+
+			// Find all index-based primary keys
+			var pks  = dbConnection.GetSchema("IndexColumns");
+			var idxs = dbConnection.GetSchema("Indexes");
+
+			var indexedPrimaryKeys = pks.AsEnumerable()
+				.Join(
+					idxs.AsEnumerable()
+						.Where(x => x.Field<bool>("PRIMARY_KEY")),
+					pk => pk.Field<string>("CONSTRAINT_NAME"),
+					idx => idx.Field<string>("INDEX_NAME"),
+					(pk, _) => new PrimaryKeyInfo
+					{
+						TableID        = pk.Field<string>("TABLE_CATALOG") + "." + TrueSchemaName(pk.Field<string>("TABLE_SCHEMA")) + "." + pk.Field<string>("TABLE_NAME"),
+						PrimaryKeyName = pk.Field<string>("CONSTRAINT_NAME")!,
+						ColumnName     = pk.Field<string>("COLUMN_NAME")!,
+						Ordinal        = pk.Field<int>   ("ORDINAL_POSITION"),
+					}
+				)
+			;
+
+			// Return distinct primary keys, prefer index-based over column-based
+			return indexedPrimaryKeys.Concat(colPrimaryKeys)
+				.GroupBy(
+					x => new { x.TableID, x.ColumnName },
+					(_, x) => x.First() // GroupBy guarantees the ordering of the source sequence
+				)
+				.ToList();
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
@@ -103,13 +127,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return
 			(
 				from c in cs.AsEnumerable()
-				let tschema  = c.Field<string>("TABLE_SCHEMA")
-				let schema   = tschema == "sqlite_default_schema" ? "" : tschema
 				let dataType = c.Field<string>("DATA_TYPE")!.Trim()
 				let length   = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"])
 				select new ColumnInfo
 				{
-					TableID    = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + c.Field<string>("TABLE_NAME"),
+					TableID    = c.Field<string>("TABLE_CATALOG") + "." + TrueSchemaName(c.Field<string>("TABLE_SCHEMA")) + "." + c.Field<string>("TABLE_NAME"),
 					Name       = c.Field<string>("COLUMN_NAME")!,
 					IsNullable = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal    = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
@@ -134,7 +156,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				select new ForeignKeyInfo
 				{
 					Name         = fk.Field<string>("CONSTRAINT_NAME"           )!,
-					ThisTableID  = fk.Field<string>("TABLE_CATALOG"             ) + "." + fk.Field<string>("TABLE_SCHEMA")   + "." + fk.Field<string>("TABLE_NAME"),
+					ThisTableID  = fk.Field<string>("TABLE_CATALOG"             ) + "." + TrueSchemaName(fk.Field<string>("TABLE_SCHEMA"))   + "." + fk.Field<string>("TABLE_NAME"),
 					ThisColumn   = fk.Field<string>("FKEY_FROM_COLUMN"          )!,
 					OtherTableID = fk.Field<string>("FKEY_TO_CATALOG"           ) + "." + fk.Field<string>("FKEY_TO_SCHEMA") + "." + fk.Field<string>("FKEY_TO_TABLE"),
 					OtherColumn  = fk.Field<string>("FKEY_TO_COLUMN"            )!,
@@ -230,6 +252,13 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				"datetime2" => typeof(DateTime),
 				_ => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
 			};
+		}
+
+		static string TrueSchemaName(string? schema)
+		{
+			schema ??= string.Empty;
+			schema = schema == "sqlite_default_schema" ? string.Empty : schema;
+			return schema;
 		}
 	}
 }
