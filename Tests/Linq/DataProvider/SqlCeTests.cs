@@ -26,7 +26,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -75,7 +75,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestNumeric<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
+		static void TestNumeric<T>(IDataContext conn, T expectedValue, DataType dataType, string skip = "")
 		{
 			var skipTypes = skip.Split(' ');
 
@@ -111,7 +111,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
+		static void TestSimple<T>(IDataContext conn, T expectedValue, DataType dataType)
 			where T : struct
 		{
 			TestNumeric<T> (conn, expectedValue, dataType);
@@ -122,7 +122,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumerics([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				TestSimple<bool>   (conn, true, DataType.Boolean);
 				TestSimple<sbyte>  (conn, 1,    DataType.SByte);
@@ -172,7 +172,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 				using (Assert.EnterMultipleScope())
@@ -191,7 +191,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -230,7 +230,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -265,7 +265,7 @@ namespace Tests.DataProvider
 			var arr1 = new byte[] {       48, 57 };
 			var arr2 = new byte[] { 0, 0, 48, 57 };
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -295,7 +295,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestSqlTypes([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var arr = new byte[] { 48, 57 };
 				using (Assert.EnterMultipleScope())
@@ -340,7 +340,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGuid([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -365,7 +365,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTimestamp([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var arr = new byte[] { 0, 0, 0, 0, 0, 0, 0, 1 };
 				using (Assert.EnterMultipleScope())
@@ -382,7 +382,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -413,7 +413,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -428,7 +428,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -471,7 +471,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{
@@ -502,7 +502,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{
@@ -603,7 +603,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Issue393Test([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				var image = TestData.Binary(9000);
@@ -644,7 +644,7 @@ namespace Tests.DataProvider
 		public void Issue4574Test([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] BulkCopyType copyType)
 		{
 			using var _ = new DisableBaseline("Guid.New");
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue4574Table>();
 
 			var items = Enumerable.Range(1, 1000).Select(_ => new Issue4574Table() { ReserveId = Guid.NewGuid(), TableId = Guid.NewGuid() }).ToArray();
@@ -665,7 +665,7 @@ namespace Tests.DataProvider
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4436")]
 		public void Issue4436Test([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue4436Table>();
 
 			var items = new Issue4436Table[]
@@ -689,7 +689,7 @@ namespace Tests.DataProvider
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4438")]
 		public void Issue4438Test([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue4438Table>();
 
 			var items = new Issue4438Table[]

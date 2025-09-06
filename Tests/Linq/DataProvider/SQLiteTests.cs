@@ -27,7 +27,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -41,7 +41,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
+		static void TestType<T>(IDataContext connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
 			where T : notnull
 		{
 			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
@@ -62,7 +62,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				TestType(conn, "bigintDataType",           1000000L);
 				TestType(conn, "numericDataType",          9999999m);
@@ -100,7 +100,7 @@ namespace Tests.DataProvider
 			throw new InvalidOperationException();
 		}
 
-		static void TestNumeric<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
+		static void TestNumeric<T>(IDataContext conn, T expectedValue, DataType dataType, string skip = "")
 		{
 			var skipTypes = skip.Split(' ');
 
@@ -144,7 +144,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
+		static void TestSimple<T>(IDataContext conn, T expectedValue, DataType dataType, string skip = "")
 			where T : struct
 		{
 			TestNumeric<T> (conn, expectedValue, dataType, skip);
@@ -157,7 +157,7 @@ namespace Tests.DataProvider
 		{
 			// culture region needed if tests run on system with non-dot decimal separator, e.g. nl-NL
 			using (new InvariantCultureRegion())
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				TestSimple<bool>   (conn, true, DataType.Boolean);
 				TestSimple<sbyte>  (conn, 1,    DataType.SByte);
@@ -214,7 +214,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDoubleRoundTrip([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var value = -1.7900000000000002E+308;
 
@@ -233,7 +233,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumericsDouble([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				TestNumeric(conn, -1.7900000000000002E+308d, DataType.Double, "bigint int smallint tinyint");
 				TestNumeric(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
@@ -245,7 +245,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 				using (Assert.EnterMultipleScope())
@@ -263,7 +263,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -321,7 +321,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -367,7 +367,7 @@ namespace Tests.DataProvider
 			var arr1 = new byte[] { 1 };
 			var arr2 = new byte[] { 2 };
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -395,7 +395,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGuid([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -420,7 +420,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestObject([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -437,7 +437,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -465,7 +465,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestJson([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var testJson = /*lang=json,strict*/ "{\"name\":\"bob\", \"age\":10}";
 
@@ -482,7 +482,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -497,7 +497,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -549,7 +549,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{
@@ -580,7 +580,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{
@@ -771,7 +771,7 @@ namespace Tests.DataProvider
 					throw new InvalidOperationException();
 			}
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (var rd = db.ExecuteReader("select sqlite_version()"))
 			{
 				rd.Reader!.Read();

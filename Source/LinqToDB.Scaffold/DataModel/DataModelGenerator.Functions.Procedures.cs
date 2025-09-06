@@ -282,8 +282,8 @@ namespace LinqToDB.DataModel
 				if (async)
 				{
 					returnValue = context.AST.ExtCall(
-						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions,
-						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_ExecuteProcAsync,
+						WellKnownTypes.LinqToDB.Data.DataContextExtensions,
+						WellKnownTypes.LinqToDB.Data.DataContextExtensions_ExecuteProcAsync,
 						WellKnownTypes.System.Int32,
 						executeProcParameters);
 
@@ -301,8 +301,8 @@ namespace LinqToDB.DataModel
 				else
 				{
 					returnValue = context.AST.ExtCall(
-						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions,
-						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_ExecuteProc,
+						WellKnownTypes.LinqToDB.Data.DataContextExtensions,
+						WellKnownTypes.LinqToDB.Data.DataContextExtensions_ExecuteProc,
 						WellKnownTypes.System.Int32,
 						executeProcParameters);
 				}
@@ -395,8 +395,8 @@ namespace LinqToDB.DataModel
 				if (async)
 				{
 					returnValue = context.AST.ExtCall(
-						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions,
-						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_QueryProcAsync,
+						WellKnownTypes.LinqToDB.Data.DataContextExtensions,
+						WellKnownTypes.LinqToDB.Data.DataContextExtensions_QueryProcAsync,
 						WellKnownTypes.System.Threading.Tasks.Task(WellKnownTypes.System.Collections.Generic.IEnumerable(returnElementType!)),
 						queryProcTypeArgs,
 						false,
@@ -405,8 +405,8 @@ namespace LinqToDB.DataModel
 				else
 				{
 					returnValue = context.AST.ExtCall(
-						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions,
-						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_QueryProc,
+						WellKnownTypes.LinqToDB.Data.DataContextExtensions,
+						WellKnownTypes.LinqToDB.Data.DataContextExtensions_QueryProc,
 						WellKnownTypes.System.Collections.Generic.IEnumerable(returnElementType!),
 						queryProcTypeArgs,
 						false,

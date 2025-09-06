@@ -57,7 +57,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -75,7 +75,7 @@ namespace Tests.DataProvider
 		}
 
 		static void TestType<T>(
-			DataConnection   connection,
+			IDataContext     connection,
 			string           dataTypeName,
 			T                value,
 			string           tableName       = "\"AllTypes\"",
@@ -123,7 +123,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				TestType(conn, "\"bigintDataType\"",         1000000L);
 				TestType(conn, "\"numericDataType\"",        9999999m);
@@ -175,7 +175,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		void TestNumeric<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
+		void TestNumeric<T>(IDataContext conn, T expectedValue, DataType dataType, string skip = "")
 		{
 			var skipTypes = skip.Split(' ');
 
@@ -203,7 +203,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
+		void TestSimple<T>(IDataContext conn, T expectedValue, DataType dataType)
 			where T : struct
 		{
 			TestNumeric<T> (conn, expectedValue, dataType);
@@ -214,7 +214,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumerics([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				TestSimple<bool>   (conn, true, DataType.Boolean);
 				TestSimple<sbyte>  (conn, 1,    DataType.SByte);
@@ -262,7 +262,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDate([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12);
 				using (Assert.EnterMultipleScope())
@@ -276,7 +276,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestSmallDateTime([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 00);
 				using (Assert.EnterMultipleScope())
@@ -290,7 +290,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 				using (Assert.EnterMultipleScope())
@@ -308,7 +308,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dateTime1 = new DateTime(2012, 12, 12, 12, 12, 12);
 				var dateTime2 = new DateTime(2012, 12, 12, 12, 12, 12, 12);
@@ -327,7 +327,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTimeOffset([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dto = new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(5, 0, 0));
 				using (Assert.EnterMultipleScope())
@@ -377,7 +377,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -418,7 +418,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -460,7 +460,7 @@ namespace Tests.DataProvider
 			var arr1 = new byte[] {       0x30, 0x39 };
 			var arr2 = new byte[] { 0, 0, 0x30, 0x39 };
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -483,7 +483,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestOracleManagedTypes([IncludeDataSources(TestProvName.AllOracleManaged)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var arr = new byte[] { 0x30, 0x39 };
 				using (Assert.EnterMultipleScope())
@@ -502,7 +502,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestOracleDevartTypes([IncludeDataSources(TestProvName.AllOracleDevart)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var arr = new byte[] { 0x30, 0x39 };
 				using (Assert.EnterMultipleScope())
@@ -524,7 +524,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestOracleNativeTypes([IncludeDataSources(TestProvName.AllOracleNative)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var arr = new byte[] { 0x30, 0x39 };
 				using (Assert.EnterMultipleScope())
@@ -546,7 +546,7 @@ namespace Tests.DataProvider
 		public void TestGuid([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using (new DisableBaseline("Server-side guid generation test"))
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var guid = conn.Execute<Guid>("SELECT \"guidDataType\" FROM \"AllTypes\" WHERE ID = 2");
 				using (Assert.EnterMultipleScope())
@@ -563,7 +563,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -596,7 +596,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -611,7 +611,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -628,7 +628,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTreatEmptyStringsAsNulls([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var table    = db.GetTable<OracleSpecific.StringTest>();
 				var expected = table.Where(_ => _.KeyValue == "NullValues").ToList();
@@ -723,7 +723,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTimeSpan([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.BeginTransaction();
 
@@ -736,7 +736,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void DateTimeTest1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<AllTypes>().Delete(t => t.ID >= 1000);
 
@@ -760,7 +760,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task DateTimeTest1Async([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<AllTypes>().Delete(t => t.ID >= 1000);
 
@@ -786,7 +786,7 @@ namespace Tests.DataProvider
 		{
 			ResetAllTypesIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.InlineParameters = false;
@@ -813,7 +813,7 @@ namespace Tests.DataProvider
 		{
 			ResetAllTypesIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.InlineParameters = false;
@@ -842,7 +842,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void SelectDateTime([IncludeDataSources(TestProvName.AllOracleNative)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var ms = new MappingSchema();
 
@@ -888,7 +888,7 @@ namespace Tests.DataProvider
 					stringBuilder.AppendFormat(format, value);
 				});
 
-			using (var db = GetDataConnection(context, ms))
+			using (var db = GetDataContext(context, ms))
 			{
 				db.GetTable<AllTypes>().Delete(t => t.ID >= 1000);
 
@@ -928,7 +928,7 @@ namespace Tests.DataProvider
 					stringBuilder.AppendFormat(format, value);
 				});
 
-			using (var db = GetDataConnection(context, ms))
+			using (var db = GetDataContext(context, ms))
 			{
 				db.GetTable<AllTypes>().Delete(t => t.ID >= 1000);
 
@@ -1052,7 +1052,7 @@ namespace Tests.DataProvider
 
 		void BulkCopyLinqTypes(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
 		{
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
 			{
 				if (bulkCopyType == BulkCopyType.ProviderSpecific)
 				{
@@ -1102,7 +1102,7 @@ namespace Tests.DataProvider
 
 		async Task BulkCopyLinqTypesAsync(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
 		{
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
 			{
 				if (bulkCopyType == BulkCopyType.ProviderSpecific)
 				{
@@ -1313,7 +1313,7 @@ namespace Tests.DataProvider
 				new OracleSpecific.SequenceTest { Value = "Value"},
 			};
 
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
 			{
 				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 
@@ -1347,7 +1347,7 @@ namespace Tests.DataProvider
 				new OracleSpecific.SequenceTest { Value = "Value"},
 			};
 
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
 			{
 				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 
@@ -1397,7 +1397,7 @@ namespace Tests.DataProvider
 				new Trade { ID = 973, Version = 1, TypeID = 20160, TypeName = "EU Allowances", },
 			};
 
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
 			{
 				var options = new BulkCopyOptions
 				{
@@ -1426,7 +1426,7 @@ namespace Tests.DataProvider
 				new Trade { ID = 973, Version = 1, TypeID = 20160, TypeName = "EU Allowances", },
 			};
 
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
 			{
 				var options = new BulkCopyOptions
 				{
@@ -1492,7 +1492,7 @@ namespace Tests.DataProvider
 
 		void BulkCopy21(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
 		{
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
 			{
 				db.GetTable<LinqDataTypesBC>().Delete();
 
@@ -1530,7 +1530,7 @@ namespace Tests.DataProvider
 
 		async Task BulkCopy21Async(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
 		{
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
 			{
 				db.GetTable<LinqDataTypesBC>().Delete();
 
@@ -1604,7 +1604,7 @@ namespace Tests.DataProvider
 
 		void BulkCopy22(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
 		{
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
 			{
 				db.Types2.Delete(_ => _.ID > 1000);
 
@@ -1639,7 +1639,7 @@ namespace Tests.DataProvider
 
 		async Task BulkCopy22Async(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
 		{
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternativeBulkCopy })))
 			{
 				db.Types2.Delete(_ => _.ID > 1000);
 
@@ -1719,7 +1719,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void LongAliasTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				try { db.DropTable<TempTestTable>(); } catch {}
 
@@ -1742,7 +1742,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void XmlTableTest1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var list = conn.OracleXmlTable(new[]
 					{
@@ -1794,7 +1794,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void XmlTableTest3([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var data = new[]
 				{
@@ -1827,7 +1827,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void XmlTableTest4([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var list = conn.OracleXmlTable<XmlData>("<t><r><c0>1</c0><c1>11</c1></r><r><c0>2</c0><c1>22</c1></r></t>")
 					.Select(t => new { t.Field1, t.Field2 })
@@ -1888,7 +1888,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void XmlTableTest6([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var data = new[]
 				{
@@ -2152,7 +2152,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void OverflowTest2([IncludeDataSources(TestProvName.AllOracleManaged, TestProvName.AllOracleDevart)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var list = db.GetTable<DecimalOverflow2>().ToList();
 			}
@@ -2182,7 +2182,7 @@ namespace Tests.DataProvider
 			for (var i = 0; i < 100; i++)
 				data.Add(new UseAlternativeBulkCopy() { Id = i, Value = i });
 
-			using var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto }));
+			using var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto }));
 			using var t = db.CreateLocalTable<UseAlternativeBulkCopy>();
 			db.BulkCopy(25, data);
 
@@ -2197,7 +2197,7 @@ namespace Tests.DataProvider
 			for (var i = 0; i < 100; i++)
 				data.Add(new UseAlternativeBulkCopy() { Id = i, Value = i });
 
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto })))
 			{
 				await db.CreateTableAsync<UseAlternativeBulkCopy>();
 				try
@@ -2221,7 +2221,7 @@ namespace Tests.DataProvider
 			for (var i = 0; i < 100; i++)
 				data.Add(new UseAlternativeBulkCopy() { Id = i, Value = i });
 
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertDual })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertDual })))
 			{
 				db.CreateTable<UseAlternativeBulkCopy>();
 				try
@@ -2245,7 +2245,7 @@ namespace Tests.DataProvider
 			for (var i = 0; i < 100; i++)
 				data.Add(new UseAlternativeBulkCopy() { Id = i, Value = i });
 
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertDual })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertDual })))
 			{
 				await db.CreateTableAsync<UseAlternativeBulkCopy>();
 				try
@@ -2298,7 +2298,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void ClobTest1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				try
 				{
@@ -2323,7 +2323,7 @@ namespace Tests.DataProvider
 		{
 			var data = new List<ClobEntity>(new[] { new ClobEntity(1), new ClobEntity(2) });
 
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = useAlternativeBulkCopy })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = useAlternativeBulkCopy })))
 			{
 				try
 				{
@@ -2348,7 +2348,7 @@ namespace Tests.DataProvider
 		{
 			var data = new List<ClobEntity>(new[] { new ClobEntity(1), new ClobEntity(2) });
 
-			using (var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = useAlternativeBulkCopy })))
+			using (var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = useAlternativeBulkCopy })))
 			{
 				try
 				{
@@ -2445,7 +2445,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		private static IEnumerable<Person> PersonSelectByKey(DataConnection dataConnection, int id)
+		private static IEnumerable<Person> PersonSelectByKey(IDataContext dataConnection, int id)
 		{
 			return dataConnection.QueryProc<Person>("PERSON_SELECTBYKEY",
 				new DataParameter("pID", @id),
@@ -2455,7 +2455,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void PersonSelectByKey([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				AreEqual(Person.Where(_ => _.ID == 1), PersonSelectByKey(db, 1));
 			}
@@ -3578,7 +3578,7 @@ namespace Tests.DataProvider
 		{
 			var trace = string.Empty;
 
-			using var db    = GetDataConnection(context, o => o.UseTracing(ti =>
+			using var db    = GetDataContext(context, o => o.UseTracing(ti =>
 			{
 				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
 					trace = ti.SqlText;
@@ -3604,7 +3604,7 @@ namespace Tests.DataProvider
 		{
 			var trace = string.Empty;
 
-			using var db    = GetDataConnection(context, o => o.UseTracing(ti =>
+			using var db    = GetDataContext(context, o => o.UseTracing(ti =>
 			{
 				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
 					trace = ti.SqlText;
@@ -3630,7 +3630,7 @@ namespace Tests.DataProvider
 		{
 			var trace = string.Empty;
 
-			using var db    = GetDataConnection(context, o => o.UseTracing(ti =>
+			using var db    = GetDataContext(context, o => o.UseTracing(ti =>
 			{
 				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
 					trace = ti.SqlText;
@@ -3653,7 +3653,7 @@ namespace Tests.DataProvider
 		{
 			var trace = string.Empty;
 
-			using var db    = GetDataConnection(context, o => o.UseTracing(ti =>
+			using var db    = GetDataContext(context, o => o.UseTracing(ti =>
 			{
 				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
 					trace = ti.SqlText;
@@ -3694,7 +3694,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Issue2342Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
-			using var db    = GetDataConnection(context, o => o
+			using var db    = GetDataContext(context, o => o
 				.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto })
 				.UseFactory(connection => new DummyRetryPolicy()));
 			using var table = db.CreateLocalTable<Issue2342Entity>();
@@ -3773,7 +3773,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task Issue2504Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				try
 				{
@@ -4049,7 +4049,7 @@ CREATE TABLE ""TABLE_A""(
 		[Test]
 		public void TestModule([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var parameters = new []
 				{
@@ -4127,7 +4127,7 @@ CREATE TABLE ""TABLE_A""(
 		[Test]
 		public void Issue3732Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using var db    = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto }));
+			using var db    = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto }));
 			using var table = db.CreateLocalTable<BulkCopyTable>();
 
 			db.BulkCopy(Enumerable.Range(1, 10).Select(x => new BulkCopyTable() { Id = x }));
@@ -4139,7 +4139,7 @@ CREATE TABLE ""TABLE_A""(
 		[Test]
 		public void Issue3740Test1([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			db.Execute("CREATE OR REPLACE FUNCTION ISSUE3742(myParameter IN VARCHAR2) RETURN BOOLEAN AS BEGIN RETURN TRUE; END;");
 			try
@@ -4160,7 +4160,7 @@ SELECT convert_bool(:p) FROM SYS.DUAL", new { p = "test" });
 		[Test]
 		public void Issue3740Test2([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			db.Execute("CREATE OR REPLACE FUNCTION ISSUE3742(myParameter IN VARCHAR2) RETURN BOOLEAN AS BEGIN RETURN TRUE; END;");
 			try
@@ -4351,7 +4351,7 @@ END convert_bool;");
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1999")]
 		public void Issue1999Test1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			var blob = new byte[40_000];
 			for (var i = 0; i < blob.Length; i++) blob[i] = (byte)(i % 256);
@@ -4376,7 +4376,7 @@ END convert_bool;");
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1999")]
 		public void Issue1999Test2([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			var blob = new byte[40_000];
 			for (var i = 0; i < blob.Length; i++) blob[i] = (byte)(i % 256);
@@ -4434,7 +4434,7 @@ END convert_bool;");
 		[Test]
 		public void TestInParameter([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			int[] ids = [1, 2, 3];
 

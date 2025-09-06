@@ -29,7 +29,7 @@ namespace Tests.DataProvider
 			var param1 = context.Contains("Odbc") ? "?" : "@p1";
 			var param2 = context.Contains("Odbc") ? "?" : "@p2";
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -203,7 +203,7 @@ namespace Tests.DataProvider
 		{
 			var param = context.Contains("Odbc") ? "?" : "@p";
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 				using (Assert.EnterMultipleScope())
@@ -223,7 +223,7 @@ namespace Tests.DataProvider
 		{
 			var param = context.Contains("Odbc") ? "?" : "@p";
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -256,7 +256,7 @@ namespace Tests.DataProvider
 			var isODBC = context.Contains("Odbc");
 			var param = isODBC ? "?" : "@p";
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -288,7 +288,7 @@ namespace Tests.DataProvider
 			var param = isODBC ? "?" : "@p";
 
 			var arr1 = new byte[] { 48, 57 };
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -317,7 +317,7 @@ namespace Tests.DataProvider
 		{
 			var param = context.Contains("Odbc") ? "?" : "@p";
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var guid = TestData.Guid1;
 				using (Assert.EnterMultipleScope())
@@ -334,7 +334,7 @@ namespace Tests.DataProvider
 			var isODBC = context.Contains("Odbc");
 			var param = isODBC ? "?" : "@p";
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -355,7 +355,7 @@ namespace Tests.DataProvider
 		{
 			var param = context.Contains("Odbc") ? "?" : "@p";
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -386,7 +386,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -403,7 +403,7 @@ namespace Tests.DataProvider
 		{
 			var param = context.Contains("Odbc") ? "?" : "@p";
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -465,7 +465,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{
@@ -496,7 +496,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{
@@ -547,7 +547,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestZeroDate([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db    = GetDataConnection(context))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable<DateTable>())
 			{
 				table.Insert(() => new DateTable() { ID = 1, Date = new DateTime(1899, 12, 29)});
@@ -680,7 +680,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Issue1906Test([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<CtqResultModel>())
 			using (db.CreateLocalTable<CtqDefinitionModel>())
 			using (db.CreateLocalTable<CtqSetModel>())
@@ -772,7 +772,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestConvertToDate_Nullable([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			db.GetTable<AllTypesTable>().Select(r => Sql.AsSql(r.DateTime!.Value.Date)).ToArray();
 		}
@@ -780,7 +780,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestConvertToDate_WithNull([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			Assert.That(() => db.GetTable<AllTypesTable>().Select(r => Sql.AsSql(Sql.AsNotNull(r.DateTime!.Value).Date)).ToArray(),
 				Throws.Exception);

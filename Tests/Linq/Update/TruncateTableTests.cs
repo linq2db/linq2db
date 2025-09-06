@@ -109,7 +109,7 @@ namespace Tests.xUpdate
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2847")]
 		public void Issue2847Test([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool withIdentity)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			using var table = db.CreateLocalTable<TestIdTrun>();
 

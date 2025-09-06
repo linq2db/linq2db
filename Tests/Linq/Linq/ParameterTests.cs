@@ -219,7 +219,7 @@ namespace Tests.Linq
 		[Test]
 		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var p   = 123.456m;
 				db.GetTable<AllTypes>().Where(t => t.DecimalDataType == p).ToArray();
@@ -234,7 +234,7 @@ namespace Tests.Linq
 		[Test]
 		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var p   = new byte[] { 0, 1, 2 };
 				db.GetTable<AllTypes>().Where(t => t.BinaryDataType == p).ToArray();

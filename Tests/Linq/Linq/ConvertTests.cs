@@ -1675,7 +1675,7 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
 
 			var result = db.Execute<Issue4043Table>("select Id, Value from Issue4043");
@@ -1696,7 +1696,7 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
 
 			var result = db.Execute<Issue4043TableWithCtor>("select Id, Value from Issue4043");
@@ -1717,7 +1717,7 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
 
 			var result = db.Execute<Issue4043ScalarTable>("select Value from Issue4043");
@@ -1737,7 +1737,7 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
 
 			var result = db.Execute<Issue4043ScalarTableWithCtor>("select Value from Issue4043");
@@ -1758,7 +1758,7 @@ namespace Tests.Linq
 			ms.SetScalarType(typeof(ValueObject));
 			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
 
 			var result = db.Execute<ValueObject>("select Value from Issue4043");
@@ -1781,7 +1781,7 @@ namespace Tests.Linq
 				.HasConversion(o => JsonSerializer.Serialize(o, (JsonSerializerOptions?)null), json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null))
 				.Build();
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
 
 			var result = db.Execute<Issue4043Table>("select Id, Value from Issue4043");
@@ -1807,7 +1807,7 @@ namespace Tests.Linq
 				.HasConversion(o => JsonSerializer.Serialize(o, (JsonSerializerOptions?)null), json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null))
 				.Build();
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
 
 			var result = db.Execute<Issue4043TableWithCtor>("select Id, Value from Issue4043");
@@ -1832,7 +1832,7 @@ namespace Tests.Linq
 				.HasConversion(o => JsonSerializer.Serialize(o, (JsonSerializerOptions?)null), json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null))
 				.Build();
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
 
 			var result = db.Execute<Issue4043ScalarTable>("select Value from Issue4043");
@@ -1857,7 +1857,7 @@ namespace Tests.Linq
 				.HasConversion(o => JsonSerializer.Serialize(o, (JsonSerializerOptions?)null), json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null))
 				.Build();
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
 
 			var result = db.Execute<Issue4043ScalarTableWithCtor>("select Value from Issue4043");

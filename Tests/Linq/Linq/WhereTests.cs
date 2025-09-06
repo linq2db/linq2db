@@ -1685,7 +1685,7 @@ namespace Tests.Linq
 		[Test]
 		public void OptionalObjectInCondition([DataSources(false)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var p  = new Parameter() { Id = 1};
 				db.Person.Where(r => r.FirstName == (p != null ? p.Id.ToString() : null)).ToList();

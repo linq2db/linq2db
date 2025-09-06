@@ -49,7 +49,7 @@ namespace Tests.Linq
 			//var schema = context.IsAnyOf(TestProvName.AllOracle19) ? "sequence_schema" : "c##sequence_schema";
 			var schema = "c##sequence_schema";
 
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			try
 			{
 				db.Execute($"DROP USER \"{schema}\" CASCADE");

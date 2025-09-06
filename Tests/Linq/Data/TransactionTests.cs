@@ -122,7 +122,7 @@ namespace Tests.Data
 		{
 			var tid = Environment.CurrentManagedThreadId;
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
 			await using (db.BeginTransaction())
 			{
@@ -183,7 +183,7 @@ namespace Tests.Data
 		[Test]
 		public void AutoRollbackTransaction([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
 			{
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
@@ -202,7 +202,7 @@ namespace Tests.Data
 		[Test]
 		public async Task AutoRollbackTransactionAsync([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
-			await using (var db = GetDataConnection(context))
+			await using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
 			{
 				await db.InsertAsync(new Parent { ParentID = 1010, Value1 = 1010 });
@@ -261,7 +261,7 @@ namespace Tests.Data
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3863")]
 		public void DisposeCommitedTransaction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var _ = db.BeginTransaction();
 			db.Execute("commit;");
 		}

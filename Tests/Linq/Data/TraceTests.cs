@@ -122,7 +122,7 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = GetDataConnection(context, o => o.UseTracing(e =>
+			using (var db = GetDataContext(context, o => o.UseTracing(e =>
 			{
 				events[e.TraceInfoStep] = e;
 				counters[e.TraceInfoStep]++;
@@ -156,7 +156,7 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = GetDataConnection(context, o => o.UseTracing(e =>
+			using (var db = GetDataContext(context, o => o.UseTracing(e =>
 			{
 				events[e.TraceInfoStep] = e;
 				counters[e.TraceInfoStep]++;
@@ -198,7 +198,7 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = GetDataConnection(context, o => o.UseTracing(e =>
+			using (var db = GetDataContext(context, o => o.UseTracing(e =>
 			{
 				events[e.TraceInfoStep] = e;
 				counters[e.TraceInfoStep]++;

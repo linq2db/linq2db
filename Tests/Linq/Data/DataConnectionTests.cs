@@ -579,7 +579,7 @@ namespace Tests.Data
 		[Test]
 		public async Task DataConnectionCloseAsync([DataSources(false)] string context)
 		{
-			var db = GetDataConnection(context);
+			var db = GetDataContext(context);
 
 			try
 			{
@@ -601,7 +601,7 @@ namespace Tests.Data
 		[Test]
 		public async Task DataConnectionDisposeAsync([DataSources(false)] string context)
 		{
-			var db = GetDataConnection(context);
+			var db = GetDataContext(context);
 
 			try
 			{
@@ -828,7 +828,7 @@ namespace Tests.Data
 		[Test]
 		public void Issue2676TransactionScopeTest1([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				db.CreateTable<TransactionScopeTable>();
@@ -836,7 +836,7 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
 					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
@@ -857,7 +857,7 @@ namespace Tests.Data
 			}
 			finally
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				}
@@ -867,7 +867,7 @@ namespace Tests.Data
 		[Test]
 		public void Issue2676TransactionScopeTest2([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				db.CreateTable<TransactionScopeTable>();
@@ -875,7 +875,7 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
 					{
@@ -894,7 +894,7 @@ namespace Tests.Data
 			}
 			finally
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				}
@@ -904,7 +904,7 @@ namespace Tests.Data
 		[Test]
 		public void Issue2676TransactionScopeTest3([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				db.CreateTable<TransactionScopeTable>();
@@ -937,7 +937,7 @@ namespace Tests.Data
 			}
 			finally
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				}
@@ -1397,7 +1397,7 @@ namespace Tests.Data
 		[Test]
 		public void MARS_ParametersPreservedAfterDispose([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var commandInterceptor = new SaveCommandInterceptor();
 				db.AddInterceptor(commandInterceptor);
@@ -1413,7 +1413,7 @@ namespace Tests.Data
 		[Test]
 		public async Task MARS_ParametersPreservedAfterDisposeAsync([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var commandInterceptor = new SaveCommandInterceptor();
 				db.AddInterceptor(commandInterceptor);

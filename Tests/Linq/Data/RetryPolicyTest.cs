@@ -109,7 +109,7 @@ namespace Tests.Data
 			var ret = new Retry();
 			Assert.Throws<TestException>(() =>
 			{
-				using (var db = GetDataConnection(context, o => o.UseRetryPolicy(ret)))
+				using (var db = GetDataContext(context, o => o.UseRetryPolicy(ret)))
 				{
 					// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 					db.GetTable<FakeClass>().ToList();
@@ -125,7 +125,7 @@ namespace Tests.Data
 			var ret = new Retry();
 			Assert.Throws<TestException>(() =>
 			{
-				using (var db = GetDataConnection(context, o => o.UseRetryPolicy(ret)))
+				using (var db = GetDataContext(context, o => o.UseRetryPolicy(ret)))
 				{
 					// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 					db.GetTable<FakeClass>().ToList();
@@ -149,7 +149,7 @@ namespace Tests.Data
 		[Test]
 		public async Task ExecuteAsyncOption([IncludeDataSources(TestProvName.AllSqlServer2008)] string context)
 		{
-			using (var db = GetDataConnection(context, o => o.UseRetryPolicy(new SqlServerRetryPolicy())))
+			using (var db = GetDataContext(context, o => o.UseRetryPolicy(new SqlServerRetryPolicy())))
 			{
 				var i = await db.ExecuteAsync("SELECT 1");
 
@@ -164,7 +164,7 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = GetDataConnection(context, o => o.UseRetryPolicy(ret)))
+				using (var db = GetDataContext(context, o => o.UseRetryPolicy(ret)))
 				{
 					var r = db.GetTable<FakeClass>().ToListAsync();
 					r.Wait();
@@ -183,7 +183,7 @@ namespace Tests.Data
 		{
 			try
 			{
-				using (var db = GetDataConnection(context, o => o.UseFactory(connection => new DummyRetryPolicy())))
+				using (var db = GetDataContext(context, o => o.UseFactory(connection => new DummyRetryPolicy())))
 				using (db.CreateLocalTable<MyEntity>())
 				{
 					Assert.Fail("Exception expected");
@@ -200,7 +200,7 @@ namespace Tests.Data
 		{
 			try
 			{
-				using (var db = GetDataConnection(context, o => o.UseRetryPolicy(new DummyRetryPolicy())))
+				using (var db = GetDataContext(context, o => o.UseRetryPolicy(new DummyRetryPolicy())))
 				using (db.CreateLocalTable<MyEntity>())
 				{
 					Assert.Fail("Exception expected");
@@ -241,7 +241,7 @@ namespace Tests.Data
 				var connection = db1.OpenDbConnection();
 				try
 				{
-					using (var db = GetDataConnection(context,
+					using (var db = GetDataContext(context,
 						o => o
 							.UseConnection(db1.DataProvider, connection)
 							.UseRetryPolicy(new DummyRetryPolicy())))
