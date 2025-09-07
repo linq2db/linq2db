@@ -10,6 +10,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
+using LinqToDB.Internal.DataProvider.SQLite;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -632,7 +633,7 @@ namespace Tests.DataProvider
 		// DOUBLE : "the number of days since noon in Greenwich on November 24, 4714 B.C. according to the proleptic Gregorian calendar." whatever it means O_O
 		// TEXT   : ISO8601 string ("YYYY-MM-DD HH:MM:SS.SSS"). Not sure why SQLite documentation specify this specific format, maybe they don't support other qualifiers from ISO8601
 		public class DateTimeTable
-		{ 
+		{
 			public DateTime DateTime { get; set; }
 		}
 
@@ -1029,6 +1030,35 @@ namespace Tests.DataProvider
 			{
 				Assert.That(records1, Has.Count.EqualTo(3));
 				Assert.That(records2, Has.Count.EqualTo(3));
+			}
+		}
+
+		// TODO: Enable AllSQLite when MSSQLite provider is supported. Related: #4117
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5014")]
+		public void Issue5014Test([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.Execute("DROP TABLE IF EXISTS Issue5014TestTable");
+			db.Execute("""
+				CREATE TABLE "Issue5014TestTable" (
+					"Id" INTEGER NOT NULL PRIMARY KEY,
+					"Name" TEXT NOT NULL
+				) without rowid;
+				""");
+
+			try
+			{
+				var provider = new SQLiteSchemaProvider();
+				var schema   = provider.GetSchema(db);
+
+				var table = schema.Tables.First(x => x.TableName == "Issue5014TestTable");
+
+				Assert.That(table.Columns.Count(x => x.IsPrimaryKey), Is.EqualTo(1));
+			}
+			finally
+			{
+				db.Execute("DROP TABLE IF EXISTS Issue5014TestTable");
 			}
 		}
 	}
