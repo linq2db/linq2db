@@ -82,39 +82,39 @@ namespace Default.SQLiteNorthwind
 		#endregion
 	}
 
-	[Table("Alphabetical list of products", IsView=true)]
+	[Table(Schema="main", Name="Alphabetical list of products", IsView=true)]
 	public partial class AlphabeticalListOfProduct
 	{
-		[Column, NotNull    ] public int     ProductID       { get; set; } // int
+		[Column, NotNull    ] public int     ProductID       { get; set; } // INT
 		[Column, NotNull    ] public string  ProductName     { get; set; } = null!; // varchar(40)
-		[Column,    Nullable] public int?    SupplierID      { get; set; } // int
-		[Column,    Nullable] public int?    CategoryID      { get; set; } // int
+		[Column,    Nullable] public int?    SupplierID      { get; set; } // INT
+		[Column,    Nullable] public int?    CategoryID      { get; set; } // INT
 		[Column,    Nullable] public string? QuantityPerUnit { get; set; } // varchar(20)
-		[Column,    Nullable] public double? UnitPrice       { get; set; } // float
-		[Column,    Nullable] public int?    UnitsInStock    { get; set; } // int
-		[Column,    Nullable] public int?    UnitsOnOrder    { get; set; } // int
-		[Column,    Nullable] public int?    ReorderLevel    { get; set; } // int
-		[Column, NotNull    ] public int     Discontinued    { get; set; } // int
+		[Column,    Nullable] public double? UnitPrice       { get; set; } // float(26)
+		[Column,    Nullable] public int?    UnitsInStock    { get; set; } // INT
+		[Column,    Nullable] public int?    UnitsOnOrder    { get; set; } // INT
+		[Column,    Nullable] public int?    ReorderLevel    { get; set; } // INT
+		[Column, NotNull    ] public int     Discontinued    { get; set; } // INT
 		[Column, NotNull    ] public string  CategoryName    { get; set; } = null!; // varchar(15)
 	}
 
-	[Table("Categories")]
+	[Table(Schema="main", Name="Categories")]
 	public partial class Category
 	{
-		[PrimaryKey, NotNull    ] public int     CategoryID   { get; set; } // int
+		[PrimaryKey, NotNull    ] public int     CategoryID   { get; set; } // INT
 		[Column,     NotNull    ] public string  CategoryName { get; set; } = null!; // varchar(15)
-		[Column,        Nullable] public string? Description  { get; set; } // text(max)
-		[Column,        Nullable] public byte[]? Picture      { get; set; } // blob
+		[Column,        Nullable] public string? Description  { get; set; } // TEXT
+		[Column,        Nullable] public byte[]? Picture      { get; set; } // BLOB
 	}
 
-	[Table("Current Product List", IsView=true)]
+	[Table(Schema="main", Name="Current Product List", IsView=true)]
 	public partial class CurrentProductList
 	{
-		[Column, NotNull] public int    ProductID   { get; set; } // int
+		[Column, NotNull] public int    ProductID   { get; set; } // INT
 		[Column, NotNull] public string ProductName { get; set; } = null!; // varchar(40)
 	}
 
-	[Table("Customers")]
+	[Table(Schema="main", Name="Customers")]
 	public partial class Customer
 	{
 		[PrimaryKey, NotNull    ] public string  CustomerID   { get; set; } = null!; // varchar(5)
@@ -130,33 +130,33 @@ namespace Default.SQLiteNorthwind
 		[Column,        Nullable] public string? Fax          { get; set; } // varchar(24)
 	}
 
-	[Table("Customer and Suppliers by City", IsView=true)]
+	[Table(Schema="main", Name="Customer and Suppliers by City", IsView=true)]
 	public partial class CustomerAndSuppliersByCity
 	{
 		[Column,    Nullable] public string? City         { get; set; } // varchar(15)
 		[Column, NotNull    ] public string  CompanyName  { get; set; } = null!; // varchar(40)
 		[Column,    Nullable] public string? ContactName  { get; set; } // varchar(30)
-		[Column,    Nullable] public object? Relationship { get; set; }
+		[Column,    Nullable] public byte[]? Relationship { get; set; }
 	}
 
-	[Table("CustomerCustomerDemo")]
+	[Table(Schema="main", Name="CustomerCustomerDemo")]
 	public partial class CustomerCustomerDemo
 	{
 		[PrimaryKey(0), NotNull] public string CustomerID     { get; set; } = null!; // varchar(5)
 		[PrimaryKey(1), NotNull] public string CustomerTypeID { get; set; } = null!; // varchar(10)
 	}
 
-	[Table("CustomerDemographics")]
+	[Table(Schema="main", Name="CustomerDemographics")]
 	public partial class CustomerDemographic
 	{
 		[PrimaryKey, NotNull    ] public string  CustomerTypeID { get; set; } = null!; // varchar(10)
-		[Column,        Nullable] public string? CustomerDesc   { get; set; } // text(max)
+		[Column,        Nullable] public string? CustomerDesc   { get; set; } // TEXT
 	}
 
-	[Table("Employees")]
+	[Table(Schema="main", Name="Employees")]
 	public partial class Employee
 	{
-		[PrimaryKey, NotNull    ] public int       EmployeeID      { get; set; } // int
+		[PrimaryKey, NotNull    ] public int       EmployeeID      { get; set; } // INT
 		[Column,     NotNull    ] public string    LastName        { get; set; } = null!; // varchar(20)
 		[Column,     NotNull    ] public string    FirstName       { get; set; } = null!; // varchar(10)
 		[Column,        Nullable] public string?   Title           { get; set; } // varchar(30)
@@ -170,30 +170,30 @@ namespace Default.SQLiteNorthwind
 		[Column,        Nullable] public string?   Country         { get; set; } // varchar(15)
 		[Column,        Nullable] public string?   HomePhone       { get; set; } // varchar(24)
 		[Column,        Nullable] public string?   Extension       { get; set; } // varchar(4)
-		[Column,        Nullable] public byte[]?   Photo           { get; set; } // blob
-		[Column,        Nullable] public string?   Notes           { get; set; } // text(max)
-		[Column,        Nullable] public int?      ReportsTo       { get; set; } // int
+		[Column,        Nullable] public byte[]?   Photo           { get; set; } // BLOB
+		[Column,        Nullable] public string?   Notes           { get; set; } // TEXT
+		[Column,        Nullable] public int?      ReportsTo       { get; set; } // INT
 		[Column,        Nullable] public string?   PhotoPath       { get; set; } // varchar(255)
 	}
 
-	[Table("EmployeeTerritories")]
+	[Table(Schema="main", Name="EmployeeTerritories")]
 	public partial class EmployeeTerritory
 	{
-		[PrimaryKey(0), NotNull] public int    EmployeeID  { get; set; } // int
+		[PrimaryKey(0), NotNull] public int    EmployeeID  { get; set; } // INT
 		[PrimaryKey(1), NotNull] public string TerritoryID { get; set; } = null!; // varchar(20)
 	}
 
-	[Table("Orders")]
+	[Table(Schema="main", Name="Orders")]
 	public partial class Order
 	{
-		[PrimaryKey, NotNull    ] public int       OrderID        { get; set; } // int
+		[PrimaryKey, NotNull    ] public int       OrderID        { get; set; } // INT
 		[Column,        Nullable] public string?   CustomerID     { get; set; } // varchar(5)
-		[Column,        Nullable] public int?      EmployeeID     { get; set; } // int
+		[Column,        Nullable] public int?      EmployeeID     { get; set; } // INT
 		[Column,        Nullable] public DateTime? OrderDate      { get; set; } // timestamp
 		[Column,        Nullable] public DateTime? RequiredDate   { get; set; } // timestamp
 		[Column,        Nullable] public DateTime? ShippedDate    { get; set; } // timestamp
-		[Column,        Nullable] public int?      ShipVia        { get; set; } // int
-		[Column,        Nullable] public double?   Freight        { get; set; } // float
+		[Column,        Nullable] public int?      ShipVia        { get; set; } // INT
+		[Column,        Nullable] public double?   Freight        { get; set; } // float(26)
 		[Column,        Nullable] public string?   ShipName       { get; set; } // varchar(40)
 		[Column,        Nullable] public string?   ShipAddress    { get; set; } // varchar(60)
 		[Column,        Nullable] public string?   ShipCity       { get; set; } // varchar(15)
@@ -202,39 +202,39 @@ namespace Default.SQLiteNorthwind
 		[Column,        Nullable] public string?   ShipCountry    { get; set; } // varchar(15)
 	}
 
-	[Table("Order Details")]
+	[Table(Schema="main", Name="Order Details")]
 	public partial class OrderDetail
 	{
-		[PrimaryKey(0), NotNull    ] public int     OrderID   { get; set; } // int
-		[PrimaryKey(1), NotNull    ] public int     ProductID { get; set; } // int
-		[Column,           Nullable] public double? UnitPrice { get; set; } // float
-		[Column,           Nullable] public int?    Quantity  { get; set; } // int
-		[Column,           Nullable] public double? Discount  { get; set; } // float
+		[PrimaryKey(0), Nullable] public int?    OrderID   { get; set; } // INT
+		[PrimaryKey(1), Nullable] public int?    ProductID { get; set; } // INT
+		[Column,        Nullable] public double? UnitPrice { get; set; } // float(26)
+		[Column,        Nullable] public int?    Quantity  { get; set; } // INT
+		[Column,        Nullable] public double? Discount  { get; set; } // float(13)
 	}
 
-	[Table("Order Details Extended", IsView=true)]
+	[Table(Schema="main", Name="Order Details Extended", IsView=true)]
 	public partial class OrderDetailsExtended
 	{
-		[Column, NotNull    ] public int     OrderID       { get; set; } // int
-		[Column, NotNull    ] public int     ProductID     { get; set; } // int
+		[Column, NotNull    ] public int     OrderID       { get; set; } // INT
+		[Column, NotNull    ] public int     ProductID     { get; set; } // INT
 		[Column, NotNull    ] public string  ProductName   { get; set; } = null!; // varchar(40)
-		[Column,    Nullable] public double? UnitPrice     { get; set; } // float
-		[Column,    Nullable] public int?    Quantity      { get; set; } // int
-		[Column,    Nullable] public double? Discount      { get; set; } // float
-		[Column,    Nullable] public object? ExtendedPrice { get; set; }
+		[Column,    Nullable] public double? UnitPrice     { get; set; } // float(26)
+		[Column,    Nullable] public int?    Quantity      { get; set; } // INT
+		[Column,    Nullable] public double? Discount      { get; set; } // float(13)
+		[Column,    Nullable] public byte[]? ExtendedPrice { get; set; }
 	}
 
-	[Table("Orders Qry", IsView=true)]
+	[Table(Schema="main", Name="Orders Qry", IsView=true)]
 	public partial class OrdersQry
 	{
-		[Column, NotNull    ] public int       OrderID        { get; set; } // int
+		[Column, NotNull    ] public int       OrderID        { get; set; } // INT
 		[Column,    Nullable] public string?   CustomerID     { get; set; } // varchar(5)
-		[Column,    Nullable] public int?      EmployeeID     { get; set; } // int
+		[Column,    Nullable] public int?      EmployeeID     { get; set; } // INT
 		[Column,    Nullable] public DateTime? OrderDate      { get; set; } // timestamp
 		[Column,    Nullable] public DateTime? RequiredDate   { get; set; } // timestamp
 		[Column,    Nullable] public DateTime? ShippedDate    { get; set; } // timestamp
-		[Column,    Nullable] public int?      ShipVia        { get; set; } // int
-		[Column,    Nullable] public double?   Freight        { get; set; } // float
+		[Column,    Nullable] public int?      ShipVia        { get; set; } // INT
+		[Column,    Nullable] public double?   Freight        { get; set; } // float(26)
 		[Column,    Nullable] public string?   ShipName       { get; set; } // varchar(40)
 		[Column,    Nullable] public string?   ShipAddress    { get; set; } // varchar(60)
 		[Column,    Nullable] public string?   ShipCity       { get; set; } // varchar(15)
@@ -249,80 +249,80 @@ namespace Default.SQLiteNorthwind
 		[Column,    Nullable] public string?   Country        { get; set; } // varchar(15)
 	}
 
-	[Table("Order Subtotals", IsView=true)]
+	[Table(Schema="main", Name="Order Subtotals", IsView=true)]
 	public partial class OrderSubtotal
 	{
-		[Column, NotNull    ] public int     OrderID  { get; set; } // int
-		[Column,    Nullable] public object? Subtotal { get; set; }
+		[Column, NotNull    ] public int     OrderID  { get; set; } // INT
+		[Column,    Nullable] public byte[]? Subtotal { get; set; }
 	}
 
-	[Table("Products")]
+	[Table(Schema="main", Name="Products")]
 	public partial class Product
 	{
-		[PrimaryKey, NotNull    ] public int     ProductID       { get; set; } // int
+		[PrimaryKey, NotNull    ] public int     ProductID       { get; set; } // INT
 		[Column,     NotNull    ] public string  ProductName     { get; set; } = null!; // varchar(40)
-		[Column,        Nullable] public int?    SupplierID      { get; set; } // int
-		[Column,        Nullable] public int?    CategoryID      { get; set; } // int
+		[Column,        Nullable] public int?    SupplierID      { get; set; } // INT
+		[Column,        Nullable] public int?    CategoryID      { get; set; } // INT
 		[Column,        Nullable] public string? QuantityPerUnit { get; set; } // varchar(20)
-		[Column,        Nullable] public double? UnitPrice       { get; set; } // float
-		[Column,        Nullable] public int?    UnitsInStock    { get; set; } // int
-		[Column,        Nullable] public int?    UnitsOnOrder    { get; set; } // int
-		[Column,        Nullable] public int?    ReorderLevel    { get; set; } // int
-		[Column,     NotNull    ] public int     Discontinued    { get; set; } // int
+		[Column,        Nullable] public double? UnitPrice       { get; set; } // float(26)
+		[Column,        Nullable] public int?    UnitsInStock    { get; set; } // INT
+		[Column,        Nullable] public int?    UnitsOnOrder    { get; set; } // INT
+		[Column,        Nullable] public int?    ReorderLevel    { get; set; } // INT
+		[Column,     NotNull    ] public int     Discontinued    { get; set; } // INT
 	}
 
-	[Table("Products Above Average Price", IsView=true)]
+	[Table(Schema="main", Name="Products Above Average Price", IsView=true)]
 	public partial class ProductsAboveAveragePrice
 	{
 		[Column, NotNull    ] public string  ProductName { get; set; } = null!; // varchar(40)
-		[Column,    Nullable] public double? UnitPrice   { get; set; } // float
+		[Column,    Nullable] public double? UnitPrice   { get; set; } // float(26)
 	}
 
-	[Table("Products by Category", IsView=true)]
+	[Table(Schema="main", Name="Products by Category", IsView=true)]
 	public partial class ProductsByCategory
 	{
 		[Column, NotNull    ] public string  CategoryName    { get; set; } = null!; // varchar(15)
 		[Column, NotNull    ] public string  ProductName     { get; set; } = null!; // varchar(40)
 		[Column,    Nullable] public string? QuantityPerUnit { get; set; } // varchar(20)
-		[Column,    Nullable] public int?    UnitsInStock    { get; set; } // int
-		[Column, NotNull    ] public int     Discontinued    { get; set; } // int
+		[Column,    Nullable] public int?    UnitsInStock    { get; set; } // INT
+		[Column, NotNull    ] public int     Discontinued    { get; set; } // INT
 	}
 
-	[Table("Region")]
+	[Table(Schema="main", Name="Region")]
 	public partial class Region
 	{
-		[PrimaryKey, NotNull] public int    RegionID          { get; set; } // int
+		[PrimaryKey, NotNull] public int    RegionID          { get; set; } // INT
 		[Column,     NotNull] public string RegionDescription { get; set; } = null!; // varchar(50)
 	}
 
-	[Table("Shippers")]
+	[Table(Schema="main", Name="Shippers")]
 	public partial class Shipper
 	{
-		[PrimaryKey, NotNull    ] public int     ShipperID   { get; set; } // int
+		[PrimaryKey, NotNull    ] public int     ShipperID   { get; set; } // INT
 		[Column,     NotNull    ] public string  CompanyName { get; set; } = null!; // varchar(40)
 		[Column,        Nullable] public string? Phone       { get; set; } // varchar(24)
 	}
 
-	[Table("Summary of Sales by Quarter", IsView=true)]
+	[Table(Schema="main", Name="Summary of Sales by Quarter", IsView=true)]
 	public partial class SummaryOfSalesByQuarter
 	{
 		[Column,    Nullable] public DateTime? ShippedDate { get; set; } // timestamp
-		[Column, NotNull    ] public int       OrderID     { get; set; } // int
-		[Column,    Nullable] public object?   Subtotal    { get; set; }
+		[Column, NotNull    ] public int       OrderID     { get; set; } // INT
+		[Column,    Nullable] public byte[]?   Subtotal    { get; set; }
 	}
 
-	[Table("Summary of Sales by Year", IsView=true)]
+	[Table(Schema="main", Name="Summary of Sales by Year", IsView=true)]
 	public partial class SummaryOfSalesByYear
 	{
 		[Column,    Nullable] public DateTime? ShippedDate { get; set; } // timestamp
-		[Column, NotNull    ] public int       OrderID     { get; set; } // int
-		[Column,    Nullable] public object?   Subtotal    { get; set; }
+		[Column, NotNull    ] public int       OrderID     { get; set; } // INT
+		[Column,    Nullable] public byte[]?   Subtotal    { get; set; }
 	}
 
-	[Table("Suppliers")]
+	[Table(Schema="main", Name="Suppliers")]
 	public partial class Supplier
 	{
-		[PrimaryKey, NotNull    ] public int     SupplierID   { get; set; } // int
+		[PrimaryKey, NotNull    ] public int     SupplierID   { get; set; } // INT
 		[Column,     NotNull    ] public string  CompanyName  { get; set; } = null!; // varchar(40)
 		[Column,        Nullable] public string? ContactName  { get; set; } // varchar(30)
 		[Column,        Nullable] public string? ContactTitle { get; set; } // varchar(30)
@@ -333,15 +333,15 @@ namespace Default.SQLiteNorthwind
 		[Column,        Nullable] public string? Country      { get; set; } // varchar(15)
 		[Column,        Nullable] public string? Phone        { get; set; } // varchar(24)
 		[Column,        Nullable] public string? Fax          { get; set; } // varchar(24)
-		[Column,        Nullable] public string? HomePage     { get; set; } // text(max)
+		[Column,        Nullable] public string? HomePage     { get; set; } // TEXT
 	}
 
-	[Table("Territories")]
+	[Table(Schema="main", Name="Territories")]
 	public partial class Territory
 	{
 		[PrimaryKey, NotNull] public string TerritoryID          { get; set; } = null!; // varchar(20)
 		[Column,     NotNull] public string TerritoryDescription { get; set; } = null!; // varchar(50)
-		[Column,     NotNull] public int    RegionID             { get; set; } // int
+		[Column,     NotNull] public int    RegionID             { get; set; } // INT
 	}
 
 	public static partial class TableExtensions
@@ -390,7 +390,7 @@ namespace Default.SQLiteNorthwind
 				t.OrderID == OrderID);
 		}
 
-		public static OrderDetail? Find(this ITable<OrderDetail> table, int OrderID, int ProductID)
+		public static OrderDetail? Find(this ITable<OrderDetail> table, int? OrderID, int? ProductID)
 		{
 			return table.FirstOrDefault(t =>
 				t.OrderID   == OrderID &&
