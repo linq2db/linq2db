@@ -15,7 +15,7 @@ namespace Cli.Default.SQLite
 	[Table("ForeignKeyTable")]
 	public class ForeignKeyTable
 	{
-		[Column("PrimaryKeyTableID"                   )] public long   PrimaryKeyTableId { get; set; } // integer
+		[Column("PrimaryKeyTableID"                   )] public long   PrimaryKeyTableId { get; set; } // INTEGER
 		[Column("Name"             , CanBeNull = false)] public string Name              { get; set; } = null!; // nvarchar(50)
 
 		#region Associations

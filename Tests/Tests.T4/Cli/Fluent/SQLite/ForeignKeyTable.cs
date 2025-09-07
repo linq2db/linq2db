@@ -13,7 +13,7 @@ namespace Cli.Fluent.SQLite
 {
 	public class ForeignKeyTable
 	{
-		public long   PrimaryKeyTableId { get; set; } // integer
+		public long   PrimaryKeyTableId { get; set; } // INTEGER
 		public string Name              { get; set; } = null!; // nvarchar(50)
 
 		#region Associations

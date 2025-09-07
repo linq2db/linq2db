@@ -16,6 +16,6 @@ namespace Cli.Default.SQLiteNorthwind
 	public class CustomerDemographic
 	{
 		[Column("CustomerTypeID", CanBeNull = false, IsPrimaryKey = true)] public string  CustomerTypeId { get; set; } = null!; // varchar(10)
-		[Column("CustomerDesc"                                          )] public string? CustomerDesc   { get; set; } // text(max)
+		[Column("CustomerDesc"                                          )] public string? CustomerDesc   { get; set; } // TEXT
 	}
 }

@@ -18,6 +18,6 @@ namespace Cli.Default.SQLiteNorthwind
 		[Column("City"                           )] public string? City         { get; set; } // varchar(15)
 		[Column("CompanyName" , CanBeNull = false)] public string  CompanyName  { get; set; } = null!; // varchar(40)
 		[Column("ContactName"                    )] public string? ContactName  { get; set; } // varchar(30)
-		[Column("Relationship"                   )] public object? Relationship { get; set; } // NUMERIC
+		[Column("Relationship"                   )] public byte[]? Relationship { get; set; } // NUMERIC
 	}
 }

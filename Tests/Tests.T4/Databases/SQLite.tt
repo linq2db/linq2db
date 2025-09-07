@@ -49,7 +49,6 @@
 	GenerateAssociationExtensions = true;
 
 	IncludeDefaultSchema = false;
-	GetSchemaOptions.GenerateChar1AsString = true;
 
 	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
 

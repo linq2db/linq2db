@@ -14,30 +14,30 @@ namespace Cli.NewCliFeatures.FluentSQLite
 {
 	public class AllTypesView
 	{
-		public long      Id                       { get; set; } // integer
+		public long      Id                       { get; set; } // INTEGER
 		public long?     BigintDataType           { get; set; } // bigint
 		public decimal?  NumericDataType          { get; set; } // numeric
 		public bool?     BitDataType              { get; set; } // bit
 		public short?    SmallintDataType         { get; set; } // smallint
 		public decimal?  DecimalDataType          { get; set; } // decimal
-		public int?      IntDataType              { get; set; } // int
+		public int?      IntDataType              { get; set; } // INT
 		public byte?     TinyintDataType          { get; set; } // tinyint
 		public decimal?  MoneyDataType            { get; set; } // money
 		public double?   FloatDataType            { get; set; } // float
-		public double?   RealDataType             { get; set; } // real
+		public double?   RealDataType             { get; set; } // REAL
 		public DateTime? DatetimeDataType         { get; set; } // datetime
 		public char?     CharDataType             { get; set; } // char(1)
 		public string?   Char20DataType           { get; set; } // char(20)
 		public string?   VarcharDataType          { get; set; } // varchar(20)
-		public string?   TextDataType             { get; set; } // text(max)
-		public string?   NcharDataType            { get; set; } // char(20)
+		public string?   TextDataType             { get; set; } // TEXT
+		public string?   NcharDataType            { get; set; } // nchar(20)
 		public string?   NvarcharDataType         { get; set; } // nvarchar(20)
-		public string?   NtextDataType            { get; set; } // ntext(max)
+		public string?   NtextDataType            { get; set; } // ntext
 		public byte[]?   BinaryDataType           { get; set; } // binary
 		public byte[]?   VarbinaryDataType        { get; set; } // varbinary
 		public byte[]?   ImageDataType            { get; set; } // image
 		public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
-		public object?   ObjectDataType           { get; set; } // object
-		public object?   Number                   { get; set; } // NUMERIC
+		public decimal?  ObjectDataType           { get; set; } // Object
+		public byte[]?   Number                   { get; set; } // NUMERIC
 	}
 }

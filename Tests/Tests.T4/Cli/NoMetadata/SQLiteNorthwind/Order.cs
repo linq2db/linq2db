@@ -14,14 +14,14 @@ namespace Cli.NoMetadata.SQLiteNorthwind
 {
 	public class Order
 	{
-		public int       OrderId        { get; set; } // int
+		public int       OrderId        { get; set; } // INT
 		public string?   CustomerId     { get; set; } // varchar(5)
-		public int?      EmployeeId     { get; set; } // int
+		public int?      EmployeeId     { get; set; } // INT
 		public DateTime? OrderDate      { get; set; } // timestamp
 		public DateTime? RequiredDate   { get; set; } // timestamp
 		public DateTime? ShippedDate    { get; set; } // timestamp
-		public int?      ShipVia        { get; set; } // int
-		public double?   Freight        { get; set; } // float
+		public int?      ShipVia        { get; set; } // INT
+		public double?   Freight        { get; set; } // float(26)
 		public string?   ShipName       { get; set; } // varchar(40)
 		public string?   ShipAddress    { get; set; } // varchar(60)
 		public string?   ShipCity       { get; set; } // varchar(15)

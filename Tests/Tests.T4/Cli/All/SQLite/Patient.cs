@@ -19,8 +19,8 @@ namespace Cli.All.SQLite
 	[Table("Patient")]
 	public class Patient : IEquatable<Patient>
 	{
-		[Column("PersonID" , DataType  = DataType.Int64, DbType   = "integer"        , Length = 8              , Precision = 19 , Scale     = 0, IsPrimaryKey = true)] public long   PersonId  { get; set; } // integer
-		[Column("Diagnosis", CanBeNull = false         , DataType = DataType.NVarChar, DbType = "nvarchar(256)", Length    = 256, Precision = 0, Scale        = 0   )] public string Diagnosis { get; set; } = null!; // nvarchar(256)
+		[Column("PersonID" , DataType  = DataType.Int64, DbType   = "INTEGER"        , IsPrimaryKey = true                         )] public long   PersonId  { get; set; } // INTEGER
+		[Column("Diagnosis", CanBeNull = false         , DataType = DataType.NVarChar, DbType       = "nvarchar(256)", Length = 256)] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<Patient> _equalityComparer = ComparerBuilder.GetEqualityComparer<Patient>(c => c.PersonId);

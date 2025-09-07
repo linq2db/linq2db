@@ -17,7 +17,7 @@ namespace Cli.Default.SQLiteNorthwind
 	public class SummaryOfSalesByYear
 	{
 		[Column("ShippedDate")] public DateTime? ShippedDate { get; set; } // timestamp
-		[Column("OrderID"    )] public int       OrderId     { get; set; } // int
-		[Column("Subtotal"   )] public object?   Subtotal    { get; set; } // NUMERIC
+		[Column("OrderID"    )] public int       OrderId     { get; set; } // INT
+		[Column("Subtotal"   )] public byte[]?   Subtotal    { get; set; } // NUMERIC
 	}
 }

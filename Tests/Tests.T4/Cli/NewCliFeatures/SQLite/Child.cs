@@ -15,7 +15,7 @@ namespace Cli.NewCliFeatures.SQLite
 	[Table("Child")]
 	public class Child
 	{
-		[Column("ParentID")] public int? ParentId { get; internal set; } // int
-		[Column("ChildID" )] public int? ChildId  { get; internal set; } // int
+		[Column("ParentID")] public int? ParentId { get; internal set; } // INT
+		[Column("ChildID" )] public int? ChildId  { get; internal set; } // INT
 	}
 }

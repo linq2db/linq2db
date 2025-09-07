@@ -16,7 +16,7 @@ namespace Cli.All.SQLiteNorthwind
 	[Table("Order Subtotals", IsView = true)]
 	public class OrderSubtotal
 	{
-		[Column("OrderID" , DataType = DataType.Int32, DbType = "int"     , Length    = 4, Precision = 10, Scale = 0)] public int     OrderId  { get; set; } // int
-		[Column("Subtotal", DbType   = "NUMERIC"     , Length = 2147483647, Precision = 0, Scale     = 0            )] public object? Subtotal { get; set; } // NUMERIC
+		[Column("OrderID" , DataType = DataType.Int32    , DbType = "INT"    )] public int     OrderId  { get; set; } // INT
+		[Column("Subtotal", DataType = DataType.VarBinary, DbType = "NUMERIC")] public byte[]? Subtotal { get; set; } // NUMERIC
 	}
 }

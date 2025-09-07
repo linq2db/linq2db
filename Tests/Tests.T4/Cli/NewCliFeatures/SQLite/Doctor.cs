@@ -15,7 +15,7 @@ namespace Cli.NewCliFeatures.SQLite
 	[Table("Doctor")]
 	public class Doctor
 	{
-		[Column("PersonID", IsPrimaryKey = true )] public long   PersonId { get; internal set; } // integer
+		[Column("PersonID", IsPrimaryKey = true )] public long   PersonId { get; internal set; } // INTEGER
 		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; internal set; } = null!; // nvarchar(50)
 
 		#region Associations

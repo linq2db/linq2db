@@ -126,12 +126,12 @@ namespace Cli.Default.SQLiteNorthwind
 			return table.FirstOrDefaultAsync(e => e.EmployeeId == employeeId, cancellationToken);
 		}
 
-		public static OrderDetail? Find(this ITable<OrderDetail> table, int orderId, int productId)
+		public static OrderDetail? Find(this ITable<OrderDetail> table, int? orderId, int? productId)
 		{
 			return table.FirstOrDefault(e => e.OrderId == orderId && e.ProductId == productId);
 		}
 
-		public static Task<OrderDetail?> FindAsync(this ITable<OrderDetail> table, int orderId, int productId, CancellationToken cancellationToken = default)
+		public static Task<OrderDetail?> FindAsync(this ITable<OrderDetail> table, int? orderId, int? productId, CancellationToken cancellationToken = default)
 		{
 			return table.FirstOrDefaultAsync(e => e.OrderId == orderId && e.ProductId == productId, cancellationToken);
 		}

@@ -16,6 +16,6 @@ namespace Cli.Default.SQLiteNorthwind
 	public class ProductsAboveAveragePrice
 	{
 		[Column("ProductName", CanBeNull = false)] public string  ProductName { get; set; } = null!; // varchar(40)
-		[Column("UnitPrice"                     )] public double? UnitPrice   { get; set; } // float
+		[Column("UnitPrice"                     )] public double? UnitPrice   { get; set; } // float(26)
 	}
 }

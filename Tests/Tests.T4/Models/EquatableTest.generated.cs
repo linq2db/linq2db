@@ -95,7 +95,7 @@ namespace EquatableDataContext
 		[Column("floatDataType"),            Nullable            ] public double?   FloatDataType            { get; set; } // float
 		[Column("realDataType"),             Nullable            ] public double?   RealDataType             { get; set; } // REAL
 		[Column("datetimeDataType"),         Nullable            ] public DateTime? DatetimeDataType         { get; set; } // datetime
-		[Column("charDataType"),             Nullable            ] public string?   CharDataType             { get; set; } // char(1)
+		[Column("charDataType"),             Nullable            ] public char?     CharDataType             { get; set; } // char(1)
 		[Column("char20DataType"),           Nullable            ] public string?   Char20DataType           { get; set; } // char(20)
 		[Column("varcharDataType"),          Nullable            ] public string?   VarcharDataType          { get; set; } // varchar(20)
 		[Column("textDataType"),             Nullable            ] public string?   TextDataType             { get; set; } // TEXT
@@ -149,7 +149,7 @@ namespace EquatableDataContext
 		[Column("floatDataType"),            Nullable] public double?   FloatDataType            { get; set; } // float
 		[Column("realDataType"),             Nullable] public double?   RealDataType             { get; set; } // REAL
 		[Column("datetimeDataType"),         Nullable] public DateTime? DatetimeDataType         { get; set; } // datetime
-		[Column("charDataType"),             Nullable] public string?   CharDataType             { get; set; } // char(1)
+		[Column("charDataType"),             Nullable] public char?     CharDataType             { get; set; } // char(1)
 		[Column("char20DataType"),           Nullable] public string?   Char20DataType           { get; set; } // char(20)
 		[Column("varcharDataType"),          Nullable] public string?   VarcharDataType          { get; set; } // varchar(20)
 		[Column("textDataType"),             Nullable] public string?   TextDataType             { get; set; } // TEXT
@@ -367,7 +367,7 @@ namespace EquatableDataContext
 		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // nvarchar(50)
 		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // nvarchar(50)
 		[Column,        Nullable] public string? MiddleName { get; set; } // nvarchar(50)
-		[Column,     NotNull    ] public string  Gender     { get; set; } = null!; // char(1)
+		[Column,     NotNull    ] public char    Gender     { get; set; } // char(1)
 
 		#region Associations
 
@@ -497,8 +497,8 @@ namespace EquatableDataContext
 		[Column,    Nullable] public bool?     FieldBoolean    { get; set; } // BIT
 		[Column,    Nullable] public string?   FieldString     { get; set; } // VARCHAR(20)
 		[Column,    Nullable] public string?   FieldNString    { get; set; } // NVARCHAR(20)
-		[Column,    Nullable] public string?   FieldChar       { get; set; } // CHAR(1)
-		[Column,    Nullable] public string?   FieldNChar      { get; set; } // NCHAR(1)
+		[Column,    Nullable] public char?     FieldChar       { get; set; } // CHAR(1)
+		[Column,    Nullable] public char?     FieldNChar      { get; set; } // NCHAR(1)
 		[Column,    Nullable] public double?   FieldFloat      { get; set; } // FLOAT(24)
 		[Column,    Nullable] public double?   FieldDouble     { get; set; } // FLOAT(53)
 		[Column,    Nullable] public DateTime? FieldDateTime   { get; set; } // DATETIME
@@ -522,8 +522,8 @@ namespace EquatableDataContext
 		[Column,    Nullable] public bool?     FieldBoolean    { get; set; } // BIT
 		[Column,    Nullable] public string?   FieldString     { get; set; } // VARCHAR(20)
 		[Column,    Nullable] public string?   FieldNString    { get; set; } // NVARCHAR(20)
-		[Column,    Nullable] public string?   FieldChar       { get; set; } // CHAR(1)
-		[Column,    Nullable] public string?   FieldNChar      { get; set; } // NCHAR(1)
+		[Column,    Nullable] public char?     FieldChar       { get; set; } // CHAR(1)
+		[Column,    Nullable] public char?     FieldNChar      { get; set; } // NCHAR(1)
 		[Column,    Nullable] public double?   FieldFloat      { get; set; } // FLOAT(24)
 		[Column,    Nullable] public double?   FieldDouble     { get; set; } // FLOAT(53)
 		[Column,    Nullable] public DateTime? FieldDateTime   { get; set; } // DATETIME

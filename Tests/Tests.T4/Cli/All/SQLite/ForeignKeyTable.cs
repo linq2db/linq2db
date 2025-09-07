@@ -16,8 +16,8 @@ namespace Cli.All.SQLite
 	[Table("ForeignKeyTable")]
 	public class ForeignKeyTable
 	{
-		[Column("PrimaryKeyTableID", DataType  = DataType.Int64, DbType   = "integer"        , Length = 8             , Precision = 19, Scale     = 0           )] public long   PrimaryKeyTableId { get; set; } // integer
-		[Column("Name"             , CanBeNull = false         , DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length    = 50, Precision = 0, Scale = 0)] public string Name              { get; set; } = null!; // nvarchar(50)
+		[Column("PrimaryKeyTableID", DataType  = DataType.Int64, DbType   = "INTEGER"                                              )] public long   PrimaryKeyTableId { get; set; } // INTEGER
+		[Column("Name"             , CanBeNull = false         , DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)] public string Name              { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 		/// <summary>

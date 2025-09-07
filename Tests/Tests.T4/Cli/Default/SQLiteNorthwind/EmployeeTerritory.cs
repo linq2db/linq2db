@@ -15,7 +15,7 @@ namespace Cli.Default.SQLiteNorthwind
 	[Table("EmployeeTerritories")]
 	public class EmployeeTerritory
 	{
-		[Column("EmployeeID" , IsPrimaryKey = true , PrimaryKeyOrder = 0                        )] public int    EmployeeId  { get; set; } // int
+		[Column("EmployeeID" , IsPrimaryKey = true , PrimaryKeyOrder = 0                        )] public int    EmployeeId  { get; set; } // INT
 		[Column("TerritoryID", CanBeNull    = false, IsPrimaryKey    = true, PrimaryKeyOrder = 1)] public string TerritoryId { get; set; } = null!; // varchar(20)
 	}
 }

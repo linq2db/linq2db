@@ -14,7 +14,7 @@ namespace Cli.NoMetadata.SQLite
 {
 	public class PrimaryKeyTable
 	{
-		public long   Id   { get; set; } // integer
+		public long   Id   { get; set; } // INTEGER
 		public string Name { get; set; } = null!; // nvarchar(50)
 
 		#region Associations

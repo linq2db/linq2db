@@ -13,10 +13,10 @@ namespace Cli.NoMetadata.SQLiteNorthwind
 {
 	public class OrderDetail
 	{
-		public int     OrderId   { get; set; } // int
-		public int     ProductId { get; set; } // int
-		public double? UnitPrice { get; set; } // float
-		public int?    Quantity  { get; set; } // int
-		public double? Discount  { get; set; } // float
+		public int?    OrderId   { get; set; } // INT
+		public int?    ProductId { get; set; } // INT
+		public double? UnitPrice { get; set; } // float(26)
+		public int?    Quantity  { get; set; } // INT
+		public double? Discount  { get; set; } // float(13)
 	}
 }

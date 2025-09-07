@@ -15,10 +15,10 @@ namespace Cli.Default.SQLiteNorthwind
 	[Table("Order Details")]
 	public class OrderDetail
 	{
-		[Column("OrderID"  , IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int     OrderId   { get; set; } // int
-		[Column("ProductID", IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int     ProductId { get; set; } // int
-		[Column("UnitPrice"                                          )] public double? UnitPrice { get; set; } // float
-		[Column("Quantity"                                           )] public int?    Quantity  { get; set; } // int
-		[Column("Discount"                                           )] public double? Discount  { get; set; } // float
+		[Column("OrderID"  , IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int?    OrderId   { get; set; } // INT
+		[Column("ProductID", IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int?    ProductId { get; set; } // INT
+		[Column("UnitPrice"                                          )] public double? UnitPrice { get; set; } // float(26)
+		[Column("Quantity"                                           )] public int?    Quantity  { get; set; } // INT
+		[Column("Discount"                                           )] public double? Discount  { get; set; } // float(13)
 	}
 }

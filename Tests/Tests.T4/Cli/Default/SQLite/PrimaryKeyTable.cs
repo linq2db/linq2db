@@ -16,7 +16,7 @@ namespace Cli.Default.SQLite
 	[Table("PrimaryKeyTable")]
 	public class PrimaryKeyTable
 	{
-		[Column("ID"  , IsPrimaryKey = true )] public long   Id   { get; set; } // integer
+		[Column("ID"  , IsPrimaryKey = true )] public long   Id   { get; set; } // INTEGER
 		[Column("Name", CanBeNull    = false)] public string Name { get; set; } = null!; // nvarchar(50)
 
 		#region Associations

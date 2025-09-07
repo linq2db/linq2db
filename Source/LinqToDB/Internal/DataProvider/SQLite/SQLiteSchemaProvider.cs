@@ -261,7 +261,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		{
 			var type = InferTypeInformation(dataType).dotnetType;
 
-			if (options.GenerateChar1AsString && length == 1 && type == typeof(string))
+			if (!options.GenerateChar1AsString && length == 1 && type == typeof(string))
 				type = typeof(char);
 
 			return type;

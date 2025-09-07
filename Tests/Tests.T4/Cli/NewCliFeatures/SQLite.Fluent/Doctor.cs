@@ -13,7 +13,7 @@ namespace Cli.NewCliFeatures.FluentSQLite
 {
 	public class Doctor
 	{
-		public long   PersonId { get; set; } // integer
+		public long   PersonId { get; set; } // INTEGER
 		public string Taxonomy { get; set; } = null!; // nvarchar(50)
 
 		#region Associations

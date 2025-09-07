@@ -15,7 +15,7 @@ namespace Cli.Default.SQLiteNorthwind
 	[Table("Region")]
 	public class Region
 	{
-		[Column("RegionID"         , IsPrimaryKey = true )] public int    RegionId          { get; set; } // int
+		[Column("RegionID"         , IsPrimaryKey = true )] public int    RegionId          { get; set; } // INT
 		[Column("RegionDescription", CanBeNull    = false)] public string RegionDescription { get; set; } = null!; // varchar(50)
 	}
 }

@@ -15,7 +15,7 @@ namespace Cli.Default.SQLite
 	[Table("Person")]
 	public class Person
 	{
-		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long    PersonId   { get; set; } // integer
+		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long    PersonId   { get; set; } // INTEGER
 		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; set; } = null!; // nvarchar(50)
 		[Column("LastName"  , CanBeNull    = false                                                             )] public string  LastName   { get; set; } = null!; // nvarchar(50)
 		[Column("MiddleName"                                                                                   )] public string? MiddleName { get; set; } // nvarchar(50)

@@ -14,15 +14,15 @@ namespace Cli.Fluent.SQLite
 {
 	public class LinqDataType
 	{
-		public int?      Id             { get; set; } // int
-		public decimal?  MoneyValue     { get; set; } // decimal
+		public int?      Id             { get; set; } // INT
+		public decimal?  MoneyValue     { get; set; } // decimal(10,4)
 		public DateTime? DateTimeValue  { get; set; } // datetime
 		public DateTime? DateTimeValue2 { get; set; } // datetime2
 		public bool?     BoolValue      { get; set; } // boolean
 		public Guid?     GuidValue      { get; set; } // uniqueidentifier
-		public byte[]?   BinaryValue    { get; set; } // binary
+		public byte[]?   BinaryValue    { get; set; } // binary(5000)
 		public short?    SmallIntValue  { get; set; } // smallint
-		public int?      IntValue       { get; set; } // int
+		public int?      IntValue       { get; set; } // INT
 		public long?     BigIntValue    { get; set; } // bigint
 		public string?   StringValue    { get; set; } // nvarchar(50)
 	}
