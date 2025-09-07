@@ -13,7 +13,7 @@ namespace Cli.NoMetadata.SQLiteNorthwind
 {
 	public class OrderSubtotal
 	{
-		public int     OrderId  { get; set; } // INT
-		public byte[]? Subtotal { get; set; } // NUMERIC
+		public int?    OrderId  { get; set; } // INT
+		public double? Subtotal { get; set; } // REAL
 	}
 }

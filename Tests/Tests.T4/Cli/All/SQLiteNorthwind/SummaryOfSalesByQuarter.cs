@@ -19,6 +19,6 @@ namespace Cli.All.SQLiteNorthwind
 	{
 		[Column("ShippedDate", DataType = DataType.DateTime2, DbType = "timestamp")] public DateTime? ShippedDate { get; set; } // timestamp
 		[Column("OrderID"    , DataType = DataType.Int32    , DbType = "INT"      )] public int       OrderId     { get; set; } // INT
-		[Column("Subtotal"   , DataType = DataType.VarBinary, DbType = "NUMERIC"  )] public byte[]?   Subtotal    { get; set; } // NUMERIC
+		[Column("Subtotal"   , DataType = DataType.Double   , DbType = "REAL"     )] public double?   Subtotal    { get; set; } // REAL
 	}
 }

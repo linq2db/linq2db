@@ -16,6 +16,6 @@ namespace Cli.Fluent.SQLiteNorthwind
 	{
 		public DateTime? ShippedDate { get; set; } // timestamp
 		public int       OrderId     { get; set; } // INT
-		public byte[]?   Subtotal    { get; set; } // NUMERIC
+		public double?   Subtotal    { get; set; } // REAL
 	}
 }

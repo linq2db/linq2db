@@ -41,6 +41,6 @@ namespace Cli.All.SQLite
 		[Column("imageDataType"           , DataType = DataType.VarBinary, DbType = "image"                                                                        )] public byte[]?   ImageDataType            { get; set; } // image
 		[Column("uniqueidentifierDataType", DataType = DataType.Guid     , DbType = "uniqueidentifier"                                                             )] public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
 		[Column("objectDataType"          , DataType = DataType.Decimal  , DbType = "Object"                                                                       )] public decimal?  ObjectDataType           { get; set; } // Object
-		[Column("Number"                  , DataType = DataType.VarBinary, DbType = "NUMERIC"                                                                      )] public byte[]?   Number                   { get; set; } // NUMERIC
+		[Column("Number"                  , DataType = DataType.Int64    , DbType = "INTEGER"                                                                      )] public long?     Number                   { get; set; } // INTEGER
 	}
 }

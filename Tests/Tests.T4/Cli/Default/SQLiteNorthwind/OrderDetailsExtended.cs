@@ -15,12 +15,12 @@ namespace Cli.Default.SQLiteNorthwind
 	[Table("Order Details Extended", IsView = true)]
 	public class OrderDetailsExtended
 	{
-		[Column("OrderID"                         )] public int     OrderId       { get; set; } // INT
-		[Column("ProductID"                       )] public int     ProductId     { get; set; } // INT
+		[Column("OrderID"                         )] public int?    OrderId       { get; set; } // INT
+		[Column("ProductID"                       )] public int?    ProductId     { get; set; } // INT
 		[Column("ProductName"  , CanBeNull = false)] public string  ProductName   { get; set; } = null!; // varchar(40)
 		[Column("UnitPrice"                       )] public double? UnitPrice     { get; set; } // float(26)
 		[Column("Quantity"                        )] public int?    Quantity      { get; set; } // INT
 		[Column("Discount"                        )] public double? Discount      { get; set; } // float(13)
-		[Column("ExtendedPrice"                   )] public byte[]? ExtendedPrice { get; set; } // NUMERIC
+		[Column("ExtendedPrice"                   )] public double? ExtendedPrice { get; set; } // REAL
 	}
 }

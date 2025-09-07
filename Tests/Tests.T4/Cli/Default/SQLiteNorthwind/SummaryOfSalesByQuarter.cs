@@ -18,6 +18,6 @@ namespace Cli.Default.SQLiteNorthwind
 	{
 		[Column("ShippedDate")] public DateTime? ShippedDate { get; set; } // timestamp
 		[Column("OrderID"    )] public int       OrderId     { get; set; } // INT
-		[Column("Subtotal"   )] public byte[]?   Subtotal    { get; set; } // NUMERIC
+		[Column("Subtotal"   )] public double?   Subtotal    { get; set; } // REAL
 	}
 }

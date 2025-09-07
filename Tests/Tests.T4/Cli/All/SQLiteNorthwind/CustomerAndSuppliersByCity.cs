@@ -16,9 +16,9 @@ namespace Cli.All.SQLiteNorthwind
 	[Table("Customer and Suppliers by City", IsView = true)]
 	public class CustomerAndSuppliersByCity
 	{
-		[Column("City"        , DataType  = DataType.NVarChar , DbType   = "varchar(15)"    , Length = 15                        )] public string? City         { get; set; } // varchar(15)
-		[Column("CompanyName" , CanBeNull = false             , DataType = DataType.NVarChar, DbType = "varchar(40)", Length = 40)] public string  CompanyName  { get; set; } = null!; // varchar(40)
-		[Column("ContactName" , DataType  = DataType.NVarChar , DbType   = "varchar(30)"    , Length = 30                        )] public string? ContactName  { get; set; } // varchar(30)
-		[Column("Relationship", DataType  = DataType.VarBinary, DbType   = "NUMERIC"                                             )] public byte[]? Relationship { get; set; } // NUMERIC
+		[Column("City"        , DataType  = DataType.NVarChar, DbType   = "varchar(15)"    , Length = 15                        )] public string? City         { get; set; } // varchar(15)
+		[Column("CompanyName" , CanBeNull = false            , DataType = DataType.NVarChar, DbType = "varchar(40)", Length = 40)] public string  CompanyName  { get; set; } = null!; // varchar(40)
+		[Column("ContactName" , DataType  = DataType.NVarChar, DbType   = "varchar(30)"    , Length = 30                        )] public string? ContactName  { get; set; } // varchar(30)
+		[Column("Relationship", DataType  = DataType.NVarChar, DbType   = "TEXT"                                                )] public string? Relationship { get; set; } // TEXT
 	}
 }

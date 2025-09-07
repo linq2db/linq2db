@@ -40,6 +40,6 @@ namespace Cli.Default.SQLite
 		[Column("imageDataType"                                                                        )] public byte[]?   ImageDataType            { get; set; } // image
 		[Column("uniqueidentifierDataType"                                                             )] public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
 		[Column("objectDataType"                                                                       )] public decimal?  ObjectDataType           { get; set; } // Object
-		[Column("Number"                                                                               )] public byte[]?   Number                   { get; set; } // NUMERIC
+		[Column("Number"                                                                               )] public long?     Number                   { get; set; } // INTEGER
 	}
 }

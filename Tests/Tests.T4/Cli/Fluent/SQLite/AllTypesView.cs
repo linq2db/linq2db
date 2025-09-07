@@ -38,6 +38,6 @@ namespace Cli.Fluent.SQLite
 		public byte[]?   ImageDataType            { get; set; } // image
 		public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
 		public decimal?  ObjectDataType           { get; set; } // Object
-		public byte[]?   Number                   { get; set; } // NUMERIC
+		public long?     Number                   { get; set; } // INTEGER
 	}
 }

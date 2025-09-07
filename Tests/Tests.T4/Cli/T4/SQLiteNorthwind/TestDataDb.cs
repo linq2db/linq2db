@@ -320,26 +320,26 @@ namespace Cli.T4.SQLiteNorthwind
 		[Column("City"                           )] public string? City         { get; set; } // varchar(15)
 		[Column("CompanyName" , CanBeNull = false)] public string  CompanyName  { get; set; } = null!; // varchar(40)
 		[Column("ContactName"                    )] public string? ContactName  { get; set; } // varchar(30)
-		[Column("Relationship"                   )] public byte[]? Relationship { get; set; } // NUMERIC
+		[Column("Relationship"                   )] public string? Relationship { get; set; } // TEXT
 	}
 
 	[Table("Order Details Extended", Schema = "main", IsView = true)]
 	public partial class OrderDetailsExtended
 	{
-		[Column("OrderID"                         )] public int     OrderID       { get; set; } // INT
-		[Column("ProductID"                       )] public int     ProductID     { get; set; } // INT
+		[Column("OrderID"                         )] public int?    OrderID       { get; set; } // INT
+		[Column("ProductID"                       )] public int?    ProductID     { get; set; } // INT
 		[Column("ProductName"  , CanBeNull = false)] public string  ProductName   { get; set; } = null!; // varchar(40)
 		[Column("UnitPrice"                       )] public double? UnitPrice     { get; set; } // float(26)
 		[Column("Quantity"                        )] public int?    Quantity      { get; set; } // INT
 		[Column("Discount"                        )] public double? Discount      { get; set; } // float(13)
-		[Column("ExtendedPrice"                   )] public byte[]? ExtendedPrice { get; set; } // NUMERIC
+		[Column("ExtendedPrice"                   )] public double? ExtendedPrice { get; set; } // REAL
 	}
 
 	[Table("Order Subtotals", Schema = "main", IsView = true)]
 	public partial class OrderSubtotal
 	{
-		[Column("OrderID" )] public int     OrderID  { get; set; } // INT
-		[Column("Subtotal")] public byte[]? Subtotal { get; set; } // NUMERIC
+		[Column("OrderID" )] public int?    OrderID  { get; set; } // INT
+		[Column("Subtotal")] public double? Subtotal { get; set; } // REAL
 	}
 
 	[Table("Orders Qry", Schema = "main", IsView = true)]
@@ -389,7 +389,7 @@ namespace Cli.T4.SQLiteNorthwind
 	{
 		[Column("ShippedDate")] public DateTime? ShippedDate { get; set; } // timestamp
 		[Column("OrderID"    )] public int       OrderID     { get; set; } // INT
-		[Column("Subtotal"   )] public byte[]?   Subtotal    { get; set; } // NUMERIC
+		[Column("Subtotal"   )] public double?   Subtotal    { get; set; } // REAL
 	}
 
 	[Table("Summary of Sales by Year", Schema = "main", IsView = true)]
@@ -397,6 +397,6 @@ namespace Cli.T4.SQLiteNorthwind
 	{
 		[Column("ShippedDate")] public DateTime? ShippedDate { get; set; } // timestamp
 		[Column("OrderID"    )] public int       OrderID     { get; set; } // INT
-		[Column("Subtotal"   )] public byte[]?   Subtotal    { get; set; } // NUMERIC
+		[Column("Subtotal"   )] public double?   Subtotal    { get; set; } // REAL
 	}
 }
