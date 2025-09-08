@@ -913,12 +913,16 @@ namespace Tests.DataProvider
 			[Column] public int Field { get; set; }
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2099")]
 		public void Issue2099Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue2099Table>();
+
+			db.Insert(new Issue2099Table());
+			var result = tb.Single();
+
+			Assert.That(result.Id, Is.EqualTo(1));
 		}
 
 		sealed class Issue2099Table
