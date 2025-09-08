@@ -21,12 +21,12 @@ namespace Cli.NewCliFeatures.FluentSQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_Doctor_0_0 backreference
+		/// FK_Doctor_0 backreference
 		/// </summary>
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_0_0 backreference
+		/// FK_Patient_0 backreference
 		/// </summary>
 		public Patient? Patient { get; set; }
 		#endregion

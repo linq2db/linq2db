@@ -20,7 +20,7 @@ namespace Cli.NewCliFeatures.SQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0
+		/// FK_ForeignKeyTable_0
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(PrimaryKeyTableId), OtherKey = nameof(SQLite.PrimaryKeyTable.Id))]
 		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;

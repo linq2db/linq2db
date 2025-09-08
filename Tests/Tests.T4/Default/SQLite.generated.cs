@@ -148,13 +148,13 @@ namespace Default.SQLite
 	[Table(Schema="main", Name="Doctor")]
 	public partial class Doctor
 	{
-		[PrimaryKey, NotNull] public long   PersonID { get; set; } // INTEGER
-		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(50)
+		[PrimaryKey, Identity] public long   PersonID { get; set; } // INTEGER
+		[Column,     NotNull ] public string Taxonomy { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_0_0 (main.Person)
+		/// FK_Doctor_0 (main.Person)
 		/// </summary>
 		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SQLite.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -186,7 +186,7 @@ namespace Default.SQLite
 		#region Associations
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0 (main.PrimaryKeyTable)
+		/// FK_ForeignKeyTable_0 (main.PrimaryKeyTable)
 		/// </summary>
 		[Association(ThisKey=nameof(PrimaryKeyTableID), OtherKey=nameof(Default.SQLite.PrimaryKeyTable.ID), CanBeNull=false)]
 		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
@@ -245,13 +245,13 @@ namespace Default.SQLite
 	[Table(Schema="main", Name="Patient")]
 	public partial class Patient
 	{
-		[PrimaryKey, NotNull] public long   PersonID  { get; set; } // INTEGER
-		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
+		[PrimaryKey, Identity] public long   PersonID  { get; set; } // INTEGER
+		[Column,     NotNull ] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_0_0 (main.Person)
+		/// FK_Patient_0 (main.Person)
 		/// </summary>
 		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SQLite.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -271,13 +271,13 @@ namespace Default.SQLite
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_0_0_BackReference (main.Doctor)
+		/// FK_Doctor_0_BackReference (main.Doctor)
 		/// </summary>
 		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SQLite.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_0_0_BackReference (main.Patient)
+		/// FK_Patient_0_BackReference (main.Patient)
 		/// </summary>
 		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SQLite.Patient.PersonID), CanBeNull=true)]
 		public Patient? Patient { get; set; }
@@ -288,13 +288,13 @@ namespace Default.SQLite
 	[Table(Schema="main", Name="PrimaryKeyTable")]
 	public partial class PrimaryKeyTable
 	{
-		[PrimaryKey, NotNull] public long   ID   { get; set; } // INTEGER
-		[Column,     NotNull] public string Name { get; set; } = null!; // nvarchar(50)
+		[PrimaryKey, Identity] public long   ID   { get; set; } // INTEGER
+		[Column,     NotNull ] public string Name { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0_BackReference (main.ForeignKeyTable)
+		/// FK_ForeignKeyTable_0_BackReference (main.ForeignKeyTable)
 		/// </summary>
 		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SQLite.ForeignKeyTable.PrimaryKeyTableID), CanBeNull=true)]
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;

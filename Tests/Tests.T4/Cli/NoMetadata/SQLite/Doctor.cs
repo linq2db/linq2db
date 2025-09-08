@@ -18,9 +18,9 @@ namespace Cli.NoMetadata.SQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_Doctor_0_0
+		/// FK_Doctor_0
 		/// </summary>
-		public Person FkDoctor00 { get; set; } = null!;
+		public Person FkDoctor0 { get; set; } = null!;
 		#endregion
 	}
 }

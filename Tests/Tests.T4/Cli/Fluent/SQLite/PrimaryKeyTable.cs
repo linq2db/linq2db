@@ -19,7 +19,7 @@ namespace Cli.Fluent.SQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0 backreference
+		/// FK_ForeignKeyTable_0 backreference
 		/// </summary>
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;
 		#endregion

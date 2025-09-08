@@ -18,7 +18,7 @@ namespace Cli.NoMetadata.SQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0
+		/// FK_ForeignKeyTable_0
 		/// </summary>
 		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
 		#endregion

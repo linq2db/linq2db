@@ -174,13 +174,13 @@ namespace EquatableDataContext
 	[Table(Schema="main", Name="Doctor")]
 	public partial class Doctor : IEquatable<Doctor>
 	{
-		[PrimaryKey, NotNull] public long   PersonID { get; set; } // INTEGER
-		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(50)
+		[PrimaryKey, Identity] public long   PersonID { get; set; } // INTEGER
+		[Column,     NotNull ] public string Taxonomy { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_0_0 (main.Person)
+		/// FK_Doctor_0 (main.Person)
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.Doctor.PersonID), OtherKey=nameof(EquatableDataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -262,7 +262,7 @@ namespace EquatableDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0 (main.PrimaryKeyTable)
+		/// FK_ForeignKeyTable_0 (main.PrimaryKeyTable)
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.ForeignKeyTable.PrimaryKeyTableID), OtherKey=nameof(EquatableDataContext.PrimaryKeyTable.ID), CanBeNull=false)]
 		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
@@ -321,13 +321,13 @@ namespace EquatableDataContext
 	[Table(Schema="main", Name="Patient")]
 	public partial class Patient : IEquatable<Patient>
 	{
-		[PrimaryKey, NotNull] public long   PersonID  { get; set; } // INTEGER
-		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
+		[PrimaryKey, Identity] public long   PersonID  { get; set; } // INTEGER
+		[Column,     NotNull ] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_0_0 (main.Person)
+		/// FK_Patient_0 (main.Person)
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.Patient.PersonID), OtherKey=nameof(EquatableDataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -372,13 +372,13 @@ namespace EquatableDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_0_0_BackReference (main.Doctor)
+		/// FK_Doctor_0_BackReference (main.Doctor)
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.Person.PersonID), OtherKey=nameof(EquatableDataContext.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_0_0_BackReference (main.Patient)
+		/// FK_Patient_0_BackReference (main.Patient)
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.Person.PersonID), OtherKey=nameof(EquatableDataContext.Patient.PersonID), CanBeNull=true)]
 		public Patient? Patient { get; set; }
@@ -414,13 +414,13 @@ namespace EquatableDataContext
 	[Table(Schema="main", Name="PrimaryKeyTable")]
 	public partial class PrimaryKeyTable : IEquatable<PrimaryKeyTable>
 	{
-		[PrimaryKey, NotNull] public long   ID   { get; set; } // INTEGER
-		[Column,     NotNull] public string Name { get; set; } = null!; // nvarchar(50)
+		[PrimaryKey, Identity] public long   ID   { get; set; } // INTEGER
+		[Column,     NotNull ] public string Name { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0_BackReference (main.ForeignKeyTable)
+		/// FK_ForeignKeyTable_0_BackReference (main.ForeignKeyTable)
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.PrimaryKeyTable.ID), OtherKey=nameof(EquatableDataContext.ForeignKeyTable.PrimaryKeyTableID), CanBeNull=true)]
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;
@@ -597,7 +597,7 @@ namespace EquatableDataContext
 		#region Doctor Associations
 
 		/// <summary>
-		/// FK_Doctor_0_0
+		/// FK_Doctor_0
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.Doctor.PersonID), OtherKey=nameof(EquatableDataContext.Person.PersonID), CanBeNull=false)]
 		public static IQueryable<Person> People(this Doctor obj, IDataContext db)
@@ -606,7 +606,7 @@ namespace EquatableDataContext
 		}
 
 		/// <summary>
-		/// FK_Doctor_0_0
+		/// FK_Doctor_0
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.Doctor.PersonID), OtherKey=nameof(EquatableDataContext.Person.PersonID), CanBeNull=false)]
 		public static Doctor Person(this Person obj, IDataContext db)
@@ -619,7 +619,7 @@ namespace EquatableDataContext
 		#region ForeignKeyTable Associations
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0
+		/// FK_ForeignKeyTable_0
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.ForeignKeyTable.PrimaryKeyTableID), OtherKey=nameof(EquatableDataContext.PrimaryKeyTable.ID), CanBeNull=false)]
 		public static IQueryable<PrimaryKeyTable> PrimaryKeyTables(this ForeignKeyTable obj, IDataContext db)
@@ -628,7 +628,7 @@ namespace EquatableDataContext
 		}
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0
+		/// FK_ForeignKeyTable_0
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.ForeignKeyTable.PrimaryKeyTableID), OtherKey=nameof(EquatableDataContext.PrimaryKeyTable.ID), CanBeNull=false)]
 		public static ForeignKeyTable PrimaryKeyTable(this PrimaryKeyTable obj, IDataContext db)
@@ -641,7 +641,7 @@ namespace EquatableDataContext
 		#region Patient Associations
 
 		/// <summary>
-		/// FK_Patient_0_0
+		/// FK_Patient_0
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.Patient.PersonID), OtherKey=nameof(EquatableDataContext.Person.PersonID), CanBeNull=false)]
 		public static IQueryable<Person> People0(this Patient obj, IDataContext db)
@@ -650,7 +650,7 @@ namespace EquatableDataContext
 		}
 
 		/// <summary>
-		/// FK_Patient_0_0
+		/// FK_Patient_0
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.Patient.PersonID), OtherKey=nameof(EquatableDataContext.Person.PersonID), CanBeNull=false)]
 		public static Patient Person0(this Person obj, IDataContext db)
@@ -663,7 +663,7 @@ namespace EquatableDataContext
 		#region Person Associations
 
 		/// <summary>
-		/// FK_Doctor_0_0_BackReference
+		/// FK_Doctor_0_BackReference
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.Person.PersonID), OtherKey=nameof(EquatableDataContext.Doctor.PersonID), CanBeNull=true)]
 		public static IQueryable<Doctor> Doctors(this Person obj, IDataContext db)
@@ -672,7 +672,7 @@ namespace EquatableDataContext
 		}
 
 		/// <summary>
-		/// FK_Doctor_0_0_BackReference
+		/// FK_Doctor_0_BackReference
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.Person.PersonID), OtherKey=nameof(EquatableDataContext.Doctor.PersonID), CanBeNull=true)]
 		public static Person? Doctor(this Doctor obj, IDataContext db)
@@ -681,7 +681,7 @@ namespace EquatableDataContext
 		}
 
 		/// <summary>
-		/// FK_Patient_0_0_BackReference
+		/// FK_Patient_0_BackReference
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.Person.PersonID), OtherKey=nameof(EquatableDataContext.Patient.PersonID), CanBeNull=true)]
 		public static IQueryable<Patient> Patients(this Person obj, IDataContext db)
@@ -690,7 +690,7 @@ namespace EquatableDataContext
 		}
 
 		/// <summary>
-		/// FK_Patient_0_0_BackReference
+		/// FK_Patient_0_BackReference
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.Person.PersonID), OtherKey=nameof(EquatableDataContext.Patient.PersonID), CanBeNull=true)]
 		public static Person? Patient(this Patient obj, IDataContext db)
@@ -703,7 +703,7 @@ namespace EquatableDataContext
 		#region PrimaryKeyTable Associations
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0_BackReference
+		/// FK_ForeignKeyTable_0_BackReference
 		/// </summary>
 		[Association(ThisKey=nameof(EquatableDataContext.PrimaryKeyTable.ID), OtherKey=nameof(EquatableDataContext.ForeignKeyTable.PrimaryKeyTableID), CanBeNull=true)]
 		public static IQueryable<ForeignKeyTable> ForeignKeyTables(this PrimaryKeyTable obj, IDataContext db)

@@ -19,8 +19,8 @@ namespace Cli.All.SQLite
 	[Table("Patient")]
 	public class Patient : IEquatable<Patient>
 	{
-		[Column("PersonID" , DataType  = DataType.Int64, DbType   = "INTEGER"        , IsPrimaryKey = true                         )] public long   PersonId  { get; set; } // INTEGER
-		[Column("Diagnosis", CanBeNull = false         , DataType = DataType.NVarChar, DbType       = "nvarchar(256)", Length = 256)] public string Diagnosis { get; set; } = null!; // nvarchar(256)
+		[Column("PersonID" , DataType  = DataType.Int64, DbType   = "INTEGER"        , IsPrimaryKey = true           , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long   PersonId  { get; set; } // INTEGER
+		[Column("Diagnosis", CanBeNull = false         , DataType = DataType.NVarChar, DbType       = "nvarchar(256)", Length     = 256                                           )] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<Patient> _equalityComparer = ComparerBuilder.GetEqualityComparer<Patient>(c => c.PersonId);
@@ -43,10 +43,10 @@ namespace Cli.All.SQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_Patient_0_0
+		/// FK_Patient_0
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
-		public Person FkPatient00 { get; set; } = null!;
+		public Person FkPatient0 { get; set; } = null!;
 		#endregion
 	}
 }

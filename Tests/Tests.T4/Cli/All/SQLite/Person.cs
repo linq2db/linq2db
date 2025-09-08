@@ -46,13 +46,13 @@ namespace Cli.All.SQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_Doctor_0_0 backreference
+		/// FK_Doctor_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(SQLite.Doctor.PersonId))]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_0_0 backreference
+		/// FK_Patient_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(SQLite.Patient.PersonId))]
 		public Patient? Patient { get; set; }

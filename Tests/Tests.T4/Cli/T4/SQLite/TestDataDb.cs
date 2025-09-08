@@ -144,15 +144,15 @@ namespace Cli.T4.SQLite
 	[Table("Doctor", Schema = "main")]
 	public partial class Doctor
 	{
-		[Column("PersonID", IsPrimaryKey = true )] public long   PersonID { get; set; } // INTEGER
-		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // nvarchar(50)
+		[Column("PersonID", IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long   PersonID { get; set; } // INTEGER
+		[Column("Taxonomy", CanBeNull    = false                                                             )] public string Taxonomy { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 		/// <summary>
-		/// FK_Doctor_0_0
+		/// FK_Doctor_0
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Person.PersonID))]
-		public Person FkDoctor00 { get; set; } = null!;
+		public Person FkDoctor0 { get; set; } = null!;
 		#endregion
 	}
 
@@ -179,7 +179,7 @@ namespace Cli.T4.SQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0
+		/// FK_ForeignKeyTable_0
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(PrimaryKeyTableID), OtherKey = nameof(SQLite.PrimaryKeyTable.ID))]
 		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
@@ -237,15 +237,15 @@ namespace Cli.T4.SQLite
 	[Table("Patient", Schema = "main")]
 	public partial class Patient
 	{
-		[Column("PersonID" , IsPrimaryKey = true )] public long   PersonID  { get; set; } // INTEGER
-		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // nvarchar(256)
+		[Column("PersonID" , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long   PersonID  { get; set; } // INTEGER
+		[Column("Diagnosis", CanBeNull    = false                                                             )] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region Associations
 		/// <summary>
-		/// FK_Patient_0_0
+		/// FK_Patient_0
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Person.PersonID))]
-		public Person FkPatient00 { get; set; } = null!;
+		public Person FkPatient0 { get; set; } = null!;
 		#endregion
 	}
 
@@ -260,13 +260,13 @@ namespace Cli.T4.SQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_Doctor_0_0 backreference
+		/// FK_Doctor_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(SQLite.Doctor.PersonID))]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_0_0 backreference
+		/// FK_Patient_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(SQLite.Patient.PersonID))]
 		public Patient? Patient { get; set; }
@@ -276,12 +276,12 @@ namespace Cli.T4.SQLite
 	[Table("PrimaryKeyTable", Schema = "main")]
 	public partial class PrimaryKeyTable
 	{
-		[Column("ID"  , IsPrimaryKey = true )] public long   ID   { get; set; } // INTEGER
-		[Column("Name", CanBeNull    = false)] public string Name { get; set; } = null!; // nvarchar(50)
+		[Column("ID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long   ID   { get; set; } // INTEGER
+		[Column("Name", CanBeNull    = false                                                             )] public string Name { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0 backreference
+		/// FK_ForeignKeyTable_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(ID), OtherKey = nameof(ForeignKeyTable.PrimaryKeyTableID))]
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;

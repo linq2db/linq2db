@@ -148,13 +148,13 @@ namespace SQLiteDataContext
 	[Table("Doctor")]
 	public partial class Doctor
 	{
-		[PrimaryKey, NotNull] public long   PersonID { get; set; } // INTEGER
-		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(50)
+		[PrimaryKey, Identity] public long   PersonID { get; set; } // INTEGER
+		[Column,     NotNull ] public string Taxonomy { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_0_0 (main.Person)
+		/// FK_Doctor_0 (main.Person)
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.Doctor.PersonID), OtherKey=nameof(SQLiteDataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -186,7 +186,7 @@ namespace SQLiteDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0 (main.PrimaryKeyTable)
+		/// FK_ForeignKeyTable_0 (main.PrimaryKeyTable)
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.ForeignKeyTable.PrimaryKeyTableID), OtherKey=nameof(SQLiteDataContext.PrimaryKeyTable.ID), CanBeNull=false)]
 		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
@@ -245,13 +245,13 @@ namespace SQLiteDataContext
 	[Table("Patient")]
 	public partial class Patient
 	{
-		[PrimaryKey, NotNull] public long   PersonID  { get; set; } // INTEGER
-		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
+		[PrimaryKey, Identity] public long   PersonID  { get; set; } // INTEGER
+		[Column,     NotNull ] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_0_0 (main.Person)
+		/// FK_Patient_0 (main.Person)
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.Patient.PersonID), OtherKey=nameof(SQLiteDataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -271,13 +271,13 @@ namespace SQLiteDataContext
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_0_0_BackReference (main.Doctor)
+		/// FK_Doctor_0_BackReference (main.Doctor)
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.Person.PersonID), OtherKey=nameof(SQLiteDataContext.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_0_0_BackReference (main.Patient)
+		/// FK_Patient_0_BackReference (main.Patient)
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.Person.PersonID), OtherKey=nameof(SQLiteDataContext.Patient.PersonID), CanBeNull=true)]
 		public Patient? Patient { get; set; }
@@ -288,13 +288,13 @@ namespace SQLiteDataContext
 	[Table("PrimaryKeyTable")]
 	public partial class PrimaryKeyTable
 	{
-		[PrimaryKey, NotNull] public long   ID   { get; set; } // INTEGER
-		[Column,     NotNull] public string Name { get; set; } = null!; // nvarchar(50)
+		[PrimaryKey, Identity] public long   ID   { get; set; } // INTEGER
+		[Column,     NotNull ] public string Name { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0_BackReference (main.ForeignKeyTable)
+		/// FK_ForeignKeyTable_0_BackReference (main.ForeignKeyTable)
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.PrimaryKeyTable.ID), OtherKey=nameof(SQLiteDataContext.ForeignKeyTable.PrimaryKeyTableID), CanBeNull=true)]
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;
@@ -421,7 +421,7 @@ namespace SQLiteDataContext
 		#region Doctor Associations
 
 		/// <summary>
-		/// FK_Doctor_0_0
+		/// FK_Doctor_0
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.Doctor.PersonID), OtherKey=nameof(SQLiteDataContext.Person.PersonID), CanBeNull=false)]
 		public static IQueryable<Person> People(this Doctor obj, IDataContext db)
@@ -430,7 +430,7 @@ namespace SQLiteDataContext
 		}
 
 		/// <summary>
-		/// FK_Doctor_0_0
+		/// FK_Doctor_0
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.Doctor.PersonID), OtherKey=nameof(SQLiteDataContext.Person.PersonID), CanBeNull=false)]
 		public static Doctor Person(this Person obj, IDataContext db)
@@ -443,7 +443,7 @@ namespace SQLiteDataContext
 		#region ForeignKeyTable Associations
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0
+		/// FK_ForeignKeyTable_0
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.ForeignKeyTable.PrimaryKeyTableID), OtherKey=nameof(SQLiteDataContext.PrimaryKeyTable.ID), CanBeNull=false)]
 		public static IQueryable<PrimaryKeyTable> PrimaryKeyTables(this ForeignKeyTable obj, IDataContext db)
@@ -452,7 +452,7 @@ namespace SQLiteDataContext
 		}
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0
+		/// FK_ForeignKeyTable_0
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.ForeignKeyTable.PrimaryKeyTableID), OtherKey=nameof(SQLiteDataContext.PrimaryKeyTable.ID), CanBeNull=false)]
 		public static ForeignKeyTable PrimaryKeyTable(this PrimaryKeyTable obj, IDataContext db)
@@ -465,7 +465,7 @@ namespace SQLiteDataContext
 		#region Patient Associations
 
 		/// <summary>
-		/// FK_Patient_0_0
+		/// FK_Patient_0
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.Patient.PersonID), OtherKey=nameof(SQLiteDataContext.Person.PersonID), CanBeNull=false)]
 		public static IQueryable<Person> People0(this Patient obj, IDataContext db)
@@ -474,7 +474,7 @@ namespace SQLiteDataContext
 		}
 
 		/// <summary>
-		/// FK_Patient_0_0
+		/// FK_Patient_0
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.Patient.PersonID), OtherKey=nameof(SQLiteDataContext.Person.PersonID), CanBeNull=false)]
 		public static Patient Person0(this Person obj, IDataContext db)
@@ -487,7 +487,7 @@ namespace SQLiteDataContext
 		#region Person Associations
 
 		/// <summary>
-		/// FK_Doctor_0_0_BackReference
+		/// FK_Doctor_0_BackReference
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.Person.PersonID), OtherKey=nameof(SQLiteDataContext.Doctor.PersonID), CanBeNull=true)]
 		public static IQueryable<Doctor> Doctors(this Person obj, IDataContext db)
@@ -496,7 +496,7 @@ namespace SQLiteDataContext
 		}
 
 		/// <summary>
-		/// FK_Doctor_0_0_BackReference
+		/// FK_Doctor_0_BackReference
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.Person.PersonID), OtherKey=nameof(SQLiteDataContext.Doctor.PersonID), CanBeNull=true)]
 		public static Person? Doctor(this Doctor obj, IDataContext db)
@@ -505,7 +505,7 @@ namespace SQLiteDataContext
 		}
 
 		/// <summary>
-		/// FK_Patient_0_0_BackReference
+		/// FK_Patient_0_BackReference
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.Person.PersonID), OtherKey=nameof(SQLiteDataContext.Patient.PersonID), CanBeNull=true)]
 		public static IQueryable<Patient> Patients(this Person obj, IDataContext db)
@@ -514,7 +514,7 @@ namespace SQLiteDataContext
 		}
 
 		/// <summary>
-		/// FK_Patient_0_0_BackReference
+		/// FK_Patient_0_BackReference
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.Person.PersonID), OtherKey=nameof(SQLiteDataContext.Patient.PersonID), CanBeNull=true)]
 		public static Person? Patient(this Patient obj, IDataContext db)
@@ -527,7 +527,7 @@ namespace SQLiteDataContext
 		#region PrimaryKeyTable Associations
 
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0_BackReference
+		/// FK_ForeignKeyTable_0_BackReference
 		/// </summary>
 		[Association(ThisKey=nameof(SQLiteDataContext.PrimaryKeyTable.ID), OtherKey=nameof(SQLiteDataContext.ForeignKeyTable.PrimaryKeyTableID), CanBeNull=true)]
 		public static IQueryable<ForeignKeyTable> ForeignKeyTables(this PrimaryKeyTable obj, IDataContext db)

@@ -18,9 +18,9 @@ namespace Cli.NewCliFeatures.FluentSQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_Patient_0_0
+		/// FK_Patient_0
 		/// </summary>
-		public Person FkPatient00 { get; set; } = null!;
+		public Person FkPatient0 { get; set; } = null!;
 		#endregion
 	}
 }

@@ -19,8 +19,8 @@ namespace Cli.All.SQLite
 	[Table("PrimaryKeyTable")]
 	public class PrimaryKeyTable : IEquatable<PrimaryKeyTable>
 	{
-		[Column("ID"  , DataType  = DataType.Int64, DbType   = "INTEGER"        , IsPrimaryKey = true                       )] public long   Id   { get; set; } // INTEGER
-		[Column("Name", CanBeNull = false         , DataType = DataType.NVarChar, DbType       = "nvarchar(50)", Length = 50)] public string Name { get; set; } = null!; // nvarchar(50)
+		[Column("ID"  , DataType  = DataType.Int64, DbType   = "INTEGER"        , IsPrimaryKey = true          , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long   Id   { get; set; } // INTEGER
+		[Column("Name", CanBeNull = false         , DataType = DataType.NVarChar, DbType       = "nvarchar(50)", Length     = 50                                            )] public string Name { get; set; } = null!; // nvarchar(50)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<PrimaryKeyTable> _equalityComparer = ComparerBuilder.GetEqualityComparer<PrimaryKeyTable>(c => c.Id);
@@ -43,7 +43,7 @@ namespace Cli.All.SQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0 backreference
+		/// FK_ForeignKeyTable_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(Id), OtherKey = nameof(ForeignKeyTable.PrimaryKeyTableId))]
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;
