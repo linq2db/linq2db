@@ -136,7 +136,7 @@ namespace Default.SQLiteNorthwind
 		[Column,    Nullable] public string? City         { get; set; } // varchar(15)
 		[Column, NotNull    ] public string  CompanyName  { get; set; } = null!; // varchar(40)
 		[Column,    Nullable] public string? ContactName  { get; set; } // varchar(30)
-		[Column,    Nullable] public byte[]? Relationship { get; set; }
+		[Column,    Nullable] public object? Relationship { get; set; }
 	}
 
 	[Table(Schema="main", Name="CustomerCustomerDemo")]
@@ -221,7 +221,7 @@ namespace Default.SQLiteNorthwind
 		[Column,    Nullable] public double? UnitPrice     { get; set; } // float(26)
 		[Column,    Nullable] public int?    Quantity      { get; set; } // INT
 		[Column,    Nullable] public double? Discount      { get; set; } // float(13)
-		[Column,    Nullable] public byte[]? ExtendedPrice { get; set; }
+		[Column,    Nullable] public object? ExtendedPrice { get; set; }
 	}
 
 	[Table(Schema="main", Name="Orders Qry", IsView=true)]
@@ -253,7 +253,7 @@ namespace Default.SQLiteNorthwind
 	public partial class OrderSubtotal
 	{
 		[Column, NotNull    ] public int     OrderID  { get; set; } // INT
-		[Column,    Nullable] public byte[]? Subtotal { get; set; }
+		[Column,    Nullable] public object? Subtotal { get; set; }
 	}
 
 	[Table(Schema="main", Name="Products")]
@@ -308,7 +308,7 @@ namespace Default.SQLiteNorthwind
 	{
 		[Column,    Nullable] public DateTime? ShippedDate { get; set; } // timestamp
 		[Column, NotNull    ] public int       OrderID     { get; set; } // INT
-		[Column,    Nullable] public byte[]?   Subtotal    { get; set; }
+		[Column,    Nullable] public object?   Subtotal    { get; set; }
 	}
 
 	[Table(Schema="main", Name="Summary of Sales by Year", IsView=true)]
@@ -316,7 +316,7 @@ namespace Default.SQLiteNorthwind
 	{
 		[Column,    Nullable] public DateTime? ShippedDate { get; set; } // timestamp
 		[Column, NotNull    ] public int       OrderID     { get; set; } // INT
-		[Column,    Nullable] public byte[]?   Subtotal    { get; set; }
+		[Column,    Nullable] public object?   Subtotal    { get; set; }
 	}
 
 	[Table(Schema="main", Name="Suppliers")]

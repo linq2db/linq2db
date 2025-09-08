@@ -73,6 +73,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 			// additional mappings
 			{ "datetime2",        ( typeof(DateTime), DataType.DateTime2) },
+			// affinity-based typing for unknown types doesn't work well with providers
+			{ "object",           ( typeof(object),   DataType.Variant)   },
 		};
 
 		// sqlite types are not useful as sqlite has only type affinity, but not types
@@ -274,8 +276,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		// plus type information from SDS client DataTypes schema table, which contains 45 mappings for some well known types
 		static (int? length, int? precision, int? scale, DataType dataType, Type dotnetType) InferTypeInformation(string? typeName)
 		{
+			// should be blob
+			// but we use object to avoid errors from provider on value mapping when affinity is not correct
 			if (string.IsNullOrWhiteSpace(typeName))
-				typeName = "blob";
+				typeName = "object";
 
 			var m = _extract.Match(typeName);
 
@@ -326,7 +330,9 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				// (3) If the data type is null or whitespace, it's considered BLOB.
 				if (string.IsNullOrWhiteSpace(dataType))
 				{
-					return _typeMappings["blob"];
+					// should be blob
+					// but we use object to avoid errors from provider on value mapping when affinity is not correct
+					return _typeMappings["object"];
 				}
 
 				// 1. Check for INTEGER affinity.
@@ -358,7 +364,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				}
 
 				// 5. Otherwise, the affinity is NUMERIC.
-				return _typeMappings["numeric"];
+				// but we use object to avoid errors from provider on value mapping when affinity is not correct
+				return _typeMappings["object"];
 			}
 		}
 	}

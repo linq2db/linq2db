@@ -39,7 +39,7 @@ namespace Cli.NewCliFeatures.SQLite
 		[Column("varbinaryDataType"                                                                    )] public byte[]?   VarbinaryDataType        { get; internal set; } // varbinary
 		[Column("imageDataType"                                                                        )] public byte[]?   ImageDataType            { get; internal set; } // image
 		[Column("uniqueidentifierDataType"                                                             )] public Guid?     UniqueidentifierDataType { get; internal set; } // uniqueidentifier
-		[Column("objectDataType"                                                                       )] public decimal?  ObjectDataType           { get; internal set; } // Object
+		[Column("objectDataType"                                                                       )] public object?   ObjectDataType           { get; internal set; } // Object
 		[Column("Number"                                                                               )] public long?     Number                   { get; internal set; } // INTEGER
 	}
 }

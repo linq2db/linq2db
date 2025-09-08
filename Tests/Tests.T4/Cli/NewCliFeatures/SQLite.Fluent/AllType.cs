@@ -37,6 +37,6 @@ namespace Cli.NewCliFeatures.FluentSQLite
 		public byte[]?   VarbinaryDataType        { get; set; } // varbinary
 		public byte[]?   ImageDataType            { get; set; } // image
 		public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
-		public decimal?  ObjectDataType           { get; set; } // Object
+		public object?   ObjectDataType           { get; set; } // Object
 	}
 }

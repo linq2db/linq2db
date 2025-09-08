@@ -106,7 +106,7 @@ namespace EquatableDataContext
 		[Column("varbinaryDataType"),        Nullable            ] public byte[]?   VarbinaryDataType        { get; set; } // varbinary
 		[Column("imageDataType"),            Nullable            ] public byte[]?   ImageDataType            { get; set; } // image
 		[Column("uniqueidentifierDataType"), Nullable            ] public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column("objectDataType"),           Nullable            ] public decimal?  ObjectDataType           { get; set; } // Object
+		[Column("objectDataType"),           Nullable            ] public object?   ObjectDataType           { get; set; } // Object
 
 		#region IEquatable support
 
@@ -160,8 +160,8 @@ namespace EquatableDataContext
 		[Column("varbinaryDataType"),        Nullable] public byte[]?   VarbinaryDataType        { get; set; } // varbinary
 		[Column("imageDataType"),            Nullable] public byte[]?   ImageDataType            { get; set; } // image
 		[Column("uniqueidentifierDataType"), Nullable] public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column("objectDataType"),           Nullable] public decimal?  ObjectDataType           { get; set; } // Object
-		[Column(),                           Nullable] public byte[]?   Number                   { get; set; }
+		[Column("objectDataType"),           Nullable] public object?   ObjectDataType           { get; set; } // Object
+		[Column(),                           Nullable] public object?   Number                   { get; set; }
 	}
 
 	[Table(Schema="main", Name="Child")]

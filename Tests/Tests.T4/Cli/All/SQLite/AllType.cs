@@ -42,7 +42,7 @@ namespace Cli.All.SQLite
 		[Column("varbinaryDataType"       , DataType = DataType.VarBinary, DbType = "varbinary"                                                                                         )] public byte[]?   VarbinaryDataType        { get; set; } // varbinary
 		[Column("imageDataType"           , DataType = DataType.VarBinary, DbType = "image"                                                                                             )] public byte[]?   ImageDataType            { get; set; } // image
 		[Column("uniqueidentifierDataType", DataType = DataType.Guid     , DbType = "uniqueidentifier"                                                                                  )] public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column("objectDataType"          , DataType = DataType.Decimal  , DbType = "Object"                                                                                            )] public decimal?  ObjectDataType           { get; set; } // Object
+		[Column("objectDataType"          , DataType = DataType.Variant  , DbType = "Object"                                                                                            )] public object?   ObjectDataType           { get; set; } // Object
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<AllType> _equalityComparer = ComparerBuilder.GetEqualityComparer<AllType>(c => c.Id);
