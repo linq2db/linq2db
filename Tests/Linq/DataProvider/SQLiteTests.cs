@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -11,7 +12,10 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.DataProvider.SQLite;
+using LinqToDB.Internal.Logging;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.Tools.Activity;
 
 using NUnit.Framework;
 
@@ -928,6 +932,61 @@ namespace Tests.DataProvider
 		sealed class Issue2099Table
 		{
 			[PrimaryKey, Identity] public long Id { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/934")]
+		public void Issue934Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			try
+			{
+			db.Execute(@"
+CREATE TABLE withid_1(x INTEGER PRIMARY KEY ASC, y, z);
+CREATE TABLE withid_2(x INTEGER, y, z, PRIMARY KEY(x ASC));
+CREATE TABLE withid_3(x INTEGER, y, z, PRIMARY KEY(x DESC));
+CREATE TABLE withoutid_1(x INTEGER PRIMARY KEY DESC, y, z);
+CREATE TABLE withoutid_2(x INTEGER PRIMARY KEY ASC, y, z) without rowid;
+CREATE TABLE withoutid_3(x INTEGER, y, z, PRIMARY KEY(x ASC)) without rowid;
+CREATE TABLE withoutid_4(x INTEGER, y, z, PRIMARY KEY(x DESC)) without rowid;
+");
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withid_1"), true);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withid_2"), true);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withid_3"), true);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withoutid_1"), false);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withoutid_2"), false);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withoutid_3"), false);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withoutid_4"), false);
+
+				static void AssertIdentity(TableSchema? table, bool hasIdentity)
+				{
+					Assert.That(table, Is.Not.Null);
+
+					var pk = table.Columns.Where(c => c.IsPrimaryKey).ToArray();
+
+					Assert.That(pk, Has.Length.EqualTo(1));
+					using (Assert.EnterMultipleScope())
+					{
+						Assert.That(pk[0].ColumnName, Is.EqualTo("x"));
+						Assert.That(pk[0].IsIdentity, Is.EqualTo(hasIdentity));
+					}
+				}
+			}
+			finally
+			{
+				db.Execute(@"
+DROP TABLE withid_1;
+DROP TABLE withid_2;
+DROP TABLE withid_3;
+DROP TABLE withoutid_1;
+DROP TABLE withoutid_2;
+DROP TABLE withoutid_3;
+DROP TABLE withoutid_4;
+");
+			}
 		}
 
 		#region issue 4808

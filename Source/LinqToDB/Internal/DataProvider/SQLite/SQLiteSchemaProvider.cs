@@ -154,7 +154,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 						c.[notnull] = 0                                                                               AS IsNullable,
 						c.cid                                                                                         AS Ordinal,
 						c.type                                                                                        AS DataType,
-						(pk.pk_count = 1 AND c.pk = 1 AND UPPER(c.type) = 'INTEGER' AND m.sql LIKE '%AUTOINCREMENT%') AS [IsIdentity]
+						(pk.pk_count = 1
+							AND c.pk = 1
+							AND UPPER(c.type) = 'INTEGER'
+							AND m.sql NOT LIKE '%PRIMARY KEY DESC%'
+							AND (m.sql LIKE '%AUTOINCREMENT%' OR m.sql NOT LIKE '%WITHOUT ROWID%'))                   AS [IsIdentity]
 					FROM pragma_table_list() t
 						LEFT OUTER JOIN pragma_table_info(t.name) c
 						INNER JOIN sqlite_master m ON m.tbl_name = t.name AND m.type IN ('table', 'view')
