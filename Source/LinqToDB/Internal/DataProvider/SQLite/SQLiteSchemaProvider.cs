@@ -238,12 +238,12 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			// https://www.sqlite.org/pragma.html#pragma_table_info
 			return dataConnection.Query<ForeignKeyInfo>(@$"
 				SELECT
-					'FK_' || tThis.name || '_' || f.id || '_' || f.seq AS Name,
-					tThis.schema || '..' || tThis.name                 AS ThisTableID,
-					f.[from]                                           AS ThisColumn,
-					tOther.schema || '..' || tOther.name               AS OtherTableID,
-					coalesce(f.[to], cOther.name)                      AS OtherColumn,
-					f.seq                                              AS Ordinal
+					'FK_' || tThis.name || '_' || f.id   AS Name,
+					tThis.schema || '..' || tThis.name   AS ThisTableID,
+					f.[from]                             AS ThisColumn,
+					tOther.schema || '..' || tOther.name AS OtherTableID,
+					coalesce(f.[to], cOther.name)        AS OtherColumn,
+					f.seq                                AS Ordinal
 				FROM pragma_table_list() tThis
 					LEFT OUTER JOIN pragma_foreign_key_list(tThis.name) f
 					INNER JOIN pragma_table_list() tOther ON f.[table] = tOther.name

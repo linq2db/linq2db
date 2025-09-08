@@ -989,6 +989,49 @@ DROP TABLE withoutid_4;
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4736")]
+		public void Issue4736Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			try
+			{
+				db.Execute(@"
+CREATE TABLE FirstTable (PkField1 INT, PkField2 INT, AdditionalField INTEGER, PRIMARY KEY (PkField1, PkField2));
+CREATE TABLE SecondTable (FkField1 INT, FkField2 INT, FOREIGN KEY (FkField1, FkField2) REFERENCES FirstTable (PkField1, PkField2));
+");
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				var firstTable = schema.Tables.FirstOrDefault(t => t.TableName == "FirstTable");
+				var secondTable = schema.Tables.FirstOrDefault(t => t.TableName == "SecondTable");
+
+				Assert.That(firstTable, Is.Not.Null);
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(firstTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
+
+					Assert.That(secondTable, Is.Not.Null);
+				}
+
+				Assert.That(secondTable.ForeignKeys, Has.Count.EqualTo(1));
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(secondTable.ForeignKeys[0].ThisColumns, Has.Count.EqualTo(2));
+					Assert.That(secondTable.ForeignKeys[0].OtherColumns, Has.Count.EqualTo(2));
+				}
+			}
+			finally
+			{
+				db.Execute(@"
+DROP TABLE FirstTable;
+DROP TABLE SecondTable;
+");
+			}
+		}
+
 		#region issue 4808
 		[Table(nameof(Issue4808Table))]
 		sealed class Issue4808TableRaw
