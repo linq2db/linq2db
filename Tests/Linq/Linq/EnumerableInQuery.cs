@@ -340,16 +340,16 @@ namespace Tests.Linq
 				{
 					new
 					{
+						ColorId     = (item.Color == null ? null : item.ColorId) ?? 0,
 						ColorName   = (string?)item.Color!.Name,
 						StyleName   = item.Style!.Name,
-						ColorId     = (item.Color == null ? null : item.ColorId) ?? 0,
 						Conditional = item.Color!.Name == "Red" ? itemsTable.Count() : 0,
 					},
 					new
 					{
+						ColorId     = (item.Color == null ? null : item.ColorId) ?? 0,
 						ColorName   = (string?)null,
 						StyleName   = item.Style!.Name,
-						ColorId     = (item.Color == null ? null : item.ColorId) ?? 0,
 						Conditional = 0,
 					},
 				}.DefaultIfEmpty()
