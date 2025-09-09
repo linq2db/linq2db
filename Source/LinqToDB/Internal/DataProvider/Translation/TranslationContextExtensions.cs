@@ -50,6 +50,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return true;
 		}
 
+		public static bool TranslateToSqlExpression(this ITranslationContext translationContext, Expression expression, [NotNullWhen(true)] out ISqlExpression? translated, [NotNullWhen(false)] out SqlErrorExpression? error)
+		{
+			var result = translationContext.Translate(expression, TranslationFlags.Sql);
+
+			if (result is not SqlPlaceholderExpression placeholder)
+			{
+				translated = null;
+				error      = SqlErrorExpression.EnsureError(result);
+				return false;
+			}
+
+			translated = placeholder.Sql;
+			error      = null;
+			return true;
+		}
+
 		public static IDisposable? UsingTypeFromExpression(this ITranslationContext translationContext, ISqlExpression? fromExpression)
 		{
 			if (fromExpression is null)
