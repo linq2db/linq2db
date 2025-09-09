@@ -14,12 +14,12 @@ namespace Cli.NoMetadata.SQLite
 {
 	public class PrimaryKeyTable
 	{
-		public long   Id   { get; set; } // integer
+		public long   Id   { get; set; } // INTEGER
 		public string Name { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0 backreference
+		/// FK_ForeignKeyTable_0 backreference
 		/// </summary>
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;
 		#endregion

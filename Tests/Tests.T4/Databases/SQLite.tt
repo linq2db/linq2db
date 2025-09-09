@@ -48,6 +48,8 @@
 
 	GenerateAssociationExtensions = true;
 
+	IncludeDefaultSchema = false;
+
 	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
 
 	LoadSQLiteMetadata(solutionsPath + @"\Data\", "TestData.sqlite");

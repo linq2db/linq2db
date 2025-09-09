@@ -13,6 +13,6 @@ namespace Cli.NewCliFeatures.FluentSQLite
 {
 	public class Dual
 	{
-		public string? Dummy { get; set; } // varchar(10)
+		public string? Dummy { get; set; } // VARCHAR(10)
 	}
 }

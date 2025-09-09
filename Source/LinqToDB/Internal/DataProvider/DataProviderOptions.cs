@@ -7,7 +7,7 @@ using LinqToDB.Internal.Options;
 namespace LinqToDB.Internal.DataProvider
 {
 	/// <param name="BulkCopyType">
-	/// Default bulk copy mode, used by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
+	/// Default bulk copy mode, used by <see cref="Data.DataContextExtensions.BulkCopy{T}(IDataContext, IEnumerable{T})"/>
 	/// methods, if mode is not specified explicitly.
 	/// </param>
 	public abstract record DataProviderOptions<T>

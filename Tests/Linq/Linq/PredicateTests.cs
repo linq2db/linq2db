@@ -147,7 +147,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
 		public void Test_Feature_IsTrue([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{
@@ -184,7 +184,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
 		public void Test_Feature_IsFalse([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{
@@ -223,7 +223,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		public void Test_Feature_IsUnknown([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{
@@ -256,7 +256,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		public void Test_Feature_IsNull([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{
@@ -289,7 +289,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		public void Test_Feature_True([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{
@@ -322,7 +322,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		public void Test_Feature_False([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{
@@ -363,7 +363,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("MySql.Data.MySqlClient.MySqlException", TestProvName.AllMySqlData)]
 		public void Test_Feature_Unknown([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{
@@ -396,7 +396,7 @@ namespace Tests.Linq
 		[Test(Description = "<PREDICATE> = (1=1)")]
 		public void Test_Feature_CalculatedTrue([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{
@@ -429,7 +429,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		public void Test_Feature_CalculatedFalse([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{
@@ -462,7 +462,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		public void Test_Feature_CalculatedUnknown([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{
@@ -500,7 +500,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("MySql.Data.MySqlClient.MySqlException", TestProvName.AllMySqlData)]
 		public void Test_Feature_DistinctFrom([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{
@@ -541,7 +541,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", TestProvName.AllFirebird)]
 		public void Test_Feature_NullSaveEqual([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{
@@ -580,7 +580,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2, TestProvName.AllDB2)]
 		public void Test_Feature_Is([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{
@@ -619,7 +619,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Microsoft.Data.Sqlite.SqliteException", ProviderName.SQLiteMS)]
 		public void Test_Feature_Decode([DataSources(false, TestProvName.AllFirebird)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{
@@ -706,7 +706,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
 		public void Test_Feature_PredicateComparison([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(FeatureTable.Data);
 			using (Assert.EnterMultipleScope())
 			{

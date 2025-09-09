@@ -16,14 +16,14 @@ namespace Cli.Default.SQLiteNorthwind
 	[Table("Orders Qry", IsView = true)]
 	public class OrdersQry
 	{
-		[Column("OrderID"                          )] public int       OrderId        { get; set; } // int
+		[Column("OrderID"                          )] public int       OrderId        { get; set; } // INT
 		[Column("CustomerID"                       )] public string?   CustomerId     { get; set; } // varchar(5)
-		[Column("EmployeeID"                       )] public int?      EmployeeId     { get; set; } // int
+		[Column("EmployeeID"                       )] public int?      EmployeeId     { get; set; } // INT
 		[Column("OrderDate"                        )] public DateTime? OrderDate      { get; set; } // timestamp
 		[Column("RequiredDate"                     )] public DateTime? RequiredDate   { get; set; } // timestamp
 		[Column("ShippedDate"                      )] public DateTime? ShippedDate    { get; set; } // timestamp
-		[Column("ShipVia"                          )] public int?      ShipVia        { get; set; } // int
-		[Column("Freight"                          )] public double?   Freight        { get; set; } // float
+		[Column("ShipVia"                          )] public int?      ShipVia        { get; set; } // INT
+		[Column("Freight"                          )] public double?   Freight        { get; set; } // float(26)
 		[Column("ShipName"                         )] public string?   ShipName       { get; set; } // varchar(40)
 		[Column("ShipAddress"                      )] public string?   ShipAddress    { get; set; } // varchar(60)
 		[Column("ShipCity"                         )] public string?   ShipCity       { get; set; } // varchar(15)

@@ -30,66 +30,6 @@ namespace LinqToDB.Remote.Grpc
 			_transferInternalExceptionToClient = transferInternalExceptionToClient;
 		}
 
-		LinqServiceInfo IGrpcLinqService.GetInfo(GrpcConfiguration configuration, CallContext context)
-		{
-			try
-			{
-				return _linqService.GetInfo(configuration.Configuration);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
-			}
-		}
-
-		GrpcInt IGrpcLinqService.ExecuteNonQuery(GrpcConfigurationQuery caq, CallContext context)
-		{
-			try
-			{
-				return _linqService.ExecuteNonQuery(caq.Configuration, caq.QueryData);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
-			}
-		}
-
-		GrpcString IGrpcLinqService.ExecuteReader(GrpcConfigurationQuery caq, CallContext context)
-		{
-			try
-			{
-				return _linqService.ExecuteReader(caq.Configuration, caq.QueryData);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
-			}
-		}
-
-		GrpcString IGrpcLinqService.ExecuteScalar(GrpcConfigurationQuery caq, CallContext context)
-		{
-			try
-			{
-				return _linqService.ExecuteScalar(caq.Configuration, caq.QueryData);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
-			}
-		}
-
-		GrpcInt IGrpcLinqService.ExecuteBatch(GrpcConfigurationQuery caq, CallContext context)
-		{
-			try
-			{
-				return _linqService.ExecuteBatch(caq.Configuration, caq.QueryData);
-			}
-			catch (Exception exception) when (_transferInternalExceptionToClient)
-			{
-				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
-			}
-		}
-
 		async Task<LinqServiceInfo> IGrpcLinqService.GetInfoAsync(GrpcConfiguration configuration, CallContext context)
 		{
 			try

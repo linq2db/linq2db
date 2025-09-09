@@ -3216,7 +3216,7 @@ FROM
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4588")]
 		public void Issue4588Test([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Order>();
 			using var t2 = db.CreateLocalTable<SubOrder>();
 			using var t3 = db.CreateLocalTable<SubOrderDetail>();

@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Data
+﻿using System.Data.Common;
+
+namespace LinqToDB.Data
 {
 	/// <summary>
 	/// Tracing steps for the <see cref="DataConnection"/> trace events.
@@ -27,7 +29,7 @@
 		MapperCreated,
 
 		/// <summary>
-		/// Occurs when an operation is completed and its associated <see cref="DataReader"/> is closed.
+		/// Occurs when an operation is completed and its associated <see cref="DbDataReader"/> is closed.
 		/// </summary>
 		Completed,
 	}

@@ -18,7 +18,7 @@ namespace Cli.Default.SQLiteNorthwind
 		[Column("CategoryName"   , CanBeNull = false)] public string  CategoryName    { get; set; } = null!; // varchar(15)
 		[Column("ProductName"    , CanBeNull = false)] public string  ProductName     { get; set; } = null!; // varchar(40)
 		[Column("QuantityPerUnit"                   )] public string? QuantityPerUnit { get; set; } // varchar(20)
-		[Column("UnitsInStock"                      )] public int?    UnitsInStock    { get; set; } // int
-		[Column("Discontinued"                      )] public int     Discontinued    { get; set; } // int
+		[Column("UnitsInStock"                      )] public int?    UnitsInStock    { get; set; } // INT
+		[Column("Discontinued"                      )] public int     Discontinued    { get; set; } // INT
 	}
 }

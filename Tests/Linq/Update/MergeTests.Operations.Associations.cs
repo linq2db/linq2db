@@ -15,7 +15,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -48,7 +48,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -81,7 +81,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -106,7 +106,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -131,7 +131,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -156,7 +156,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -194,7 +194,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -229,7 +229,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -283,7 +283,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -334,7 +334,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -384,7 +384,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -431,7 +431,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -475,7 +475,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -522,7 +522,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -572,7 +572,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -617,7 +617,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -655,7 +655,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -690,7 +690,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -746,7 +746,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -797,7 +797,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -849,7 +849,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -895,7 +895,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -939,7 +939,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -987,7 +987,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -1038,7 +1038,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -1083,7 +1083,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -1129,7 +1129,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);
@@ -1166,7 +1166,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				PrepareIdentityData(db, context);

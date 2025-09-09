@@ -15,7 +15,7 @@ namespace Cli.Default.SQLiteNorthwind
 	[Table("Order Subtotals", IsView = true)]
 	public class OrderSubtotal
 	{
-		[Column("OrderID" )] public int     OrderId  { get; set; } // int
-		[Column("Subtotal")] public object? Subtotal { get; set; } // NUMERIC
+		[Column("OrderID" )] public int?    OrderId  { get; set; } // INT
+		[Column("Subtotal")] public double? Subtotal { get; set; } // REAL
 	}
 }
