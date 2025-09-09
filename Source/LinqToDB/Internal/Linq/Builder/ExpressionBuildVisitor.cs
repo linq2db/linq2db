@@ -1260,11 +1260,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Builder.PushTranslationModifier(translationModifier, true);
 
-			var saveFlags            = _buildFlags;
+			var saveFlags            = UsingBuildFlags(_buildFlags | BuildFlags.ForExtension);
 			var saveColumnDescriptor = _columnDescriptor;
 			try
 			{
-				_buildFlags       |= BuildFlags.ForExtension;
 				_columnDescriptor  = columnDescriptor;
 
 				expression = expression.UnwrapConvertToObject();
@@ -1336,7 +1335,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			finally
 			{
-				_buildFlags       = saveFlags;
 				_columnDescriptor = saveColumnDescriptor;
 				Builder.PopTranslationModifier();
 			}
@@ -2821,13 +2819,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			_columnDescriptor        = null;
 			_alias                   = null;
 
-			var saveFlags = _buildFlags;
-			_buildFlags |= BuildFlags.ForKeys;
-
-			var left  = Visit(node.Left);
-			var right = Visit(node.Right);
-
-			_buildFlags = saveFlags;
+			Expression left;
+			Expression right;
+			using (var saveFlags = UsingBuildFlags(_buildFlags | BuildFlags.ForKeys))
+			{
+				left  = Visit(node.Left);
+				right = Visit(node.Right);
+			}
 
 			_columnDescriptor = saveColumnDescriptor;
 			_alias            = saveAlias;
@@ -3308,63 +3306,60 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (node.Method.Name == "Equals" && node.Object != null && node.Arguments.Count == 1)
 				return ConvertCompareExpression(ExpressionType.Equal, node.Object, node.Arguments[0]);
 
-			var saveFlags = _buildFlags;
-			_buildFlags |= BuildFlags.ForKeys;
-			_buildFlags &= ~BuildFlags.ForMemberRoot;
-
-			if (node.Method.DeclaringType == typeof(string))
+			using (var saveFlags = UsingBuildFlags((_buildFlags | BuildFlags.ForKeys) & ~BuildFlags.ForMemberRoot))
 			{
-				switch (node.Method.Name)
+				if (node.Method.DeclaringType == typeof(string))
 				{
-					case "Contains"  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.Contains,   IsCaseSensitive(node)); break;
-					case "StartsWith": predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(node)); break;
-					case "EndsWith"  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.EndsWith,   IsCaseSensitive(node)); break;
+					switch (node.Method.Name)
+					{
+						case "Contains"  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.Contains,   IsCaseSensitive(node)); break;
+						case "StartsWith": predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(node)); break;
+						case "EndsWith"  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.EndsWith,   IsCaseSensitive(node)); break;
+					}
+				}
+				else if (node.Method.Name == "Contains")
+				{
+					if (node.Method.DeclaringType == typeof(Enumerable) ||
+						(node.Method.DeclaringType == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0])) ||
+						typeof(IList).IsSameOrParentOf(node.Method.DeclaringType!) ||
+						typeof(ICollection<>).IsSameOrParentOf(node.Method.DeclaringType!) ||
+						typeof(IReadOnlyCollection<>).IsSameOrParentOf(node.Method.DeclaringType!))
+					{
+						predicate = ConvertInPredicate(node);
+					}
+				}
+				else if (node.Method.Name == "ContainsValue" && typeof(Dictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!))
+				{
+					var args = node.Method.DeclaringType!.GetGenericArguments(typeof(Dictionary<,>))!;
+					var minf = ExpressionBuilder.EnumerableMethods
+									.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
+									.MakeGenericMethod(args[1]);
+
+					var expr = Expression.Call(
+									minf,
+									ExpressionHelper.PropertyOrField(node.Object!, "Values"),
+									node.Arguments[0]);
+
+					predicate = ConvertInPredicate(expr);
+				}
+				else if (node.Method.Name == "ContainsKey" &&
+					(typeof(IDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!) ||
+					 typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!)))
+				{
+					var type = typeof(IDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!) ? typeof(IDictionary<,>) : typeof(IReadOnlyDictionary<,>);
+					var args = node.Method.DeclaringType!.GetGenericArguments(type)!;
+					var minf = ExpressionBuilder.EnumerableMethods
+									.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
+									.MakeGenericMethod(args[0]);
+
+					var expr = Expression.Call(
+									minf,
+									ExpressionHelper.PropertyOrField(node.Object!, "Keys"),
+									node.Arguments[0]);
+
+					predicate = ConvertInPredicate(expr);
 				}
 			}
-			else if (node.Method.Name == "Contains")
-			{
-				if (node.Method.DeclaringType == typeof(Enumerable) ||
-					(node.Method.DeclaringType == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0])) ||
-					typeof(IList).IsSameOrParentOf(node.Method.DeclaringType!) ||
-					typeof(ICollection<>).IsSameOrParentOf(node.Method.DeclaringType!) ||
-					typeof(IReadOnlyCollection<>).IsSameOrParentOf(node.Method.DeclaringType!))
-				{
-					predicate = ConvertInPredicate(node);
-				}
-			}
-			else if (node.Method.Name == "ContainsValue" && typeof(Dictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!))
-			{
-				var args = node.Method.DeclaringType!.GetGenericArguments(typeof(Dictionary<,>))!;
-				var minf = ExpressionBuilder.EnumerableMethods
-								.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
-								.MakeGenericMethod(args[1]);
-
-				var expr = Expression.Call(
-								minf,
-								ExpressionHelper.PropertyOrField(node.Object!, "Values"),
-								node.Arguments[0]);
-
-				predicate = ConvertInPredicate(expr);
-			}
-			else if (node.Method.Name == "ContainsKey" &&
-				(typeof(IDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!) ||
-				 typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!)))
-			{
-				var type = typeof(IDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!) ? typeof(IDictionary<,>) : typeof(IReadOnlyDictionary<,>);
-				var args = node.Method.DeclaringType!.GetGenericArguments(type)!;
-				var minf = ExpressionBuilder.EnumerableMethods
-								.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
-								.MakeGenericMethod(args[0]);
-
-				var expr = Expression.Call(
-								minf,
-								ExpressionHelper.PropertyOrField(node.Object!, "Keys"),
-								node.Arguments[0]);
-
-				predicate = ConvertInPredicate(expr);
-			}
-
-			_buildFlags = saveFlags;
 
 			if (predicate != null)
 			{
@@ -3823,14 +3818,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var nullability = NullabilityContext.GetContext(BuildContext.SelectQuery);
 
-			var saveFlags            = _buildFlags;
+			using var saveFlags      = UsingBuildFlags((_buildFlags | BuildFlags.ForKeys) & ~BuildFlags.ForMemberRoot);
 			var saveColumnDescriptor = _columnDescriptor;
 
 			try
 			{
-				_buildFlags |= BuildFlags.ForKeys;
-				_buildFlags &= ~BuildFlags.ForMemberRoot;
-
 				var columnDescriptor = SuggestColumnDescriptor(left, right);
 
 				_columnDescriptor = columnDescriptor;
@@ -4108,7 +4100,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			finally
 			{
-				_buildFlags       = saveFlags;
 				_columnDescriptor = saveColumnDescriptor;
 			}
 		}
@@ -4756,16 +4747,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			ISqlExpression? expr = null;
 
-			var saveFlags            = _buildFlags;
 			var saveColumnDescriptor = _columnDescriptor;
 
 			try
 			{
-				_buildFlags |= BuildFlags.ForKeys;
+				Expression builtExpr;
 
-				var builtExpr = Visit(arg);
-
-				_buildFlags = saveFlags;
+				using (var saveFlags = UsingBuildFlags(_buildFlags | BuildFlags.ForKeys))
+				{
+					builtExpr = Visit(arg);
+				}
 
 				if (builtExpr is SqlPlaceholderExpression placeholder)
 				{
@@ -4830,7 +4821,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			finally
 			{
 				_columnDescriptor = saveColumnDescriptor;
-				_buildFlags       = saveFlags;
 			}
 		}
 
