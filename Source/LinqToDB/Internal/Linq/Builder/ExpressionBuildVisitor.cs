@@ -225,6 +225,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			return new StateHolder<NewExpression?>(this, disableNew, static v => v._disableNew, static (v, f) => v._disableNew = f);
 		}
 
+		public StateHolder<bool> UsingPreferClientSide(bool preferClientSide)
+		{
+			return new StateHolder<bool>(this, preferClientSide, static v => v._preferClientSide, static (v, f) => v._preferClientSide = f);
+		}
+
 		static BuildFlags CombineFlags (BuildFlags currentFlags, BuildFlags additional)
 		{
 			if (additional.HasFlag(BuildFlags.ResetPrevious))
@@ -2241,13 +2246,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			if (node.MarkerType == MarkerType.PreferClientSide)
 			{
-				var savePreferClientSide = _preferClientSide;
-
-				_preferClientSide = true;
+				using var savePreferClientSide = UsingPreferClientSide(true);
 
 				var inner = Visit(node.InnerExpression);
-
-				_preferClientSide = savePreferClientSide;
 
 				if (inner is SqlPlaceholderExpression or SqlErrorExpression)
 					return inner;
