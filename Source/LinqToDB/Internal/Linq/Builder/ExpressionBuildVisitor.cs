@@ -752,7 +752,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			LogVisit(node);
 
-			if (_buildPurpose == BuildPurpose.Traverse)
+			if (_buildPurpose is BuildPurpose.Traverse)
 			{
 				var newNode = base.VisitMethodCall(node);
 				FoundRoot = null;
@@ -1579,7 +1579,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 
-				if (_buildPurpose == BuildPurpose.Expression && node.Expression != null)
+				if (_buildPurpose is BuildPurpose.Expression && node.Expression != null)
 				{
 					return base.VisitMember(node);
 				}
@@ -2047,7 +2047,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			// Trying to convert whole expression
-			if (_buildPurpose != BuildPurpose.Sql && node is BinaryExpression or UnaryExpression or ConditionalExpression)
+			if (_buildPurpose is not BuildPurpose.Sql && node is BinaryExpression or UnaryExpression or ConditionalExpression)
 			{
 				translated = BuildSqlExpression(node);
 				//if (!SequenceHelper.HasError(translated))
@@ -2150,12 +2150,12 @@ namespace LinqToDB.Internal.Linq.Builder
 						return Visit(translated);
 					}
 
-					if ((_buildPurpose == BuildPurpose.Root || _buildFlags.HasFlag(BuildFlags.ForMemberRoot)) && node.Operand is ContextRefExpression contextRef)
+					if ((_buildPurpose is BuildPurpose.Root || _buildFlags.HasFlag(BuildFlags.ForMemberRoot)) && node.Operand is ContextRefExpression contextRef)
 					{
 						return Visit(contextRef.WithType(node.Type));
 					}
 
-					if (_buildPurpose == BuildPurpose.Expression && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
+					if (_buildPurpose is BuildPurpose.Expression && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
 					{
 						return base.VisitUnary(node);
 					}
@@ -2387,7 +2387,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (!Builder.PreferServerSide(node, false))
 				{
-					var preferConvert = _buildPurpose is BuildPurpose.Sql || (_buildPurpose == BuildPurpose.Expression && _buildFlags.HasFlag(BuildFlags.ForSetProjection));
+					var preferConvert = _buildPurpose is BuildPurpose.Sql || (_buildPurpose is BuildPurpose.Expression && _buildFlags.HasFlag(BuildFlags.ForSetProjection));
 
 					if (!preferConvert)
 					{
@@ -3824,7 +3824,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			var nullability = NullabilityContext.GetContext(BuildContext.SelectQuery);
 
 			var saveFlags            = _buildFlags;
-			var saveBuildPurpose     = _buildPurpose;
 			var saveColumnDescriptor = _columnDescriptor;
 
 			try
@@ -4111,7 +4110,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				_buildFlags       = saveFlags;
 				_columnDescriptor = saveColumnDescriptor;
-				_buildPurpose     = saveBuildPurpose;
 			}
 		}
 
