@@ -1260,7 +1260,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Builder.PushTranslationModifier(translationModifier, true);
 
-			var saveFlags            = UsingBuildFlags(_buildFlags | BuildFlags.ForExtension);
+			using var saveFlags      = UsingBuildFlags(_buildFlags | BuildFlags.ForExtension);
 			var saveColumnDescriptor = _columnDescriptor;
 			try
 			{
