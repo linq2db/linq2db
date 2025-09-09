@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		IBuildContext?             _buildContext;
 		ColumnDescriptor?          _columnDescriptor;
 		string?                    _alias;
-		Stack<Expression>          _disableSubqueries = new();
+		readonly Stack<Expression> _disableSubqueries = new();
 		NewExpression?             _disableNew;
 		bool                       _preferClientSide;
 
@@ -218,6 +218,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		public StateHolder<ColumnDescriptor?> UsingColumnDescriptor(ColumnDescriptor? columnDescriptor)
 		{
 			return new StateHolder<ColumnDescriptor?>(this, columnDescriptor, static v => v._columnDescriptor, static (v, f) => v._columnDescriptor = f);
+		}
+
+		public StateHolder<NewExpression?> UsingDisableNew(NewExpression? disableNew)
+		{
+			return new StateHolder<NewExpression?>(this, disableNew, static v => v._disableNew, static (v, f) => v._disableNew = f);
 		}
 
 		static BuildFlags CombineFlags (BuildFlags currentFlags, BuildFlags additional)
@@ -691,12 +696,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			FoundRoot = null;
 
-			var saveDisableNew = _disableNew;
-			_disableNew = node.NewExpression;
+			using var saveDisableNew = UsingDisableNew(node.NewExpression);
 
 			var newExpression = base.VisitListInit(node);
-
-			_disableNew = saveDisableNew;
 
 			return newExpression;
 		}
@@ -956,16 +958,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			using var saveDescriptor = UsingColumnDescriptor(null);
 
-			var saveDisableNew = _disableNew;
-
-			_disableNew = node.NewExpression;
 			Expression newExpression;
-			using (var saveAlias = UsingAlias(null))
+			using (var saveDisableNew = UsingDisableNew(node.NewExpression))
+			using (var saveAlias      = UsingAlias(null))
 			{
 				newExpression = base.VisitMemberInit(node);
 			}
-
-			_disableNew = saveDisableNew;
 
 			if (!IsSame(newExpression, node))
 				return Visit(newExpression);
