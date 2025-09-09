@@ -130,7 +130,7 @@ namespace Tests.Extensions
 		[Test]
 		public void GuidMappingTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			var interceptor = new SaveCommandInterceptor();
 			db.AddInterceptor(interceptor);
 

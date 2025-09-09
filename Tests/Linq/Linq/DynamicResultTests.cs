@@ -34,7 +34,7 @@ namespace Tests
 		{
 			var data = RawDynamicData.Seed();
 
-			using (var db = (DataConnection)GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(data))
 			{
 				var result = db.Query<dynamic>("select * from RawDynamicData where AId >= @param", new {param = param}).ToList();
@@ -58,7 +58,7 @@ namespace Tests
 		{
 			var data = RawDynamicData.Seed();
 
-			using (var db = (DataConnection)GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(data))
 			{
 				var result = db.Query<object>("select * from RawDynamicData where AId >= @param", new {param = param}).ToList();
@@ -83,7 +83,7 @@ namespace Tests
 		{
 			var data = RawDynamicData.Seed();
 
-			using (var db = (DataConnection)GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(data))
 			{
 				var result = db.Query<MyObject>("select * from RawDynamicData where AId >= @param", new {param = param}).ToList();

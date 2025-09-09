@@ -1039,7 +1039,7 @@ namespace Tests.Linq
 			if (context.IsAnyOf(TestProvName.AllOracle))
 				sql = "select \"PersonID\", \"FirstName\", \"MiddleName\", \"LastName\", \"Gender\" from \"Person\" where \"PersonID\" = 3";
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var person = db.Query<ComplexPerson>(sql).FirstOrDefault()!;
 
