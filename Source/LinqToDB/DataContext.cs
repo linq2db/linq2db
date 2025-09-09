@@ -681,7 +681,7 @@ namespace LinqToDB
 				return _queryRunner!.ExecuteScalar();
 			}
 
-			public DataReaderWrapper ExecuteReader()
+			public IDataReaderAsync ExecuteReader()
 			{
 				return _queryRunner!.ExecuteReader();
 			}
